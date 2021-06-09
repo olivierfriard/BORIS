@@ -140,7 +140,6 @@ def create_behaviors_bar_plot(pj: dict,
     try:
 
         # extract all behaviors from ethogram for colors in plot
-        # all_behaviors = [pj[ETHOGRAM][x][BEHAVIOR_CODE] for x in utilities.sorted_keys(pj[ETHOGRAM])]
         all_behaviors = utilities.all_behaviors(pj[ETHOGRAM])
 
         for obs_id in selected_observations:

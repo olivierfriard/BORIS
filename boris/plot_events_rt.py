@@ -45,15 +45,17 @@ class Plot_events_RT(QWidget):
         take consideration of subject and modifiers
 
         return dict
+
+
+        AltGr + p -> þ
         """
 
         try:
-            # state_events_list = state_behavior_codes(pj[ETHOGRAM])
             mem_behav = {}
             intervals_behav = {}
 
             for event in events:
-                intervals_behav[f"{event[1]}|{event[2]}|{event[3]}"] = [(0,0)]
+                intervals_behav[f"{event[1]}þ{event[2]}þ{event[3]}"] = [(0,0)]
 
             for event in events:
 
@@ -62,20 +64,18 @@ class Plot_events_RT(QWidget):
                 # check if code is state
                 if code in self.state_events_list:
 
-                    if f"{subject}|{code}|{modifier}" in mem_behav and mem_behav[f"{subject}|{code}|{modifier}"]:
+                    if f"{subject}þ{code}þ{modifier}" in mem_behav and mem_behav[f"{subject}þ{code}þ{modifier}"]:
                         #stop interval
-                        #if f"{subject}|{code}|{modifier}" not in intervals_behav:
-                        #    intervals_behav[f"{subject}|{code}|{modifier}"] = []
 
                         # check if event is in interval start-end
-                        if (start <= mem_behav[f"{subject}|{code}|{modifier}"] <= end) \
+                        if (start <= mem_behav[f"{subject}þ{code}þ{modifier}"] <= end) \
                             or (start <= time_ <= end) \
-                            or (mem_behav[f"{subject}|{code}|{modifier}"] <= start and time_ > end):
-                                intervals_behav[f"{subject}|{code}|{modifier}"].append((float(mem_behav[f"{subject}|{code}|{modifier}"]), float(time_)))
-                        mem_behav[f"{subject}|{code}|{modifier}"] = 0
+                            or (mem_behav[f"{subject}þ{code}þ{modifier}"] <= start and time_ > end):
+                                intervals_behav[f"{subject}þ{code}þ{modifier}"].append((float(mem_behav[f"{subject}þ{code}þ{modifier}"]), float(time_)))
+                        mem_behav[f"{subject}þ{code}þ{modifier}"] = 0
                     else:
                         # start interval
-                        mem_behav[f"{subject}|{code}|{modifier}"] = time_
+                        mem_behav[f"{subject}þ{code}þ{modifier}"] = time_
 
             return intervals_behav
 
@@ -103,25 +103,20 @@ class Plot_events_RT(QWidget):
 
         if self.events != self.events_mem:
 
-            print("extract events for plot")
-            #behav = []
             left, duration = {}, {}
-
             for k in self.events:
-                #behav.append(k)
                 left[k] = []
                 duration[k] = []
                 for interv in self.events[k]:
                     left[k].append(interv[0])
                     duration[k].append(interv[1] - interv[0])
 
-            self.behaviors = []
-            self.durations = []
-            self.lefts = []
-            self.colors = []
+            self.behaviors, self.durations, self.lefts, self.colors = [], [], [], []
             for k in self.events:
-                behav_col = self.behav_color[k]
-                self.behaviors.extend([k] * len(self.events[k]))
+                subject_name, bevavior_code, modifier = k.split('þ')
+
+                behav_col = self.behav_color[bevavior_code]
+                self.behaviors.extend([f"{subject_name} - {bevavior_code} ({modifier})"] * len(self.events[k]))
                 self.colors.extend([behav_col] * len(self.events[k]))
 
                 self.lefts.extend(left[k])
@@ -139,7 +134,6 @@ class Plot_events_RT(QWidget):
                     left=self.lefts,
                     color=self.colors,
                     height=0.5)
-
 
         #self.figure.subplots_adjust(wspace=0, hspace=0)
 

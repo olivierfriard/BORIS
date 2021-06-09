@@ -807,10 +807,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         # subjects
 
         # timer for spectrogram visualization
-        self.timer_sound_signal = QTimer(self)
+        self.plot_timer = QTimer(self)
         # TODO check value of interval
-        self.timer_sound_signal.setInterval(SPECTRO_TIMER)
-        self.timer_sound_signal.timeout.connect(self.timer_sound_signal_out)
+        self.plot_timer.setInterval(SPECTRO_TIMER)
+        self.plot_timer.timeout.connect(self.plot_timer_out)
 
         # timer for timing the live observation
         self.liveTimer = QTimer(self)
@@ -2359,8 +2359,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     self.spectro.sb_freq_max.setValue(int(self.spectro.frame_rate / 2))
                     self.spectro.show()
 
-                    '''self.timer_sound_signal.start()'''
-
                 if self.playerType == VLC and self.playMode == MPV and not flag_paused:
                     self.play_video()
 
@@ -2423,7 +2421,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
                 self.plot_events.setWindowFlags(Qt.WindowStaysOnTopHint)
 
-                self.plot_events.interval = self.spectrogram_time_interval
+                self.plot_events.interval = 60  # self.spectrogram_time_interval
                 self.plot_events.cursor_color = "red"
 
                 self.plot_events.state_events_list = utilities.state_behavior_codes(self.pj[ETHOGRAM])
@@ -2431,21 +2429,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 self.plot_events.events_list = self.pj[OBSERVATIONS][self.observationId][EVENTS]
                 self.plot_events.events = self.plot_events.aggregate_events(self.pj[OBSERVATIONS][self.observationId][EVENTS], 0, 60)
 
-                # behavior color
-
-                plot_colors = BEHAVIORS_PLOT_COLORS
-
-                self.plot_events.all_behaviors = utilities.all_behaviors(pj[ETHOGRAM])
-
+                # behavior colors
                 self.plot_events.behav_color = {}
-                for idx, behavior in enumerate(self.plot_events.all_behaviors):
+                for idx, behavior in enumerate(utilities.all_behaviors(self.pj[ETHOGRAM])):
                     self.plot_events.behav_color[behavior] = BEHAVIORS_PLOT_COLORS[idx]
-
-                    #utilities.behavior_color(plot_colors, all_behaviors.index(behavior))
-
-                #for idx, behav in enumerate(self.plot_events.events.keys()):
-                #    self.plot_events.behav_color[behav] = colors_list[idx % len(colors_list)]
-
 
                 self.plot_events.sendEvent.connect(self.signal_from_widget)
                 self.plot_events.show()
@@ -2453,7 +2440,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
 
 
-    def timer_sound_signal_out(self):
+    def plot_timer_out(self):
         """
         timer for sound signal visualization: spectrogram and/or waveform
         """
@@ -2464,8 +2451,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             return
         '''
 
-        print('timer_sound_signal_out')
-
         '''
         if self.playerType == LIVE:
             QMessageBox.warning(self, programName, "The sound signal visualization is not available for live observations")
@@ -2474,7 +2459,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         if not hasattr(self, "plot_events"):
             return
-        print("plot events")
+
         self.plot_events.events_list = self.pj[OBSERVATIONS][self.observationId][EVENTS]
         self.plot_events.plot_events(float(self.getLaps()))
 
@@ -3750,8 +3735,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.spectro.sb_freq_min.setValue(0)
             self.spectro.sb_freq_max.setValue(int(self.spectro.frame_rate / 2))
             self.spectro.show()
-            self.timer_sound_signal_out()
-            '''self.timer_sound_signal.start()'''
+            self.plot_timer_out()
+
 
         # waveform
         if (VISUALIZE_WAVEFORM in self.pj[OBSERVATIONS][self.observationId] and
@@ -3795,8 +3780,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.waveform.sb_freq_max.setValue(int(self.waveform.frame_rate / 2))
             '''
             self.waveform.show()
-            self.timer_sound_signal_out()
-            '''self.timer_sound_signal.start()'''
+            self.plot_timer_out()
+
 
         # external data plot
         if PLOT_DATA in self.pj[OBSERVATIONS][self.observationId] and self.pj[OBSERVATIONS][self.observationId][PLOT_DATA]:
@@ -4659,6 +4644,14 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 del self.waveform
             except Exception:
                 pass
+
+        if hasattr(self, "plot_events"):
+            try:
+                self.waveform.close()
+                del self.waveform
+            except Exception:
+                pass
+
 
         if hasattr(self, "results"):
             try:
@@ -7283,7 +7276,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.lbCurrentStates.setText(", ".join(self.currentStates[idx]))
         self.show_current_states_in_subjects_table()
 
-        self.timer_sound_signal_out()
+        self.plot_timer_out()
 
         # check scan sampling
         if self.pj[OBSERVATIONS][self.observationId].get(SCAN_SAMPLING_TIME, 0):
@@ -7942,7 +7935,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         """
         for n_player, dw in enumerate(self.dw_player):
             dw.player.frame_step()
-            self.timer_sound_signal_out()
+            self.plot_timer_out()
             for idx in self.plot_data:
                 self.timer_plot_data_out(self.plot_data[idx])
 
@@ -7961,7 +7954,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         """
         for n_player, dw in enumerate(self.dw_player):
             dw.player.frame_back_step()
-            self.timer_sound_signal_out()
+            self.plot_timer_out()
             for idx in self.plot_data:
                 self.timer_plot_data_out(self.plot_data[idx])
 
@@ -10794,7 +10787,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
             self.lb_player_status.setText("Player paused")
 
-            self.timer_sound_signal_out()
+            self.plot_timer_out()
             for idx in self.plot_data:
                 self.timer_plot_data_out(self.plot_data[idx])
 
@@ -10862,10 +10855,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
     def update_visualizations(self, scroll_slider=False):
         """
-        update visualization of video position, spectrogram and data
+        update visualization of video position, spectrogram, waveform, plot events and data
         """
 
-        self.timer_sound_signal_out()
+        self.plot_timer_out()
         for idx in self.plot_data:
             self.timer_plot_data_out(self.plot_data[idx])
 
