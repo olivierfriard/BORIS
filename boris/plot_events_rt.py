@@ -21,6 +21,7 @@ class Plot_events_RT(QWidget):
 
     def __init__(self):
         super().__init__()
+        self.setWindowTitle(f"Events plot")
 
         self.interval = 60  # interval of visualization (in seconds)
         self.time_mem = -1
@@ -38,6 +39,18 @@ class Plot_events_RT(QWidget):
         layout.addWidget(self.canvas)
         self.setLayout(layout)
 
+        self.installEventFilter(self)
+
+
+    def eventFilter(self, receiver, event):
+        """
+        send event (if keypress) to main window
+        """
+        if(event.type() == QEvent.KeyPress):
+            self.sendEvent.emit(event)
+            return True
+        else:
+            return False
 
     def aggregate_events(self, events, start, end) -> dict:
         """

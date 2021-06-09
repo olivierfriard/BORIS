@@ -2442,7 +2442,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
     def plot_timer_out(self):
         """
-        timer for sound signal visualization: spectrogram and/or waveform
+        timer for plot visualization: spectrogram, waveform, plot events
         """
 
         '''
@@ -2457,11 +2457,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             return
         '''
 
-        if not hasattr(self, "plot_events"):
-            return
-
-        self.plot_events.events_list = self.pj[OBSERVATIONS][self.observationId][EVENTS]
-        self.plot_events.plot_events(float(self.getLaps()))
+        if hasattr(self, "plot_events"):
+            self.plot_events.events_list = self.pj[OBSERVATIONS][self.observationId][EVENTS]
+            self.plot_events.plot_events(float(self.getLaps()))
 
 
         if self.playerType == VLC:
@@ -4735,7 +4733,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
             if self.playerType == VLC:
 
-                self.timer_sound_signal.stop()
+                self.plot_timer.stop()
 
                 if self.playMode == MPV:
                     for i, player in enumerate(self.dw_player):
@@ -8939,7 +8937,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
             else:  # player ended
                 # self.timer.stop()
-                self.timer_sound_signal.stop()
+                self.plot_timer.stop()
 
                 # stop all timer for plotting data
                 for data_timer in self.ext_data_timer_list:
@@ -10747,8 +10745,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.lb_player_status.clear()
 
             # self.timer.start(VLC_TIMER_OUT)
-            if self.pj[OBSERVATIONS][self.observationId].get(VISUALIZE_WAVEFORM, False) or self.pj[OBSERVATIONS][self.observationId].get(VISUALIZE_SPECTROGRAM, False):
-                self.timer_sound_signal.start()
+            if self.pj[OBSERVATIONS][self.observationId].get(VISUALIZE_WAVEFORM, False) \
+                or self.pj[OBSERVATIONS][self.observationId].get(VISUALIZE_SPECTROGRAM, False):
+                    self.plot_timer.start()
 
             # start all timer for plotting data
             for data_timer in self.ext_data_timer_list:
@@ -10777,7 +10776,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     if not player.player.pause:
 
                         # self.timer.stop()
-                        self.timer_sound_signal.stop()
+                        self.plot_timer.stop()
                         # stop all timer for plotting data
 
                         for data_timer in self.ext_data_timer_list:

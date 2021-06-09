@@ -38,22 +38,9 @@ class Plot_waveform_RT(QWidget):
     # send keypress event to mainwindow
     sendEvent = pyqtSignal(QEvent)
 
-    def get_wav_info(self, wav_file: str):
-        """
-        read wav file and extract information
-        """
-        try:
-            wav = wave.open(wav_file, "r")
-            frames = wav.readframes(-1)
-            signal = np.fromstring(frames, dtype=np.int16)
-            frame_rate = wav.getframerate()
-            wav.close()
-            return signal, frame_rate
-        except Exception:
-            return np.array([]), 0
-
     def __init__(self):
         super().__init__()
+        self.setWindowTitle(f"Waveform")
 
         self.interval = 60 # interval of visualization (in seconds)
         self.time_mem = -1
@@ -81,6 +68,21 @@ class Plot_waveform_RT(QWidget):
             return True
         else:
             return False
+
+
+    def get_wav_info(self, wav_file: str):
+        """
+        read wav file and extract information
+        """
+        try:
+            wav = wave.open(wav_file, "r")
+            frames = wav.readframes(-1)
+            signal = np.fromstring(frames, dtype=np.int16)
+            frame_rate = wav.getframerate()
+            wav.close()
+            return signal, frame_rate
+        except Exception:
+            return np.array([]), 0
 
 
     def load_wav(self, wav_file_path: str) -> dict:
