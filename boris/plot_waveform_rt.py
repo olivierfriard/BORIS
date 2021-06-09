@@ -159,6 +159,7 @@ class Plot_waveform_RT(QWidget):
 
         Args:
             current_time (float): time for displaying waveform
+            force_plot (bool): force plot even if media paused
         """
 
         if not force_plot and current_time == self.time_mem:

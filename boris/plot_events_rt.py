@@ -103,7 +103,6 @@ class Plot_events_RT(QWidget):
         Returns:
             dict
 
-
         AltGr + p -> þ
         """
 
@@ -144,7 +143,14 @@ class Plot_events_RT(QWidget):
                 else:  # point event
 
                     if start <= time_ <= end:
-                        intervals_behav[key].append((float(time_), float(time_) + self.point_event_plot_duration))  # point event -> 1 s
+                        intervals_behav[key].append((float(time_), float(time_) + self.point_event_plot_duration * 50))  # point event -> 1 s
+
+            # check if intervals are closed
+            for k in mem_behav:
+                if mem_behav[k]:  # interval open
+                    print(f"{k} is open at: {mem_behav[k]}")
+                    intervals_behav[k].append((float(mem_behav[k]), float((end + start) / 2)))  # close interval with current time
+                    print(f"closed with {float((end + start) / 2)}")
 
             return intervals_behav
 
