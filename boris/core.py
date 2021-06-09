@@ -662,9 +662,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.action_create_modifiers_coding_map.triggered.connect(self.modifiers_coding_map_creator)
         self.action_create_behaviors_coding_map.triggered.connect(self.behaviors_coding_map_creator)
 
-        self.actionShow_spectrogram.triggered.connect(lambda: self.show_sound_signal_widget("spectrogram"))
-        self.actionShow_the_sound_waveform.triggered.connect(lambda: self.show_sound_signal_widget("waveform"))
-        self.actionPlot_events_in_real_time.triggered.connect(lambda: self.show_sound_signal_widget("plot_events"))
+        self.actionShow_spectrogram.triggered.connect(lambda: self.show_plot_widget("spectrogram"))
+        self.actionShow_the_sound_waveform.triggered.connect(lambda: self.show_plot_widget("waveform"))
+        self.actionPlot_events_in_real_time.triggered.connect(lambda: self.show_plot_widget("plot_events"))
 
         self.actionShow_data_files.triggered.connect(self.show_data_files)
         self.action_geometric_measurements.triggered.connect(self.geometric_measurements)
@@ -2300,10 +2300,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 QMessageBox.warning(self, programName, f"<b>{media_file_path}</b> file not found")
 
 
-    def show_sound_signal_widget(self, plot_type):
+    def show_plot_widget(self, plot_type):
         """
-        show spectrogram window if any
+        show active plot widgets (spectrogram, waveform, plot events)
         """
+
         if plot_type not in ["waveform", "spectrogram", "plot_events"]:
             logging.critical("error on plot type")
             return
@@ -2431,6 +2432,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 self.plot_events.events = self.plot_events.aggregate_events(self.pj[OBSERVATIONS][self.observationId][EVENTS], 0, 60)
 
                 # behavior color
+
+                plot_colors = BEHAVIORS_PLOT_COLORS
+
                 colors_list = ['blue', 'red','green','yellow','purple', 'black', 'coral']
                 self.plot_events.behav_color = {}
                 for idx, behav in enumerate(self.plot_events.events.keys()):
@@ -8648,6 +8652,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         for n_player in keys_to_delete:
             del self.pj[OBSERVATIONS][self.observationId][MEDIA_INFO][OVERLAY][n_player]
 
+
     def video_slider_sliderMoved(self):
         """
         media position slider moved
@@ -8672,7 +8677,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         logging.debug(f"video_slider released: {self.video_slider.value() / (slider_maximum - 1)}")
         self.user_move_slider = False
-
 
 
     def get_events_current_row(self):

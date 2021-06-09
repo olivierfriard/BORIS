@@ -301,9 +301,6 @@ def aggregate_events(pj:dict, obs_id:str) -> dict:
         return {"error": ""}
 
 
-
-
-
 def get_current_states_modifiers_by_subject(state_behaviors_codes: list,
                                             events: list,
                                             subjects: dict,
@@ -1277,15 +1274,38 @@ def accurate_media_analysis(ffmpeg_bin, file_name):
             "resolution": resolution}
 
 
-
-def behavior_color(colors_list, idx):
+def behavior_color(colors_list: list, idx: int, default_color:str = "darkgray"):
     """
     return color with index corresponding to behavior index
 
     see BEHAVIORS_PLOT_COLORS list in config.py
+
+    Args:
+        colors_list (list): list of colors
+        idx (int): index of behavior in all behaviors list (sorted)
+        default_color (str): default color (if problem)
+
+    Returns:
+        str: color corresponding to behavior index
+
     """
 
     try:
         return colors_list[idx % len(colors_list)]
     except Exception:
-        return "darkgray"
+        return default_color
+
+
+def all_behaviors(ethogram: dict) -> list:
+    """
+    extract all behaviors from the submitted ethogram
+    behaviors are alphabetically sorted
+
+    Args:
+        ethogram (dict): ethogram
+
+    Returns:
+        list: behaviors code (alphabetically sorted)
+    """ 
+
+    return [ethogram[x][BEHAVIOR_CODE] for x in sorted_keys(ethogram)]

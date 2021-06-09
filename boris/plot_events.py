@@ -44,9 +44,7 @@ from boris import utilities
 from boris.config import *
 
 
-
-
-plt_colors = dict(mcolors.BASE_COLORS, **mcolors.CSS4_COLORS)
+# plt_colors = dict(mcolors.BASE_COLORS, **mcolors.CSS4_COLORS)
 
 
 def default_value(ethogram, behavior, parameter):
@@ -64,10 +62,11 @@ def init_behav_modif(ethogram: dict,
                      selected_subjects: list,
                      distinct_behav_modif,
                      include_modifiers,
-                     parameters):
+                     parameters) -> dict:
     """
     initialize dictionary with subject, behaviors and modifiers
     """
+
     behaviors = {}
     for subj in selected_subjects:
         behaviors[subj] = {}
@@ -86,12 +85,13 @@ def init_behav_modif(ethogram: dict,
 
 
 def init_behav(ethogram: dict,
-                     selected_subjects: list,
-                     distinct_behaviors,
-                     parameters):
+               selected_subjects: list,
+               distinct_behaviors,
+               parameters) -> dict:
     """
     initialize dictionary with subject, behaviors and modifiers
     """
+
     behaviors = {}
     for subj in selected_subjects:
         behaviors[subj] = {}
@@ -140,7 +140,8 @@ def create_behaviors_bar_plot(pj: dict,
     try:
 
         # extract all behaviors from ethogram for colors in plot
-        all_behaviors = [pj[ETHOGRAM][x][BEHAVIOR_CODE] for x in utilities.sorted_keys(pj[ETHOGRAM])]
+        # all_behaviors = [pj[ETHOGRAM][x][BEHAVIOR_CODE] for x in utilities.sorted_keys(pj[ETHOGRAM])]
+        all_behaviors = utilities.all_behaviors(pj[ETHOGRAM])
 
         for obs_id in selected_observations:
 
@@ -164,9 +165,9 @@ def create_behaviors_bar_plot(pj: dict,
             distinct_subjects = [rows["subject"] for rows in cursor.fetchall()]
 
             behaviors = init_behav(pj[ETHOGRAM],
-                                distinct_subjects,
-                                distinct_behav,
-                                parameters)
+                                   distinct_subjects,
+                                   distinct_behav,
+                                   parameters)
 
             # plot creation
             if len(distinct_subjects) > 1:

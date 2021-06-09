@@ -25,7 +25,7 @@ class Plot_events_RT(QWidget):
         self.interval = 60  # interval of visualization (in seconds)
         self.time_mem = -1
 
-        self.events_mem = {}
+        self.events_mem = {"init": 0}
 
         self.cursor_color = "red"
 
