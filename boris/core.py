@@ -2435,11 +2435,17 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
                 plot_colors = BEHAVIORS_PLOT_COLORS
 
-                colors_list = ['blue', 'red','green','yellow','purple', 'black', 'coral']
+                self.plot_events.all_behaviors = utilities.all_behaviors(pj[ETHOGRAM])
+
                 self.plot_events.behav_color = {}
-                for idx, behav in enumerate(self.plot_events.events.keys()):
-                    self.plot_events.behav_color[behav] = colors_list[idx % len(colors_list)]
-                #print(self.plot_events.behav_color)
+                for idx, behavior in enumerate(self.plot_events.all_behaviors):
+                    self.plot_events.behav_color[behavior] = BEHAVIORS_PLOT_COLORS[idx]
+
+                    #utilities.behavior_color(plot_colors, all_behaviors.index(behavior))
+
+                #for idx, behav in enumerate(self.plot_events.events.keys()):
+                #    self.plot_events.behav_color[behav] = colors_list[idx % len(colors_list)]
+
 
                 self.plot_events.sendEvent.connect(self.signal_from_widget)
                 self.plot_events.show()
