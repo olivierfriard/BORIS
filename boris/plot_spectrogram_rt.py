@@ -60,24 +60,18 @@ class Plot_spectrogram_RT(QWidget):
 
         hlayout1 = QHBoxLayout()
         hlayout1.addWidget(QLabel("Time interval"))
-        button_time_inc = QPushButton("+", self)
-        button_time_inc.clicked.connect(lambda: self.time_interval_changed(1))
-        button_time_dec = QPushButton("-", self)
-        button_time_dec.clicked.connect(lambda: self.time_interval_changed(-1))
-        hlayout1.addWidget(button_time_inc)
-        hlayout1.addWidget(button_time_dec)
+        hlayout1.addWidget(QPushButton("+", self, clicked=lambda: self.time_interval_changed(1)))
+        hlayout1.addWidget(QPushButton("-", self, clicked=lambda: self.time_interval_changed(-1)))
         layout.addLayout(hlayout1)
 
         hlayout2 = QHBoxLayout()
         hlayout2.addWidget(QLabel("Frequency interval"))
-        self.sb_freq_min = QSpinBox()
+        self.sb_freq_min = QSpinBox(valueChanged=self.frequency_interval_changed)
         self.sb_freq_min.setRange(0, 200000)
         self.sb_freq_min.setSingleStep(100)
-        self.sb_freq_min.valueChanged.connect(self.frequency_interval_changed)
-        self.sb_freq_max = QSpinBox()
+        self.sb_freq_max = QSpinBox(valueChanged=self.frequency_interval_changed)
         self.sb_freq_max.setRange(0, 200000)
         self.sb_freq_max.setSingleStep(100)
-        self.sb_freq_max.valueChanged.connect(self.frequency_interval_changed)
         hlayout2.addWidget(self.sb_freq_min)
         hlayout2.addWidget(self.sb_freq_max)
         layout.addLayout(hlayout2)
@@ -132,6 +126,7 @@ class Plot_spectrogram_RT(QWidget):
         Returns:
             None
         """
+
         if action == -1 and self.interval <= 5:
             return
         self.interval += (5 * action)

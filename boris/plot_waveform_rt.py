@@ -59,12 +59,8 @@ class Plot_waveform_RT(QWidget):
 
         hlayout1 = QHBoxLayout()
         hlayout1.addWidget(QLabel("Time interval"))
-        button_time_inc = QPushButton("+", self)
-        button_time_inc.clicked.connect(lambda: self.time_interval_changed(1))
-        button_time_dec = QPushButton("-", self)
-        button_time_dec.clicked.connect(lambda: self.time_interval_changed(-1))
-        hlayout1.addWidget(button_time_inc)
-        hlayout1.addWidget(button_time_dec)
+        hlayout1.addWidget(QPushButton("+", self, clicked=lambda: self.time_interval_changed(1)))
+        hlayout1.addWidget(QPushButton("-", self, clicked=lambda: self.time_interval_changed(-1)))
         layout.addLayout(hlayout1)
 
         self.setLayout(layout)

@@ -5,7 +5,6 @@ plot waveform in real time
 
 import matplotlib
 matplotlib.use("Qt5Agg")
-#import matplotlib.ticker as mticker
 import numpy as np
 from PyQt5.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, QPushButton, QLabel)
 from PyQt5.QtCore import pyqtSignal, QEvent
@@ -41,12 +40,10 @@ class Plot_events_RT(QWidget):
 
         hlayout1 = QHBoxLayout()
         hlayout1.addWidget(QLabel("Time interval"))
-        button_time_inc = QPushButton("+", self)
-        button_time_inc.clicked.connect(lambda: self.time_interval_changed(1))
-        button_time_dec = QPushButton("-", self)
-        button_time_dec.clicked.connect(lambda: self.time_interval_changed(-1))
-        hlayout1.addWidget(button_time_inc)
-        hlayout1.addWidget(button_time_dec)
+        hlayout1.addWidget(QPushButton("+", self, clicked=lambda: self.time_interval_changed(1)))
+        hlayout1.addWidget(QPushButton("-", self, clicked=lambda: self.time_interval_changed(-1)))
+        self.pb_mode = QPushButton("Include modifiers", self, clicked=self.change_mode)
+        hlayout1.addWidget(self.pb_mode)
         layout.addLayout(hlayout1)
 
         self.setLayout(layout)
@@ -64,13 +61,27 @@ class Plot_events_RT(QWidget):
         else:
             return False
 
-    def time_interval_changed(self, action: int):
+
+    def change_mode(self):
+        if self.groupby == "behaviors":
+            self.groupby = "modifiers"
+            self.pb_mode.setText("Show behaviors w/o modifiers")
+        else:
+            self.groupby = "behaviors"
+            self.pb_mode.setText("Include modifiers")
+
+
+    def time_interval_changed(self, action: int) -> None:
         """
         change the time interval for events plot
 
         Args:
             action (int): -1 decrease time interval, +1 increase time interval
+
+        Returns:
+            None
         """
+
         if action == -1 and self.interval <= 5:
             return
         self.interval += (5 * action)
@@ -182,6 +193,8 @@ class Plot_events_RT(QWidget):
             for k in self.events:
                 if self.groupby == "behaviors":
                     subject_name, bevavior_code = k.split('þ')
+                    if subject_name == "":
+                        subject_name = "No focal"
                     behav_col = self.behav_color[bevavior_code]
                     self.behaviors.extend([f"{subject_name} - {bevavior_code}"] * len(self.events[k]))
                     self.colors.extend([behav_col] * len(self.events[k]))

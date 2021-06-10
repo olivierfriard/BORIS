@@ -2447,6 +2447,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 self.plot_events.setWindowFlags(Qt.WindowStaysOnTopHint)
                 self.plot_events.setWindowFlags(self.plot_events.windowFlags() & ~Qt.WindowMinimizeButtonHint)
 
+                self.plot_events.groupby = "behaviors"
                 self.plot_events.interval = 60  # self.spectrogram_time_interval
                 self.plot_events.cursor_color = "red"
                 self.plot_events.point_event_plot_duration = POINT_EVENT_PLOT_DURATION
