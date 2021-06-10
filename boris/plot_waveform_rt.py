@@ -67,24 +67,7 @@ class Plot_waveform_RT(QWidget):
         hlayout1.addWidget(button_time_dec)
         layout.addLayout(hlayout1)
 
-        '''
-        hlayout2 = QHBoxLayout()
-        hlayout2.addWidget(QLabel("Frequency interval"))
-        self.sb_freq_min = QSpinBox()
-        self.sb_freq_min.setRange(0, 200000)
-        self.sb_freq_min.setSingleStep(100)
-        self.sb_freq_min.valueChanged.connect(self.frequency_interval_changed)
-        self.sb_freq_max = QSpinBox()
-        self.sb_freq_max.setRange(0, 200000)
-        self.sb_freq_max.setSingleStep(100)
-        self.sb_freq_max.valueChanged.connect(self.frequency_interval_changed)
-        hlayout2.addWidget(self.sb_freq_min)
-        hlayout2.addWidget(self.sb_freq_max)
-        layout.addLayout(hlayout2)
-        '''
-
         self.setLayout(layout)
-
 
         self.installEventFilter(self)
 
@@ -103,6 +86,14 @@ class Plot_waveform_RT(QWidget):
     def get_wav_info(self, wav_file: str):
         """
         read wav file and extract information
+
+        Args:
+            wav_file (str): path of wav file
+
+        Returns:
+            np.array: signal contained in wav file
+            int: frame rate of wav file
+
         """
         try:
             wav = wave.open(wav_file, "r")
@@ -140,13 +131,17 @@ class Plot_waveform_RT(QWidget):
                 "frame_rate": self.frame_rate}
 
 
-    def time_interval_changed(self, action: int):
+    def time_interval_changed(self, action: int) -> None:
         """
         change the time interval for plotting waveform
 
         Args:
             action (int): -1 decrease time interval, +1 increase time interval
+
+        Returns:
+            None
         """
+
         if action == -1 and self.interval <= 5:
             return
         self.interval += (5 * action)

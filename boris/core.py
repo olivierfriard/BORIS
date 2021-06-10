@@ -38,7 +38,6 @@ import urllib.error
 import urllib.parse
 import urllib.request
 from decimal import *
-# getcontext().prec = 3
 from optparse import OptionParser
 import gzip
 
@@ -2351,7 +2350,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
                 self.spectro.setWindowFlags(Qt.WindowStaysOnTopHint)
                 self.spectro.setWindowFlags(self.spectro.windowFlags() & ~Qt.WindowMinimizeButtonHint)
-               
+
 
                 self.spectro.interval = self.spectrogram_time_interval
                 self.spectro.cursor_color = "red"

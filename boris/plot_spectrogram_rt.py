@@ -101,7 +101,16 @@ class Plot_spectrogram_RT(QWidget):
     def get_wav_info(self, wav_file: str):
         """
         read wav file and extract information
+
+        Args:
+            wav_file (str): path of wav file
+
+        Returns:
+            np.array: signal contained in wav file
+            int: frame rate of wav file
+
         """
+
         try:
             wav = wave.open(wav_file, "r")
             frames = wav.readframes(-1)
@@ -119,6 +128,9 @@ class Plot_spectrogram_RT(QWidget):
 
         Args:
             action (int): -1 decrease time interval, +1 increase time interval
+
+        Returns:
+            None
         """
         if action == -1 and self.interval <= 5:
             return

@@ -31,16 +31,6 @@ class Plot_events_RT(QWidget):
         self.cursor_color = "red"
         self.groupby = "behaviors"  # group results by "behaviors" or "modifiers"
 
-        '''
-        self.figure = Figure()
-        self.ax = self.figure.add_subplot(1, 1, 1)
-
-        self.canvas = FigureCanvas(self.figure)
-        layout = QVBoxLayout()
-
-        layout.addWidget(self.canvas)
-        '''
-
         self.figure = Figure()
         self.ax = self.figure.add_subplot(1, 1, 1)
 
