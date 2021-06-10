@@ -33,11 +33,18 @@ Some video tutorials are available:
 https://www.youtube.com/channel/UCo-Jyvzawwp0bRMEor4aLVQ
 
 
+
+
 Bug reports and feature requests
 --------------------------------------
 
 To search for bugs, report them or request a feature, please use the github tracker:
 https://github.com/olivierfriard/BORIS/issues
+
+Please see http://www.boris.unito.it/pages/report_a_bug.html before 
+
+
+
 
 Citing BORIS
 --------------------------------------
