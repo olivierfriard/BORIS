@@ -2442,29 +2442,33 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             else:
                 logging.debug("plot_events not shown")
 
-                self.plot_events = plot_events_rt.Plot_events_RT()
+                try:
+                    self.plot_events = plot_events_rt.Plot_events_RT()
 
-                self.plot_events.setWindowFlags(Qt.WindowStaysOnTopHint)
-                self.plot_events.setWindowFlags(self.plot_events.windowFlags() & ~Qt.WindowMinimizeButtonHint)
+                    self.plot_events.setWindowFlags(Qt.WindowStaysOnTopHint)
+                    self.plot_events.setWindowFlags(self.plot_events.windowFlags() & ~Qt.WindowMinimizeButtonHint)
 
-                self.plot_events.groupby = "behaviors"
-                self.plot_events.interval = 60  # self.spectrogram_time_interval
-                self.plot_events.cursor_color = "red"
-                self.plot_events.point_event_plot_duration = POINT_EVENT_PLOT_DURATION
-                self.plot_events.point_event_plot_color = POINT_EVENT_PLOT_COLOR
+                    self.plot_events.groupby = "behaviors"
+                    self.plot_events.interval = 60  # self.spectrogram_time_interval
+                    self.plot_events.cursor_color = "red"
+                    self.plot_events.point_event_plot_duration = POINT_EVENT_PLOT_DURATION
+                    self.plot_events.point_event_plot_color = POINT_EVENT_PLOT_COLOR
 
-                self.plot_events.state_events_list = utilities.state_behavior_codes(self.pj[ETHOGRAM])
+                    self.plot_events.state_events_list = utilities.state_behavior_codes(self.pj[ETHOGRAM])
 
-                self.plot_events.events_list = self.pj[OBSERVATIONS][self.observationId][EVENTS]
-                self.plot_events.events = self.plot_events.aggregate_events(self.pj[OBSERVATIONS][self.observationId][EVENTS], 0, 60)
+                    self.plot_events.events_list = self.pj[OBSERVATIONS][self.observationId][EVENTS]
+                    self.plot_events.events = self.plot_events.aggregate_events(self.pj[OBSERVATIONS][self.observationId][EVENTS], 0, 60)
 
-                # behavior colors
-                self.plot_events.behav_color = {}
-                for idx, behavior in enumerate(utilities.all_behaviors(self.pj[ETHOGRAM])):
-                    self.plot_events.behav_color[behavior] = BEHAVIORS_PLOT_COLORS[idx]
+                    # behavior colors
+                    self.plot_events.behav_color = {}
+                    for idx, behavior in enumerate(utilities.all_behaviors(self.pj[ETHOGRAM])):
+                        self.plot_events.behav_color[behavior] = BEHAVIORS_PLOT_COLORS[idx]
 
-                self.plot_events.sendEvent.connect(self.signal_from_widget)
-                self.plot_events.show()
+                    self.plot_events.sendEvent.connect(self.signal_from_widget)
+                    self.plot_events.show()
+                except Exception:
+                    raise
+                    dialog.error_message("creation of real-time events plot", sys.exc_info())
 
 
 
@@ -4676,7 +4680,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         if hasattr(self, "plot_events"):
             try:
                 self.plot_events.close()
-                del self.waveform
+                del self.plot_events
             except Exception:
                 pass
 
@@ -4797,7 +4801,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
                 for i, dw in enumerate(self.dw_player):
                     dw.player.quit()
-                    #dw.player.wait_for_shutdown()
                     dw.deleteLater()
 
                 self.dw_player = []
@@ -4805,7 +4808,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 self.playMode = VLC
 
             self.observationId = ""
-
 
             self.statusbar.showMessage("", 0)
 
