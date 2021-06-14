@@ -142,17 +142,19 @@ class Plot_events_RT(QWidget):
             else:  # with modifiers
                 return f"{subject}þ{code}þ{modifier}"
 
+        '''
         print(self.observation_type)
         print(f"{start} - {end}")
         print(events)
         print()
+        '''
 
         try:
             mem_behav = {}
             intervals_behav = {}
 
             for event in events:
-                intervals_behav[group(event[1], event[2], event[3])] = [(-100, -100)]
+                intervals_behav[group(event[1], event[2], event[3])] = [(0, 0)]
 
             for event in events:
 
@@ -181,24 +183,33 @@ class Plot_events_RT(QWidget):
                         intervals_behav[key].append((float(time_), float(time_) + self.point_event_plot_duration * 50))  # point event -> 1 s
 
 
+            '''
             print('pre', intervals_behav)
+            '''
 
             # check if intervals are closed
             for k in mem_behav:
                 if mem_behav[k] is not None:  # interval open
+                    '''
                     print(f"{k} is open at: {mem_behav[k]}")
+                    '''
                     if self.observation_type == "LIVE":
                         intervals_behav[k].append((float(mem_behav[k]), float((end + start) / 2)))  # close interval with current time
+                        '''
                         print(f"closed with {float((end + start) / 2)}")
+                        '''
 
                     elif self.observation_type == "vlc":
 
                         intervals_behav[k].append((float(mem_behav[k]), float(end)))  # close interval with end value
-
+                        '''
                         print(f"closed with {float((end))}")
+                        '''
 
+            '''
             print('post', intervals_behav)
             print('----------------------')
+            '''
             return intervals_behav
 
         except Exception:

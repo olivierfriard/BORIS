@@ -43,7 +43,7 @@ import gzip
 
 import matplotlib
 matplotlib.use("Qt5Agg")
-import matplotlib.pyplot as plt
+#import matplotlib.pyplot as plt
 import matplotlib.transforms as mtransforms
 import numpy as np
 import tablib

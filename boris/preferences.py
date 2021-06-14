@@ -24,7 +24,7 @@ This file is part of BORIS.
 import logging
 import os
 
-from boris.config import (BEHAVIORS_PLOT_COLORS, CANCEL)
+from .config import (BEHAVIORS_PLOT_COLORS, CANCEL)
 from boris.dialog import MessageDialog
 from boris.preferences_ui import Ui_prefDialog
 from PyQt5.QtWidgets import (QDialog, QFileDialog)
