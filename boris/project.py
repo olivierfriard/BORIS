@@ -361,7 +361,7 @@ class projectDialog(QDialog, Ui_dlgProject):
 
                     self.twBehaviors.item(row, behavioursFields["modifiers"]).setText(str(modifiers_dict))
         except Exception:
-            dialog.error_message("convert behaviors keys to lower case", sys.exc_info())
+            dialog.error_message2()
 
 
     def convert_subjects_keys_to_lower_case(self):
@@ -391,7 +391,7 @@ class projectDialog(QDialog, Ui_dlgProject):
                     self.twSubjects.item(row, subjectsFields.index("key")).setText(
                         self.twSubjects.item(row, subjectsFields.index("key")).text().lower())
         except Exception:
-            dialog.error_message("convert subjects keys to lower case", sys.exc_info())
+            dialog.error_message2()
 
 
     def add_behaviors_coding_map(self):
@@ -435,7 +435,7 @@ class projectDialog(QDialog, Ui_dlgProject):
                 codes = ", ".join([bcm["areas"][idx]["code"] for idx in bcm["areas"]])
                 self.twBehavCodingMap.setItem(self.twBehavCodingMap.rowCount() - 1, 1, QTableWidgetItem(codes))
         except Exception:
-            dialog.error_message("add behaviors coding map", sys.exc_info())
+            dialog.error_message2()
 
 
     def remove_behaviors_coding_map(self):
@@ -450,7 +450,7 @@ class projectDialog(QDialog, Ui_dlgProject):
                     del self.pj[BEHAVIORS_CODING_MAP][self.twBehavCodingMap.selectedIndexes()[0].row()]
                     self.twBehavCodingMap.removeRow(self.twBehavCodingMap.selectedIndexes()[0].row())
         except Exception:
-            dialog.error_message(sys._getframe().f_code.co_name, sys.exc_info())
+            dialog.error_message2()
 
 
     def export_ethogram(self):
@@ -493,7 +493,7 @@ class projectDialog(QDialog, Ui_dlgProject):
             if not ok:
                 QMessageBox.critical(None, programName, msg, QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
         except Exception:
-            dialog.error_message(sys._getframe().f_code.co_name, sys.exc_info())
+            dialog.error_message2()
 
 
     def leLabel_changed(self):
@@ -501,7 +501,7 @@ class projectDialog(QDialog, Ui_dlgProject):
             if self.selected_twvariables_row != -1:
                 self.twVariables.item(self.selected_twvariables_row, 0).setText(self.leLabel.text())
         except Exception:
-            dialog.error_message(sys._getframe().f_code.co_name, sys.exc_info())
+            dialog.error_message2()
 
 
     def leDescription_changed(self):
@@ -509,7 +509,7 @@ class projectDialog(QDialog, Ui_dlgProject):
             if self.selected_twvariables_row != -1:
                 self.twVariables.item(self.selected_twvariables_row, 1).setText(self.leDescription.text())
         except Exception:
-            dialog.error_message(sys._getframe().f_code.co_name, sys.exc_info())
+            dialog.error_message2()
 
 
     def lePredefined_changed(self):
@@ -521,7 +521,7 @@ class projectDialog(QDialog, Ui_dlgProject):
                     if not r:
                         QMessageBox.warning(self, f"{programName} - Independent variables error", msg)
         except Exception:
-            dialog.error_message(sys._getframe().f_code.co_name, sys.exc_info())
+            dialog.error_message2()
 
 
     def leSetValues_changed(self):
@@ -529,7 +529,7 @@ class projectDialog(QDialog, Ui_dlgProject):
             if self.selected_twvariables_row != -1:
                 self.twVariables.item(self.selected_twvariables_row, 4).setText(self.leSetValues.text())
         except Exception:
-            dialog.error_message(sys._getframe().f_code.co_name, sys.exc_info())
+            dialog.error_message2()
 
 
     def dte_default_date_changed(self):
@@ -537,7 +537,7 @@ class projectDialog(QDialog, Ui_dlgProject):
             if self.selected_twvariables_row != -1:
                 self.twVariables.item(self.selected_twvariables_row, 3).setText(self.dte_default_date.dateTime().toString(Qt.ISODate))
         except Exception:
-            dialog.error_message(sys._getframe().f_code.co_name, sys.exc_info())
+            dialog.error_message2()
 
 
     def pbBehaviorsCategories_clicked(self):
@@ -573,7 +573,7 @@ class projectDialog(QDialog, Ui_dlgProject):
                             if self.twBehaviors.item(row, behavioursFields["category"]).text() == bc.renamed[0]:
                                 self.twBehaviors.item(row, behavioursFields["category"]).setText(bc.renamed[1])
         except Exception:
-            dialog.error_message(sys._getframe().f_code.co_name, sys.exc_info())
+            dialog.error_message2()
 
 
     def twBehaviors_cellDoubleClicked(self, row, column):
@@ -628,7 +628,7 @@ class projectDialog(QDialog, Ui_dlgProject):
                     if addModifierWindow.exec_():
                         self.twBehaviors.item(row, column).setText(addModifierWindow.getModifiers())
         except Exception:
-            dialog.error_message(sys._getframe().f_code.co_name, sys.exc_info())
+            dialog.error_message2()
 
 
     def behavior_type_doubleclicked(self, row):
@@ -649,7 +649,7 @@ class projectDialog(QDialog, Ui_dlgProject):
 
                 self.behaviorTypeChanged(row)
         except Exception:
-            dialog.error_message(sys._getframe().f_code.co_name, sys.exc_info())
+            dialog.error_message2()
 
 
     def category_doubleclicked(self, row):
@@ -672,7 +672,7 @@ class projectDialog(QDialog, Ui_dlgProject):
                     category = ""
                 self.twBehaviors.item(row, behavioursFields["category"]).setText(category)
         except Exception:
-            dialog.error_message(sys._getframe().f_code.co_name, sys.exc_info())
+            dialog.error_message2()
 
 
     def check_variable_default_value(self, txt, varType):
@@ -721,7 +721,7 @@ class projectDialog(QDialog, Ui_dlgProject):
                         "is not compatible with variable type")
                                    )
         except Exception:
-            dialog.error_message(sys._getframe().f_code.co_name, sys.exc_info())
+            dialog.error_message2()
 
 
     def check_indep_var_config(self):
@@ -758,7 +758,7 @@ class projectDialog(QDialog, Ui_dlgProject):
 
             return True, "OK"
         except Exception:
-            dialog.error_message(sys._getframe().f_code.co_name, sys.exc_info())
+            dialog.error_message2()
 
 
     def cbtype_changed(self):
@@ -772,7 +772,7 @@ class projectDialog(QDialog, Ui_dlgProject):
             self.lePredefined.setVisible(self.cbType.currentText() != TIMESTAMP)
             self.label_4.setVisible(self.cbType.currentText() != TIMESTAMP)
         except Exception:
-            dialog.error_message(sys._getframe().f_code.co_name, sys.exc_info())
+            dialog.error_message2()
 
 
     def cbtype_activated(self):
@@ -797,7 +797,7 @@ class projectDialog(QDialog, Ui_dlgProject):
             if not r:
                 QMessageBox.warning(self, f"{programName} - Independent variables error", msg)
         except Exception:
-            dialog.error_message(sys._getframe().f_code.co_name, sys.exc_info())
+            dialog.error_message2()
 
 
     def pbAddVariable_clicked(self):
@@ -821,7 +821,7 @@ class projectDialog(QDialog, Ui_dlgProject):
 
             self.twVariables_cellClicked(self.twVariables.rowCount() - 1, 0)
         except Exception:
-            dialog.error_message(sys._getframe().f_code.co_name, sys.exc_info())
+            dialog.error_message2()
 
 
     def pbRemoveVariable_clicked(self):
@@ -842,7 +842,7 @@ class projectDialog(QDialog, Ui_dlgProject):
             else:
                 self.twVariables_cellClicked(-1, 0)
         except Exception:
-            dialog.error_message(sys._getframe().f_code.co_name, sys.exc_info())
+            dialog.error_message2()
 
 
     def pbImportVarFromProject_clicked(self):
@@ -996,7 +996,7 @@ class projectDialog(QDialog, Ui_dlgProject):
                                 item.setBackground(QColor(230, 230, 230))
                                 self.twBehaviors.setItem(r, behavioursFields["excluded"], item)
         except Exception:
-            dialog.error_message("exclusion matrix", sys.exc_info())
+            dialog.error_message2()
 
     def pbRemoveAllBehaviors_clicked(self):
 
@@ -1037,7 +1037,7 @@ class projectDialog(QDialog, Ui_dlgProject):
                             self.twBehaviors.removeRow(row_mem[codeToDelete])
 
                 except Exception:
-                    dialog.error_message(sys._getframe().f_code.co_name, sys.exc_info())
+                    dialog.error_message2()
 
 
     def pbImportFromJWatcher_clicked(self):
@@ -1122,7 +1122,7 @@ class projectDialog(QDialog, Ui_dlgProject):
                         item.setBackground(QColor(230, 230, 230))
             self.twBehaviors.scrollToBottom()
         except Exception:
-            dialog.error_message("cloning a behavior", sys.exc_info())
+            dialog.error_message2()
 
 
     def pbRemoveBehavior_clicked(self):
@@ -1166,7 +1166,7 @@ class projectDialog(QDialog, Ui_dlgProject):
                     item.setBackground(QColor(230, 230, 230))
                 self.twBehaviors.setItem(self.twBehaviors.rowCount() - 1, behavioursFields[field_type], item)
         except Exception:
-            dialog.error_message("adding a new behavior", sys.exc_info())
+            dialog.error_message2()
         self.twBehaviors.scrollToBottom()
 
 
@@ -1217,7 +1217,7 @@ class projectDialog(QDialog, Ui_dlgProject):
                 item = QTableWidgetItem("")
                 self.twSubjects.setItem(self.twSubjects.rowCount() - 1, col, item)
         except Exception:
-            dialog.error_message("adding a new subject", sys.exc_info())
+            dialog.error_message2()
         self.twSubjects.scrollToBottom()
 
 
@@ -1256,7 +1256,7 @@ class projectDialog(QDialog, Ui_dlgProject):
 
                     self.twSubjects_cellChanged(0, 0)
         except Exception:
-            dialog.error_message("removing subject", sys.exc_info())
+            dialog.error_message2()
 
 
     def remove_all_subjects(self):
@@ -1305,7 +1305,7 @@ class projectDialog(QDialog, Ui_dlgProject):
                         else:   # remove without asking
                             self.twSubjects.removeRow(row_mem[nameToDelete])
         except Exception:
-            dialog.error_message("removing all subjects", sys.exc_info())
+            dialog.error_message2()
 
 
     def twSubjects_cellChanged(self, row: int, column: int):
@@ -1400,7 +1400,7 @@ class projectDialog(QDialog, Ui_dlgProject):
                     for row in sorted(set(rows_to_delete), reverse=True):
                         self.twObservations.removeRow(row)
         except Exception:
-            dialog.error_message("removing observation", sys.exc_info())
+            dialog.error_message2()
 
 
     def pbCancel_clicked(self):
@@ -1729,7 +1729,7 @@ class projectDialog(QDialog, Ui_dlgProject):
 
             self.row_in_modification = self.tw_converters.selectedIndexes()[0].row()
         except Exception:
-            dialog.error_message("modifying a converter", sys.exc_info())
+            dialog.error_message2()
 
 
     def code_2_func(self, name, code):

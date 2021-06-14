@@ -71,6 +71,24 @@ def error_message_box(task, error_type, error_file_name, error_lineno):
                           ))
 
 
+def error_message_box2(error_traceback):
+    # do NOT use this function directly, use error_message function
+    """
+    show a critical dialog
+
+    """
+    QMessageBox.critical(None, programName,
+                         (f"BORIS version: {version.__version__}<br><br>"
+                          f"<b>An error has occured</b>:<br>"
+                          f"{error_traceback}<br><br>"
+                          "to improve the software please report this problem at:<br>"
+                          '<a href="https://github.com/olivierfriard/BORIS/issues">'
+                          'https://github.com/olivierfriard/BORIS/issues</a><br>'
+                          "or by email (See the About page on the BORIS web site.<br><br>"
+                          "Thank you for your collaboration!"
+                          ))
+
+
 def error_message(task: str, exc_info: tuple) -> None:
     """
     Show details about the error in a message box
@@ -79,6 +97,17 @@ def error_message(task: str, exc_info: tuple) -> None:
     error_type, error_file_name, error_lineno = utilities.error_info(exc_info)
     logging.critical(f"Error during {task}: {error_type} in {error_file_name} at line #{error_lineno}")
     error_message_box(task, error_type, error_file_name, error_lineno)
+
+
+def error_message2() -> None:
+    """
+    Show details about the error in a message box
+    write entry to log as CRITICAL
+    """
+
+    error_traceback = utilities.error_info2()
+    logging.critical(error_traceback)
+    error_message_box2(error_traceback)
 
 
 class Info_widget(QWidget):

@@ -2004,7 +2004,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                                         out, error = p.communicate()
 
         except Exception:
-            dialog.error_message("Export during frame extraction", sys.exc_info())
+            dialog.error_message2()
 
 
     def extract_events(self):
@@ -2263,7 +2263,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                                         out, error = p.communicate()
 
         except Exception:
-            dialog.error_message("Error during subvideo extraction", sys.exc_info())
+            dialog.error_message2()
 
 
     def generate_wav_file_from_media(self):
@@ -2468,7 +2468,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     self.plot_events.show()
                 except Exception:
                     raise
-                    dialog.error_message("creation of real-time events plot", sys.exc_info())
+                    dialog.error_message2()
 
 
 
@@ -2957,7 +2957,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                         self.video_slider.setValue(self.dw_player[0].player.time_pos  / self.dw_player[0].player.duration * (slider_maximum - 1))
                     except Exception:
                         pass
-                        #dialog.error_message("set video slider value", sys.exc_info())
+                        #dialog.error_message2()
 
             else:
                 QMessageBox.warning(self, programName,
@@ -3284,7 +3284,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 self.saveConfigFile()
 
         except Exception:
-            dialog.error_message("Error ", sys.exc_info())
+            dialog.error_message2()
 
 
     def getCurrentMediaByFrame(self, player: str, requiredFrame: int, fps: float):
@@ -4706,7 +4706,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     self.bcm_dict[idx].close()
                 self.bcm_dict[idx] = None
         except Exception:
-            dialog.error_message(f"closing behavior coding map: {idx}", sys.exc_info())
+            dialog.error_message2()
 
     logging.debug("function: close_tool_windows finished")
 
@@ -4834,7 +4834,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.menu_options()
 
         except Exception:
-            dialog.error_message("Close observation", sys.exc_info())
+            dialog.error_message2()
 
 
     def set_recent_projects_menu(self):
@@ -6659,7 +6659,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                                                  )
         if "error" in r:
             if "exception" in r:
-                dialog.error_message("Time budget bar plot", r["exception"])
+                dialog.error_message2()
             else:
                 QMessageBox.warning(self, programName, r.get("message", "Error on time budget bar plot"))
 
@@ -7109,7 +7109,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             del newProjectWindow
 
         except Exception:
-            dialog.error_message("Close observation", sys.exc_info())
+            dialog.error_message2()
 
 
     def new_project_activated(self):
@@ -7163,7 +7163,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             return 1
 
         except Exception:
-            dialog.error_message("save_project_json", sys.exc_info())
+            dialog.error_message2()
 
             self.save_project_json_started = False
             return 2
@@ -7848,10 +7848,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                                             QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
 
                 except Exception:
-                    dialog.error_message("Export textGrid", sys.exc_info())
+                    dialog.error_message2()
 
         except Exception:
-            dialog.error_message("Export textGrid", sys.exc_info())
+            dialog.error_message2()
 
 
     def media_file_info(self):
@@ -8389,7 +8389,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                         break
 
         except Exception:
-            dialog.error_message("editing the event", sys.exc_info())
+            dialog.error_message2()
 
 
     def show_all_events(self):
@@ -8506,7 +8506,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             # del self.bcm_dict[coding_map_name]
             self.bcm_dict[coding_map_name].deleteLater()
         except Exception:
-            dialog.error_message("deleting behavior coding map", sys.exc_info())
+            dialog.error_message2()
     '''
 
 
@@ -8551,6 +8551,15 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         """
         About dialog
         """
+
+        '''
+        try:
+            1/0
+        except Exception:
+            #print(utilities.error_info2())
+            #print( utilities.error_info (  sys.exc_info() ) )
+            dialog.error_message2()
+        '''
 
         '''
         import time
@@ -9081,7 +9090,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     else:
                         self.twEvents.item(row, tw_obs_fields[TYPE]).setText(START)
         except Exception:
-            dialog.error_message("update_events_start_stop", sys.exc_info())
+            dialog.error_message2()
 
 
 
@@ -9118,7 +9127,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                         mem_behav[f"{subject}|{code}|{modifier}"] = 1
 
         except Exception:
-            dialog.error_message("update_events_start_stop", sys.exc_info())
+            dialog.error_message2()
 
 
 
@@ -9319,7 +9328,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
             self.projectChanged = True
         except Exception:
-            dialog.error_message("Event can not be recorded", sys.exc_info())
+            dialog.error_message2()
 
 
     def fill_lwDetailed(self, obs_key, memLaps):
@@ -10572,7 +10581,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     out += f"<b>{fileName}.gv</b> created<br>"
 
         except Exception:
-            dialog.error_message("Error during dot script creation", sys.exc_info())
+            dialog.error_message2()
 
         if out:
             QMessageBox.information(self, programName,
@@ -10616,7 +10625,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     else:
                         out += f"Problem with <b>{fileName}</b><br>"
         except Exception:
-            dialog.error_message("Error during flow diagram creation", sys.exc_info())
+            dialog.error_message2()
 
         if out:
             QMessageBox.information(self, programName, out)

@@ -274,8 +274,7 @@ def export_events_jwatcher(parameters: list,
         return True, ""
 
     except Exception:
-        logging.critical("Error during exporting the events for JWatcher")
-        dialog.error_message("exporting the events for JWatcher", sys.exc_info())
+        dialog.error_message2()
         return False, ""
 
 

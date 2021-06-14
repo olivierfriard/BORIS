@@ -380,7 +380,7 @@ def synthetic_time_budget_bin(pj: dict,
                     break
 
     except Exception:
-        dialog.error_message("synthetic_time_budget_bin", sys.exc_info())
+        dialog.error_message2()
         return (False,
                 tablib.Dataset())
 
@@ -592,7 +592,7 @@ def synthetic_time_budget(pj: dict,
             data_report.append(columns)
 
     except Exception:
-        dialog.error_message("synthetic_time_budget", sys.exc_info())
+        dialog.error_message2()
 
         return (False,
                 msg,
@@ -892,6 +892,6 @@ def time_budget_analysis(ethogram: dict,
         return out_sorted, categories
 
     except Exception:
-        dialog.error_message("time_budget", sys.exc_info())
+        dialog.error_message2()
 
         return [], []
