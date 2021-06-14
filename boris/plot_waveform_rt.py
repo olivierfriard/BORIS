@@ -28,6 +28,7 @@ matplotlib.use("Qt5Agg")
 import numpy as np
 from PyQt5.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, QPushButton, QLabel)
 from PyQt5.QtCore import pyqtSignal, QEvent
+from PyQt5 import Qt
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.figure import Figure
 import matplotlib.ticker as mticker
@@ -59,8 +60,8 @@ class Plot_waveform_RT(QWidget):
 
         hlayout1 = QHBoxLayout()
         hlayout1.addWidget(QLabel("Time interval"))
-        hlayout1.addWidget(QPushButton("+", self, clicked=lambda: self.time_interval_changed(1)))
-        hlayout1.addWidget(QPushButton("-", self, clicked=lambda: self.time_interval_changed(-1)))
+        hlayout1.addWidget(QPushButton("+", self, clicked=lambda: self.time_interval_changed(1), focusPolicy=Qt.Qt.NoFocus))
+        hlayout1.addWidget(QPushButton("-", self, clicked=lambda: self.time_interval_changed(-1), focusPolicy=Qt.Qt.NoFocus))
         layout.addLayout(hlayout1)
 
         self.setLayout(layout)

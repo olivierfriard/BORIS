@@ -2380,6 +2380,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     if self.playerType == VLC and self.playMode == MPV and not flag_paused:
                         self.play_video()
 
+
         if plot_type == "waveform":
             if hasattr(self, "waveform"):
                 self.waveform.show()
@@ -2431,6 +2432,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 self.waveform.sendEvent.connect(self.signal_from_widget)
                 self.waveform.show()
 
+                self.plot_timer_out()
+
                 if warning:
                     if self.playerType == VLC and self.playMode == MPV and not flag_paused:
                         self.play_video()
@@ -2451,6 +2454,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     self.plot_events.groupby = "behaviors"
                     self.plot_events.interval = 60  # self.spectrogram_time_interval
                     self.plot_events.cursor_color = "red"
+                    self.plot_events.observation_type  = self.playerType
+
                     self.plot_events.point_event_plot_duration = POINT_EVENT_PLOT_DURATION
                     self.plot_events.point_event_plot_color = POINT_EVENT_PLOT_COLOR
 
@@ -2465,9 +2470,12 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                         self.plot_events.behav_color[behavior] = BEHAVIORS_PLOT_COLORS[idx]
 
                     self.plot_events.sendEvent.connect(self.signal_from_widget)
+
                     self.plot_events.show()
+
+                    self.plot_timer_out()
+
                 except Exception:
-                    raise
                     dialog.error_message2()
 
 
@@ -3350,7 +3358,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                                     for point in element[2]:
                                         polygon.append(QPoint(point[0], point[1]))
                                     painter = QPainter()
-                                    painter.begin(self.dw_player[i].frame_viewer.pixmap())
+                                    painter.begin(self.dw_player[idx].frame_viewer.pixmap())
                                     painter.setPen(QColor(elementsColor))
                                     painter.drawPolygon(polygon)
                                     painter.end()
@@ -10785,7 +10793,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
             self.lb_player_status.clear()
 
-            # self.timer.start(VLC_TIMER_OUT)
             if self.pj[OBSERVATIONS][self.observationId].get(VISUALIZE_WAVEFORM, False) \
                 or self.pj[OBSERVATIONS][self.observationId].get(VISUALIZE_SPECTROGRAM, False):
                     self.plot_timer.start()
