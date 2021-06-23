@@ -688,7 +688,9 @@ class Observation(QDialog, Ui_Form):
                 self.mediaHasAudio[file_path] = r["has_audio"]
                 self.add_media_to_listview(file_path)
                 return True, ""
+
             else:
+
                 return False, "duration not available"
 
 

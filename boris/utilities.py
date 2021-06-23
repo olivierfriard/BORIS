@@ -27,6 +27,7 @@ import datetime
 import hashlib
 import logging
 import math
+import time
 import os
 import pathlib
 import re
@@ -45,6 +46,7 @@ from PyQt5.QtWidgets import *
 
 from boris.config import *
 
+from . import vlc
 
 def error_info(exc_info: tuple) -> tuple:
     """
@@ -1196,8 +1198,21 @@ def accurate_media_analysis(ffmpeg_bin, file_name):
         hasAudio = False
 
     if duration == 0 or bitrate == -1:
-    #if not hasVideo and not hasAudio:
-        return {"error": "This file does not seem to be a media file"}
+
+        instance = vlc.Instance()
+        media = instance.media_new(pathlib.Path(file_name).as_uri())
+        media.parse()
+
+        mediaplayer = instance.media_player_new()
+        mediaplayer.set_media(media)
+        mediaplayer.play()
+        time.sleep(3)
+        mediaplayer.stop()
+
+        duration = Decimal(media.get_duration() / 1000)
+
+        if not duration:
+            return {"error": "This file does not seem to be a media file"}
 
     return {"frames_number": int(fps * duration),
             "duration_ms": duration * 1000,

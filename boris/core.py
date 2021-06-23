@@ -430,7 +430,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     def __init__(self, ffmpeg_bin, parent=None):
 
         # 2020-03-18
-        print("init")
         from boris import vlc
 
         if vlc.dll is None:
@@ -8515,6 +8514,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 if not (str(i + 1) in self.pj[OBSERVATIONS][self.observationId][FILE] and
                         self.pj[OBSERVATIONS][self.observationId][FILE][str(i + 1)]):
                     continue
+
                 media = player.mediaplayer.get_media()
 
                 logging.info(f"State: {player.mediaplayer.get_state()}")
