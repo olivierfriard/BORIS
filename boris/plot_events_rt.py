@@ -234,6 +234,7 @@ class Plot_events_RT(QWidget):
                                             )
 
         if not force_plot and current_time == self.time_mem:
+            print("not force and current_time == self.time_mem")
             return
 
         self.time_mem = current_time

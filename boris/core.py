@@ -805,7 +805,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         # subjects
 
-        # timer for spectrogram visualization
+        # timer for plot visualization
         self.plot_timer = QTimer(self)
         # TODO check value of interval
         self.plot_timer.setInterval(SPECTRO_TIMER)
@@ -2271,6 +2271,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         extract wav from all media files loaded in player #1
         """
 
+        logging.debug("function: create wav file from media")
+
         # check temp dir for images from ffmpeg
         tmp_dir = self.ffmpeg_cache_dir if self.ffmpeg_cache_dir and os.path.isdir(self.ffmpeg_cache_dir) else tempfile.gettempdir()
 
@@ -2321,7 +2323,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             if hasattr(self, "spectro"):
                 self.spectro.show()
             else:
-                logging.debug("spectro show not OK")
+                logging.debug("create spectrogram plot")
 
                 # remember if player paused
                 if warning:
@@ -2376,6 +2378,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 self.spectro.sb_freq_max.setValue(int(self.spectro.frame_rate / 2))
                 self.spectro.show()
 
+                self.plot_timer_out()
+
                 if warning:
                     if self.playerType == VLC and self.playMode == MPV and not flag_paused:
                         self.play_video()
@@ -2385,7 +2389,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             if hasattr(self, "waveform"):
                 self.waveform.show()
             else:
-                logging.debug("waveform not shown")
+                logging.debug("create waveform plot")
 
                 # remember if player paused
                 if warning:
@@ -2432,7 +2436,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 self.waveform.sendEvent.connect(self.signal_from_widget)
                 self.waveform.show()
 
-                self.plot_timer_out()
+                self.plot_timer.start()
 
                 if warning:
                     if self.playerType == VLC and self.playMode == MPV and not flag_paused:
@@ -2443,7 +2447,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             if hasattr(self, "plot_events"):
                 self.plot_events.show()
             else:
-                logging.debug("plot_events not shown")
+                logging.debug("create plot events")
 
                 try:
                     self.plot_events = plot_events_rt.Plot_events_RT()
@@ -2473,7 +2477,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
                     self.plot_events.show()
 
-                    self.plot_timer_out()
+                    # self.plot_timer_out()
+                    self.plot_timer.start()
 
                 except Exception:
                     dialog.error_message2()
@@ -2725,6 +2730,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             if dialog.MessageDialog(programName,
                                     "The current observation will be closed. Do you want to continue?",
                                     [YES, NO]) == NO:
+                # restore plots
                 self.show_data_files()
                 return
             else:
@@ -3741,7 +3747,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         self.lbSpeed.setText(f"Player rate: x{self.play_rate:.3f}")
 
-
         # spectrogram
         if (VISUALIZE_SPECTROGRAM in self.pj[OBSERVATIONS][self.observationId] and
                 self.pj[OBSERVATIONS][self.observationId][VISUALIZE_SPECTROGRAM]):
@@ -3757,34 +3762,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
             self.show_plot_widget("spectrogram", warning=False)
 
-            '''
-            self.spectro = plot_spectrogram_rt.Plot_spectrogram_RT()
-
-            self.spectro.setWindowFlags(Qt.WindowStaysOnTopHint)
-
-            self.spectro.interval = self.spectrogram_time_interval
-            self.spectro.cursor_color = "red"
-            try:
-                self.spectro.spectro_color_map = matplotlib.pyplot.get_cmap(self.spectrogram_color_map)
-            except ValueError:
-                self.spectro.spectro_color_map = matplotlib.pyplot.get_cmap("viridis")
-
-            r = self.spectro.load_wav(str(wav_file_path))
-            if "error" in r:
-                logging.warning("spectro_load_wav error: {}".format(r["error"]))
-                QMessageBox.warning(self, programName, "Error in spectrogram generation: " + r["error"],
-                                    QMessageBox.Ok | QMessageBox.Default,
-                                    QMessageBox.NoButton)
-                del self.spectro
-                return
-
-            self.spectro.sendEvent.connect(self.signal_from_widget)
-            self.spectro.sb_freq_min.setValue(0)
-            self.spectro.sb_freq_max.setValue(int(self.spectro.frame_rate / 2))
-            self.spectro.show()
-            self.plot_timer_out()
-            '''
-
         # waveform
         if (VISUALIZE_WAVEFORM in self.pj[OBSERVATIONS][self.observationId] and
                 self.pj[OBSERVATIONS][self.observationId][VISUALIZE_WAVEFORM]):
@@ -3799,28 +3776,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 self.generate_wav_file_from_media()
 
             self.show_plot_widget("waveform", warning=False)
-            '''
-            self.waveform = plot_waveform_rt.Plot_waveform_RT()
-
-            self.waveform.setWindowFlags(Qt.WindowStaysOnTopHint)
-
-            # TODO fix time interval
-            self.waveform.interval = self.spectrogram_time_interval
-            self.waveform.cursor_color = "red"
-
-            r = self.waveform.load_wav(str(wav_file_path))
-            if "error" in r:
-                logging.warning("waveform_load_wav error: {}".format(r["error"]))
-                QMessageBox.warning(self, programName, "Error in waveform generation: " + r["error"],
-                                    QMessageBox.Ok | QMessageBox.Default,
-                                    QMessageBox.NoButton)
-                del self.waveform
-                return
-
-            self.waveform.sendEvent.connect(self.signal_from_widget)
-            self.waveform.show()
-            self.plot_timer_out()
-            '''
 
 
         # external data plot
@@ -4226,7 +4181,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         observationWindow.ffmpeg_bin = self.ffmpeg_bin
         observationWindow.project_file_name = self.projectFileName
 
-        # add indepvariables
+        # add independent variables
         if INDEPENDENT_VARIABLES in self.pj:
 
             observationWindow.twIndepVariables.setRowCount(0)
@@ -10793,9 +10748,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
             self.lb_player_status.clear()
 
-            if self.pj[OBSERVATIONS][self.observationId].get(VISUALIZE_WAVEFORM, False) \
-                or self.pj[OBSERVATIONS][self.observationId].get(VISUALIZE_SPECTROGRAM, False):
-                    self.plot_timer.start()
+            #if self.pj[OBSERVATIONS][self.observationId].get(VISUALIZE_WAVEFORM, False) \
+            #    or self.pj[OBSERVATIONS][self.observationId].get(VISUALIZE_SPECTROGRAM, False):
+
+            self.plot_timer.start()
 
             # start all timer for plotting data
             for data_timer in self.ext_data_timer_list:
@@ -10823,10 +10779,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
                     if not player.player.pause:
 
-                        # self.timer.stop()
                         self.plot_timer.stop()
                         # stop all timer for plotting data
-
                         for data_timer in self.ext_data_timer_list:
                             data_timer.stop()
 
@@ -10834,6 +10788,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
             self.lb_player_status.setText("Player paused")
 
+            # adjust positions of plots
             self.plot_timer_out()
             for idx in self.plot_data:
                 self.timer_plot_data_out(self.plot_data[idx])

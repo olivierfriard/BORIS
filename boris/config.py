@@ -248,7 +248,7 @@ SUBJECT_NAME_FIELD_IDX = 1
 
 
 # indexes of project window
-MEDIA_TAB_IDX = 1
+MEDIA_TAB_IDX = 0
 LIVE_TAB_IDX = 1
 
 LIVE = "LIVE"
