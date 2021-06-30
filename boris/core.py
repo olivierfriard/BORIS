@@ -2960,7 +2960,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                             self.dw_player[player].player.playlist_prev()
                             time.sleep(1)
 
-                        self.dw_player[player].player.seek(round(new_time - sum(self.dw_player[player].media_durations[0:self.dw_player[player].player.playlist_pos]) / 1000, 3),
+                        
+                        self.dw_player[player].player.seek(round(float(new_time) - sum(self.dw_player[player].media_durations[0:self.dw_player[player].player.playlist_pos]) / 1000, 3),
                                                            'absolute+exact')
 
                         break
