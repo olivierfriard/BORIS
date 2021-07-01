@@ -44,7 +44,7 @@ class Plot_spectrogram_RT(QWidget):
         try:
             wav = wave.open(wav_file, "r")
             frames = wav.readframes(-1)
-            sound_info = np.fromstring(frames, "Int16")
+            sound_info = np.fromstring(frames, dtype=np.int16)
             frame_rate = wav.getframerate()
             wav.close()
             return sound_info, frame_rate

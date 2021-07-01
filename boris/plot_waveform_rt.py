@@ -47,7 +47,7 @@ class Plot_waveform_RT(QWidget):
         try:
             wav = wave.open(wav_file, "r")
             frames = wav.readframes(-1)
-            signal = np.fromstring(frames, "Int16")
+            signal = np.fromstring(frames, dtype=np.int16)
             frame_rate = wav.getframerate()
             wav.close()
             return signal, frame_rate
