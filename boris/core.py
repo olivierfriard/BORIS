@@ -1746,7 +1746,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         allow user to:
             filter behaviors in ethogram widget
             or
-            select behaviors to remove from the total time 
+            select behaviors to remove from the total time
 
         Args:
             title (str): title of dialog box
@@ -3004,8 +3004,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.hide_data_files()
             if dialog.MessageDialog(programName, "The current observation will be closed. Do you want to continue?",
                                     [YES, NO]) == NO:
-                
-                self.show_data_files()                                    
+
+                self.show_data_files()
                 return
             else:
                 self.close_observation()
@@ -4818,7 +4818,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             if dialog.MessageDialog(programName, "The current observation will be closed. Do you want to continue?",
                                     [YES, NO]) == NO:
 
-                # show data plot 
+                # show data plot
                 self.show_data_files()
                 return
             else:
@@ -4990,7 +4990,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 # sampling time
                 observationWindow.sbScanSampling.setValue(self.pj[OBSERVATIONS][obsId].get(SCAN_SAMPLING_TIME, 0))
                 # start from current time
-                observationWindow.cb_start_from_current_time.setChecked(self.pj[OBSERVATIONS][obsId].get(START_FROM_CURRENT_TIME, False) 
+                observationWindow.cb_start_from_current_time.setChecked(self.pj[OBSERVATIONS][obsId].get(START_FROM_CURRENT_TIME, False)
                                                                         or self.pj[OBSERVATIONS][obsId].get(START_FROM_CURRENT_EPOCH_TIME, False))
                 # day/epoch time
                 observationWindow.rb_day_time.setChecked(self.pj[OBSERVATIONS][obsId].get(START_FROM_CURRENT_TIME, False))
@@ -5155,9 +5155,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
             if self.pj[OBSERVATIONS][new_obs_id][TYPE] in [LIVE]:
                 self.pj[OBSERVATIONS][new_obs_id][SCAN_SAMPLING_TIME] = observationWindow.sbScanSampling.value()
-                self.pj[OBSERVATIONS][new_obs_id][START_FROM_CURRENT_TIME] = (observationWindow.cb_start_from_current_time.isChecked() 
+                self.pj[OBSERVATIONS][new_obs_id][START_FROM_CURRENT_TIME] = (observationWindow.cb_start_from_current_time.isChecked()
                                                                               and observationWindow.rb_day_time.isChecked())
-                self.pj[OBSERVATIONS][new_obs_id][START_FROM_CURRENT_EPOCH_TIME] = (observationWindow.cb_start_from_current_time.isChecked() 
+                self.pj[OBSERVATIONS][new_obs_id][START_FROM_CURRENT_EPOCH_TIME] = (observationWindow.cb_start_from_current_time.isChecked()
                                                                               and observationWindow.rb_epoch_time.isChecked())
 
             # media file
@@ -9296,7 +9296,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         programs_versions = ["VLC media player"]
         from boris.vlc import libvlc_get_version, plugin_path
         programs_versions.append(f"version {bytes_to_str(libvlc_get_version())}")
-        
+
         #if plugin_path:
         programs_versions.append(f"VLC plugin path: {plugin_path}")
 
@@ -10916,12 +10916,16 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         cb = QApplication.clipboard()
         cb_text = cb.text()
+
         cb_text_splitted = cb_text.split("\n")
+
         length = []
         content = []
-        for l in cb_text_splitted:
-            length.append(len(l.split("\t")))
-            content.append(l.split("\t"))
+        for row in cb_text_splitted:
+            if row:  # skip if row is empty
+                length.append(len(row.split("\t")))
+                content.append(row.split("\t"))
+
         if set(length) != set([5]):
             QMessageBox.warning(self, programName, ("The clipboard does not contain events!\n"
                                                     "Events must be organized in 5 columns separated by TAB character"))

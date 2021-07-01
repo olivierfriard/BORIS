@@ -143,6 +143,7 @@ class Plot_spectrogram_RT(QWidget):
 
         try:
             self.sound_info, self.frame_rate = self.get_wav_info(wav_file_path)
+            print(self.sound_info)
             if not self.frame_rate:
                 return {"error": f"unknown format for file {wav_file_path}"}
         except FileNotFoundError:
