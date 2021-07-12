@@ -923,20 +923,27 @@ def accurate_media_analysis(ffmpeg_bin:str, file_name:str) -> dict:
 
     rows = error.split("\n")
 
+    # check if file found and if invalid data found
+    for row in rows:
+        if "No such file or directory" in row:
+            return {"error": "No such file or directory"}
+        if "Invalid data found when processing input" in row:
+            return {"error": "This file does not seem to be a media file"}
+
     # video duration
     try:
-        for r in rows:
-            if "Duration" in r:
-                duration = time2seconds(r.split("Duration: ")[1].split(",")[0].strip())
+        for row in rows:
+            if "Duration" in row:
+                duration = time2seconds(row.split("Duration: ")[1].split(",")[0].strip())
                 break
     except Exception:
         duration = 0
 
     # bitrate
     try:
-        for r in rows:
-            if "bitrate:" in r:
-                re_results = re.search("bitrate: (.{1,10}) kb", r, re.IGNORECASE)
+        for row in rows:
+            if "bitrate:" in row:
+                re_results = re.search("bitrate: (.{1,10}) kb", row, re.IGNORECASE)
                 if re_results:
                     bitrate = int(re_results.group(1).strip())
                 break
@@ -981,8 +988,8 @@ def accurate_media_analysis(ffmpeg_bin:str, file_name:str) -> dict:
     except Exception:
         hasAudio = False
 
-    if duration == 0 or bitrate == -1:
-    #if not hasVideo and not hasAudio:
+    #if duration == 0 or bitrate == -1:
+    if not hasVideo and not hasAudio:
         return {"error": "This file does not seem to be a media file"}
 
     return {"frames_number": int(fps * duration),
