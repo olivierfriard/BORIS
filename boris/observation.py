@@ -477,7 +477,7 @@ class Observation(QDialog, Ui_Form):
                     media_file_path = project_functions.media_full_path(self.twVideo1.item(row, MEDIA_FILE_PATH_IDX).text(),
                                                                         self.project_path)
                     if self.twVideo1.item(row, HAS_AUDIO_IDX).text() == "False":
-                        QMessageBox.critical(self, programName, f"The media file {media_file_path} do not seem to have audio")
+                        QMessageBox.critical(self, programName, f"The media file {media_file_path} does not seem to have audio")
                         flag_wav_produced = False
                         break
 
