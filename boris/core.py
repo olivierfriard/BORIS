@@ -4318,6 +4318,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     logging.debug("media_info key not found")
 
                     r = utilities.accurate_media_analysis(self.ffmpeg_bin, media_full_path)
+
                     if "error" not in r:
                         if MEDIA_INFO not in self.pj[OBSERVATIONS][self.observationId]:
                             self.pj[OBSERVATIONS][self.observationId][MEDIA_INFO] = {LENGTH: {}, FPS: {}}
@@ -4325,6 +4326,23 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                                 self.pj[OBSERVATIONS][self.observationId][MEDIA_INFO][LENGTH] = {}
                             if FPS not in self.pj[OBSERVATIONS][self.observationId][MEDIA_INFO]:
                                 self.pj[OBSERVATIONS][self.observationId][MEDIA_INFO][FPS] = {}
+
+                        # check if duration not found
+                        '''
+                        if r["duration"] == 0:
+
+                            instance = vlc.Instance()
+                            media = instance.media_new(pathlib.Path(media_full_path).as_uri())
+                            media.parse()
+
+                            mediaplayer = instance.media_player_new()
+                            mediaplayer.set_media(media)
+                            mediaplayer.play()
+                            time.sleep(3)
+                            mediaplayer.stop()
+
+                            r["duration"] = Decimal(media.get_duration() / 1000)
+                        '''
 
                         self.pj[OBSERVATIONS][self.observationId][MEDIA_INFO][LENGTH][mediaFile] = r["duration"]
                         self.pj[OBSERVATIONS][self.observationId][MEDIA_INFO][FPS][mediaFile] = r["fps"]

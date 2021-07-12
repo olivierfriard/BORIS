@@ -46,7 +46,6 @@ from PyQt5.QtWidgets import *
 
 from boris.config import *
 
-from . import vlc
 
 def error_info(exc_info: tuple) -> tuple:
     """
@@ -1138,6 +1137,11 @@ def accurate_media_analysis(ffmpeg_bin, file_name):
         return {"error": "Error reading file"}
 
     rows = error.split("\n")
+    for row in rows:
+        if "No such file or directory" in row:
+            return {"error": "No such file or directory"}
+        if "Invalid data found when processing input" in row:
+            return {"error": "This file does not seem to be a media file"}
 
     # video duration
     try:
@@ -1197,8 +1201,9 @@ def accurate_media_analysis(ffmpeg_bin, file_name):
     except Exception:
         hasAudio = False
 
-    if duration == 0 or bitrate == -1:
+    if duration == 0:
 
+        from . import vlc
         instance = vlc.Instance()
         media = instance.media_new(pathlib.Path(file_name).as_uri())
         media.parse()

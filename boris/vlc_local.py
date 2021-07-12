@@ -40,15 +40,17 @@ def find_local_libvlc():
 
     if sys.platform.startswith("win"):
         
+        if sys.argv[0] == "-m":
+            vlc_dll_path = pathlib.Path(os.getcwd()) / "Lib"  / "site-packages" / "boris" / "misc" / "libvlc.dll"
+
         if sys.argv[0].endswith("start_boris.py"):
             vlc_dll_path = pathlib.Path(sys.argv[0]).resolve().parent / "boris" / "misc" / "libvlc.dll"
 
         if sys.argv[0].endswith("__main__.py"):
             vlc_dll_path = pathlib.Path(sys.argv[0]).resolve().parent / "misc" / "libvlc.dll"
 
-        print(f"vlc_dll_path: {vlc_dll_path}")
         if not vlc_dll_path.is_file():
-            print("The vlc dll was not found!")
+            print("The VLC dll path was not found!")
             return dll, plugin_path
 
         dll = ctypes.CDLL(str(vlc_dll_path))
