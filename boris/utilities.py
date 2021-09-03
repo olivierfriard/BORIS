@@ -624,21 +624,21 @@ def distance(p1, p2):
     return ((x1 - x2) ** 2 + (y1 - y2) ** 2) ** 0.5
 
 
-def angle(p1, p2, p3):
+def angle(vertex: tuple, side1: tuple, side2: tuple) -> float:
     """
-    angle between 3 points (p1 must be the vertex)
+    Determine the angle between 3 points (p1 must be the vertex)
     return angle in degree
 
     Args:
-        p1 (tuple): vertex
-        p2 (tuple): side 1
-        p3 (tuple): side 2
+        vertex (tuple): vertex
+        side1 (tuple): side 1
+        side2 (tuple): side 2
 
     Returns:
         float: angle between side1 - vertex - side2
     """
     return math.acos(
-        (distance(p1, p2) ** 2 + distance(p1, p3)**2 - distance(p2, p3)**2) / (2 * distance(p1, p2) * distance(p1, p3))) / math.pi * 180
+        (distance(vertex, side1) ** 2 + distance(vertex, side2)**2 - distance(side1, side2)**2) / (2 * distance(vertex, side1) * distance(vertex, side2))) / math.pi * 180
 
 
 def mem_info():

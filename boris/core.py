@@ -307,6 +307,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
     measurement_w = None
     memPoints = []   # memory of clicked points for measurement tool
+    memPoints_video = []   # memory of clicked points for measurement tool
 
     behaviouralStringsSeparator = "|"
 
@@ -2960,7 +2961,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                             self.dw_player[player].player.playlist_prev()
                             time.sleep(1)
 
-                        
+
                         self.dw_player[player].player.seek(round(float(new_time) - sum(self.dw_player[player].media_durations[0:self.dw_player[player].player.playlist_pos]) / 1000, 3),
                                                            'absolute+exact')
 
@@ -3388,6 +3389,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         """
 
         def close_measurement_widget():
+
+            print("close measurement widget")
+
             self.geometric_measurements_mode = False
             for n_player, dw in enumerate(self.dw_player):
                 dw.frame_viewer.clear()
@@ -3396,26 +3400,27 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.measurement_w.close()
             self.menu_options()
 
+        ''' to be deleted 2021-09-03
         def clear_measurements():
-            '''
-            if self.FFmpegGlobalFrame > 1:
-                self.FFmpegGlobalFrame -= 1
-            '''
             pass
+        '''
 
         self.geometric_measurements_mode = True
+        self.pause_video()
+
         self.menu_options()
 
         self.measurement_w = measurement_widget.wgMeasurement()
         self.measurement_w.draw_mem = {}
         self.measurement_w.setWindowFlags(Qt.WindowStaysOnTopHint)
         self.measurement_w.closeSignal.connect(close_measurement_widget)
+        ''' to be deleted 2021-09-03
         self.measurement_w.clearSignal.connect(clear_measurements)
+        '''
         self.measurement_w.show()
 
-
         for n_player, dw in enumerate(self.dw_player):
-            dw.setWindowTitle("geometric measurements")
+            dw.setWindowTitle("Geometric measurements")
             dw.stack.setCurrentIndex(1)
             self.extract_frame(dw)
 
@@ -3450,7 +3455,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
     def image_clicked(self, n_player, event):
         """
-        geometric measurements on image
+        Geometric measurements on image
 
         Args:
             n_player (int): id of clicked player
@@ -3472,6 +3477,16 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             x = int(x - (self.dw_player[n_player].frame_viewer.width() - self.dw_player[n_player].frame_viewer.pixmap().width()) / 2)
             y = int(y - (self.dw_player[n_player].frame_viewer.height() - self.dw_player[n_player].frame_viewer.pixmap().height()) / 2)
 
+            # convert pixmap coordinates in video coordinates
+            x_video = round((x / self.dw_player[n_player].frame_viewer.pixmap().width()) * self.dw_player[n_player].player.width)
+            y_video = round((y / self.dw_player[n_player].frame_viewer.pixmap().height()) * self.dw_player[n_player].player.height)
+
+            if not (0 <= x <= self.dw_player[n_player].frame_viewer.pixmap().width() and 0 <= y <= self.dw_player[n_player].frame_viewer.pixmap().height()):
+                self.measurement_w.status_lb.setText("<b>The click is outside the video area!</b>")
+                return
+
+            self.measurement_w.status_lb.clear()
+
             # point
             if self.measurement_w.rbPoint.isChecked():
                 if event.button() == 1:   # left
@@ -3482,13 +3497,14 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                         self.measurement_w.draw_mem[current_frame] = [[n_player, "point", x, y]]
 
                     self.measurement_w.pte.appendPlainText((f"Time: {self.getLaps():.3f}\tPlayer: {n_player + 1}\t"
-                                                            f"Frame: {current_frame}\tPoint: {x},{y}"))
+                                                            f"Frame: {current_frame}\tPoint: {x_video},{y_video}"))
 
             # distance
-            if self.measurement_w.rbDistance.isChecked():
+            elif self.measurement_w.rbDistance.isChecked():
                 if event.button() == 1:   # left
                     self.draw_point(x, y, ACTIVE_MEASUREMENTS_COLOR, n_player)
                     self.memx, self.memy = x, y
+                    self.memx_video, self.memy_video = x_video, y_video
 
                 if event.button() == 2 and self.memx != -1 and self.memy != -1:
                     self.draw_point(x, y, ACTIVE_MEASUREMENTS_COLOR, n_player)
@@ -3499,21 +3515,21 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     else:
                         self.measurement_w.draw_mem[current_frame] = [[n_player, "line", self.memx, self.memy, x, y]]
 
-                    d = ((x - self.memx) ** 2 + (y - self.memy) ** 2) ** 0.5
+                    distance = ((x_video - self.memx_video) ** 2 + (y_video - self.memy_video) ** 2) ** 0.5
                     try:
-                        d = d / float(self.measurement_w.lePx.text()) * float(self.measurement_w.leRef.text())
+                        distance = distance / float(self.measurement_w.lePx.text()) * float(self.measurement_w.leRef.text())
                     except Exception:
                         QMessageBox.critical(self, programName,
                                              "Check reference and pixel values! Values must be numeric.",
                                              QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
 
                     self.measurement_w.pte.appendPlainText((f"Time: {self.getLaps()}\tPlayer: {n_player + 1}\t"
-                                                            f"Frame: {current_frame}\tDistance: {round(d, 1)}"))
+                                                            f"Frame: {current_frame}\tDistance: {round(distance, 1)}"))
                     self.measurement_w.flagSaved = False
                     self.memx, self.memy = -1, -1
 
             # angle 1st clic -> vertex
-            if self.measurement_w.rbAngle.isChecked():
+            elif self.measurement_w.rbAngle.isChecked():
                 if event.button() == 1:   # left for vertex
                     self.draw_point(x, y, ACTIVE_MEASUREMENTS_COLOR, n_player)
                     self.memPoints = [(x, y)]
@@ -3528,7 +3544,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                         self.measurement_w.pte.appendPlainText(
                             (f"Time: {self.getLaps()}\tPlayer: {n_player + 1}\t"
                              f"Frame: {current_frame}\t"
-                             f"Angle: {round(angle(self.memPoints[0], self.memPoints[1], self.memPoints[2]), 1)}"))
+                             f"Angle: {round(utilities.angle(self.memPoints[0], self.memPoints[1], self.memPoints[2]), 1)}"))
                         self.measurement_w.flagSaved = False
                         if current_frame in self.measurement_w.draw_mem:
                             self.measurement_w.draw_mem[current_frame].append([n_player, "angle", self.memPoints])
@@ -3538,36 +3554,42 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                         self.memPoints = []
 
             # Area
-            if self.measurement_w.rbArea.isChecked():
+            elif self.measurement_w.rbArea.isChecked():
                 if event.button() == 1:   # left
                     self.draw_point(x, y, ACTIVE_MEASUREMENTS_COLOR)
                     if len(self.memPoints):
                         self.draw_line(self.memPoints[-1][0], self.memPoints[-1][1], x, y, ACTIVE_MEASUREMENTS_COLOR, n_player)
                     self.memPoints.append((x, y))
+                    self.memPoints_video.append((x_video, y_video))
 
                 if event.button() == 2 and len(self.memPoints) >= 2:
                     self.draw_point(x, y, ACTIVE_MEASUREMENTS_COLOR, n_player)
                     self.draw_line(self.memPoints[-1][0], self.memPoints[-1][1], x, y, ACTIVE_MEASUREMENTS_COLOR, n_player)
                     self.memPoints.append((x, y))
+                    self.memPoints_video.append((x_video, y_video))
+
                     # close polygon
                     self.draw_line(self.memPoints[-1][0], self.memPoints[-1][1],
                                    self.memPoints[0][0], self.memPoints[0][1], ACTIVE_MEASUREMENTS_COLOR, n_player)
-                    a = polygon_area(self.memPoints)
+                    area = polygon_area(self.memPoints_video)
 
                     if current_frame in self.measurement_w.draw_mem:
                         self.measurement_w.draw_mem[current_frame].append([n_player, "polygon", self.memPoints])
                     else:
                         self.measurement_w.draw_mem[current_frame] = [[n_player, "polygon", self.memPoints]]
                     try:
-                        a = a / (float(self.measurement_w.lePx.text())**2) * float(self.measurement_w.leRef.text())**2
+                        area = area / (float(self.measurement_w.lePx.text())**2) * float(self.measurement_w.leRef.text())**2
                     except Exception:
                         QMessageBox.critical(self, programName,
                                              "Check reference and pixel values! Values must be numeric.",
                                              QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
 
                     self.measurement_w.pte.appendPlainText((f"Time: {self.getLaps()}\tPlayer: {n_player + 1}\t"
-                                                            f"Frame: {current_frame}\tArea: {round(a, 1)}"))
-                    self.memPoints = []
+                                                            f"Frame: {current_frame}\tArea: {round(area, 1)}"))
+                    self.memPoints, self.memPoints_video = [], []
+
+            else:
+                self.measurement_w.status_lb.setText("<b>Choose a measurement type!</b>")
 
         else:  # no measurements
             QMessageBox.warning(self, programName,

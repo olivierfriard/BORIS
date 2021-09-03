@@ -22,10 +22,12 @@ This file is part of BORIS.
 
 import logging
 
-from PyQt5.QtCore import *
-from PyQt5.QtGui import *
-from PyQt5.QtWidgets import *
-
+from PyQt5.QtCore import pyqtSignal
+#from PyQt5.QtGui import *
+from PyQt5.QtWidgets import (QWidget, QRadioButton, QLabel,
+                             QHBoxLayout, QVBoxLayout,
+                             QLineEdit, QPlainTextEdit, QCheckBox,
+                             QPushButton)
 from boris import dialog
 from boris.config import YES, NO, CANCEL, programName
 
@@ -41,7 +43,7 @@ class wgMeasurement(QWidget):
     def __init__(self):
         super().__init__()
 
-        self.setWindowTitle("Geometric measurement")
+        self.setWindowTitle("Geometric measurements")
 
         vbox = QVBoxLayout(self)
 
@@ -56,6 +58,11 @@ class wgMeasurement(QWidget):
 
         self.rbAngle = QRadioButton("Angle (vertex: left click, segments: right click)")
         vbox.addWidget(self.rbAngle)
+
+        self.cbPersistentMeasurements = QCheckBox("Measurements are persistent")
+        self.cbPersistentMeasurements.setChecked(True)
+        vbox.addWidget(self.cbPersistentMeasurements)
+
 
         vbox.addWidget(QLabel("<b>Scale</b>"))
 
@@ -84,9 +91,8 @@ class wgMeasurement(QWidget):
         self.pte = QPlainTextEdit()
         vbox.addWidget(self.pte)
 
-        self.cbPersistentMeasurements = QCheckBox("Measurements are persistent")
-        self.cbPersistentMeasurements.setChecked(True)
-        vbox.addWidget(self.cbPersistentMeasurements)
+        self.status_lb = QLabel()
+        vbox.addWidget(self.status_lb)
 
         hbox3 = QHBoxLayout()
 
@@ -101,8 +107,13 @@ class wgMeasurement(QWidget):
 
         vbox.addLayout(hbox3)
 
+
     def closeEvent(self, event):
+
+
+        print("close event")
         self.pbClose_clicked()
+
 
     def pbClear_clicked(self):
         """
@@ -114,9 +125,11 @@ class wgMeasurement(QWidget):
 
 
     def pbClose_clicked(self):
+
+        print("pb close clicked")
         if not self.flagSaved:
-            response = dialog.MessageDialog(programName, 
-                                            "The current results are not saved. Do you want to save results before closing?",
+            response = dialog.MessageDialog(programName,
+                                            "The current measurements are not saved. Do you want to save results before closing?",
                                             [YES, NO, CANCEL])
             if response == YES:
                 self.pbSave_clicked()
@@ -130,14 +143,17 @@ class wgMeasurement(QWidget):
         save results
         """
         if self.pte.toPlainText():
-            fileName, _ = QFileDialog().getSaveFileName(self, "Save measurement results", "", 
+            fileName, _ = QFileDialog().getSaveFileName(self, "Save measurements", "",
                                                         "Text files (*.txt);;All files (*)")
             if fileName:
-                with open(fileName, "w") as f:
-                    f.write(self.pte.toPlainText())
-                self.flagSaved = True
+                try:
+                    with open(fileName, "w") as f:
+                        f.write(self.pte.toPlainText())
+                    self.flagSaved = True
+                except Exception:
+                    QMessageBox.warning(self, programName, "An error occured during saving the measurements")
         else:
-            QMessageBox.information(self, programName, "There are no results to save")
+            QMessageBox.information(self, programName, "There are no measurements to save")
 
 
 if __name__ == '__main__':
