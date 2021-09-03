@@ -24,12 +24,14 @@ This file is part of BORIS.
 
 import logging
 
-from PyQt5.QtCore import *
-from PyQt5.QtGui import *
-from PyQt5.QtWidgets import *
-
+from PyQt5.QtCore import pyqtSignal
+#from PyQt5.QtGui import *
+from PyQt5.QtWidgets import (QWidget, QRadioButton, QLabel,
+                             QHBoxLayout, QVBoxLayout,
+                             QLineEdit, QPlainTextEdit, QCheckBox,
+                             QPushButton)
 from boris import dialog
-from boris.config import *
+from boris.config import YES, NO, CANCEL, programName
 
 
 class wgMeasurement(QWidget):
@@ -43,7 +45,7 @@ class wgMeasurement(QWidget):
     def __init__(self):
         super().__init__()
 
-        self.setWindowTitle("Geometric measurement")
+        self.setWindowTitle("Geometric measurements")
 
         vbox = QVBoxLayout(self)
 
@@ -58,6 +60,11 @@ class wgMeasurement(QWidget):
 
         self.rbAngle = QRadioButton("Angle (vertex: left click, segments: right click)")
         vbox.addWidget(self.rbAngle)
+
+        self.cbPersistentMeasurements = QCheckBox("Measurements are persistent")
+        self.cbPersistentMeasurements.setChecked(True)
+        vbox.addWidget(self.cbPersistentMeasurements)
+
 
         vbox.addWidget(QLabel("<b>Scale</b>"))
 
@@ -86,9 +93,8 @@ class wgMeasurement(QWidget):
         self.pte = QPlainTextEdit()
         vbox.addWidget(self.pte)
 
-        self.cbPersistentMeasurements = QCheckBox("Measurements are persistent")
-        self.cbPersistentMeasurements.setChecked(True)
-        vbox.addWidget(self.cbPersistentMeasurements)
+        self.status_lb = QLabel()
+        vbox.addWidget(self.status_lb)
 
         hbox3 = QHBoxLayout()
 

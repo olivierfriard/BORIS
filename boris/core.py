@@ -367,6 +367,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
     measurement_w = None
     memPoints = []   # memory of clicked points for measurement tool
+    memPoints_video = []   # memory of clicked points for measurement tool
 
     behaviouralStringsSeparator = "|"
 
@@ -4100,6 +4101,18 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             x = int(x - (self.dw_player[n_player].frame_viewer.width() - self.dw_player[n_player].frame_viewer.pixmap().width()) / 2)
             y = int(y - (self.dw_player[n_player].frame_viewer.height() - self.dw_player[n_player].frame_viewer.pixmap().height()) / 2)
 
+            # video resolution player.mediaplayer.video_get_size(0)
+            video_width, video_height = self.dw_player[n_player].mediaplayer.video_get_size(0)
+            print(video_width, video_height)
+
+            # convert pixmap coordinates in video coordinates
+            x_video = round((x / self.dw_player[n_player].frame_viewer.pixmap().width()) * video_width)
+            y_video = round((y / self.dw_player[n_player].frame_viewer.pixmap().height()) * video_height)
+
+            if not (0 <= x <= self.dw_player[n_player].frame_viewer.pixmap().width() and 0 <= y <= self.dw_player[n_player].frame_viewer.pixmap().height()):
+                self.measurement_w.status_lb.setText("<b>The click is outside the video area!</b>")
+                return
+
             # point
             if self.measurement_w.rbPoint.isChecked():
                 if event.button() == 1:   # left
@@ -4110,7 +4123,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                         self.measurement_w.draw_mem[self.FFmpegGlobalFrame] = [[n_player, "point", x, y]]
 
                     self.measurement_w.pte.appendPlainText((f"Time: {self.getLaps()}\tPlayer: {n_player + 1}\t"
-                                                            f"Frame: {self.FFmpegGlobalFrame}\tPoint: {x},{y}"))
+                                                            f"Frame: {self.FFmpegGlobalFrame}\tPoint: {x_video},{y_video}"))
 
 
             # distance
@@ -4118,6 +4131,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 if event.button() == 1:   # left
                     self.draw_point(x, y, ACTIVE_MEASUREMENTS_COLOR, n_player)
                     self.memx, self.memy = x, y
+                    self.memx_video, self.memy_video = x_video, y_video
 
                 if event.button() == 2 and self.memx != -1 and self.memy != -1:
                     self.draw_point(x, y, ACTIVE_MEASUREMENTS_COLOR, n_player)
@@ -4128,16 +4142,16 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     else:
                         self.measurement_w.draw_mem[self.FFmpegGlobalFrame] = [[n_player, "line", self.memx, self.memy, x, y]]
 
-                    d = ((x - self.memx) ** 2 + (y - self.memy) ** 2) ** 0.5
+                    distance = ((x_video - self.memx_video) ** 2 + (y_video - self.memy_video) ** 2) ** 0.5
                     try:
-                        d = d / float(self.measurement_w.lePx.text()) * float(self.measurement_w.leRef.text())
+                        distance = distance / float(self.measurement_w.lePx.text()) * float(self.measurement_w.leRef.text())
                     except Exception:
                         QMessageBox.critical(self, programName,
                                              "Check reference and pixel values! Values must be numeric.",
                                              QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
 
                     self.measurement_w.pte.appendPlainText((f"Time: {self.getLaps()}\tPlayer: {n_player + 1}\t"
-                                                            f"Frame: {self.FFmpegGlobalFrame}\tDistance: {round(d, 1)}"))
+                                                            f"Frame: {self.FFmpegGlobalFrame}\tDistance: {round(distance, 1)}"))
                     self.measurement_w.flagSaved = False
                     self.memx, self.memy = -1, -1
 
@@ -4173,29 +4187,32 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     if len(self.memPoints):
                         self.draw_line(self.memPoints[-1][0], self.memPoints[-1][1], x, y, ACTIVE_MEASUREMENTS_COLOR, n_player)
                     self.memPoints.append((x, y))
+                    self.memPoints_video.append((x_video, y_video))
 
                 if event.button() == 2 and len(self.memPoints) >= 2:
                     self.draw_point(x, y, ACTIVE_MEASUREMENTS_COLOR, n_player)
                     self.draw_line(self.memPoints[-1][0], self.memPoints[-1][1], x, y, ACTIVE_MEASUREMENTS_COLOR, n_player)
                     self.memPoints.append((x, y))
+                    self.memPoints_video.append((x_video, y_video))
                     # close polygon
                     self.draw_line(self.memPoints[-1][0], self.memPoints[-1][1],
                                    self.memPoints[0][0], self.memPoints[0][1], ACTIVE_MEASUREMENTS_COLOR, n_player)
-                    a = polygon_area(self.memPoints)
+                    area = polygon_area(self.memPoints_video)
+
 
                     if self.FFmpegGlobalFrame in self.measurement_w.draw_mem:
                         self.measurement_w.draw_mem[self.FFmpegGlobalFrame].append([n_player, "polygon", self.memPoints])
                     else:
                         self.measurement_w.draw_mem[self.FFmpegGlobalFrame] = [[n_player, "polygon", self.memPoints]]
                     try:
-                        a = a / (float(self.measurement_w.lePx.text())**2) * float(self.measurement_w.leRef.text())**2
+                        area = area / (float(self.measurement_w.lePx.text())**2) * float(self.measurement_w.leRef.text())**2
                     except Exception:
                         QMessageBox.critical(self, programName,
                                              "Check reference and pixel values! Values must be numeric.",
                                              QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
 
                     self.measurement_w.pte.appendPlainText((f"Time: {self.getLaps()}\tPlayer: {n_player + 1}\t"
-                                                            f"Frame: {self.FFmpegGlobalFrame}\tArea: {round(a, 1)}"))
+                                                            f"Frame: {self.FFmpegGlobalFrame}\tArea: {round(area, 1)}"))
                     self.memPoints = []
 
         else:  # no measurements
