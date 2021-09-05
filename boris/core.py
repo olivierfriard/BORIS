@@ -3653,7 +3653,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                or not self.pj[OBSERVATIONS][self.observationId][FILE][n_player]):
                 continue
 
-            if i == 0:
+            if i == 0:  # first player
                 p = player_dock_widget.DW2(i)
                 self.dw_player.append(p)
                 @p.player.property_observer('time-pos')
@@ -3667,8 +3667,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.dw_player[-1].setFeatures(QDockWidget.DockWidgetFloatable | QDockWidget.DockWidgetMovable)
 
             # place 4 players at the top of the main window and 4 at the bottom
-            if i < 4:
-                self.addDockWidget(Qt.TopDockWidgetArea if i < 4 else Qt.BottomDockWidgetArea, self.dw_player[-1])
+            self.addDockWidget(Qt.TopDockWidgetArea if i < 4 else Qt.BottomDockWidgetArea, self.dw_player[-1])
 
             self.dw_player[i].setVisible(True)
 
@@ -4786,13 +4785,16 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
             if self.playerType == VLC:
 
-                for i, dw in enumerate(self.dw_player):
-                    dw.player.quit()
+                for dw in self.dw_player:
+                    self.removeDockWidget(dw)
+                    #dw.player.quit()
                     dw.deleteLater()
 
                 self.dw_player = []
-
                 self.playMode = VLC
+
+            #return
+
 
             self.observationId = ""
 
