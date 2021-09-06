@@ -26,10 +26,10 @@ import logging
 
 from PyQt5.QtCore import pyqtSignal
 #from PyQt5.QtGui import *
-from PyQt5.QtWidgets import (QWidget, QRadioButton, QLabel,
+from PyQt5.QtWidgets import (QApplication, QWidget, QRadioButton, QLabel,
                              QHBoxLayout, QVBoxLayout,
                              QLineEdit, QPlainTextEdit, QCheckBox,
-                             QPushButton)
+                             QPushButton, QFileDialog, QMessageBox)
 from boris import dialog
 from boris.config import YES, NO, CANCEL, programName
 
