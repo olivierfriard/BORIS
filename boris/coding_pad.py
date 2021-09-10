@@ -49,23 +49,47 @@ class CodingPad(QWidget):
         super().__init__(parent)
         self.pj = pj
         self.filtered_behaviors = filtered_behaviors
-        '''
-        self.button_css = ("border-radius: 0px; min-width: 50px; max-width: 200px; "
-                           "min-height:50px; max-height:200px; font-weight: bold;")
-        '''
+        self.button_font_size = 20
         self.button_css = ("border-radius: 0px; min-width: 50px; min-height:50px; font-weight: bold; max-height:5000px; max-width: 5000px;")
 
         self.setWindowTitle("Coding pad")
+
         self.grid = QGridLayout(self)
+
+
+
         self.installEventFilter(self)
         self.compose()
 
-        #self.resize(200,200)
+
+    def config(self):
+        """
+        Configure the coding pad
+        """
+        if "Increase" in self.cb_config.currentText():
+            self.button_font_size += 2
+        if "Decrease" in self.cb_config.currentText():
+            self.button_font_size -= 2
+
+        self.cb_config.setCurrentIndex(0)
+        self.button_configuration()
 
 
     def compose(self):
+        """
+        Add buttons to coding pad
+        """
         for i in reversed(range(self.grid.count())):
-            self.grid.itemAt(i).widget().setParent(None)
+            if self.grid.itemAt(i).widget() is not None:
+                self.grid.itemAt(i).widget().setParent(None)
+
+        # combobox for coding pas configuration
+        vlayout = QHBoxLayout()
+        self.cb_config = QComboBox()
+        self.cb_config.addItems(["", "Increase text size", "Decrease text size"])
+        self.cb_config.currentIndexChanged.connect(self.config)
+        vlayout.addWidget(self.cb_config)
+        self.grid.addLayout(vlayout, 0, 1, 1, 1)
 
         self.all_behaviors = [self.pj[cfg.ETHOGRAM][x][cfg.BEHAVIOR_CODE] for x in util.sorted_keys(self.pj[cfg.ETHOGRAM])]
         self.colors_dict = {}
@@ -107,8 +131,21 @@ class CodingPad(QWidget):
                 color = cfg.BEHAVIORS_PLOT_COLORS[behavior_position % len(cfg.BEHAVIORS_PLOT_COLORS)].replace("tab:", "")
 
             widget.color = color
+            widget.pushButton.setFont(QFont('Arial', self.button_font_size))
             widget.pushButton.setStyleSheet(self.button_css + f"background-color: {color};")
             widget.pushButton.clicked.connect(lambda: self.click(behaviorCode))
+
+
+    def button_configuration(self):
+        """
+
+        """
+
+        for index in range(self.grid.count()):
+            font = QFont("Arial", self.button_font_size)
+            if self.grid.itemAt(index).widget() is not None:
+                self.grid.itemAt(index).widget().pushButton.setFont(font)
+
 
 
     def resizeEvent(self, event):
@@ -116,31 +153,9 @@ class CodingPad(QWidget):
         Resize event
         button are redesigned with new font size
         """
-        print("resize", event.size())
-        for index in range(self.grid.count()):
+        print("resize event", event.size())
 
-            button_size = self.grid.itemAt(index).widget().pushButton.size()
-            # print("button size", button_size)
-
-            print(len(self.all_behaviors))
-            font = QFont('Arial', 20)
-            '''
-            size = 500
-            while True:
-                font.setPixelSize(size)
-                metrics = QFontMetrics(font)
-                text_width = metrics.width(self.grid.itemAt(index).widget().pushButton.text())
-                text_height = metrics.height()
-                if (text_width < button_size.width()) and (text_height < button_size.height()) or (size < 20):
-                    break
-                size -= 10
-
-            print("size", size, self.grid.itemAt(index).widget().pushButton.text())
-            '''
-            self.grid.itemAt(index).widget().pushButton.setFont(font)
-
-            #metrics = QFontMetrics(self.grid.itemAt(index).widget().pushButton.font())
-            #print(metrics.width(self.grid.itemAt(index).widget().pushButton.text()))
+        self.button_configuration()
 
 
     def click(self, behaviorCode):
