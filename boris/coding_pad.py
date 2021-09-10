@@ -24,9 +24,19 @@ from PyQt5.QtGui import *
 from PyQt5.QtCore import *
 from PyQt5.QtWidgets import *
 
-import sys
-from boris.config import *
-from boris.utilities import *
+
+from . import config as cfg
+from . import utilities as util
+
+
+class Button(QWidget):
+    def __init__(self, parent=None):
+        super(Button, self).__init__(parent)
+        self.pushButton = QPushButton()
+        self.pushButton.setFocusPolicy(Qt.NoFocus)
+        layout = QHBoxLayout()
+        layout.addWidget(self.pushButton)
+        self.setLayout(layout)
 
 
 class CodingPad(QWidget):
@@ -36,33 +46,39 @@ class CodingPad(QWidget):
     close_signal = pyqtSignal(QRect)
 
     def __init__(self, pj, filtered_behaviors, parent=None):
-        super(CodingPad, self).__init__(parent)
+        super().__init__(parent)
         self.pj = pj
         self.filtered_behaviors = filtered_behaviors
+        '''
+        self.button_css = ("border-radius: 0px; min-width: 50px; max-width: 200px; "
+                           "min-height:50px; max-height:200px; font-weight: bold;")
+        '''
+        self.button_css = ("border-radius: 0px; min-width: 50px; min-height:50px; font-weight: bold; max-height:5000px; max-width: 5000px;")
 
         self.setWindowTitle("Coding pad")
         self.grid = QGridLayout(self)
         self.installEventFilter(self)
         self.compose()
 
+        #self.resize(200,200)
+
+
     def compose(self):
         for i in reversed(range(self.grid.count())):
             self.grid.itemAt(i).widget().setParent(None)
 
+        self.all_behaviors = [self.pj[cfg.ETHOGRAM][x][cfg.BEHAVIOR_CODE] for x in util.sorted_keys(self.pj[cfg.ETHOGRAM])]
         self.colors_dict = {}
-        if BEHAVIORAL_CATEGORIES in self.pj:
-            for idx, category in enumerate(set([self.pj[ETHOGRAM][x]["category"]
-                                                for x in self.pj[ETHOGRAM]
-                                                if "category" in self.pj[ETHOGRAM][x]])):
-                self.colors_dict[category] = CATEGORY_COLORS_LIST[idx % len(CATEGORY_COLORS_LIST)]
 
-        if self.colors_dict:
-            behaviorsList = [[self.pj[ETHOGRAM][x]["category"], self.pj[ETHOGRAM][x]["code"]]
-                             for x in sorted_keys(self.pj[ETHOGRAM])
-                             if "category" in self.pj[ETHOGRAM][x] and self.pj[ETHOGRAM][x]["code"] in self.filtered_behaviors]
-        else:
-            behaviorsList = [["", self.pj[ETHOGRAM][x]["code"]]
-                             for x in sorted_keys(self.pj[ETHOGRAM]) if self.pj[ETHOGRAM][x]["code"] in self.filtered_behaviors]
+        self.unique_behavioral_categories = sorted(set([self.pj[cfg.ETHOGRAM][x].get(cfg.BEHAVIOR_CATEGORY, "") for x in self.pj[cfg.ETHOGRAM]]))
+        for idx, category in enumerate(self.unique_behavioral_categories):   # sorted list of unique behavior categories
+            self.colors_dict[category] = cfg.CATEGORY_COLORS_LIST[idx % len(cfg.CATEGORY_COLORS_LIST)]
+
+        behaviorsList = [[self.pj[cfg.ETHOGRAM][x][cfg.BEHAVIOR_CATEGORY], self.pj[cfg.ETHOGRAM][x][cfg.BEHAVIOR_CODE]]
+                            for x in util.sorted_keys(self.pj[cfg.ETHOGRAM])
+                            if cfg.BEHAVIOR_CATEGORY in self.pj[cfg.ETHOGRAM][x] and self.pj[cfg.ETHOGRAM][x][cfg.BEHAVIOR_CODE] in self.filtered_behaviors]
+
+        # square grid dimension
         dim = int(len(behaviorsList)**0.5 + 0.999)
 
         c = 0
@@ -82,14 +98,49 @@ class CodingPad(QWidget):
 
         if widget is not None:
             widget.pushButton.setText(behaviorCode)
-            if self.colors_dict:
-                color = self.colors_dict[[self.pj[ETHOGRAM][x]["category"]
-                                         for x in self.pj[ETHOGRAM] if self.pj[ETHOGRAM][x]["code"] == behaviorCode][0]]
+            if self.unique_behavioral_categories != ['']:  # behavioral categories are used
+                color = self.colors_dict[[self.pj[cfg.ETHOGRAM][x][cfg.BEHAVIOR_CATEGORY]
+                                             for x in self.pj[cfg.ETHOGRAM] if self.pj[cfg.ETHOGRAM][x][cfg.BEHAVIOR_CODE] == behaviorCode][0]]
             else:
-                color = CATEGORY_COLORS_LIST[0]
-            widget.pushButton.setStyleSheet(("background-color: {}; border-radius: 0px; min-width: 50px;max-width: 200px; "
-                                             "min-height:50px; max-height:200px; font-weight: bold;").format(color))
+                # behavioral categories are not defined
+                behavior_position = int([x for x in util.sorted_keys(self.pj[cfg.ETHOGRAM]) if self.pj[cfg.ETHOGRAM][x][cfg.BEHAVIOR_CODE] == behaviorCode][0])
+                color = cfg.BEHAVIORS_PLOT_COLORS[behavior_position % len(cfg.BEHAVIORS_PLOT_COLORS)].replace("tab:", "")
+
+            widget.color = color
+            widget.pushButton.setStyleSheet(self.button_css + f"background-color: {color};")
             widget.pushButton.clicked.connect(lambda: self.click(behaviorCode))
+
+
+    def resizeEvent(self, event):
+        """
+        Resize event
+        button are redesigned with new font size
+        """
+        print("resize", event.size())
+        for index in range(self.grid.count()):
+
+            button_size = self.grid.itemAt(index).widget().pushButton.size()
+            # print("button size", button_size)
+
+            print(len(self.all_behaviors))
+            font = QFont('Arial', 20)
+            '''
+            size = 500
+            while True:
+                font.setPixelSize(size)
+                metrics = QFontMetrics(font)
+                text_width = metrics.width(self.grid.itemAt(index).widget().pushButton.text())
+                text_height = metrics.height()
+                if (text_width < button_size.width()) and (text_height < button_size.height()) or (size < 20):
+                    break
+                size -= 10
+
+            print("size", size, self.grid.itemAt(index).widget().pushButton.text())
+            '''
+            self.grid.itemAt(index).widget().pushButton.setFont(font)
+
+            #metrics = QFontMetrics(self.grid.itemAt(index).widget().pushButton.font())
+            #print(metrics.width(self.grid.itemAt(index).widget().pushButton.text()))
 
 
     def click(self, behaviorCode):
@@ -106,6 +157,7 @@ class CodingPad(QWidget):
         else:
             return False
 
+
     def closeEvent(self, event):
         """
         send event for widget geometry memory
@@ -113,11 +165,3 @@ class CodingPad(QWidget):
         self.close_signal.emit(self.geometry())
 
 
-class Button(QWidget):
-    def __init__(self, parent=None):
-        super(Button, self).__init__(parent)
-        self.pushButton = QPushButton()
-        self.pushButton.setFocusPolicy(Qt.NoFocus)
-        layout = QHBoxLayout()
-        layout.addWidget(self.pushButton)
-        self.setLayout(layout)

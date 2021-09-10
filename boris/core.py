@@ -1682,6 +1682,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.codingpad.clickSignal.connect(self.click_signal_from_coding_pad)
             self.codingpad.close_signal.connect(self.close_signal_from_coding_pad)
             self.codingpad.show()
+            self.codingpad.setGeometry(200,
+                                       200,
+                                       660,
+                                       500)
+            self.codingpad_geometry_memory = self.codingpad.geometry()
 
 
     def show_subjects_pad(self):

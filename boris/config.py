@@ -396,6 +396,8 @@ SPECTROGRAM_DEFAULT_TIME_INTERVAL = 10
 ACTIVE_MEASUREMENTS_COLOR = "lime"
 PASSIVE_MEASUREMENTS_COLOR = "red"
 
+
+# see matplotlib for color name
 BEHAVIORS_PLOT_COLORS = [
     "tab:blue",
     "tab:orange",
