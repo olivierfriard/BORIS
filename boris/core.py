@@ -1622,11 +1622,13 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.keyPressEvent(q)
 
 
-    def close_signal_from_coding_pad(self, geom):
+    def close_signal_from_coding_pad(self, geom, preferences):
         """
         save coding pad geometry after close
         """
         self.codingpad_geometry_memory = geom
+        self.codingpad_preferences = preferences
+
 
 
     def click_signal_from_subjects_pad(self, subject):
@@ -1686,7 +1688,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                                        200,
                                        660,
                                        500)
+                                       
             self.codingpad_geometry_memory = self.codingpad.geometry()
+            self.codingpad_geometry_preferences = self.codingpad.coding_pad_preferences
 
 
     def show_subjects_pad(self):
