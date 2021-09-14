@@ -50,7 +50,7 @@ class CodingPad(QWidget):
         self.pj = pj
         self.filtered_behaviors = filtered_behaviors
 
-        self.coding_pad_preferences = {"button font size": 20,
+        self.preferences = {"button font size": 20,
                                        "button color": "category"}
 
         self.button_css = ("border-radius: 0px; min-width: 50px; min-height:50px; font-weight: bold; max-height:5000px; max-width: 5000px;")
@@ -68,15 +68,15 @@ class CodingPad(QWidget):
         Configure the coding pad
         """
         if self.cb_config.currentIndex() == 1:   # increase text size
-            self.coding_pad_preferences["button font size"] += 4
+            self.preferences["button font size"] += 4
         if self.cb_config.currentIndex() == 2:  # increase text size
-            self.coding_pad_preferences["button font size"] += 4
+            self.preferences["button font size"] += 4
         if self.cb_config.currentIndex() == 3:
-            self.coding_pad_preferences["button color"] = "category"
+            self.preferences["button color"] = "category"
         if self.cb_config.currentIndex() == 4:
-            self.coding_pad_preferences["button color"] = "behavior"
-        if self.cb_config.currentIndex() == 5: 
-            self.coding_pad_preferences["button color"] = "no color"
+            self.preferences["button color"] = "behavior"
+        if self.cb_config.currentIndex() == 5:
+            self.preferences["button color"] = "no color"
 
 
 
@@ -92,10 +92,15 @@ class CodingPad(QWidget):
             if self.grid.itemAt(i).widget() is not None:
                 self.grid.itemAt(i).widget().setParent(None)
 
-        # combobox for coding pas configuration
+        # combobox for coding pad configuration
         vlayout = QHBoxLayout()
         self.cb_config = QComboBox()
-        self.cb_config.addItems(["", "Increase button text size", "Decrease button text size", "Color button by behavioral category", "Color button by behavior", "No color"])
+        self.cb_config.addItems(["Choose an option to configure",
+                                 "Increase button text size",
+                                 "Decrease button text size",
+                                 "Color button by behavioral category",
+                                 "Color button by behavior",
+                                 "No color"])
         self.cb_config.currentIndexChanged.connect(self.config)
         vlayout.addWidget(self.cb_config)
         self.grid.addLayout(vlayout, 0, 1, 1, 1)
@@ -105,7 +110,7 @@ class CodingPad(QWidget):
 
         # sorted list of unique behavior categories
         self.unique_behavioral_categories = sorted(set([self.pj[cfg.ETHOGRAM][x].get(cfg.BEHAVIOR_CATEGORY, "") for x in self.pj[cfg.ETHOGRAM]]))
-        for idx, category in enumerate(self.unique_behavioral_categories):   
+        for idx, category in enumerate(self.unique_behavioral_categories):
             self.colors_dict[category] = cfg.CATEGORY_COLORS_LIST[idx % len(cfg.CATEGORY_COLORS_LIST)]
 
         behaviorsList = [[self.pj[cfg.ETHOGRAM][x][cfg.BEHAVIOR_CATEGORY], self.pj[cfg.ETHOGRAM][x][cfg.BEHAVIOR_CODE]]
@@ -123,6 +128,8 @@ class CodingPad(QWidget):
                 self.addWidget(behaviorsList[c][1], i, j)
                 c += 1
 
+        self.button_configuration()
+
 
     def addWidget(self, behaviorCode, i, j):
 
@@ -132,44 +139,29 @@ class CodingPad(QWidget):
 
         if widget is not None:
             widget.pushButton.setText(behaviorCode)
-
-            #if self.unique_behavioral_categories != ['']:  # behavioral categories are used
-            if self.coding_pad_preferences["button color"] == "category":
-                color = self.colors_dict[[self.pj[cfg.ETHOGRAM][x][cfg.BEHAVIOR_CATEGORY]
-                                             for x in self.pj[cfg.ETHOGRAM] if self.pj[cfg.ETHOGRAM][x][cfg.BEHAVIOR_CODE] == behaviorCode][0]]
-            if self.coding_pad_preferences["button color"] == "behavior":
-                behavior_position = int([x for x in util.sorted_keys(self.pj[cfg.ETHOGRAM]) if self.pj[cfg.ETHOGRAM][x][cfg.BEHAVIOR_CODE] == behaviorCode][0])
-                color = cfg.BEHAVIORS_PLOT_COLORS[behavior_position % len(cfg.BEHAVIORS_PLOT_COLORS)].replace("tab:", "")
-
-            if self.coding_pad_preferences["button color"] == "no color":
-                color = "#777777"
-
-            widget.color = color
-            widget.pushButton.setFont(QFont('Arial', self.coding_pad_preferences["button font size"]))
-            widget.pushButton.setStyleSheet(self.button_css + f"background-color: {color};")
             widget.pushButton.clicked.connect(lambda: self.click(behaviorCode))
 
 
     def button_configuration(self):
         """
-
+        configure the font and color of buttons
         """
 
         for index in range(self.grid.count()):
             if self.grid.itemAt(index).widget() is None:
                 continue
             behavior_code = self.grid.itemAt(index).widget().pushButton.text()
-            if self.coding_pad_preferences["button color"] == "category":
+            if self.preferences["button color"] == cfg.BEHAVIOR_CATEGORY:
                 color = self.colors_dict[[self.pj[cfg.ETHOGRAM][x][cfg.BEHAVIOR_CATEGORY]
                                              for x in self.pj[cfg.ETHOGRAM] if self.pj[cfg.ETHOGRAM][x][cfg.BEHAVIOR_CODE] == behavior_code][0]]
-            if self.coding_pad_preferences["button color"] == "behavior":
+            if self.preferences["button color"] == "behavior":
                 # behavioral categories are not defined
                 behavior_position = int([x for x in util.sorted_keys(self.pj[cfg.ETHOGRAM]) if self.pj[cfg.ETHOGRAM][x][cfg.BEHAVIOR_CODE] == behavior_code][0])
                 color = cfg.BEHAVIORS_PLOT_COLORS[behavior_position % len(cfg.BEHAVIORS_PLOT_COLORS)].replace("tab:", "")
-            if self.coding_pad_preferences["button color"] == "no color":
-                color = "#777777"
+            if self.preferences["button color"] == "no color":
+                color = cfg.NO_COLOR_CODING_PAD
             self.grid.itemAt(index).widget().pushButton.setStyleSheet(self.button_css + f"background-color: {color};")
-            font = QFont("Arial", self.coding_pad_preferences["button font size"])
+            font = QFont("Arial", self.preferences["button font size"])
             self.grid.itemAt(index).widget().pushButton.setFont(font)
 
 
@@ -179,13 +171,15 @@ class CodingPad(QWidget):
         Resize event
         button are redesigned with new font size
         """
-        print("resize event", event.size())
-
         self.button_configuration()
 
 
     def click(self, behaviorCode):
+        """
+        Button clicked
+        """
         self.clickSignal.emit(behaviorCode)
+
 
 
     def eventFilter(self, receiver, event):
@@ -203,6 +197,6 @@ class CodingPad(QWidget):
         """
         send event for widget geometry memory
         """
-        self.close_signal.emit(self.geometry(), self.coding_pad_preferences)
+        self.close_signal.emit(self.geometry(), self.preferences)
 
 
