@@ -54,6 +54,7 @@ class CodingPad(QWidget):
                                        "button color": "category"}
 
         self.button_css = ("border-radius: 0px; min-width: 50px; min-height:50px; font-weight: bold; max-height:5000px; max-width: 5000px;")
+        self.button_css = ("min-width: 50px; min-height:50px; font-weight: bold; max-height:5000px; max-width: 5000px;")
 
         self.setWindowTitle("Coding pad")
 
@@ -69,10 +70,10 @@ class CodingPad(QWidget):
         """
         if self.cb_config.currentIndex() == 1:   # increase text size
             self.preferences["button font size"] += 4
-        if self.cb_config.currentIndex() == 2:  # increase text size
+        if self.cb_config.currentIndex() == 2:   # decrease text size
             self.preferences["button font size"] += 4
         if self.cb_config.currentIndex() == 3:
-            self.preferences["button color"] = "category"
+            self.preferences["button color"] = cfg.BEHAVIOR_CATEGORY
         if self.cb_config.currentIndex() == 4:
             self.preferences["button color"] = "behavior"
         if self.cb_config.currentIndex() == 5:
