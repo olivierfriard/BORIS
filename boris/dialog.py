@@ -21,20 +21,21 @@ This file is part of BORIS.
 """
 
 import logging
-import re
-import sys
 
-import tablib
 from PyQt5.QtCore import *
 from PyQt5.QtGui import *
 from PyQt5.QtWidgets import *
 
-from boris import duration_widget
-from boris import param_panel
-from boris import project_functions
-from boris import utilities
-from boris import version
-from boris.config import *
+from . import duration_widget
+from . import param_panel
+from . import project_functions
+
+from . import utilities
+# from . import utilities as util
+
+from . import version
+
+from . import config as cfg
 
 
 def MessageDialog(title, text, buttons):
@@ -57,7 +58,7 @@ def error_message_box(task, error_type, error_file_name, error_lineno):
     show a critical dialog
 
     """
-    QMessageBox.critical(None, programName,
+    QMessageBox.critical(None, cfg.programName,
                          (f"BORIS version: {version.__version__}<br>"
                           f"An error occured during the execution of: <b>{task}</b>.<br>"
                           f"Error: {error_type}<br>"
@@ -77,7 +78,7 @@ def error_message_box2(error_traceback):
     show a critical dialog
 
     """
-    QMessageBox.critical(None, programName,
+    QMessageBox.critical(None, cfg.programName,
                          (f"BORIS version: {version.__version__}<br><br>"
                           f"<b>An error has occured</b>:<br>"
                           f"{error_traceback}<br><br>"
@@ -176,19 +177,19 @@ class Video_overlay_dialog(QDialog):
 
     def ok(self):
         if not self.le_file_path.text():
-            QMessageBox.warning(None, programName, "Select a file containing a PNG image",
+            QMessageBox.warning(None, cfg.programName, "Select a file containing a PNG image",
                                 QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
             return
 
         if self.le_overlay_position.text() and "," not in self.le_overlay_position.text():
-            QMessageBox.warning(None, programName, "The overlay position must be in x,y format",
+            QMessageBox.warning(None, cfg.programName, "The overlay position must be in x,y format",
                                 QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
             return
         if self.le_overlay_position.text():
             try:
                 [int(x.strip()) for x in self.le_overlay_position.text().split(",")]
             except Exception:
-                QMessageBox.warning(None, programName, "The overlay position must be in x,y format",
+                QMessageBox.warning(None, cfg.programName, "The overlay position must be in x,y format",
                                     QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
                 return
         self.accept()
@@ -211,18 +212,18 @@ class Input_dialog(QDialog):
         self.elements = {}
         for element in elements_list:
 
-            if element[0] == "cb":
+            if element[0] == "cb":  # checkbox
                 self.elements[element[1]] = QCheckBox(element[1])
                 self.elements[element[1]].setChecked(element[2])
                 hbox.addWidget(self.elements[element[1]])
 
-            if element[0] == "le":
+            if element[0] == "le":  # line edit
                 lb = QLabel(element[1])
                 hbox.addWidget(lb)
                 self.elements[element[1]] = QLineEdit()
                 hbox.addWidget(self.elements[element[1]])
 
-            if element[0] == "sb":
+            if element[0] == "sb":  # spinbox
                 lb = QLabel(element[1])
                 hbox.addWidget(lb)
                 self.elements[element[1]] = QSpinBox()
@@ -245,11 +246,11 @@ class Input_dialog(QDialog):
 
         hbox2 = QHBoxLayout()
 
-        self.pbCancel = QPushButton("Cancel")
+        self.pbCancel = QPushButton(cfg.CANCEL)
         self.pbCancel.clicked.connect(self.reject)
         hbox2.addWidget(self.pbCancel)
 
-        self.pbOK = QPushButton("OK")
+        self.pbOK = QPushButton(cfg.OK)
         self.pbOK.clicked.connect(self.accept)
         self.pbOK.setDefault(True)
         hbox2.addWidget(self.pbOK)
@@ -271,7 +272,7 @@ class DuplicateBehaviorCode(QDialog):
 
         super(DuplicateBehaviorCode, self).__init__()
 
-        self.setWindowTitle(programName)
+        self.setWindowTitle(cfg.programName)
         self.setWindowFlags(Qt.WindowStaysOnTopHint)
 
         Vlayout = QVBoxLayout()
@@ -327,7 +328,7 @@ class ChooseObservationsToImport(QDialog):
 
         super(ChooseObservationsToImport, self).__init__()
 
-        self.setWindowTitle(programName)
+        self.setWindowTitle(cfg.programName)
 
         Vlayout = QVBoxLayout()
         widget = QWidget(self)
@@ -385,9 +386,9 @@ class Ask_time(QDialog):
         hbox.addWidget(self.label)
 
         self.time_widget = duration_widget.Duration_widget()
-        if time_format == HHMMSS:
+        if time_format == cfg.HHMMSS:
             self.time_widget.set_format_hhmmss()
-        if time_format == S:
+        if time_format == cfg.S:
             self.time_widget.set_format_s()
 
         hbox.addWidget(self.time_widget)
@@ -478,12 +479,12 @@ class EditSelectedEvents(QDialog):
 
     def pbOK_clicked(self):
         if not self.rbSubject.isChecked() and not self.rbBehavior.isChecked() and not self.rbComment.isChecked():
-            QMessageBox.warning(None, programName, "You must select a field to be edited",
+            QMessageBox.warning(None, cfg.programName, "You must select a field to be edited",
                                 QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
             return
 
         if (self.rbSubject.isChecked() or self.rbBehavior.isChecked()) and self.newText.selectedItems() == []:
-            QMessageBox.warning(None, programName, "You must select a new value from the list",
+            QMessageBox.warning(None, cfg.programName, "You must select a new value from the list",
                                 QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
             return
 
@@ -611,16 +612,13 @@ class FindReplaceEvents(QWidget):
 
         hbox2 = QHBoxLayout()
 
-        self.pbCancel = QPushButton("Cancel")
-        self.pbCancel.clicked.connect(lambda: self.click("CANCEL"))
+        self.pbCancel = QPushButton(cfg.CANCEL, clicked=lambda: self.click("CANCEL"))
         hbox2.addWidget(self.pbCancel)
 
-        self.pbOK = QPushButton("Find and replace")
-        self.pbOK.clicked.connect(lambda: self.click("FIND_REPLACE"))
+        self.pbOK = QPushButton("Find and replace", clicked=lambda: self.click("FIND_REPLACE"))
         hbox2.addWidget(self.pbOK)
 
-        self.pbFindReplaceAll = QPushButton("Find and replace all")
-        self.pbFindReplaceAll.clicked.connect(lambda: self.click("FIND_REPLACE_ALL"))
+        self.pbFindReplaceAll = QPushButton("Find and replace all", clicked=lambda: self.click("FIND_REPLACE_ALL"))
         hbox2.addWidget(self.pbFindReplaceAll)
 
         hbox.addLayout(hbox2)
@@ -705,12 +703,12 @@ class Results_dialog(QDialog):
 
         hbox2.addItem(QSpacerItem(241, 20, QSizePolicy.Expanding, QSizePolicy.Minimum))
 
-        self.pbCancel = QPushButton("Cancel")
+        self.pbCancel = QPushButton(cfg.CANCEL)
         self.pbCancel.clicked.connect(self.reject)
         hbox2.addWidget(self.pbCancel)
         self.pbCancel.setVisible(False)
 
-        self.pbOK = QPushButton("OK")
+        self.pbOK = QPushButton(cfg.OK)
         self.pbOK.clicked.connect(self.accept)
         hbox2.addWidget(self.pbOK)
 
@@ -729,12 +727,13 @@ class Results_dialog(QDialog):
         fn = QFileDialog().getSaveFileName(self, "Save results", "", "Text files (*.txt *.tsv);;All files (*)")
         file_name = fn[0] if type(fn) is tuple else fn
 
-        if file_name:
-            try:
-                with open(file_name, "w") as f:
-                    f.write(self.ptText.toPlainText())
-            except Exception:
-                QMessageBox.critical(self, programName, f"The file {file_name} can not be saved")
+        if not file_name:
+            return
+        try:
+            with open(file_name, "w") as f:
+                f.write(self.ptText.toPlainText())
+        except Exception:
+            QMessageBox.critical(self, cfg.programName, f"The file {file_name} can not be saved")
 
 
 class ResultsWidget(QWidget):
@@ -783,7 +782,7 @@ class ResultsWidget(QWidget):
                 with open(file_name, "w") as f:
                     f.write(self.ptText.toPlainText())
             except Exception:
-                QMessageBox.critical(self, programName, f"The file {file_name} can not be saved")
+                QMessageBox.critical(self, cfg.programName, f"The file {file_name} can not be saved")
 
 
 class View_data_head(QDialog):
@@ -812,12 +811,10 @@ class View_data_head(QDialog):
 
         hbox2 = QHBoxLayout()
 
-        self.pbCancel = QPushButton("Cancel")
-        self.pbCancel.clicked.connect(self.reject)
+        self.pbCancel = QPushButton("Cancel", clicked=self.reject)
         hbox2.addWidget(self.pbCancel)
 
-        self.pbOK = QPushButton("OK")
-        self.pbOK.clicked.connect(self.accept)
+        self.pbOK = QPushButton("OK", clicked=self.accept)
         hbox2.addWidget(self.pbOK)
 
         vbox.addLayout(hbox2)
@@ -898,7 +895,7 @@ def choose_obs_subj_behav_category(pj: dict,
                                    flagShowExcludeBehaviorsWoEvents: bool = True,
                                    by_category: bool = False,
                                    show_time: bool = False,
-                                   timeFormat: str = HHMMSS):
+                                   timeFormat: str = cfg.HHMMSS):
 
     """
     show window for:
@@ -937,7 +934,7 @@ def choose_obs_subj_behav_category(pj: dict,
     paramPanelWindow.frm_time_interval.setEnabled(False)
 
 
-    if timeFormat == HHMMSS:
+    if timeFormat == cfg.HHMMSS:
         paramPanelWindow.start_time.set_format_hhmmss()
         paramPanelWindow.end_time.set_format_hhmmss()
         '''
@@ -947,7 +944,7 @@ def choose_obs_subj_behav_category(pj: dict,
         paramPanelWindow.dsbEndTime.setVisible(False)
         '''
 
-    if timeFormat == S:
+    if timeFormat == cfg.S:
         paramPanelWindow.start_time.set_format_s()
         paramPanelWindow.end_time.set_format_s()
         '''
@@ -968,20 +965,20 @@ def choose_obs_subj_behav_category(pj: dict,
         observedSubjects = project_functions.extract_observed_subjects(pj, selected_observations)
     else:
         # load all subjects and "No focal subject"
-        observedSubjects = [pj[SUBJECTS][x][SUBJECT_NAME] for x in pj[SUBJECTS]] + [""]
+        observedSubjects = [pj[cfg.SUBJECTS][x][cfg.SUBJECT_NAME] for x in pj[cfg.SUBJECTS]] + [""]
     selectedSubjects = []
 
     # add 'No focal subject'
     if "" in observedSubjects:
-        selectedSubjects.append(NO_FOCAL_SUBJECT)
+        selectedSubjects.append(cfg.NO_FOCAL_SUBJECT)
         paramPanelWindow.item = QListWidgetItem(paramPanelWindow.lwSubjects)
         paramPanelWindow.ch = QCheckBox()
-        paramPanelWindow.ch.setText(NO_FOCAL_SUBJECT)
+        paramPanelWindow.ch.setText(cfg.NO_FOCAL_SUBJECT)
         paramPanelWindow.ch.stateChanged.connect(paramPanelWindow.cb_changed)
         paramPanelWindow.ch.setChecked(True)
         paramPanelWindow.lwSubjects.setItemWidget(paramPanelWindow.item, paramPanelWindow.ch)
 
-    all_subjects = [pj[SUBJECTS][x][SUBJECT_NAME] for x in utilities.sorted_keys(pj[SUBJECTS])]
+    all_subjects = [pj[cfg.SUBJECTS][x][cfg.SUBJECT_NAME] for x in utilities.sorted_keys(pj[cfg.SUBJECTS])]
 
     for subject in all_subjects:
         paramPanelWindow.item = QListWidgetItem(paramPanelWindow.lwSubjects)
@@ -999,15 +996,15 @@ def choose_obs_subj_behav_category(pj: dict,
         observedBehaviors = paramPanelWindow.extract_observed_behaviors(selected_observations, selectedSubjects)  # not sorted
     else:
         # load all behaviors
-        observedBehaviors = [pj[ETHOGRAM][x][BEHAVIOR_CODE] for x in pj[ETHOGRAM]]
+        observedBehaviors = [pj[cfg.ETHOGRAM][x][cfg.BEHAVIOR_CODE] for x in pj[cfg.ETHOGRAM]]
 
     logging.debug(f'observed behaviors: {observedBehaviors}')
 
-    if BEHAVIORAL_CATEGORIES in pj:
-        categories = pj[BEHAVIORAL_CATEGORIES][:]
+    if cfg.BEHAVIORAL_CATEGORIES in pj:
+        categories = pj[cfg.BEHAVIORAL_CATEGORIES][:]
         # check if behavior not included in a category
         try:
-            if "" in [pj[ETHOGRAM][idx][BEHAVIOR_CATEGORY] for idx in pj[ETHOGRAM] if BEHAVIOR_CATEGORY in pj[ETHOGRAM][idx]]:
+            if "" in [pj[cfg.ETHOGRAM][idx][cfg.BEHAVIOR_CATEGORY] for idx in pj[cfg.ETHOGRAM] if cfg.BEHAVIOR_CATEGORY in pj[cfg.ETHOGRAM][idx]]:
                 categories += [""]
         except Exception:
             categories = ["###no category###"]
@@ -1033,11 +1030,11 @@ def choose_obs_subj_behav_category(pj: dict,
 
             paramPanelWindow.lwBehaviors.addItem(paramPanelWindow.item)
 
-        for behavior in [pj[ETHOGRAM][x][BEHAVIOR_CODE] for x in utilities.sorted_keys(pj[ETHOGRAM])]:
+        for behavior in [pj[cfg.ETHOGRAM][x][cfg.BEHAVIOR_CODE] for x in utilities.sorted_keys(pj[cfg.ETHOGRAM])]:
 
             if ((categories == ["###no category###"])
-                or (behavior in [pj[ETHOGRAM][x][BEHAVIOR_CODE] for x in pj[ETHOGRAM]
-                    if BEHAVIOR_CATEGORY in pj[ETHOGRAM][x] and pj[ETHOGRAM][x][BEHAVIOR_CATEGORY] == category])):
+                or (behavior in [pj[cfg.ETHOGRAM][x][cfg.BEHAVIOR_CODE] for x in pj[cfg.ETHOGRAM]
+                    if cfg.BEHAVIOR_CATEGORY in pj[cfg.ETHOGRAM][x] and pj[cfg.ETHOGRAM][x][cfg.BEHAVIOR_CATEGORY] == category])):
 
                 paramPanelWindow.item = QListWidgetItem(behavior)
                 if behavior in observedBehaviors:
@@ -1055,8 +1052,8 @@ def choose_obs_subj_behav_category(pj: dict,
                 paramPanelWindow.lwBehaviors.addItem(paramPanelWindow.item)
 
     if not paramPanelWindow.exec_():
-        return {SELECTED_SUBJECTS: [],
-                SELECTED_BEHAVIORS: []}
+        return {cfg.SELECTED_SUBJECTS: [],
+                cfg.SELECTED_BEHAVIORS: []}
 
     selectedSubjects = paramPanelWindow.selectedSubjects
     selectedBehaviors = paramPanelWindow.selectedBehaviors
@@ -1075,22 +1072,22 @@ def choose_obs_subj_behav_category(pj: dict,
         endTime = Decimal(paramPanelWindow.dsbEndTime.value())
     '''
     if startTime > endTime:
-        QMessageBox.warning(None, programName, "The start time is greater than the end time",
+        QMessageBox.warning(None, cfg.programName, "The start time is greater than the end time",
                             QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
-        return {SELECTED_SUBJECTS: [], SELECTED_BEHAVIORS: []}
+        return {cfg.SELECTED_SUBJECTS: [], cfg.SELECTED_BEHAVIORS: []}
 
     if paramPanelWindow.rb_full.isChecked():
-        time_param = TIME_FULL_OBS
+        time_param = cfg.TIME_FULL_OBS
     if paramPanelWindow.rb_limit.isChecked():
-        time_param = TIME_EVENTS
+        time_param = cfg.TIME_EVENTS
     if paramPanelWindow.rb_interval.isChecked():
-        time_param = TIME_ARBITRARY_INTERVAL
+        time_param = cfg.TIME_ARBITRARY_INTERVAL
 
-    return {SELECTED_SUBJECTS: selectedSubjects,
-            SELECTED_BEHAVIORS: selectedBehaviors,
-            INCLUDE_MODIFIERS: paramPanelWindow.cbIncludeModifiers.isChecked(),
-            EXCLUDE_BEHAVIORS: paramPanelWindow.cbExcludeBehaviors.isChecked(),
+    return {cfg.SELECTED_SUBJECTS: selectedSubjects,
+            cfg.SELECTED_BEHAVIORS: selectedBehaviors,
+            cfg.INCLUDE_MODIFIERS: paramPanelWindow.cbIncludeModifiers.isChecked(),
+            cfg.EXCLUDE_BEHAVIORS: paramPanelWindow.cbExcludeBehaviors.isChecked(),
             "time": time_param,
-            START_TIME: startTime,
-            END_TIME: endTime
+            cfg.START_TIME: startTime,
+            cfg.END_TIME: endTime
             }
