@@ -387,6 +387,10 @@ CATEGORY_COLORS_LIST = [
     "#3DC7AD",
 ]
 
+CODING_PAD_CONFIG = "coding pad configuration"
+CODING_PAD_GEOMETRY = "coding pad geometry"
+NO_COLOR_CODING_PAD = "#777777"
+
 SPECTROGRAM_COLOR_MAPS = ["viridis", "inferno", "plasma", "magma", "gray", "YlOrRd"]
 SPECTROGRAM_DEFAULT_COLOR_MAP = "viridis"
 SPECTROGRAM_DEFAULT_TIME_INTERVAL = 10
@@ -402,6 +406,8 @@ SPECTROGRAM_DEFAULT_TIME_INTERVAL = 10
 ACTIVE_MEASUREMENTS_COLOR = "lime"
 PASSIVE_MEASUREMENTS_COLOR = "red"
 
+
+# see matplotlib for color name
 BEHAVIORS_PLOT_COLORS = [
     "tab:blue",
     "tab:orange",

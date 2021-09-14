@@ -1482,11 +1482,12 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.keyPressEvent(q)
 
 
-    def close_signal_from_coding_pad(self, geom):
+    def close_signal_from_coding_pad(self, geometry, preferences):
         """
         save coding pad geometry after close
         """
-        self.codingpad_geometry_memory = geom
+        self.config_param[CODING_PAD_GEOMETRY] = geometry
+        self.config_param[CODING_PAD_CONFIG] = preferences
 
 
     def click_signal_from_subjects_pad(self, subject):
@@ -1525,14 +1526,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             if not self.codingpad.filtered_behaviors:
                 QMessageBox.warning(self, programName, "No behaviors to show!")
                 return
-            self.codingpad.compose()
             self.codingpad.show()
-            self.codingpad.setGeometry(self.codingpad_geometry_memory.x(),
-                                       self.codingpad_geometry_memory.y(),
-                                       self.codingpad_geometry_memory.width(),
-                                       self.codingpad_geometry_memory.height())
 
-        else:
+        else:  # coding pad does not exist
+
             filtered_behaviors = [self.twEthogram.item(i, 1).text() for i in range(self.twEthogram.rowCount())]
             if not filtered_behaviors:
                 QMessageBox.warning(self, programName, "No behaviors to show!")
@@ -1543,6 +1540,18 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.codingpad.clickSignal.connect(self.click_signal_from_coding_pad)
             self.codingpad.close_signal.connect(self.close_signal_from_coding_pad)
             self.codingpad.show()
+
+            if self.config_param.get(CODING_PAD_GEOMETRY, None):
+                self.codingpad.setGeometry(self.config_param[CODING_PAD_GEOMETRY].x(),
+                                           self.config_param[CODING_PAD_GEOMETRY].y(),
+                                           self.config_param[CODING_PAD_GEOMETRY].width(),
+                                           self.config_param[CODING_PAD_GEOMETRY].height())
+            else:
+                self.codingpad.setGeometry(200, 200, 660, 500)
+
+            if self.config_param.get(CODING_PAD_CONFIG, {}):
+                self.codingpad.preferences = self.config_param[CODING_PAD_CONFIG]
+                self.codingpad.button_configuration()
 
 
     def show_subjects_pad(self):
