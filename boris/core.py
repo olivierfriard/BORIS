@@ -1664,17 +1664,13 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         if hasattr(self, "codingpad"):
 
-            print("codingpad exists")
-
             self.codingpad.filtered_behaviors = [self.twEthogram.item(i, 1).text() for i in range(self.twEthogram.rowCount())]
             if not self.codingpad.filtered_behaviors:
                 QMessageBox.warning(self, programName, "No behaviors to show!")
                 return
             self.codingpad.show()
 
-        else:
-
-            print("codingpad does not exist")
+        else:  # coding pad does not exist
 
             filtered_behaviors = [self.twEthogram.item(i, 1).text() for i in range(self.twEthogram.rowCount())]
             if not filtered_behaviors:

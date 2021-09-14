@@ -20,10 +20,10 @@ Copyright 2012-2021 Olivier Friard
 """
 
 
-from PyQt5.QtGui import *
-from PyQt5.QtCore import *
-from PyQt5.QtWidgets import *
-
+from PyQt5.QtCore import (Qt, pyqtSignal, QEvent, QRect)
+from PyQt5.QtGui import QFont
+from PyQt5.QtWidgets import (QWidget, QPushButton, QHBoxLayout,
+                             QGridLayout, QComboBox, )
 
 from . import config as cfg
 from . import utilities as util
@@ -51,9 +51,8 @@ class CodingPad(QWidget):
         self.filtered_behaviors = filtered_behaviors
 
         self.preferences = {"button font size": 20,
-                                       "button color": "category"}
+                            "button color": cfg.BEHAVIOR_CATEGORY}
 
-        self.button_css = ("border-radius: 0px; min-width: 50px; min-height:50px; font-weight: bold; max-height:5000px; max-width: 5000px;")
         self.button_css = ("min-width: 50px; min-height:50px; font-weight: bold; max-height:5000px; max-width: 5000px;")
 
         self.setWindowTitle("Coding pad")
@@ -78,8 +77,6 @@ class CodingPad(QWidget):
             self.preferences["button color"] = "behavior"
         if self.cb_config.currentIndex() == 5:
             self.preferences["button color"] = "no color"
-
-
 
         self.cb_config.setCurrentIndex(0)
         self.button_configuration()
