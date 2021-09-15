@@ -24,9 +24,10 @@ This file is part of BORIS.
 import logging
 import os
 
-from boris.config import (BEHAVIORS_PLOT_COLORS, CANCEL)
-from boris.dialog import MessageDialog
-from boris.preferences_ui import Ui_prefDialog
+from .config import (BEHAVIORS_PLOT_COLORS, CATEGORY_COLORS_LIST, CANCEL)
+from .dialog import MessageDialog
+from .preferences_ui import Ui_prefDialog
+
 from PyQt5.QtWidgets import (QDialog, QFileDialog)
 
 
@@ -42,7 +43,8 @@ class Preferences(QDialog, Ui_prefDialog):
         self.rb_save_frames_on_disk.toggled.connect(self.rb_frames_mem_disk)
         self.cb_reset_frames_memory.clicked.connect(self.reset_frames_memory)
 
-        self.pb_reset_colors.clicked.connect(self.reset_colors)
+        self.pb_reset_behav_colors.clicked.connect(self.reset_behav_colors)
+        self.pb_reset_category_colors.clicked.connect(self.reset_category_colors)
 
         self.pb_refresh.clicked.connect(self.refresh_preferences)
         self.pbOK.clicked.connect(self.accept)
@@ -95,10 +97,19 @@ class Preferences(QDialog, Ui_prefDialog):
             self.leFFmpegCacheDir.setText(FFmpegCacheDir)
 
 
-    def reset_colors(self):
+    def reset_behav_colors(self):
         """
         reset behavior colors to default
         """
-        self.te_plot_colors.setPlainText("\n".join(BEHAVIORS_PLOT_COLORS))
+        self.te_behav_colors.setPlainText("\n".join(BEHAVIORS_PLOT_COLORS))
 
         logging.debug("reset behaviors colors to default")
+
+
+    def reset_category_colors(self):
+        """
+        reset category colors to default
+        """
+        self.te_category_colors.setPlainText("\n".join(CATEGORY_COLORS_LIST))
+
+        logging.debug("reset category colors to default")

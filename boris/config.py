@@ -372,13 +372,28 @@ subtitlesColors = [
 ]
 
 CATEGORY_COLORS_LIST = [
-    "#FF96CC",
-    "#96FF9C",
-    "#CCFFFE",
-    "#EEFF70",
-    "#FF4F64",
-    "#F8BF15",
-    "#3DC7AD",
+    "magenta",
+    "yellow",
+    "lime",
+    "darksalmon",
+    "purple",
+    "orange",
+    "maroon",
+    "silver",
+    "slateblue",
+    "hotpink",
+    "steelblue",
+    "darkgoldenrod",
+    "aqua",
+    "aquamarine",
+    "beige",
+    "bisque",
+    "black",
+    "blanchedalmond",
+    "blueviolet",
+    "brown",
+    "burlywood",
+    "cadetblue",
 ]
 
 CODING_PAD_CONFIG = "coding pad configuration"

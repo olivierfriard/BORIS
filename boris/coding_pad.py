@@ -70,7 +70,7 @@ class CodingPad(QWidget):
         if self.cb_config.currentIndex() == 1:   # increase text size
             self.preferences["button font size"] += 4
         if self.cb_config.currentIndex() == 2:   # decrease text size
-            self.preferences["button font size"] += 4
+            self.preferences["button font size"] -= 4
         if self.cb_config.currentIndex() == 3:
             self.preferences["button color"] = cfg.BEHAVIOR_CATEGORY
         if self.cb_config.currentIndex() == 4:

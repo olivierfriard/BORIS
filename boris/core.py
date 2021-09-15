@@ -364,6 +364,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     beep_every = 0
 
     plot_colors = BEHAVIORS_PLOT_COLORS
+    behav_category_colors = CATEGORY_COLORS_LIST
 
     measurement_w = None
     memPoints = []   # memory of clicked points for measurement tool
@@ -3492,10 +3493,16 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             except Exception:
                 preferencesWindow.sb_time_interval.setValue(SPECTROGRAM_DEFAULT_TIME_INTERVAL)
 
-            # plot colors
+            # behavior colors
             if not self.plot_colors:
                 self.plot_colors = BEHAVIORS_PLOT_COLORS
-            preferencesWindow.te_plot_colors.setPlainText("\n".join(self.plot_colors))
+            preferencesWindow.te_behav_colors.setPlainText("\n".join(self.plot_colors))
+
+            # category colors
+            if not self.behav_category_colors:
+                self.behav_category_colors = CATEGORY_COLORS_LIST
+            preferencesWindow.te_category_colors.setPlainText("\n".join(self.behav_category_colors))
+
 
             gui_utilities.restore_geometry(preferencesWindow, "preferences", (700, 500))
 
@@ -3620,8 +3627,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     self.FFmpegGlobalFrame -= 1
                     self.ffmpeg_timer_out()
 
-                # plot colors
-                self.plot_colors = preferencesWindow.te_plot_colors.toPlainText().split()
+                # behav colors
+                self.plot_colors = preferencesWindow.te_behav_colors.toPlainText().split()
+                # category colors
+                self.behav_category_colors = preferencesWindow.te_category_colors.toPlainText().split()
+
 
                 self.menu_options()
 
@@ -5769,6 +5779,20 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                                         [NO, YES]) == YES:
                     self.plot_colors = BEHAVIORS_PLOT_COLORS
 
+            # behavioral categories colors
+            try:
+                self.behav_category_colors = settings.value("behav_category_colors").split("|")
+            except Exception:
+                self.behav_category_colors = CATEGORY_COLORS_LIST
+
+            if ("white" in self.behav_category_colors
+                    or "azure" in self.behav_category_colors
+                    or "snow" in self.behav_category_colors):
+                if dialog.MessageDialog(programName, ("The colors list contain colors that are very light.\n"
+                                                      "Do you want to reload the default colors list?"),
+                                        [NO, YES]) == YES:
+                    self.behav_category_colors = CATEGORY_COLORS_LIST
+
 
         else:  # no .boris file found
             logging.info("No config file found")
@@ -5849,6 +5873,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         settings.setValue("spectrogram_time_interval", self.spectrogram_time_interval)
         # plot colors
         settings.setValue("plot_colors", "|".join(self.plot_colors))
+        # behavioral categories colors
+        settings.setValue("behav_category_colors", "|".join(self.behav_category_colors))
 
         # recent projects
         logging.debug("save recent projects")
