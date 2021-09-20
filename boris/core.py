@@ -1671,6 +1671,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 return
             self.codingpad.show()
 
+            # update colors
+            self.codingpad.behavior_colors_list = self.plot_colors
+            self.codingpad.behavioral_category_colors_list = self.behav_category_colors
+
+
         else:  # coding pad does not exist
 
             filtered_behaviors = [self.twEthogram.item(i, 1).text() for i in range(self.twEthogram.rowCount())]
@@ -1678,12 +1683,17 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 QMessageBox.warning(self, programName, "No behaviors to show!")
                 return
             self.codingpad = coding_pad.CodingPad(self.pj, filtered_behaviors)
+
+            self.codingpad.behavior_colors_list = self.plot_colors
+            self.codingpad.behavioral_category_colors_list = self.behav_category_colors
+
+            self.codingpad.compose()
+
             self.codingpad.setWindowFlags(Qt.WindowStaysOnTopHint)
             self.codingpad.sendEventSignal.connect(self.signal_from_widget)
             self.codingpad.clickSignal.connect(self.click_signal_from_coding_pad)
             self.codingpad.close_signal.connect(self.close_signal_from_coding_pad)
             self.codingpad.show()
-
 
             if self.config_param.get(CODING_PAD_GEOMETRY, None):
                 self.codingpad.setGeometry(self.config_param[CODING_PAD_GEOMETRY].x(),
