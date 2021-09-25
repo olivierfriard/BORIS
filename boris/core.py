@@ -304,6 +304,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     beep_every = 0
 
     plot_colors = BEHAVIORS_PLOT_COLORS
+    behav_category_colors = CATEGORY_COLORS_LIST
 
     measurement_w = None
     memPoints = []   # memory of clicked points for measurement tool
@@ -1522,11 +1523,17 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             return
 
         if hasattr(self, "codingpad"):
+
             self.codingpad.filtered_behaviors = [self.twEthogram.item(i, 1).text() for i in range(self.twEthogram.rowCount())]
             if not self.codingpad.filtered_behaviors:
                 QMessageBox.warning(self, programName, "No behaviors to show!")
                 return
             self.codingpad.show()
+
+            # update colors
+            self.codingpad.behavior_colors_list = self.plot_colors
+            self.codingpad.behavioral_category_colors_list = self.behav_category_colors
+
 
         else:  # coding pad does not exist
 
@@ -1535,6 +1542,12 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 QMessageBox.warning(self, programName, "No behaviors to show!")
                 return
             self.codingpad = coding_pad.CodingPad(self.pj, filtered_behaviors)
+
+            self.codingpad.behavior_colors_list = self.plot_colors
+            self.codingpad.behavioral_category_colors_list = self.behav_category_colors
+
+            self.codingpad.compose()
+
             self.codingpad.setWindowFlags(Qt.WindowStaysOnTopHint)
             self.codingpad.sendEventSignal.connect(self.signal_from_widget)
             self.codingpad.clickSignal.connect(self.click_signal_from_coding_pad)
@@ -1604,6 +1617,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         show all subjects in subjects list
         """
         self.load_subjects_in_twSubjects([self.pj[SUBJECTS][x][SUBJECT_NAME] for x in self.pj[SUBJECTS]])
+
+
 
 
     def filter_behaviors(self,
@@ -5079,6 +5094,20 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                                         [NO, YES]) == YES:
                     self.plot_colors = BEHAVIORS_PLOT_COLORS
 
+            # behavioral categories colors
+            try:
+                self.behav_category_colors = settings.value("behav_category_colors").split("|")
+            except Exception:
+                self.behav_category_colors = CATEGORY_COLORS_LIST
+
+            if ("white" in self.behav_category_colors
+                    or "azure" in self.behav_category_colors
+                    or "snow" in self.behav_category_colors):
+                if dialog.MessageDialog(programName, ("The colors list contain colors that are very light.\n"
+                                                      "Do you want to reload the default colors list?"),
+                                        [NO, YES]) == YES:
+                    self.behav_category_colors = CATEGORY_COLORS_LIST
+
 
         else:  # no .boris file found
             logging.info("No config file found")
@@ -5158,6 +5187,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         settings.setValue("spectrogram_time_interval", self.spectrogram_time_interval)
         # plot colors
         settings.setValue("plot_colors", "|".join(self.plot_colors))
+        # behavioral categories colors
+        settings.setValue("behav_category_colors", "|".join(self.behav_category_colors))
 
         # recent projects
         logging.debug("save recent projects")

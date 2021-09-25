@@ -392,28 +392,56 @@
         <attribute name="title">
          <string>Plot colors</string>
         </attribute>
-        <layout class="QVBoxLayout" name="verticalLayout_11">
+        <layout class="QVBoxLayout" name="verticalLayout_10">
          <item>
-          <layout class="QVBoxLayout" name="verticalLayout_10">
+          <layout class="QHBoxLayout" name="horizontalLayout_12">
            <item>
-            <widget class="QLabel" name="label_10">
-             <property name="text">
-              <string>List of colors to be used in plot. See &lt;a href=&quot;https://matplotlib.org/api/colors_api.html&quot;&gt;matplotlib colors&lt;/a&gt;</string>
-             </property>
-             <property name="openExternalLinks">
-              <bool>true</bool>
-             </property>
-            </widget>
+            <layout class="QVBoxLayout" name="verticalLayout_6">
+             <item>
+              <widget class="QLabel" name="label_10">
+               <property name="text">
+                <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;List of colors for behaviors. See &lt;a href=&quot;https://matplotlib.org/api/colors_api.html&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#0000ff;&quot;&gt;matplotlib colors&lt;/span&gt;&lt;/a&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+               </property>
+               <property name="openExternalLinks">
+                <bool>true</bool>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QPlainTextEdit" name="te_behav_colors"/>
+             </item>
+             <item>
+              <widget class="QPushButton" name="pb_reset_behav_colors">
+               <property name="text">
+                <string>Reset colors to default</string>
+               </property>
+              </widget>
+             </item>
+            </layout>
            </item>
            <item>
-            <widget class="QPlainTextEdit" name="te_plot_colors"/>
-           </item>
-           <item>
-            <widget class="QPushButton" name="pb_reset_colors">
-             <property name="text">
-              <string>Reset colors to default</string>
-             </property>
-            </widget>
+            <layout class="QVBoxLayout" name="verticalLayout_9">
+             <item>
+              <widget class="QLabel" name="label_11">
+               <property name="text">
+                <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;List of colors for behavioral categories. See &lt;a href=&quot;https://matplotlib.org/api/colors_api.html&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#0000ff;&quot;&gt;matplotlib colors&lt;/span&gt;&lt;/a&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+               </property>
+               <property name="openExternalLinks">
+                <bool>true</bool>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QPlainTextEdit" name="te_category_colors"/>
+             </item>
+             <item>
+              <widget class="QPushButton" name="pb_reset_category_colors">
+               <property name="text">
+                <string>Reset colors to default</string>
+               </property>
+              </widget>
+             </item>
+            </layout>
            </item>
           </layout>
          </item>
