@@ -33,6 +33,7 @@ class Button(QWidget):
     def __init__(self, parent=None):
         super(Button, self).__init__(parent)
         self.pushButton = QPushButton()
+        # self.pushButton.setCheckable(True)
         self.pushButton.setFocusPolicy(Qt.NoFocus)
         layout = QHBoxLayout()
         layout.addWidget(self.pushButton)
@@ -123,7 +124,7 @@ class CodingPad(QWidget):
                             if cfg.BEHAVIOR_CATEGORY in self.pj[cfg.ETHOGRAM][x] and self.pj[cfg.ETHOGRAM][x][cfg.BEHAVIOR_CODE] in self.filtered_behaviors]
 
         # square grid dimension
-        dim = int(len(behaviorsList)**0.5 + 0.999)
+        dim = int(len(behaviorsList) ** 0.5 + 0.999)
 
         c = 0
         for i in range(1, dim + 1):
@@ -136,21 +137,24 @@ class CodingPad(QWidget):
         self.button_configuration()
 
 
-    def addWidget(self, behaviorCode, i, j):
+    def addWidget(self, behavior_code, i, j):
 
         self.grid.addWidget(Button(), i, j)
         index = self.grid.count() - 1
         widget = self.grid.itemAt(index).widget()
 
         if widget is not None:
-            widget.pushButton.setText(behaviorCode)
-            widget.pushButton.clicked.connect(lambda: self.click(behaviorCode))
+            widget.pushButton.setText(behavior_code)
+
+            widget.pushButton.clicked.connect(lambda: self.click(behavior_code))
 
 
     def button_configuration(self):
         """
         configure the font and color of buttons
         """
+
+        state_behaviors_list = util.state_behavior_codes(self.pj[cfg.ETHOGRAM])
 
         for index in range(self.grid.count()):
             if self.grid.itemAt(index).widget() is None:
@@ -167,9 +171,12 @@ class CodingPad(QWidget):
                 color = self.behavior_colors_list[behavior_position % len(self.behavior_colors_list)].replace("tab:", "")
 
             if self.preferences["button color"] == "no color":
-                color = cfg.NO_COLOR_CODING_PAD
+                #color = cfg.NO_COLOR_CODING_PAD
+                color = ""
 
-            self.grid.itemAt(index).widget().pushButton.setStyleSheet(self.button_css + f"background-color: {color};")
+            # set checkable if state behavior
+            self.grid.itemAt(index).widget().pushButton.setCheckable(behavior_code in state_behaviors_list)
+            self.grid.itemAt(index).widget().pushButton.setStyleSheet(self.button_css + (f"background-color: {color};" if color else ""))
             font = QFont("Arial", self.preferences["button font size"])
             self.grid.itemAt(index).widget().pushButton.setFont(font)
 

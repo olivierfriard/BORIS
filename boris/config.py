@@ -398,7 +398,7 @@ CATEGORY_COLORS_LIST = [
 
 CODING_PAD_CONFIG = "coding pad configuration"
 CODING_PAD_GEOMETRY = "coding pad geometry"
-NO_COLOR_CODING_PAD = "#777777"
+# NO_COLOR_CODING_PAD = "#777777"
 
 SPECTROGRAM_COLOR_MAPS = ["viridis", "inferno", "plasma", "magma", "gray", "YlOrRd"]
 SPECTROGRAM_DEFAULT_COLOR_MAP = "viridis"
