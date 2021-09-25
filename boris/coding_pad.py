@@ -33,7 +33,6 @@ class Button(QWidget):
     def __init__(self, parent=None):
         super(Button, self).__init__(parent)
         self.pushButton = QPushButton()
-        # self.pushButton.setCheckable(True)
         self.pushButton.setFocusPolicy(Qt.NoFocus)
         layout = QHBoxLayout()
         layout.addWidget(self.pushButton)

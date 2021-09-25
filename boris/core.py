@@ -5652,26 +5652,12 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
             logging.debug(f"close_the_same_current_event: {self.close_the_same_current_event}")
 
-            self.confirmSound = False
-            try:
-                self.confirmSound = (settings.value("confirm_sound") == "true")
-            except Exception:
-                self.confirmSound = False
 
-            logging.debug(f"confirm_sound: {self.confirmSound}")
+            self.confirmSound = (settings.value("confirm_sound", defaultValue=False) == "true")
 
-            self.alertNoFocalSubject = False
-            try:
-                self.alertNoFocalSubject = (settings.value("alert_nosubject") == "true")
-            except Exception:
-                self.alertNoFocalSubject = False
-            logging.debug(f"alert_nosubject: {self.alertNoFocalSubject}")
+            self.alertNoFocalSubject = (settings.value("alert_nosubject", defaultValue=False) == "true")
 
-            try:
-                self.beep_every = int(settings.value("beep_every"))
-            except Exception:
-                self.beep_every = 0
-            logging.debug(f"beep_every: {self.beep_every}")
+            self.beep_every = int(settings.value("beep_every", defaultValue=0))
 
             self.trackingCursorAboveEvent = False
             try:
