@@ -4156,9 +4156,13 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
                     self.measurement_w.pte.appendPlainText((f"Time: {self.getLaps()}\tPlayer: {n_player + 1}\t"
                                                             f"Frame: {self.FFmpegGlobalFrame}\tPoint: {x_video},{y_video}"))
+                    self.measurement_w.flagSaved = False
                 
-                if event.button() == Qt.MiddleButton:   # middle
-                    self.measurement_w.draw_mem[self.FFmpegGlobalFrame].pop(-1)
+                if event.button() == Qt.MiddleButton:   # delete point
+                    if self.measurement_w.draw_mem[self.FFmpegGlobalFrame]:
+                        self.measurement_w.draw_mem[self.FFmpegGlobalFrame].pop(-1)
+                        self.measurement_w.flagSaved = False
+                        self.clear_measurements()
 
 
             # distance
@@ -4190,6 +4194,13 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                                                             f"Frame: {self.FFmpegGlobalFrame}\tDistance: {round(distance, 1)}"))
                     self.measurement_w.flagSaved = False
                     self.memx, self.memy = -1, -1
+
+                if event.button() == Qt.MiddleButton:   # delete
+
+                    if self.memx != -1 and self.memy != -1:
+                        self.memx, self.memy = -1, -1
+                        self.clear_measurements()
+
 
             # angle 1st clic -> vertex
             if self.measurement_w.rbAngle.isChecked():
