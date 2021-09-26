@@ -4136,7 +4136,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
             # video resolution player.mediaplayer.video_get_size(0)
             video_width, video_height = self.dw_player[n_player].mediaplayer.video_get_size(0)
-            print(video_width, video_height)
 
             # convert pixmap coordinates in video coordinates
             x_video = round((x / self.dw_player[n_player].frame_viewer.pixmap().width()) * video_width)
@@ -4148,7 +4147,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
             # point
             if self.measurement_w.rbPoint.isChecked():
-                if event.button() == 1:   # left
+                if event.button() == Qt.LeftButton:   # left
                     self.draw_point(x, y, ACTIVE_MEASUREMENTS_COLOR, n_player)
                     if self.FFmpegGlobalFrame in self.measurement_w.draw_mem:
                         self.measurement_w.draw_mem[self.FFmpegGlobalFrame].append([n_player, "point", x, y])
@@ -4157,16 +4156,20 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
                     self.measurement_w.pte.appendPlainText((f"Time: {self.getLaps()}\tPlayer: {n_player + 1}\t"
                                                             f"Frame: {self.FFmpegGlobalFrame}\tPoint: {x_video},{y_video}"))
+                
+                if event.button() == Qt.MiddleButton:   # middle
+                    self.measurement_w.draw_mem[self.FFmpegGlobalFrame].pop(-1)
 
 
             # distance
             if self.measurement_w.rbDistance.isChecked():
-                if event.button() == 1:   # left
+
+                if event.button() == Qt.LeftButton:
                     self.draw_point(x, y, ACTIVE_MEASUREMENTS_COLOR, n_player)
                     self.memx, self.memy = x, y
                     self.memx_video, self.memy_video = x_video, y_video
 
-                if event.button() == 2 and self.memx != -1 and self.memy != -1:
+                if event.button() == Qt.RightButton and self.memx != -1 and self.memy != -1:
                     self.draw_point(x, y, ACTIVE_MEASUREMENTS_COLOR, n_player)
                     self.draw_line(self.memx, self.memy, x, y, ACTIVE_MEASUREMENTS_COLOR, n_player)
 
@@ -4190,11 +4193,13 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
             # angle 1st clic -> vertex
             if self.measurement_w.rbAngle.isChecked():
-                if event.button() == 1:   # left for vertex
+                # left for vertex
+                if event.button() == Qt.LeftButton:   
                     self.draw_point(x, y, ACTIVE_MEASUREMENTS_COLOR, n_player)
                     self.memPoints = [(x, y)]
 
-                if event.button() == 2 and len(self.memPoints):
+                # right button
+                if event.button() == Qt.RightButton and len(self.memPoints):
                     self.draw_point(x, y, ACTIVE_MEASUREMENTS_COLOR, n_player)
                     self.draw_line(self.memPoints[0][0], self.memPoints[0][1], x, y, ACTIVE_MEASUREMENTS_COLOR, n_player)
 
@@ -4215,14 +4220,14 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
             # Area
             if self.measurement_w.rbArea.isChecked():
-                if event.button() == 1:   # left
+                if event.button() == Qt.LeftButton:   # left
                     self.draw_point(x, y, ACTIVE_MEASUREMENTS_COLOR)
                     if len(self.memPoints):
                         self.draw_line(self.memPoints[-1][0], self.memPoints[-1][1], x, y, ACTIVE_MEASUREMENTS_COLOR, n_player)
                     self.memPoints.append((x, y))
                     self.memPoints_video.append((x_video, y_video))
 
-                if event.button() == 2 and len(self.memPoints) >= 2:
+                if event.button() == Qt.RightButton and len(self.memPoints) >= 2:
                     self.draw_point(x, y, ACTIVE_MEASUREMENTS_COLOR, n_player)
                     self.draw_line(self.memPoints[-1][0], self.memPoints[-1][1], x, y, ACTIVE_MEASUREMENTS_COLOR, n_player)
                     self.memPoints.append((x, y))
