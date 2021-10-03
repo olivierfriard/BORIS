@@ -7622,11 +7622,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                         # replace various char by _
                         for char in [" ", "-", "/"]:
                             subject = subject.replace(char, "_")
-                        event_start = "{0:.3f}".format(float(event[start_idx]))  # start event (from end for independent variables)
+                        event_start = f"{float(event[start_idx]):.3f}"  # start event (from end for independent variables)
                         if not event[stop_idx]:  # stop event (from end)
-                            event_stop = "{0:.3f}".format(float(event[start_idx]) + 0.001)
+                            event_stop = f"{float(event[start_idx]) + 0.001:.3f}"
                         else:
-                            event_stop = "{0:.3f}".format(float(event[stop_idx]))
+                            event_stop = f"{float(event[stop_idx]):.3f}"
 
                         bs_timed = ([f"{subject}_{behavior}"] *
                                     round((float(event_stop) - float(event_start)) * 100))
@@ -9316,6 +9316,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                                 cm[cs] = ev[EVENT_MODIFIER_FIELD_IDX]
 
                 logging.debug(f"cm {cm}")
+
                 for cs in csj:
                     # close state if same state without modifier
                     if (self.close_the_same_current_event and
@@ -9326,7 +9327,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     if (event["excluded"] and cs in event["excluded"].split(",")) or (event["code"] == cs and cm[cs] != modifier_str):
                         # add excluded state event to observations (= STOP them)
                         self.pj[OBSERVATIONS][self.observationId][EVENTS].append(
-                            [memTime - Decimal("0.001"), self.currentSubject, cs, cm[cs], ""]
+                            #[memTime - Decimal("0.001"), self.currentSubject, cs, cm[cs], ""]
+                            [memTime, self.currentSubject, cs, cm[cs], ""]
                         )
 
             # remove key code from modifiers
