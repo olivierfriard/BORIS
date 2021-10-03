@@ -3229,10 +3229,16 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             except Exception:
                 preferencesWindow.sb_time_interval.setValue(SPECTROGRAM_DEFAULT_TIME_INTERVAL)
 
-            # plot colors
+            # behavior colors
             if not self.plot_colors:
                 self.plot_colors = BEHAVIORS_PLOT_COLORS
-            preferencesWindow.te_plot_colors.setPlainText("\n".join(self.plot_colors))
+            preferencesWindow.te_behav_colors.setPlainText("\n".join(self.plot_colors))
+
+            # category colors
+            if not self.behav_category_colors:
+                self.behav_category_colors = CATEGORY_COLORS_LIST
+            preferencesWindow.te_category_colors.setPlainText("\n".join(self.behav_category_colors))
+
 
             gui_utilities.restore_geometry(preferencesWindow, "preferences", (700, 500))
 
@@ -3316,8 +3322,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 # self.spectrogramHeight = preferencesWindow.sbSpectrogramHeight.value()
                 self.spectrogram_time_interval = preferencesWindow.sb_time_interval.value()
 
-                # plot colors
-                self.plot_colors = preferencesWindow.te_plot_colors.toPlainText().split()
+                # behav colors
+                self.plot_colors = preferencesWindow.te_behav_colors.toPlainText().split()
+                # category colors
+                self.behav_category_colors = preferencesWindow.te_category_colors.toPlainText().split()
+
 
                 self.menu_options()
 
