@@ -41,9 +41,10 @@ from boris import export_observation
 from boris import param_panel
 from boris import exclusion_matrix
 from boris import project_import
-from boris.config import (programName, behavioursFields, subjectsFields, function_keys, YES, CANCEL,
-                          BEHAVIORAL_CATEGORIES, ETHOGRAM, BEHAVIOR_CATEGORY, BEHAVIOR_CODE, BEHAVIORS_CODING_MAP,
-                          PROJECT_BEHAVIORS_KEY_FIELD_IDX, PROJECT_BEHAVIORS_CODE_FIELD_IDX, TYPE)
+from .config import (programName, behavioursFields, tw_indVarFields, subjectsFields, function_keys, YES, CANCEL, OK,
+                     INDEPENDENT_VARIABLES, CONVERTERS, CODING_MAP, BEHAVIORAL_CATEGORIES, ETHOGRAM, BEHAVIOR_CATEGORY,
+                     BEHAVIOR_CODE, BEHAVIORS_CODING_MAP, PROJECT_BEHAVIORS_KEY_FIELD_IDX,
+                     PROJECT_BEHAVIORS_CODE_FIELD_IDX, TYPE, HHMMSS, S, NO)
 
 from boris.project_ui import Ui_dlgProject
 import boris.utilities as utilities
