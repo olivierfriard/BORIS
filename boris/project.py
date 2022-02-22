@@ -35,7 +35,7 @@ from PyQt5.QtCore import Qt
 from PyQt5.QtGui import *
 from PyQt5.QtWidgets import *
 
-from boris import add_modifier
+from . import add_modifier
 from boris import dialog
 from boris import export_observation
 from boris import param_panel
