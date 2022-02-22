@@ -475,20 +475,39 @@ class projectDialog(QDialog, Ui_dlgProject):
                 ethogram_data.title = f"Ethogram of {self.leProjectName.text()} project"
 
             ethogram_data.headers = [
-                "Behavior code", "Behavior type", "Description", "Key", "Behavioral category", "Excluded behaviors"
+                "Behavior code", "Behavior type", "Description", "Key", "Behavioral category", "Excluded behaviors",
+                "modifiers names and values", "modifiers (JSON)"
             ]
 
             for r in range(self.twBehaviors.rowCount()):
                 row = []
                 for field in ["code", TYPE, "description", "key", "category", "excluded"]:
                     row.append(self.twBehaviors.item(r, behavioursFields[field]).text())
+
+                # modifiers
+                if self.twBehaviors.item(r, behavioursFields["modifiers"]).text():
+                    modifiers_dict = eval(self.twBehaviors.item(r, behavioursFields["modifiers"]).text())
+                    modifiers_list = []
+                    for key in modifiers_dict:
+                        if modifiers_dict[key]['values']:
+                            values = ", ".join(modifiers_dict[key]['values'])
+                            modifiers_list.append(f"{modifiers_dict[key]['name']} ({values})")
+                        else:
+                            modifiers_list.append(modifiers_dict[key]['name'])
+
+                    row.append(", ".join(modifiers_list))
+                    row.append(json.dumps(modifiers_dict))
+                else:
+                    row.append("")
+                    row.append("")
+
                 ethogram_data.append(row)
 
             ok, msg = export_observation.dataset_write(ethogram_data, fileName, outputFormat)
             if not ok:
                 QMessageBox.critical(None, programName, msg, QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
         except Exception:
-            dialog.error_message2()
+            dialog.error_message(sys._getframe().f_code.co_name, sys.exc_info())
 
     def leLabel_changed(self):
         try:
