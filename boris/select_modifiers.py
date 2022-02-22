@@ -2,7 +2,7 @@
 """
 BORIS
 Behavioral Observation Research Interactive Software
-Copyright 2012-2021 Olivier Friard
+Copyright 2012-2022 Olivier Friard
 
 This file is part of BORIS.
 
@@ -20,7 +20,6 @@ This file is part of BORIS.
   along with this program; if not see <http://www.gnu.org/licenses/>.
 
 """
-
 
 from PyQt5.QtGui import *
 from PyQt5.QtCore import *
@@ -81,7 +80,8 @@ class ModifiersList(QDialog):
 
                         # previously selected
                         try:
-                            if currentModifierList != [""] and re.sub(" \(.\)", "", modifier) in currentModifierList[int(idx)].split(","):
+                            if currentModifierList != [""] and re.sub(
+                                    " \(.\)", "", modifier) in currentModifierList[int(idx)].split(","):
                                 item.setCheckState(Qt.Checked)
                         except Exception:  # for old projects due to a fixed bug
                             pass
@@ -90,7 +90,8 @@ class ModifiersList(QDialog):
 
                     if self.modifiers_dict[idx]["type"] == SINGLE_SELECTION:
                         try:
-                            if currentModifierList != [""] and re.sub(" \(.\)", "", modifier) == currentModifierList[int(idx)]:
+                            if currentModifierList != [""] and re.sub(" \(.\)", "",
+                                                                      modifier) == currentModifierList[int(idx)]:
                                 item.setSelected(True)
                         except Exception:  # for old projects due to a fixed bug
                             pass
@@ -131,7 +132,6 @@ class ModifiersList(QDialog):
         self.installEventFilter(self)
         self.setMaximumSize(1024, 960)
 
-
     def eventFilter(self, receiver, event):
         """
         send event (if keypress) to main window
@@ -161,7 +161,8 @@ class ModifiersList(QDialog):
                             # modifiers have no associated code: the modifier starting with hit key will be selected
                             if ek not in [Qt.Key_Down, Qt.Key_Up]:
 
-                                if ek == Qt.Key_Space and f"({MULTI_SELECTION})" in widget.objectName(): # checking using SPACE bar
+                                if ek == Qt.Key_Space and f"({MULTI_SELECTION})" in widget.objectName(
+                                ):  # checking using SPACE bar
                                     if widget.item(widget.currentRow()).checkState() == Qt.Checked:
                                         widget.item(widget.currentRow()).setCheckState(Qt.Unchecked)
                                     else:
@@ -173,7 +174,7 @@ class ModifiersList(QDialog):
                                             widget.setCurrentRow(index)
                                             widget.scrollToItem(widget.item(index), QAbstractItemView.EnsureVisible)
                                             return True
-                            else: # up / down keys
+                            else:  # up / down keys
                                 try:
                                     if ek == Qt.Key_Down and widget.currentRow() < widget.count() - 1:
                                         widget.setCurrentRow(widget.currentRow() + 1)
@@ -199,7 +200,6 @@ class ModifiersList(QDialog):
                                     else:
                                         widget.item(index).setCheckState(Qt.Checked)
 
-
                         if ek < 1114112 and f"({ek_text})" in widget.item(index).text():
 
                             if f"({SINGLE_SELECTION})" in widget.objectName():
@@ -215,11 +215,9 @@ class ModifiersList(QDialog):
                                 else:
                                     widget.item(index).setCheckState(Qt.Checked)
 
-
             return True
         else:
             return False
-
 
     def get_modifiers(self):
         """
@@ -246,8 +244,8 @@ class ModifiersList(QDialog):
                     self.modifiers_dict[idx]["selected"].append(re.sub(" \(.*\)", "", item.text()))
 
             if self.modifiers_dict[idx]["type"] == NUMERIC_MODIFIER:
-                self.modifiers_dict[idx]["selected"] = self.modifiers_dict[idx]["widget"].text() if self.modifiers_dict[idx]["widget"].text(
-                ) else "None"
+                self.modifiers_dict[idx]["selected"] = self.modifiers_dict[idx]["widget"].text(
+                ) if self.modifiers_dict[idx]["widget"].text() else "None"
         '''
         for widget in self.children():
             if widget.objectName() == "lw_modifiers_classic":
@@ -261,7 +259,6 @@ class ModifiersList(QDialog):
 
         return self.modifiers_dict
 
-
     def pbOK_clicked(self):
 
         for idx in sorted_keys(self.modifiers_dict):
@@ -270,8 +267,9 @@ class ModifiersList(QDialog):
                     try:
                         val = float(self.modifiers_dict[idx]["widget"].text())
                     except Exception:
-                        QMessageBox.warning(self, programName,
-                                            "<b>{}</b> is not a numeric value".format(self.modifiers_dict[idx]["widget"].text()))
+                        QMessageBox.warning(
+                            self, programName,
+                            "<b>{}</b> is not a numeric value".format(self.modifiers_dict[idx]["widget"].text()))
                         return
 
         self.accept()

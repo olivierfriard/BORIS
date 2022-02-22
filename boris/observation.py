@@ -1,7 +1,7 @@
 """
 BORIS
 Behavioral Observation Research Interactive Software
-Copyright 2012-2021 Olivier Friard
+Copyright 2012-2022 Olivier Friard
 
 This file is part of BORIS.
 
@@ -19,7 +19,6 @@ This file is part of BORIS.
   along with this program; if not see <http://www.gnu.org/licenses/>.
 
 """
-
 
 import glob
 import hashlib
@@ -148,7 +147,6 @@ class Observation(QDialog, Ui_Form):
 
         self.tabWidget.setCurrentIndex(0)
 
-
     def cb_start_from_current_time_changed(self):
         """
         enable/disable radiobox for type of time selection
@@ -187,11 +185,11 @@ class Observation(QDialog, Ui_Form):
                     self.cb_observation_time_interval.setChecked(False)
                     return
                 self.observation_time_interval = [start_time, stop_time]
-                self.cb_observation_time_interval.setText(f"Limit observation to a time interval: {start_time} - {stop_time}")
+                self.cb_observation_time_interval.setText(
+                    f"Limit observation to a time interval: {start_time} - {stop_time}")
         else:
             self.observation_time_interval = [0, 0]
             self.cb_observation_time_interval.setText("Limit observation to a time interval")
-
 
     def tw_data_files_cellDoubleClicked(self, row, column):
         """
@@ -199,18 +197,20 @@ class Observation(QDialog, Ui_Form):
         """
         if column == PLOT_DATA_CONVERTERS_IDX:
             if self.tw_data_files.item(row, PLOT_DATA_COLUMNS_IDX).text():
-                w = AssignConverter(self.tw_data_files.item(row, PLOT_DATA_COLUMNS_IDX).text(), self.converters,
-                                    eval(self.tw_data_files.item(row, PLOT_DATA_CONVERTERS_IDX).text()) if self.tw_data_files.item(row, PLOT_DATA_CONVERTERS_IDX).text() else "")
+                w = AssignConverter(
+                    self.tw_data_files.item(row, PLOT_DATA_COLUMNS_IDX).text(), self.converters,
+                    eval(self.tw_data_files.item(row, PLOT_DATA_CONVERTERS_IDX).text()) if self.tw_data_files.item(
+                        row, PLOT_DATA_CONVERTERS_IDX).text() else "")
 
                 if w.exec_():
                     d = {}
-                    for col_idx, cb in zip(self.tw_data_files.item(row, PLOT_DATA_COLUMNS_IDX).text().split(","), w.cbb):
+                    for col_idx, cb in zip(
+                            self.tw_data_files.item(row, PLOT_DATA_COLUMNS_IDX).text().split(","), w.cbb):
                         if cb.currentText() != "None":
                             d[col_idx] = cb.currentText()
                     self.tw_data_files.item(row, PLOT_DATA_CONVERTERS_IDX).setText(str(d))
             else:
                 QMessageBox.critical(self, programName, "Select the columns to plot (time,value)")
-
 
     def plot_data_file(self):
         """
@@ -237,11 +237,12 @@ class Observation(QDialog, Ui_Form):
                 else:
                     column_converter = {}
 
-                variable_name  = self.tw_data_files.item(row_idx, PLOT_DATA_VARIABLENAME_IDX).text()
+                variable_name = self.tw_data_files.item(row_idx, PLOT_DATA_VARIABLENAME_IDX).text()
                 time_interval = int(self.tw_data_files.item(row_idx, PLOT_DATA_TIMEINTERVAL_IDX).text())
                 time_offset = int(self.tw_data_files.item(row_idx, PLOT_DATA_TIMEOFFSET_IDX).text())
 
-                substract_first_value = self.tw_data_files.cellWidget(row_idx, PLOT_DATA_SUBSTRACT1STVALUE_IDX).currentText()
+                substract_first_value = self.tw_data_files.cellWidget(row_idx,
+                                                                      PLOT_DATA_SUBSTRACT1STVALUE_IDX).currentText()
 
                 plot_color = self.tw_data_files.cellWidget(row_idx, PLOT_DATA_PLOTCOLOR_IDX).currentText()
 
@@ -253,18 +254,18 @@ class Observation(QDialog, Ui_Form):
                                                              "must be in the same directory than your project"))
                     return
 
-                self.test = plot_data_module.Plot_data(data_file_path,
-                                                  time_interval,  # time interval
-                                                  time_offset,   # time offset
-                                                  plot_color,    # plot style
-                                                  plot_title,    # plot title
-                                                  variable_name,
-                                                  columns_to_plot,
-                                                  substract_first_value,
-                                                  self.converters,
-                                                  column_converter,
-                                                  log_level=logging.getLogger().getEffectiveLevel()
-                                                  )
+                self.test = plot_data_module.Plot_data(
+                    data_file_path,
+                    time_interval,  # time interval
+                    time_offset,  # time offset
+                    plot_color,  # plot style
+                    plot_title,  # plot title
+                    variable_name,
+                    columns_to_plot,
+                    substract_first_value,
+                    self.converters,
+                    column_converter,
+                    log_level=logging.getLogger().getEffectiveLevel())
 
                 if self.test.error_msg:
                     QMessageBox.critical(self, programName, f"Impossible to plot data:\n{self.test.error_msg}")
@@ -279,10 +280,9 @@ class Observation(QDialog, Ui_Form):
             else:
                 QMessageBox.warning(self, programName, "Select a data file")
 
-        else: # close plot
+        else:  # close plot
             self.test.close_plot()
             self.pb_plot_data.setText("Show plot")
-
 
     def add_data_file(self, flag_path=True):
         """
@@ -349,7 +349,8 @@ class Observation(QDialog, Ui_Form):
                             try:
                                 col_idx = int(col)
                             except ValueError:
-                                QMessageBox.critical(self, programName, f"<b>{col}</b> does not seem to be a column index")
+                                QMessageBox.critical(self, programName,
+                                                     f"<b>{col}</b> does not seem to be a column index")
                                 flag_ok = False
                                 break
                             if col_idx <= 0 or col_idx > r["fields number"]:
@@ -365,21 +366,17 @@ class Observation(QDialog, Ui_Form):
                     return
 
             else:
-                return # problem with header
+                return  # problem with header
 
             self.tw_data_files.setRowCount(self.tw_data_files.rowCount() + 1)
 
             if not flag_path:
                 file_name = str(Path(file_name).name)
 
-            for col_idx, value in zip([PLOT_DATA_FILEPATH_IDX, PLOT_DATA_COLUMNS_IDX,
-                                       PLOT_DATA_PLOTTITLE_IDX, PLOT_DATA_VARIABLENAME_IDX,
-                                       PLOT_DATA_CONVERTERS_IDX, PLOT_DATA_TIMEINTERVAL_IDX,
-                                       PLOT_DATA_TIMEOFFSET_IDX],
-                                      [file_name, columns_to_plot,
-                                       "", "",
-                                       "", "60",
-                                       "0"]):
+            for col_idx, value in zip([
+                    PLOT_DATA_FILEPATH_IDX, PLOT_DATA_COLUMNS_IDX, PLOT_DATA_PLOTTITLE_IDX, PLOT_DATA_VARIABLENAME_IDX,
+                    PLOT_DATA_CONVERTERS_IDX, PLOT_DATA_TIMEINTERVAL_IDX, PLOT_DATA_TIMEOFFSET_IDX
+            ], [file_name, columns_to_plot, "", "", "", "60", "0"]):
                 item = QTableWidgetItem(value)
                 if col_idx == PLOT_DATA_CONVERTERS_IDX:
                     item.setFlags(Qt.ItemIsEnabled)
@@ -389,13 +386,13 @@ class Observation(QDialog, Ui_Form):
             # substract first value
             combobox = QComboBox()
             combobox.addItems(["True", "False"])
-            self.tw_data_files.setCellWidget(self.tw_data_files.rowCount() - 1, PLOT_DATA_SUBSTRACT1STVALUE_IDX, combobox)
+            self.tw_data_files.setCellWidget(self.tw_data_files.rowCount() - 1, PLOT_DATA_SUBSTRACT1STVALUE_IDX,
+                                             combobox)
 
             # plot line color
             combobox = QComboBox()
             combobox.addItems(DATA_PLOT_STYLES)
             self.tw_data_files.setCellWidget(self.tw_data_files.rowCount() - 1, PLOT_DATA_PLOTCOLOR_IDX, combobox)
-
 
     def view_data_file_head(self):
         """
@@ -403,16 +400,15 @@ class Observation(QDialog, Ui_Form):
         """
         if self.tw_data_files.selectedIndexes() or self.tw_data_files.rowCount() == 1:
             if self.tw_data_files.rowCount() == 1:
-                data_file_path = project_functions.media_full_path(self.tw_data_files.item(0, 0).text(), self.project_path)
+                data_file_path = project_functions.media_full_path(
+                    self.tw_data_files.item(0, 0).text(), self.project_path)
             else:
-                data_file_path = project_functions.media_full_path(self.tw_data_files.item(
-                                                                       self.tw_data_files.selectedIndexes()[0].row(), 0).text(),
-                                                                       self.project_path)
+                data_file_path = project_functions.media_full_path(
+                    self.tw_data_files.item(self.tw_data_files.selectedIndexes()[0].row(), 0).text(), self.project_path)
 
             file_parameters = utilities.check_txt_file(data_file_path)
             if "error" in file_parameters:
-                QMessageBox.critical(self, programName,
-                                     f"Error on file {data_file_path}: {file_parameters['error']}")
+                QMessageBox.critical(self, programName, f"Error on file {data_file_path}: {file_parameters['error']}")
                 return
             header = utilities.return_file_header(data_file_path)
 
@@ -439,7 +435,6 @@ class Observation(QDialog, Ui_Form):
         else:
             QMessageBox.warning(self, programName, "Select a data file")
 
-
     def extract_wav(self):
         """
         extract wav of all media files loaded in player #1
@@ -458,7 +453,6 @@ class Observation(QDialog, Ui_Form):
                 self.cbVisualizeSpectrogram.setChecked(False)
                 self.cb_visualize_waveform.setChecked(False)
                 return
-
             '''
             if dialog.MessageDialog(programName, ("You choose to visualize the spectrogram or waveform for the media in player #1.<br>"
                                                   "The WAV will be extracted from the media files, be patient"), [YES, NO]) == YES:
@@ -476,10 +470,11 @@ class Observation(QDialog, Ui_Form):
                     if self.twVideo1.cellWidget(row, 0).currentText() != "1":
                         continue
 
-                    media_file_path = project_functions.media_full_path(self.twVideo1.item(row, MEDIA_FILE_PATH_IDX).text(),
-                                                                        self.project_path)
+                    media_file_path = project_functions.media_full_path(
+                        self.twVideo1.item(row, MEDIA_FILE_PATH_IDX).text(), self.project_path)
                     if self.twVideo1.item(row, HAS_AUDIO_IDX).text() == "False":
-                        QMessageBox.critical(self, programName, f"The media file {media_file_path} do not seem to have audio")
+                        QMessageBox.critical(self, programName,
+                                             f"The media file {media_file_path} do not seem to have audio")
                         flag_wav_produced = False
                         break
 
@@ -508,10 +503,8 @@ class Observation(QDialog, Ui_Form):
                 self.cb_visualize_waveform.setChecked(False)
             '''
 
-
     def pbCancel_clicked(self):
         self.reject()
-
 
     def check_parameters(self):
         """
@@ -544,7 +537,6 @@ class Observation(QDialog, Ui_Form):
             self.qm.exec_()
             return False
 
-
         if self.tabProjectType.currentIndex() == 0:  # observation based on media file
             # check player number
             players_list = []
@@ -552,9 +544,8 @@ class Observation(QDialog, Ui_Form):
             for row in range(self.twVideo1.rowCount()):
                 players_list.append(int(self.twVideo1.cellWidget(row, 0).currentText()))
                 if int(self.twVideo1.cellWidget(row, 0).currentText()) not in players:
-                    players[int(self.twVideo1.cellWidget(row, 0).currentText())] = [
-                        utilities.time2seconds(self.twVideo1.item(row, 3).text())
-                    ]
+                    players[int(self.twVideo1.cellWidget(
+                        row, 0).currentText())] = [utilities.time2seconds(self.twVideo1.item(row, 3).text())]
                 else:
                     players[int(self.twVideo1.cellWidget(row, 0).currentText())].append(
                         utilities.time2seconds(self.twVideo1.item(row, 3).text()))
@@ -595,11 +586,10 @@ class Observation(QDialog, Ui_Form):
             # check offset for media files
             for row in range(self.twVideo1.rowCount()):
                 if not is_numeric(self.twVideo1.item(row, 1).text()):
-                    QMessageBox.critical(self, programName,
-                                         ("The offset value "
-                                          f"<b>{self.twVideo1.item(row, 1).text()}</b>"
-                                          " is not recognized as a numeric value.<br>"
-                                          "Use decimal number of seconds (e.g. -58.5 or 32)"))
+                    QMessageBox.critical(self, programName, ("The offset value "
+                                                             f"<b>{self.twVideo1.item(row, 1).text()}</b>"
+                                                             " is not recognized as a numeric value.<br>"
+                                                             "Use decimal number of seconds (e.g. -58.5 or 32)"))
                     return False
 
             # check offset for external data files
@@ -612,13 +602,14 @@ class Observation(QDialog, Ui_Form):
                                           "Use decimal number of seconds (e.g. -58.5 or 32)"))
                     return False
 
-
         # check if indep variables are correct type
         for row in range(self.twIndepVariables.rowCount()):
             if self.twIndepVariables.item(row, 1).text() == NUMERIC:
-                if self.twIndepVariables.item(row, 2).text() and not is_numeric(self.twIndepVariables.item(row, 2).text()):
-                    QMessageBox.critical(self, programName,
-                                         f"The <b>{self.twIndepVariables.item(row, 0).text()}</b> variable must be numeric!")
+                if self.twIndepVariables.item(row,
+                                              2).text() and not is_numeric(self.twIndepVariables.item(row, 2).text()):
+                    QMessageBox.critical(
+                        self, programName,
+                        f"The <b>{self.twIndepVariables.item(row, 0).text()}</b> variable must be numeric!")
                     return False
 
         # check if new obs and observation id already present or if edit obs and id changed
@@ -630,17 +621,16 @@ class Observation(QDialog, Ui_Form):
                                       f"{self.pj[OBSERVATIONS][self.leObservationId.text()]['date']}"))
                 return False
 
-
-
         for row in range(self.twIndepVariables.rowCount()):
             if self.twIndepVariables.item(row, 1).text() == NUMERIC:
-                if self.twIndepVariables.item(row, 2).text() and not is_numeric(self.twIndepVariables.item(row, 2).text()):
-                    QMessageBox.critical(self, programName,
-                                         f"The <b>{self.twIndepVariables.item(row, 0).text()}</b> variable must be numeric!")
+                if self.twIndepVariables.item(row,
+                                              2).text() and not is_numeric(self.twIndepVariables.item(row, 2).text()):
+                    QMessageBox.critical(
+                        self, programName,
+                        f"The <b>{self.twIndepVariables.item(row, 0).text()}</b> variable must be numeric!")
                     return False
 
         return True
-
 
     def pbLaunch_clicked(self):
         """
@@ -649,7 +639,6 @@ class Observation(QDialog, Ui_Form):
 
         if self.check_parameters():
             self.done(2)
-
 
     def pbSave_clicked(self):
         """
@@ -660,7 +649,6 @@ class Observation(QDialog, Ui_Form):
             self.accept()
         else:
             self.state = "refused"
-
 
     def check_media(self, file_path, flag_path):
         """
@@ -692,7 +680,6 @@ class Observation(QDialog, Ui_Form):
             else:
 
                 return False, "duration not available"
-
 
     def add_media(self, flag_path):
         """
@@ -726,16 +713,16 @@ class Observation(QDialog, Ui_Form):
             for file_path in file_paths:
                 r, msg = self.check_media(file_path, flag_path)
                 if not r:
-                    QMessageBox.critical(self, programName,
-                                         f"<b>{file_path}</b>. {msg}")
+                    QMessageBox.critical(self, programName, f"<b>{file_path}</b>. {msg}")
 
-        for w in [self.cbVisualizeSpectrogram, self.cb_visualize_waveform,
-                  self.cb_observation_time_interval, self.cbCloseCurrentBehaviorsBetweenVideo]:
+        for w in [
+                self.cbVisualizeSpectrogram, self.cb_visualize_waveform, self.cb_observation_time_interval,
+                self.cbCloseCurrentBehaviorsBetweenVideo
+        ]:
             w.setEnabled(self.twVideo1.rowCount() > 0)
 
         # disabled for problems
         self.cbCloseCurrentBehaviorsBetweenVideo.setEnabled(False)
-
 
     def add_media_from_dir(self, flag_path):
         """
@@ -761,19 +748,19 @@ class Observation(QDialog, Ui_Form):
                 r, msg = self.check_media(file_path, flag_path)
                 if not r:
                     if response != "Skip all non media files":
-                        response = dialog.MessageDialog(programName,
-                                                 f"<b>{file_path}</b> {msg}",
-                                                 ["Continue", "Skip all non media files", "Cancel"])
+                        response = dialog.MessageDialog(programName, f"<b>{file_path}</b> {msg}",
+                                                        ["Continue", "Skip all non media files", "Cancel"])
                         if response == "Cancel":
                             break
 
-        for w in [self.cbVisualizeSpectrogram, self.cb_visualize_waveform,
-                  self.cb_observation_time_interval, self.cbCloseCurrentBehaviorsBetweenVideo]:
+        for w in [
+                self.cbVisualizeSpectrogram, self.cb_visualize_waveform, self.cb_observation_time_interval,
+                self.cbCloseCurrentBehaviorsBetweenVideo
+        ]:
             w.setEnabled(self.twVideo1.rowCount() > 0)
 
         # disabled for problems
         self.cbCloseCurrentBehaviorsBetweenVideo.setEnabled(False)
-
 
     def add_media_to_listview(self, file_name):
         """
@@ -782,13 +769,11 @@ class Observation(QDialog, Ui_Form):
 
         self.twVideo1.setRowCount(self.twVideo1.rowCount() + 1)
 
-        for col_idx, s in enumerate([None,
-                                     0,
-                                     file_name,
-                                     seconds2time(self.mediaDurations[file_name]),
-                                     f"{self.mediaFPS[file_name]:.2f}",
-                                     self.mediaHasVideo[file_name],
-                                     self.mediaHasAudio[file_name]]):
+        for col_idx, s in enumerate([
+                None, 0, file_name,
+                seconds2time(self.mediaDurations[file_name]), f"{self.mediaFPS[file_name]:.2f}",
+                self.mediaHasVideo[file_name], self.mediaHasAudio[file_name]
+        ]):
             if col_idx == 0:  # player combobox
                 combobox = QComboBox()
                 combobox.addItems(ALL_PLAYERS)
@@ -799,7 +784,6 @@ class Observation(QDialog, Ui_Form):
                     item.setFlags(Qt.ItemIsEnabled)
 
                 self.twVideo1.setItem(self.twVideo1.rowCount() - 1, col_idx, item)
-
 
     def remove_data_file(self):
         """
@@ -812,7 +796,6 @@ class Observation(QDialog, Ui_Form):
         else:
             QMessageBox.warning(self, programName, "No data file selected")
 
-
     def remove_media(self):
         """
         remove all selected media files from list widget
@@ -823,7 +806,9 @@ class Observation(QDialog, Ui_Form):
             for row in sorted(rows_to_delete, reverse=True):
                 media_path = self.twVideo1.item(row, MEDIA_FILE_PATH_IDX).text()
                 self.twVideo1.removeRow(row)
-                if media_path not in [self.twVideo1.item(idx, MEDIA_FILE_PATH_IDX).text() for idx in range(self.twVideo1.rowCount())]:
+                if media_path not in [
+                        self.twVideo1.item(idx, MEDIA_FILE_PATH_IDX).text() for idx in range(self.twVideo1.rowCount())
+                ]:
                     try:
                         del self.mediaDurations[mediaPath]
                     except NameError:
@@ -833,8 +818,10 @@ class Observation(QDialog, Ui_Form):
                     except NameError:
                         pass
 
-            for w in [self.cbVisualizeSpectrogram, self.cb_visualize_waveform,
-                      self.cb_observation_time_interval, self.cbCloseCurrentBehaviorsBetweenVideo]:
+            for w in [
+                    self.cbVisualizeSpectrogram, self.cb_visualize_waveform, self.cb_observation_time_interval,
+                    self.cbCloseCurrentBehaviorsBetweenVideo
+            ]:
                 w.setEnabled(self.twVideo1.rowCount() > 0)
 
             # disabled for problems

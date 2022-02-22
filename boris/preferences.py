@@ -1,7 +1,7 @@
 """
 BORIS
 Behavioral Observation Research Interactive Software
-Copyright 2012-2021 Olivier Friard
+Copyright 2012-2022 Olivier Friard
 
 This file is part of BORIS.
 
@@ -19,7 +19,6 @@ This file is part of BORIS.
   along with this program; if not see <http://www.gnu.org/licenses/>.
 
 """
-
 
 import logging
 import os
@@ -53,7 +52,6 @@ class Preferences(QDialog, Ui_prefDialog):
         self.flag_refresh = False
         self.flag_reset_frames_memory = False
 
-
     def rb_frames_mem_disk(self):
         """
         change where extracted frames will be saved: disk or memory
@@ -64,7 +62,6 @@ class Preferences(QDialog, Ui_prefDialog):
         for w in [self.lb_storage_dir]:
             w.setEnabled(self.rb_save_frames_on_disk.isChecked())
 
-
     def reset_frames_memory(self):
         """
         reset memory used for frames storage.
@@ -72,18 +69,15 @@ class Preferences(QDialog, Ui_prefDialog):
         """
         self.flag_reset_frames_memory = self.cb_reset_frames_memory.isChecked()
 
-
     def refresh_preferences(self):
         """
         allow user to delete the config file (.boris)
         """
-        if MessageDialog("BORIS",
-                         ("Refresh will re-initialize "
-                          "all your preferences and close BORIS"),
+        if MessageDialog("BORIS", ("Refresh will re-initialize "
+                                   "all your preferences and close BORIS"),
                          [CANCEL, "Refresh preferences"]) == "Refresh preferences":
             self.flag_refresh = True
             self.accept()
-
 
     def browseFFmpegCacheDir(self):
         """
@@ -96,7 +90,6 @@ class Preferences(QDialog, Ui_prefDialog):
         if FFmpegCacheDir:
             self.leFFmpegCacheDir.setText(FFmpegCacheDir)
 
-
     def reset_behav_colors(self):
         """
         reset behavior colors to default
@@ -104,7 +97,6 @@ class Preferences(QDialog, Ui_prefDialog):
         self.te_behav_colors.setPlainText("\n".join(BEHAVIORS_PLOT_COLORS))
 
         logging.debug("reset behaviors colors to default")
-
 
     def reset_category_colors(self):
         """

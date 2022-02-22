@@ -1,7 +1,7 @@
 """
 BORIS
 Behavioral Observation Research Interactive Software
-Copyright 2012-2021 Olivier Friard
+Copyright 2012-2022 Olivier Friard
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -29,13 +29,11 @@ from boris import portion as Interval
 import tablib
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QIcon
-from PyQt5.QtWidgets import (QDialog, QFileDialog, QHBoxLayout, QLabel,
-                             QLineEdit, QListWidget, QMessageBox, QPushButton,
-                             QRadioButton, QSizePolicy, QSpacerItem,
-                             QTableWidget, QTableWidgetItem, QVBoxLayout)
+from PyQt5.QtWidgets import (QDialog, QFileDialog, QHBoxLayout, QLabel, QLineEdit, QListWidget, QMessageBox,
+                             QPushButton, QRadioButton, QSizePolicy, QSpacerItem, QTableWidget, QTableWidgetItem,
+                             QVBoxLayout)
 
-from boris import (db_functions, dialog, project_functions,
-                   select_observations, utilities)
+from boris import (db_functions, dialog, project_functions, select_observations, utilities)
 from boris.config import *
 
 
@@ -156,7 +154,6 @@ class Advanced_event_filtering_dialog(QDialog):
 
         self.resize(640, 640)
 
-
     def add_subj_behav(self):
         """
         add subject|behavior of selected listwidgets items in lineEdit
@@ -165,7 +162,6 @@ class Advanced_event_filtering_dialog(QDialog):
             self.logic.insert(f'"{self.lw1.currentItem().text()}|{self.lw2.currentItem().text()}" ')
         else:
             QMessageBox.warning(self, programName, "Select a subject and a behavior")
-
 
     def add_logic(self):
         """
@@ -182,7 +178,6 @@ class Advanced_event_filtering_dialog(QDialog):
                 self.logic.insert(text)
         else:
             QMessageBox.warning(self, programName, "Select a logical operator")
-
 
     def filter(self):
         """
@@ -245,8 +240,7 @@ class Advanced_event_filtering_dialog(QDialog):
                     str(len(summary[obs_id])),
                     str(round(sum(summary[obs_id]), 3)),
                     str(round(statistics.mean(summary[obs_id]), 3)),
-                    str(round(statistics.stdev(summary[obs_id]), 3))
-                    if len(summary[obs_id]) > 1 else "NA"
+                    str(round(statistics.stdev(summary[obs_id]), 3)) if len(summary[obs_id]) > 1 else "NA"
                 ])
 
             self.lb_results.setText(f"Results ({len(summary)} observation{'s'*(len(summary) > 1)})")
@@ -261,24 +255,17 @@ class Advanced_event_filtering_dialog(QDialog):
                 item.setFlags(Qt.ItemIsEnabled)
                 self.tw.setItem(r, c, item)
 
-
     def save_results(self):
         """
         save results
         """
 
-        extended_file_formats = ["Tab Separated Values (*.tsv)",
-                                 "Comma Separated Values (*.csv)",
-                                 "Open Document Spreadsheet ODS (*.ods)",
-                                 "Microsoft Excel Spreadsheet XLSX (*.xlsx)",
-                                 "Legacy Microsoft Excel Spreadsheet XLS (*.xls)",
-                                 "HTML (*.html)"]
-        file_formats = ["tsv",
-                        "csv",
-                        "ods",
-                        "xlsx",
-                        "xls",
-                        "html"]
+        extended_file_formats = [
+            "Tab Separated Values (*.tsv)", "Comma Separated Values (*.csv)", "Open Document Spreadsheet ODS (*.ods)",
+            "Microsoft Excel Spreadsheet XLSX (*.xlsx)", "Legacy Microsoft Excel Spreadsheet XLS (*.xls)",
+            "HTML (*.html)"
+        ]
+        file_formats = ["tsv", "csv", "ods", "xlsx", "xls", "html"]
 
         file_name, filter_ = QFileDialog().getSaveFileName(None, "Save results", "", ";;".join(extended_file_formats))
         if not file_name:
@@ -290,8 +277,7 @@ class Advanced_event_filtering_dialog(QDialog):
             file_name = str(pathlib.Path(file_name)) + "." + output_format
             # check if file with new extension already exists
             if pathlib.Path(file_name).is_file():
-                if dialog.MessageDialog(programName,
-                                        f"The file {file_name} already exists.",
+                if dialog.MessageDialog(programName, f"The file {file_name} already exists.",
                                         [CANCEL, OVERWRITE]) == CANCEL:
                     return
 
@@ -322,9 +308,8 @@ def event_filtering(pj: dict):
     the python-intervals module is used to do operations on intervals (intersection, union)
     """
 
-    result, selected_observations = select_observations.select_observations(pj,
-                                                                            MULTIPLE,
-                                                                            "Select observations for advanced event filtering")
+    result, selected_observations = select_observations.select_observations(
+        pj, MULTIPLE, "Select observations for advanced event filtering")
     if not selected_observations:
         return
 
@@ -332,8 +317,7 @@ def event_filtering(pj: dict):
     out = ""
     not_paired_obs_list = []
     for obs_id in selected_observations:
-        r, msg = project_functions.check_state_events_obs(obs_id, pj[ETHOGRAM],
-                                                          pj[OBSERVATIONS][obs_id])
+        r, msg = project_functions.check_state_events_obs(obs_id, pj[ETHOGRAM], pj[OBSERVATIONS][obs_id])
 
         if not r:
             out += f"Observation: <strong>{obs_id}</strong><br>{msg}<br>"
@@ -370,8 +354,7 @@ def event_filtering(pj: dict):
         QMessageBox.warning(None, programName, "Select subject(s) and behavior(s) to analyze")
         return
 
-    ok, msg, db_connector = db_functions.load_aggregated_events_in_db(pj,
-                                                                      parameters[SELECTED_SUBJECTS],
+    ok, msg, db_connector = db_functions.load_aggregated_events_in_db(pj, parameters[SELECTED_SUBJECTS],
                                                                       selected_observations,
                                                                       parameters[SELECTED_BEHAVIORS])
 

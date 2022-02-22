@@ -1,9 +1,8 @@
 #!/usr/bin/env python3
-
 """
 BORIS
 Behavioral Observation Research Interactive Software
-Copyright 2012-2021 Olivier Friard
+Copyright 2012-2022 Olivier Friard
 
 
   This program is free software; you can redistribute it and/or modify
@@ -30,19 +29,15 @@ from PyQt5.QtCore import Qt, QSettings
 from PyQt5.QtWidgets import QAbstractItemView
 
 from boris import observations_list
-from boris.config import (INDEPENDENT_VARIABLES, OBSERVATIONS, DESCRIPTION, TEXT, NUMERIC,
-                          TYPE, MEDIA, FILE, LIVE, OPEN, VIEW, EDIT, ETHOGRAM, EVENTS,
-                          SINGLE, MULTIPLE, SELECT1, NO_FOCAL_SUBJECT, HHMMSS,
+from boris.config import (INDEPENDENT_VARIABLES, OBSERVATIONS, DESCRIPTION, TEXT, NUMERIC, TYPE, MEDIA, FILE, LIVE,
+                          OPEN, VIEW, EDIT, ETHOGRAM, EVENTS, SINGLE, MULTIPLE, SELECT1, NO_FOCAL_SUBJECT, HHMMSS,
                           STATE, BEHAVIOR_CODE)
 from boris import gui_utilities
 from boris import utilities
 from boris import project_functions
 
 
-def select_observations(pj: dict,
-                        mode: str,
-                        windows_title: str = ""
-                        ) -> tuple:
+def select_observations(pj: dict, mode: str, windows_title: str = "") -> tuple:
     """
     allow user to select observations
     mode: accepted values: OPEN, EDIT, SINGLE, MULTIPLE, SELECT1
@@ -73,13 +68,15 @@ def select_observations(pj: dict,
         descr = utilities.eol2space(pj[OBSERVATIONS][obs][DESCRIPTION])
 
         # subjects
-        observedSubjects = [NO_FOCAL_SUBJECT if x == "" else x for x in project_functions.extract_observed_subjects(pj, [obs])]
+        observedSubjects = [
+            NO_FOCAL_SUBJECT if x == "" else x for x in project_functions.extract_observed_subjects(pj, [obs])
+        ]
 
         subjectsList = ", ".join(observedSubjects)
 
         # observed time interval
         interval = project_functions.observed_interval(pj[OBSERVATIONS][obs])
-        observed_interval_str = str(interval[1] - interval[0]) 
+        observed_interval_str = str(interval[1] - interval[0])
 
         # media
         mediaList = []
@@ -111,16 +108,12 @@ def select_observations(pj: dict,
         if not ok:
             not_paired.append(obs)
 
-        # check exhaustivity of observation 
-        exhaustivity = project_functions.check_observation_exhaustivity(pj[OBSERVATIONS][obs][EVENTS],
-                                                                        [],
-                                                                        state_events_list
-                                                                       )
-
+        # check exhaustivity of observation
+        exhaustivity = project_functions.check_observation_exhaustivity(pj[OBSERVATIONS][obs][EVENTS], [],
+                                                                        state_events_list)
 
         data.append([obs, date, descr, subjectsList, observed_interval_str, str(exhaustivity), media] + indepvar)
 
-    
     obsList = observations_list.observationsList_widget(data,
                                                         header=obsListFields + indepVarHeader,
                                                         column_type=column_type,
@@ -181,18 +174,18 @@ def select_observations(pj: dict,
     if result:
         if obsList.view.selectedIndexes():
             for idx in obsList.view.selectedIndexes():
-                if idx.column() == 0:   # first column
+                if idx.column() == 0:  # first column
                     selected_observations.append(idx.data())
 
     if result == 0:  # cancel
         resultStr = ""
-    if result == 1:   # select
+    if result == 1:  # select
         resultStr = "ok"
-    if result == 2:   # open
+    if result == 2:  # open
         resultStr = OPEN
-    if result == 3:   # edit
+    if result == 3:  # edit
         resultStr = EDIT
-    if result == 4:   # view
+    if result == 4:  # view
         resultStr = VIEW
 
     return resultStr, selected_observations

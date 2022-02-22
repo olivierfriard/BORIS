@@ -1,9 +1,8 @@
 #!/usr/bin/env python3
-
 """
 BORIS
 Behavioral Observation Research Interactive Software
-Copyright 2012-2021 Olivier Friard
+Copyright 2012-2022 Olivier Friard
 
 This file is part of BORIS.
 
@@ -107,50 +106,49 @@ def observed_transitions_matrix(sequences, behaviours, mode="frequency"):
     return out
 
 
-
 def create_transitions_gv_from_matrix(matrix, cutoff_all=0, cutoff_behavior=0, edge_label="percent_node"):
-        """
+    """
         create code for GraphViz
         matrix: matrix of frequency
         edge_label: (percent_node, fraction_node)
         return string containing graphviz code
         """
 
-        behaviours = matrix.split("\n")[0].strip().split("\t")
-        transitions = {}
+    behaviours = matrix.split("\n")[0].strip().split("\t")
+    transitions = {}
 
-        for row in matrix.split("\n")[1:]:
-            if not row:
-                continue
+    for row in matrix.split("\n")[1:]:
+        if not row:
+            continue
 
-            transitions[row.split("\t")[0]] = {}
-            for idx, r in enumerate(row.split("\t")[1:]):
-                if '.' in r:
-                    transitions[row.split("\t")[0]][behaviours[idx]] = float(r)
-                else:
-                    transitions[row.split("\t")[0]][behaviours[idx]] = int(r)
+        transitions[row.split("\t")[0]] = {}
+        for idx, r in enumerate(row.split("\t")[1:]):
+            if '.' in r:
+                transitions[row.split("\t")[0]][behaviours[idx]] = float(r)
+            else:
+                transitions[row.split("\t")[0]][behaviours[idx]] = int(r)
 
-        transitions_total_number = sum([sum(transitions[x].values()) for x in transitions])
+    transitions_total_number = sum([sum(transitions[x].values()) for x in transitions])
 
-        out = "digraph G { \n"
+    out = "digraph G { \n"
 
-        for behaviour1 in behaviours:
-            for behaviour2 in behaviours:
+    for behaviour1 in behaviours:
+        for behaviour2 in behaviours:
 
-                if transitions[behaviour1][behaviour2]:
+            if transitions[behaviour1][behaviour2]:
 
-                    if edge_label == "percent_node":
-                        if transitions[behaviour1][behaviour2] > cutoff_all:
-                            out += '"{behaviour1}" -> "{behaviour2}" [label="{label:0.3f}"];\n'.format(
-    behaviour1=behaviour1,
-    behaviour2=behaviour2,
-    label=transitions[behaviour1][behaviour2])
+                if edge_label == "percent_node":
+                    if transitions[behaviour1][behaviour2] > cutoff_all:
+                        out += '"{behaviour1}" -> "{behaviour2}" [label="{label:0.3f}"];\n'.format(
+                            behaviour1=behaviour1, behaviour2=behaviour2, label=transitions[behaviour1][behaviour2])
 
-                    if edge_label == "fraction_node":
-                        transition_sum = sum(transitions[behaviour1].values())
-                        if transitions[behaviour1][behaviour2] / transition_sum > cutoff_behavior:
-                            out += """"{behaviour1}" -> "{behaviour2}" [label="{label}%"];\n""".format(behaviour1=behaviour1,
-                                    behaviour2=behaviour2, label=round(transitions[behaviour1][behaviour2] / transition_sum * 100, 1))
+                if edge_label == "fraction_node":
+                    transition_sum = sum(transitions[behaviour1].values())
+                    if transitions[behaviour1][behaviour2] / transition_sum > cutoff_behavior:
+                        out += """"{behaviour1}" -> "{behaviour2}" [label="{label}%"];\n""".format(
+                            behaviour1=behaviour1,
+                            behaviour2=behaviour2,
+                            label=round(transitions[behaviour1][behaviour2] / transition_sum * 100, 1))
 
-        out += '\n}'
-        return out
+    out += '\n}'
+    return out

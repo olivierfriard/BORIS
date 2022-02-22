@@ -1,7 +1,7 @@
 """
 BORIS
 Behavioral Observation Research Interactive Software
-Copyright 2012-2021 Olivier Friard
+Copyright 2012-2022 Olivier Friard
 
 This file is part of BORIS.
 
@@ -51,23 +51,22 @@ def MessageDialog(title, text, buttons):
     return message.clickedButton().text()
 
 
-def error_message_box(task, error_type, error_file_name, error_lineno):  # do NOT use this function directly, use error_message function
+def error_message_box(task, error_type, error_file_name,
+                      error_lineno):  # do NOT use this function directly, use error_message function
     """
     show a critical dialog
-    
+
     """
-    QMessageBox.critical(None, programName,
-                         (f"BORIS version: {version.__version__}<br>"
-                          f"An error occured during the execution of: <b>{task}</b>.<br>"
-                          f"Error: {error_type}<br>"
-                          f"in {error_file_name} "
-                          f"at line # {error_lineno}<br><br>"
-                          "to improve the software please report this problem at:<br>"
-                          '<a href="https://github.com/olivierfriard/BORIS/issues">'
-                          'https://github.com/olivierfriard/BORIS/issues</a><br>'
-                          "or by email (See the About page on the BORIS web site.<br><br>"
-                          "Thank you for your collaboration!"
-                          ))
+    QMessageBox.critical(None, programName, (f"BORIS version: {version.__version__}<br>"
+                                             f"An error occured during the execution of: <b>{task}</b>.<br>"
+                                             f"Error: {error_type}<br>"
+                                             f"in {error_file_name} "
+                                             f"at line # {error_lineno}<br><br>"
+                                             "to improve the software please report this problem at:<br>"
+                                             '<a href="https://github.com/olivierfriard/BORIS/issues">'
+                                             'https://github.com/olivierfriard/BORIS/issues</a><br>'
+                                             "or by email (See the About page on the BORIS web site.<br><br>"
+                                             "Thank you for your collaboration!"))
 
 
 def error_message(task: str, exc_info: tuple) -> None:
@@ -213,7 +212,6 @@ class Input_dialog(QDialog):
         self.setLayout(hbox)
 
         self.setWindowTitle("title")
-
 
 
 class DuplicateBehaviorCode(QDialog):
@@ -362,7 +360,6 @@ class Ask_time(QDialog):
         self.setWindowTitle("Time")
 
 
-
 class EditSelectedEvents(QDialog):
     """
     "edit selected events" dialog box
@@ -412,7 +409,6 @@ class EditSelectedEvents(QDialog):
 
         self.setLayout(hbox)
 
-
     def rb_changed(self):
 
         self.newText.setEnabled(not self.rbComment.isChecked())
@@ -428,7 +424,6 @@ class EditSelectedEvents(QDialog):
 
         if self.rbComment.isChecked():
             self.newText.clear()
-
 
     def pbOK_clicked(self):
         if not self.rbSubject.isChecked() and not self.rbBehavior.isChecked() and not self.rbComment.isChecked():
@@ -529,7 +524,6 @@ class FindReplaceEvents(QWidget):
         self.cbSubject = QCheckBox("Subject")
         self.cbSubject.setChecked(False)
         hbox.addWidget(self.cbSubject)
-
 
         self.cbBehavior = QCheckBox("Behavior")
         self.cbBehavior.setChecked(False)
@@ -639,6 +633,7 @@ class Results_dialog(QDialog):
     """
     widget for visualizing text output
     """
+
     def __init__(self):
         super().__init__()
 
@@ -674,7 +669,6 @@ class Results_dialog(QDialog):
 
         self.resize(540, 640)
 
-
     def save_results(self):
         """
         save content of self.ptText
@@ -695,6 +689,7 @@ class ResultsWidget(QWidget):
     """
     widget for visualizing text output
     """
+
     def __init__(self):
         super().__init__()
 
@@ -722,7 +717,6 @@ class ResultsWidget(QWidget):
         self.setLayout(hbox)
 
         self.resize(540, 640)
-
 
     def save_results(self):
         """
@@ -815,7 +809,6 @@ class View_explore_project_results(QWidget):
 
         # self.resize(540, 640)
 
-
     def tw_cellDoubleClicked(self, r, c):
 
         self.double_click_signal.emit(self.tw.item(r, 0).text(), int(self.tw.item(r, 1).text()))
@@ -853,7 +846,6 @@ def choose_obs_subj_behav_category(pj: dict,
                                    by_category: bool = False,
                                    show_time: bool = False,
                                    timeFormat: str = HHMMSS):
-
     """
     show window for:
       - selection of subjects
@@ -890,7 +882,6 @@ def choose_obs_subj_behav_category(pj: dict,
 
     paramPanelWindow.frm_time_interval.setEnabled(False)
 
-
     if timeFormat == HHMMSS:
         paramPanelWindow.start_time.set_format_hhmmss()
         paramPanelWindow.end_time.set_format_hhmmss()
@@ -912,7 +903,6 @@ def choose_obs_subj_behav_category(pj: dict,
         '''
     paramPanelWindow.start_time.set_time(0)
     paramPanelWindow.end_time.set_time(maxTime)
-
 
     # hide max time
     if not maxTime:
@@ -950,7 +940,8 @@ def choose_obs_subj_behav_category(pj: dict,
     logging.debug(f'selectedSubjects: {selectedSubjects}')
 
     if selected_observations:
-        observedBehaviors = paramPanelWindow.extract_observed_behaviors(selected_observations, selectedSubjects)  # not sorted
+        observedBehaviors = paramPanelWindow.extract_observed_behaviors(selected_observations,
+                                                                        selectedSubjects)  # not sorted
     else:
         # load all behaviors
         observedBehaviors = [pj[ETHOGRAM][x][BEHAVIOR_CODE] for x in pj[ETHOGRAM]]
@@ -961,7 +952,11 @@ def choose_obs_subj_behav_category(pj: dict,
         categories = pj[BEHAVIORAL_CATEGORIES][:]
         # check if behavior not included in a category
         try:
-            if "" in [pj[ETHOGRAM][idx][BEHAVIOR_CATEGORY] for idx in pj[ETHOGRAM] if BEHAVIOR_CATEGORY in pj[ETHOGRAM][idx]]:
+            if "" in [
+                    pj[ETHOGRAM][idx][BEHAVIOR_CATEGORY]
+                    for idx in pj[ETHOGRAM]
+                    if BEHAVIOR_CATEGORY in pj[ETHOGRAM][idx]
+            ]:
                 categories += [""]
         except Exception:
             categories = ["###no category###"]
@@ -989,9 +984,11 @@ def choose_obs_subj_behav_category(pj: dict,
 
         for behavior in [pj[ETHOGRAM][x][BEHAVIOR_CODE] for x in utilities.sorted_keys(pj[ETHOGRAM])]:
 
-            if ((categories == ["###no category###"])
-                or (behavior in [pj[ETHOGRAM][x][BEHAVIOR_CODE] for x in pj[ETHOGRAM]
-                    if BEHAVIOR_CATEGORY in pj[ETHOGRAM][x] and pj[ETHOGRAM][x][BEHAVIOR_CATEGORY] == category])):
+            if ((categories == ["###no category###"]) or (behavior in [
+                    pj[ETHOGRAM][x][BEHAVIOR_CODE]
+                    for x in pj[ETHOGRAM]
+                    if BEHAVIOR_CATEGORY in pj[ETHOGRAM][x] and pj[ETHOGRAM][x][BEHAVIOR_CATEGORY] == category
+            ])):
 
                 paramPanelWindow.item = QListWidgetItem(behavior)
                 if behavior in observedBehaviors:
@@ -1009,8 +1006,7 @@ def choose_obs_subj_behav_category(pj: dict,
                 paramPanelWindow.lwBehaviors.addItem(paramPanelWindow.item)
 
     if not paramPanelWindow.exec_():
-        return {SELECTED_SUBJECTS: [],
-                SELECTED_BEHAVIORS: []}
+        return {SELECTED_SUBJECTS: [], SELECTED_BEHAVIORS: []}
 
     selectedSubjects = paramPanelWindow.selectedSubjects
     selectedBehaviors = paramPanelWindow.selectedBehaviors
@@ -1040,11 +1036,12 @@ def choose_obs_subj_behav_category(pj: dict,
     if paramPanelWindow.rb_interval.isChecked():
         time_param = TIME_ARBITRARY_INTERVAL
 
-    return {SELECTED_SUBJECTS: selectedSubjects,
-            SELECTED_BEHAVIORS: selectedBehaviors,
-            INCLUDE_MODIFIERS: paramPanelWindow.cbIncludeModifiers.isChecked(),
-            EXCLUDE_BEHAVIORS: paramPanelWindow.cbExcludeBehaviors.isChecked(),
-            "time": time_param,
-            START_TIME: startTime,
-            END_TIME: endTime
-            }
+    return {
+        SELECTED_SUBJECTS: selectedSubjects,
+        SELECTED_BEHAVIORS: selectedBehaviors,
+        INCLUDE_MODIFIERS: paramPanelWindow.cbIncludeModifiers.isChecked(),
+        EXCLUDE_BEHAVIORS: paramPanelWindow.cbExcludeBehaviors.isChecked(),
+        "time": time_param,
+        START_TIME: startTime,
+        END_TIME: endTime
+    }

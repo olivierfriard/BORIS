@@ -1,9 +1,8 @@
 #!/usr/bin/env python3
-
 """
 BORIS
 Behavioral Observation Research Interactive Software
-Copyright 2012-2021 Olivier Friard
+Copyright 2012-2022 Olivier Friard
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -20,7 +19,6 @@ Copyright 2012-2021 Olivier Friard
   Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
   MA 02110-1301, USA.
 """
-
 
 from PyQt5.QtGui import *
 from PyQt5.QtCore import *
@@ -48,12 +46,12 @@ class SubjectsPad(QWidget):
         self.compose()
 
     def compose(self):
-        for i in reversed(range(self.grid.count())): 
+        for i in reversed(range(self.grid.count())):
             self.grid.itemAt(i).widget().setParent(None)
-        
+
         subjects_list = [["", self.pj[SUBJECTS][x]["name"]]
-                          for x in sorted_keys(self.pj[SUBJECTS])
-                              if self.pj[SUBJECTS][x]["name"] in self.filtered_subjects]
+                         for x in sorted_keys(self.pj[SUBJECTS])
+                         if self.pj[SUBJECTS][x]["name"] in self.filtered_subjects]
         dim = int(len(subjects_list)**0.5 + 0.999)
 
         c = 0
@@ -73,8 +71,9 @@ class SubjectsPad(QWidget):
         if widget is not None:
             widget.pushButton.setText(subject)
             color = "cyan"
-            widget.pushButton.setStyleSheet(("background-color: {}; border-radius: 0px; min-width: 50px; max-width: 200px;"
-                                             " min-height:50px; max-height:200px; font-weight: bold;").format(color))
+            widget.pushButton.setStyleSheet(
+                ("background-color: {}; border-radius: 0px; min-width: 50px; max-width: 200px;"
+                 " min-height:50px; max-height:200px; font-weight: bold;").format(color))
             widget.pushButton.clicked.connect(lambda: self.click(subject))
 
     def click(self, subject):
@@ -84,7 +83,7 @@ class SubjectsPad(QWidget):
         """
         send event (if keypress) to main window
         """
-        if(event.type() == QEvent.KeyPress):
+        if (event.type() == QEvent.KeyPress):
             self.sendEventSignal.emit(event)
             return True
         else:
@@ -95,9 +94,10 @@ class SubjectsPad(QWidget):
         send event for widget geometry memory
         """
         self.close_signal.emit(self.geometry())
-        
+
 
 class Button(QWidget):
+
     def __init__(self, parent=None):
         super(Button, self).__init__(parent)
         self.pushButton = QPushButton()
@@ -105,4 +105,3 @@ class Button(QWidget):
         layout = QHBoxLayout()
         layout.addWidget(self.pushButton)
         self.setLayout(layout)
-

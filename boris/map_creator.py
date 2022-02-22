@@ -1,9 +1,8 @@
 #!/usr/bin/env python3
-
 """
 BORIS
 Behavioral Observation Research Interactive Software
-Copyright 2012-2021 Olivier Friard
+Copyright 2012-2022 Olivier Friard
 
 This file is part of BORIS.
 
@@ -21,7 +20,6 @@ This file is part of BORIS.
   along with this program; if not see <http://www.gnu.org/licenses/>.
 
 """
-
 
 from PyQt5.QtGui import *
 from PyQt5.QtCore import *
@@ -73,15 +71,22 @@ def intersection(A, B, C, D):
         ym = slope * xm + intersept
     else:
         # round Decimal result: .quantize(Dec('.001'), rounding=decimal.ROUND_DOWN)
-        xm = ((xd * xa * yc - xd * xb * yc - xd * xa * yb - xc * xa * yd + xc * xa * yb + xd * ya * xb + xc * xb * yd - xc * ya * xb) / (-yb * xd + yb * xc + ya * xd - ya * xc + xb * yd - xb * yc - xa * yd + xa * yc)).quantize(Dec('.001'), rounding=decimal.ROUND_DOWN)
-        ym = ((yb * xc * yd - yb * yc * xd - ya * xc * yd + ya * yc * xd - xa * yb * yd + xa * yb * yc + ya * xb * yd - ya * xb * yc) / (-yb * xd + yb * xc + ya * xd - ya * xc + xb * yd - xb * yc - xa * yd + xa * yc)).quantize(Dec('.001'), rounding=decimal.ROUND_DOWN)
+        xm = ((xd * xa * yc - xd * xb * yc - xd * xa * yb - xc * xa * yd + xc * xa * yb + xd * ya * xb + xc * xb * yd -
+               xc * ya * xb) /
+              (-yb * xd + yb * xc + ya * xd - ya * xc + xb * yd - xb * yc - xa * yd + xa * yc)).quantize(
+                  Dec('.001'), rounding=decimal.ROUND_DOWN)
+        ym = ((yb * xc * yd - yb * yc * xd - ya * xc * yd + ya * yc * xd - xa * yb * yd + xa * yb * yc + ya * xb * yd -
+               ya * xb * yc) /
+              (-yb * xd + yb * xc + ya * xd - ya * xc + xb * yd - xb * yc - xa * yd + xa * yc)).quantize(
+                  Dec('.001'), rounding=decimal.ROUND_DOWN)
 
     xmin1, xmax1 = min(xa, xb), max(xa, xb)
     xmin2, xmax2 = min(xc, xd), max(xc, xd)
     ymin1, ymax1 = min(ya, yb), max(ya, yb)
     ymin2, ymax2 = min(yc, yd), max(yc, yd)
 
-    return (xm >= xmin1 and xm <= xmax1 and xm >= xmin2 and xm <= xmax2 and ym >= ymin1 and ym <= ymax1 and ym >= ymin2 and ym <= ymax2)
+    return (xm >= xmin1 and xm <= xmax1 and xm >= xmin2 and xm <= xmax2 and ym >= ymin1 and ym <= ymax1 and
+            ym >= ymin2 and ym <= ymax2)
 
 
 class ModifiersMapCreatorWindow(QMainWindow):
@@ -93,8 +98,9 @@ class ModifiersMapCreatorWindow(QMainWindow):
         class for handling mousepress event in QGraphicsView
         """
         mousePress = pyqtSignal(QMouseEvent)
+
         def mousePressEvent(self, event):
-            self.mousePress.emit( event )
+            self.mousePress.emit(event)
 
         _start = 0
         elList, points = [], []
@@ -105,7 +111,7 @@ class ModifiersMapCreatorWindow(QMainWindow):
             self.setScene(QGraphicsScene(self))
             self.scene().update()
 
-    bitmapFileName,mapName, fileName  = "", "", ""
+    bitmapFileName, mapName, fileName = "", "", ""
     flagNewArea, flagMapChanged = False, False
     areasList, polygonsList2 = {}, {}
     areaColor = QColor("lime")
@@ -141,14 +147,11 @@ class ModifiersMapCreatorWindow(QMainWindow):
         self.saveAsMapAction.setEnabled(False)
         self.saveAsMapAction.triggered.connect(self.saveAsMap_clicked)
 
-
         self.mapNameAction = QAction(QIcon(), "&Modifiers map name", self)
         self.mapNameAction.setShortcut("Ctrl+M")
         self.mapNameAction.setStatusTip("Change modifiers map name")
         self.mapNameAction.setEnabled(False)
         self.mapNameAction.triggered.connect(self.mapName_clicked)
-
-
 
         self.exitAction = QAction(QIcon(), "&Close", self)
         self.exitAction.setStatusTip("Close modifiers map creator")
@@ -164,7 +167,6 @@ class ModifiersMapCreatorWindow(QMainWindow):
         fileMenu.addAction(self.mapNameAction)
         fileMenu.addSeparator()
         fileMenu.addAction(self.exitAction)
-
 
         self.view = self.View(self)
         self.view.mousePress.connect(self.viewMousePressEvent)
@@ -201,8 +203,6 @@ class ModifiersMapCreatorWindow(QMainWindow):
         self.hlayout.addWidget(self.slAlpha)
 
         self.slAlpha_changed(50)
-
-
         '''
         self.btCancelMap = QPushButton("Cancel modifiers map", self)
         self.btCancelMap.clicked.connect(self.cancelMap)
@@ -226,7 +226,6 @@ class ModifiersMapCreatorWindow(QMainWindow):
         self.btCancelAreaCreation.setVisible(False)
         hlayout2.addWidget(self.btCancelAreaCreation)
 
-
         self.btDeleteArea = QPushButton("Delete selected modifier", self)
         self.btDeleteArea.clicked.connect(self.deleteArea)
         self.btDeleteArea.setVisible(True)
@@ -235,7 +234,6 @@ class ModifiersMapCreatorWindow(QMainWindow):
 
         layout.addLayout(hlayout2)
         layout.addLayout(self.hlayout)
-
         '''layout.addWidget(self.btCancelMap)'''
 
         main_widget = QWidget(self)
@@ -243,7 +241,6 @@ class ModifiersMapCreatorWindow(QMainWindow):
         self.setCentralWidget(main_widget)
 
         self.statusBar().showMessage("")
-
 
     def slAlpha_changed(self, val):
         """
@@ -259,7 +256,6 @@ class ModifiersMapCreatorWindow(QMainWindow):
 
         if self.closedPolygon:
             self.closedPolygon.setBrush(self.areaColor)
-
 
     def chooseColor(self):
         """
@@ -281,12 +277,13 @@ class ModifiersMapCreatorWindow(QMainWindow):
         if self.closedPolygon:
             self.closedPolygon.setBrush(self.areaColor)
 
-
     def closeEvent(self, event):
 
         if self.flagMapChanged:
 
-            response = dialog.MessageDialog("BORIS - Modifiers map creator", "What to do about the current unsaved modifiers coding map?", ["Save", "Discard", "Cancel"])
+            response = dialog.MessageDialog("BORIS - Modifiers map creator",
+                                            "What to do about the current unsaved modifiers coding map?",
+                                            ["Save", "Discard", "Cancel"])
 
             if response == "Save":
                 if not self.saveMap_clicked():
@@ -298,7 +295,6 @@ class ModifiersMapCreatorWindow(QMainWindow):
 
         self.closed.emit()
         event.accept()
-
 
     def viewMousePressEvent(self, event):
         """
@@ -312,21 +308,22 @@ class ModifiersMapCreatorWindow(QMainWindow):
 
         test = self.view.mapToScene(event.pos()).toPoint()
 
-        if test.x()<0 or test.y()<0 or test.x() > self.pixmap.size().width() or test.y() > self.pixmap.size().height():
+        if test.x() < 0 or test.y() < 0 or test.x() > self.pixmap.size().width() or test.y() > self.pixmap.size(
+        ).height():
             return
 
-        if not self.flagNewArea:   # test clicked point for areas
+        if not self.flagNewArea:  # test clicked point for areas
             txt = ""
 
             # reset selected polygon to default pen
             if self.selectedPolygon:
-                self.selectedPolygon.setPen( QPen(designColor, penWidth, penStyle, Qt.RoundCap, Qt.RoundJoin) )
+                self.selectedPolygon.setPen(QPen(designColor, penWidth, penStyle, Qt.RoundCap, Qt.RoundJoin))
                 self.selectedPolygon = None
                 self.selectedPolygonMemBrush = None
 
             for areaCode in self.polygonsList2:
 
-                if self.polygonsList2[areaCode].contains( test ):
+                if self.polygonsList2[areaCode].contains(test):
 
                     if txt:
                         txt += ','
@@ -337,14 +334,16 @@ class ModifiersMapCreatorWindow(QMainWindow):
 
                     self.selectedPolygonMemBrush = self.selectedPolygon.brush()
 
-                    self.selectedPolygon.setPen(QPen(QColor(255, 0, 0, 255), 2, Qt.SolidLine, Qt.RoundCap, Qt.RoundJoin))
+                    self.selectedPolygon.setPen(QPen(QColor(255, 0, 0, 255), 2, Qt.SolidLine, Qt.RoundCap,
+                                                     Qt.RoundJoin))
 
                     self.leAreaCode.setText(areaCode)
                     self.leAreaCode.setVisible(True)
                     self.btDeleteArea.setEnabled(True)
 
                     self.areaColor = self.selectedPolygon.brush().color()
-                    self.btColor.setStyleSheet("QWidget {{background-color:{}}}".format(self.selectedPolygon.brush().color().name()))
+                    self.btColor.setStyleSheet("QWidget {{background-color:{}}}".format(
+                        self.selectedPolygon.brush().color().name()))
                     self.btColor.setVisible(True)
 
                     self.slAlpha.setValue(int(self.selectedPolygon.brush().color().alpha() / 255 * 100))
@@ -370,7 +369,7 @@ class ModifiersMapCreatorWindow(QMainWindow):
                 self.view.points = self.view.points[0:-1]
 
             if self.view.points:
-                self.view._start = QPoint( self.view.points[-1][0], self.view.points[-1][1])
+                self.view._start = QPoint(self.view.points[-1][0], self.view.points[-1][1])
             else:
                 self.view._start = None
 
@@ -382,7 +381,7 @@ class ModifiersMapCreatorWindow(QMainWindow):
         # add line item
         if event.buttons() == Qt.LeftButton and not self.closedPolygon:
 
-            if self.view._start :
+            if self.view._start:
 
                 end = test
 
@@ -391,17 +390,19 @@ class ModifiersMapCreatorWindow(QMainWindow):
 
                     for idx, point in enumerate(self.view.points[:-2]):
 
-                        if intersection(self.view.points[idx], self.view.points[idx + 1], self.view.points[-1], (int(end.x()), int(end.y()))) :
+                        if intersection(self.view.points[idx], self.view.points[idx + 1], self.view.points[-1],
+                                        (int(end.x()), int(end.y()))):
                             QMessageBox.critical(self, "", "The polygon edges can not be intersected")
                             return
 
                 # test if polygon closed (dist min 10 px)
                 if abs(end.x() - self.view.points[0][0]) < 10 and abs(end.y() - self.view.points[0][1]) < 10:
 
-                    line = QGraphicsLineItem(QLineF(self.view._start, QPoint( self.view.points[0][0], self.view.points[0][1])))
+                    line = QGraphicsLineItem(
+                        QLineF(self.view._start, QPoint(self.view.points[0][0], self.view.points[0][1])))
                     line.setPen(QPen(designColor, penWidth, Qt.SolidLine, Qt.RoundCap, Qt.RoundJoin))
 
-                    self.view.scene().addItem( line )
+                    self.view.scene().addItem(line)
                     self.view.elList.append(line)
 
                     self.statusBar().showMessage("Area completed")
@@ -416,47 +417,46 @@ class ModifiersMapCreatorWindow(QMainWindow):
 
                     self.closedPolygon.setPen(QPen(designColor, penWidth, penStyle, Qt.RoundCap, Qt.RoundJoin))
 
-                    self.closedPolygon.setBrush( self.areaColor )
+                    self.closedPolygon.setBrush(self.areaColor)
 
-                    self.view.scene().addItem( self.closedPolygon )
+                    self.view.scene().addItem(self.closedPolygon)
 
                     return
 
-
-                self.view.points.append( (  int(end.x()), int(end.y())) )
+                self.view.points.append((int(end.x()), int(end.y())))
 
                 line = QGraphicsLineItem(QLineF(self.view._start, end))
 
                 line.setPen(QPen(designColor, 2, Qt.SolidLine, Qt.RoundCap, Qt.RoundJoin))
 
-                self.view.scene().addItem( line )
+                self.view.scene().addItem(line)
                 self.view.elList.append(line)
 
                 self.view._start = test
 
-            else:   # first point
+            else:  # first point
 
                 self.view._start = test
 
-                ellipse = QGraphicsEllipseItem( self.view._start.x(), self.view._start.y(), 3, 3)
+                ellipse = QGraphicsEllipseItem(self.view._start.x(), self.view._start.y(), 3, 3)
                 ellipse.setPen(QPen(designColor, 1, Qt.SolidLine, Qt.RoundCap, Qt.RoundJoin))
 
                 brush = QBrush()
                 brush.setStyle(Qt.SolidPattern)
                 brush.setColor(designColor)
-                ellipse.setBrush( brush )
+                ellipse.setBrush(brush)
 
-                self.view.scene().addItem( ellipse )
+                self.view.scene().addItem(ellipse)
                 self.view.elList.append(ellipse)
 
-                self.view.points.append( ( self.view._start.x(), self.view._start.y()) )
-
+                self.view.points.append((self.view._start.x(), self.view._start.y()))
 
     def mapName_clicked(self):
         """
         change map name
         """
-        text, ok = QInputDialog.getText(self, "Modifiers map name", "Enter a name for the modifiers map", QLineEdit.Normal, self.mapName )
+        text, ok = QInputDialog.getText(self, "Modifiers map name", "Enter a name for the modifiers map",
+                                        QLineEdit.Normal, self.mapName)
         if ok:
             self.mapName = text
             self.setWindowTitle("{} - Modifiers map creator tool - {}".format(programName, self.mapName))
@@ -468,7 +468,9 @@ class ModifiersMapCreatorWindow(QMainWindow):
 
         if self.flagMapChanged:
 
-            response = dialog.MessageDialog(programName + ' - Modifiers map creator', 'What to do about the current unsaved coding map?', ['Save', 'Discard', 'Cancel'])
+            response = dialog.MessageDialog(programName + ' - Modifiers map creator',
+                                            'What to do about the current unsaved coding map?',
+                                            ['Save', 'Discard', 'Cancel'])
 
             if response == 'Save':
                 if not self.saveMap_clicked():
@@ -476,7 +478,6 @@ class ModifiersMapCreatorWindow(QMainWindow):
 
             if response == 'Cancel':
                 return
-
 
         self.cancelMap()
 
@@ -487,13 +488,12 @@ class ModifiersMapCreatorWindow(QMainWindow):
             return
 
         if self.mapName == '':
-            QMessageBox.critical(self, '' , 'You must define a name for the new map' )
+            QMessageBox.critical(self, '', 'You must define a name for the new map')
             return
 
-        if self.mapName in ['areas','bitmap']:
-            QMessageBox.critical(self, '' , 'This name is not allowed' )
+        if self.mapName in ['areas', 'bitmap']:
+            QMessageBox.critical(self, '', 'This name is not allowed')
             return
-
 
         self.setWindowTitle(programName + ' - Map creator tool - ' + self.mapName)
 
@@ -502,8 +502,6 @@ class ModifiersMapCreatorWindow(QMainWindow):
 
         self.statusBar().showMessage('Click "Load bitmap" button to select and load a bitmap into the viewer')
 
-
-
     def openMap(self):
         """
         load bitmap from data
@@ -511,7 +509,9 @@ class ModifiersMapCreatorWindow(QMainWindow):
         """
         if self.flagMapChanged:
 
-            response = dialog.MessageDialog(programName + ' - Map creator', 'What to do about the current unsaved coding map?', ['Save', 'Discard', 'Cancel'])
+            response = dialog.MessageDialog(programName + ' - Map creator',
+                                            'What to do about the current unsaved coding map?',
+                                            ['Save', 'Discard', 'Cancel'])
 
             if response == "Save":
                 if not self.saveMap_clicked():
@@ -520,19 +520,21 @@ class ModifiersMapCreatorWindow(QMainWindow):
             if response == "Cancel":
                 return
 
-        fn = QFileDialog().getOpenFileName(self, 'Open a coding map', '', 'BORIS coding map (*.boris_map);;All files (*)')
+        fn = QFileDialog().getOpenFileName(self, 'Open a coding map', '',
+                                           'BORIS coding map (*.boris_map);;All files (*)')
         fileName = fn[0] if type(fn) is tuple else fn
 
         if fileName:
 
             try:
-                self.codingMap = json.loads( open( fileName , 'r').read() )
+                self.codingMap = json.loads(open(fileName, 'r').read())
             except:
-                QMessageBox.critical(self, programName, "The file {} seems not a behaviors coding map...".format(fileName))
-                return              
+                QMessageBox.critical(self, programName,
+                                     "The file {} seems not a behaviors coding map...".format(fileName))
+                return
 
             self.cancelMap()
-            
+
             self.mapName = self.codingMap['name']
 
             self.setWindowTitle(programName + ' - Map creator tool - ' + self.mapName)
@@ -541,42 +543,39 @@ class ModifiersMapCreatorWindow(QMainWindow):
 
             self.fileName = fileName
 
-            self.areasList = self.codingMap['areas']   # dictionary of dictionaries
-            bitmapContent = binascii.a2b_base64( self.codingMap['bitmap'] )
+            self.areasList = self.codingMap['areas']  # dictionary of dictionaries
+            bitmapContent = binascii.a2b_base64(self.codingMap['bitmap'])
 
             self.pixmap.loadFromData(bitmapContent)
 
             self.btDeleteArea.setEnabled(False)
 
-
             self.view.setSceneRect(0, 0, self.pixmap.size().width(), self.pixmap.size().height())
             pixItem = QGraphicsPixmapItem(self.pixmap)
-            pixItem.setPos(0,0)
+            pixItem.setPos(0, 0)
             self.view.scene().addItem(pixItem)
 
             for areaCode in self.areasList:
-                points = self.areasList[ areaCode ]['geometry']
+                points = self.areasList[areaCode]['geometry']
 
                 newPolygon = QPolygonF()
                 for p in points:
                     newPolygon.append(QPoint(p[0], p[1]))
 
-
-                clr = QColor( )
-                clr.setRgba( self.areasList[ areaCode ]['color'] )
+                clr = QColor()
+                clr.setRgba(self.areasList[areaCode]['color'])
 
                 # draw polygon
                 polygon = QGraphicsPolygonItem()
-
 
                 polygon.setPolygon(newPolygon)
 
                 polygon.setPen(QPen(clr, penWidth, penStyle, Qt.RoundCap, Qt.RoundJoin))
 
-                polygon.setBrush( QBrush( clr, Qt.SolidPattern ) )
+                polygon.setBrush(QBrush(clr, Qt.SolidPattern))
 
-                self.view.scene().addItem( polygon )
-                self.polygonsList2[ areaCode ] = polygon
+                self.view.scene().addItem(polygon)
+                self.polygonsList2[areaCode] = polygon
 
             self.btNewArea.setVisible(True)
 
@@ -589,14 +588,12 @@ class ModifiersMapCreatorWindow(QMainWindow):
         else:
             self.statusBar().showMessage('No file', 5000)
 
-
-
     def saveMap(self):
 
         if self.fileName:
 
             # create dict with map name key
-            mapDict = { 'name' : self.mapName}
+            mapDict = {'name': self.mapName}
 
             # add areas
             mapDict['areas'] = self.areasList
@@ -609,22 +606,21 @@ class ModifiersMapCreatorWindow(QMainWindow):
             buffer.open(QIODevice.WriteOnly)
             self.pixmap.save(buffer, 'PNG')
 
-            string_io = io.BytesIO( byte_array )
+            string_io = io.BytesIO(byte_array)
 
             string_io.seek(0)
 
             # add bitmap
-            mapDict[ 'bitmap' ] = binascii.b2a_base64(string_io.read()).decode('utf-8')
+            mapDict['bitmap'] = binascii.b2a_base64(string_io.read()).decode('utf-8')
 
             with open(self.fileName, 'w') as outfile:
-                outfile.write(json.dumps( mapDict ))
+                outfile.write(json.dumps(mapDict))
 
             self.flagMapChanged = False
 
             return True
         else:
             return False
-
 
     def saveAsMap_clicked(self):
 
@@ -641,13 +637,12 @@ class ModifiersMapCreatorWindow(QMainWindow):
                 self.fileName += '.boris_map'
             self.saveMap()
 
-
     def saveMap_clicked(self):
-
 
         if not self.fileName:
 
-            fn = QFileDialog(self).getSaveFileName(self, 'Save modifiers map', self.mapName + '.boris_map' , 'BORIS MAP (*.boris_map);;All files (*)')
+            fn = QFileDialog(self).getSaveFileName(self, 'Save modifiers map', self.mapName + '.boris_map',
+                                                   'BORIS MAP (*.boris_map);;All files (*)')
             if type(fn) is tuple:
                 self.fileName, _ = fn
             else:
@@ -661,15 +656,14 @@ class ModifiersMapCreatorWindow(QMainWindow):
 
         return False
 
-
     def newArea(self):
 
         if not self.bitmapFileName:
-            QMessageBox.critical(self, programName , "A bitmap must be loaded before to define areas")
+            QMessageBox.critical(self, programName, "A bitmap must be loaded before to define areas")
             return
 
         if self.selectedPolygon:
-            self.selectedPolygon.setPen( QPen(designColor, penWidth, penStyle, Qt.RoundCap, Qt.RoundJoin) )
+            self.selectedPolygon.setPen(QPen(designColor, penWidth, penStyle, Qt.RoundCap, Qt.RoundJoin))
             self.selectedPolygon = None
 
         self.flagNewArea = True
@@ -683,32 +677,36 @@ class ModifiersMapCreatorWindow(QMainWindow):
         self.slAlpha.setVisible(True)
         self.btDeleteArea.setVisible(False)
 
-        self.statusBar().showMessage('Select the vertices of the area for this modifier with the mouse (right click will cancel the last point)')
+        self.statusBar().showMessage(
+            'Select the vertices of the area for this modifier with the mouse (right click will cancel the last point)')
 
     def saveArea(self):
 
         if not self.closedPolygon:
-            QMessageBox.critical(self, programName , 'You must close your area before saving it.\nThe last vertex must correspond to the first one.' )
+            QMessageBox.critical(
+                self, programName,
+                'You must close your area before saving it.\nThe last vertex must correspond to the first one.')
 
         if len(self.view.points) < 3:
-            QMessageBox.critical(self, programName , 'You must define a closed area' )
+            QMessageBox.critical(self, programName, 'You must define a closed area')
             return
 
         # check if no area code
         if not self.leAreaCode.text():
-            QMessageBox.critical(self, programName , 'You must define a code for the new modifier' )
+            QMessageBox.critical(self, programName, 'You must define a code for the new modifier')
             return
 
         # check if not allowed character
         for c in "|,()":
             if c in self.leAreaCode.text():
-                QMessageBox.critical(self, programName , 'The modifier contains a character that is not allowed <b>()|,</b>.' )
+                QMessageBox.critical(self, programName,
+                                     'The modifier contains a character that is not allowed <b>()|,</b>.')
                 return
 
         # check if area code already used
 
         if self.leAreaCode.text() in self.areasList:
-            QMessageBox.critical(self, programName , "The modifier is already in use" )
+            QMessageBox.critical(self, programName, "The modifier is already in use")
             return
 
         # create polygon
@@ -716,15 +714,15 @@ class ModifiersMapCreatorWindow(QMainWindow):
         for p in self.view.points:
             newPolygon.append(QPoint(p[0], p[1]))
 
-        self.areasList[ self.leAreaCode.text() ] = {'geometry': self.view.points, 'color': self.areaColor.rgba() }
+        self.areasList[self.leAreaCode.text()] = {'geometry': self.view.points, 'color': self.areaColor.rgba()}
 
         # remove all lines
         for l in self.view.elList:
-            self.view.scene().removeItem( l )
+            self.view.scene().removeItem(l)
 
         # draw polygon
-        self.closedPolygon.setBrush( QBrush( self.areaColor, Qt.SolidPattern ) )
-        self.polygonsList2[ self.leAreaCode.text()  ] = self.closedPolygon
+        self.closedPolygon.setBrush(QBrush(self.areaColor, Qt.SolidPattern))
+        self.polygonsList2[self.leAreaCode.text()] = self.closedPolygon
         self.closedPolygon = None
         self.view._start = 0
         self.view.points = []
@@ -748,11 +746,9 @@ class ModifiersMapCreatorWindow(QMainWindow):
 
     def cancelAreaCreation(self):
 
-
         if self.closedPolygon:
             self.view.scene().removeItem(self.closedPolygon)
             self.closedPolygon = None
-
 
         # remove all lines
         for l in self.view.elList:
@@ -775,7 +771,6 @@ class ModifiersMapCreatorWindow(QMainWindow):
         self.leAreaCode.setVisible(False)
         self.leAreaCode.setText("")
 
-
     def deleteArea(self):
         """
         remove selected area from map
@@ -783,19 +778,18 @@ class ModifiersMapCreatorWindow(QMainWindow):
         print("cancel")
 
         print(self.selectedPolygon)
-        print( self.closedPolygon )
-        print( self.view.elList )
+        print(self.closedPolygon)
+        print(self.view.elList)
 
         if self.selectedPolygon:
             print("selected polygon")
             self.view.scene().removeItem(self.selectedPolygon)
-            self.view.scene().removeItem( self.polygonsList2[self.selectedPolygonAreaCode])
+            self.view.scene().removeItem(self.polygonsList2[self.selectedPolygonAreaCode])
 
             del self.polygonsList2[self.selectedPolygonAreaCode]
             del self.areasList[self.selectedPolygonAreaCode]
 
             self.flagMapChanged = True
-
 
         # remove all lines
         '''
@@ -836,7 +830,6 @@ class ModifiersMapCreatorWindow(QMainWindow):
         self.statusBar().showMessage("")
         self.flagMapChanged = False
 
-
     def loadBitmap(self):
         '''
         load bitmap as background for coding map
@@ -854,8 +847,10 @@ class ModifiersMapCreatorWindow(QMainWindow):
             self.pixmap.load(self.bitmapFileName)
 
             if self.pixmap.size().width() > maxSize or self.pixmap.size().height() > maxSize:
-                self.pixmap = self.pixmap.scaled (maxSize, maxSize, Qt.KeepAspectRatio)
-                QMessageBox.information(self, programName , 'The bitmap was resized to %d x %d pixels\nThe original file was not modified' % (self.pixmap.size().width(), self.pixmap.size().height() ) )
+                self.pixmap = self.pixmap.scaled(maxSize, maxSize, Qt.KeepAspectRatio)
+                QMessageBox.information(
+                    self, programName, 'The bitmap was resized to %d x %d pixels\nThe original file was not modified' %
+                    (self.pixmap.size().width(), self.pixmap.size().height()))
 
             # scale image
             # pixmap = pixmap.scaled (256, 256, Qt.KeepAspectRatio)
@@ -875,6 +870,7 @@ class ModifiersMapCreatorWindow(QMainWindow):
             self.statusBar().showMessage("""Click "New modifier" to create a new modifier""")
 
             self.flagMapChanged = True
+
 
 if __name__ == '__main__':
 

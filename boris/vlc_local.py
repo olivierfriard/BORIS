@@ -1,7 +1,7 @@
 """
 BORIS
 Behavioral Observation Research Interactive Software
-Copyright 2012-2021 Olivier Friard
+Copyright 2012-2022 Olivier Friard
 
 This file is part of BORIS.
 
@@ -27,6 +27,7 @@ import sys
 import ctypes
 import os
 
+
 def find_local_libvlc():
 
     dll = None
@@ -39,9 +40,9 @@ def find_local_libvlc():
     vlc_dll_path = pathlib.Path("")
 
     if sys.platform.startswith("win"):
-        
+
         if sys.argv[0] == "-m":
-            vlc_dll_path = pathlib.Path(os.getcwd()) / "Lib"  / "site-packages" / "boris" / "misc" / "libvlc.dll"
+            vlc_dll_path = pathlib.Path(os.getcwd()) / "Lib" / "site-packages" / "boris" / "misc" / "libvlc.dll"
 
         if sys.argv[0].endswith("start_boris.py"):
             vlc_dll_path = pathlib.Path(sys.argv[0]).resolve().parent / "boris" / "misc" / "libvlc.dll"
@@ -56,13 +57,14 @@ def find_local_libvlc():
         dll = ctypes.CDLL(str(vlc_dll_path))
         plugin_path = str(pathlib.Path(sys.argv[0]).resolve().parent / "misc" / "plugins")
 
-
     if sys.platform.startswith("darwin"):
 
         libvlccore_path = pathlib.Path("")
         if sys.argv[0].endswith("start_boris.py"):
-            libvlccore_path = pathlib.Path(sys.argv[0]).resolve().parent / "boris" / "misc" / "VLC" / "lib" / "libvlccore.dylib"
-            vlc_dll_path = pathlib.Path(sys.argv[0]).resolve().parent / "boris" / "misc" / "VLC" / "lib" / "libvlc.dylib"
+            libvlccore_path = pathlib.Path(
+                sys.argv[0]).resolve().parent / "boris" / "misc" / "VLC" / "lib" / "libvlccore.dylib"
+            vlc_dll_path = pathlib.Path(
+                sys.argv[0]).resolve().parent / "boris" / "misc" / "VLC" / "lib" / "libvlc.dylib"
             plugin_path = pathlib.Path(sys.argv[0]).resolve().parent / "boris" / "misc" / "VLC" / "plugins"
 
         if sys.argv[0].endswith("__main__.py"):

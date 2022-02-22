@@ -1,7 +1,7 @@
 """
 BORIS
 Behavioral Observation Research Interactive Software
-Copyright 2012-2021 Olivier Friard
+Copyright 2012-2022 Olivier Friard
 
 This file is part of BORIS.
 
@@ -19,7 +19,6 @@ This file is part of BORIS.
   along with this program; if not see <http://www.gnu.org/licenses/>.
 
 """
-
 
 import logging
 import os
@@ -63,13 +62,11 @@ class Param_panel(QDialog, Ui_Dialog):
         self.rb_limit.clicked.connect(lambda: self.rb_time(TIME_EVENTS))
         self.rb_interval.clicked.connect(lambda: self.rb_time(TIME_ARBITRARY_INTERVAL))
 
-
     def rb_time(self, button):
         """
         time
         """
         self.frm_time_interval.setEnabled(button == TIME_ARBITRARY_INTERVAL)
-
 
     def subjects_button_clicked(self, command):
         for idx in range(self.lwSubjects.count()):
@@ -80,7 +77,6 @@ class Param_panel(QDialog, Ui_Dialog):
                 cb.setChecked(False)
             if command == "reverse selection":
                 cb.setChecked(not cb.isChecked())
-
 
     def behaviors_button_clicked(self, command):
         for idx in range(self.lwBehaviors.count()):
@@ -97,7 +93,6 @@ class Param_panel(QDialog, Ui_Dialog):
                         self.lwBehaviors.item(idx).setCheckState(Qt.Unchecked)
                     else:
                         self.lwBehaviors.item(idx).setCheckState(Qt.Checked)
-
 
     def ok(self):
 
@@ -116,7 +111,6 @@ class Param_panel(QDialog, Ui_Dialog):
 
         self.accept()
 
-
     def behavior_item_clicked(self, item):
         """
         check / uncheck behaviors belonging to the clicked category
@@ -134,7 +128,6 @@ class Param_panel(QDialog, Ui_Dialog):
 
             item.setData(35, not item.data(35))
 
-
     def extract_observed_behaviors(self, selected_observations, selected_subjects):
         """
         extract unique behaviors codes from obs_id observation and selected subjects
@@ -147,13 +140,12 @@ class Param_panel(QDialog, Ui_Dialog):
 
         for events in all_events:
             for event in events:
-                if (event[EVENT_SUBJECT_FIELD_IDX] in selected_subjects
-                        or (not event[EVENT_SUBJECT_FIELD_IDX] and NO_FOCAL_SUBJECT in selected_subjects)):
+                if (event[EVENT_SUBJECT_FIELD_IDX] in selected_subjects or
+                    (not event[EVENT_SUBJECT_FIELD_IDX] and NO_FOCAL_SUBJECT in selected_subjects)):
                     observed_behaviors.append(event[EVENT_BEHAVIOR_FIELD_IDX])
 
         # remove duplicate
         return list(set(observed_behaviors))
-
 
     def cb_changed(self):
         selectedSubjects = []

@@ -1,7 +1,7 @@
 """
 BORIS
 Behavioral Observation Research Interactive Software
-Copyright 2012-2021 Olivier Friard
+Copyright 2012-2022 Olivier Friard
 
 
   This program is free software; you can redistribute it and/or modify
@@ -37,6 +37,7 @@ from boris.utilities import txt2np_array
 
 
 class MyMplCanvas(FigureCanvas):
+
     def __init__(self, parent=None):
         self.fig = Figure()
         self.axes = self.fig.add_subplot(1, 1, 1)
@@ -52,19 +53,18 @@ class Plot_data(QWidget):
     # send keypress event to mainwindow
     sendEvent = pyqtSignal(QEvent)
 
-    def __init__(
-            self,
-            file_name,
-            interval,
-            time_offset,
-            plot_style,
-            plot_title,
-            y_label,
-            columns_to_plot,
-            substract_first_value,
-            converters,
-            column_converter,
-            log_level=""):
+    def __init__(self,
+                 file_name,
+                 interval,
+                 time_offset,
+                 plot_style,
+                 plot_title,
+                 y_label,
+                 columns_to_plot,
+                 substract_first_value,
+                 converters,
+                 column_converter,
+                 log_level=""):
 
         super().__init__()
 
@@ -132,7 +132,7 @@ class Plot_data(QWidget):
         logging.debug("data[50]: {}".format(data[:50]))
         logging.debug("shape: {}".format(data.shape))
 
-        if data.shape == (0, ):
+        if data.shape == (0,):
             self.error_msg = "Empty input file"
             return
 
@@ -233,7 +233,6 @@ class Plot_data(QWidget):
         else:
             self.time_out = min_time_step * 1000
 
-
     def eventFilter(self, receiver, event):
         """
         send event (if keypress) to main window
@@ -243,7 +242,6 @@ class Plot_data(QWidget):
             return True
         else:
             return False
-
 
     def zoom(self, z):
         if z == -1 and self.plotter.interval <= 10:
@@ -257,17 +255,14 @@ class Plot_data(QWidget):
 
         self.plotter.interval = new_interval
 
-
     def timer_plot_data_out(self, time_):
         self.update_plot(time_)
-
 
     def update_plot(self, time_):
         """
         update plot by signal
         """
         self.send_fig.emit(float(time_) + float(self.time_offset))
-
 
     def close_plot(self):
         self.thread.quit()
@@ -319,10 +314,8 @@ class Plotter(QObject):
         float  # position end
     )
 
-
     @pyqtSlot(float)
     def replot(self, current_time):  # time_ in s
-
 
         logging.debug("current_time: {}".format(current_time))
 
@@ -381,7 +374,9 @@ class Plotter(QObject):
 
             logging.debug("self.interval/self.min_time_step/2: {}".format(self.interval / self.min_time_step / 2))
 
-            dim_footer = int(round((current_time - self.max_time_value) / self.min_time_step + self.interval / self.min_time_step / 2))
+            dim_footer = int(
+                round((current_time - self.max_time_value) / self.min_time_step +
+                      self.interval / self.min_time_step / 2))
 
             footer = np.array([np.nan] * dim_footer).T
             logging.debug("len footer: {}".format(len(footer)))
@@ -480,11 +475,11 @@ if __name__ == '__main__':
     converters = {
         "convert_time_ecg": {
             "name":
-            "convert_time_ecg",
+                "convert_time_ecg",
             "description":
-            "convert '%d/%m/%Y %H:%M:%S.%f' in seconds from epoch",
+                "convert '%d/%m/%Y %H:%M:%S.%f' in seconds from epoch",
             "code":
-            "\nimport datetime\nepoch = datetime.datetime.utcfromtimestamp(0)\ndatetime_format = \"%d/%m/%Y %H:%M:%S.%f\"\n\nOUTPUT = (datetime.datetime.strptime(INPUT, datetime_format) - epoch).total_seconds()\n"
+                "\nimport datetime\nepoch = datetime.datetime.utcfromtimestamp(0)\ndatetime_format = \"%d/%m/%Y %H:%M:%S.%f\"\n\nOUTPUT = (datetime.datetime.strptime(INPUT, datetime_format) - epoch).total_seconds()\n"
         },
         "hhmmss_2_seconds": {
             "name": "hhmmss_2_seconds",
@@ -500,8 +495,8 @@ if __name__ == '__main__':
 
     app = QApplication(sys.argv)
 
-    win = Plot_data(file_name, interval, time_offset, color, plot_title, y_label, columns_to_plot, substract_first_value, converters,
-                    column_converter)
+    win = Plot_data(file_name, interval, time_offset, color, plot_title, y_label, columns_to_plot,
+                    substract_first_value, converters, column_converter)
 
     if win.error_msg:
         sys.exit()

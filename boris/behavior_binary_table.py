@@ -1,7 +1,7 @@
 """
 BORIS
 Behavioral Observation Research Interactive Software
-Copyright 2012-2021 Olivier Friard
+Copyright 2012-2022 Olivier Friard
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -36,9 +36,7 @@ from boris import utilities
 from boris.config import *
 
 
-def create_behavior_binary_table(pj: dict,
-                                 selected_observations: list,
-                                 parameters_obs: dict,
+def create_behavior_binary_table(pj: dict, selected_observations: list, parameters_obs: dict,
                                  time_interval: float) -> dict:
     """
     create behavior binary table
@@ -56,8 +54,12 @@ def create_behavior_binary_table(pj: dict,
 
     results_df = {}
 
-    state_behavior_codes = [x for x in utilities.state_behavior_codes(pj[ETHOGRAM]) if x in parameters_obs[SELECTED_BEHAVIORS]]
-    point_behavior_codes = [x for x in utilities.point_behavior_codes(pj[ETHOGRAM]) if x in parameters_obs[SELECTED_BEHAVIORS]]
+    state_behavior_codes = [
+        x for x in utilities.state_behavior_codes(pj[ETHOGRAM]) if x in parameters_obs[SELECTED_BEHAVIORS]
+    ]
+    point_behavior_codes = [
+        x for x in utilities.point_behavior_codes(pj[ETHOGRAM]) if x in parameters_obs[SELECTED_BEHAVIORS]
+    ]
     if not state_behavior_codes and not point_behavior_codes:
         return {"error": True, "msg": "No state events selected"}
 
@@ -84,16 +86,14 @@ def create_behavior_binary_table(pj: dict,
                 max_obs_length, _ = project_functions.observation_length(pj, [obs_id])
                 end_time = dc(max_obs_length)
 
-
         if obs_id not in results_df:
             results_df[obs_id] = {}
 
         for subject in parameters_obs[SELECTED_SUBJECTS]:
 
             # extract tuple (behavior, modifier)
-            behav_modif_list = [(idx[2], idx[3])
-                                for idx in pj[OBSERVATIONS][obs_id][EVENTS] if idx[1] == (subject if subject != NO_FOCAL_SUBJECT else "")
-                                                                               and idx[2] in parameters_obs[SELECTED_BEHAVIORS]]
+            behav_modif_list = [(idx[2], idx[3]) for idx in pj[OBSERVATIONS][obs_id][EVENTS] if idx[1] == (
+                subject if subject != NO_FOCAL_SUBJECT else "") and idx[2] in parameters_obs[SELECTED_BEHAVIORS]]
 
             # extract observed subjects NOT USED at the moment
             observed_subjects = [event[EVENT_SUBJECT_FIELD_IDX] for event in pj[OBSERVATIONS][obs_id][EVENTS]]
@@ -108,34 +108,30 @@ def create_behavior_binary_table(pj: dict,
             behav_modif_set = set(behav_modif_list)
             observed_behav = [(x[0], x[1]) for x in sorted(behav_modif_set)]
             if parameters_obs[INCLUDE_MODIFIERS]:
-                results_df[obs_id][subject] = tablib.Dataset(headers=["time"] + [f"{x[0]}" + f" ({x[1]})" * (x[1] != "")
-                                                                                 for x in sorted(behav_modif_set)])
+                results_df[obs_id][subject] = tablib.Dataset(
+                    headers=["time"] + [f"{x[0]}" + f" ({x[1]})" * (x[1] != "") for x in sorted(behav_modif_set)])
             else:
                 results_df[obs_id][subject] = tablib.Dataset(headers=["time"] + [x[0] for x in sorted(behav_modif_set)])
 
             if subject == NO_FOCAL_SUBJECT:
                 sel_subject_dict = {"": {SUBJECT_NAME: ""}}
             else:
-                sel_subject_dict = dict([(idx, pj[SUBJECTS][idx]) for idx in pj[SUBJECTS] if pj[SUBJECTS][idx][SUBJECT_NAME] == subject])
+                sel_subject_dict = dict([
+                    (idx, pj[SUBJECTS][idx]) for idx in pj[SUBJECTS] if pj[SUBJECTS][idx][SUBJECT_NAME] == subject
+                ])
 
             row_idx = 0
             t = start_time
             while t <= end_time:
 
                 # state events
-                current_states = utilities.get_current_states_modifiers_by_subject_2(state_behavior_codes,
-                                                                                   pj[OBSERVATIONS][obs_id][EVENTS],
-                                                                                   sel_subject_dict,
-                                                                                   t
-                                                                                   )
+                current_states = utilities.get_current_states_modifiers_by_subject_2(
+                    state_behavior_codes, pj[OBSERVATIONS][obs_id][EVENTS], sel_subject_dict, t)
 
                 # point events
                 current_point = utilities.get_current_points_by_subject(point_behavior_codes,
                                                                         pj[OBSERVATIONS][obs_id][EVENTS],
-                                                                        sel_subject_dict,
-                                                                        t,
-                                                                        time_interval
-                                                                        )
+                                                                        sel_subject_dict, t, time_interval)
 
                 cols = [float(t)]  # time
 
@@ -160,9 +156,8 @@ def behavior_binary_table(pj: dict):
     call create_behavior_binary_table
     """
 
-    _, selected_observations = select_observations.select_observations(pj,
-                                                                       MULTIPLE,
-                                                                       "Select observations for the behavior binary table")
+    _, selected_observations = select_observations.select_observations(
+        pj, MULTIPLE, "Select observations for the behavior binary table")
 
     if not selected_observations:
         return
@@ -170,9 +165,7 @@ def behavior_binary_table(pj: dict):
     out = ""
     not_paired_obs_list = []
     for obs_id in selected_observations:
-        r, msg = project_functions.check_state_events_obs(obs_id,
-                                                          pj[ETHOGRAM],
-                                                          pj[OBSERVATIONS][obs_id])
+        r, msg = project_functions.check_state_events_obs(obs_id, pj[ETHOGRAM], pj[OBSERVATIONS][obs_id])
 
         if not r:
             out += f"Observation: <strong>{obs_id}</strong><br>{msg}<br>"
@@ -214,10 +207,7 @@ def behavior_binary_table(pj: dict):
         return
     time_interval = utilities.float2decimal(i)
 
-    results_df = create_behavior_binary_table(pj,
-                                              selected_observations,
-                                              parameters,
-                                              time_interval)
+    results_df = create_behavior_binary_table(pj, selected_observations, parameters, time_interval)
 
     if "error" in results_df:
         QMessageBox.warning(None, programName, results_df["msg"])
@@ -225,18 +215,12 @@ def behavior_binary_table(pj: dict):
 
     # save results
     if len(selected_observations) == 1:
-        extended_file_formats = ["Tab Separated Values (*.tsv)",
-                                 "Comma Separated Values (*.csv)",
-                                 "Open Document Spreadsheet ODS (*.ods)",
-                                 "Microsoft Excel Spreadsheet XLSX (*.xlsx)",
-                                 "Legacy Microsoft Excel Spreadsheet XLS (*.xls)",
-                                 "HTML (*.html)"]
-        file_formats = ["tsv",
-                        "csv",
-                        "ods",
-                        "xlsx",
-                        "xls",
-                        "html"]
+        extended_file_formats = [
+            "Tab Separated Values (*.tsv)", "Comma Separated Values (*.csv)", "Open Document Spreadsheet ODS (*.ods)",
+            "Microsoft Excel Spreadsheet XLSX (*.xlsx)", "Legacy Microsoft Excel Spreadsheet XLS (*.xls)",
+            "HTML (*.html)"
+        ]
+        file_formats = ["tsv", "csv", "ods", "xlsx", "xls", "html"]
 
         file_name, filter_ = QFileDialog().getSaveFileName(None, "Save results", "", ";;".join(extended_file_formats))
         if not file_name:
@@ -248,16 +232,12 @@ def behavior_binary_table(pj: dict):
             file_name = str(pathlib.Path(file_name)) + "." + output_format
             # check if file with new extension already exists
             if pathlib.Path(file_name).is_file():
-                if dialog.MessageDialog(programName,
-                                        f"The file {file_name} already exists.",
+                if dialog.MessageDialog(programName, f"The file {file_name} already exists.",
                                         [CANCEL, OVERWRITE]) == CANCEL:
                     return
     else:
-        items = ("Tab Separated Values (*.tsv)",
-                 "Comma separated values (*.csv)",
-                 "Open Document Spreadsheet (*.ods)",
-                 "Microsoft Excel Spreadsheet XLSX (*.xlsx)",
-                 "Legacy Microsoft Excel Spreadsheet XLS (*.xls)",
+        items = ("Tab Separated Values (*.tsv)", "Comma separated values (*.csv)", "Open Document Spreadsheet (*.ods)",
+                 "Microsoft Excel Spreadsheet XLSX (*.xlsx)", "Legacy Microsoft Excel Spreadsheet XLS (*.xls)",
                  "HTML (*.html)")
 
         item, ok = QInputDialog.getItem(None, "Save results", "Available formats", items, 0, False)
@@ -265,7 +245,8 @@ def behavior_binary_table(pj: dict):
             return
         output_format = re.sub(".* \(\*\.", "", item)[:-1]
 
-        export_dir = QFileDialog().getExistingDirectory(None, "Choose a directory to save results",
+        export_dir = QFileDialog().getExistingDirectory(None,
+                                                        "Choose a directory to save results",
                                                         os.path.expanduser("~"),
                                                         options=QFileDialog.ShowDirsOnly)
         if not export_dir:
@@ -277,16 +258,17 @@ def behavior_binary_table(pj: dict):
         for subject in results_df[obs_id]:
 
             if len(selected_observations) > 1:
-                file_name_with_subject = str(pathlib.Path(export_dir) / utilities.safeFileName(obs_id + "_" + subject)) + "." + output_format
+                file_name_with_subject = str(
+                    pathlib.Path(export_dir) / utilities.safeFileName(obs_id + "_" + subject)) + "." + output_format
             else:
-                file_name_with_subject = str(os.path.splitext(file_name)[0] + utilities.safeFileName("_" + subject)) + "." + output_format
+                file_name_with_subject = str(os.path.splitext(file_name)[0] +
+                                             utilities.safeFileName("_" + subject)) + "." + output_format
 
             # check if file with new extension already exists
             if mem_command != OVERWRITE_ALL and pathlib.Path(file_name_with_subject).is_file():
                 if mem_command == "Skip all":
                     continue
-                mem_command = dialog.MessageDialog(programName,
-                                                   f"The file {file_name_with_subject} already exists.",
+                mem_command = dialog.MessageDialog(programName, f"The file {file_name_with_subject} already exists.",
                                                    [OVERWRITE, OVERWRITE_ALL, "Skip", "Skip all", CANCEL])
                 if mem_command == CANCEL:
                     return
@@ -305,7 +287,8 @@ def behavior_binary_table(pj: dict):
             except Exception:
 
                 error_type, error_file_name, error_lineno = utilities.error_info(sys.exc_info())
-                logging.critical(f"Error in behavior binary table function: {error_type} {error_file_name} {error_lineno}")
+                logging.critical(
+                    f"Error in behavior binary table function: {error_type} {error_file_name} {error_lineno}")
 
                 QMessageBox.critical(None, programName, f"Error saving file: {error_type}")
                 return

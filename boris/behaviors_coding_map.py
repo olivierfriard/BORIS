@@ -1,9 +1,8 @@
 #!/usr/bin/env python3
-
 """
 BORIS
 Behavioral Observation Research Interactive Software
-Copyright 2012-2021 Olivier Friard
+Copyright 2012-2022 Olivier Friard
 
 This file is part of BORIS.
 
@@ -21,7 +20,6 @@ This file is part of BORIS.
   along with this program; if not see <http://www.gnu.org/licenses/>.
 
 """
-
 
 from PyQt5.QtGui import *
 from PyQt5.QtCore import *
@@ -67,7 +65,6 @@ class BehaviorsCodingMapWindowClass(QWidget):
     keypressSignal = pyqtSignal(QEvent)
     close_signal = pyqtSignal(str)
 
-
     def __init__(self, behaviors_coding_map, idx=0):
         super(BehaviorsCodingMapWindowClass, self).__init__()
 
@@ -105,17 +102,15 @@ class BehaviorsCodingMapWindowClass(QWidget):
 
         self.loadMap()
 
-
     def closeEvent(self, event):
         self.close_signal.emit(self.codingMap["name"])
         event.accept()
-
 
     def eventFilter(self, receiver, event):
         """
         send event (if keypress) to main window
         """
-        if(event.type() == QEvent.KeyPress):
+        if (event.type() == QEvent.KeyPress):
             self.keypressSignal.emit(event)
             return True
         else:
@@ -134,7 +129,6 @@ class BehaviorsCodingMapWindowClass(QWidget):
                 codes.append(areaCode)
         self.leareaCode.setText(", ".join(codes))
 
-
     def viewMousePressEvent(self, event):
         """
         insert clicked areas codes
@@ -149,7 +143,6 @@ class BehaviorsCodingMapWindowClass(QWidget):
 
         if to_be_sent:
             self.clickSignal.emit(self.codingMap["name"], to_be_sent)
-
 
     def loadMap(self):
         """

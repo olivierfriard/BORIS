@@ -1,7 +1,7 @@
 """
 BORIS
 Behavioral Observation Research Interactive Software
-Copyright 2012-2021 Olivier Friard
+Copyright 2012-2022 Olivier Friard
 
 
   This program is free software; you can redistribute it and/or modify
@@ -22,10 +22,8 @@ Copyright 2012-2021 Olivier Friard
 """
 
 from PyQt5.QtGui import QColor
-from PyQt5.QtWidgets import (QTableWidgetItem, QLabel, QLineEdit,
-                             QTableWidget, QAbstractItemView, QComboBox,
-                             QGridLayout, QHBoxLayout, QSpacerItem,
-                             QPushButton, QDialog)
+from PyQt5.QtWidgets import (QTableWidgetItem, QLabel, QLineEdit, QTableWidget, QAbstractItemView, QComboBox,
+                             QGridLayout, QHBoxLayout, QSpacerItem, QPushButton, QDialog)
 
 from boris import config
 from boris import dialog
@@ -33,7 +31,9 @@ from boris.utilities import *
 
 commands_index = {"Start": 2, "Edit": 3, "View": 4}
 
+
 class MyTableWidgetItem(QTableWidgetItem):
+
     def __init__(self, text, sortKey):
         QTableWidgetItem.__init__(self, text, QTableWidgetItem.UserType)
         self.sortKey = sortKey
@@ -45,12 +45,7 @@ class MyTableWidgetItem(QTableWidgetItem):
 
 class observationsList_widget(QDialog):
 
-    def __init__(self,
-                 data: list,
-                 header: list,
-                 column_type: list,
-                 not_paired: list=[],
-                 parent=None):
+    def __init__(self, data: list, header: list, column_type: list, not_paired: list = [], parent=None):
 
         super(observationsList_widget, self).__init__(parent)
 
@@ -73,16 +68,8 @@ class observationsList_widget(QDialog):
         self.comboBox.currentIndexChanged.connect(self.view_filter)
 
         self.cbLogic = QComboBox(self)
-        self.cbLogic.addItems(["contains",
-                               "does not contain",
-                               "=",
-                               "!=",
-                               ">",
-                               "<",
-                               ">=",
-                               "<=",
-                               "between (use and to separate terms)"
-                               ])
+        self.cbLogic.addItems(
+            ["contains", "does not contain", "=", "!=", ">", "<", ">=", "<=", "between (use and to separate terms)"])
         self.cbLogic.currentIndexChanged.connect(self.view_filter)
 
         self.label = QLabel(self)
@@ -144,7 +131,6 @@ class observationsList_widget(QDialog):
         self.view.setEditTriggers(QAbstractItemView.NoEditTriggers)
         self.label.setText(f"{self.view.rowCount()} observation{'s' * (self.view.rowCount() > 1)}")
 
-
     def view_doubleClicked(self, index):
 
         if self.mode == config.MULTIPLE:
@@ -165,7 +151,6 @@ class observationsList_widget(QDialog):
         else:
             self.done(commands_index[response])
 
-
     def pbSelection_clicked(self, mode):
         """
         select or unselect all filtered observations
@@ -175,26 +160,20 @@ class observationsList_widget(QDialog):
             table_item = self.view.item(idx, 0)
             table_item.setSelected(mode == "select")
 
-
     def pbCancel_clicked(self):
         self.close()
-
 
     def pbOk_clicked(self):
         self.done(1)
 
-
     def pbOpen_clicked(self):
         self.done(2)
-
 
     def pbEdit_clicked(self):
         self.done(3)
 
-
     def pbView_clicked(self):
         self.done(4)
-
 
     def set_item(self, r, c):
 
@@ -205,15 +184,13 @@ class observationsList_widget(QDialog):
                 item = MyTableWidgetItem(self.data[r][c], 0)
         else:
             item = MyTableWidgetItem(self.data[r][c], self.data[r][c])
-        
-        # if obs_id in not_paired -> set background color to red 
+
+        # if obs_id in not_paired -> set background color to red
         if c == 0 and self.data[r][c] in self.not_paired:
             item.setBackground(QColor(255, 0, 0, 128))
             # item.setForeground(QBrush(QColor(0, 255, 0)))
 
-        
         return item
-
 
     def view_filter(self):
         """

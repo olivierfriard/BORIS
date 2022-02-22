@@ -1,9 +1,8 @@
 #!/usr/bin/env python3
-
 """
 BORIS
 Behavioral Observation Research Interactive Software
-Copyright 2012-2021 Olivier Friard
+Copyright 2012-2022 Olivier Friard
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -20,7 +19,6 @@ Copyright 2012-2021 Olivier Friard
   Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
   MA 02110-1301, USA.
 """
-
 
 import csv
 import datetime
@@ -138,11 +136,7 @@ def file_content_md5(file_name: str) -> str:
         return ""
 
 
-def txt2np_array(file_name: str,
-                 columns_str: str,
-                 substract_first_value: str,
-                 converters=None,
-                 column_converter=None):
+def txt2np_array(file_name: str, columns_str: str, substract_first_value: str, converters=None, column_converter=None):
     """
     read a txt file (tsv or csv) and return np array with passed columns
 
@@ -286,10 +280,10 @@ def get_current_states_modifiers_by_subject(state_behaviors_codes: list,
         for idx in subjects:
             current_states[idx] = []
             for sbc in state_behaviors_codes:
-                bl = [(x[EVENT_BEHAVIOR_FIELD_IDX], x[EVENT_MODIFIER_FIELD_IDX]) for x in events
-                      if x[EVENT_SUBJECT_FIELD_IDX] == subjects[idx][SUBJECT_NAME]
-                      and x[EVENT_BEHAVIOR_FIELD_IDX] == sbc
-                      and x[EVENT_TIME_FIELD_IDX] <= time]
+                bl = [(x[EVENT_BEHAVIOR_FIELD_IDX], x[EVENT_MODIFIER_FIELD_IDX])
+                      for x in events
+                      if x[EVENT_SUBJECT_FIELD_IDX] == subjects[idx][SUBJECT_NAME] and
+                      x[EVENT_BEHAVIOR_FIELD_IDX] == sbc and x[EVENT_TIME_FIELD_IDX] <= time]
 
                 if len(bl) % 2:  # test if odd
                     current_states[idx].append(bl[-1][0] + f" ({bl[-1][1]})" * (bl[-1][1] != ""))
@@ -298,18 +292,16 @@ def get_current_states_modifiers_by_subject(state_behaviors_codes: list,
         for idx in subjects:
             current_states[idx] = []
             for sbc in state_behaviors_codes:
-                if len([x[EVENT_BEHAVIOR_FIELD_IDX] for x in events
-                        if x[EVENT_SUBJECT_FIELD_IDX] == subjects[idx][SUBJECT_NAME]
-                        and x[EVENT_BEHAVIOR_FIELD_IDX] == sbc
-                        and x[EVENT_TIME_FIELD_IDX] <= time]) % 2:  # test if odd
+                if len([
+                        x[EVENT_BEHAVIOR_FIELD_IDX] for x in events if x[EVENT_SUBJECT_FIELD_IDX] == subjects[idx]
+                    [SUBJECT_NAME] and x[EVENT_BEHAVIOR_FIELD_IDX] == sbc and x[EVENT_TIME_FIELD_IDX] <= time
+                ]) % 2:  # test if odd
                     current_states[idx].append(sbc)
 
     return current_states
 
 
-def get_current_states_modifiers_by_subject_2(state_behaviors_codes: list,
-                                              events: list,
-                                              subjects: dict,
+def get_current_states_modifiers_by_subject_2(state_behaviors_codes: list, events: list, subjects: dict,
                                               time: Decimal) -> dict:
     """
     get current states and modifiers for subjects at given time
@@ -329,10 +321,10 @@ def get_current_states_modifiers_by_subject_2(state_behaviors_codes: list,
     for idx in subjects:
         current_states[idx] = []
         for sbc in state_behaviors_codes:
-            bl = [(x[EVENT_BEHAVIOR_FIELD_IDX], x[EVENT_MODIFIER_FIELD_IDX]) for x in events
-                    if x[EVENT_SUBJECT_FIELD_IDX] == subjects[idx][SUBJECT_NAME]
-                    and x[EVENT_BEHAVIOR_FIELD_IDX] == sbc
-                    and x[EVENT_TIME_FIELD_IDX] <= time]
+            bl = [(x[EVENT_BEHAVIOR_FIELD_IDX], x[EVENT_MODIFIER_FIELD_IDX])
+                  for x in events
+                  if x[EVENT_SUBJECT_FIELD_IDX] == subjects[idx][SUBJECT_NAME] and
+                  x[EVENT_BEHAVIOR_FIELD_IDX] == sbc and x[EVENT_TIME_FIELD_IDX] <= time]
 
             if len(bl) % 2:  # test if odd
                 current_states[idx].append(bl[-1])
@@ -366,11 +358,13 @@ def get_current_points_by_subject(point_behaviors_codes: list,
         current_points[idx] = []
         for sbc in point_behaviors_codes:
             #if include_modifiers:
-            point_events = [(x[EVENT_BEHAVIOR_FIELD_IDX], x[EVENT_MODIFIER_FIELD_IDX]) for x in events
-                                if x[EVENT_SUBJECT_FIELD_IDX] == subjects[idx]["name"]
-                                and x[EVENT_BEHAVIOR_FIELD_IDX] == sbc
-                                # and abs(x[EVENT_TIME_FIELD_IDX] - time) <= tolerance
-                                and time <= x[EVENT_TIME_FIELD_IDX] < (time + tolerance)]
+            point_events = [
+                (x[EVENT_BEHAVIOR_FIELD_IDX], x[EVENT_MODIFIER_FIELD_IDX])
+                for x in events
+                if x[EVENT_SUBJECT_FIELD_IDX] == subjects[idx]["name"] and x[EVENT_BEHAVIOR_FIELD_IDX] == sbc
+                # and abs(x[EVENT_TIME_FIELD_IDX] - time) <= tolerance
+                and time <= x[EVENT_TIME_FIELD_IDX] < (time + tolerance)
+            ]
 
             #else:
             #    point_events = [x[EVENT_BEHAVIOR_FIELD_IDX] for x in events
@@ -380,7 +374,6 @@ def get_current_points_by_subject(point_behaviors_codes: list,
             #                    and time <= x[EVENT_TIME_FIELD_IDX] < (time + tolerance)]
             for point_event in point_events:
                 current_points[idx].append(point_event)
-
 
     return current_points
 
@@ -494,16 +487,8 @@ def extract_wav(ffmpeg_bin: str, media_file_path: str, tmp_dir: str) -> str:
             return ""
 
 
-def extract_frames(ffmpeg_bin: str,
-                   start_frame: int,
-                   second: float,
-                   current_media_path,
-                   fps,
-                   imageDir,
-                   md5_media_path,
-                   extension,
-                   frame_resize,
-                   number_of_seconds):
+def extract_frames(ffmpeg_bin: str, start_frame: int, second: float, current_media_path, fps, imageDir, md5_media_path,
+                   extension, frame_resize, number_of_seconds):
     """
     extract frames from media file and save them in imageDir directory
 
@@ -527,8 +512,7 @@ def extract_frames(ffmpeg_bin: str,
                       f'-start_number {start_frame} '
                       f'-vframes {number_of_seconds * fps} '
                       f'-vf scale={frame_resize}:-1 '
-                      f'"{pathlib.Path(imageDir) / pathlib.Path(f"BORIS@{md5_media_path}_%08d.{extension}")}"'
-                      )
+                      f'"{pathlib.Path(imageDir) / pathlib.Path(f"BORIS@{md5_media_path}_%08d.{extension}")}"')
 
     logging.debug(f"ffmpeg command: {ffmpeg_command}")
 
@@ -540,25 +524,27 @@ def extract_frames(ffmpeg_bin: str,
         logging.debug(f"ffmpeg error: {error}")
 
     # check before frame
-    if (start_frame - 1 > 0
-            and not os.path.isfile(pathlib.Path(imageDir) / pathlib.Path(f"BORIS@{md5_media_path}_{start_frame - 1:08}.{extension}"))):
+    if (start_frame - 1 > 0 and not os.path.isfile(
+            pathlib.Path(imageDir) / pathlib.Path(f"BORIS@{md5_media_path}_{start_frame - 1:08}.{extension}"))):
 
         start_frame_before = max(1, round(start_frame - fps * number_of_seconds))
         second_before = (start_frame_before - 1) / fps
 
         number_of_frames = start_frame - start_frame_before
 
-        logging.debug(f"start_frame_before {start_frame_before} second_before {second_before} number_of_frames  {number_of_frames}")
+        logging.debug(
+            f"start_frame_before {start_frame_before} second_before {second_before} number_of_frames  {number_of_frames}"
+        )
 
-        ffmpeg_command = (f'"{ffmpeg_bin}" -ss {second_before} '
-                          "-loglevel quiet "
-                          f'-i "{current_media_path}" '
-                          f'-start_number {start_frame_before} '
-                          f'-vframes {number_of_frames} '
-                          f'-vf scale={frame_resize}:-1 '
-                          # f'"{imageDir}{os.sep}BORIS@{md5_media_path}_%08d.{extension}"'
-                          f'"{pathlib.Path(imageDir) / pathlib.Path(f"BORIS@{md5_media_path}_%08d.{extension}")}"'
-                          )
+        ffmpeg_command = (
+            f'"{ffmpeg_bin}" -ss {second_before} '
+            "-loglevel quiet "
+            f'-i "{current_media_path}" '
+            f'-start_number {start_frame_before} '
+            f'-vframes {number_of_frames} '
+            f'-vf scale={frame_resize}:-1 '
+            # f'"{imageDir}{os.sep}BORIS@{md5_media_path}_%08d.{extension}"'
+            f'"{pathlib.Path(imageDir) / pathlib.Path(f"BORIS@{md5_media_path}_%08d.{extension}")}"')
 
         logging.debug(f"ffmpeg command (before): {ffmpeg_command}")
 
@@ -570,15 +556,8 @@ def extract_frames(ffmpeg_bin: str,
             logging.debug(f"ffmpeg error: {error}")
 
 
-def extract_frames_mem_old(ffmpeg_bin: str,
-                       start_frame: int,
-                       second: float,
-                       current_media_path,
-                       fps: float,
-                       resolution: tuple,
-                       frame_resize: int,
-                       number_of_seconds: int) -> (list, tuple):
-
+def extract_frames_mem_old(ffmpeg_bin: str, start_frame: int, second: float, current_media_path, fps: float,
+                           resolution: tuple, frame_resize: int, number_of_seconds: int) -> (list, tuple):
     """
     extract frames from media file and return in a list in QPixmap format
 
@@ -623,16 +602,27 @@ def extract_frames_mem_old(ffmpeg_bin: str,
 
     logging.debug(f"new resolution: {new_h_resolution} x {new_v_resolution}")
 
-    ffmpeg_command = ["ffmpeg", "-loglevel", "info",
-                      "-i", current_media_path,
-                      "-hide_banner",
-                      "-ss", str((start_frame - 1) / fps),
-                      "-vframes", str(int(fps * number_of_seconds)),
-                      "-s", f"{new_h_resolution}x{new_v_resolution}",
-                      "-f", "image2pipe",
-                      "-pix_fmt", "rgb24",
-                      "-vcodec", "rawvideo", "-",
-                      ]
+    ffmpeg_command = [
+        "ffmpeg",
+        "-loglevel",
+        "info",
+        "-i",
+        current_media_path,
+        "-hide_banner",
+        "-ss",
+        str((start_frame - 1) / fps),
+        "-vframes",
+        str(int(fps * number_of_seconds)),
+        "-s",
+        f"{new_h_resolution}x{new_v_resolution}",
+        "-f",
+        "image2pipe",
+        "-pix_fmt",
+        "rgb24",
+        "-vcodec",
+        "rawvideo",
+        "-",
+    ]
     pipe = subprocess.Popen(ffmpeg_command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, bufsize=10**8)
 
     frames = []
@@ -644,7 +634,9 @@ def extract_frames_mem_old(ffmpeg_bin: str,
 
             return [], ()
 
-        frames.append(QPixmap.fromImage(toQImage(np.fromstring(raw_image, dtype="uint8").reshape((new_v_resolution, new_h_resolution, 3)))))
+        frames.append(
+            QPixmap.fromImage(
+                toQImage(np.fromstring(raw_image, dtype="uint8").reshape((new_v_resolution, new_h_resolution, 3)))))
 
     return frames, (new_h_resolution, new_v_resolution)
 
@@ -708,6 +700,7 @@ def extract_frames_mem(buffer,
     return d
 '''
 
+
 def decimal_default(obj):
     if isinstance(obj, Decimal):
         return float(round(obj, 3))
@@ -747,7 +740,8 @@ def seconds_of_day(dt) -> Decimal:
     return the number of seconds since start of the day
     """
 
-    return Decimal((dt - datetime.datetime.combine(dt.date(), datetime.time(0))).total_seconds()).quantize(Decimal("0.001"))
+    return Decimal(
+        (dt - datetime.datetime.combine(dt.date(), datetime.time(0))).total_seconds()).quantize(Decimal("0.001"))
 
 
 def sorted_keys(d: dict) -> list:
@@ -783,7 +777,7 @@ def distance(p1, p2):
     """
     x1, y1 = p1
     x2, y2 = p2
-    return ((x1 - x2) ** 2 + (y1 - y2) ** 2) ** 0.5
+    return ((x1 - x2)**2 + (y1 - y2)**2)**0.5
 
 
 def angle(vertex: tuple, side1: tuple, side2: tuple) -> float:
@@ -799,8 +793,8 @@ def angle(vertex: tuple, side1: tuple, side2: tuple) -> float:
     Returns:
         float: angle between side1 - vertex - side2
     """
-    return math.acos(
-        (distance(vertex, side1) ** 2 + distance(vertex, side2)**2 - distance(side1, side2)**2) / (2 * distance(vertex, side1) * distance(vertex, side2))) / math.pi * 180
+    return math.acos((distance(vertex, side1)**2 + distance(vertex, side2)**2 - distance(side1, side2)**2) /
+                     (2 * distance(vertex, side1) * distance(vertex, side2))) / math.pi * 180
 
 
 def mem_info():
@@ -820,8 +814,14 @@ def mem_info():
             process = subprocess.run(["free", "-m"], stdout=subprocess.PIPE)
             #out, err = process.communicate()
             out = process.stdout
-            _, tot_mem, used_mem, _, _, _, available_mem = [x.decode("utf-8") for x in out.split(b"\n")[1].split(b" ") if x != b""]
-            return False, {"total_memory": int(tot_mem), "used_memory": int(used_mem), "free_memory": int(available_mem)}
+            _, tot_mem, used_mem, _, _, _, available_mem = [
+                x.decode("utf-8") for x in out.split(b"\n")[1].split(b" ") if x != b""
+            ]
+            return False, {
+                "total_memory": int(tot_mem),
+                "used_memory": int(used_mem),
+                "free_memory": int(available_mem)
+            }
         except Exception:
             return True, {"msg": error_info(sys.exc_info())[0]}
 
@@ -845,7 +845,7 @@ def mem_info():
             free_mem = [x.decode("utf-8").strip() for x in output.split(b"\n")
                                                  if b"Available Physical Memory" in x][0].split(":")[1]
             free_mem = int(free_mem.strip(" ").split(" ")[0].replace(",", ""))
-            
+
             return False, {"total_memory": tot_mem, "free_memory": free_mem}
         except Exception:
             return True, {"msg": error_info(sys.exc_info())[0]}
@@ -855,8 +855,7 @@ def mem_info():
                                     stdout=subprocess.PIPE)
             tot_mem = int(output.stdout.strip().split(b"=")[-1].decode("utf-8")) / 1024 / 1024
 
-            output = subprocess.run(["wmic", "OS", "get", "FreePhysicalMemory", "/", "Value"],
-                                             stdout=subprocess.PIPE)
+            output = subprocess.run(["wmic", "OS", "get", "FreePhysicalMemory", "/", "Value"], stdout=subprocess.PIPE)
             free_mem = int(output.stdout.strip().split(b"=")[-1].decode("utf-8")) / 1024
             return False, {"total_memory": tot_mem, "free_memory": free_mem}
 
@@ -906,6 +905,7 @@ def available_memory():
     except Exception:
         return -1
 '''
+
 
 def polygon_area(poly):
     """
@@ -958,7 +958,7 @@ def time2seconds(time_: str) -> Decimal:
         time_ = time_.replace("-", "")
         tsplit = time_.split(":")
         h, m, s = int(tsplit[0]), int(tsplit[1]), Decimal(tsplit[2])
-        return Decimal(- (h * 3600 + m * 60 + s)) if flag_neg else Decimal(h * 3600 + m * 60 + s)
+        return Decimal(-(h * 3600 + m * 60 + s)) if flag_neg else Decimal(h * 3600 + m * 60 + s)
     except Exception:
         return Decimal("0.000")
 
@@ -973,7 +973,7 @@ def seconds2time(sec):
         str: time in format hh:mm:ss
     """
 
-    if sec > 1_600_000_000: # epoch time
+    if sec > 1_600_000_000:  # epoch time
         t = datetime.datetime.fromtimestamp(sec)
         return f"{t:%Y-%m-%d %H:%M:%S}.{t.microsecond/1000:03.0f}"
 
@@ -1004,11 +1004,10 @@ def safeFileName(s: str) -> str:
     return fileName
 
 
-def safe_xl_worksheet_title(title: str,
-                            output_format: str):
+def safe_xl_worksheet_title(title: str, output_format: str):
     """
     sanitize the XLS and XLSX worksheet title
-    
+
     Args:
         title (str): title for worksheet
         output_format (str): xls or xlsx
@@ -1048,7 +1047,8 @@ def test_ffmpeg_path(FFmpegPath):
 
     out, error = subprocess.Popen(f'"{FFmpegPath}" -version',
                                   stdout=subprocess.PIPE,
-                                  stderr=subprocess.PIPE, shell=True).communicate()
+                                  stderr=subprocess.PIPE,
+                                  shell=True).communicate()
     logging.debug(f"test ffmpeg path output: {out}")
     logging.debug(f"test ffmpeg path error: {error}")
 
@@ -1220,15 +1220,16 @@ def accurate_media_analysis(ffmpeg_bin, file_name):
         if not duration:
             return {"error": "This file does not seem to be a media file"}
 
-    return {"frames_number": int(fps * duration),
-            "duration_ms": duration * 1000,
-            "duration": duration,
-            "fps": fps,
-            "has_video": hasVideo,
-            "has_audio": hasAudio,
-            "bitrate": bitrate,
-            "resolution": resolution}
-
+    return {
+        "frames_number": int(fps * duration),
+        "duration_ms": duration * 1000,
+        "duration": duration,
+        "fps": fps,
+        "has_video": hasVideo,
+        "has_audio": hasAudio,
+        "bitrate": bitrate,
+        "resolution": resolution
+    }
 
 
 def behavior_color(colors_list, idx):

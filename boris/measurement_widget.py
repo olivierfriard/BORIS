@@ -1,9 +1,8 @@
 #!/usr/bin/env python3
-
 """
 BORIS
 Behavioral Observation Research Interactive Software
-Copyright 2012-2021 Olivier Friard
+Copyright 2012-2022 Olivier Friard
 
 This file is part of BORIS.
 
@@ -26,10 +25,8 @@ import logging
 
 from PyQt5.QtCore import pyqtSignal
 #from PyQt5.QtGui import *
-from PyQt5.QtWidgets import (QApplication, QWidget, QRadioButton, QLabel,
-                             QHBoxLayout, QVBoxLayout,
-                             QLineEdit, QPlainTextEdit, QCheckBox,
-                             QPushButton, QFileDialog, QMessageBox)
+from PyQt5.QtWidgets import (QApplication, QWidget, QRadioButton, QLabel, QHBoxLayout, QVBoxLayout, QLineEdit,
+                             QPlainTextEdit, QCheckBox, QPushButton, QFileDialog, QMessageBox)
 from boris import dialog
 from boris.config import YES, NO, CANCEL, programName
 
@@ -64,7 +61,6 @@ class wgMeasurement(QWidget):
         self.cbPersistentMeasurements = QCheckBox("Measurements are persistent")
         self.cbPersistentMeasurements.setChecked(True)
         vbox.addWidget(self.cbPersistentMeasurements)
-
 
         vbox.addWidget(QLabel("<b>Scale</b>"))
 
@@ -109,7 +105,6 @@ class wgMeasurement(QWidget):
 
         vbox.addLayout(hbox3)
 
-
     def pbClear_clicked(self):
         """
         clear measurements draw and results
@@ -118,24 +113,24 @@ class wgMeasurement(QWidget):
         self.pte.clear()
         self.clearSignal.emit()
 
-
     def pbClose_clicked(self):
         if not self.flagSaved:
-            response = dialog.MessageDialog(programName, "The current results are not saved. Do you want to save results before closing?",
-                                            [YES, NO, CANCEL])
+            response = dialog.MessageDialog(
+                programName, "The current results are not saved. Do you want to save results before closing?",
+                [YES, NO, CANCEL])
             if response == YES:
                 self.pbSave_clicked()
             if response == CANCEL:
                 return
         self.closeSignal.emit()
 
-
     def pbSave_clicked(self):
         """
         save results
         """
         if self.pte.toPlainText():
-            fileName, _ = QFileDialog().getSaveFileName(self, "Save measurement results", "", "Text files (*.txt);;All files (*)")
+            fileName, _ = QFileDialog().getSaveFileName(self, "Save measurement results", "",
+                                                        "Text files (*.txt);;All files (*)")
             if fileName:
                 with open(fileName, "w") as f:
                     f.write(self.pte.toPlainText())

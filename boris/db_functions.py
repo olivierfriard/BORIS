@@ -1,7 +1,7 @@
 """
 BORIS
 Behavioral Observation Research Interactive Software
-Copyright 2012-2021 Olivier Friard
+Copyright 2012-2022 Olivier Friard
 
 
   This program is free software; you can redistribute it and/or modify
@@ -28,8 +28,6 @@ from boris.config import *
 from boris import project_functions
 
 import time
-
-
 '''
 def load_events_in_intervals(pj: dict,
                       selected_subjects: list,
@@ -75,8 +73,6 @@ def load_events_in_intervals(pj: dict,
 '''
 
 
-
-
 def load_events_in_db(pj: dict,
                       selected_subjects: list,
                       selected_observations: list,
@@ -99,14 +95,18 @@ def load_events_in_db(pj: dict,
     """
 
     # selected behaviors defined as state event
-    state_behaviors_codes = [pj[ETHOGRAM][x][BEHAVIOR_CODE] for x in pj[ETHOGRAM]
-                                 if STATE in pj[ETHOGRAM][x][TYPE].upper()
-                                    and pj[ETHOGRAM][x][BEHAVIOR_CODE] in selected_behaviors]
+    state_behaviors_codes = [
+        pj[ETHOGRAM][x][BEHAVIOR_CODE]
+        for x in pj[ETHOGRAM]
+        if STATE in pj[ETHOGRAM][x][TYPE].upper() and pj[ETHOGRAM][x][BEHAVIOR_CODE] in selected_behaviors
+    ]
 
     # selected behaviors defined as point event
-    point_behaviors_codes = [pj[ETHOGRAM][x][BEHAVIOR_CODE] for x in pj[ETHOGRAM]
-                                 if POINT in pj[ETHOGRAM][x][TYPE].upper()
-                                    and pj[ETHOGRAM][x][BEHAVIOR_CODE] in selected_behaviors]
+    point_behaviors_codes = [
+        pj[ETHOGRAM][x][BEHAVIOR_CODE]
+        for x in pj[ETHOGRAM]
+        if POINT in pj[ETHOGRAM][x][TYPE].upper() and pj[ETHOGRAM][x][BEHAVIOR_CODE] in selected_behaviors
+    ]
 
     db = sqlite3.connect(":memory:", isolation_level=None)
     # db = sqlite3.connect("/tmp/1.sqlite", isolation_level=None)
@@ -136,26 +136,23 @@ def load_events_in_db(pj: dict,
 
                     # extract time, code, modifier and comment (time:0, subject:1, code:2, modifier:3, comment:4)
                     if ((subject_to_analyze == NO_FOCAL_SUBJECT and event[EVENT_SUBJECT_FIELD_IDX] == "") or
-                            (event[EVENT_SUBJECT_FIELD_IDX] == subject_to_analyze)):
+                        (event[EVENT_SUBJECT_FIELD_IDX] == subject_to_analyze)):
 
-                        r = cursor.execute(("INSERT INTO events "
-                                            "(observation, subject, code, type, modifiers, occurence, comment) "
-                                            "VALUES (?,?,?,?,?,?,?)"),
-                                           (obsId,
-                                            NO_FOCAL_SUBJECT if event[EVENT_SUBJECT_FIELD_IDX] == "" else event[EVENT_SUBJECT_FIELD_IDX],
-                                            event[EVENT_BEHAVIOR_FIELD_IDX],
-                                            STATE if event[EVENT_BEHAVIOR_FIELD_IDX] in state_behaviors_codes else POINT,
-                                            event[EVENT_MODIFIER_FIELD_IDX],
-                                            str(event[EVENT_TIME_FIELD_IDX]),
-                                            event[EVENT_COMMENT_FIELD_IDX]))
+                        r = cursor.execute(
+                            ("INSERT INTO events "
+                             "(observation, subject, code, type, modifiers, occurence, comment) "
+                             "VALUES (?,?,?,?,?,?,?)"),
+                            (obsId, NO_FOCAL_SUBJECT if event[EVENT_SUBJECT_FIELD_IDX] == "" else
+                             event[EVENT_SUBJECT_FIELD_IDX], event[EVENT_BEHAVIOR_FIELD_IDX],
+                             STATE if event[EVENT_BEHAVIOR_FIELD_IDX] in state_behaviors_codes else POINT,
+                             event[EVENT_MODIFIER_FIELD_IDX], str(
+                                 event[EVENT_TIME_FIELD_IDX]), event[EVENT_COMMENT_FIELD_IDX]))
 
     db.commit()
     return cursor
 
 
-def load_aggregated_events_in_db(pj: dict,
-                                 selected_subjects: list,
-                                 selected_observations: list,
+def load_aggregated_events_in_db(pj: dict, selected_subjects: list, selected_observations: list,
                                  selected_behaviors: list):
     """
     populate a memory sqlite database with aggregated events from selected_observations, selected_subjects and selected_behaviors
@@ -190,23 +187,25 @@ def load_aggregated_events_in_db(pj: dict,
     # check if state events are paired
     out = ""
     for obsId in selected_observations:
-        r, msg = project_functions.check_state_events_obs(obsId, pj[ETHOGRAM],
-                                                          pj[OBSERVATIONS][obsId],
-                                                          HHMMSS)
+        r, msg = project_functions.check_state_events_obs(obsId, pj[ETHOGRAM], pj[OBSERVATIONS][obsId], HHMMSS)
         if not r:
             out += f"Observation: <strong>{obsId}</strong><br>{msg}<br>"
     if out:
         return False, out, None
 
     # selected behaviors defined as state event
-    state_behaviors_codes = [pj[ETHOGRAM][x][BEHAVIOR_CODE] for x in pj[ETHOGRAM]
-                                 if STATE in pj[ETHOGRAM][x][TYPE].upper()
-                                    and pj[ETHOGRAM][x][BEHAVIOR_CODE] in selected_behaviors]
+    state_behaviors_codes = [
+        pj[ETHOGRAM][x][BEHAVIOR_CODE]
+        for x in pj[ETHOGRAM]
+        if STATE in pj[ETHOGRAM][x][TYPE].upper() and pj[ETHOGRAM][x][BEHAVIOR_CODE] in selected_behaviors
+    ]
 
     # selected behaviors defined as point event
-    point_behaviors_codes = [pj[ETHOGRAM][x][BEHAVIOR_CODE] for x in pj[ETHOGRAM]
-                                 if POINT in pj[ETHOGRAM][x][TYPE].upper()
-                                    and pj[ETHOGRAM][x][BEHAVIOR_CODE] in selected_behaviors]
+    point_behaviors_codes = [
+        pj[ETHOGRAM][x][BEHAVIOR_CODE]
+        for x in pj[ETHOGRAM]
+        if POINT in pj[ETHOGRAM][x][TYPE].upper() and pj[ETHOGRAM][x][BEHAVIOR_CODE] in selected_behaviors
+    ]
 
     db = sqlite3.connect(":memory:")
     #db = sqlite3.connect("/tmp/1.sqlite", isolation_level=None)
@@ -239,8 +238,10 @@ def load_aggregated_events_in_db(pj: dict,
         for subject in selected_subjects:
             for behavior in selected_behaviors:
 
-                cursor1.execute("SELECT DISTINCT modifiers FROM events WHERE subject=? AND code=? ORDER BY modifiers",
-                                (subject, behavior, ))
+                cursor1.execute("SELECT DISTINCT modifiers FROM events WHERE subject=? AND code=? ORDER BY modifiers", (
+                    subject,
+                    behavior,
+                ))
 
                 rows_distinct_modifiers = list(x[0] for x in cursor1.fetchall())
 
@@ -254,29 +255,37 @@ def load_aggregated_events_in_db(pj: dict,
                     for idx, row in enumerate(rows):
 
                         if behavior in point_behaviors_codes:
-                            cursor2.execute(("INSERT INTO aggregated_events (observation, subject, behavior, type, modifiers, "
-                                             "                               start, stop, comment, comment_stop) "
-                                            "VALUES (?,?,?,?,?,?,?,?,?)"),
-                                            (obsId, subject, behavior, POINT, distinct_modifiers,
-                                             row["occurence"], row["occurence"], row["comment"], "",))
+                            cursor2.execute(
+                                ("INSERT INTO aggregated_events (observation, subject, behavior, type, modifiers, "
+                                 "                               start, stop, comment, comment_stop) "
+                                 "VALUES (?,?,?,?,?,?,?,?,?)"), (
+                                     obsId,
+                                     subject,
+                                     behavior,
+                                     POINT,
+                                     distinct_modifiers,
+                                     row["occurence"],
+                                     row["occurence"],
+                                     row["comment"],
+                                     "",
+                                 ))
 
                         if behavior in state_behaviors_codes:
                             if idx % 2 == 0:
-                                cursor2.execute(("INSERT INTO aggregated_events (observation, subject, behavior, type, modifiers,"
-                                                 "                               start, stop, comment, comment_stop) "
-                                                "VALUES (?,?,?,?,?,?,?,?,?)"),
-                                                (obsId, subject, behavior, STATE, distinct_modifiers,
-                                                 row["occurence"], rows[idx + 1]["occurence"], row["comment"], rows[idx + 1]["comment"]))
+                                cursor2.execute(
+                                    ("INSERT INTO aggregated_events (observation, subject, behavior, type, modifiers,"
+                                     "                               start, stop, comment, comment_stop) "
+                                     "VALUES (?,?,?,?,?,?,?,?,?)"),
+                                    (obsId, subject, behavior, STATE, distinct_modifiers, row["occurence"],
+                                     rows[idx + 1]["occurence"], row["comment"], rows[idx + 1]["comment"]))
 
     db.commit()
 
     return True, "", db
 
 
-def load_aggregated_events_in_intervals(pj: dict,
-                                 selected_subjects: list,
-                                 selected_observations: list,
-                                 selected_behaviors: list):
+def load_aggregated_events_in_intervals(pj: dict, selected_subjects: list, selected_observations: list,
+                                        selected_behaviors: list):
     """
     populate a memory sqlite database with aggregated events from selected_observations, selected_subjects and selected_behaviors
 
@@ -312,23 +321,25 @@ def load_aggregated_events_in_intervals(pj: dict,
     # check if state events are paired
     out = ""
     for obsId in selected_observations:
-        r, msg = project_functions.check_state_events_obs(obsId, pj[ETHOGRAM],
-                                                          pj[OBSERVATIONS][obsId],
-                                                          HHMMSS)
+        r, msg = project_functions.check_state_events_obs(obsId, pj[ETHOGRAM], pj[OBSERVATIONS][obsId], HHMMSS)
         if not r:
             out += f"Observation: <strong>{obsId}</strong><br>{msg}<br>"
     if out:
         return False, out, None
 
     # selected behaviors defined as state event
-    state_behaviors_codes = [pj[ETHOGRAM][x][BEHAVIOR_CODE] for x in pj[ETHOGRAM]
-                                 if STATE in pj[ETHOGRAM][x][TYPE].upper()
-                                    and pj[ETHOGRAM][x][BEHAVIOR_CODE] in selected_behaviors]
+    state_behaviors_codes = [
+        pj[ETHOGRAM][x][BEHAVIOR_CODE]
+        for x in pj[ETHOGRAM]
+        if STATE in pj[ETHOGRAM][x][TYPE].upper() and pj[ETHOGRAM][x][BEHAVIOR_CODE] in selected_behaviors
+    ]
 
     # selected behaviors defined as point event
-    point_behaviors_codes = [pj[ETHOGRAM][x][BEHAVIOR_CODE] for x in pj[ETHOGRAM]
-                                 if POINT in pj[ETHOGRAM][x][TYPE].upper()
-                                    and pj[ETHOGRAM][x][BEHAVIOR_CODE] in selected_behaviors]
+    point_behaviors_codes = [
+        pj[ETHOGRAM][x][BEHAVIOR_CODE]
+        for x in pj[ETHOGRAM]
+        if POINT in pj[ETHOGRAM][x][TYPE].upper() and pj[ETHOGRAM][x][BEHAVIOR_CODE] in selected_behaviors
+    ]
 
     db = sqlite3.connect(":memory:")
 
@@ -341,8 +352,10 @@ def load_aggregated_events_in_intervals(pj: dict,
             for behavior in selected_behaviors:
                 intervals[subject][behaviors] = []
 
-                cursor1.execute("SELECT DISTINCT modifiers FROM events WHERE subject=? AND code=? ORDER BY modifiers",
-                                (subject, behavior, ))
+                cursor1.execute("SELECT DISTINCT modifiers FROM events WHERE subject=? AND code=? ORDER BY modifiers", (
+                    subject,
+                    behavior,
+                ))
 
                 rows_distinct_modifiers = list(x[0] for x in cursor1.fetchall())
 
@@ -357,19 +370,29 @@ def load_aggregated_events_in_intervals(pj: dict,
 
                         if behavior in point_behaviors_codes:
                             intervals[subject][behavior].append = P.singleton(row["occurence"])
-                            cursor2.execute(("INSERT INTO aggregated_events (observation, subject, behavior, type, modifiers, "
-                                             "                               start, stop, comment, comment_stop) "
-                                            "VALUES (?,?,?,?,?,?,?,?,?)"),
-                                            (obsId, subject, behavior, POINT, distinct_modifiers,
-                                             row["occurence"], row["occurence"], row["comment"], "",))
+                            cursor2.execute(
+                                ("INSERT INTO aggregated_events (observation, subject, behavior, type, modifiers, "
+                                 "                               start, stop, comment, comment_stop) "
+                                 "VALUES (?,?,?,?,?,?,?,?,?)"), (
+                                     obsId,
+                                     subject,
+                                     behavior,
+                                     POINT,
+                                     distinct_modifiers,
+                                     row["occurence"],
+                                     row["occurence"],
+                                     row["comment"],
+                                     "",
+                                 ))
 
                         if behavior in state_behaviors_codes:
                             if idx % 2 == 0:
-                                cursor2.execute(("INSERT INTO aggregated_events (observation, subject, behavior, type, modifiers,"
-                                                 "                               start, stop, comment, comment_stop) "
-                                                "VALUES (?,?,?,?,?,?,?,?,?)"),
-                                                (obsId, subject, behavior, STATE, distinct_modifiers,
-                                                 row["occurence"], rows[idx + 1]["occurence"], row["comment"], rows[idx + 1]["comment"]))
+                                cursor2.execute(
+                                    ("INSERT INTO aggregated_events (observation, subject, behavior, type, modifiers,"
+                                     "                               start, stop, comment, comment_stop) "
+                                     "VALUES (?,?,?,?,?,?,?,?,?)"),
+                                    (obsId, subject, behavior, STATE, distinct_modifiers, row["occurence"],
+                                     rows[idx + 1]["occurence"], row["comment"], rows[idx + 1]["comment"]))
 
     db.commit()
 

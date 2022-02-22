@@ -1,7 +1,7 @@
 """
 BORIS
 Behavioral Observation Research Interactive Software
-Copyright 2012-2021 Olivier Friard
+Copyright 2012-2022 Olivier Friard
 
 This file is part of BORIS.
 
@@ -34,7 +34,6 @@ NA = "NA"
 
 VLC_TIMER_OUT = 200
 SPECTRO_TIMER = 200
-
 
 function_keys = {
     16777264: "F1",
@@ -142,7 +141,6 @@ BEHAVIOR_CODE = "code"
 BEHAVIOR_KEY = "key"
 BEHAVIOR_CATEGORY = "category"
 
-
 # fields for event configuration
 fields = {
     "type": 0,
@@ -225,10 +223,8 @@ tw_obs_fields, pj_obs_fields = {}, {}
 for idx, field in enumerate(tw_events_fields):
     tw_obs_fields[field] = idx
 
-
 for idx, field in enumerate(pj_events_fields):
     pj_obs_fields[field] = idx
-
 
 EVENT_TIME_FIELD_IDX = 0
 
@@ -289,13 +285,11 @@ SET_OF_VALUES_idx = 2
 TIMESTAMP = "timestamp"
 TIMESTAMP_idx = 3
 
-
 TIME_FULL_OBS = "full obs"
 TIME_EVENTS = "limit to events"
 TIME_ARBITRARY_INTERVAL = "time interval"
 
 AVAILABLE_INDEP_VAR_TYPES = [NUMERIC, TEXT, SET_OF_VALUES, TIMESTAMP]
-
 
 INDEPENDENT_VARIABLES = "independent_variables"
 OBSERVATIONS = "observations"
@@ -402,7 +396,6 @@ SPECTROGRAM_COLOR_MAPS = ["viridis", "inferno", "plasma", "magma", "gray", "YlOr
 SPECTROGRAM_DEFAULT_COLOR_MAP = "viridis"
 SPECTROGRAM_DEFAULT_TIME_INTERVAL = 10
 
-
 # see matplotlib.colors.cnames.keys()
 # https://xkcd.com/color/rgb/
 
@@ -412,7 +405,6 @@ SPECTROGRAM_DEFAULT_TIME_INTERVAL = 10
 # sage #87ae73
 ACTIVE_MEASUREMENTS_COLOR = "lime"
 PASSIVE_MEASUREMENTS_COLOR = "red"
-
 
 # see matplotlib for color name
 BEHAVIORS_PLOT_COLORS = [
@@ -583,10 +575,10 @@ EMPTY_PROJECT = {
     CONVERTERS: {},
 }
 
-
-INIT_PARAM = {DISPLAY_SUBTITLES: False,
-              SAVE_FRAMES: DISK,
-              MEMORY_FOR_FRAMES: DEFAULT_MEMORY_FOR_FRAMES,
-              ADAPT_FAST_JUMP: ADAPT_FAST_JUMP_DEFAULT,
-              TIME_BUDGET_FORMAT: DEFAULT_TIME_BUDGET_FORMAT,
-              }
+INIT_PARAM = {
+    DISPLAY_SUBTITLES: False,
+    SAVE_FRAMES: DISK,
+    MEMORY_FOR_FRAMES: DEFAULT_MEMORY_FOR_FRAMES,
+    ADAPT_FAST_JUMP: ADAPT_FAST_JUMP_DEFAULT,
+    TIME_BUDGET_FORMAT: DEFAULT_TIME_BUDGET_FORMAT,
+}

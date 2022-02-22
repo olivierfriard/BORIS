@@ -2,7 +2,7 @@
 BORIS
 Behavioral Observation Research Interactive Software
 
-Copyright 2012-2021 Olivier Friard
+Copyright 2012-2022 Olivier Friard
 
 This file is part of BORIS.
 
@@ -20,7 +20,6 @@ This file is part of BORIS.
   along with this program; if not see <http://www.gnu.org/licenses/>.
 
 """
-
 
 from .core import main
 

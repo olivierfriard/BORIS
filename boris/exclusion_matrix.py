@@ -1,7 +1,7 @@
 """
 BORIS
 Behavioral Observation Research Interactive Software
-Copyright 2012-2021 Olivier Friard
+Copyright 2012-2022 Olivier Friard
 
 This file is part of BORIS.
 
@@ -21,8 +21,9 @@ This file is part of BORIS.
 """
 
 import logging
-from PyQt5.QtWidgets import (QDialog, QVBoxLayout, QHBoxLayout, QPushButton, QLabel,
-                             QTableWidget, QSpacerItem, QAbstractItemView, QSizePolicy)
+from PyQt5.QtWidgets import (QDialog, QVBoxLayout, QHBoxLayout, QPushButton, QLabel, QTableWidget, QSpacerItem,
+                             QAbstractItemView, QSizePolicy)
+
 
 class ExclusionMatrix(QDialog):
 
@@ -33,8 +34,7 @@ class ExclusionMatrix(QDialog):
 
         self.label = QLabel()
         self.label.setText(("Check if behaviors are mutually exclusive.\n"
-                            "The Point events (displayed on blue background) cannot be excluded)"
-                           ))
+                            "The Point events (displayed on blue background) cannot be excluded)"))
         hbox.addWidget(self.label)
 
         self.twExclusions = QTableWidget()
@@ -80,7 +80,6 @@ class ExclusionMatrix(QDialog):
         self.setWindowTitle("Behaviors exclusion matrix")
         self.setGeometry(100, 100, 600, 400)
 
-
     def pb_selected(self, to_check: bool):
         """
         check/uncheck the checkbox in selected cells
@@ -96,7 +95,6 @@ class ExclusionMatrix(QDialog):
                     except Exception:
                         logging.warning(f"Error during checking/unchecking for {row}/{column} in exclusion matrix")
         self.cb_clicked()
-
 
     def pb_cb_selection(self, mode):
         """
@@ -120,7 +118,6 @@ class ExclusionMatrix(QDialog):
                 except Exception:
                     logging.warning(f"Error during checking/unchecking for {r}/{c} in exclusion matrix")
 
-
     def cb_clicked(self):
         """
         de/select the corresponding checkbox
@@ -130,6 +127,7 @@ class ExclusionMatrix(QDialog):
                 if c_name != r_name:
                     try:
                         if f"{c_name}|{r_name}" in self.checkboxes:
-                            self.checkboxes[f"{c_name}|{r_name}"].setChecked(self.checkboxes[f"{r_name}|{c_name}"].isChecked())
+                            self.checkboxes[f"{c_name}|{r_name}"].setChecked(
+                                self.checkboxes[f"{r_name}|{c_name}"].isChecked())
                     except Exception:
                         logging.warning(f"Error during checking/unchecking for {r_name}/{c_name} in exclusion matrix")

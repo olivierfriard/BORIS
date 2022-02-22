@@ -1,9 +1,8 @@
 #!/usr/bin/env python3
-
 """
 BORIS
 Behavioral Observation Research Interactive Software
-Copyright 2012-2021 Olivier Friard
+Copyright 2012-2022 Olivier Friard
 
 This file is part of BORIS.
 
@@ -21,7 +20,6 @@ This file is part of BORIS.
   along with this program; if not see <http://www.gnu.org/licenses/>.
 
 """
-
 
 import json
 import os
@@ -64,11 +62,13 @@ class Converters(QDialog, Ui_converters):
         self.row_in_modification = -1
         self.flag_modified = False
 
-        for w in [self.le_converter_name, self.le_converter_description, self.pteCode, self.pb_save_converter, self.pb_cancel_converter]:
+        for w in [
+                self.le_converter_name, self.le_converter_description, self.pteCode, self.pb_save_converter,
+                self.pb_cancel_converter
+        ]:
             w.setEnabled(False)
 
         self.load_converters_in_table()
-
 
     def pb_code_help_clicked(self):
         """
@@ -78,12 +78,11 @@ class Converters(QDialog, Ui_converters):
         msg.setIcon(QMessageBox.Information)
         msg.setWindowTitle("Help for writing converters")
 
-        msg.setText(("A converter is a function that will convert a time value from external data into seconds.<br>"
-                     "A time value like 00:23:59 must be converted into seconds before to be plotted synchronously with your media.<br>"
-                     "For this you can use BORIS native converters or write your own converter.<br>"
-                     "A converter must be written using the <a href=\"www.python.org\">Python3</a> language.<br>"
-
-))
+        msg.setText((
+            "A converter is a function that will convert a time value from external data into seconds.<br>"
+            "A time value like 00:23:59 must be converted into seconds before to be plotted synchronously with your media.<br>"
+            "For this you can use BORIS native converters or write your own converter.<br>"
+            "A converter must be written using the <a href=\"www.python.org\">Python3</a> language.<br>"))
 
         #msg.setInformativeText("This is additional information")
 
@@ -93,10 +92,12 @@ class Converters(QDialog, Ui_converters):
     def add_converter(self):
         """Add a new converter"""
 
-        for w in [self.le_converter_name, self.le_converter_description, self.pteCode, self.pb_save_converter, self.pb_cancel_converter]:
+        for w in [
+                self.le_converter_name, self.le_converter_description, self.pteCode, self.pb_save_converter,
+                self.pb_cancel_converter
+        ]:
             w.setEnabled(True)
         self.tw_converters.setEnabled(False)
-
 
     def modify_converter(self):
         """Modifiy the selected converter"""
@@ -105,16 +106,20 @@ class Converters(QDialog, Ui_converters):
             QMessageBox.warning(self, programName, "Select a converter in the table")
             return
 
-        for w in [self.le_converter_name, self.le_converter_description, self.pteCode, self.pb_save_converter, self.pb_cancel_converter]:
+        for w in [
+                self.le_converter_name, self.le_converter_description, self.pteCode, self.pb_save_converter,
+                self.pb_cancel_converter
+        ]:
             w.setEnabled(True)
         self.tw_converters.setEnabled(False)
 
         self.le_converter_name.setText(self.tw_converters.item(self.tw_converters.selectedIndexes()[0].row(), 0).text())
-        self.le_converter_description.setText(self.tw_converters.item(self.tw_converters.selectedIndexes()[0].row(), 1).text())
-        self.pteCode.setPlainText(self.tw_converters.item(self.tw_converters.selectedIndexes()[0].row(), 2).text().replace("@", "\n"))
+        self.le_converter_description.setText(
+            self.tw_converters.item(self.tw_converters.selectedIndexes()[0].row(), 1).text())
+        self.pteCode.setPlainText(
+            self.tw_converters.item(self.tw_converters.selectedIndexes()[0].row(), 2).text().replace("@", "\n"))
 
         self.row_in_modification = self.tw_converters.selectedIndexes()[0].row()
-
 
     def code_2_func(self, name, code):
         """
@@ -135,7 +140,6 @@ class Converters(QDialog, Ui_converters):
 
         return function
 
-
     def save_converter(self):
         """Save converter"""
 
@@ -146,7 +150,8 @@ class Converters(QDialog, Ui_converters):
             return
 
         if not self.le_converter_name.text().replace("_", "a").isalnum():
-            QMessageBox.critical(self, "BORIS", "Forbidden characters are used in converter name.<br>Use a..z, A..Z, 0..9 _")
+            QMessageBox.critical(self, "BORIS",
+                                 "Forbidden characters are used in converter name.<br>Use a..z, A..Z, 0..9 _")
             return
 
         # test code with exec
@@ -162,7 +167,6 @@ class Converters(QDialog, Ui_converters):
         except:
             QMessageBox.critical(self, "BORIS", "The code produces an error:<br><b>{}</b>".format(sys.exc_info()[1]))
             return
-
 
         if self.row_in_modification == -1:
             self.tw_converters.setRowCount(self.tw_converters.rowCount() + 1)
@@ -185,7 +189,6 @@ class Converters(QDialog, Ui_converters):
 
         self.flag_modified = True
 
-
     def cancel_converter(self):
         """Cancel converter"""
 
@@ -196,7 +199,6 @@ class Converters(QDialog, Ui_converters):
         self.pb_cancel_converter.setEnabled(False)
         self.tw_converters.setEnabled(True)
 
-
     def delete_converter(self):
         """Delete selected converter"""
 
@@ -206,7 +208,6 @@ class Converters(QDialog, Ui_converters):
         else:
             QMessageBox.warning(self, programName, "Select a converter in the table")
 
-
     def load_converters_in_table(self):
         """
         load converters in table
@@ -215,15 +216,13 @@ class Converters(QDialog, Ui_converters):
 
         for converter in sorted(self.converters.keys()):
             self.tw_converters.setRowCount(self.tw_converters.rowCount() + 1)
-            self.tw_converters.setItem(self.tw_converters.rowCount() - 1, 0,
-                 QTableWidgetItem(converter)) # id / name
+            self.tw_converters.setItem(self.tw_converters.rowCount() - 1, 0, QTableWidgetItem(converter))  # id / name
             self.tw_converters.setItem(self.tw_converters.rowCount() - 1, 1,
-                 QTableWidgetItem(self.converters[converter]["description"]))
+                                       QTableWidgetItem(self.converters[converter]["description"]))
             self.tw_converters.setItem(self.tw_converters.rowCount() - 1, 2,
-             QTableWidgetItem(self.converters[converter]["code"].replace("\n", "@")))
+                                       QTableWidgetItem(self.converters[converter]["code"].replace("\n", "@")))
 
-        [self.tw_converters.resizeColumnToContents(idx) for idx in [0,1]]
-
+        [self.tw_converters.resizeColumnToContents(idx) for idx in [0, 1]]
 
     def load_converters_from_file_repo(self, mode):
         """
@@ -252,19 +251,21 @@ class Converters(QDialog, Ui_converters):
             try:
                 converters_from_repo = urllib.request.urlopen(converters_repo_URL).read().strip().decode("utf-8")
             except:
-                QMessageBox.critical(self, programName, "An error occured during retrieving converters from BORIS remote repository")
+                QMessageBox.critical(self, programName,
+                                     "An error occured during retrieving converters from BORIS remote repository")
                 return
 
             try:
                 converters_from_file = eval(converters_from_repo)["BORIS converters"]
             except:
-                QMessageBox.critical(self, programName, "An error occured during retrieving converters from BORIS remote repository")
+                QMessageBox.critical(self, programName,
+                                     "An error occured during retrieving converters from BORIS remote repository")
                 return
-
 
         if converters_from_file:
 
-            diag_choose_conv = dialog.ChooseObservationsToImport("Choose the converters to load:", sorted(list(converters_from_file.keys())))
+            diag_choose_conv = dialog.ChooseObservationsToImport("Choose the converters to load:",
+                                                                 sorted(list(converters_from_file.keys())))
 
             if diag_choose_conv.exec_():
 
@@ -282,18 +283,20 @@ class Converters(QDialog, Ui_converters):
                         if converter in converter_names:
                             while True:
                                 text, ok = QInputDialog.getText(self, "Converter conflict",
-                                                                      "The converter already exists<br>Rename it:",
-                                                                      QLineEdit.Normal,
-                                                                      converter)
+                                                                "The converter already exists<br>Rename it:",
+                                                                QLineEdit.Normal, converter)
                                 if not ok:
                                     break
                                 if text in converter_names:
                                     QMessageBox.critical(self, programName, "This name already exists in converters")
 
                                 if not text.replace("_", "a").isalnum():
-                                    QMessageBox.critical(self, programName, "This name contains forbidden character(s).<br>Use a..z, A..Z, 0..9 _")
+                                    QMessageBox.critical(
+                                        self, programName,
+                                        "This name contains forbidden character(s).<br>Use a..z, A..Z, 0..9 _")
 
-                                if text != converter and text not in converter_names and text.replace("_", "a").isalnum():
+                                if text != converter and text not in converter_names and text.replace("_",
+                                                                                                      "a").isalnum():
                                     break
 
                             if ok:
@@ -306,36 +309,35 @@ class Converters(QDialog, Ui_converters):
                         try:
                             exec(function)
                         except:
-                            QMessageBox.critical(self, "BORIS",
-                                                 (f"The code of {converter_name} converter "
-                                                  f"produces an error:<br><b>{sys.exc_info()[1]}</b>"))
+                            QMessageBox.critical(self, "BORIS", (f"The code of {converter_name} converter "
+                                                                 f"produces an error:<br><b>{sys.exc_info()[1]}</b>"))
 
                         self.tw_converters.setRowCount(self.tw_converters.rowCount() + 1)
                         self.tw_converters.setItem(self.tw_converters.rowCount() - 1, 0,
-                            QTableWidgetItem(converter_name))
+                                                   QTableWidgetItem(converter_name))
                         self.tw_converters.setItem(self.tw_converters.rowCount() - 1, 1,
-                            QTableWidgetItem(converters_from_file[converter]["description"]))
-                        self.tw_converters.setItem(self.tw_converters.rowCount() - 1, 2,
+                                                   QTableWidgetItem(converters_from_file[converter]["description"]))
+                        self.tw_converters.setItem(
+                            self.tw_converters.rowCount() - 1, 2,
                             QTableWidgetItem(converters_from_file[converter]["code"].replace("\n", "@")))
 
                         self.flag_modified = True
 
-                [self.tw_converters.resizeColumnToContents(idx) for idx in [0,1]]
-
+                [self.tw_converters.resizeColumnToContents(idx) for idx in [0, 1]]
 
     def pb_ok_clicked(self):
         """populate converters and close widget"""
 
         converters = {}
         for row in range(self.tw_converters.rowCount()):
-            converters[self.tw_converters.item(row, 0).text()] = {"name": self.tw_converters.item(row, 0).text(),
-                                                                  "description": self.tw_converters.item(row, 1).text(),
-                                                                  "code": self.tw_converters.item(row, 2).text().replace("@", "\n")
-                                                                 }
+            converters[self.tw_converters.item(row, 0).text()] = {
+                "name": self.tw_converters.item(row, 0).text(),
+                "description": self.tw_converters.item(row, 1).text(),
+                "code": self.tw_converters.item(row, 2).text().replace("@", "\n")
+            }
 
         self.converters = converters
         self.accept()
-
 
     def pb_cancel_widget_clicked(self):
         if self.flag_modified:
@@ -351,11 +353,11 @@ if __name__ == '__main__':
         "BORIS converters": {
             "convert_time_ecg": {
                 "name":
-                "convert_time_ecg",
+                    "convert_time_ecg",
                 "description":
-                "convert '%d/%m/%Y %H:%M:%S.%f' in seconds from epoch",
+                    "convert '%d/%m/%Y %H:%M:%S.%f' in seconds from epoch",
                 "code":
-                """
+                    """
     import datetime
     epoch = datetime.datetime.utcfromtimestamp(0)
     datetime_format = "%d/%m/%Y %H:%M:%S.%f"
@@ -364,12 +366,9 @@ if __name__ == '__main__':
     """
             },
             "hhmmss_2_seconds": {
-                "name":
-                "hhmmss_2_seconds",
-                "description":
-                "convert HH:MM:SS in seconds",
-                "code":
-                """
+                "name": "hhmmss_2_seconds",
+                "description": "convert HH:MM:SS in seconds",
+                "code": """
     h, m, s = INPUT.split(':')
     OUTPUT = int(h) * 3600 + int(m) * 60 + int(s)
 
@@ -377,8 +376,6 @@ if __name__ == '__main__':
             }
         }
     }
-
-
 
     import sys
 

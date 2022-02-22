@@ -1,9 +1,8 @@
 #!/usr/bin/env python3
-
 """
 BORIS
 Behavioral Observation Research Interactive Software
-Copyright 2012-2021 Olivier Friard
+Copyright 2012-2022 Olivier Friard
 
 This file is part of BORIS.
 
@@ -22,7 +21,6 @@ This file is part of BORIS.
 
 """
 
-
 import logging
 
 from PyQt5.QtCore import *
@@ -37,7 +35,8 @@ from boris.utilities import seconds2time
 
 class DlgEditEvent(QDialog, Ui_Form):
 
-    def __init__(self, log_level,
+    def __init__(self,
+                 log_level,
                  time_value=0,
                  current_time=0,
                  time_format=S,
@@ -62,11 +61,9 @@ class DlgEditEvent(QDialog, Ui_Form):
 
         self.horizontalLayout_2.insertWidget(0, self.time_widget)
 
-
         self.pb_set_to_current_time.clicked.connect(self.set_to_current_time)
         self.pbOK.clicked.connect(self.accept)
         self.pbCancel.clicked.connect(self.reject)
-
 
     def set_to_current_time(self):
         """
@@ -140,7 +137,6 @@ class EditSelectedEvents(QDialog):
 
         if self.rbComment.isChecked():
             self.newText.clear()
-
 
     def pbOK_clicked(self):
         if not self.rbSubject.isChecked() and not self.rbBehavior.isChecked() and not self.rbComment.isChecked():

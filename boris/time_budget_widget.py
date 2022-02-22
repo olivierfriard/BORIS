@@ -1,7 +1,7 @@
 """
 BORIS
 Behavioral Observation Research Interactive Software
-Copyright 2012-2021 Olivier Friard
+Copyright 2012-2022 Olivier Friard
 
 This file is part of BORIS.
 
@@ -85,14 +85,12 @@ class timeBudgetResults(QWidget):
 
         self.setWindowTitle("Time budget")
 
-
     def close_clicked(self):
         """
         save geometry of widget and close it
         """
         gui_utilities.save_geometry(self, "time budget")
         self.close()
-
 
     def pbSave_clicked(self):
         """
@@ -117,15 +115,15 @@ class timeBudgetResults(QWidget):
 
         logging.debug("save time budget results to file")
 
-        extended_file_formats = ["Tab Separated Values (*.tsv)",
-                                 "Comma Separated Values (*.csv)",
-                                 "Open Document Spreadsheet ODS (*.ods)",
-                                 "Microsoft Excel Spreadsheet XLSX (*.xlsx)",
-                                 "Legacy Microsoft Excel Spreadsheet XLS (*.xls)",
-                                 "HTML (*.html)"]
+        extended_file_formats = [
+            "Tab Separated Values (*.tsv)", "Comma Separated Values (*.csv)", "Open Document Spreadsheet ODS (*.ods)",
+            "Microsoft Excel Spreadsheet XLSX (*.xlsx)", "Legacy Microsoft Excel Spreadsheet XLS (*.xls)",
+            "HTML (*.html)"
+        ]
         file_formats = ["tsv", "csv", "ods", "xlsx", "xls", "html"]
 
-        file_name, filter_ = QFileDialog().getSaveFileName(self, "Save Time budget analysis", "", ";;".join(extended_file_formats))
+        file_name, filter_ = QFileDialog().getSaveFileName(self, "Save Time budget analysis", "",
+                                                           ";;".join(extended_file_formats))
 
         if not file_name:
             return
@@ -135,16 +133,15 @@ class timeBudgetResults(QWidget):
             file_name = str(pathlib.Path(file_name)) + "." + outputFormat
             # check if file with new extension already exists
             if pathlib.Path(file_name).is_file():
-                if dialog.MessageDialog(programName,
-                                        f"The file {file_name} already exists.",
+                if dialog.MessageDialog(programName, f"The file {file_name} already exists.",
                                         [CANCEL, OVERWRITE]) == CANCEL:
                     return
 
         rows = []
 
         # 1 observation
-        if (self.lw.count() == 1
-                and self.config_param.get(TIME_BUDGET_FORMAT, DEFAULT_TIME_BUDGET_FORMAT ) == COMPACT_TIME_BUDGET_FORMAT):
+        if (self.lw.count() == 1 and
+                self.config_param.get(TIME_BUDGET_FORMAT, DEFAULT_TIME_BUDGET_FORMAT) == COMPACT_TIME_BUDGET_FORMAT):
             col1, indep_var_label = [], []
             # add obs id
             col1.append(self.lw.item(0).text())
@@ -182,7 +179,10 @@ class timeBudgetResults(QWidget):
                 rows.append([""])
                 rows.append(["Observation id", self.lw.item(idx).text()])
                 rows.append(["Observation date", self.pj[OBSERVATIONS][self.lw.item(idx).text()].get("date", "")])
-                rows.append(["Description", utilities.eol2space(self.pj[OBSERVATIONS][self.lw.item(idx).text()].get(DESCRIPTION, ""))])
+                rows.append([
+                    "Description",
+                    utilities.eol2space(self.pj[OBSERVATIONS][self.lw.item(idx).text()].get(DESCRIPTION, ""))
+                ])
 
                 if INDEPENDENT_VARIABLES in self.pj[OBSERVATIONS][self.lw.item(idx).text()]:
                     rows.append(["Independent variables:"])

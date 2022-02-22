@@ -1,7 +1,7 @@
 """
 BORIS
 Behavioral Observation Research Interactive Software
-Copyright 2012-2021 Olivier Friard
+Copyright 2012-2022 Olivier Friard
 
 This file is part of BORIS.
 
@@ -20,9 +20,6 @@ This file is part of BORIS.
 
 """
 
-
-
-
 from PyQt5.QtGui import *
 from PyQt5.QtCore import *
 from PyQt5.QtWidgets import *
@@ -37,10 +34,11 @@ class ModifiersCodingMapWindowClass(QDialog):
     class View(QGraphicsView):
 
         mousePress = pyqtSignal(QMouseEvent)
+
         def mousePressEvent(self, event):
             self.mousePress.emit(event)
 
-        start=0
+        start = 0
         elList = []
         points = []
 
@@ -88,7 +86,6 @@ class ModifiersCodingMapWindowClass(QDialog):
 
         self.loadMap()
 
-
     def viewMousePressEvent(self, event):
         """
         insert clicked areas codes
@@ -129,7 +126,7 @@ class ModifiersCodingMapWindowClass(QDialog):
 
         self.view.setSceneRect(0, 0, pixmap.size().width(), pixmap.size().height())
         pixItem = QGraphicsPixmapItem(pixmap)
-        pixItem.setPos(0,0)
+        pixItem.setPos(0, 0)
         self.view.scene().addItem(pixItem)
 
         for area in self.areasList["areas"]:

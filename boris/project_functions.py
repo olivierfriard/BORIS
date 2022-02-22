@@ -1,7 +1,7 @@
 """
 BORIS
 Behavioral Observation Research Interactive Software
-Copyright 2012-2021 Olivier Friard
+Copyright 2012-2022 Olivier Friard
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -18,7 +18,6 @@ Copyright 2012-2021 Olivier Friard
   Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
   MA 02110-1301, USA.
 """
-
 
 import json
 import logging
@@ -38,19 +37,17 @@ from boris import utilities
 from boris.config import *
 
 
-def check_observation_exhaustivity(events:list,
-                                   ethogram: list,
-                                   state_events_list: list=[]):
+def check_observation_exhaustivity(events: list, ethogram: list, state_events_list: list = []):
     """
     check if observation is continous
-    if ethogram not empty state events list is determined else 
+    if ethogram not empty state events list is determined else
     """
 
     def interval_len(interval):
         if interval.empty:
             return dec(0)
         else:
-            return sum([x.upper-x.lower for x in interval])
+            return sum([x.upper - x.lower for x in interval])
 
     def interval_number(interval):
         if interval.empty:
@@ -69,20 +66,21 @@ def check_observation_exhaustivity(events:list,
             events_interval[event[EVENT_SUBJECT_FIELD_IDX]] = {}
             mem_events_interval[event[EVENT_SUBJECT_FIELD_IDX]] = {}
 
-        
         if event[EVENT_BEHAVIOR_FIELD_IDX] not in events_interval[event[EVENT_SUBJECT_FIELD_IDX]]:
             events_interval[event[EVENT_SUBJECT_FIELD_IDX]][event[EVENT_BEHAVIOR_FIELD_IDX]] = I.empty()
             mem_events_interval[event[EVENT_SUBJECT_FIELD_IDX]][event[EVENT_BEHAVIOR_FIELD_IDX]] = []
-        
+
         if event[EVENT_BEHAVIOR_FIELD_IDX] in state_events_list:
-            mem_events_interval[event[EVENT_SUBJECT_FIELD_IDX]][event[EVENT_BEHAVIOR_FIELD_IDX]].append(event[EVENT_TIME_FIELD_IDX])
+            mem_events_interval[event[EVENT_SUBJECT_FIELD_IDX]][event[EVENT_BEHAVIOR_FIELD_IDX]].append(
+                event[EVENT_TIME_FIELD_IDX])
             if len(mem_events_interval[event[EVENT_SUBJECT_FIELD_IDX]][event[EVENT_BEHAVIOR_FIELD_IDX]]) == 2:
                 events_interval[event[EVENT_SUBJECT_FIELD_IDX]][event[EVENT_BEHAVIOR_FIELD_IDX]] |= \
                         I.closedopen(mem_events_interval[event[EVENT_SUBJECT_FIELD_IDX]][event[EVENT_BEHAVIOR_FIELD_IDX]][0],
                                     mem_events_interval[event[EVENT_SUBJECT_FIELD_IDX]][event[EVENT_BEHAVIOR_FIELD_IDX]][1])
                 mem_events_interval[event[EVENT_SUBJECT_FIELD_IDX]][event[EVENT_BEHAVIOR_FIELD_IDX]] = []
         else:
-            events_interval[event[EVENT_SUBJECT_FIELD_IDX]][event[EVENT_BEHAVIOR_FIELD_IDX]] |= I.singleton(event[EVENT_TIME_FIELD_IDX])
+            events_interval[event[EVENT_SUBJECT_FIELD_IDX]][event[EVENT_BEHAVIOR_FIELD_IDX]] |= I.singleton(
+                event[EVENT_TIME_FIELD_IDX])
 
     if events:
         obs_theo_dur = max(events)[EVENT_TIME_FIELD_IDX] - min(events)[EVENT_TIME_FIELD_IDX]
@@ -107,13 +105,11 @@ def check_observation_exhaustivity(events:list,
 
         if obs_real_dur >= obs_theo_dur:
             obs_real_dur = obs_theo_dur
-        
+
         total_duration += obs_real_dur
-       
         '''
         print(f"theo dur: {obs_theo_dur}  real: {obs_real_dur}  exhaustiv %: {obs_real_dur/obs_theo_dur}")
         '''
-
     '''
     print(f"  {total_duration/(len(events_interval) * obs_theo_dur) } ")
     '''
@@ -222,7 +218,11 @@ def check_state_events_obs(obsId: str, ethogram: dict, observation: dict, time_f
 
     for subject in sorted(set(subjects)):
 
-        behaviors = [event[EVENT_BEHAVIOR_FIELD_IDX] for event in observation[EVENTS] if event[EVENT_SUBJECT_FIELD_IDX] == subject]
+        behaviors = [
+            event[EVENT_BEHAVIOR_FIELD_IDX]
+            for event in observation[EVENTS]
+            if event[EVENT_SUBJECT_FIELD_IDX] == subject
+        ]
 
         for behavior in sorted(set(behaviors)):
             if behavior not in ethogram_behaviors:
@@ -233,9 +233,8 @@ def check_state_events_obs(obsId: str, ethogram: dict, observation: dict, time_f
                     flagStateEvent = True
                     lst, memTime = [], {}
                     for event in [
-                        event
-                        for event in observation[EVENTS]
-                        if event[EVENT_BEHAVIOR_FIELD_IDX] == behavior and event[EVENT_SUBJECT_FIELD_IDX] == subject
+                            event for event in observation[EVENTS]
+                            if event[EVENT_BEHAVIOR_FIELD_IDX] == behavior and event[EVENT_SUBJECT_FIELD_IDX] == subject
                     ]:
 
                         behav_modif = [event[EVENT_BEHAVIOR_FIELD_IDX], event[EVENT_MODIFIER_FIELD_IDX]]
@@ -248,25 +247,22 @@ def check_state_events_obs(obsId: str, ethogram: dict, observation: dict, time_f
                             memTime[str(behav_modif)] = event[EVENT_TIME_FIELD_IDX]
 
                     for event in lst:
-                        out += (
-                            'The behavior <b>{behavior}</b> {modifier} is not PAIRED for subject'
-                            ' "<b>{subject}</b>" at <b>{time}</b><br>'
-                        ).format(
-                            behavior=behavior,
-                            modifier=("(modifier " + event[1] + ") ") if event[1] else "",
-                            subject=subject if subject else NO_FOCAL_SUBJECT,
-                            time=memTime[str(event)] if time_format == S else utilities.seconds2time(memTime[str(event)]),
-                        )
+                        out += ('The behavior <b>{behavior}</b> {modifier} is not PAIRED for subject'
+                                ' "<b>{subject}</b>" at <b>{time}</b><br>').format(
+                                    behavior=behavior,
+                                    modifier=("(modifier " + event[1] + ") ") if event[1] else "",
+                                    subject=subject if subject else NO_FOCAL_SUBJECT,
+                                    time=memTime[str(event)]
+                                    if time_format == S else utilities.seconds2time(memTime[str(event)]),
+                                )
 
     return (False, out) if out else (True, "No problem detected")
-
 
 
 def check_project_integrity(pj: dict,
                             time_format: str,
                             project_file_name: str,
                             media_file_available: bool = True) -> str:
-
     """
     check project integrity
     check if behaviors in observations are in ethogram
@@ -306,11 +302,9 @@ def check_project_integrity(pj: dict,
                 if pj[ETHOGRAM][idx][BEHAVIOR_CATEGORY]:
                     if pj[ETHOGRAM][idx][BEHAVIOR_CATEGORY] not in pj[BEHAVIORAL_CATEGORIES]:
                         out += "<br><br>" if out else ""
-                        out += (
-                            f"The behavior <b>{pj[ETHOGRAM][idx][BEHAVIOR_CODE]}</b> belongs "
-                            f"to the behavioral category <b>{pj[ETHOGRAM][idx][BEHAVIOR_CATEGORY]}</b> "
-                            "that is no more in behavioral categories list."
-                        )
+                        out += (f"The behavior <b>{pj[ETHOGRAM][idx][BEHAVIOR_CODE]}</b> belongs "
+                                f"to the behavioral category <b>{pj[ETHOGRAM][idx][BEHAVIOR_CATEGORY]}</b> "
+                                "that is no more in behavioral categories list.")
 
         # check for leading/trailing spaces/special chars in modifiers defined in ethogram
         for idx in pj[ETHOGRAM]:
@@ -357,10 +351,7 @@ def check_project_integrity(pj: dict,
         return str(sys.exc_info()[1])
 
 
-def create_subtitles(pj: dict,
-                     selected_observations: list,
-                     parameters: dict,
-                     export_dir: str) -> tuple:
+def create_subtitles(pj: dict, selected_observations: list, parameters: dict, export_dir: str) -> tuple:
     """
     create subtitles for selected observations, subjects and behaviors
 
@@ -390,16 +381,15 @@ def create_subtitles(pj: dict,
             return "", ""
         else:
             return (
-                """<font color="{}">""".format(
-                    subtitlesColors[parameters["selected subjects"].index(row["subject"]) % len(subtitlesColors)]
-                ),
+                """<font color="{}">""".format(subtitlesColors[parameters["selected subjects"].index(row["subject"]) %
+                                                               len(subtitlesColors)]),
                 "</font>",
             )
 
     try:
-        ok, msg, db_connector = db_functions.load_aggregated_events_in_db(
-            pj, parameters["selected subjects"], selected_observations, parameters["selected behaviors"]
-        )
+        ok, msg, db_connector = db_functions.load_aggregated_events_in_db(pj, parameters["selected subjects"],
+                                                                          selected_observations,
+                                                                          parameters["selected behaviors"])
         if not ok:
             return False, msg
 
@@ -410,13 +400,11 @@ def create_subtitles(pj: dict,
             if pj[OBSERVATIONS][obsId][TYPE] in [LIVE]:
                 out = ""
                 cursor.execute(
-                    (
-                        "SELECT subject, behavior, start, stop, type, modifiers FROM aggregated_events "
-                        "WHERE observation = ? AND subject in ({}) "
-                        "AND behavior in ({}) "
-                        "ORDER BY start"
-                    ).format(",".join(["?"] * len(parameters["selected subjects"])),
-                             ",".join(["?"] * len(parameters["selected behaviors"]))),
+                    ("SELECT subject, behavior, start, stop, type, modifiers FROM aggregated_events "
+                     "WHERE observation = ? AND subject in ({}) "
+                     "AND behavior in ({}) "
+                     "ORDER BY start").format(",".join(["?"] * len(parameters["selected subjects"])),
+                                              ",".join(["?"] * len(parameters["selected behaviors"]))),
                     [obsId] + parameters["selected subjects"] + parameters["selected behaviors"],
                 )
 
@@ -426,19 +414,21 @@ def create_subtitles(pj: dict,
                         modifiers_str = "\n{}".format(row["modifiers"].replace("|", ", "))
                     else:
                         modifiers_str = ""
-                    out += ("{idx}\n" "{start} --> {stop}\n" "{col1}{subject}: {behavior}" "{modifiers}" "{col2}\n\n").format(
-                        idx=idx + 1,
-                        start=utilities.seconds2time(row["start"]).replace(".", ","),
-                        stop=utilities.seconds2time(row["stop"] if row["type"] == STATE else row["stop"] + POINT_EVENT_ST_DURATION).replace(
-                            ".", ","
-                        ),
-                        col1=col1,
-                        col2=col2,
-                        subject=row["subject"],
-                        behavior=row["behavior"],
-                        modifiers=modifiers_str,
-                    )
-
+                    out += ("{idx}\n"
+                            "{start} --> {stop}\n"
+                            "{col1}{subject}: {behavior}"
+                            "{modifiers}"
+                            "{col2}\n\n").format(
+                                idx=idx + 1,
+                                start=utilities.seconds2time(row["start"]).replace(".", ","),
+                                stop=utilities.seconds2time(row["stop"] if row["type"] == STATE else row["stop"] +
+                                                            POINT_EVENT_ST_DURATION).replace(".", ","),
+                                col1=col1,
+                                col2=col2,
+                                subject=row["subject"],
+                                behavior=row["behavior"],
+                                modifiers=modifiers_str,
+                            )
                 '''
                 file_name = str(pathlib.Path(pathlib.Path(export_dir) / utilities.safeFileName(obsId)).with suffix(".srt"))
                 '''
@@ -464,16 +454,14 @@ def create_subtitles(pj: dict,
                         out = ""
 
                         cursor.execute(
-                            (
-                                "SELECT subject, behavior, type, start, stop, modifiers FROM aggregated_events "
-                                "WHERE observation = ? AND start BETWEEN ? and ? "
-                                "AND subject in ({}) "
-                                "AND behavior in ({}) "
-                                "ORDER BY start"
-                            ).format(
-                                ",".join(["?"] * len(parameters["selected subjects"])),
-                                ",".join(["?"] * len(parameters["selected behaviors"])),
-                            ),
+                            ("SELECT subject, behavior, type, start, stop, modifiers FROM aggregated_events "
+                             "WHERE observation = ? AND start BETWEEN ? and ? "
+                             "AND subject in ({}) "
+                             "AND behavior in ({}) "
+                             "ORDER BY start").format(
+                                 ",".join(["?"] * len(parameters["selected subjects"])),
+                                 ",".join(["?"] * len(parameters["selected behaviors"])),
+                             ),
                             [obsId, init, end] + parameters["selected subjects"] + parameters["selected behaviors"],
                         )
 
@@ -484,19 +472,22 @@ def create_subtitles(pj: dict,
                             else:
                                 modifiers_str = ""
 
-                            out += ("{idx}\n" "{start} --> {stop}\n" "{col1}{subject}: {behavior}" "{modifiers}" "{col2}\n\n").format(
-                                idx=idx + 1,
-                                start=utilities.seconds2time(row["start"] - init).replace(".", ","),
-                                stop=utilities.seconds2time(
-                                    (row["stop"] if row["type"] == STATE else row["stop"] + POINT_EVENT_ST_DURATION) - init
-                                ).replace(".", ","),
-                                col1=col1,
-                                col2=col2,
-                                subject=row["subject"],
-                                behavior=row["behavior"],
-                                modifiers=modifiers_str,
-                            )
-
+                            out += (
+                                "{idx}\n"
+                                "{start} --> {stop}\n"
+                                "{col1}{subject}: {behavior}"
+                                "{modifiers}"
+                                "{col2}\n\n").format(
+                                    idx=idx + 1,
+                                    start=utilities.seconds2time(row["start"] - init).replace(".", ","),
+                                    stop=utilities.seconds2time((row["stop"] if row["type"] == STATE else row["stop"] +
+                                                                 POINT_EVENT_ST_DURATION) - init).replace(".", ","),
+                                    col1=col1,
+                                    col2=col2,
+                                    subject=row["subject"],
+                                    behavior=row["behavior"],
+                                    modifiers=modifiers_str,
+                                )
                         '''
                         file_name = str(pathlib.Path(pathlib.Path(export_dir) / pathlib.Path(mediaFile).name).with suffix(".srt"))
                         '''
@@ -515,10 +506,7 @@ def create_subtitles(pj: dict,
         return False, str(sys.exc_info()[1])
 
 
-def export_observations_list(pj: dict,
-                             selected_observations: list,
-                             file_name: str,
-                             output_format: str) -> bool:
+def export_observations_list(pj: dict, selected_observations: list, file_name: str, output_format: str) -> bool:
     """
     create file with a list of selected observations
 
@@ -567,10 +555,10 @@ def export_observations_list(pj: dict,
                 else:
                     indep_var.append("")
 
-        data.append(
-            [obs_id, pj[OBSERVATIONS][obs_id]["date"], pj[OBSERVATIONS][obs_id]["description"], subjects, ", ".join(media_files)]
-            + indep_var
-        )
+        data.append([
+            obs_id, pj[OBSERVATIONS][obs_id]["date"], pj[OBSERVATIONS][obs_id]["description"], subjects, ", ".join(
+                media_files)
+        ] + indep_var)
 
     if output_format in ["tsv", "csv", "html"]:
         try:
@@ -611,11 +599,10 @@ def remove_media_files_path(pj):
                         pj[OBSERVATIONS][obs_id][FILE][n_player][idx] = p
                         if MEDIA_INFO in pj[OBSERVATIONS][obs_id]:
                             for info in [LENGTH, "hasAudio", "hasVideo", "fps"]:
-                                if (info in pj[OBSERVATIONS][obs_id][MEDIA_INFO]
-                                        and media_file in pj[OBSERVATIONS][obs_id][MEDIA_INFO][info]):
-                                    pj[OBSERVATIONS][obs_id][MEDIA_INFO][info][p] = pj[OBSERVATIONS][obs_id][MEDIA_INFO][info][
-                                        media_file
-                                    ]
+                                if (info in pj[OBSERVATIONS][obs_id][MEDIA_INFO] and
+                                        media_file in pj[OBSERVATIONS][obs_id][MEDIA_INFO][info]):
+                                    pj[OBSERVATIONS][obs_id][MEDIA_INFO][info][p] = pj[OBSERVATIONS][obs_id][
+                                        MEDIA_INFO][info][media_file]
                                     del pj[OBSERVATIONS][obs_id][MEDIA_INFO][info][media_file]
 
     return dict(pj)
@@ -754,8 +741,7 @@ def observation_length(pj, selected_observations: list) -> tuple:
         # propose to user to use max event time
         if dialog.MessageDialog(programName,
                                 (f"A media length is not available for the observation <b>{obs_id}</b>.<br>"
-                                 "Use last event time as media length?"),
-                                [YES, NO]) == YES:
+                                 "Use last event time as media length?"), [YES, NO]) == YES:
             maxTime = 0  # max length for all events all subjects
             max_length = 0
             for obs_id in selected_observations:
@@ -773,7 +759,6 @@ def observation_length(pj, selected_observations: list) -> tuple:
             selectedObsTotalMediaLength = dec("-1")
 
     return max_obs_length, selectedObsTotalMediaLength
-
 
 
 def events_start_stop(ethogram, events):
@@ -801,19 +786,12 @@ def events_start_stop(ethogram, events):
         # check if code is state
         if code in state_events_list:
             # how many code before with same subject?
-            if (
-                len(
-                    [
-                        x[EVENT_BEHAVIOR_FIELD_IDX]
-                        for x in events
-                        if x[EVENT_BEHAVIOR_FIELD_IDX] == code and
-                        x[EVENT_TIME_FIELD_IDX] < time and
-                        x[EVENT_SUBJECT_FIELD_IDX] == subject and
-                        x[EVENT_MODIFIER_FIELD_IDX] == modifier
-                    ]
-                )
-                % 2
-            ):  # test if odd
+            if (len([
+                    x[EVENT_BEHAVIOR_FIELD_IDX]
+                    for x in events
+                    if x[EVENT_BEHAVIOR_FIELD_IDX] == code and x[EVENT_TIME_FIELD_IDX] < time and
+                    x[EVENT_SUBJECT_FIELD_IDX] == subject and x[EVENT_MODIFIER_FIELD_IDX] == modifier
+            ]) % 2):  # test if odd
                 flag = STOP
             else:
                 flag = START
@@ -825,8 +803,7 @@ def events_start_stop(ethogram, events):
     return events_flagged
 
 
-def extract_observed_subjects(pj: dict,
-                              selected_observations: list) -> list:
+def extract_observed_subjects(pj: dict, selected_observations: list) -> list:
     """
     extract unique subjects present in observations list
 
@@ -905,10 +882,8 @@ def open_project_json(projectFileName: str) -> tuple:
             projectFileName,
             projectChanged,
             {
-                "error": (
-                    "This project file was created with a more recent version of BORIS.<br>"
-                    f"You must update BORIS to <b>v. >= {pj['project_format_version']}</b> to open this project"
-                )
+                "error": ("This project file was created with a more recent version of BORIS.<br>"
+                          f"You must update BORIS to <b>v. >= {pj['project_format_version']}</b> to open this project")
             },
             msg,
         )
@@ -943,16 +918,17 @@ def open_project_json(projectFileName: str) -> tuple:
             key, name = pj[SUBJECTS][idx]
             pj[SUBJECTS][idx] = {"key": key, "name": name, "description": ""}
 
-        msg = (f"The project file was converted to the new format (v. {project_format_version}) in use with your version of BORIS.<br>"
-               "Choose a new file name for saving it."
-              )
+        msg = (
+            f"The project file was converted to the new format (v. {project_format_version}) in use with your version of BORIS.<br>"
+            "Choose a new file name for saving it.")
         projectFileName = ""
 
     # update modifiers to JSON format
 
     # check if project format version < 4 (modifiers were str)
     project_lowerthan4 = False
-    if "project_format_version" in pj and utilities.versiontuple(pj["project_format_version"]) < utilities.versiontuple("4.0"):
+    if "project_format_version" in pj and utilities.versiontuple(
+            pj["project_format_version"]) < utilities.versiontuple("4.0"):
         for idx in pj[ETHOGRAM]:
             if pj[ETHOGRAM][idx]["modifiers"]:
                 if isinstance(pj[ETHOGRAM][idx]["modifiers"], str):
@@ -960,13 +936,18 @@ def open_project_json(projectFileName: str) -> tuple:
                     modif_set_list = pj[ETHOGRAM][idx]["modifiers"].split("|")
                     modif_set_dict = {}
                     for modif_set in modif_set_list:
-                        modif_set_dict[str(len(modif_set_dict))] = {"name": "", "type": SINGLE_SELECTION, "values": modif_set.split(",")}
+                        modif_set_dict[str(len(modif_set_dict))] = {
+                            "name": "",
+                            "type": SINGLE_SELECTION,
+                            "values": modif_set.split(",")
+                        }
                     pj[ETHOGRAM][idx]["modifiers"] = dict(modif_set_dict)
             else:
                 pj[ETHOGRAM][idx]["modifiers"] = {}
 
         if not project_lowerthan4:
-            msg = "The project version was updated from {} to {}".format(pj["project_format_version"], project_format_version)
+            msg = "The project version was updated from {} to {}".format(pj["project_format_version"],
+                                                                         project_format_version)
             pj["project_format_version"] = project_format_version
             projectChanged = True
 
@@ -1001,24 +982,26 @@ def open_project_json(projectFileName: str) -> tuple:
                         pj[OBSERVATIONS][obs][MEDIA_INFO]["hasAudio"][media_file_path] = r["has_audio"]
                         project_updated, projectChanged = True, True
                     else:  # file path not found
-                        if (
-                            "media_file_info" in pj[OBSERVATIONS][obs] and
-                            len(pj[OBSERVATIONS][obs]["media_file_info"]) == 1 and
-                            len(pj[OBSERVATIONS][obs][FILE][PLAYER1]) == 1 and
-                            len(pj[OBSERVATIONS][obs][FILE][PLAYER2]) == 0
-                        ):
+                        if ("media_file_info" in pj[OBSERVATIONS][obs] and
+                                len(pj[OBSERVATIONS][obs]["media_file_info"]) == 1 and
+                                len(pj[OBSERVATIONS][obs][FILE][PLAYER1]) == 1 and
+                                len(pj[OBSERVATIONS][obs][FILE][PLAYER2]) == 0):
                             media_md5_key = list(pj[OBSERVATIONS][obs]["media_file_info"].keys())[0]
                             # duration
                             pj[OBSERVATIONS][obs][MEDIA_INFO] = {
-                                LENGTH: {media_file_path: pj[OBSERVATIONS][obs]["media_file_info"][media_md5_key]["video_length"] / 1000}
+                                LENGTH: {
+                                    media_file_path:
+                                        pj[OBSERVATIONS][obs]["media_file_info"][media_md5_key]["video_length"] / 1000
+                                }
                             }
                             projectChanged = True
 
                             # FPS
                             if "nframe" in pj[OBSERVATIONS][obs]["media_file_info"][media_md5_key]:
                                 pj[OBSERVATIONS][obs][MEDIA_INFO][FPS] = {
-                                    media_file_path: pj[OBSERVATIONS][obs]["media_file_info"][media_md5_key]["nframe"]
-                                                     / (pj[OBSERVATIONS][obs]["media_file_info"][media_md5_key]["video_length"] / 1000)
+                                    media_file_path:
+                                        pj[OBSERVATIONS][obs]["media_file_info"][media_md5_key]["nframe"] /
+                                        (pj[OBSERVATIONS][obs]["media_file_info"][media_md5_key]["video_length"] / 1000)
                                 }
                             else:
                                 pj[OBSERVATIONS][obs][MEDIA_INFO][FPS] = {media_file_path: 0}
@@ -1034,7 +1017,8 @@ def open_project_json(projectFileName: str) -> tuple:
             for player in pj[OBSERVATIONS][obs][FILE]:
                 pj[OBSERVATIONS][obs][MEDIA_INFO]["offset"][player] = 0.0
             if pj[OBSERVATIONS][obs]["time offset second player"]:
-                pj[OBSERVATIONS][obs][MEDIA_INFO]["offset"]["2"] = float(pj[OBSERVATIONS][obs]["time offset second player"])
+                pj[OBSERVATIONS][obs][MEDIA_INFO]["offset"]["2"] = float(
+                    pj[OBSERVATIONS][obs]["time offset second player"])
 
             del pj[OBSERVATIONS][obs]["time offset second player"]
             project_lowerthan7 = True
@@ -1042,17 +1026,13 @@ def open_project_json(projectFileName: str) -> tuple:
             msg = (
                 f"The project file was converted to the new format (v. {project_format_version}) in use with your version of BORIS.<br>"
                 f"Please note that this new version will NOT be compatible with previous BORIS versions "
-                f"(&lt; v. {project_format_version}).<br>"
-            )
+                f"(&lt; v. {project_format_version}).<br>")
 
             projectChanged = True
 
-
     if project_lowerthan7:
 
-        msg = (
-            f"The project was updated to the current project version ({project_format_version})."
-        )
+        msg = (f"The project was updated to the current project version ({project_format_version}).")
 
         try:
             old_project_file_name = projectFileName.replace(".boris", f".v{pj['project_format_version']}.boris")
@@ -1084,7 +1064,6 @@ def event_type(code: str, ethogram: dict) -> str:
     return None
 
 
-
 def fix_unpaired_state_events(obsId, ethogram, observation, fix_at_time):
     """
     fix unpaired state events in observation
@@ -1107,7 +1086,11 @@ def fix_unpaired_state_events(obsId, ethogram, observation, fix_at_time):
 
     for subject in sorted(set(subjects)):
 
-        behaviors = [event[EVENT_BEHAVIOR_FIELD_IDX] for event in observation[EVENTS] if event[EVENT_SUBJECT_FIELD_IDX] == subject]
+        behaviors = [
+            event[EVENT_BEHAVIOR_FIELD_IDX]
+            for event in observation[EVENTS]
+            if event[EVENT_SUBJECT_FIELD_IDX] == subject
+        ]
 
         for behavior in sorted(set(behaviors)):
             if (behavior in ethogram_behaviors) and (STATE in event_type(behavior, ethogram).upper()):
@@ -1115,9 +1098,8 @@ def fix_unpaired_state_events(obsId, ethogram, observation, fix_at_time):
                 flagStateEvent = True
                 lst, memTime = [], {}
                 for event in [
-                    event
-                    for event in observation[EVENTS]
-                    if event[EVENT_BEHAVIOR_FIELD_IDX] == behavior and event[EVENT_SUBJECT_FIELD_IDX] == subject
+                        event for event in observation[EVENTS]
+                        if event[EVENT_BEHAVIOR_FIELD_IDX] == behavior and event[EVENT_SUBJECT_FIELD_IDX] == subject
                 ]:
 
                     behav_modif = [event[EVENT_BEHAVIOR_FIELD_IDX], event[EVENT_MODIFIER_FIELD_IDX]]
@@ -1133,8 +1115,8 @@ def fix_unpaired_state_events(obsId, ethogram, observation, fix_at_time):
 
                     last_event_time = max([fix_at_time] + [x[0] for x in closing_events_to_add])
 
-                    closing_events_to_add.append(
-                        [last_event_time + dec("0.001"), subject, behavior, event[1], ""]  # modifiers  # comment
-                    )
+                    closing_events_to_add.append([last_event_time + dec("0.001"), subject, behavior, event[1],
+                                                  ""]  # modifiers  # comment
+                                                )
 
     return closing_events_to_add
