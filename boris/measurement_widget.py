@@ -1,7 +1,7 @@
 """
 BORIS
 Behavioral Observation Research Interactive Software
-Copyright 2012-2021 Olivier Friard
+Copyright 2012-2022 Olivier Friard
 
 This file is part of BORIS.
 
@@ -23,11 +23,8 @@ This file is part of BORIS.
 import logging
 
 from PyQt5.QtCore import pyqtSignal
-from PyQt5.QtWidgets import (QApplication, QWidget, QRadioButton, QLabel,
-                             QHBoxLayout, QVBoxLayout,
-                             QLineEdit, QPlainTextEdit, QCheckBox,
-                             QPushButton,
-                             QFileDialog, QMessageBox)
+from PyQt5.QtWidgets import (QApplication, QWidget, QRadioButton, QLabel, QHBoxLayout, QVBoxLayout, QLineEdit,
+                             QPlainTextEdit, QCheckBox, QPushButton, QFileDialog, QMessageBox)
 from boris import dialog
 from boris.config import YES, NO, CANCEL, programName
 
@@ -62,7 +59,6 @@ class wgMeasurement(QWidget):
         self.cbPersistentMeasurements = QCheckBox("Measurements are persistent")
         self.cbPersistentMeasurements.setChecked(True)
         vbox.addWidget(self.cbPersistentMeasurements)
-
 
         vbox.addWidget(QLabel("<b>Scale</b>"))
 
@@ -107,13 +103,10 @@ class wgMeasurement(QWidget):
 
         vbox.addLayout(hbox3)
 
-
     def closeEvent(self, event):
-
 
         print("close event")
         self.pbClose_clicked()
-
 
     def pbClear_clicked(self):
         """
@@ -123,20 +116,18 @@ class wgMeasurement(QWidget):
         self.pte.clear()
         self.clearSignal.emit()
 
-
     def pbClose_clicked(self):
 
         print("pb close clicked")
         if not self.flagSaved:
-            response = dialog.MessageDialog(programName,
-                                            "The current measurements are not saved. Do you want to save results before closing?",
-                                            [YES, NO, CANCEL])
+            response = dialog.MessageDialog(
+                programName, "The current measurements are not saved. Do you want to save results before closing?",
+                [YES, NO, CANCEL])
             if response == YES:
                 self.pbSave_clicked()
             if response == CANCEL:
                 return
         self.closeSignal.emit()
-
 
     def pbSave_clicked(self):
         """

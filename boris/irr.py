@@ -1,7 +1,7 @@
 """
 BORIS
 Behavioral Observation Research Interactive Software
-Copyright 2012-2021 Olivier Friard
+Copyright 2012-2022 Olivier Friard
 
 
   This program is free software; you can redistribute it and/or modify
@@ -30,12 +30,7 @@ from boris import utilities
 from boris.config import *
 
 
-def subj_behav_modif(cursor,
-                     obsid,
-                     subject,
-                     time,
-                     interval,
-                     include_modifiers: bool):
+def subj_behav_modif(cursor, obsid, subject, time, interval, include_modifiers: bool):
     """
     current behaviors for observation obsId at time
 
@@ -57,8 +52,11 @@ def subj_behav_modif(cursor,
                            "observation = ? "
                            "AND subject = ? "
                            "AND type = 'STATE' "
-                           "AND (? BETWEEN start AND STOP) "),
-                          (obsid, subject, float(time),)).fetchall()
+                           "AND (? BETWEEN start AND STOP) "), (
+                               obsid,
+                               subject,
+                               float(time),
+                           )).fetchall()
 
     for row in rows:
         if include_modifiers:
@@ -72,8 +70,12 @@ def subj_behav_modif(cursor,
                            "observation = ? "
                            "AND subject = ? "
                            "AND type = 'POINT' "
-                           "AND abs(start - ?) <= ? "),
-                          (obsid, subject, float(time), float(interval / 2),)).fetchall()
+                           "AND abs(start - ?) <= ? "), (
+                               obsid,
+                               subject,
+                               float(time),
+                               float(interval / 2),
+                           )).fetchall()
 
     for row in rows:
         if include_modifiers:
@@ -84,12 +86,7 @@ def subj_behav_modif(cursor,
     return s
 
 
-def cohen_kappa(cursor,
-                obsid1: str,
-                obsid2: str,
-                interval: Decimal,
-                selected_subjects: list,
-                include_modifiers: bool):
+def cohen_kappa(cursor, obsid1: str, obsid2: str, interval: Decimal, selected_subjects: list, include_modifiers: bool):
     """
     Inter-rater reliability Cohen's kappa coefficient (time-unit)
     see Sequential Analysis and Observational Methods for the Behavioral Sciences p. 77
@@ -109,21 +106,20 @@ def cohen_kappa(cursor,
 
     # check if obs have events
     for obs_id in [obsid1, obsid2]:
-        if not cursor.execute("SELECT * FROM aggregated_events WHERE observation = ? ",
-                              (obs_id, )).fetchall():
+        if not cursor.execute("SELECT * FROM aggregated_events WHERE observation = ? ", (obs_id,)).fetchall():
             return -100, f"The observation {obs_id} has no recorded events"
 
-
-    first_event = cursor.execute(("SELECT min(start) FROM aggregated_events "
-                                  f"WHERE observation in (?, ?) AND subject in ({','.join('?'*len(selected_subjects))}) "),
-                                 (obsid1, obsid2) + tuple(selected_subjects)).fetchone()[0]
+    first_event = cursor.execute(
+        ("SELECT min(start) FROM aggregated_events "
+         f"WHERE observation in (?, ?) AND subject in ({','.join('?'*len(selected_subjects))}) "),
+        (obsid1, obsid2) + tuple(selected_subjects)).fetchone()[0]
 
     logging.debug(f"first_event: {first_event}")
 
-    last_event = cursor.execute(("SELECT max(stop) FROM aggregated_events "
-                                 f"WHERE observation in (?, ?) AND subject in ({','.join('?'*len(selected_subjects))}) "),
-                                (obsid1, obsid2) + tuple(selected_subjects)).fetchone()[0]
-
+    last_event = cursor.execute(
+        ("SELECT max(stop) FROM aggregated_events "
+         f"WHERE observation in (?, ?) AND subject in ({','.join('?'*len(selected_subjects))}) "),
+        (obsid1, obsid2) + tuple(selected_subjects)).fetchone()[0]
 
     logging.debug(f"last_event: {last_event}")
 
@@ -222,20 +218,13 @@ def cohen_kappa(cursor,
         except Exception:
             K = nan
 
-    out = template.format(obsid1=obsid1, obsid2=obsid2,
-                          nb_events1=nb_events1, nb_events2=nb_events2,
-                          K=K
-                          )
+    out = template.format(obsid1=obsid1, obsid2=obsid2, nb_events1=nb_events1, nb_events2=nb_events2, K=K)
 
     logging.debug(f"K: {K}")
     return K, out
 
 
-def needleman_wunsch_identity(cursor,
-                              obsid1: str,
-                              obsid2: str,
-                              interval,
-                              selected_subjects: list,
+def needleman_wunsch_identity(cursor, obsid1: str, obsid2: str, interval, selected_subjects: list,
                               include_modifiers: bool):
     """
     Needleman - Wunsch identity between 2 observations
@@ -266,7 +255,6 @@ def needleman_wunsch_identity(cursor,
     match_award = 1
     mismatch_penalty = -1
     gap_penalty = -1
-
 
     def match_score(alpha, beta):
         if alpha == beta:
@@ -304,12 +292,7 @@ def needleman_wunsch_identity(cursor,
 
         identity = float(identity) / len(align1) * 100
 
-        return {'identity': identity,
-                'score': score,
-                "align1": align1,
-                "align2": align2,
-                "symbol": symbol}
-
+        return {'identity': identity, 'score': score, "align1": align1, "align2": align2, "symbol": symbol}
 
     def needle(seq1, seq2):
         m, n = len(seq1), len(seq2)
@@ -328,7 +311,7 @@ def needleman_wunsch_identity(cursor,
                 score[i][j] = max(match, delete, insert)
 
         align1, align2 = [], []
-        i, j = m, n 
+        i, j = m, n
         while i > 0 and j > 0:
             score_current = score[i][j]
             score_diagonal = score[i - 1][j - 1]
@@ -361,10 +344,10 @@ def needleman_wunsch_identity(cursor,
 
         return finalize(align1, align2)
 
-
-    first_event = cursor.execute(("SELECT min(start) FROM aggregated_events "
-                                  f"WHERE observation in (?, ?) AND subject in ({','.join('?'*len(selected_subjects))}) "),
-                                 (obsid1, obsid2) + tuple(selected_subjects)).fetchone()[0]
+    first_event = cursor.execute(
+        ("SELECT min(start) FROM aggregated_events "
+         f"WHERE observation in (?, ?) AND subject in ({','.join('?'*len(selected_subjects))}) "),
+        (obsid1, obsid2) + tuple(selected_subjects)).fetchone()[0]
 
     if first_event is None:
         logging.debug(f"An observation has no recorded events: {obsid1} or {obsid2}")
@@ -372,16 +355,16 @@ def needleman_wunsch_identity(cursor,
 
     logging.debug(f"first_event: {first_event}")
 
-    last_event = cursor.execute(("SELECT max(start) FROM aggregated_events "
-                                 f"WHERE observation in (?, ?) AND subject in ({','.join('?'*len(selected_subjects))}) "),
-                                (obsid1, obsid2) + tuple(selected_subjects)).fetchone()[0]
+    last_event = cursor.execute(
+        ("SELECT max(start) FROM aggregated_events "
+         f"WHERE observation in (?, ?) AND subject in ({','.join('?'*len(selected_subjects))}) "),
+        (obsid1, obsid2) + tuple(selected_subjects)).fetchone()[0]
 
     logging.debug(f"last_event: {last_event}")
 
     nb_events1 = cursor.execute(("SELECT COUNT(*) FROM aggregated_events "
                                  f"WHERE observation = ? AND subject in ({','.join('?'*len(selected_subjects))}) "),
                                 (obsid1,) + tuple(selected_subjects)).fetchone()[0]
-
 
     nb_events2 = cursor.execute(("SELECT COUNT(*) FROM aggregated_events "
                                  f"WHERE observation = ? AND subject in ({','.join('?'*len(selected_subjects))}) "),

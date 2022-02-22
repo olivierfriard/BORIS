@@ -1,7 +1,7 @@
 """
 BORIS
 Behavioral Observation Research Interactive Software
-Copyright 2012-2021 Olivier Friard
+Copyright 2012-2022 Olivier Friard
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -24,8 +24,8 @@ import logging
 from PyQt5.QtCore import QSettings
 from PyQt5.QtWidgets import QWidget
 
-def save_geometry(widget:QWidget,
-                  widget_name:str):
+
+def save_geometry(widget: QWidget, widget_name: str):
     """
     save window geometry in ini file
     """
@@ -39,9 +39,7 @@ def save_geometry(widget:QWidget,
         logging.warning(f"error during saving {widget_name} geometry")
 
 
-def restore_geometry(widget:QWidget,
-                     widget_name:str,
-                     default_geometry):
+def restore_geometry(widget: QWidget, widget_name: str, default_geometry):
     """
     restore window geometry in ini file
     """

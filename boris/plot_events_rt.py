@@ -1,7 +1,7 @@
 """
 BORIS
 Behavioral Observation Research Interactive Software
-Copyright 2012-2021 Olivier Friard
+Copyright 2012-2022 Olivier Friard
 
 This file is part of BORIS.
 
@@ -23,8 +23,8 @@ This file is part of BORIS.
 Plot events in real time
 """
 
-
 import matplotlib
+
 matplotlib.use("Qt5Agg")
 import numpy as np
 from PyQt5.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, QPushButton, QLabel)
@@ -63,8 +63,10 @@ class Plot_events_RT(QWidget):
 
         hlayout1 = QHBoxLayout()
         hlayout1.addWidget(QLabel("Time interval"))
-        hlayout1.addWidget(QPushButton("+", self, clicked=lambda: self.time_interval_changed(1), focusPolicy=Qt.Qt.NoFocus))
-        hlayout1.addWidget(QPushButton("-", self, clicked=lambda: self.time_interval_changed(-1), focusPolicy=Qt.Qt.NoFocus))
+        hlayout1.addWidget(
+            QPushButton("+", self, clicked=lambda: self.time_interval_changed(1), focusPolicy=Qt.Qt.NoFocus))
+        hlayout1.addWidget(
+            QPushButton("-", self, clicked=lambda: self.time_interval_changed(-1), focusPolicy=Qt.Qt.NoFocus))
         self.pb_mode = QPushButton("Include modifiers", self, clicked=self.change_mode, focusPolicy=Qt.Qt.NoFocus)
         hlayout1.addWidget(self.pb_mode)
         layout.addLayout(hlayout1)
@@ -73,17 +75,15 @@ class Plot_events_RT(QWidget):
 
         self.installEventFilter(self)
 
-
     def eventFilter(self, receiver, event):
         """
         send event (if keypress) to main window
         """
-        if(event.type() == QEvent.KeyPress):
+        if (event.type() == QEvent.KeyPress):
             self.sendEvent.emit(event)
             return True
         else:
             return False
-
 
     def change_mode(self) -> None:
         """
@@ -98,7 +98,6 @@ class Plot_events_RT(QWidget):
         else:
             self.groupby = "behaviors"
             self.pb_mode.setText("Include modifiers")
-
 
     def time_interval_changed(self, action: int) -> None:
         """
@@ -116,11 +115,7 @@ class Plot_events_RT(QWidget):
         self.interval += (5 * action)
         self.plot_events(current_time=self.time_mem, force_plot=True)
 
-
-    def aggregate_events(self,
-                         events:list,
-                         start:float,
-                         end:float) -> dict:
+    def aggregate_events(self, events: list, start: float, end: float) -> dict:
         """
         aggregate state events
         take consideration of subject and modifiers
@@ -171,7 +166,7 @@ class Plot_events_RT(QWidget):
                         if (start <= mem_behav[key] <= end) \
                             or (start <= time_ <= end) \
                             or (mem_behav[key] <= start and time_ > end):
-                                intervals_behav[key].append((float(mem_behav[key]), float(time_)))
+                            intervals_behav[key].append((float(mem_behav[key]), float(time_)))
                         mem_behav[key] = None
                     else:
                         # start interval
@@ -180,9 +175,8 @@ class Plot_events_RT(QWidget):
                 else:  # point event
 
                     if start <= time_ <= end:
-                        intervals_behav[key].append((float(time_), float(time_) + self.point_event_plot_duration * 50))  # point event -> 1 s
-
-
+                        intervals_behav[key].append(
+                            (float(time_), float(time_) + self.point_event_plot_duration * 50))  # point event -> 1 s
             '''
             print('pre', intervals_behav)
             '''
@@ -194,7 +188,8 @@ class Plot_events_RT(QWidget):
                     print(f"{k} is open at: {mem_behav[k]}")
                     '''
                     if self.observation_type == "LIVE":
-                        intervals_behav[k].append((float(mem_behav[k]), float((end + start) / 2)))  # close interval with current time
+                        intervals_behav[k].append((float(mem_behav[k]), float(
+                            (end + start) / 2)))  # close interval with current time
                         '''
                         print(f"closed with {float((end + start) / 2)}")
                         '''
@@ -205,7 +200,6 @@ class Plot_events_RT(QWidget):
                         '''
                         print(f"closed with {float((end))}")
                         '''
-
             '''
             print('post', intervals_behav)
             print('----------------------')
@@ -216,8 +210,7 @@ class Plot_events_RT(QWidget):
             raise
             return {"error": ""}
 
-
-    def plot_events(self, current_time: float, force_plot: bool=False):
+    def plot_events(self, current_time: float, force_plot: bool = False):
         """
         plot events centered on the current time
 
@@ -228,10 +221,8 @@ class Plot_events_RT(QWidget):
 
         print('init plot events')
 
-        self.events = self.aggregate_events(self.events_list,
-                                            current_time - self.interval / 2,
-                                            current_time + self.interval / 2
-                                            )
+        self.events = self.aggregate_events(self.events_list, current_time - self.interval / 2,
+                                            current_time + self.interval / 2)
 
         if not force_plot and current_time == self.time_mem:
             print("not force and current_time == self.time_mem")
@@ -274,14 +265,9 @@ class Plot_events_RT(QWidget):
 
         self.ax.axvline(x=current_time, color=self.cursor_color, linestyle="-")
 
-        self.ax.barh(y=np.array(self.behaviors),
-                    width=self.durations,
-                    left=self.lefts,
-                    color=self.colors,
-                    height=0.5)
+        self.ax.barh(y=np.array(self.behaviors), width=self.durations, left=self.lefts, color=self.colors, height=0.5)
 
         #self.figure.subplots_adjust(wspace=0, hspace=0)
 
         self.canvas.draw()
         self.figure.canvas.flush_events()
-

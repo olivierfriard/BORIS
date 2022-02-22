@@ -1,7 +1,7 @@
 """
 BORIS
 Behavioral Observation Research Interactive Software
-Copyright 2012-2021 Olivier Friard
+Copyright 2012-2022 Olivier Friard
 
 
   This program is free software; you can redistribute it and/or modify
@@ -24,6 +24,7 @@ Copyright 2012-2021 Olivier Friard
 import wave
 
 import matplotlib
+
 matplotlib.use("Qt5Agg")
 import numpy as np
 from PyQt5.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, QPushButton, QLabel, QSpinBox)
@@ -60,8 +61,10 @@ class Plot_spectrogram_RT(QWidget):
 
         hlayout1 = QHBoxLayout()
         hlayout1.addWidget(QLabel("Time interval"))
-        hlayout1.addWidget(QPushButton("+", self, clicked=lambda: self.time_interval_changed(1), focusPolicy=Qt.Qt.NoFocus))
-        hlayout1.addWidget(QPushButton("-", self, clicked=lambda: self.time_interval_changed(-1), focusPolicy=Qt.Qt.NoFocus))
+        hlayout1.addWidget(
+            QPushButton("+", self, clicked=lambda: self.time_interval_changed(1), focusPolicy=Qt.Qt.NoFocus))
+        hlayout1.addWidget(
+            QPushButton("-", self, clicked=lambda: self.time_interval_changed(-1), focusPolicy=Qt.Qt.NoFocus))
         layout.addLayout(hlayout1)
 
         hlayout2 = QHBoxLayout()
@@ -80,17 +83,15 @@ class Plot_spectrogram_RT(QWidget):
 
         self.installEventFilter(self)
 
-
     def eventFilter(self, receiver, event):
         """
         send event (if keypress) to main window
         """
-        if(event.type() == QEvent.KeyPress):
+        if (event.type() == QEvent.KeyPress):
             self.sendEvent.emit(event)
             return True
         else:
             return False
-
 
     def get_wav_info(self, wav_file: str):
         """
@@ -115,7 +116,6 @@ class Plot_spectrogram_RT(QWidget):
         except Exception:
             return np.array([]), 0
 
-
     def time_interval_changed(self, action: int):
         """
         change the time interval for plotting spectrogram
@@ -132,13 +132,11 @@ class Plot_spectrogram_RT(QWidget):
         self.interval += (5 * action)
         self.plot_spectro(current_time=self.time_mem, force_plot=True)
 
-
     def frequency_interval_changed(self):
         """
         change the frequency interval for plotting spectrogram
         """
         self.plot_spectro(current_time=self.time_mem, force_plot=True)
-
 
     def load_wav(self, wav_file_path: str) -> dict:
         """
@@ -162,11 +160,9 @@ class Plot_spectrogram_RT(QWidget):
 
         self.wav_file_path = wav_file_path
 
-        return {"media_length": self.media_length,
-                "frame_rate": self.frame_rate}
+        return {"media_length": self.media_length, "frame_rate": self.frame_rate}
 
-
-    def plot_spectro(self, current_time: float, force_plot: bool=False):
+    def plot_spectro(self, current_time: float, force_plot: bool = False):
         """
         plot sound spectrogram centered on the current time
 
@@ -185,30 +181,30 @@ class Plot_spectrogram_RT(QWidget):
         # start
         if current_time <= self.interval / 2:
 
-            self.ax.specgram(self.sound_info[: int((self.interval) * self.frame_rate)],
-                                               mode="psd",
-                                               #NFFT=1024,
-                                               Fs=self.frame_rate,
-                                               #noverlap=900,
-                                               cmap=self.spectro_color_map)
+            self.ax.specgram(
+                self.sound_info[:int((self.interval) * self.frame_rate)],
+                mode="psd",
+                #NFFT=1024,
+                Fs=self.frame_rate,
+                #noverlap=900,
+                cmap=self.spectro_color_map)
 
             self.ax.set_xlim(current_time - self.interval / 2, current_time + self.interval / 2)
 
-
             # cursor
             self.ax.axvline(x=current_time, color=self.cursor_color, linestyle="-")
-
 
         elif current_time >= self.media_length - self.interval / 2:
 
             i = int(round(len(self.sound_info) - (self.interval * self.frame_rate), 0))
 
-            self.ax.specgram(self.sound_info[i:],
-                                               mode="psd",
-                                               #NFFT=1024,
-                                               Fs=self.frame_rate,
-                                               #noverlap=900,
-                                               cmap=self.spectro_color_map)
+            self.ax.specgram(
+                self.sound_info[i:],
+                mode="psd",
+                #NFFT=1024,
+                Fs=self.frame_rate,
+                #noverlap=900,
+                cmap=self.spectro_color_map)
 
             lim1 = current_time - (self.media_length - self.interval / 2)
             lim2 = lim1 + self.interval
@@ -216,7 +212,8 @@ class Plot_spectrogram_RT(QWidget):
             self.ax.set_xlim(lim1, lim2)
 
             self.ax.xaxis.set_major_locator(mticker.FixedLocator(self.ax.get_xticks().tolist()))
-            self.ax.set_xticklabels([str(round(w + self.media_length - self.interval, 1)) for w in self.ax.get_xticks()])
+            self.ax.set_xticklabels(
+                [str(round(w + self.media_length - self.interval, 1)) for w in self.ax.get_xticks()])
 
             # cursor
             self.ax.axvline(x=lim1 + self.interval / 2, color=self.cursor_color, linestyle="-")
@@ -224,13 +221,15 @@ class Plot_spectrogram_RT(QWidget):
         # middle
         else:
 
-            self.ax.specgram(self.sound_info[int(round((current_time - self.interval / 2) * self.frame_rate, 0)):
-                                             int(round((current_time + self.interval / 2) * self.frame_rate, 0))],
-                                               mode="psd",
-                                               #NFFT=1024,
-                                               Fs=self.frame_rate,
-                                               #noverlap=900,
-                                               cmap=self.spectro_color_map)
+            self.ax.specgram(
+                self.sound_info[int(round(
+                    (current_time - self.interval / 2) *
+                    self.frame_rate, 0)):int(round((current_time + self.interval / 2) * self.frame_rate, 0))],
+                mode="psd",
+                #NFFT=1024,
+                Fs=self.frame_rate,
+                #noverlap=900,
+                cmap=self.spectro_color_map)
 
             self.ax.xaxis.set_major_locator(mticker.FixedLocator(self.ax.get_xticks().tolist()))
             self.ax.set_xticklabels([str(round(current_time + w - self.interval / 2, 1)) for w in self.ax.get_xticks()])
@@ -239,7 +238,6 @@ class Plot_spectrogram_RT(QWidget):
             self.ax.axvline(x=self.interval / 2, color=self.cursor_color, linestyle="-")
 
         self.ax.set_ylim(self.sb_freq_min.value(), self.sb_freq_max.value())
-
         '''self.figure.subplots_adjust(wspace=0, hspace=0)'''
 
         self.canvas.draw()

@@ -3,7 +3,7 @@ BORIS CLI
 
 Behavioral Observation Research Interactive Software Command Line Interface
 
-Copyright 2012-2021 Olivier Friard
+Copyright 2012-2022 Olivier Friard
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -51,30 +51,26 @@ def all_observations(pj):
 
 commands_list = ["check_state_events", "export_events", "irr", "subtitles", "check_project_integrity", "plot_events"]
 commands_usage = {
-
     "check_state_events": ("usage:\nboris_cli -p PROJECT_FILE -o OBSERVATION_ID --command check_state_events\n"
                            "where\n"
                            "PROJECT_FILE is the path of the BORIS project\n"
                            "OBSERVATION_ID is the id of observation(s) (if ommitted all observations are checked)"),
-
     "export_events": ("usage:\nboris_cli -p PROJECT_FILE -o OBSERVATION_ID --command export_events [OUTPUT_FORMAT]\n"
                       "where:\n"
                       "PROJECT_FILE is the path of the BORIS project\n"
                       "OBSERVATION_ID is the id of observation(s) (if ommitted all observations are exported)\n"
                       "OUTPUT_FORMAT can be tsv (default), csv, xls, xlsx, ods, html"),
-
-    "irr": ('usage:\nboris_cli -p PROJECT_FILE -o "OBSERVATION_ID1" "OBSERVATION_ID2" --command irr [INTERVAL] [INCLUDE_MODIFIERS]\n'
-            'where:\n'
-            'PROJECT_FILE is the path of the BORIS project\n'
-            'INTERVAL in seconds (default is 1)\n'
-            'INCLUDE_MODIFIERS must be true or false (default is true)'),
-
+    "irr": (
+        'usage:\nboris_cli -p PROJECT_FILE -o "OBSERVATION_ID1" "OBSERVATION_ID2" --command irr [INTERVAL] [INCLUDE_MODIFIERS]\n'
+        'where:\n'
+        'PROJECT_FILE is the path of the BORIS project\n'
+        'INTERVAL in seconds (default is 1)\n'
+        'INCLUDE_MODIFIERS must be true or false (default is true)'),
     "subtitles": ('usage:\nboris_cli -p PROJECT_FILE -o "OBSERVATION_ID" --command subtitles [OUTPUT_DIRECTORY]\n'
                   'where:\n'
                   'OUTPUT_DIRECTORY is the directory where subtitles files will be saved'),
-
-    "check_project_integrity": "usage:\nboris_cli -p PROJECT_FILE --command check_project_integrity",
-
+    "check_project_integrity":
+        "usage:\nboris_cli -p PROJECT_FILE --command check_project_integrity",
     "plot_events": ("usage:\nboris_cli - p PROJECT_FILE -o OBSERVATION_ID --command plot_events "
                     "[OUTPUT_DIRECTORY] [INCLUDE_MODIFIERS] [EXCLUDE_BEHAVIORS] [PLOT_FORMAT]\n"
                     "where\n"
@@ -87,7 +83,13 @@ commands_usage = {
 parser = argparse.ArgumentParser(description="BORIS CLI")
 parser.add_argument("-v", "--version", action="store_true", dest='version', help='BORIS version')
 parser.add_argument("-p", "--project", action="store", dest='project_file', help='Project file path')
-parser.add_argument("-o", "--observation", nargs="*", action="store", default=[], dest='observation_id', help='Observation id')
+parser.add_argument("-o",
+                    "--observation",
+                    nargs="*",
+                    action="store",
+                    default=[],
+                    dest='observation_id',
+                    help='Observation id')
 parser.add_argument("-i", "--info", action="store_true", dest='project_info', help='Project information')
 parser.add_argument("-c", "--command", nargs="*", action="store", dest='command', help='Command to execute')
 
@@ -110,7 +112,6 @@ if args.command:
         print()
         sys.exit()
 
-
 if args.project_file:
 
     if not args.command:
@@ -125,7 +126,6 @@ if args.project_file:
 
 if args.observation_id:
     observations_id_list = args.observation_id
-
     '''
     if not args.command:
         print("\nObservations:")
@@ -136,7 +136,6 @@ if args.observation_id:
                 print("{}: NOT FOUND in project".format(observation_id))
         print()
     '''
-
 
 if args.project_info:
     if not args.command:
@@ -152,15 +151,15 @@ if args.project_info:
                 for idx in utilities.sorted_keys(pj[ETHOGRAM]):
                     print("Code: {}\tDescription: {}\tType: {}".format(pj[ETHOGRAM][idx][BEHAVIOR_CODE],
                                                                        pj[ETHOGRAM][idx]["description"],
-                                                                       pj[ETHOGRAM][idx][TYPE]
-                                                                       ))
+                                                                       pj[ETHOGRAM][idx][TYPE]))
                 '''print("Behaviors: {}".format(",".join([pj[ETHOGRAM][k]["code"] for k in utilities.sorted_keys(pj[ETHOGRAM])])))'''
                 print()
 
                 print("Subjects\n========")
                 print("Number of subjects: {}".format(len(pj[SUBJECTS])))
                 for idx in utilities.sorted_keys(pj[SUBJECTS]):
-                    print("Name: {}\tDescription: {}".format(pj[SUBJECTS][idx]["name"], pj[SUBJECTS][idx]["description"]))
+                    print("Name: {}\tDescription: {}".format(pj[SUBJECTS][idx]["name"],
+                                                             pj[SUBJECTS][idx]["description"]))
                 print()
 
                 print("Observations\n============")
@@ -183,8 +182,6 @@ if args.project_info:
             print("No project")
         sys.exit()
 
-
-
 if args.command:
 
     print("Command: {}\n".format(" ".join(args.command)))
@@ -193,7 +190,6 @@ if args.command:
         print("No project")
         sys.exit()
 
-
     if "check_state_events" in args.command:
 
         if not observations_id_list:
@@ -201,7 +197,8 @@ if args.command:
             observations_id_list = all_observations(pj)
 
         for observation_id in observations_id_list:
-            ret, msg = project_functions.check_state_events_obs(observation_id, pj[ETHOGRAM], pj[OBSERVATIONS][observation_id], HHMMSS)
+            ret, msg = project_functions.check_state_events_obs(observation_id, pj[ETHOGRAM],
+                                                                pj[OBSERVATIONS][observation_id], HHMMSS)
             print("{}: {}".format(observation_id, cleanhtml(msg)))
         sys.exit()
 
@@ -211,7 +208,6 @@ if args.command:
             print("No observation selected. Command applied on all observations found in project\n")
             observations_id_list = [idx for idx in pj[OBSERVATIONS]]
 
-
         behaviors = [pj[ETHOGRAM][k]["code"] for k in utilities.sorted_keys(pj[ETHOGRAM])]
         subjects = [pj[SUBJECTS][k]["name"] for k in utilities.sorted_keys(pj[SUBJECTS])] + [NO_FOCAL_SUBJECT]
 
@@ -220,18 +216,16 @@ if args.command:
             output_format = args.command[1]
 
         for observation_id in observations_id_list:
-            ok, msg = export_observation.export_events({"selected subjects": subjects,
-                                                        "selected behaviors": behaviors},
-                                                       observation_id,
-                                                       pj[OBSERVATIONS][observation_id],
-                                                       pj[ETHOGRAM],
+            ok, msg = export_observation.export_events({
+                "selected subjects": subjects,
+                "selected behaviors": behaviors
+            }, observation_id, pj[OBSERVATIONS][observation_id], pj[ETHOGRAM],
                                                        utilities.safeFileName(observation_id + "." + output_format),
                                                        output_format)
             if not ok:
                 print(msg)
 
         sys.exit()
-
 
     if "irr" in args.command:
         if len(observations_id_list) != 2:
@@ -241,10 +235,7 @@ if args.command:
         behaviors = [pj[ETHOGRAM][k]["code"] for k in utilities.sorted_keys(pj[ETHOGRAM])]
         subjects = [pj[SUBJECTS][k]["name"] for k in utilities.sorted_keys(pj[SUBJECTS])] + [NO_FOCAL_SUBJECT]
 
-        ok, msg, db_connector = db_functions.load_aggregated_events_in_db(pj,
-                                                                          subjects,
-                                                                          observations_id_list,
-                                                                          behaviors)
+        ok, msg, db_connector = db_functions.load_aggregated_events_in_db(pj, subjects, observations_id_list, behaviors)
 
         if not ok:
             print(cleanhtml(msg))
@@ -260,14 +251,11 @@ if args.command:
         if len(args.command) > 2:
             include_modifiers = "TRUE" in args.command[2].upper()
 
-        K, out = irr.cohen_kappa(cursor,
-                                 observations_id_list[0], observations_id_list[1],
-                                 interval,
-                                 subjects,
+        K, out = irr.cohen_kappa(cursor, observations_id_list[0], observations_id_list[1], interval, subjects,
                                  include_modifiers)
 
         print(("Cohen's Kappa - Index of Inter-Rater Reliability\n\n"
-              "Interval time: {interval:.3f} s\n").format(interval=interval))
+               "Interval time: {interval:.3f} s\n").format(interval=interval))
 
         print(out)
         sys.exit()
@@ -288,12 +276,11 @@ if args.command:
                 print("{} is not a valid directory".format(export_dir))
                 sys.exit()
 
-        ok, msg = project_functions.create_subtitles(pj,
-                                                     observations_id_list,
-                                                     {"selected subjects": subjects,
-                                                      "selected behaviors": behaviors,
-                                                      "include modifiers": True},
-                                                     export_dir)
+        ok, msg = project_functions.create_subtitles(pj, observations_id_list, {
+            "selected subjects": subjects,
+            "selected behaviors": behaviors,
+            "include modifiers": True
+        }, export_dir)
         if not ok:
             print(cleanhtml(msg))
         sys.exit()
@@ -305,7 +292,6 @@ if args.command:
         else:
             print("No issuses found in project")
         sys.exit()
-
 
     if "plot_events" in args.command[0]:
 
@@ -335,20 +321,20 @@ if args.command:
         if len(args.command) > 4:
             plot_format = args.command[4].lower()
 
-
         plot_events.create_events_plot(pj,
-                                            observations_id_list,
-                                            {"selected subjects": subjects,
-                                             "selected behaviors": behaviors,
-                                             "include modifiers": include_modifiers,
-                                             "exclude behaviors": exclude_behaviors,
-                                             "time": TIME_FULL_OBS,
-                                             "start time": 0, "end time": 0},
-                                            plot_colors=BEHAVIORS_PLOT_COLORS,
-                                            plot_directory=export_dir,
-                                            file_format=plot_format)
+                                       observations_id_list, {
+                                           "selected subjects": subjects,
+                                           "selected behaviors": behaviors,
+                                           "include modifiers": include_modifiers,
+                                           "exclude behaviors": exclude_behaviors,
+                                           "time": TIME_FULL_OBS,
+                                           "start time": 0,
+                                           "end time": 0
+                                       },
+                                       plot_colors=BEHAVIORS_PLOT_COLORS,
+                                       plot_directory=export_dir,
+                                       file_format=plot_format)
         sys.exit()
-
 
     print("Command {} not found!".format(args.command[0]))
 

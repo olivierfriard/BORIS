@@ -1,9 +1,8 @@
 #!/usr/bin/env python3
-
 """
 BORIS
 Behavioral Observation Research Interactive Software
-Copyright 2012-2021 Olivier Friard
+Copyright 2012-2022 Olivier Friard
 
 This file is part of BORIS.
 
@@ -103,7 +102,6 @@ class BehavioralCategories(QDialog):
 
         self.setLayout(self.vbox)
 
-
     def pbAddCategory_clicked(self):
         """
         add a behavioral category
@@ -111,7 +109,6 @@ class BehavioralCategories(QDialog):
         category, ok = QInputDialog.getText(self, "New behavioral category", "Category name:")
         if ok:
             self.lw.addItem(QListWidgetItem(category))
-
 
     def pbRemoveCategory_clicked(self):
         """
@@ -123,17 +120,18 @@ class BehavioralCategories(QDialog):
             category_to_remove = self.lw.item(self.lw.row(SelectedItem)).text().strip()
             behaviors_in_category = []
             for idx in self.pj[ETHOGRAM]:
-                if BEHAVIOR_CATEGORY in self.pj[ETHOGRAM][idx] and self.pj[ETHOGRAM][idx][BEHAVIOR_CATEGORY] == category_to_remove:
+                if BEHAVIOR_CATEGORY in self.pj[ETHOGRAM][idx] and self.pj[ETHOGRAM][idx][
+                        BEHAVIOR_CATEGORY] == category_to_remove:
                     behaviors_in_category.append(self.pj[ETHOGRAM][idx][BEHAVIOR_CODE])
             flag_remove = False
             if behaviors_in_category:
 
-                flag_remove = dialog.MessageDialog(
-                    programName, ("Some behavior belong to the <b>{1}</b> to remove:<br>"
-                                  "{0}<br>"
-                                  "<br>Some features may not be available anymore.<br>").format(
-                                      "<br>".join(behaviors_in_category), category_to_remove),
-                    ["Remove category", CANCEL]) == "Remove category"
+                flag_remove = dialog.MessageDialog(programName,
+                                                   ("Some behavior belong to the <b>{1}</b> to remove:<br>"
+                                                    "{0}<br>"
+                                                    "<br>Some features may not be available anymore.<br>").format(
+                                                        "<br>".join(behaviors_in_category), category_to_remove),
+                                                   ["Remove category", CANCEL]) == "Remove category"
 
             else:
                 flag_remove = True
@@ -142,8 +140,6 @@ class BehavioralCategories(QDialog):
                 self.lw.takeItem(self.lw.row(SelectedItem))
                 self.removed = category_to_remove
                 self.accept()
-
-
 
     def pb_rename_category_clicked(self):
         """
@@ -154,16 +150,16 @@ class BehavioralCategories(QDialog):
             category_to_rename = self.lw.item(self.lw.row(SelectedItem)).text().strip()
             behaviors_in_category = []
             for idx in self.pj[ETHOGRAM]:
-                if BEHAVIOR_CATEGORY in self.pj[ETHOGRAM][idx] and self.pj[ETHOGRAM][idx][BEHAVIOR_CATEGORY] == category_to_rename:
+                if BEHAVIOR_CATEGORY in self.pj[ETHOGRAM][idx] and self.pj[ETHOGRAM][idx][
+                        BEHAVIOR_CATEGORY] == category_to_rename:
                     behaviors_in_category.append(self.pj[ETHOGRAM][idx][BEHAVIOR_CODE])
 
             flag_rename = False
             if behaviors_in_category:
-                flag_rename = dialog.MessageDialog(
-                    programName,
-                    ("Some behavior belong to the <b>{1}</b> to rename:<br>"
-                     "{0}<br>").format("<br>".join(behaviors_in_category), category_to_rename),
-                    ["Rename category", CANCEL]) == "Rename category"
+                flag_rename = dialog.MessageDialog(programName, ("Some behavior belong to the <b>{1}</b> to rename:<br>"
+                                                                 "{0}<br>").format("<br>".join(behaviors_in_category),
+                                                                                   category_to_rename),
+                                                   ["Rename category", CANCEL]) == "Rename category"
             else:
                 flag_rename = True
 
@@ -271,33 +267,34 @@ class projectDialog(QDialog, Ui_dlgProject):
         self.row_in_modification = -1
         self.flag_modified = False
 
-        for w in [self.le_converter_name, self.le_converter_description, self.pteCode, self.pb_save_converter, self.pb_cancel_converter]:
+        for w in [
+                self.le_converter_name, self.le_converter_description, self.pteCode, self.pb_save_converter,
+                self.pb_cancel_converter
+        ]:
             w.setEnabled(False)
 
         # disable widget for indep var setting
-        for widget in [self.leLabel, self.le_converter_description, self.cbType, self.lePredefined, self.dte_default_date,
-                       self.leSetValues]:
+        for widget in [
+                self.leLabel, self.le_converter_description, self.cbType, self.lePredefined, self.dte_default_date,
+                self.leSetValues
+        ]:
             widget.setEnabled(False)
 
         self.twBehaviors.horizontalHeader().sortIndicatorChanged.connect(self.sort_twBehaviors)
         self.twSubjects.horizontalHeader().sortIndicatorChanged.connect(self.sort_twSubjects)
         self.twVariables.horizontalHeader().sortIndicatorChanged.connect(self.sort_twVariables)
 
-
     def sort_twBehaviors(self, index, order):
         """order ethogram table"""
         self.twBehaviors.sortItems(index, order)
-
 
     def sort_twSubjects(self, index, order):
         """order subjects table"""
         self.twSubjects.sortItems(index, order)
 
-
     def sort_twVariables(self, index, order):
         """order variables table"""
         self.twVariables.sortItems(index, order)
-
 
     def convert_behaviors_keys_to_lower_case(self):
         """
@@ -306,45 +303,41 @@ class projectDialog(QDialog, Ui_dlgProject):
 
         try:
             if not self.twBehaviors.rowCount():
-                QMessageBox.critical(None, programName, "The ethogram is empty", QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
+                QMessageBox.critical(None, programName, "The ethogram is empty", QMessageBox.Ok | QMessageBox.Default,
+                                     QMessageBox.NoButton)
                 return
 
             # check if some keys will be duplicated after conversion
             try:
-                all_keys = [self.twBehaviors.item(row, behavioursFields["key"]).text() for row in range(self.twBehaviors.rowCount())]
+                all_keys = [
+                    self.twBehaviors.item(row, behavioursFields["key"]).text()
+                    for row in range(self.twBehaviors.rowCount())
+                ]
             except Exception:
                 pass
             if all_keys == [x.lower() for x in all_keys]:
                 QMessageBox.information(self, programName, "All keys are already lower case")
                 return
 
-            if dialog.MessageDialog(programName, "Confirm the conversion of key to lower case.", [YES, CANCEL]) == CANCEL:
+            if dialog.MessageDialog(programName, "Confirm the conversion of key to lower case.",
+                                    [YES, CANCEL]) == CANCEL:
                 return
 
             if len([x.lower() for x in all_keys]) != len(set([x.lower() for x in all_keys])):
-                if dialog.MessageDialog(programName,
-                                        "Some keys will be duplicated after conversion. Proceed?", [YES, CANCEL]) == CANCEL:
+                if dialog.MessageDialog(programName, "Some keys will be duplicated after conversion. Proceed?",
+                                        [YES, CANCEL]) == CANCEL:
                     return
 
             for row in range(self.twBehaviors.rowCount()):
                 if self.twBehaviors.item(row, behavioursFields["key"]).text():
-                    self.twBehaviors.item(row, behavioursFields["key"]).setText(self.twBehaviors.item(row,
-                                                                                                    behavioursFields["key"]).text().lower())
+                    self.twBehaviors.item(row, behavioursFields["key"]).setText(
+                        self.twBehaviors.item(row, behavioursFields["key"]).text().lower())
 
                 # convert modifier shortcuts
                 if self.twBehaviors.item(row, behavioursFields["modifiers"]).text():
 
-                    modifiers_dict = (
-                        eval(
-                            self.twBehaviors.item(
-                                row, behavioursFields["modifiers"]
-                            ).text()
-                        )
-                        if self.twBehaviors.item(
-                            row, behavioursFields["modifiers"]
-                        ).text()
-                        else {}
-                    )
+                    modifiers_dict = (eval(self.twBehaviors.item(row, behavioursFields["modifiers"]).text())
+                                      if self.twBehaviors.item(row, behavioursFields["modifiers"]).text() else {})
 
                     for modifier_set in modifiers_dict:
                         try:
@@ -363,7 +356,6 @@ class projectDialog(QDialog, Ui_dlgProject):
         except Exception:
             dialog.error_message2()
 
-
     def convert_subjects_keys_to_lower_case(self):
         """
         convert subjects key to lower case to help to migrate to v. 7
@@ -371,19 +363,23 @@ class projectDialog(QDialog, Ui_dlgProject):
         try:
             # check if some keys will be duplicated after conversion
             try:
-                all_keys = [self.twSubjects.item(row, subjectsFields.index("key")).text() for row in range(self.twSubjects.rowCount())]
+                all_keys = [
+                    self.twSubjects.item(row, subjectsFields.index("key")).text()
+                    for row in range(self.twSubjects.rowCount())
+                ]
             except Exception:
                 pass
             if all_keys == [x.lower() for x in all_keys]:
                 QMessageBox.information(self, programName, "All keys are already lower case")
                 return
 
-            if dialog.MessageDialog(programName, "Confirm the conversion of key to lower case.", [YES, CANCEL]) == CANCEL:
+            if dialog.MessageDialog(programName, "Confirm the conversion of key to lower case.",
+                                    [YES, CANCEL]) == CANCEL:
                 return
 
             if len([x.lower() for x in all_keys]) != len(set([x.lower() for x in all_keys])):
-                if dialog.MessageDialog(programName,
-                                        "Some keys will be duplicated after conversion. Proceed?", [YES, CANCEL]) == CANCEL:
+                if dialog.MessageDialog(programName, "Some keys will be duplicated after conversion. Proceed?",
+                                        [YES, CANCEL]) == CANCEL:
                     return
 
             for row in range(self.twSubjects.rowCount()):
@@ -393,15 +389,14 @@ class projectDialog(QDialog, Ui_dlgProject):
         except Exception:
             dialog.error_message2()
 
-
     def add_behaviors_coding_map(self):
         """
         Add a behaviors coding map from file
         """
 
         try:
-            fn = QFileDialog().getOpenFileName(self, "Open a behaviors coding map",
-                                            "", "Behaviors coding map (*.behav_coding_map);;All files (*)")
+            fn = QFileDialog().getOpenFileName(self, "Open a behaviors coding map", "",
+                                               "Behaviors coding map (*.behav_coding_map);;All files (*)")
             fileName = fn[0] if type(fn) is tuple else fn
             if fileName:
                 try:
@@ -425,7 +420,8 @@ class projectDialog(QDialog, Ui_dlgProject):
                 if bcm_code_not_found:
                     QMessageBox.warning(self, programName,
                                         ("The following behavior{} are not defined in the ethogram:<br>"
-                                        "{}").format("s" if len(bcm_code_not_found) > 1 else "", ",".join(bcm_code_not_found)))
+                                         "{}").format("s" if len(bcm_code_not_found) > 1 else "",
+                                                      ",".join(bcm_code_not_found)))
 
                 self.pj[BEHAVIORS_CODING_MAP].append(dict(bcm))
 
@@ -436,7 +432,6 @@ class projectDialog(QDialog, Ui_dlgProject):
                 self.twBehavCodingMap.setItem(self.twBehavCodingMap.rowCount() - 1, 1, QTableWidgetItem(codes))
         except Exception:
             dialog.error_message2()
-
 
     def remove_behaviors_coding_map(self):
         """
@@ -452,18 +447,16 @@ class projectDialog(QDialog, Ui_dlgProject):
         except Exception:
             dialog.error_message2()
 
-
     def export_ethogram(self):
         """
         export ethogram in various format
         """
         try:
-            extended_file_formats = ["Tab Separated Values (*.tsv)",
-                                    "Comma Separated Values (*.csv)",
-                                    "Open Document Spreadsheet ODS (*.ods)",
-                                    "Microsoft Excel Spreadsheet XLSX (*.xlsx)",
-                                    "Legacy Microsoft Excel Spreadsheet XLS (*.xls)",
-                                    "HTML (*.html)"]
+            extended_file_formats = [
+                "Tab Separated Values (*.tsv)", "Comma Separated Values (*.csv)",
+                "Open Document Spreadsheet ODS (*.ods)", "Microsoft Excel Spreadsheet XLSX (*.xlsx)",
+                "Legacy Microsoft Excel Spreadsheet XLS (*.xls)", "HTML (*.html)"
+            ]
             file_formats = ["tsv", "csv", "ods", "xlsx", "xls", "html"]
 
             filediag_func = QFileDialog().getSaveFileName
@@ -481,7 +474,9 @@ class projectDialog(QDialog, Ui_dlgProject):
             if self.leProjectName.text():
                 ethogram_data.title = f"Ethogram of {self.leProjectName.text()} project"
 
-            ethogram_data.headers = ["Behavior code", "Behavior type", "Description", "Key", "Behavioral category", "Excluded behaviors"]
+            ethogram_data.headers = [
+                "Behavior code", "Behavior type", "Description", "Key", "Behavioral category", "Excluded behaviors"
+            ]
 
             for r in range(self.twBehaviors.rowCount()):
                 row = []
@@ -495,7 +490,6 @@ class projectDialog(QDialog, Ui_dlgProject):
         except Exception:
             dialog.error_message2()
 
-
     def leLabel_changed(self):
         try:
             if self.selected_twvariables_row != -1:
@@ -503,14 +497,12 @@ class projectDialog(QDialog, Ui_dlgProject):
         except Exception:
             dialog.error_message2()
 
-
     def leDescription_changed(self):
         try:
             if self.selected_twvariables_row != -1:
                 self.twVariables.item(self.selected_twvariables_row, 1).setText(self.leDescription.text())
         except Exception:
             dialog.error_message2()
-
 
     def lePredefined_changed(self):
         try:
@@ -523,7 +515,6 @@ class projectDialog(QDialog, Ui_dlgProject):
         except Exception:
             dialog.error_message2()
 
-
     def leSetValues_changed(self):
         try:
             if self.selected_twvariables_row != -1:
@@ -531,14 +522,13 @@ class projectDialog(QDialog, Ui_dlgProject):
         except Exception:
             dialog.error_message2()
 
-
     def dte_default_date_changed(self):
         try:
             if self.selected_twvariables_row != -1:
-                self.twVariables.item(self.selected_twvariables_row, 3).setText(self.dte_default_date.dateTime().toString(Qt.ISODate))
+                self.twVariables.item(self.selected_twvariables_row,
+                                      3).setText(self.dte_default_date.dateTime().toString(Qt.ISODate))
         except Exception:
             dialog.error_message2()
-
 
     def pbBehaviorsCategories_clicked(self):
         """
@@ -559,13 +549,11 @@ class projectDialog(QDialog, Ui_dlgProject):
                         if self.twBehaviors.item(row, behavioursFields["category"]):
                             if self.twBehaviors.item(row, behavioursFields["category"]).text() == bc.removed:
                                 if dialog.MessageDialog(
-                                    programName,
+                                        programName,
                                     (f"The <b>{self.twBehaviors.item(row, behavioursFields['code']).text()}</b> behavior belongs "
-                                    f"to a behavioral category <b>{self.twBehaviors.item(row, behavioursFields['category']).text()}</b> "
-                                    "that is no more in the behavioral categories list.<br><br>"
-                                    "Remove the behavior from category?"
-                                    ),
-                                        [YES, CANCEL]) == YES:
+                                     f"to a behavioral category <b>{self.twBehaviors.item(row, behavioursFields['category']).text()}</b> "
+                                     "that is no more in the behavioral categories list.<br><br>"
+                                     "Remove the behavior from category?"), [YES, CANCEL]) == YES:
                                     self.twBehaviors.item(row, behavioursFields["category"]).setText("")
                 if bc.renamed:
                     for row in range(self.twBehaviors.rowCount()):
@@ -574,7 +562,6 @@ class projectDialog(QDialog, Ui_dlgProject):
                                 self.twBehaviors.item(row, behavioursFields["category"]).setText(bc.renamed[1])
         except Exception:
             dialog.error_message2()
-
 
     def twBehaviors_cellDoubleClicked(self, row, column):
         """
@@ -599,7 +586,8 @@ class projectDialog(QDialog, Ui_dlgProject):
                 if "with coding map" in self.twBehaviors.item(row, behavioursFields[TYPE]).text():
                     self.behaviorTypeChanged(row)
                 else:
-                    QMessageBox.information(self, programName, "Change the behavior type on first column to select a coding map")
+                    QMessageBox.information(self, programName,
+                                            "Change the behavior type on first column to select a coding map")
 
             # check if double click on category
             if column == behavioursFields["type"]:
@@ -611,25 +599,26 @@ class projectDialog(QDialog, Ui_dlgProject):
 
             if column == behavioursFields["modifiers"]:
                 # check if behavior has coding map
-                if (self.twBehaviors.item(row, behavioursFields["coding map"]) is not None 
-                    and self.twBehaviors.item(row, behavioursFields["coding map"]).text()):
-                        QMessageBox.warning(self, programName, "Use the coding map to set/modify the areas")
+                if (self.twBehaviors.item(row, behavioursFields["coding map"]) is not None and
+                        self.twBehaviors.item(row, behavioursFields["coding map"]).text()):
+                    QMessageBox.warning(self, programName, "Use the coding map to set/modify the areas")
                 else:
                     subjects_list = []
                     for subject_row in range(self.twSubjects.rowCount()):
-                        key = self.twSubjects.item(subject_row, 0).text() if self.twSubjects.item(subject_row, 0) else ""
-                        subjectName = self.twSubjects.item(subject_row, 1).text().strip() if self.twSubjects.item(subject_row, 1) else ""
+                        key = self.twSubjects.item(subject_row, 0).text() if self.twSubjects.item(subject_row,
+                                                                                                  0) else ""
+                        subjectName = self.twSubjects.item(subject_row, 1).text().strip() if self.twSubjects.item(
+                            subject_row, 1) else ""
                         subjects_list.append((subjectName, key))
 
                     addModifierWindow = add_modifier.addModifierDialog(self.twBehaviors.item(row, column).text(),
-                                                                    subjects=subjects_list
-                                                                    )
-                    addModifierWindow.setWindowTitle(f'Set modifiers for "{self.twBehaviors.item(row, 2).text()}" behavior')
+                                                                       subjects=subjects_list)
+                    addModifierWindow.setWindowTitle(
+                        f'Set modifiers for "{self.twBehaviors.item(row, 2).text()}" behavior')
                     if addModifierWindow.exec_():
                         self.twBehaviors.item(row, column).setText(addModifierWindow.getModifiers())
         except Exception:
             dialog.error_message2()
-
 
     def behavior_type_doubleclicked(self, row):
         """
@@ -642,7 +631,8 @@ class projectDialog(QDialog, Ui_dlgProject):
             else:
                 selected = 0
 
-            new_type, ok = QInputDialog.getItem(self, "Select a behavior type", "Types of behavior", BEHAVIOR_TYPES, selected, False)
+            new_type, ok = QInputDialog.getItem(self, "Select a behavior type", "Types of behavior", BEHAVIOR_TYPES,
+                                                selected, False)
 
             if ok and new_type:
                 self.twBehaviors.item(row, behavioursFields["type"]).setText(new_type)
@@ -650,7 +640,6 @@ class projectDialog(QDialog, Ui_dlgProject):
                 self.behaviorTypeChanged(row)
         except Exception:
             dialog.error_message2()
-
 
     def category_doubleclicked(self, row):
         """
@@ -665,7 +654,8 @@ class projectDialog(QDialog, Ui_dlgProject):
             else:
                 selected = 0
 
-            category, ok = QInputDialog.getItem(self, "Select a behavioral category", "Behavioral categories", categories, selected, False)
+            category, ok = QInputDialog.getItem(self, "Select a behavioral category", "Behavioral categories",
+                                                categories, selected, False)
 
             if ok and category:
                 if category == "None":
@@ -673,7 +663,6 @@ class projectDialog(QDialog, Ui_dlgProject):
                 self.twBehaviors.item(row, behavioursFields["category"]).setText(category)
         except Exception:
             dialog.error_message2()
-
 
     def check_variable_default_value(self, txt, varType):
         """
@@ -690,7 +679,6 @@ class projectDialog(QDialog, Ui_dlgProject):
 
         return True
 
-
     def variableTypeChanged(self, row):
         """
         variable type combobox changed
@@ -699,12 +687,16 @@ class projectDialog(QDialog, Ui_dlgProject):
         try:
             if self.twVariables.cellWidget(row, tw_indVarFields.index("type")).currentText() == SET_OF_VALUES:
                 if self.twVariables.item(row, tw_indVarFields.index("possible values")).text() == "NA":
-                    self.twVariables.item(row, tw_indVarFields.index("possible values")).setText("Double-click to add values")
+                    self.twVariables.item(
+                        row, tw_indVarFields.index("possible values")).setText("Double-click to add values")
             else:
                 # check if set of values defined
-                if self.twVariables.item(row, tw_indVarFields.index("possible values")).text() not in ["NA", "Double-click to add values"]:
+                if self.twVariables.item(row, tw_indVarFields.index("possible values")).text() not in [
+                        "NA", "Double-click to add values"
+                ]:
                     if dialog.MessageDialog(programName, "Erase the set of values?", [YES, CANCEL]) == CANCEL:
-                        self.twVariables.cellWidget(row, tw_indVarFields.index("type")).setCurrentIndex(SET_OF_VALUES_idx)
+                        self.twVariables.cellWidget(row,
+                                                    tw_indVarFields.index("type")).setCurrentIndex(SET_OF_VALUES_idx)
                         return
                     else:
                         self.twVariables.item(row, tw_indVarFields.index("possible values")).setText("NA")
@@ -712,17 +704,16 @@ class projectDialog(QDialog, Ui_dlgProject):
                     self.twVariables.item(row, tw_indVarFields.index("possible values")).setText("NA")
 
             # check compatibility between variable type and default value
-            if not self.check_variable_default_value(self.twVariables.item(row, tw_indVarFields.index("default value")).text(),
-                                                     self.twVariables.cellWidget(row, tw_indVarFields.index("type")).currentIndex()):
-                QMessageBox.warning(self,
-                                    programName + " - Independent variables error",
+            if not self.check_variable_default_value(
+                    self.twVariables.item(row, tw_indVarFields.index("default value")).text(),
+                    self.twVariables.cellWidget(row, tw_indVarFields.index("type")).currentIndex()):
+                QMessageBox.warning(
+                    self, programName + " - Independent variables error",
                     (f"The default value ({self.twVariables.item(row, tw_indVarFields.index('default value')).text()}) "
-                        f"of variable <b>{self.twVariables.item(row, tw_indVarFields.index('label')).text()}</b> "
-                        "is not compatible with variable type")
-                                   )
+                     f"of variable <b>{self.twVariables.item(row, tw_indVarFields.index('label')).text()}</b> "
+                     "is not compatible with variable type"))
         except Exception:
             dialog.error_message2()
-
 
     def check_indep_var_config(self):
         """
@@ -740,26 +731,25 @@ class projectDialog(QDialog, Ui_dlgProject):
                 existing_var.append(self.twVariables.item(r, 0).text().strip().upper())
 
                 # check default value
-                if (self.twVariables.item(r, 2).text() != TIMESTAMP
-                        and not self.check_variable_default_value(self.twVariables.item(r, 3).text(), self.twVariables.item(r, 2).text())):
+                if (self.twVariables.item(r, 2).text() != TIMESTAMP and not self.check_variable_default_value(
+                        self.twVariables.item(r, 3).text(),
+                        self.twVariables.item(r, 2).text())):
                     return False, (f"Row: {r + 1} - "
-                                f"The default value ({self.twVariables.item(r, 3).text()}) is not compatible "
-                                f"with the variable type ({self.twVariables.item(r, 2).text()})")
+                                   f"The default value ({self.twVariables.item(r, 3).text()}) is not compatible "
+                                   f"with the variable type ({self.twVariables.item(r, 2).text()})")
 
                 # check if default value in set of values
                 if self.twVariables.item(r, 2).text() == SET_OF_VALUES and self.twVariables.item(r, 4).text() == "":
                     return False, "No values were defined in set"
 
-                if (self.twVariables.item(r, 2).text() == SET_OF_VALUES
-                        and self.twVariables.item(r, 4).text()
-                        and self.twVariables.item(r, 3).text()
-                        and self.twVariables.item(r, 3).text() not in self.twVariables.item(r, 4).text().split(",")):
+                if (self.twVariables.item(r, 2).text() == SET_OF_VALUES and self.twVariables.item(r, 4).text() and
+                        self.twVariables.item(r, 3).text() and
+                        self.twVariables.item(r, 3).text() not in self.twVariables.item(r, 4).text().split(",")):
                     return False, f"The default value ({self.twVariables.item(r, 3).text()}) is not contained in set of values"
 
             return True, "OK"
         except Exception:
             dialog.error_message2()
-
 
     def cbtype_changed(self):
 
@@ -774,12 +764,12 @@ class projectDialog(QDialog, Ui_dlgProject):
         except Exception:
             dialog.error_message2()
 
-
     def cbtype_activated(self):
 
         try:
             if self.cbType.currentText() == TIMESTAMP:
-                self.twVariables.item(self.selected_twvariables_row, 3).setText(self.dte_default_date.dateTime().toString(Qt.ISODate))
+                self.twVariables.item(self.selected_twvariables_row,
+                                      3).setText(self.dte_default_date.dateTime().toString(Qt.ISODate))
                 self.twVariables.item(self.selected_twvariables_row, 4).setText("")
             else:
                 self.twVariables.item(self.selected_twvariables_row, 3).setText(self.lePredefined.text())
@@ -787,8 +777,8 @@ class projectDialog(QDialog, Ui_dlgProject):
 
             # remove spaces after and before comma
             if self.cbType.currentText() == SET_OF_VALUES:
-                self.twVariables.item(self.selected_twvariables_row, 4).setText(
-                    ",".join([x.strip() for x in self.leSetValues.text().split(",")]))
+                self.twVariables.item(self.selected_twvariables_row,
+                                      4).setText(",".join([x.strip() for x in self.leSetValues.text().split(",")]))
 
             self.twVariables.item(self.selected_twvariables_row, 2).setText(self.cbType.currentText())
 
@@ -799,12 +789,11 @@ class projectDialog(QDialog, Ui_dlgProject):
         except Exception:
             dialog.error_message2()
 
-
     def pbAddVariable_clicked(self):
         """
         add an independent variable
         """
-        
+
         logging.debug("add an independent variable")
         try:
             self.twVariables.setRowCount(self.twVariables.rowCount() + 1)
@@ -822,7 +811,6 @@ class projectDialog(QDialog, Ui_dlgProject):
             self.twVariables_cellClicked(self.twVariables.rowCount() - 1, 0)
         except Exception:
             dialog.error_message2()
-
 
     def pbRemoveVariable_clicked(self):
         """
@@ -844,14 +832,12 @@ class projectDialog(QDialog, Ui_dlgProject):
         except Exception:
             dialog.error_message2()
 
-
     def pbImportVarFromProject_clicked(self):
         """
         import independent variables from another project
         """
 
         project_import.import_indep_variables_from_project(self)
-
 
     def pbImportSubjectsFromProject_clicked(self):
         """
@@ -860,16 +846,12 @@ class projectDialog(QDialog, Ui_dlgProject):
 
         project_import.import_subjects_from_project(self)
 
-
-
-
     def pbImportBehaviorsFromProject_clicked(self):
         """
         import behaviors from another BORIS project
         """
 
         project_import.import_behaviors_from_project(self)
-
 
     def pbExclusionMatrix_clicked(self):
         """
@@ -878,14 +860,14 @@ class projectDialog(QDialog, Ui_dlgProject):
 
         try:
             if not self.twBehaviors.rowCount():
-                QMessageBox.critical(None, programName, "The ethogram is empty",
-                QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
+                QMessageBox.critical(None, programName, "The ethogram is empty", QMessageBox.Ok | QMessageBox.Default,
+                                     QMessageBox.NoButton)
                 return
 
             for row in range(self.twBehaviors.rowCount()):
                 if not self.twBehaviors.item(row, behavioursFields["code"]).text():
                     QMessageBox.critical(None, programName, f"A behavior code is empty at row {row + 1}",
-                                        QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
+                                         QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
                     return
 
             ex = exclusion_matrix.ExclusionMatrix()
@@ -901,17 +883,16 @@ class projectDialog(QDialog, Ui_dlgProject):
             # check if point are present and if user want to include them in exclusion matrix
             include_point_events = NO
             if point_behaviors:
-                include_point_events = dialog.MessageDialog(programName,
-                                                    "Do you want to include the point events in the exclusion matrix?",
-                                                            [YES, NO])
-
+                include_point_events = dialog.MessageDialog(
+                    programName, "Do you want to include the point events in the exclusion matrix?", [YES, NO])
 
             for r in range(self.twBehaviors.rowCount()):
 
                 if self.twBehaviors.item(r, behavioursFields[BEHAVIOR_CODE]):
 
-                    if (include_point_events == YES
-                            or (include_point_events == NO and "State" in self.twBehaviors.item(r, behavioursFields[TYPE]).text())):
+                    if (include_point_events == YES or
+                        (include_point_events == NO and
+                         "State" in self.twBehaviors.item(r, behavioursFields[TYPE]).text())):
                         allBehaviors.append(self.twBehaviors.item(r, behavioursFields[BEHAVIOR_CODE]).text())
 
                     excl[self.twBehaviors.item(r, behavioursFields[BEHAVIOR_CODE]).text()] = self.twBehaviors.item(
@@ -926,7 +907,7 @@ class projectDialog(QDialog, Ui_dlgProject):
 
             if not state_behaviors:
                 QMessageBox.critical(None, programName, "No state events were defined in ethogram",
-                                    QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
+                                     QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
                 return
 
             logging.debug(f"exclusion matrix {excl}")
@@ -959,7 +940,8 @@ class projectDialog(QDialog, Ui_dlgProject):
 
                     if c_name != r_name:
                         ex.checkboxes[f"{r_name}|{c_name}"] = QCheckBox()
-                        ex.checkboxes[f"{r_name}|{c_name}"].setStyleSheet("text-align: center; margin-left:50%; margin-right:50%;")
+                        ex.checkboxes[f"{r_name}|{c_name}"].setStyleSheet(
+                            "text-align: center; margin-left:50%; margin-right:50%;")
 
                         if flag_left_bottom:
                             # hide if cell in left-bottom part of table
@@ -987,8 +969,8 @@ class projectDialog(QDialog, Ui_dlgProject):
 
                 # update excluded field
                 for r in range(self.twBehaviors.rowCount()):
-                    if (include_point_events == YES
-                            or (include_point_events == NO and "State" in self.twBehaviors.item(r, 0).text())):
+                    if (include_point_events == YES or
+                        (include_point_events == NO and "State" in self.twBehaviors.item(r, 0).text())):
                         for e in excl:
                             if e == self.twBehaviors.item(r, behavioursFields[BEHAVIOR_CODE]).text():
                                 item = QTableWidgetItem(",".join(new_excl[e]))
@@ -1033,12 +1015,11 @@ class projectDialog(QDialog, Ui_dlgProject):
                                                             ['Remove', CANCEL])
                             if response == "Remove":
                                 self.twBehaviors.removeRow(row_mem[codeToDelete])
-                        else:   # remove without asking
+                        else:  # remove without asking
                             self.twBehaviors.removeRow(row_mem[codeToDelete])
 
                 except Exception:
                     dialog.error_message2()
-
 
     def pbImportFromJWatcher_clicked(self):
         """
@@ -1046,7 +1027,6 @@ class projectDialog(QDialog, Ui_dlgProject):
         """
 
         project_import.import_from_JWatcher(self)
-
 
     def import_from_text_file(self):
         """
@@ -1057,7 +1037,6 @@ class projectDialog(QDialog, Ui_dlgProject):
 
         project_import.import_from_text_file(self)
 
-
     def import_behaviors_from_clipboard(self):
         """
         import ethogram from clipboard
@@ -1065,14 +1044,12 @@ class projectDialog(QDialog, Ui_dlgProject):
 
         project_import.import_behaviors_from_clipboard(self)
 
-
     def import_subjects_from_clipboard(self):
         """
         import subjects from clipboard
         """
 
         project_import.import_subjects_from_clipboard(self)
-
 
     def twBehaviors_cellChanged(self, row, column):
         """
@@ -1102,7 +1079,6 @@ class projectDialog(QDialog, Ui_dlgProject):
                     if self.twBehaviors.item(r, PROJECT_BEHAVIORS_CODE_FIELD_IDX).text():
                         codes.append(self.twBehaviors.item(r, PROJECT_BEHAVIORS_CODE_FIELD_IDX).text())
 
-
     def pb_clone_behavior_clicked(self):
         """
         clone the selected configuration
@@ -1124,7 +1100,6 @@ class projectDialog(QDialog, Ui_dlgProject):
         except Exception:
             dialog.error_message2()
 
-
     def pbRemoveBehavior_clicked(self):
         """
         remove behavior
@@ -1139,14 +1114,16 @@ class projectDialog(QDialog, Ui_dlgProject):
                 flag_break = False
                 codeToDelete = self.twBehaviors.item(self.twBehaviors.selectedIndexes()[0].row(), 2).text()
                 for obs_id in self.pj[OBSERVATIONS]:
-                    if codeToDelete in [event[EVENT_BEHAVIOR_FIELD_IDX] for event in self.pj[OBSERVATIONS][obs_id][EVENTS]]:
-                        if dialog.MessageDialog(programName, "The code to remove is used in observations!", [REMOVE, CANCEL]) == CANCEL:
+                    if codeToDelete in [
+                            event[EVENT_BEHAVIOR_FIELD_IDX] for event in self.pj[OBSERVATIONS][obs_id][EVENTS]
+                    ]:
+                        if dialog.MessageDialog(programName, "The code to remove is used in observations!",
+                                                [REMOVE, CANCEL]) == CANCEL:
                             return
                         break
 
                 self.twBehaviors.removeRow(self.twBehaviors.selectedIndexes()[0].row())
                 self.twBehaviors_cellChanged(0, 0)
-
 
     def pbAddBehavior_clicked(self):
         """
@@ -1169,7 +1146,6 @@ class projectDialog(QDialog, Ui_dlgProject):
             dialog.error_message2()
         self.twBehaviors.scrollToBottom()
 
-
     def behaviorTypeChanged(self, row):
         """
         event type combobox changed
@@ -1177,10 +1153,10 @@ class projectDialog(QDialog, Ui_dlgProject):
 
         if "with coding map" in self.twBehaviors.item(row, behavioursFields[TYPE]).text():
             # let user select a coding maop
-            fn = QFileDialog().getOpenFileName(self,
-                                               "Select a coding map for "
-                                               f"{self.twBehaviors.item(row, behavioursFields['code']).text()} behavior",
-                                               "", "BORIS map files (*.boris_map);;All files (*)")
+            fn = QFileDialog().getOpenFileName(
+                self, "Select a coding map for "
+                f"{self.twBehaviors.item(row, behavioursFields['code']).text()} behavior", "",
+                "BORIS map files (*.boris_map);;All files (*)")
             fileName = fn[0] if type(fn) is tuple else fn
 
             if fileName:
@@ -1192,7 +1168,13 @@ class projectDialog(QDialog, Ui_dlgProject):
                 self.pj[CODING_MAP][new_map["name"]] = new_map
 
                 # add modifiers from coding map areas
-                modifstr = str({"0": {"name": new_map["name"], "type": MULTI_SELECTION, "values": list(sorted(new_map['areas'].keys()))}})
+                modifstr = str({
+                    "0": {
+                        "name": new_map["name"],
+                        "type": MULTI_SELECTION,
+                        "values": list(sorted(new_map['areas'].keys()))
+                    }
+                })
 
                 self.twBehaviors.item(row, behavioursFields["modifiers"]).setText(modifstr)
                 self.twBehaviors.item(row, behavioursFields["coding map"]).setText(new_map["name"])
@@ -1200,11 +1182,11 @@ class projectDialog(QDialog, Ui_dlgProject):
             else:
                 # if coding map already exists do not reset the behavior type if no filename selected
                 if not self.twBehaviors.item(row, behavioursFields["coding map"]).text():
-                    QMessageBox.critical(self, programName, 'No coding map was selected.\nEvent type will be reset to "Point event" ')
+                    QMessageBox.critical(self, programName,
+                                         'No coding map was selected.\nEvent type will be reset to "Point event" ')
                     self.twBehaviors.item(row, behavioursFields["type"]).setText("Point event")
         else:
             self.twBehaviors.item(row, behavioursFields["coding map"]).setText("")
-
 
     def pbAddSubject_clicked(self):
         """
@@ -1220,7 +1202,6 @@ class projectDialog(QDialog, Ui_dlgProject):
             dialog.error_message2()
         self.twSubjects.scrollToBottom()
 
-
     def pbRemoveSubject_clicked(self):
         """
         remove selected subject from subjects list
@@ -1234,7 +1215,8 @@ class projectDialog(QDialog, Ui_dlgProject):
 
                     flagDel = False
                     if self.twSubjects.item(self.twSubjects.selectedIndexes()[0].row(), 1):
-                        subjectToDelete = self.twSubjects.item(self.twSubjects.selectedIndexes()[0].row(), 1).text()  # 1: subject name
+                        subjectToDelete = self.twSubjects.item(self.twSubjects.selectedIndexes()[0].row(),
+                                                               1).text()  # 1: subject name
 
                         subjectsInObs = []
                         for obs in self.pj[OBSERVATIONS]:
@@ -1257,7 +1239,6 @@ class projectDialog(QDialog, Ui_dlgProject):
                     self.twSubjects_cellChanged(0, 0)
         except Exception:
             dialog.error_message2()
-
 
     def remove_all_subjects(self):
         """
@@ -1293,20 +1274,19 @@ class projectDialog(QDialog, Ui_dlgProject):
                     for nameToDelete in namesToDelete:
                         # if name to delete used in obs ask confirmation
                         if nameToDelete in namesInObs and not flag_force:
-                            response = dialog.MessageDialog(programName,
-                                                            f"The subject <b>{nameToDelete}</b> is used in observations!",
-                                                            ["Force removing of all subjects", REMOVE, CANCEL])
+                            response = dialog.MessageDialog(
+                                programName, f"The subject <b>{nameToDelete}</b> is used in observations!",
+                                ["Force removing of all subjects", REMOVE, CANCEL])
                             if response == "Force removing of all subjects":
                                 flag_force = True
                                 self.twSubjects.removeRow(row_mem[nameToDelete])
 
                             if response == REMOVE:
                                 self.twSubjects.removeRow(row_mem[nameToDelete])
-                        else:   # remove without asking
+                        else:  # remove without asking
                             self.twSubjects.removeRow(row_mem[nameToDelete])
         except Exception:
             dialog.error_message2()
-
 
     def twSubjects_cellChanged(self, row: int, column: int):
         """
@@ -1322,11 +1302,12 @@ class projectDialog(QDialog, Ui_dlgProject):
             if self.twSubjects.item(r, 0):
 
                 # check key length
-                if (self.twSubjects.item(r, 0).text().upper() not in list(function_keys.values())
-                        and len(self.twSubjects.item(r, 0).text()) > 1):
-                    self.lbSubjectsState.setText((f'<font color="red">Error on key {self.twSubjects.item(r, 0).text()} for subject!</font>'
-                                                  "The key is too long (keys must be of one character"
-                                                  " except for function keys _F1, F2..._)"))
+                if (self.twSubjects.item(r, 0).text().upper() not in list(function_keys.values()) and
+                        len(self.twSubjects.item(r, 0).text()) > 1):
+                    self.lbSubjectsState.setText(
+                        (f'<font color="red">Error on key {self.twSubjects.item(r, 0).text()} for subject!</font>'
+                         "The key is too long (keys must be of one character"
+                         " except for function keys _F1, F2..._)"))
                     return
 
                 if self.twSubjects.item(r, 0).text() in keys:
@@ -1343,7 +1324,6 @@ class projectDialog(QDialog, Ui_dlgProject):
                     if self.twSubjects.item(r, 1).text():
                         subjects.append(self.twSubjects.item(r, 1).text())
 
-
     def twVariables_cellClicked(self, row, column):
         """
         check if variable default values are compatible with variable type
@@ -1353,7 +1333,10 @@ class projectDialog(QDialog, Ui_dlgProject):
         logging.debug(f"selected row: {self.selected_twvariables_row}")
 
         if self.selected_twvariables_row == -1:
-            for widget in [self.leLabel, self.leDescription, self.cbType, self.lePredefined, self.dte_default_date, self.leSetValues]:
+            for widget in [
+                    self.leLabel, self.leDescription, self.cbType, self.lePredefined, self.dte_default_date,
+                    self.leSetValues
+            ]:
                 widget.setEnabled(False)
                 self.leLabel.setText("")
                 self.leDescription.setText("")
@@ -1364,7 +1347,10 @@ class projectDialog(QDialog, Ui_dlgProject):
             return
 
         # enable widget for indep var setting
-        for widget in [self.leLabel, self.leDescription, self.cbType, self.lePredefined, self.dte_default_date, self.leSetValues]:
+        for widget in [
+                self.leLabel, self.leDescription, self.cbType, self.lePredefined, self.dte_default_date,
+                self.leSetValues
+        ]:
             widget.setEnabled(True)
 
         self.leLabel.setText(self.twVariables.item(row, 0).text())
@@ -1378,7 +1364,6 @@ class projectDialog(QDialog, Ui_dlgProject):
 
         self.cbType.setCurrentIndex(AVAILABLE_INDEP_VAR_TYPES.index(self.twVariables.item(row, 2).text()))
 
-
     def pbRemoveObservation_clicked(self):
         """
         remove all selected observations
@@ -1388,7 +1373,8 @@ class projectDialog(QDialog, Ui_dlgProject):
             if not self.twObservations.selectedIndexes():
                 QMessageBox.warning(self, programName, "No selected observation")
             else:
-                response = dialog.MessageDialog(programName, "Are you sure to remove all the selected observation?", [YES, CANCEL])
+                response = dialog.MessageDialog(programName, "Are you sure to remove all the selected observation?",
+                                                [YES, CANCEL])
                 if response == YES:
                     rows_to_delete = []
                     for index in self.twObservations.selectedIndexes():
@@ -1402,7 +1388,6 @@ class projectDialog(QDialog, Ui_dlgProject):
         except Exception:
             dialog.error_message2()
 
-
     def pbCancel_clicked(self):
         if self.flag_modified:
             if dialog.MessageDialog("BORIS", "The converters were modified. Are you sure to cancel?",
@@ -1410,7 +1395,6 @@ class projectDialog(QDialog, Ui_dlgProject):
                 self.reject()
         else:
             self.reject()
-
 
     def pbOK_clicked(self):
         """
@@ -1453,8 +1437,7 @@ class projectDialog(QDialog, Ui_dlgProject):
                 f"<b>{subjects_name_with_leading_trailing_spaces}</b><br><br>"
                 "Do you want to remove the leading and trailing spaces?<br><br>"
                 '<font color="red"><b>Be careful with this option'
-                " if you have already done observations!</b></font>"
-            ), [YES, NO])
+                " if you have already done observations!</b></font>"), [YES, NO])
 
         # check subjects
         for row in range(self.twSubjects.rowCount()):
@@ -1481,7 +1464,8 @@ class projectDialog(QDialog, Ui_dlgProject):
                                         f"The pipe (|) character is not allowed in subject name <b>{subjectName}</b>")
                     return
             else:
-                QMessageBox.warning(self, programName, f"Missing subject name in subjects configuration at row #{row + 1}")
+                QMessageBox.warning(self, programName,
+                                    f"Missing subject name in subjects configuration at row #{row + 1}")
                 return
 
             # description
@@ -1489,7 +1473,11 @@ class projectDialog(QDialog, Ui_dlgProject):
             if self.twSubjects.item(row, 2):
                 subjectDescription = self.twSubjects.item(row, 2).text().strip()
 
-            self.subjects_conf[str(len(self.subjects_conf))] = {"key": key, "name": subjectName, "description": subjectDescription}
+            self.subjects_conf[str(len(self.subjects_conf))] = {
+                "key": key,
+                "name": subjectName,
+                "description": subjectDescription
+            }
 
         self.pj[SUBJECTS] = dict(self.subjects_conf)
 
@@ -1523,14 +1511,12 @@ class projectDialog(QDialog, Ui_dlgProject):
         if code_with_leading_trailing_spaces:
             remove_leading_trailing_spaces = dialog.MessageDialog(
                 programName,
-                (
-                    "<b>Warning!</b> Some leading and/or trailing spaces are present"
-                    " in the following behaviors code(s):<br>"
-                    f"<b>{'<br>'.join([x.replace(' ', '&#9608;') for x in code_with_leading_trailing_spaces])}</b><br><br>"
-                    "Do you want to remove the leading and trailing spaces from behaviors?<br><br>"
-                    """<font color="red"><b>Be careful with this option"""
-                    """ if you have already done observations!</b></font>"""
-                ),
+                ("<b>Warning!</b> Some leading and/or trailing spaces are present"
+                 " in the following behaviors code(s):<br>"
+                 f"<b>{'<br>'.join([x.replace(' ', '&#9608;') for x in code_with_leading_trailing_spaces])}</b><br><br>"
+                 "Do you want to remove the leading and trailing spaces from behaviors?<br><br>"
+                 """<font color="red"><b>Be careful with this option"""
+                 """ if you have already done observations!</b></font>"""),
                 [YES, NO, CANCEL],
             )
         if remove_leading_trailing_spaces == CANCEL:
@@ -1540,14 +1526,12 @@ class projectDialog(QDialog, Ui_dlgProject):
         if modifiers_with_leading_trailing_spaces:
             remove_leading_trailing_spaces_in_modifiers = dialog.MessageDialog(
                 programName,
-                (
-                    "<b>Warning!</b> Some leading and/or trailing spaces are present"
-                    " in the following modifier(s):<br>"
-                    f"<b>{'<br>'.join([x.replace(' ', '&#9608;') for x in set(modifiers_with_leading_trailing_spaces)])}</b><br><br>"
-                    "Do you want to remove the leading and trailing spaces from modifiers?<br><br>"
-                    """<font color="red"><b>Be careful with this option"""
-                    """ if you have already done observations!</b></font>"""
-                ),
+                ("<b>Warning!</b> Some leading and/or trailing spaces are present"
+                 " in the following modifier(s):<br>"
+                 f"<b>{'<br>'.join([x.replace(' ', '&#9608;') for x in set(modifiers_with_leading_trailing_spaces)])}</b><br><br>"
+                 "Do you want to remove the leading and trailing spaces from modifiers?<br><br>"
+                 """<font color="red"><b>Be careful with this option"""
+                 """ if you have already done observations!</b></font>"""),
                 [YES, NO, CANCEL],
             )
         if remove_leading_trailing_spaces_in_modifiers == CANCEL:
@@ -1580,16 +1564,16 @@ class projectDialog(QDialog, Ui_dlgProject):
                                     for idx, value in enumerate(modifiers_dict[k]["values"]):
                                         modif_code = value.split(" (")[0]
 
-                                        modifiers_dict[k]["values"][idx] = modifiers_dict[k][
-                                            "values"
-                                        ][idx].replace(modif_code, modif_code.strip())
+                                        modifiers_dict[k]["values"][idx] = modifiers_dict[k]["values"][idx].replace(
+                                            modif_code, modif_code.strip())
 
                                 row["modifiers"] = dict(modifiers_dict)
                             except Exception:
 
                                 logging.critical("Error removing leading/trailing spaces in modifiers")
 
-                                QMessageBox.critical(self, programName, "Error removing leading/trailing spaces in modifiers")
+                                QMessageBox.critical(self, programName,
+                                                     "Error removing leading/trailing spaces in modifiers")
 
                         else:
                             row["modifiers"] = eval(row["modifiers"])
@@ -1603,7 +1587,6 @@ class projectDialog(QDialog, Ui_dlgProject):
 
             if self.twBehaviors.item(r, behavioursFields["coding map"]).text():
                 codingMapsList.append(self.twBehaviors.item(r, behavioursFields["coding map"]).text())
-
 
         # remove coding map from project if not in ethogram
         cmToDelete = []
@@ -1627,11 +1610,10 @@ class projectDialog(QDialog, Ui_dlgProject):
                         behavior_category.append((self.obs[idx][BEHAVIOR_CODE], self.obs[idx][BEHAVIOR_CATEGORY]))
         if behavior_category:
 
-            response = dialog.MessageDialog(f"{programName} - Behavioral categories",
-                                            ("The behavioral categorie(s) "
-                                             f"{', '.join(set(['<b>' + x[1] + '</b>' + ' (used with <b>' + x[0] + '</b>)' for x in behavior_category]))} "
-                                             "are no more defined in behavioral categories list"),
-                                            ["Add behavioral category/ies", "Ignore", CANCEL])
+            response = dialog.MessageDialog(f"{programName} - Behavioral categories", (
+                "The behavioral categorie(s) "
+                f"{', '.join(set(['<b>' + x[1] + '</b>' + ' (used with <b>' + x[0] + '</b>)' for x in behavior_category]))} "
+                "are no more defined in behavioral categories list"), ["Add behavioral category/ies", "Ignore", CANCEL])
             if response == "Add behavioral category/ies":
                 [self.pj[BEHAVIORAL_CATEGORIES].append(x1) for x1 in set(x[1] for x in behavior_category)]
             if response == CANCEL:
@@ -1653,8 +1635,9 @@ class projectDialog(QDialog, Ui_dlgProject):
                 if self.twVariables.item(r, idx):
                     # check if label is empty
                     if field == "label" and self.twVariables.item(r, idx).text() == "":
-                        QMessageBox.warning(self, programName,
-                                            f"The label of an indipendent variable can not be empty (check row #{r + 1}).")
+                        QMessageBox.warning(
+                            self, programName,
+                            f"The label of an indipendent variable can not be empty (check row #{r + 1}).")
                         return
                     row[field] = self.twVariables.item(r, idx).text().strip()
                 else:
@@ -1667,14 +1650,14 @@ class projectDialog(QDialog, Ui_dlgProject):
         # converters
         converters = {}
         for row in range(self.tw_converters.rowCount()):
-            converters[self.tw_converters.item(row, 0).text()] = {"name": self.tw_converters.item(row, 0).text(),
-                                                                  "description": self.tw_converters.item(row, 1).text(),
-                                                                  "code": self.tw_converters.item(row, 2).text().replace("@", "\n")
-                                                                  }
+            converters[self.tw_converters.item(row, 0).text()] = {
+                "name": self.tw_converters.item(row, 0).text(),
+                "description": self.tw_converters.item(row, 1).text(),
+                "code": self.tw_converters.item(row, 2).text().replace("@", "\n")
+            }
         self.pj[CONVERTERS] = dict(converters)
 
         self.accept()
-
 
     def pb_code_help_clicked(self):
         """
@@ -1684,28 +1667,31 @@ class projectDialog(QDialog, Ui_dlgProject):
         msg.setIcon(QMessageBox.Information)
         msg.setWindowTitle("Help for writing converters")
 
-        msg.setText(("A converter is a function that will convert a time value from external data into seconds.<br>"
-                     "A time value like 00:23:59 must be converted into seconds before to be plotted synchronously with your media.<br>"
-                     "For this you can use BORIS native converters or write your own converter.<br>"
-                     "A converter must be written using the <a href=\"www.python.org\">Python3</a> language.<br>"
-                     ))
+        msg.setText((
+            "A converter is a function that will convert a time value from external data into seconds.<br>"
+            "A time value like 00:23:59 must be converted into seconds before to be plotted synchronously with your media.<br>"
+            "For this you can use BORIS native converters or write your own converter.<br>"
+            "A converter must be written using the <a href=\"www.python.org\">Python3</a> language.<br>"))
 
         # msg.setInformativeText("This is additional information")
 
         msg.setStandardButtons(QMessageBox.Ok)
         msg.exec_()
 
-
     def add_converter(self):
         """Add a new converter"""
 
-        for w in [self.le_converter_name, self.le_converter_description, self.pteCode, self.pb_save_converter, self.pb_cancel_converter]:
+        for w in [
+                self.le_converter_name, self.le_converter_description, self.pteCode, self.pb_save_converter,
+                self.pb_cancel_converter
+        ]:
             w.setEnabled(True)
         # disable buttons
-        for w in [self.pb_add_converter, self.pb_modify_converter, self.pb_delete_converter,
-                  self.pb_load_from_file, self.pb_load_from_repo, self.tw_converters]:
+        for w in [
+                self.pb_add_converter, self.pb_modify_converter, self.pb_delete_converter, self.pb_load_from_file,
+                self.pb_load_from_repo, self.tw_converters
+        ]:
             w.setEnabled(False)
-
 
     def modify_converter(self):
         """Modifiy the selected converter"""
@@ -1715,22 +1701,29 @@ class projectDialog(QDialog, Ui_dlgProject):
                 QMessageBox.warning(self, programName, "Select a converter in the table")
                 return
 
-            for w in [self.le_converter_name, self.le_converter_description, self.pteCode, self.pb_save_converter, self.pb_cancel_converter]:
+            for w in [
+                    self.le_converter_name, self.le_converter_description, self.pteCode, self.pb_save_converter,
+                    self.pb_cancel_converter
+            ]:
                 w.setEnabled(True)
 
             # disable buttons
-            for w in [self.pb_add_converter, self.pb_modify_converter, self.pb_delete_converter,
-                    self.pb_load_from_file, self.pb_load_from_repo, self.tw_converters]:
+            for w in [
+                    self.pb_add_converter, self.pb_modify_converter, self.pb_delete_converter, self.pb_load_from_file,
+                    self.pb_load_from_repo, self.tw_converters
+            ]:
                 w.setEnabled(False)
 
-            self.le_converter_name.setText(self.tw_converters.item(self.tw_converters.selectedIndexes()[0].row(), 0).text())
-            self.le_converter_description.setText(self.tw_converters.item(self.tw_converters.selectedIndexes()[0].row(), 1).text())
-            self.pteCode.setPlainText(self.tw_converters.item(self.tw_converters.selectedIndexes()[0].row(), 2).text().replace("@", "\n"))
+            self.le_converter_name.setText(
+                self.tw_converters.item(self.tw_converters.selectedIndexes()[0].row(), 0).text())
+            self.le_converter_description.setText(
+                self.tw_converters.item(self.tw_converters.selectedIndexes()[0].row(), 1).text())
+            self.pteCode.setPlainText(
+                self.tw_converters.item(self.tw_converters.selectedIndexes()[0].row(), 2).text().replace("@", "\n"))
 
             self.row_in_modification = self.tw_converters.selectedIndexes()[0].row()
         except Exception:
             dialog.error_message2()
-
 
     def code_2_func(self, name, code):
         """
@@ -1751,7 +1744,6 @@ class projectDialog(QDialog, Ui_dlgProject):
 
         return function
 
-
     def save_converter(self):
         """Save converter"""
 
@@ -1762,7 +1754,8 @@ class projectDialog(QDialog, Ui_dlgProject):
             return
 
         if not self.le_converter_name.text().replace("_", "a").isalnum():
-            QMessageBox.critical(self, "BORIS", "Forbidden characters are used in converter name.<br>Use a..z, A..Z, 0..9 _")
+            QMessageBox.critical(self, "BORIS",
+                                 "Forbidden characters are used in converter name.<br>Use a..z, A..Z, 0..9 _")
             return
 
         # test code with exec
@@ -1801,10 +1794,11 @@ class projectDialog(QDialog, Ui_dlgProject):
         self.flag_modified = True
 
         # enable buttons
-        for w in [self.pb_add_converter, self.pb_modify_converter, self.pb_delete_converter,
-                  self.pb_load_from_file, self.pb_load_from_repo, self.tw_converters]:
+        for w in [
+                self.pb_add_converter, self.pb_modify_converter, self.pb_delete_converter, self.pb_load_from_file,
+                self.pb_load_from_repo, self.tw_converters
+        ]:
             w.setEnabled(True)
-
 
     def cancel_converter(self):
         """Cancel converter"""
@@ -1816,10 +1810,11 @@ class projectDialog(QDialog, Ui_dlgProject):
         self.pb_cancel_converter.setEnabled(False)
 
         # enable buttons
-        for w in [self.pb_add_converter, self.pb_modify_converter, self.pb_delete_converter,
-                  self.pb_load_from_file, self.pb_load_from_repo, self.tw_converters]:
+        for w in [
+                self.pb_add_converter, self.pb_modify_converter, self.pb_delete_converter, self.pb_load_from_file,
+                self.pb_load_from_repo, self.tw_converters
+        ]:
             w.setEnabled(True)
-
 
     def delete_converter(self):
         """Delete selected converter"""
@@ -1830,7 +1825,6 @@ class projectDialog(QDialog, Ui_dlgProject):
         else:
             QMessageBox.warning(self, programName, "Select a converter in the table")
 
-
     def load_converters_in_table(self):
         """
         load converters in table
@@ -1839,15 +1833,13 @@ class projectDialog(QDialog, Ui_dlgProject):
 
         for converter in sorted(self.converters.keys()):
             self.tw_converters.setRowCount(self.tw_converters.rowCount() + 1)
-            self.tw_converters.setItem(self.tw_converters.rowCount() - 1, 0,
-                                       QTableWidgetItem(converter))  # id / name
+            self.tw_converters.setItem(self.tw_converters.rowCount() - 1, 0, QTableWidgetItem(converter))  # id / name
             self.tw_converters.setItem(self.tw_converters.rowCount() - 1, 1,
                                        QTableWidgetItem(self.converters[converter]["description"]))
             self.tw_converters.setItem(self.tw_converters.rowCount() - 1, 2,
                                        QTableWidgetItem(self.converters[converter]["code"].replace("\n", "@")))
 
         [self.tw_converters.resizeColumnToContents(idx) for idx in [0, 1]]
-
 
     def load_converters_from_file_repo(self, mode):
         """
@@ -1876,15 +1868,16 @@ class projectDialog(QDialog, Ui_dlgProject):
             try:
                 converters_from_repo = urllib.request.urlopen(converters_repo_URL).read().strip().decode("utf-8")
             except Exception:
-                QMessageBox.critical(self, programName, "An error occured during retrieving converters from BORIS remote repository")
+                QMessageBox.critical(self, programName,
+                                     "An error occured during retrieving converters from BORIS remote repository")
                 return
 
             try:
                 converters_from_file = eval(converters_from_repo)["BORIS converters"]
             except Exception:
-                QMessageBox.critical(self, programName, "An error occured during retrieving converters from BORIS remote repository")
+                QMessageBox.critical(self, programName,
+                                     "An error occured during retrieving converters from BORIS remote repository")
                 return
-
 
         if converters_from_file:
 
@@ -1907,19 +1900,20 @@ class projectDialog(QDialog, Ui_dlgProject):
                         if converter in converter_names:
                             while True:
                                 text, ok = QInputDialog.getText(self, "Converter conflict",
-                                                                      "The converter already exists<br>Rename it:",
-                                                                      QLineEdit.Normal,
-                                                                      converter)
+                                                                "The converter already exists<br>Rename it:",
+                                                                QLineEdit.Normal, converter)
                                 if not ok:
                                     break
                                 if text in converter_names:
                                     QMessageBox.critical(self, programName, "This name already exists in converters")
 
                                 if not text.replace("_", "a").isalnum():
-                                    QMessageBox.critical(self, programName,
-                                                         "This name contains forbidden character(s).<br>Use a..z, A..Z, 0..9 _")
+                                    QMessageBox.critical(
+                                        self, programName,
+                                        "This name contains forbidden character(s).<br>Use a..z, A..Z, 0..9 _")
 
-                                if text != converter and text not in converter_names and text.replace("_", "a").isalnum():
+                                if text != converter and text not in converter_names and text.replace("_",
+                                                                                                      "a").isalnum():
                                     break
 
                             if ok:
@@ -1941,11 +1935,10 @@ class projectDialog(QDialog, Ui_dlgProject):
                                                    QTableWidgetItem(converter_name))
                         self.tw_converters.setItem(self.tw_converters.rowCount() - 1, 1,
                                                    QTableWidgetItem(converters_from_file[converter]["description"]))
-                        self.tw_converters.setItem(self.tw_converters.rowCount() - 1, 2,
-                                                   QTableWidgetItem(converters_from_file[converter]["code"].replace("\n", "@")))
+                        self.tw_converters.setItem(
+                            self.tw_converters.rowCount() - 1, 2,
+                            QTableWidgetItem(converters_from_file[converter]["code"].replace("\n", "@")))
 
                         self.flag_modified = True
 
                 [self.tw_converters.resizeColumnToContents(idx) for idx in [0, 1]]
-
-

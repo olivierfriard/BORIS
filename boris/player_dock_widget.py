@@ -1,7 +1,7 @@
 """
 BORIS
 Behavioral Observation Research Interactive Software
-Copyright 2012-2021 Olivier Friard
+Copyright 2012-2022 Olivier Friard
 
 This file is part of BORIS.
 
@@ -22,12 +22,11 @@ This file is part of BORIS.
 
 # add misc directory to search path for mpv-1.dll
 import os
+
 os.environ["PATH"] = os.path.dirname(__file__) + os.sep + "misc" + os.pathsep + os.environ["PATH"]
 
 from boris import mpv
-from PyQt5.QtWidgets import (QLabel, QDockWidget, QWidget,
-                             QHBoxLayout, QSlider, QSizePolicy, QStackedWidget
-                             )
+from PyQt5.QtWidgets import (QLabel, QDockWidget, QWidget, QHBoxLayout, QSlider, QSizePolicy, QStackedWidget)
 from PyQt5.QtCore import (pyqtSignal, QEvent, Qt)
 
 import logging
@@ -61,7 +60,6 @@ class DW2(QDockWidget):
     view_signal = pyqtSignal(int, str, int)
     resize_signal = pyqtSignal(int)
 
-
     def __init__(self, id_, parent=None):
         super().__init__(parent)
         self.id_ = id_
@@ -74,14 +72,15 @@ class DW2(QDockWidget):
 
         self.videoframe = QWidget(self)
 
-        self.player = mpv.MPV(wid=str(int(self.videoframe.winId())),
-                              #vo='x11', # You may not need this
-                              log_handler=None,
-                              loglevel="debug")
+        self.player = mpv.MPV(
+            wid=str(int(self.videoframe.winId())),
+            #vo='x11', # You may not need this
+            log_handler=None,
+            loglevel="debug")
 
         self.player.screenshot_format = "png"
         self.hlayout.addWidget(self.videoframe)
-        
+
         self.volume_slider = QSlider(Qt.Vertical, self)
         self.volume_slider.setFocusPolicy(Qt.NoFocus)
         self.volume_slider.setMaximum(100)
@@ -109,7 +108,6 @@ class DW2(QDockWidget):
 
         self.setWidget(self.stack)
         self.stack.setCurrentIndex(0)
-        
 
     def volume_slider_moved(self):
         """
@@ -117,13 +115,11 @@ class DW2(QDockWidget):
         """
         self.volume_slider_moved_signal.emit(self.id_, self.volume_slider.value())
 
-
     def keyPressEvent(self, event):
         """
         emit signal when key pressed on dock widget
         """
         self.key_pressed_signal.emit(event)
-
 
     '''
     def view_signal_triggered(self, msg, button):
@@ -132,7 +128,6 @@ class DW2(QDockWidget):
         """
         self.view_signal.emit(self.id_, msg, button)
     '''
-
 
     def resizeEvent(self, dummy):
         """
