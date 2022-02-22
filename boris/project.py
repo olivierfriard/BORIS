@@ -49,9 +49,9 @@ from .config import (programName, behavioursFields, tw_indVarFields, subjectsFie
                      PROJECT_BEHAVIORS_CODE_FIELD_IDX, TYPE, HHMMSS, S, NO)
 
 from .project_ui import Ui_dlgProject
-import .utilities as utilities
-import .dialog as dialog
-import .project_functions as project_functions
+from . import utilities
+from . import dialog
+from .project_functions import project_functions
 
 
 class BehavioralCategories(QDialog):
