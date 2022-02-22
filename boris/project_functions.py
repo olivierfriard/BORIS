@@ -27,14 +27,14 @@ import sys
 from decimal import Decimal as dec
 from shutil import copyfile
 import gzip
-from boris import portion as I
+from . import portion as I
 
-from boris import db_functions
-from boris import dialog
-from boris import select_observations
+from . import db_functions
+from . import dialog
+from . import select_observations
 import tablib
-from boris import utilities
-from boris.config import *
+from . import utilities
+from .config import *
 
 
 def check_observation_exhaustivity(events: list, ethogram: list, state_events_list: list = []):
