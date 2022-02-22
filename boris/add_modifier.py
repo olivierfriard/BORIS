@@ -26,10 +26,10 @@ from PyQt5.QtCore import *
 from PyQt5.QtGui import *
 from PyQt5.QtWidgets import *
 
-from boris import dialog
-from boris.add_modifier_ui import Ui_Dialog
-from boris.config import *
-from boris.utilities import sorted_keys
+from . import dialog
+from .add_modifier_ui import Ui_Dialog
+from .config import *
+from .utilities import sorted_keys
 
 
 class addModifierDialog(QDialog, Ui_Dialog):
