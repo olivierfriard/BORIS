@@ -41,7 +41,9 @@ from boris import export_observation
 from boris import param_panel
 from boris import exclusion_matrix
 from boris import project_import
-from boris.config import *
+from boris.config import (programName, behavioursFields, subjectsFields, function_keys, YES, CANCEL,
+                          BEHAVIORAL_CATEGORIES, ETHOGRAM, BEHAVIOR_CATEGORY, BEHAVIOR_CODE, BEHAVIORS_CODING_MAP,
+                          PROJECT_BEHAVIORS_KEY_FIELD_IDX, PROJECT_BEHAVIORS_CODE_FIELD_IDX, TYPE)
 
 from boris.project_ui import Ui_dlgProject
 import boris.utilities as utilities
@@ -475,13 +477,32 @@ class projectDialog(QDialog, Ui_dlgProject):
                 ethogram_data.title = f"Ethogram of {self.leProjectName.text()} project"
 
             ethogram_data.headers = [
-                "Behavior code", "Behavior type", "Description", "Key", "Behavioral category", "Excluded behaviors"
+                "Behavior code", "Behavior type", "Description", "Key", "Behavioral category", "Excluded behaviors",
+                "modifiers names and values", "modifiers (JSON)"
             ]
 
             for r in range(self.twBehaviors.rowCount()):
                 row = []
                 for field in ["code", TYPE, "description", "key", "category", "excluded"]:
                     row.append(self.twBehaviors.item(r, behavioursFields[field]).text())
+
+                # modifiers
+                if self.twBehaviors.item(r, behavioursFields["modifiers"]).text():
+                    modifiers_dict = eval(self.twBehaviors.item(r, behavioursFields["modifiers"]).text())
+                    modifiers_list = []
+                    for key in modifiers_dict:
+                        if modifiers_dict[key]['values']:
+                            values = ", ".join(modifiers_dict[key]['values'])
+                            modifiers_list.append(f"{modifiers_dict[key]['name']} ({values})")
+                        else:
+                            modifiers_list.append(modifiers_dict[key]['name'])
+
+                    row.append(", ".join(modifiers_list))
+                    row.append(json.dumps(modifiers_dict))
+                else:
+                    row.append("")
+                    row.append("")
+
                 ethogram_data.append(row)
 
             ok, msg = export_observation.dataset_write(ethogram_data, fileName, outputFormat)
