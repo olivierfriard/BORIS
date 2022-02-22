@@ -35,12 +35,12 @@ from PyQt5.QtCore import Qt
 from PyQt5.QtGui import *
 from PyQt5.QtWidgets import *
 
-from boris import add_modifier
-from boris import dialog
-from boris import export_observation
-from boris import param_panel
-from boris import exclusion_matrix
-from boris import project_import
+from . import add_modifier
+from . import dialog
+from . import export_observation
+from . import param_panel
+from . import exclusion_matrix
+from . import project_import
 from .config import (programName, behavioursFields, tw_indVarFields, subjectsFields, function_keys, REMOVE, YES, CANCEL,
                      MULTI_SELECTION, OK, OBSERVATIONS, EVENTS, TIMESTAMP, NUMERIC, SET_OF_VALUES, SET_OF_VALUES_idx,
                      EVENT_BEHAVIOR_FIELD_IDX, EVENT_SUBJECT_FIELD_IDX, INDEPENDENT_VARIABLES, CONVERTERS, CODING_MAP,
@@ -48,10 +48,10 @@ from .config import (programName, behavioursFields, tw_indVarFields, subjectsFie
                      AVAILABLE_INDEP_VAR_TYPES, NUMERIC_idx, BEHAVIOR_TYPES, PROJECT_BEHAVIORS_KEY_FIELD_IDX,
                      PROJECT_BEHAVIORS_CODE_FIELD_IDX, TYPE, HHMMSS, S, NO)
 
-from boris.project_ui import Ui_dlgProject
-import boris.utilities as utilities
-import boris.dialog as dialog
-import boris.project_functions as project_functions
+from .project_ui import Ui_dlgProject
+import .utilities as utilities
+import .dialog as dialog
+import .project_functions as project_functions
 
 
 class BehavioralCategories(QDialog):
