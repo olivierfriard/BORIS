@@ -51,7 +51,7 @@ from .config import (programName, behavioursFields, tw_indVarFields, subjectsFie
 from .project_ui import Ui_dlgProject
 from . import utilities
 from . import dialog
-from .project_functions import project_functions
+from . import project_functions
 
 
 class BehavioralCategories(QDialog):
