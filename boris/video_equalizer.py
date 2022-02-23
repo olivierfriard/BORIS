@@ -31,6 +31,7 @@ class Video_equalizer(QDialog, Ui_Equalizer):
     """
 
     sendEventSignal = pyqtSignal(int, str, int)
+    sendKeyPressSignal = pyqtSignal(QEvent)
 
     def __init__(self, equalizer, parent=None):
         super().__init__(parent)
@@ -50,6 +51,8 @@ class Video_equalizer(QDialog, Ui_Equalizer):
 
         for n_player in self.equalizer:
             self.cb_player.addItem(f"Player {n_player + 1}")
+
+        self.installEventFilter(self)
 
         self.initialize(0)
 
@@ -105,6 +108,17 @@ class Video_equalizer(QDialog, Ui_Equalizer):
         self.sendEventSignal.emit(self.cb_player.currentIndex(), self.sender().objectName(), self.sender().value())
 
         self.initialize(self.cb_player.currentIndex())
+
+
+    def eventFilter(self, receiver, event):
+        """
+        send event (if keypress) to main window
+        """
+        if (event.type() == QEvent.KeyPress):
+            self.sendKeyPressSignal.emit(event)
+            return True
+        else:
+            return False
 
 
 if __name__ == '__main__':

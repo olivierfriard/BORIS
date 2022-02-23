@@ -892,8 +892,13 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.pb_live_obs.clicked.connect(self.start_live_observation)
 
     def video_equalizer_show(self):
+        """
+        Video equalizer
+        """
         def update_parameter(n_player, parameter, value):
-
+            """
+            update player parameter with value received by signal
+            """
             if parameter == "hs_brightness":
                 self.dw_player[n_player].player.brightness = value
             if parameter == "hs_contrast":
@@ -918,7 +923,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         self.w = video_equalizer.Video_equalizer(equalizer)
         self.w.sendEventSignal.connect(update_parameter)
-
+        # send key press events received by widget to main window
+        self.w.sendKeyPressSignal.connect(self.signal_from_widget)
         #self.w.equalizer = equalizer
 
         self.w.show()
