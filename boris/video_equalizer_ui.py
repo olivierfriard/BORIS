@@ -120,7 +120,7 @@ class Ui_Equalizer(object):
 
     def retranslateUi(self, Equalizer):
         _translate = QtCore.QCoreApplication.translate
-        Equalizer.setWindowTitle(_translate("Equalizer", "Edit event"))
+        Equalizer.setWindowTitle(_translate("Equalizer", "Video equalizer"))
         self.label_6.setText(_translate("Equalizer", "Video equalizer"))
         self.label_5.setText(_translate("Equalizer", "Hue"))
         self.label_2.setText(_translate("Equalizer", "Contrast"))
