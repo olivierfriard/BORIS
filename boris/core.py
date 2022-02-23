@@ -96,6 +96,8 @@ from boris.time_budget_widget import timeBudgetResults
 from boris.utilities import *
 from boris import player_dock_widget
 
+from . import video_equalizer
+
 __version__ = version.__version__
 __version_date__ = version.__version_date__
 
@@ -655,6 +657,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.actionJumpTo.triggered.connect(self.jump_to)
         self.actionZoom_level.triggered.connect(self.zoom_level)
         self.actionDisplay_subtitles.triggered.connect(self.display_subtitles)
+        self.actionVideo_equalizer.triggered.connect(self.video_equalizer_show)
 
         # menu Tools
         self.action_block_dockwidgets.triggered.connect(self.block_dockwidgets)
@@ -823,6 +826,12 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.automaticBackupTimer.start(self.automaticBackup * 60000)
 
         self.pb_live_obs.clicked.connect(self.start_live_observation)
+
+    def video_equalizer_show(self):
+        self.w = video_equalizer.Video_equalizer()
+        print(self.w)
+        self.w.show()
+        print("show2")
 
     def block_dockwidgets(self):
         """

@@ -24,9 +24,7 @@ from PyQt5.QtGui import *
 from PyQt5.QtCore import *
 from PyQt5.QtWidgets import *
 
-import json
 import binascii
-import os
 
 
 class ModifiersCodingMapWindowClass(QDialog):

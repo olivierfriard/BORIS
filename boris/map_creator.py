@@ -31,8 +31,9 @@ import json
 import binascii
 import os
 
-from boris.config import *
-from boris import dialog
+from . import config as cfg
+
+from . import dialog
 
 designColor = QColor(255, 0, 0, 128)  # red opacity: 50%
 penWidth = 0
@@ -459,7 +460,7 @@ class ModifiersMapCreatorWindow(QMainWindow):
                                         QLineEdit.Normal, self.mapName)
         if ok:
             self.mapName = text
-            self.setWindowTitle("{} - Modifiers map creator tool - {}".format(programName, self.mapName))
+            self.setWindowTitle("{} - Modifiers map creator tool - {}".format(cfg.programName, self.mapName))
 
     def newMap(self):
         """
@@ -468,7 +469,7 @@ class ModifiersMapCreatorWindow(QMainWindow):
 
         if self.flagMapChanged:
 
-            response = dialog.MessageDialog(programName + ' - Modifiers map creator',
+            response = dialog.MessageDialog(cfg.programName + ' - Modifiers map creator',
                                             'What to do about the current unsaved coding map?',
                                             ['Save', 'Discard', 'Cancel'])
 
@@ -495,7 +496,7 @@ class ModifiersMapCreatorWindow(QMainWindow):
             QMessageBox.critical(self, '', 'This name is not allowed')
             return
 
-        self.setWindowTitle(programName + ' - Map creator tool - ' + self.mapName)
+        self.setWindowTitle(cfg.programName + ' - Map creator tool - ' + self.mapName)
 
         self.btLoad.setVisible(True)
         '''self.btCancelMap.setVisible(True)'''
@@ -509,7 +510,7 @@ class ModifiersMapCreatorWindow(QMainWindow):
         """
         if self.flagMapChanged:
 
-            response = dialog.MessageDialog(programName + ' - Map creator',
+            response = dialog.MessageDialog(cfg.programName + ' - Map creator',
                                             'What to do about the current unsaved coding map?',
                                             ['Save', 'Discard', 'Cancel'])
 
@@ -529,7 +530,7 @@ class ModifiersMapCreatorWindow(QMainWindow):
             try:
                 self.codingMap = json.loads(open(fileName, 'r').read())
             except:
-                QMessageBox.critical(self, programName,
+                QMessageBox.critical(self, cfg.programName,
                                      "The file {} seems not a behaviors coding map...".format(fileName))
                 return
 
@@ -537,7 +538,7 @@ class ModifiersMapCreatorWindow(QMainWindow):
 
             self.mapName = self.codingMap['name']
 
-            self.setWindowTitle(programName + ' - Map creator tool - ' + self.mapName)
+            self.setWindowTitle(cfg.programName + ' - Map creator tool - ' + self.mapName)
 
             self.bitmapFileName = True
 
@@ -659,7 +660,7 @@ class ModifiersMapCreatorWindow(QMainWindow):
     def newArea(self):
 
         if not self.bitmapFileName:
-            QMessageBox.critical(self, programName, "A bitmap must be loaded before to define areas")
+            QMessageBox.critical(self, cfg.programName, "A bitmap must be loaded before to define areas")
             return
 
         if self.selectedPolygon:
@@ -684,29 +685,29 @@ class ModifiersMapCreatorWindow(QMainWindow):
 
         if not self.closedPolygon:
             QMessageBox.critical(
-                self, programName,
+                self, cfg.programName,
                 'You must close your area before saving it.\nThe last vertex must correspond to the first one.')
 
         if len(self.view.points) < 3:
-            QMessageBox.critical(self, programName, 'You must define a closed area')
+            QMessageBox.critical(self, cfg.programName, 'You must define a closed area')
             return
 
         # check if no area code
         if not self.leAreaCode.text():
-            QMessageBox.critical(self, programName, 'You must define a code for the new modifier')
+            QMessageBox.critical(self, cfg.programName, 'You must define a code for the new modifier')
             return
 
         # check if not allowed character
         for c in "|,()":
             if c in self.leAreaCode.text():
-                QMessageBox.critical(self, programName,
+                QMessageBox.critical(self, cfg.programName,
                                      'The modifier contains a character that is not allowed <b>()|,</b>.')
                 return
 
         # check if area code already used
 
         if self.leAreaCode.text() in self.areasList:
-            QMessageBox.critical(self, programName, "The modifier is already in use")
+            QMessageBox.critical(self, cfg.programName, "The modifier is already in use")
             return
 
         # create polygon
@@ -849,7 +850,8 @@ class ModifiersMapCreatorWindow(QMainWindow):
             if self.pixmap.size().width() > maxSize or self.pixmap.size().height() > maxSize:
                 self.pixmap = self.pixmap.scaled(maxSize, maxSize, Qt.KeepAspectRatio)
                 QMessageBox.information(
-                    self, programName, 'The bitmap was resized to %d x %d pixels\nThe original file was not modified' %
+                    self, cfg.programName,
+                    'The bitmap was resized to %d x %d pixels\nThe original file was not modified' %
                     (self.pixmap.size().width(), self.pixmap.size().height()))
 
             # scale image

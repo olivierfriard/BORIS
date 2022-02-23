@@ -26,8 +26,10 @@ from PyQt5.QtCore import *
 from PyQt5.QtWidgets import *
 
 import re
-from boris.config import *
-from boris.utilities import sorted_keys
+
+from . import config as cfg
+
+from .utilities import sorted_keys
 
 
 class ModifiersList(QDialog):
@@ -35,7 +37,7 @@ class ModifiersList(QDialog):
     def __init__(self, code, modifiers_dict, currentModifier):
 
         super().__init__()
-        self.setWindowTitle(programName)
+        self.setWindowTitle(cfg.programName)
         self.setWindowFlags(Qt.WindowStaysOnTopHint)
 
         self.modifiers_dict = dict(modifiers_dict)
@@ -51,7 +53,9 @@ class ModifiersList(QDialog):
 
         for idx in sorted_keys(modifiers_dict):
 
-            if self.modifiers_dict[idx]["type"] not in [SINGLE_SELECTION, MULTI_SELECTION, NUMERIC_MODIFIER]:
+            if self.modifiers_dict[idx]["type"] not in [
+                    cfg.SINGLE_SELECTION, cfg.MULTI_SELECTION, cfg.NUMERIC_MODIFIER
+            ]:
                 continue
 
             V2layout = QVBoxLayout()
@@ -62,20 +66,20 @@ class ModifiersList(QDialog):
             lb.setText(f"Modifier <b>{self.modifiers_dict[idx]['name']}</b>")
             V2layout.addWidget(lb)
 
-            if self.modifiers_dict[idx]["type"] in [SINGLE_SELECTION, MULTI_SELECTION]:
+            if self.modifiers_dict[idx]["type"] in [cfg.SINGLE_SELECTION, cfg.MULTI_SELECTION]:
                 lw = QListWidget()
                 self.modifiers_dict[idx]["widget"] = lw
                 lw.setObjectName(f"lw_modifiers_({self.modifiers_dict[idx]['type']})")
                 lw.installEventFilter(self)
 
-                if self.modifiers_dict[idx]["type"] == SINGLE_SELECTION:
+                if self.modifiers_dict[idx]["type"] == cfg.SINGLE_SELECTION:
                     item = QListWidgetItem("None")
                     lw.addItem(item)
                     item.setSelected(True)
 
                 for modifier in self.modifiers_dict[idx]["values"]:
                     item = QListWidgetItem(modifier)
-                    if self.modifiers_dict[idx]["type"] == MULTI_SELECTION:
+                    if self.modifiers_dict[idx]["type"] == cfg.MULTI_SELECTION:
                         item.setCheckState(Qt.Unchecked)
 
                         # previously selected
@@ -88,7 +92,7 @@ class ModifiersList(QDialog):
 
                     lw.addItem(item)
 
-                    if self.modifiers_dict[idx]["type"] == SINGLE_SELECTION:
+                    if self.modifiers_dict[idx]["type"] == cfg.SINGLE_SELECTION:
                         try:
                             if currentModifierList != [""] and re.sub(" \(.\)", "",
                                                                       modifier) == currentModifierList[int(idx)]:
@@ -97,7 +101,7 @@ class ModifiersList(QDialog):
                             pass
                 V2layout.addWidget(lw)
 
-            if self.modifiers_dict[idx]["type"] in [NUMERIC_MODIFIER]:
+            if self.modifiers_dict[idx]["type"] in [cfg.NUMERIC_MODIFIER]:
                 le = QLineEdit()
                 self.modifiers_dict[idx]["widget"] = le
 
@@ -117,11 +121,11 @@ class ModifiersList(QDialog):
         H2layout = QHBoxLayout()
         H2layout.addStretch(1)
 
-        pbCancel = QPushButton(CANCEL)
+        pbCancel = QPushButton(cfg.CANCEL)
         pbCancel.clicked.connect(self.reject)
         H2layout.addWidget(pbCancel)
 
-        pbOK = QPushButton(OK)
+        pbOK = QPushButton(cfg.OK)
         pbOK.setDefault(True)
         pbOK.clicked.connect(self.pbOK_clicked)
         H2layout.addWidget(pbOK)
@@ -161,7 +165,7 @@ class ModifiersList(QDialog):
                             # modifiers have no associated code: the modifier starting with hit key will be selected
                             if ek not in [Qt.Key_Down, Qt.Key_Up]:
 
-                                if ek == Qt.Key_Space and f"({MULTI_SELECTION})" in widget.objectName(
+                                if ek == Qt.Key_Space and f"({cfg.MULTI_SELECTION})" in widget.objectName(
                                 ):  # checking using SPACE bar
                                     if widget.item(widget.currentRow()).checkState() == Qt.Checked:
                                         widget.item(widget.currentRow()).setCheckState(Qt.Unchecked)
@@ -185,16 +189,16 @@ class ModifiersList(QDialog):
 
                     for index in range(widget.count()):
 
-                        if ek in function_keys:
-                            if f"({function_keys[ek]})" in widget.item(index).text().upper():
-                                if f"({SINGLE_SELECTION})" in widget.objectName():
+                        if ek in cfg.function_keys:
+                            if f"({cfg.function_keys[ek]})" in widget.item(index).text().upper():
+                                if f"({cfg.SINGLE_SELECTION})" in widget.objectName():
                                     widget.item(index).setSelected(True)
                                     # close dialog if one set of modifiers
                                     if self.modifiersSetNumber == 1:
                                         self.accept()
                                         return True
 
-                                if f"({MULTI_SELECTION})" in widget.objectName():
+                                if f"({cfg.MULTI_SELECTION})" in widget.objectName():
                                     if widget.item(index).checkState() == Qt.Checked:
                                         widget.item(index).setCheckState(Qt.Unchecked)
                                     else:
@@ -202,14 +206,14 @@ class ModifiersList(QDialog):
 
                         if ek < 1114112 and f"({ek_text})" in widget.item(index).text():
 
-                            if f"({SINGLE_SELECTION})" in widget.objectName():
+                            if f"({cfg.SINGLE_SELECTION})" in widget.objectName():
                                 widget.item(index).setSelected(True)
                                 # close dialog if one set of modifiers
                                 if self.modifiersSetNumber == 1:
                                     self.accept()
                                     return True
 
-                            if f"({MULTI_SELECTION})" in widget.objectName():
+                            if f"({cfg.MULTI_SELECTION})" in widget.objectName():
                                 if widget.item(index).checkState() == Qt.Checked:
                                     widget.item(index).setCheckState(Qt.Unchecked)
                                 else:
@@ -227,10 +231,10 @@ class ModifiersList(QDialog):
         modifiers = []
         for idx in sorted_keys(self.modifiers_dict):
 
-            if self.modifiers_dict[idx]["type"] in [SINGLE_SELECTION, MULTI_SELECTION, NUMERIC_MODIFIER]:
+            if self.modifiers_dict[idx]["type"] in [cfg.SINGLE_SELECTION, cfg.MULTI_SELECTION, cfg.NUMERIC_MODIFIER]:
                 self.modifiers_dict[idx]["selected"] = []
 
-            if self.modifiers_dict[idx]["type"] == MULTI_SELECTION:
+            if self.modifiers_dict[idx]["type"] == cfg.MULTI_SELECTION:
                 for j in range(self.modifiers_dict[idx]["widget"].count()):
                     if self.modifiers_dict[idx]["widget"].item(j).checkState() == Qt.Checked:
                         self.modifiers_dict[idx]["selected"].append(
@@ -239,11 +243,11 @@ class ModifiersList(QDialog):
                 if not self.modifiers_dict[idx]["selected"]:
                     self.modifiers_dict[idx]["selected"].append("None")
 
-            if self.modifiers_dict[idx]["type"] == SINGLE_SELECTION:
+            if self.modifiers_dict[idx]["type"] == cfg.SINGLE_SELECTION:
                 for item in self.modifiers_dict[idx]["widget"].selectedItems():
                     self.modifiers_dict[idx]["selected"].append(re.sub(" \(.*\)", "", item.text()))
 
-            if self.modifiers_dict[idx]["type"] == NUMERIC_MODIFIER:
+            if self.modifiers_dict[idx]["type"] == cfg.NUMERIC_MODIFIER:
                 self.modifiers_dict[idx]["selected"] = self.modifiers_dict[idx]["widget"].text(
                 ) if self.modifiers_dict[idx]["widget"].text() else "None"
         '''
@@ -262,13 +266,13 @@ class ModifiersList(QDialog):
     def pbOK_clicked(self):
 
         for idx in sorted_keys(self.modifiers_dict):
-            if self.modifiers_dict[idx]["type"] == NUMERIC_MODIFIER:
+            if self.modifiers_dict[idx]["type"] == cfg.NUMERIC_MODIFIER:
                 if self.modifiers_dict[idx]["widget"].text():
                     try:
                         val = float(self.modifiers_dict[idx]["widget"].text())
                     except Exception:
                         QMessageBox.warning(
-                            self, programName,
+                            self, cfg.programName,
                             "<b>{}</b> is not a numeric value".format(self.modifiers_dict[idx]["widget"].text()))
                         return
 

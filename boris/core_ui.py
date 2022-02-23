@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'core.ui'
+# Form implementation generated from reading ui file 'boris/core.ui'
 #
 # Created by: PyQt5 UI code generator 5.15.2
 #
@@ -530,6 +530,8 @@ class Ui_MainWindow(object):
         self.actionRemove_image_overlay.setObjectName("actionRemove_image_overlay")
         self.actionPlot_events_in_real_time = QtWidgets.QAction(MainWindow)
         self.actionPlot_events_in_real_time.setObjectName("actionPlot_events_in_real_time")
+        self.actionVideo_equalizer = QtWidgets.QAction(MainWindow)
+        self.actionVideo_equalizer.setObjectName("actionVideo_equalizer")
         self.menuHelp.addAction(self.actionUser_guide)
         self.menuHelp.addAction(self.actionCheckUpdate)
         self.menuHelp.addSeparator()
@@ -623,6 +625,8 @@ class Ui_MainWindow(object):
         self.menuPlayback.addAction(self.actionDisplay_subtitles)
         self.menuPlayback.addSeparator()
         self.menuPlayback.addAction(self.menuImage_overlay_on_video_2.menuAction())
+        self.menuPlayback.addSeparator()
+        self.menuPlayback.addAction(self.actionVideo_equalizer)
         self.menuTransitions_flow_diagram.addAction(self.actionCreate_transitions_flow_diagram)
         self.menuTransitions_flow_diagram.addAction(self.actionCreate_transitions_flow_diagram_2)
         self.menu_coding_map_creator.addAction(self.action_create_behaviors_coding_map)
@@ -883,3 +887,4 @@ class Ui_MainWindow(object):
         self.actionAdd_image_overlay_on_video.setText(_translate("MainWindow", "Add"))
         self.actionRemove_image_overlay.setText(_translate("MainWindow", "Remove"))
         self.actionPlot_events_in_real_time.setText(_translate("MainWindow", "Plot events in real time"))
+        self.actionVideo_equalizer.setText(_translate("MainWindow", "Video equalizer"))

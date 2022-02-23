@@ -317,6 +317,8 @@
     <addaction name="actionDisplay_subtitles"/>
     <addaction name="separator"/>
     <addaction name="menuImage_overlay_on_video_2"/>
+    <addaction name="separator"/>
+    <addaction name="actionVideo_equalizer"/>
    </widget>
    <widget class="QMenu" name="menuTools">
     <property name="title">
@@ -1433,6 +1435,11 @@
   <action name="actionPlot_events_in_real_time">
    <property name="text">
     <string>Plot events in real time</string>
+   </property>
+  </action>
+  <action name="actionVideo_equalizer">
+   <property name="text">
+    <string>Video equalizer</string>
    </property>
   </action>
  </widget>

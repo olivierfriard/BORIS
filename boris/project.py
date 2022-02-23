@@ -36,22 +36,32 @@ from PyQt5.QtGui import *
 from PyQt5.QtWidgets import *
 
 from . import add_modifier
-from boris import dialog
-from boris import export_observation
-from boris import param_panel
-from boris import exclusion_matrix
-from boris import project_import
+
+from . import export_observation
+from . import param_panel
+from . import exclusion_matrix
+from . import project_import
+
+from . import config as cfg
+'''
 from .config import (programName, behavioursFields, tw_indVarFields, subjectsFields, function_keys, REMOVE, YES, CANCEL,
                      MULTI_SELECTION, OK, OBSERVATIONS, EVENTS, TIMESTAMP, NUMERIC, SET_OF_VALUES, SET_OF_VALUES_idx,
                      EVENT_BEHAVIOR_FIELD_IDX, EVENT_SUBJECT_FIELD_IDX, INDEPENDENT_VARIABLES, CONVERTERS, CODING_MAP,
                      BEHAVIORAL_CATEGORIES, ETHOGRAM, BEHAVIOR_CATEGORY, SUBJECTS, BEHAVIOR_CODE, BEHAVIORS_CODING_MAP,
                      AVAILABLE_INDEP_VAR_TYPES, NUMERIC_idx, BEHAVIOR_TYPES, PROJECT_BEHAVIORS_KEY_FIELD_IDX,
                      PROJECT_BEHAVIORS_CODE_FIELD_IDX, TYPE, HHMMSS, S, NO)
+'''
 
-from boris.project_ui import Ui_dlgProject
+from .project_ui import Ui_dlgProject
+
+from . import utilities as util
+'''
 import boris.utilities as utilities
-import boris.dialog as dialog
-import boris.project_functions as project_functions
+'''
+
+from . import dialog
+
+from . import project_functions
 
 
 class BehavioralCategories(QDialog):
@@ -73,8 +83,8 @@ class BehavioralCategories(QDialog):
 
         self.lw = QListWidget()
 
-        if BEHAVIORAL_CATEGORIES in pj:
-            for category in pj[BEHAVIORAL_CATEGORIES]:
+        if cfg.BEHAVIORAL_CATEGORIES in pj:
+            for category in pj[cfg.BEHAVIORAL_CATEGORIES]:
                 self.lw.addItem(QListWidgetItem(category))
 
         self.vbox.addWidget(self.lw)
@@ -124,19 +134,19 @@ class BehavioralCategories(QDialog):
             # check if behavioral category is in use
             category_to_remove = self.lw.item(self.lw.row(SelectedItem)).text().strip()
             behaviors_in_category = []
-            for idx in self.pj[ETHOGRAM]:
-                if BEHAVIOR_CATEGORY in self.pj[ETHOGRAM][idx] and self.pj[ETHOGRAM][idx][
-                        BEHAVIOR_CATEGORY] == category_to_remove:
-                    behaviors_in_category.append(self.pj[ETHOGRAM][idx][BEHAVIOR_CODE])
+            for idx in self.pj[cfg.ETHOGRAM]:
+                if cfg.BEHAVIOR_CATEGORY in self.pj[cfg.ETHOGRAM][idx] and self.pj[cfg.ETHOGRAM][idx][
+                        cfg.BEHAVIOR_CATEGORY] == category_to_remove:
+                    behaviors_in_category.append(self.pj[cfg.ETHOGRAM][idx][cfg.BEHAVIOR_CODE])
             flag_remove = False
             if behaviors_in_category:
 
-                flag_remove = dialog.MessageDialog(programName,
+                flag_remove = dialog.MessageDialog(cfg.programName,
                                                    ("Some behavior belong to the <b>{1}</b> to remove:<br>"
                                                     "{0}<br>"
                                                     "<br>Some features may not be available anymore.<br>").format(
                                                         "<br>".join(behaviors_in_category), category_to_remove),
-                                                   ["Remove category", CANCEL]) == "Remove category"
+                                                   ["Remove category", cfg.CANCEL]) == "Remove category"
 
             else:
                 flag_remove = True
@@ -154,17 +164,18 @@ class BehavioralCategories(QDialog):
             # check if behavioral category is in use
             category_to_rename = self.lw.item(self.lw.row(SelectedItem)).text().strip()
             behaviors_in_category = []
-            for idx in self.pj[ETHOGRAM]:
-                if BEHAVIOR_CATEGORY in self.pj[ETHOGRAM][idx] and self.pj[ETHOGRAM][idx][
-                        BEHAVIOR_CATEGORY] == category_to_rename:
-                    behaviors_in_category.append(self.pj[ETHOGRAM][idx][BEHAVIOR_CODE])
+            for idx in self.pj[cfg.ETHOGRAM]:
+                if cfg.BEHAVIOR_CATEGORY in self.pj[cfg.ETHOGRAM][idx] and self.pj[cfg.ETHOGRAM][idx][
+                        cfg.BEHAVIOR_CATEGORY] == category_to_rename:
+                    behaviors_in_category.append(self.pj[cfg.ETHOGRAM][idx][cfg.BEHAVIOR_CODE])
 
             flag_rename = False
             if behaviors_in_category:
-                flag_rename = dialog.MessageDialog(programName, ("Some behavior belong to the <b>{1}</b> to rename:<br>"
-                                                                 "{0}<br>").format("<br>".join(behaviors_in_category),
-                                                                                   category_to_rename),
-                                                   ["Rename category", CANCEL]) == "Rename category"
+                flag_rename = dialog.MessageDialog(cfg.programName,
+                                                   ("Some behavior belong to the <b>{1}</b> to rename:<br>"
+                                                    "{0}<br>").format("<br>".join(behaviors_in_category),
+                                                                      category_to_rename),
+                                                   ["Rename category", cfg.CANCEL]) == "Rename category"
             else:
                 flag_rename = True
 
@@ -308,41 +319,41 @@ class projectDialog(QDialog, Ui_dlgProject):
 
         try:
             if not self.twBehaviors.rowCount():
-                QMessageBox.critical(None, programName, "The ethogram is empty", QMessageBox.Ok | QMessageBox.Default,
-                                     QMessageBox.NoButton)
+                QMessageBox.critical(None, cfg.programName, "The ethogram is empty",
+                                     QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
                 return
 
             # check if some keys will be duplicated after conversion
             try:
                 all_keys = [
-                    self.twBehaviors.item(row, behavioursFields["key"]).text()
+                    self.twBehaviors.item(row, cfg.behavioursFields["key"]).text()
                     for row in range(self.twBehaviors.rowCount())
                 ]
             except Exception:
                 pass
             if all_keys == [x.lower() for x in all_keys]:
-                QMessageBox.information(self, programName, "All keys are already lower case")
+                QMessageBox.information(self, cfg.programName, "All keys are already lower case")
                 return
 
-            if dialog.MessageDialog(programName, "Confirm the conversion of key to lower case.",
-                                    [YES, CANCEL]) == CANCEL:
+            if dialog.MessageDialog(cfg.programName, "Confirm the conversion of key to lower case.",
+                                    [cfg.YES, cfg.CANCEL]) == cfg.CANCEL:
                 return
 
             if len([x.lower() for x in all_keys]) != len(set([x.lower() for x in all_keys])):
-                if dialog.MessageDialog(programName, "Some keys will be duplicated after conversion. Proceed?",
-                                        [YES, CANCEL]) == CANCEL:
+                if dialog.MessageDialog(cfg.programName, "Some keys will be duplicated after conversion. Proceed?",
+                                        [cfg.YES, cfg.CANCEL]) == cfg.CANCEL:
                     return
 
             for row in range(self.twBehaviors.rowCount()):
-                if self.twBehaviors.item(row, behavioursFields["key"]).text():
-                    self.twBehaviors.item(row, behavioursFields["key"]).setText(
-                        self.twBehaviors.item(row, behavioursFields["key"]).text().lower())
+                if self.twBehaviors.item(row, cfg.behavioursFields["key"]).text():
+                    self.twBehaviors.item(row, cfg.behavioursFields["key"]).setText(
+                        self.twBehaviors.item(row, cfg.behavioursFields["key"]).text().lower())
 
                 # convert modifier shortcuts
-                if self.twBehaviors.item(row, behavioursFields["modifiers"]).text():
+                if self.twBehaviors.item(row, cfg.behavioursFields["modifiers"]).text():
 
-                    modifiers_dict = (eval(self.twBehaviors.item(row, behavioursFields["modifiers"]).text())
-                                      if self.twBehaviors.item(row, behavioursFields["modifiers"]).text() else {})
+                    modifiers_dict = (eval(self.twBehaviors.item(row, cfg.behavioursFields["modifiers"]).text())
+                                      if self.twBehaviors.item(row, cfg.behavioursFields["modifiers"]).text() else {})
 
                     for modifier_set in modifiers_dict:
                         try:
@@ -357,7 +368,7 @@ class projectDialog(QDialog, Ui_dlgProject):
                         except Exception:
                             logging.warning("error during conversion of modifier short cut to lower case")
 
-                    self.twBehaviors.item(row, behavioursFields["modifiers"]).setText(str(modifiers_dict))
+                    self.twBehaviors.item(row, cfg.behavioursFields["modifiers"]).setText(str(modifiers_dict))
         except Exception:
             dialog.error_message2()
 
@@ -369,28 +380,28 @@ class projectDialog(QDialog, Ui_dlgProject):
             # check if some keys will be duplicated after conversion
             try:
                 all_keys = [
-                    self.twSubjects.item(row, subjectsFields.index("key")).text()
+                    self.twSubjects.item(row, cfg.subjectsFields.index("key")).text()
                     for row in range(self.twSubjects.rowCount())
                 ]
             except Exception:
                 pass
             if all_keys == [x.lower() for x in all_keys]:
-                QMessageBox.information(self, programName, "All keys are already lower case")
+                QMessageBox.information(self, cfg.programName, "All keys are already lower case")
                 return
 
-            if dialog.MessageDialog(programName, "Confirm the conversion of key to lower case.",
-                                    [YES, CANCEL]) == CANCEL:
+            if dialog.MessageDialog(cfg.programName, "Confirm the conversion of key to lower case.",
+                                    [cfg.YES, cfg.CANCEL]) == cfg.CANCEL:
                 return
 
             if len([x.lower() for x in all_keys]) != len(set([x.lower() for x in all_keys])):
-                if dialog.MessageDialog(programName, "Some keys will be duplicated after conversion. Proceed?",
-                                        [YES, CANCEL]) == CANCEL:
+                if dialog.MessageDialog(cfg.programName, "Some keys will be duplicated after conversion. Proceed?",
+                                        [cfg.YES, cfg.CANCEL]) == cfg.CANCEL:
                     return
 
             for row in range(self.twSubjects.rowCount()):
-                if self.twSubjects.item(row, subjectsFields.index("key")).text():
-                    self.twSubjects.item(row, subjectsFields.index("key")).setText(
-                        self.twSubjects.item(row, subjectsFields.index("key")).text().lower())
+                if self.twSubjects.item(row, cfg.subjectsFields.index("key")).text():
+                    self.twSubjects.item(row, cfg.subjectsFields.index("key")).setText(
+                        self.twSubjects.item(row, cfg.subjectsFields.index("key")).text().lower())
         except Exception:
             dialog.error_message2()
 
@@ -407,28 +418,29 @@ class projectDialog(QDialog, Ui_dlgProject):
                 try:
                     bcm = json.loads(open(fileName, "r").read())
                 except Exception:
-                    QMessageBox.critical(self, programName, f"The file {fileName} is not a behaviors coding map.")
+                    QMessageBox.critical(self, cfg.programName, f"The file {fileName} is not a behaviors coding map.")
                     return
 
                 if "coding_map_type" not in bcm or bcm["coding_map_type"] != "BORIS behaviors coding map":
-                    QMessageBox.critical(self, programName, f"The file {fileName} is not a BORIS behaviors coding map.")
+                    QMessageBox.critical(self, cfg.programName,
+                                         f"The file {fileName} is not a BORIS behaviors coding map.")
 
-                if BEHAVIORS_CODING_MAP not in self.pj:
-                    self.pj[BEHAVIORS_CODING_MAP] = []
+                if cfg.BEHAVIORS_CODING_MAP not in self.pj:
+                    self.pj[cfg.BEHAVIORS_CODING_MAP] = []
 
                 bcm_code_not_found = []
-                existing_codes = [self.pj[ETHOGRAM][key]["code"] for key in self.pj[ETHOGRAM]]
+                existing_codes = [self.pj[cfg.ETHOGRAM][key]["code"] for key in self.pj[cfg.ETHOGRAM]]
                 for code in [bcm["areas"][key]["code"] for key in bcm["areas"]]:
                     if code not in existing_codes:
                         bcm_code_not_found.append(code)
 
                 if bcm_code_not_found:
-                    QMessageBox.warning(self, programName,
+                    QMessageBox.warning(self, cfg.programName,
                                         ("The following behavior{} are not defined in the ethogram:<br>"
                                          "{}").format("s" if len(bcm_code_not_found) > 1 else "",
                                                       ",".join(bcm_code_not_found)))
 
-                self.pj[BEHAVIORS_CODING_MAP].append(dict(bcm))
+                self.pj[cfg.BEHAVIORS_CODING_MAP].append(dict(bcm))
 
                 self.twBehavCodingMap.setRowCount(self.twBehavCodingMap.rowCount() + 1)
 
@@ -444,10 +456,11 @@ class projectDialog(QDialog, Ui_dlgProject):
         """
         try:
             if not self.twBehavCodingMap.selectedIndexes():
-                QMessageBox.warning(self, programName, "Select a behaviors coding map")
+                QMessageBox.warning(self, cfg.programName, "Select a behaviors coding map")
             else:
-                if dialog.MessageDialog(programName, "Remove the selected behaviors coding map?", [YES, CANCEL]) == YES:
-                    del self.pj[BEHAVIORS_CODING_MAP][self.twBehavCodingMap.selectedIndexes()[0].row()]
+                if dialog.MessageDialog(cfg.programName, "Remove the selected behaviors coding map?",
+                                        [cfg.YES, cfg.CANCEL]) == cfg.YES:
+                    del self.pj[cfg.BEHAVIORS_CODING_MAP][self.twBehavCodingMap.selectedIndexes()[0].row()]
                     self.twBehavCodingMap.removeRow(self.twBehavCodingMap.selectedIndexes()[0].row())
         except Exception:
             dialog.error_message2()
@@ -486,12 +499,12 @@ class projectDialog(QDialog, Ui_dlgProject):
 
             for r in range(self.twBehaviors.rowCount()):
                 row = []
-                for field in ["code", TYPE, "description", "key", "category", "excluded"]:
-                    row.append(self.twBehaviors.item(r, behavioursFields[field]).text())
+                for field in ["code", cfg.TYPE, "description", "key", "category", "excluded"]:
+                    row.append(self.twBehaviors.item(r, cfg.behavioursFields[field]).text())
 
                 # modifiers
-                if self.twBehaviors.item(r, behavioursFields["modifiers"]).text():
-                    modifiers_dict = eval(self.twBehaviors.item(r, behavioursFields["modifiers"]).text())
+                if self.twBehaviors.item(r, cfg.behavioursFields["modifiers"]).text():
+                    modifiers_dict = eval(self.twBehaviors.item(r, cfg.behavioursFields["modifiers"]).text())
                     modifiers_list = []
                     for key in modifiers_dict:
                         if modifiers_dict[key]['values']:
@@ -510,7 +523,8 @@ class projectDialog(QDialog, Ui_dlgProject):
 
             ok, msg = export_observation.dataset_write(ethogram_data, fileName, outputFormat)
             if not ok:
-                QMessageBox.critical(None, programName, msg, QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
+                QMessageBox.critical(None, cfg.programName, msg, QMessageBox.Ok | QMessageBox.Default,
+                                     QMessageBox.NoButton)
         except Exception:
             dialog.error_message(sys._getframe().f_code.co_name, sys.exc_info())
 
@@ -535,7 +549,7 @@ class projectDialog(QDialog, Ui_dlgProject):
                 if not self.lePredefined.hasFocus():
                     r, msg = self.check_indep_var_config()
                     if not r:
-                        QMessageBox.warning(self, f"{programName} - Independent variables error", msg)
+                        QMessageBox.warning(self, f"{cfg.programName} - Independent variables error", msg)
         except Exception:
             dialog.error_message2()
 
@@ -563,27 +577,27 @@ class projectDialog(QDialog, Ui_dlgProject):
             bc = BehavioralCategories(self.pj)
 
             if bc.exec_():
-                self.pj[BEHAVIORAL_CATEGORIES] = []
+                self.pj[cfg.BEHAVIORAL_CATEGORIES] = []
                 for index in range(bc.lw.count()):
-                    self.pj[BEHAVIORAL_CATEGORIES].append(bc.lw.item(index).text().strip())
+                    self.pj[cfg.BEHAVIORAL_CATEGORIES].append(bc.lw.item(index).text().strip())
 
                 # check if behavior belong to removed category
                 if bc.removed:
                     for row in range(self.twBehaviors.rowCount()):
-                        if self.twBehaviors.item(row, behavioursFields["category"]):
-                            if self.twBehaviors.item(row, behavioursFields["category"]).text() == bc.removed:
+                        if self.twBehaviors.item(row, cfg.behavioursFields["category"]):
+                            if self.twBehaviors.item(row, cfg.behavioursFields["category"]).text() == bc.removed:
                                 if dialog.MessageDialog(
-                                        programName,
-                                    (f"The <b>{self.twBehaviors.item(row, behavioursFields['code']).text()}</b> behavior belongs "
-                                     f"to a behavioral category <b>{self.twBehaviors.item(row, behavioursFields['category']).text()}</b> "
+                                        cfg.programName,
+                                    (f"The <b>{self.twBehaviors.item(row, cfg.behavioursFields['code']).text()}</b> behavior belongs "
+                                     f"to a behavioral category <b>{self.twBehaviors.item(row, cfg.behavioursFields['category']).text()}</b> "
                                      "that is no more in the behavioral categories list.<br><br>"
-                                     "Remove the behavior from category?"), [YES, CANCEL]) == YES:
-                                    self.twBehaviors.item(row, behavioursFields["category"]).setText("")
+                                     "Remove the behavior from category?"), [cfg.YES, cfg.CANCEL]) == cfg.YES:
+                                    self.twBehaviors.item(row, cfg.behavioursFields["category"]).setText("")
                 if bc.renamed:
                     for row in range(self.twBehaviors.rowCount()):
-                        if self.twBehaviors.item(row, behavioursFields["category"]):
-                            if self.twBehaviors.item(row, behavioursFields["category"]).text() == bc.renamed[0]:
-                                self.twBehaviors.item(row, behavioursFields["category"]).setText(bc.renamed[1])
+                        if self.twBehaviors.item(row, cfg.behavioursFields["category"]):
+                            if self.twBehaviors.item(row, cfg.behavioursFields["category"]).text() == bc.renamed[0]:
+                                self.twBehaviors.item(row, cfg.behavioursFields["category"]).setText(bc.renamed[1])
         except Exception:
             dialog.error_message2()
 
@@ -602,30 +616,30 @@ class projectDialog(QDialog, Ui_dlgProject):
 
         try:
             # check if double click on excluded column
-            if column == behavioursFields["excluded"]:
+            if column == cfg.behavioursFields["excluded"]:
                 self.pbExclusionMatrix_clicked()
 
             # check if double click on 'coding map' column
-            if column == behavioursFields["coding map"]:
-                if "with coding map" in self.twBehaviors.item(row, behavioursFields[TYPE]).text():
+            if column == cfg.behavioursFields["coding map"]:
+                if "with coding map" in self.twBehaviors.item(row, cfg.behavioursFields[cfg.TYPE]).text():
                     self.behaviorTypeChanged(row)
                 else:
-                    QMessageBox.information(self, programName,
+                    QMessageBox.information(self, cfg.programName,
                                             "Change the behavior type on first column to select a coding map")
 
             # check if double click on category
-            if column == behavioursFields["type"]:
+            if column == cfg.behavioursFields["type"]:
                 self.behavior_type_doubleclicked(row)
 
             # behavioral category
-            if column == behavioursFields["category"]:
+            if column == cfg.behavioursFields["category"]:
                 self.category_doubleclicked(row)
 
-            if column == behavioursFields["modifiers"]:
+            if column == cfg.behavioursFields["modifiers"]:
                 # check if behavior has coding map
-                if (self.twBehaviors.item(row, behavioursFields["coding map"]) is not None and
-                        self.twBehaviors.item(row, behavioursFields["coding map"]).text()):
-                    QMessageBox.warning(self, programName, "Use the coding map to set/modify the areas")
+                if (self.twBehaviors.item(row, cfg.behavioursFields["coding map"]) is not None and
+                        self.twBehaviors.item(row, cfg.behavioursFields["coding map"]).text()):
+                    QMessageBox.warning(self, cfg.programName, "Use the coding map to set/modify the areas")
                 else:
                     subjects_list = []
                     for subject_row in range(self.twSubjects.rowCount()):
@@ -650,16 +664,16 @@ class projectDialog(QDialog, Ui_dlgProject):
         """
 
         try:
-            if self.twBehaviors.item(row, behavioursFields[TYPE]).text() in BEHAVIOR_TYPES:
-                selected = BEHAVIOR_TYPES.index(self.twBehaviors.item(row, behavioursFields[TYPE]).text())
+            if self.twBehaviors.item(row, cfg.behavioursFields[cfg.TYPE]).text() in cfg.BEHAVIOR_TYPES:
+                selected = cfg.BEHAVIOR_TYPES.index(self.twBehaviors.item(row, cfg.behavioursFields[cfg.TYPE]).text())
             else:
                 selected = 0
 
-            new_type, ok = QInputDialog.getItem(self, "Select a behavior type", "Types of behavior", BEHAVIOR_TYPES,
+            new_type, ok = QInputDialog.getItem(self, "Select a behavior type", "Types of behavior", cfg.BEHAVIOR_TYPES,
                                                 selected, False)
 
             if ok and new_type:
-                self.twBehaviors.item(row, behavioursFields["type"]).setText(new_type)
+                self.twBehaviors.item(row, cfg.behavioursFields["type"]).setText(new_type)
 
                 self.behaviorTypeChanged(row)
         except Exception:
@@ -671,10 +685,12 @@ class projectDialog(QDialog, Ui_dlgProject):
         """
 
         try:
-            categories = ["None"] + self.pj[BEHAVIORAL_CATEGORIES] if BEHAVIORAL_CATEGORIES in self.pj else ["None"]
+            categories = ["None"] + self.pj[cfg.BEHAVIORAL_CATEGORIES] if cfg.BEHAVIORAL_CATEGORIES in self.pj else [
+                "None"
+            ]
 
-            if self.twBehaviors.item(row, behavioursFields["category"]).text() in categories:
-                selected = categories.index(self.twBehaviors.item(row, behavioursFields["category"]).text())
+            if self.twBehaviors.item(row, cfg.behavioursFields["category"]).text() in categories:
+                selected = categories.index(self.twBehaviors.item(row, cfg.behavioursFields["category"]).text())
             else:
                 selected = 0
 
@@ -684,7 +700,7 @@ class projectDialog(QDialog, Ui_dlgProject):
             if ok and category:
                 if category == "None":
                     category = ""
-                self.twBehaviors.item(row, behavioursFields["category"]).setText(category)
+                self.twBehaviors.item(row, cfg.behavioursFields["category"]).setText(category)
         except Exception:
             dialog.error_message2()
 
@@ -693,7 +709,7 @@ class projectDialog(QDialog, Ui_dlgProject):
         check if variable default value is compatible with variable type
         """
         # check for numeric type
-        if varType == NUMERIC:
+        if varType == cfg.NUMERIC:
             try:
                 if txt:
                     float(txt)
@@ -709,33 +725,33 @@ class projectDialog(QDialog, Ui_dlgProject):
         """
 
         try:
-            if self.twVariables.cellWidget(row, tw_indVarFields.index("type")).currentText() == SET_OF_VALUES:
-                if self.twVariables.item(row, tw_indVarFields.index("possible values")).text() == "NA":
+            if self.twVariables.cellWidget(row, cfg.tw_indVarFields.index("type")).currentText() == cfg.SET_OF_VALUES:
+                if self.twVariables.item(row, cfg.tw_indVarFields.index("possible values")).text() == "NA":
                     self.twVariables.item(
-                        row, tw_indVarFields.index("possible values")).setText("Double-click to add values")
+                        row, cfg.tw_indVarFields.index("possible values")).setText("Double-click to add values")
             else:
                 # check if set of values defined
-                if self.twVariables.item(row, tw_indVarFields.index("possible values")).text() not in [
+                if self.twVariables.item(row, cfg.tw_indVarFields.index("possible values")).text() not in [
                         "NA", "Double-click to add values"
                 ]:
-                    if dialog.MessageDialog(programName, "Erase the set of values?", [YES, CANCEL]) == CANCEL:
-                        self.twVariables.cellWidget(row,
-                                                    tw_indVarFields.index("type")).setCurrentIndex(SET_OF_VALUES_idx)
+                    if dialog.MessageDialog(cfg.programName, "Erase the set of values?",
+                                            [cfg.YES, cfg.CANCEL]) == cfg.CANCEL:
+                        self.twVariables.cellWidget(row, cfg.tw_indVarFields.index("type")).setCurrentIndex(
+                            cfg.SET_OF_VALUES_idx)
                         return
                     else:
-                        self.twVariables.item(row, tw_indVarFields.index("possible values")).setText("NA")
+                        self.twVariables.item(row, cfg.tw_indVarFields.index("possible values")).setText("NA")
                 else:
-                    self.twVariables.item(row, tw_indVarFields.index("possible values")).setText("NA")
+                    self.twVariables.item(row, cfg.tw_indVarFields.index("possible values")).setText("NA")
 
             # check compatibility between variable type and default value
             if not self.check_variable_default_value(
-                    self.twVariables.item(row, tw_indVarFields.index("default value")).text(),
-                    self.twVariables.cellWidget(row, tw_indVarFields.index("type")).currentIndex()):
-                QMessageBox.warning(
-                    self, programName + " - Independent variables error",
-                    (f"The default value ({self.twVariables.item(row, tw_indVarFields.index('default value')).text()}) "
-                     f"of variable <b>{self.twVariables.item(row, tw_indVarFields.index('label')).text()}</b> "
-                     "is not compatible with variable type"))
+                    self.twVariables.item(row, cfg.tw_indVarFields.index("default value")).text(),
+                    self.twVariables.cellWidget(row, cfg.tw_indVarFields.index("type")).currentIndex()):
+                QMessageBox.warning(self, cfg.programName + " - Independent variables error", (
+                    f"The default value ({self.twVariables.item(row, cfg.tw_indVarFields.index('default value')).text()}) "
+                    f"of variable <b>{self.twVariables.item(row, cfg.tw_indVarFields.index('label')).text()}</b> "
+                    "is not compatible with variable type"))
         except Exception:
             dialog.error_message2()
 
@@ -755,7 +771,7 @@ class projectDialog(QDialog, Ui_dlgProject):
                 existing_var.append(self.twVariables.item(r, 0).text().strip().upper())
 
                 # check default value
-                if (self.twVariables.item(r, 2).text() != TIMESTAMP and not self.check_variable_default_value(
+                if (self.twVariables.item(r, 2).text() != cfg.TIMESTAMP and not self.check_variable_default_value(
                         self.twVariables.item(r, 3).text(),
                         self.twVariables.item(r, 2).text())):
                     return False, (f"Row: {r + 1} - "
@@ -763,10 +779,10 @@ class projectDialog(QDialog, Ui_dlgProject):
                                    f"with the variable type ({self.twVariables.item(r, 2).text()})")
 
                 # check if default value in set of values
-                if self.twVariables.item(r, 2).text() == SET_OF_VALUES and self.twVariables.item(r, 4).text() == "":
+                if self.twVariables.item(r, 2).text() == cfg.SET_OF_VALUES and self.twVariables.item(r, 4).text() == "":
                     return False, "No values were defined in set"
 
-                if (self.twVariables.item(r, 2).text() == SET_OF_VALUES and self.twVariables.item(r, 4).text() and
+                if (self.twVariables.item(r, 2).text() == cfg.SET_OF_VALUES and self.twVariables.item(r, 4).text() and
                         self.twVariables.item(r, 3).text() and
                         self.twVariables.item(r, 3).text() not in self.twVariables.item(r, 4).text().split(",")):
                     return False, f"The default value ({self.twVariables.item(r, 3).text()}) is not contained in set of values"
@@ -778,20 +794,20 @@ class projectDialog(QDialog, Ui_dlgProject):
     def cbtype_changed(self):
 
         try:
-            self.leSetValues.setVisible(self.cbType.currentText() == SET_OF_VALUES)
-            self.label_5.setVisible(self.cbType.currentText() == SET_OF_VALUES)
+            self.leSetValues.setVisible(self.cbType.currentText() == cfg.SET_OF_VALUES)
+            self.label_5.setVisible(self.cbType.currentText() == cfg.SET_OF_VALUES)
 
-            self.dte_default_date.setVisible(self.cbType.currentText() == TIMESTAMP)
-            self.label_9.setVisible(self.cbType.currentText() == TIMESTAMP)
-            self.lePredefined.setVisible(self.cbType.currentText() != TIMESTAMP)
-            self.label_4.setVisible(self.cbType.currentText() != TIMESTAMP)
+            self.dte_default_date.setVisible(self.cbType.currentText() == cfg.TIMESTAMP)
+            self.label_9.setVisible(self.cbType.currentText() == cfg.TIMESTAMP)
+            self.lePredefined.setVisible(self.cbType.currentText() != cfg.TIMESTAMP)
+            self.label_4.setVisible(self.cbType.currentText() != cfg.TIMESTAMP)
         except Exception:
             dialog.error_message2()
 
     def cbtype_activated(self):
 
         try:
-            if self.cbType.currentText() == TIMESTAMP:
+            if self.cbType.currentText() == cfg.TIMESTAMP:
                 self.twVariables.item(self.selected_twvariables_row,
                                       3).setText(self.dte_default_date.dateTime().toString(Qt.ISODate))
                 self.twVariables.item(self.selected_twvariables_row, 4).setText("")
@@ -800,7 +816,7 @@ class projectDialog(QDialog, Ui_dlgProject):
                 self.twVariables.item(self.selected_twvariables_row, 4).setText("")
 
             # remove spaces after and before comma
-            if self.cbType.currentText() == SET_OF_VALUES:
+            if self.cbType.currentText() == cfg.SET_OF_VALUES:
                 self.twVariables.item(self.selected_twvariables_row,
                                       4).setText(",".join([x.strip() for x in self.leSetValues.text().split(",")]))
 
@@ -809,7 +825,7 @@ class projectDialog(QDialog, Ui_dlgProject):
             r, msg = self.check_indep_var_config()
 
             if not r:
-                QMessageBox.warning(self, f"{programName} - Independent variables error", msg)
+                QMessageBox.warning(self, f"{cfg.programName} - Independent variables error", msg)
         except Exception:
             dialog.error_message2()
 
@@ -823,7 +839,7 @@ class projectDialog(QDialog, Ui_dlgProject):
             self.twVariables.setRowCount(self.twVariables.rowCount() + 1)
             self.selected_twvariables_row = self.twVariables.rowCount() - 1
 
-            for idx, field in enumerate(tw_indVarFields):
+            for idx, field in enumerate(cfg.tw_indVarFields):
                 if field == "type":
                     item = QTableWidgetItem("numeric")
                 else:
@@ -844,9 +860,10 @@ class projectDialog(QDialog, Ui_dlgProject):
 
         try:
             if not self.twVariables.selectedIndexes():
-                QMessageBox.warning(self, programName, "Select a variable to remove")
+                QMessageBox.warning(self, cfg.programName, "Select a variable to remove")
             else:
-                if dialog.MessageDialog(programName, "Remove the selected variable?", [YES, CANCEL]) == YES:
+                if dialog.MessageDialog(cfg.programName, "Remove the selected variable?",
+                                        [cfg.YES, cfg.CANCEL]) == cfg.YES:
                     self.twVariables.removeRow(self.twVariables.selectedIndexes()[0].row())
 
             if self.twVariables.selectedIndexes():
@@ -884,13 +901,13 @@ class projectDialog(QDialog, Ui_dlgProject):
 
         try:
             if not self.twBehaviors.rowCount():
-                QMessageBox.critical(None, programName, "The ethogram is empty", QMessageBox.Ok | QMessageBox.Default,
-                                     QMessageBox.NoButton)
+                QMessageBox.critical(None, cfg.programName, "The ethogram is empty",
+                                     QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
                 return
 
             for row in range(self.twBehaviors.rowCount()):
-                if not self.twBehaviors.item(row, behavioursFields["code"]).text():
-                    QMessageBox.critical(None, programName, f"A behavior code is empty at row {row + 1}",
+                if not self.twBehaviors.item(row, cfg.behavioursFields["code"]).text():
+                    QMessageBox.critical(None, cfg.programName, f"A behavior code is empty at row {row + 1}",
                                          QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
                     return
 
@@ -900,37 +917,39 @@ class projectDialog(QDialog, Ui_dlgProject):
 
             # list of point events
             for r in range(self.twBehaviors.rowCount()):
-                if self.twBehaviors.item(r, behavioursFields[BEHAVIOR_CODE]):
-                    if "Point" in self.twBehaviors.item(r, behavioursFields[TYPE]).text():
-                        point_behaviors.append(self.twBehaviors.item(r, behavioursFields[BEHAVIOR_CODE]).text())
+                if self.twBehaviors.item(r, cfg.behavioursFields[cfg.BEHAVIOR_CODE]):
+                    if "Point" in self.twBehaviors.item(r, cfg.behavioursFields[cfg.TYPE]).text():
+                        point_behaviors.append(self.twBehaviors.item(r, cfg.behavioursFields[cfg.BEHAVIOR_CODE]).text())
 
             # check if point are present and if user want to include them in exclusion matrix
-            include_point_events = NO
+            include_point_events = cfg.NO
             if point_behaviors:
                 include_point_events = dialog.MessageDialog(
-                    programName, "Do you want to include the point events in the exclusion matrix?", [YES, NO])
+                    cfg.programName, "Do you want to include the point events in the exclusion matrix?",
+                    [cfg.YES, cfg.NO])
 
             for r in range(self.twBehaviors.rowCount()):
 
-                if self.twBehaviors.item(r, behavioursFields[BEHAVIOR_CODE]):
+                if self.twBehaviors.item(r, cfg.behavioursFields[cfg.BEHAVIOR_CODE]):
 
-                    if (include_point_events == YES or
-                        (include_point_events == NO and
-                         "State" in self.twBehaviors.item(r, behavioursFields[TYPE]).text())):
-                        allBehaviors.append(self.twBehaviors.item(r, behavioursFields[BEHAVIOR_CODE]).text())
+                    if (include_point_events == cfg.YES or
+                        (include_point_events == cfg.NO and
+                         "State" in self.twBehaviors.item(r, cfg.behavioursFields[cfg.TYPE]).text())):
+                        allBehaviors.append(self.twBehaviors.item(r, cfg.behavioursFields[cfg.BEHAVIOR_CODE]).text())
 
-                    excl[self.twBehaviors.item(r, behavioursFields[BEHAVIOR_CODE]).text()] = self.twBehaviors.item(
-                        r, behavioursFields["excluded"]).text().split(",")
-                    new_excl[self.twBehaviors.item(r, behavioursFields[BEHAVIOR_CODE]).text()] = []
+                    excl[self.twBehaviors.item(r,
+                                               cfg.behavioursFields[cfg.BEHAVIOR_CODE]).text()] = self.twBehaviors.item(
+                                                   r, cfg.behavioursFields["excluded"]).text().split(",")
+                    new_excl[self.twBehaviors.item(r, cfg.behavioursFields[cfg.BEHAVIOR_CODE]).text()] = []
 
-                    if "State" in self.twBehaviors.item(r, behavioursFields[TYPE]).text():
-                        state_behaviors.append(self.twBehaviors.item(r, behavioursFields[BEHAVIOR_CODE]).text())
+                    if "State" in self.twBehaviors.item(r, cfg.behavioursFields[cfg.TYPE]).text():
+                        state_behaviors.append(self.twBehaviors.item(r, cfg.behavioursFields[cfg.BEHAVIOR_CODE]).text())
 
             logging.debug(f"point behaviors: {point_behaviors}")
             logging.debug(f"state behaviors: {state_behaviors}")
 
             if not state_behaviors:
-                QMessageBox.critical(None, programName, "No state events were defined in ethogram",
+                QMessageBox.critical(None, cfg.programName, "No state events were defined in ethogram",
                                      QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
                 return
 
@@ -993,14 +1012,14 @@ class projectDialog(QDialog, Ui_dlgProject):
 
                 # update excluded field
                 for r in range(self.twBehaviors.rowCount()):
-                    if (include_point_events == YES or
-                        (include_point_events == NO and "State" in self.twBehaviors.item(r, 0).text())):
+                    if (include_point_events == cfg.YES or
+                        (include_point_events == cfg.NO and "State" in self.twBehaviors.item(r, 0).text())):
                         for e in excl:
-                            if e == self.twBehaviors.item(r, behavioursFields[BEHAVIOR_CODE]).text():
+                            if e == self.twBehaviors.item(r, cfg.behavioursFields[cfg.BEHAVIOR_CODE]).text():
                                 item = QTableWidgetItem(",".join(new_excl[e]))
                                 item.setFlags(Qt.ItemIsEnabled)
                                 item.setBackground(QColor(230, 230, 230))
-                                self.twBehaviors.setItem(r, behavioursFields["excluded"], item)
+                                self.twBehaviors.setItem(r, cfg.behavioursFields["excluded"], item)
         except Exception:
             dialog.error_message2()
 
@@ -1008,35 +1027,35 @@ class projectDialog(QDialog, Ui_dlgProject):
 
         if self.twBehaviors.rowCount():
 
-            if dialog.MessageDialog(programName, "Remove all behaviors?", [YES, CANCEL]) == YES:
+            if dialog.MessageDialog(cfg.programName, "Remove all behaviors?", [cfg.YES, cfg.CANCEL]) == cfg.YES:
 
                 try:
                     # delete ethogram rows without behavior code
                     for r in range(self.twBehaviors.rowCount() - 1, -1, -1):
-                        if not self.twBehaviors.item(r, PROJECT_BEHAVIORS_CODE_FIELD_IDX).text():
+                        if not self.twBehaviors.item(r, cfg.PROJECT_BEHAVIORS_CODE_FIELD_IDX).text():
                             self.twBehaviors.removeRow(r)
 
                     # extract all codes to delete
                     codesToDelete = []
                     row_mem = {}
                     for r in range(self.twBehaviors.rowCount() - 1, -1, -1):
-                        if self.twBehaviors.item(r, PROJECT_BEHAVIORS_CODE_FIELD_IDX).text():
-                            codesToDelete.append(self.twBehaviors.item(r, PROJECT_BEHAVIORS_CODE_FIELD_IDX).text())
-                            row_mem[self.twBehaviors.item(r, PROJECT_BEHAVIORS_CODE_FIELD_IDX).text()] = r
+                        if self.twBehaviors.item(r, cfg.PROJECT_BEHAVIORS_CODE_FIELD_IDX).text():
+                            codesToDelete.append(self.twBehaviors.item(r, cfg.PROJECT_BEHAVIORS_CODE_FIELD_IDX).text())
+                            row_mem[self.twBehaviors.item(r, cfg.PROJECT_BEHAVIORS_CODE_FIELD_IDX).text()] = r
 
                     # extract all codes used in observations
                     codesInObs = []
-                    for obs in self.pj[OBSERVATIONS]:
-                        events = self.pj[OBSERVATIONS][obs][EVENTS]
+                    for obs in self.pj[cfg.OBSERVATIONS]:
+                        events = self.pj[cfg.OBSERVATIONS][obs][cfg.EVENTS]
                         for event in events:
-                            codesInObs.append(event[EVENT_BEHAVIOR_FIELD_IDX])
+                            codesInObs.append(event[cfg.EVENT_BEHAVIOR_FIELD_IDX])
 
                     for codeToDelete in codesToDelete:
                         # if code to delete used in obs ask confirmation
                         if codeToDelete in codesInObs:
-                            response = dialog.MessageDialog(programName,
+                            response = dialog.MessageDialog(cfg.programName,
                                                             f"The code <b>{codeToDelete}</b> is used in observations!",
-                                                            ['Remove', CANCEL])
+                                                            ['Remove', cfg.CANCEL])
                             if response == "Remove":
                                 self.twBehaviors.removeRow(row_mem[codeToDelete])
                         else:  # remove without asking
@@ -1086,22 +1105,22 @@ class projectDialog(QDialog, Ui_dlgProject):
         for r in range(self.twBehaviors.rowCount()):
 
             # check key
-            if self.twBehaviors.item(r, PROJECT_BEHAVIORS_KEY_FIELD_IDX):
-                key = self.twBehaviors.item(r, PROJECT_BEHAVIORS_KEY_FIELD_IDX).text()
+            if self.twBehaviors.item(r, cfg.PROJECT_BEHAVIORS_KEY_FIELD_IDX):
+                key = self.twBehaviors.item(r, cfg.PROJECT_BEHAVIORS_KEY_FIELD_IDX).text()
                 # check key length
-                if key.upper() not in list(function_keys.values()) and len(key) > 1:
+                if key.upper() not in list(cfg.function_keys.values()) and len(key) > 1:
                     self.lbObservationsState.setText('<font color="red">Key length &gt; 1</font>')
                     return
 
                 keys.append(key)
 
             # check code
-            if self.twBehaviors.item(r, PROJECT_BEHAVIORS_CODE_FIELD_IDX):
-                if self.twBehaviors.item(r, PROJECT_BEHAVIORS_CODE_FIELD_IDX).text() in codes:
+            if self.twBehaviors.item(r, cfg.PROJECT_BEHAVIORS_CODE_FIELD_IDX):
+                if self.twBehaviors.item(r, cfg.PROJECT_BEHAVIORS_CODE_FIELD_IDX).text() in codes:
                     self.lbObservationsState.setText(f'<font color="red">Code duplicated at line {r + 1} </font>')
                 else:
-                    if self.twBehaviors.item(r, PROJECT_BEHAVIORS_CODE_FIELD_IDX).text():
-                        codes.append(self.twBehaviors.item(r, PROJECT_BEHAVIORS_CODE_FIELD_IDX).text())
+                    if self.twBehaviors.item(r, cfg.PROJECT_BEHAVIORS_CODE_FIELD_IDX).text():
+                        codes.append(self.twBehaviors.item(r, cfg.PROJECT_BEHAVIORS_CODE_FIELD_IDX).text())
 
     def pb_clone_behavior_clicked(self):
         """
@@ -1109,15 +1128,15 @@ class projectDialog(QDialog, Ui_dlgProject):
         """
         try:
             if not self.twBehaviors.selectedIndexes():
-                QMessageBox.about(self, programName, "First select a behavior")
+                QMessageBox.about(self, cfg.programName, "First select a behavior")
             else:
                 self.twBehaviors.setRowCount(self.twBehaviors.rowCount() + 1)
 
                 row = self.twBehaviors.selectedIndexes()[0].row()
-                for field in behavioursFields:
-                    item = QTableWidgetItem(self.twBehaviors.item(row, behavioursFields[field]))
-                    self.twBehaviors.setItem(self.twBehaviors.rowCount() - 1, behavioursFields[field], item)
-                    if field in [TYPE, "category", "excluded", "coding map", "modifiers"]:
+                for field in cfg.behavioursFields:
+                    item = QTableWidgetItem(self.twBehaviors.item(row, cfg.behavioursFields[field]))
+                    self.twBehaviors.setItem(self.twBehaviors.rowCount() - 1, cfg.behavioursFields[field], item)
+                    if field in [cfg.TYPE, "category", "excluded", "coding map", "modifiers"]:
                         item.setFlags(Qt.ItemIsEnabled)
                         item.setBackground(QColor(230, 230, 230))
             self.twBehaviors.scrollToBottom()
@@ -1130,19 +1149,20 @@ class projectDialog(QDialog, Ui_dlgProject):
         """
 
         if not self.twBehaviors.selectedIndexes():
-            QMessageBox.warning(self, programName, "Select a behaviour to be removed")
+            QMessageBox.warning(self, cfg.programName, "Select a behaviour to be removed")
         else:
-            if dialog.MessageDialog(programName, "Remove the selected behavior?", [YES, CANCEL]) == YES:
+            if dialog.MessageDialog(cfg.programName, "Remove the selected behavior?", [cfg.YES, cfg.CANCEL]) == cfg.YES:
 
                 # check if behavior already used in observations
                 flag_break = False
                 codeToDelete = self.twBehaviors.item(self.twBehaviors.selectedIndexes()[0].row(), 2).text()
-                for obs_id in self.pj[OBSERVATIONS]:
+                for obs_id in self.pj[cfg.OBSERVATIONS]:
                     if codeToDelete in [
-                            event[EVENT_BEHAVIOR_FIELD_IDX] for event in self.pj[OBSERVATIONS][obs_id][EVENTS]
+                            event[cfg.EVENT_BEHAVIOR_FIELD_IDX]
+                            for event in self.pj[cfg.OBSERVATIONS][obs_id][cfg.EVENTS]
                     ]:
-                        if dialog.MessageDialog(programName, "The code to remove is used in observations!",
-                                                [REMOVE, CANCEL]) == CANCEL:
+                        if dialog.MessageDialog(cfg.programName, "The code to remove is used in observations!",
+                                                [cfg.REMOVE, cfg.CANCEL]) == cfg.CANCEL:
                             return
                         break
 
@@ -1157,15 +1177,15 @@ class projectDialog(QDialog, Ui_dlgProject):
         try:
             # Add behavior to table
             self.twBehaviors.setRowCount(self.twBehaviors.rowCount() + 1)
-            for field_type in behavioursFields:
+            for field_type in cfg.behavioursFields:
                 item = QTableWidgetItem()
-                if field_type == TYPE:
+                if field_type == cfg.TYPE:
                     item.setText("Point event")
                 # no manual editing, gray back ground
-                if field_type in [TYPE, "category", "modifiers", "excluded", "coding map"]:
+                if field_type in [cfg.TYPE, "category", "modifiers", "excluded", "coding map"]:
                     item.setFlags(Qt.ItemIsEnabled)
                     item.setBackground(QColor(230, 230, 230))
-                self.twBehaviors.setItem(self.twBehaviors.rowCount() - 1, behavioursFields[field_type], item)
+                self.twBehaviors.setItem(self.twBehaviors.rowCount() - 1, cfg.behavioursFields[field_type], item)
         except Exception:
             dialog.error_message2()
         self.twBehaviors.scrollToBottom()
@@ -1175,11 +1195,11 @@ class projectDialog(QDialog, Ui_dlgProject):
         event type combobox changed
         """
 
-        if "with coding map" in self.twBehaviors.item(row, behavioursFields[TYPE]).text():
+        if "with coding map" in self.twBehaviors.item(row, cfg.behavioursFields[cfg.TYPE]).text():
             # let user select a coding maop
             fn = QFileDialog().getOpenFileName(
                 self, "Select a coding map for "
-                f"{self.twBehaviors.item(row, behavioursFields['code']).text()} behavior", "",
+                f"{self.twBehaviors.item(row, cfg.behavioursFields['code']).text()} behavior", "",
                 "BORIS map files (*.boris_map);;All files (*)")
             fileName = fn[0] if type(fn) is tuple else fn
 
@@ -1187,30 +1207,30 @@ class projectDialog(QDialog, Ui_dlgProject):
                 try:
                     new_map = json.loads(open(fileName, "r").read())
                 except Exception:
-                    QMessageBox.critical(self, programName, "Error reding the file")
+                    QMessageBox.critical(self, cfg.programName, "Error reding the file")
                     return
-                self.pj[CODING_MAP][new_map["name"]] = new_map
+                self.pj[cfg.CODING_MAP][new_map["name"]] = new_map
 
                 # add modifiers from coding map areas
                 modifstr = str({
                     "0": {
                         "name": new_map["name"],
-                        "type": MULTI_SELECTION,
+                        "type": cfg.MULTI_SELECTION,
                         "values": list(sorted(new_map['areas'].keys()))
                     }
                 })
 
-                self.twBehaviors.item(row, behavioursFields["modifiers"]).setText(modifstr)
-                self.twBehaviors.item(row, behavioursFields["coding map"]).setText(new_map["name"])
+                self.twBehaviors.item(row, cfg.behavioursFields["modifiers"]).setText(modifstr)
+                self.twBehaviors.item(row, cfg.behavioursFields["coding map"]).setText(new_map["name"])
 
             else:
                 # if coding map already exists do not reset the behavior type if no filename selected
-                if not self.twBehaviors.item(row, behavioursFields["coding map"]).text():
-                    QMessageBox.critical(self, programName,
+                if not self.twBehaviors.item(row, cfg.behavioursFields["coding map"]).text():
+                    QMessageBox.critical(self, cfg.programName,
                                          'No coding map was selected.\nEvent type will be reset to "Point event" ')
-                    self.twBehaviors.item(row, behavioursFields["type"]).setText("Point event")
+                    self.twBehaviors.item(row, cfg.behavioursFields["type"]).setText("Point event")
         else:
-            self.twBehaviors.item(row, behavioursFields["coding map"]).setText("")
+            self.twBehaviors.item(row, cfg.behavioursFields["coding map"]).setText("")
 
     def pbAddSubject_clicked(self):
         """
@@ -1219,7 +1239,7 @@ class projectDialog(QDialog, Ui_dlgProject):
 
         try:
             self.twSubjects.setRowCount(self.twSubjects.rowCount() + 1)
-            for col in range(len(subjectsFields)):
+            for col in range(len(cfg.subjectsFields)):
                 item = QTableWidgetItem("")
                 self.twSubjects.setItem(self.twSubjects.rowCount() - 1, col, item)
         except Exception:
@@ -1233,9 +1253,10 @@ class projectDialog(QDialog, Ui_dlgProject):
         """
         try:
             if not self.twSubjects.selectedIndexes():
-                QMessageBox.warning(self, programName, "Select a subject to remove")
+                QMessageBox.warning(self, cfg.programName, "Select a subject to remove")
             else:
-                if dialog.MessageDialog(programName, "Remove the selected subject?", [YES, CANCEL]) == YES:
+                if dialog.MessageDialog(cfg.programName, "Remove the selected subject?",
+                                        [cfg.YES, cfg.CANCEL]) == cfg.YES:
 
                     flagDel = False
                     if self.twSubjects.item(self.twSubjects.selectedIndexes()[0].row(), 1):
@@ -1243,13 +1264,13 @@ class projectDialog(QDialog, Ui_dlgProject):
                                                                1).text()  # 1: subject name
 
                         subjectsInObs = []
-                        for obs in self.pj[OBSERVATIONS]:
-                            events = self.pj[OBSERVATIONS][obs][EVENTS]
+                        for obs in self.pj[cfg.OBSERVATIONS]:
+                            events = self.pj[cfg.OBSERVATIONS][obs][cfg.EVENTS]
                             for event in events:
-                                subjectsInObs.append(event[EVENT_SUBJECT_FIELD_IDX])
+                                subjectsInObs.append(event[cfg.EVENT_SUBJECT_FIELD_IDX])
                         if subjectToDelete in subjectsInObs:
-                            if dialog.MessageDialog(programName, "The subject to remove is used in observations!",
-                                                    [REMOVE, CANCEL]) == REMOVE:
+                            if dialog.MessageDialog(cfg.programName, "The subject to remove is used in observations!",
+                                                    [cfg.REMOVE, cfg.CANCEL]) == cfg.REMOVE:
                                 flagDel = True
                         else:
                             # code not used
@@ -1272,7 +1293,7 @@ class projectDialog(QDialog, Ui_dlgProject):
         try:
             if self.twSubjects.rowCount():
 
-                if dialog.MessageDialog(programName, "Remove all subjects?", [YES, CANCEL]) == YES:
+                if dialog.MessageDialog(cfg.programName, "Remove all subjects?", [cfg.YES, cfg.CANCEL]) == cfg.YES:
 
                     # delete ethogram rows without behavior code
                     for r in range(self.twSubjects.rowCount() - 1, -1, -1):
@@ -1289,23 +1310,23 @@ class projectDialog(QDialog, Ui_dlgProject):
 
                     # extract all subjects name used in observations
                     namesInObs = []
-                    for obs in self.pj[OBSERVATIONS]:
-                        events = self.pj[OBSERVATIONS][obs][EVENTS]
+                    for obs in self.pj[cfg.OBSERVATIONS]:
+                        events = self.pj[cfg.OBSERVATIONS][obs][cfg.EVENTS]
                         for event in events:
-                            namesInObs.append(event[EVENT_SUBJECT_FIELD_IDX])
+                            namesInObs.append(event[cfg.EVENT_SUBJECT_FIELD_IDX])
 
                     flag_force = False
                     for nameToDelete in namesToDelete:
                         # if name to delete used in obs ask confirmation
                         if nameToDelete in namesInObs and not flag_force:
                             response = dialog.MessageDialog(
-                                programName, f"The subject <b>{nameToDelete}</b> is used in observations!",
-                                ["Force removing of all subjects", REMOVE, CANCEL])
+                                cfg.programName, f"The subject <b>{nameToDelete}</b> is used in observations!",
+                                ["Force removing of all subjects", cfg.REMOVE, cfg.CANCEL])
                             if response == "Force removing of all subjects":
                                 flag_force = True
                                 self.twSubjects.removeRow(row_mem[nameToDelete])
 
-                            if response == REMOVE:
+                            if response == cfg.REMOVE:
                                 self.twSubjects.removeRow(row_mem[nameToDelete])
                         else:  # remove without asking
                             self.twSubjects.removeRow(row_mem[nameToDelete])
@@ -1326,7 +1347,7 @@ class projectDialog(QDialog, Ui_dlgProject):
             if self.twSubjects.item(r, 0):
 
                 # check key length
-                if (self.twSubjects.item(r, 0).text().upper() not in list(function_keys.values()) and
+                if (self.twSubjects.item(r, 0).text().upper() not in list(cfg.function_keys.values()) and
                         len(self.twSubjects.item(r, 0).text()) > 1):
                     self.lbSubjectsState.setText(
                         (f'<font color="red">Error on key {self.twSubjects.item(r, 0).text()} for subject!</font>'
@@ -1383,10 +1404,10 @@ class projectDialog(QDialog, Ui_dlgProject):
         self.leSetValues.setText(self.twVariables.item(row, 4).text())
 
         self.cbType.clear()
-        self.cbType.addItems(AVAILABLE_INDEP_VAR_TYPES)
-        self.cbType.setCurrentIndex(NUMERIC_idx)
+        self.cbType.addItems(cfg.AVAILABLE_INDEP_VAR_TYPES)
+        self.cbType.setCurrentIndex(cfg.NUMERIC_idx)
 
-        self.cbType.setCurrentIndex(AVAILABLE_INDEP_VAR_TYPES.index(self.twVariables.item(row, 2).text()))
+        self.cbType.setCurrentIndex(cfg.AVAILABLE_INDEP_VAR_TYPES.index(self.twVariables.item(row, 2).text()))
 
     def pbRemoveObservation_clicked(self):
         """
@@ -1395,17 +1416,17 @@ class projectDialog(QDialog, Ui_dlgProject):
 
         try:
             if not self.twObservations.selectedIndexes():
-                QMessageBox.warning(self, programName, "No selected observation")
+                QMessageBox.warning(self, cfg.programName, "No selected observation")
             else:
-                response = dialog.MessageDialog(programName, "Are you sure to remove all the selected observation?",
-                                                [YES, CANCEL])
-                if response == YES:
+                response = dialog.MessageDialog(cfg.programName, "Are you sure to remove all the selected observation?",
+                                                [cfg.YES, cfg.CANCEL])
+                if response == cfg.YES:
                     rows_to_delete = []
                     for index in self.twObservations.selectedIndexes():
                         rows_to_delete.append(index.row())
                         obs_id = self.twObservations.item(index.row(), 0).text()
-                        if obs_id in self.pj[OBSERVATIONS]:
-                            del self.pj[OBSERVATIONS][obs_id]
+                        if obs_id in self.pj[cfg.OBSERVATIONS]:
+                            del self.pj[cfg.OBSERVATIONS][obs_id]
 
                     for row in sorted(set(rows_to_delete), reverse=True):
                         self.twObservations.removeRow(row)
@@ -1415,7 +1436,7 @@ class projectDialog(QDialog, Ui_dlgProject):
     def pbCancel_clicked(self):
         if self.flag_modified:
             if dialog.MessageDialog("BORIS", "The converters were modified. Are you sure to cancel?",
-                                    [CANCEL, OK]) == OK:
+                                    [cfg.CANCEL, cfg.OK]) == cfg.OK:
                 self.reject()
         else:
             self.reject()
@@ -1426,11 +1447,11 @@ class projectDialog(QDialog, Ui_dlgProject):
         """
 
         if self.lbObservationsState.text():
-            QMessageBox.warning(self, programName, self.lbObservationsState.text())
+            QMessageBox.warning(self, cfg.programName, self.lbObservationsState.text())
             return
 
         if self.lbSubjectsState.text():
-            QMessageBox.warning(self, programName, self.lbSubjectsState.text())
+            QMessageBox.warning(self, cfg.programName, self.lbSubjectsState.text())
             return
 
         self.pj["project_name"] = self.leProjectName.text().strip()
@@ -1439,9 +1460,9 @@ class projectDialog(QDialog, Ui_dlgProject):
 
         # time format
         if self.rbSeconds.isChecked():
-            self.pj["time_format"] = S
+            self.pj["time_format"] = cfg.S
         if self.rbHMS.isChecked():
-            self.pj["time_format"] = HHMMSS
+            self.pj["time_format"] = cfg.HHMMSS
 
         # store subjects
         self.subjects_conf = {}
@@ -1453,15 +1474,15 @@ class projectDialog(QDialog, Ui_dlgProject):
                 if self.twSubjects.item(row, 1).text() != self.twSubjects.item(row, 1).text().strip():
                     subjects_name_with_leading_trailing_spaces += f'"{self.twSubjects.item(row, 1).text()}" '
 
-        remove_leading_trailing_spaces = NO
+        remove_leading_trailing_spaces = cfg.NO
         if subjects_name_with_leading_trailing_spaces:
 
-            remove_leading_trailing_spaces = dialog.MessageDialog(programName, (
+            remove_leading_trailing_spaces = dialog.MessageDialog(cfg.programName, (
                 "Attention! Some leading and/or trailing spaces are present in the following <b>subject name(s)</b>:<br>"
                 f"<b>{subjects_name_with_leading_trailing_spaces}</b><br><br>"
                 "Do you want to remove the leading and trailing spaces?<br><br>"
                 '<font color="red"><b>Be careful with this option'
-                " if you have already done observations!</b></font>"), [YES, NO])
+                " if you have already done observations!</b></font>"), [cfg.YES, cfg.NO])
 
         # check subjects
         for row in range(self.twSubjects.rowCount()):
@@ -1473,22 +1494,23 @@ class projectDialog(QDialog, Ui_dlgProject):
 
             # check subject name
             if self.twSubjects.item(row, 1):
-                if remove_leading_trailing_spaces == YES:
+                if remove_leading_trailing_spaces == cfg.YES:
                     subjectName = self.twSubjects.item(row, 1).text().strip()
                 else:
                     subjectName = self.twSubjects.item(row, 1).text()
 
                 # check if subject name is empty
                 if subjectName == "":
-                    QMessageBox.warning(self, programName, f"The subject name can not be empty (check row #{row + 1}).")
+                    QMessageBox.warning(self, cfg.programName,
+                                        f"The subject name can not be empty (check row #{row + 1}).")
                     return
 
                 if "|" in subjectName:
-                    QMessageBox.warning(self, programName,
+                    QMessageBox.warning(self, cfg.programName,
                                         f"The pipe (|) character is not allowed in subject name <b>{subjectName}</b>")
                     return
             else:
-                QMessageBox.warning(self, programName,
+                QMessageBox.warning(self, cfg.programName,
                                     f"Missing subject name in subjects configuration at row #{row + 1}")
                 return
 
@@ -1503,7 +1525,7 @@ class projectDialog(QDialog, Ui_dlgProject):
                 "description": subjectDescription
             }
 
-        self.pj[SUBJECTS] = dict(self.subjects_conf)
+        self.pj[cfg.SUBJECTS] = dict(self.subjects_conf)
 
         # store behaviors
         missing_data = []
@@ -1516,13 +1538,13 @@ class projectDialog(QDialog, Ui_dlgProject):
         code_with_leading_trailing_spaces, modifiers_with_leading_trailing_spaces = [], []
         for r in range(self.twBehaviors.rowCount()):
 
-            if self.twBehaviors.item(r, behavioursFields["code"]).text() != self.twBehaviors.item(
-                    r, behavioursFields["code"]).text().strip():
-                code_with_leading_trailing_spaces.append(self.twBehaviors.item(r, behavioursFields["code"]).text())
+            if self.twBehaviors.item(r, cfg.behavioursFields["code"]).text() != self.twBehaviors.item(
+                    r, cfg.behavioursFields["code"]).text().strip():
+                code_with_leading_trailing_spaces.append(self.twBehaviors.item(r, cfg.behavioursFields["code"]).text())
 
-            if self.twBehaviors.item(r, behavioursFields["modifiers"]).text():
+            if self.twBehaviors.item(r, cfg.behavioursFields["modifiers"]).text():
                 try:
-                    modifiers_dict = eval(self.twBehaviors.item(r, behavioursFields["modifiers"]).text())
+                    modifiers_dict = eval(self.twBehaviors.item(r, cfg.behavioursFields["modifiers"]).text())
                     for k in modifiers_dict:
                         for value in modifiers_dict[k]["values"]:
                             modif_code = value.split(" (")[0]
@@ -1531,57 +1553,58 @@ class projectDialog(QDialog, Ui_dlgProject):
                 except Exception:
                     logging.critical("error checking leading/trailing spaces in modifiers")
 
-        remove_leading_trailing_spaces = NO
+        remove_leading_trailing_spaces = cfg.NO
         if code_with_leading_trailing_spaces:
             remove_leading_trailing_spaces = dialog.MessageDialog(
-                programName,
+                cfg.programName,
                 ("<b>Warning!</b> Some leading and/or trailing spaces are present"
                  " in the following behaviors code(s):<br>"
                  f"<b>{'<br>'.join([x.replace(' ', '&#9608;') for x in code_with_leading_trailing_spaces])}</b><br><br>"
                  "Do you want to remove the leading and trailing spaces from behaviors?<br><br>"
                  """<font color="red"><b>Be careful with this option"""
                  """ if you have already done observations!</b></font>"""),
-                [YES, NO, CANCEL],
+                [cfg.YES, cfg.NO, cfg.CANCEL],
             )
-        if remove_leading_trailing_spaces == CANCEL:
+        if remove_leading_trailing_spaces == cfg.CANCEL:
             return
 
-        remove_leading_trailing_spaces_in_modifiers = NO
+        remove_leading_trailing_spaces_in_modifiers = cfg.NO
         if modifiers_with_leading_trailing_spaces:
             remove_leading_trailing_spaces_in_modifiers = dialog.MessageDialog(
-                programName,
+                cfg.programName,
                 ("<b>Warning!</b> Some leading and/or trailing spaces are present"
                  " in the following modifier(s):<br>"
                  f"<b>{'<br>'.join([x.replace(' ', '&#9608;') for x in set(modifiers_with_leading_trailing_spaces)])}</b><br><br>"
                  "Do you want to remove the leading and trailing spaces from modifiers?<br><br>"
                  """<font color="red"><b>Be careful with this option"""
                  """ if you have already done observations!</b></font>"""),
-                [YES, NO, CANCEL],
+                [cfg.YES, cfg.NO, cfg.CANCEL],
             )
-        if remove_leading_trailing_spaces_in_modifiers == CANCEL:
+        if remove_leading_trailing_spaces_in_modifiers == cfg.CANCEL:
             return
 
         codingMapsList = []
         for r in range(self.twBehaviors.rowCount()):
             row = {}
-            for field in behavioursFields:
-                if self.twBehaviors.item(r, behavioursFields[field]):
+            for field in cfg.behavioursFields:
+                if self.twBehaviors.item(r, cfg.behavioursFields[field]):
 
                     # check for | char in code
-                    if field == "code" and "|" in self.twBehaviors.item(r, behavioursFields[field]).text():
-                        QMessageBox.warning(self, programName,
-                                            ("The pipe (|) character is not allowed in code "
-                                             f"<b>{self.twBehaviors.item(r, behavioursFields[field]).text()}</b> !"))
+                    if field == "code" and "|" in self.twBehaviors.item(r, cfg.behavioursFields[field]).text():
+                        QMessageBox.warning(
+                            self, cfg.programName,
+                            ("The pipe (|) character is not allowed in code "
+                             f"<b>{self.twBehaviors.item(r, cfg.behavioursFields[field]).text()}</b> !"))
                         return
 
-                    if remove_leading_trailing_spaces == YES:
-                        row[field] = self.twBehaviors.item(r, behavioursFields[field]).text().strip()
+                    if remove_leading_trailing_spaces == cfg.YES:
+                        row[field] = self.twBehaviors.item(r, cfg.behavioursFields[field]).text().strip()
                     else:
-                        row[field] = self.twBehaviors.item(r, behavioursFields[field]).text()
+                        row[field] = self.twBehaviors.item(r, cfg.behavioursFields[field]).text()
 
                     if field == "modifiers" and row["modifiers"]:
 
-                        if remove_leading_trailing_spaces_in_modifiers == YES:
+                        if remove_leading_trailing_spaces_in_modifiers == cfg.YES:
                             try:
                                 modifiers_dict = eval(row["modifiers"])
                                 for k in modifiers_dict:
@@ -1596,7 +1619,7 @@ class projectDialog(QDialog, Ui_dlgProject):
 
                                 logging.critical("Error removing leading/trailing spaces in modifiers")
 
-                                QMessageBox.critical(self, programName,
+                                QMessageBox.critical(self, cfg.programName,
                                                      "Error removing leading/trailing spaces in modifiers")
 
                         else:
@@ -1609,58 +1632,60 @@ class projectDialog(QDialog, Ui_dlgProject):
             else:
                 missing_data.append(str(r + 1))
 
-            if self.twBehaviors.item(r, behavioursFields["coding map"]).text():
-                codingMapsList.append(self.twBehaviors.item(r, behavioursFields["coding map"]).text())
+            if self.twBehaviors.item(r, cfg.behavioursFields["coding map"]).text():
+                codingMapsList.append(self.twBehaviors.item(r, cfg.behavioursFields["coding map"]).text())
 
         # remove coding map from project if not in ethogram
         cmToDelete = []
-        for cm in self.pj[CODING_MAP]:
+        for cm in self.pj[cfg.CODING_MAP]:
             if cm not in codingMapsList:
                 cmToDelete.append(cm)
 
         for cm in cmToDelete:
-            del self.pj[CODING_MAP][cm]
+            del self.pj[cfg.CODING_MAP][cm]
 
         if missing_data:
-            QMessageBox.warning(self, programName, f"Missing data in ethogram at row {','.join(missing_data)} !")
+            QMessageBox.warning(self, cfg.programName, f"Missing data in ethogram at row {','.join(missing_data)} !")
             return
 
         # check if behavior belong to category that is not in categories list
         behavior_category = []
         for idx in self.obs:
-            if BEHAVIOR_CATEGORY in self.obs[idx]:
-                if self.obs[idx][BEHAVIOR_CATEGORY]:
-                    if self.obs[idx][BEHAVIOR_CATEGORY] not in self.pj[BEHAVIORAL_CATEGORIES]:
-                        behavior_category.append((self.obs[idx][BEHAVIOR_CODE], self.obs[idx][BEHAVIOR_CATEGORY]))
+            if cfg.BEHAVIOR_CATEGORY in self.obs[idx]:
+                if self.obs[idx][cfg.BEHAVIOR_CATEGORY]:
+                    if self.obs[idx][cfg.BEHAVIOR_CATEGORY] not in self.pj[cfg.BEHAVIORAL_CATEGORIES]:
+                        behavior_category.append(
+                            (self.obs[idx][cfg.BEHAVIOR_CODE], self.obs[idx][cfg.BEHAVIOR_CATEGORY]))
         if behavior_category:
 
-            response = dialog.MessageDialog(f"{programName} - Behavioral categories", (
+            response = dialog.MessageDialog(f"{cfg.programName} - Behavioral categories", (
                 "The behavioral categorie(s) "
                 f"{', '.join(set(['<b>' + x[1] + '</b>' + ' (used with <b>' + x[0] + '</b>)' for x in behavior_category]))} "
-                "are no more defined in behavioral categories list"), ["Add behavioral category/ies", "Ignore", CANCEL])
+                "are no more defined in behavioral categories list"),
+                                            ["Add behavioral category/ies", "Ignore", cfg.CANCEL])
             if response == "Add behavioral category/ies":
-                [self.pj[BEHAVIORAL_CATEGORIES].append(x1) for x1 in set(x[1] for x in behavior_category)]
-            if response == CANCEL:
+                [self.pj[cfg.BEHAVIORAL_CATEGORIES].append(x1) for x1 in set(x[1] for x in behavior_category)]
+            if response == cfg.CANCEL:
                 return
 
         # delete coding maps loaded in pj and not cited in ethogram
-        self.pj[ETHOGRAM] = dict(self.obs)
+        self.pj[cfg.ETHOGRAM] = dict(self.obs)
 
         # independent variables
         r, msg = self.check_indep_var_config()
         if not r:
-            QMessageBox.warning(self, programName + " - Independent variables error", msg)
+            QMessageBox.warning(self, cfg.programName + " - Independent variables error", msg)
             return
 
         self.indVar = {}
         for r in range(self.twVariables.rowCount()):
             row = {}
-            for idx, field in enumerate(tw_indVarFields):
+            for idx, field in enumerate(cfg.tw_indVarFields):
                 if self.twVariables.item(r, idx):
                     # check if label is empty
                     if field == "label" and self.twVariables.item(r, idx).text() == "":
                         QMessageBox.warning(
-                            self, programName,
+                            self, cfg.programName,
                             f"The label of an indipendent variable can not be empty (check row #{r + 1}).")
                         return
                     row[field] = self.twVariables.item(r, idx).text().strip()
@@ -1669,7 +1694,7 @@ class projectDialog(QDialog, Ui_dlgProject):
 
             self.indVar[str(len(self.indVar))] = row
 
-        self.pj[INDEPENDENT_VARIABLES] = dict(self.indVar)
+        self.pj[cfg.INDEPENDENT_VARIABLES] = dict(self.indVar)
 
         # converters
         converters = {}
@@ -1679,7 +1704,7 @@ class projectDialog(QDialog, Ui_dlgProject):
                 "description": self.tw_converters.item(row, 1).text(),
                 "code": self.tw_converters.item(row, 2).text().replace("@", "\n")
             }
-        self.pj[CONVERTERS] = dict(converters)
+        self.pj[cfg.CONVERTERS] = dict(converters)
 
         self.accept()
 
@@ -1722,7 +1747,7 @@ class projectDialog(QDialog, Ui_dlgProject):
 
         try:
             if not self.tw_converters.selectedIndexes():
-                QMessageBox.warning(self, programName, "Select a converter in the table")
+                QMessageBox.warning(self, cfg.programName, "Select a converter in the table")
                 return
 
             for w in [
@@ -1844,10 +1869,10 @@ class projectDialog(QDialog, Ui_dlgProject):
         """Delete selected converter"""
 
         if self.tw_converters.selectedIndexes():
-            if dialog.MessageDialog("BORIS", "Confirm converter deletion", [CANCEL, OK]) == OK:
+            if dialog.MessageDialog("BORIS", "Confirm converter deletion", [cfg.CANCEL, cfg.OK]) == cfg.OK:
                 self.tw_converters.removeRow(self.tw_converters.selectedIndexes()[0].row())
         else:
-            QMessageBox.warning(self, programName, "Select a converter in the table")
+            QMessageBox.warning(self, cfg.programName, "Select a converter in the table")
 
     def load_converters_in_table(self):
         """
@@ -1883,7 +1908,7 @@ class projectDialog(QDialog, Ui_dlgProject):
                     try:
                         converters_from_file = json.loads(f_in.read())["BORIS converters"]
                     except Exception:
-                        QMessageBox.critical(self, programName, "This file does not contain converters...")
+                        QMessageBox.critical(self, cfg.programName, "This file does not contain converters...")
                         return
 
         if mode == "repo":
@@ -1892,14 +1917,14 @@ class projectDialog(QDialog, Ui_dlgProject):
             try:
                 converters_from_repo = urllib.request.urlopen(converters_repo_URL).read().strip().decode("utf-8")
             except Exception:
-                QMessageBox.critical(self, programName,
+                QMessageBox.critical(self, cfg.programName,
                                      "An error occured during retrieving converters from BORIS remote repository")
                 return
 
             try:
                 converters_from_file = eval(converters_from_repo)["BORIS converters"]
             except Exception:
-                QMessageBox.critical(self, programName,
+                QMessageBox.critical(self, cfg.programName,
                                      "An error occured during retrieving converters from BORIS remote repository")
                 return
 
@@ -1929,11 +1954,12 @@ class projectDialog(QDialog, Ui_dlgProject):
                                 if not ok:
                                     break
                                 if text in converter_names:
-                                    QMessageBox.critical(self, programName, "This name already exists in converters")
+                                    QMessageBox.critical(self, cfg.programName,
+                                                         "This name already exists in converters")
 
                                 if not text.replace("_", "a").isalnum():
                                     QMessageBox.critical(
-                                        self, programName,
+                                        self, cfg.programName,
                                         "This name contains forbidden character(s).<br>Use a..z, A..Z, 0..9 _")
 
                                 if text != converter and text not in converter_names and text.replace("_",

@@ -19,7 +19,6 @@ Copyright 2012-2022 Olivier Friard
   MA 02110-1301, USA.
 """
 
-import os
 import pathlib
 import re
 import statistics

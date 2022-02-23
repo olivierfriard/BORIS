@@ -25,8 +25,9 @@ import logging
 from PyQt5.QtCore import pyqtSignal
 from PyQt5.QtWidgets import (QApplication, QWidget, QRadioButton, QLabel, QHBoxLayout, QVBoxLayout, QLineEdit,
                              QPlainTextEdit, QCheckBox, QPushButton, QFileDialog, QMessageBox)
-from boris import dialog
-from boris.config import YES, NO, CANCEL, programName
+from . import dialog
+
+from . import config as cfg
 
 
 class wgMeasurement(QWidget):
@@ -121,11 +122,11 @@ class wgMeasurement(QWidget):
         print("pb close clicked")
         if not self.flagSaved:
             response = dialog.MessageDialog(
-                programName, "The current measurements are not saved. Do you want to save results before closing?",
-                [YES, NO, CANCEL])
-            if response == YES:
+                cfg.programName, "The current measurements are not saved. Do you want to save results before closing?",
+                [cfg.YES, cfg.NO, cfg.CANCEL])
+            if response == cfg.YES:
                 self.pbSave_clicked()
-            if response == CANCEL:
+            if response == cfg.CANCEL:
                 return
         self.closeSignal.emit()
 
@@ -142,9 +143,9 @@ class wgMeasurement(QWidget):
                         f.write(self.pte.toPlainText())
                     self.flagSaved = True
                 except Exception:
-                    QMessageBox.warning(self, programName, "An error occured during saving the measurements")
+                    QMessageBox.warning(self, cfg.programName, "An error occured during saving the measurements")
         else:
-            QMessageBox.information(self, programName, "There are no measurements to save")
+            QMessageBox.information(self, cfg.programName, "There are no measurements to save")
 
 
 if __name__ == '__main__':

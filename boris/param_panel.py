@@ -28,9 +28,11 @@ import sys
 from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import QDialog
 
-from boris import duration_widget
-from boris.config import *
-from boris.param_panel_ui import Ui_Dialog
+from . import duration_widget
+
+from . import config as cfg
+
+from .param_panel_ui import Ui_Dialog
 
 
 class Param_panel(QDialog, Ui_Dialog):
@@ -59,15 +61,15 @@ class Param_panel(QDialog, Ui_Dialog):
 
         self.lwBehaviors.itemClicked.connect(self.behavior_item_clicked)
 
-        self.rb_full.clicked.connect(lambda: self.rb_time(TIME_FULL_OBS))
-        self.rb_limit.clicked.connect(lambda: self.rb_time(TIME_EVENTS))
-        self.rb_interval.clicked.connect(lambda: self.rb_time(TIME_ARBITRARY_INTERVAL))
+        self.rb_full.clicked.connect(lambda: self.rb_time(cfg.TIME_FULL_OBS))
+        self.rb_limit.clicked.connect(lambda: self.rb_time(cfg.TIME_EVENTS))
+        self.rb_interval.clicked.connect(lambda: self.rb_time(cfg.TIME_ARBITRARY_INTERVAL))
 
     def rb_time(self, button):
         """
         time
         """
-        self.frm_time_interval.setEnabled(button == TIME_ARBITRARY_INTERVAL)
+        self.frm_time_interval.setEnabled(button == cfg.TIME_ARBITRARY_INTERVAL)
 
     def subjects_button_clicked(self, command):
         for idx in range(self.lwSubjects.count()):
@@ -137,13 +139,15 @@ class Param_panel(QDialog, Ui_Dialog):
         observed_behaviors = []
 
         # extract events from selected observations
-        all_events = [self.pj[OBSERVATIONS][x][EVENTS] for x in self.pj[OBSERVATIONS] if x in selected_observations]
+        all_events = [
+            self.pj[cfg.OBSERVATIONS][x][cfg.EVENTS] for x in self.pj[cfg.OBSERVATIONS] if x in selected_observations
+        ]
 
         for events in all_events:
             for event in events:
-                if (event[EVENT_SUBJECT_FIELD_IDX] in selected_subjects or
-                    (not event[EVENT_SUBJECT_FIELD_IDX] and NO_FOCAL_SUBJECT in selected_subjects)):
-                    observed_behaviors.append(event[EVENT_BEHAVIOR_FIELD_IDX])
+                if (event[cfg.EVENT_SUBJECT_FIELD_IDX] in selected_subjects or
+                    (not event[cfg.EVENT_SUBJECT_FIELD_IDX] and cfg.NO_FOCAL_SUBJECT in selected_subjects)):
+                    observed_behaviors.append(event[cfg.EVENT_BEHAVIOR_FIELD_IDX])
 
         # remove duplicate
         return list(set(observed_behaviors))
