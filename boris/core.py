@@ -921,13 +921,12 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 "hs_hue": self.dw_player[n_player].player.hue,
             }
 
-        self.w = video_equalizer.Video_equalizer(equalizer)
-        self.w.sendEventSignal.connect(update_parameter)
+        self.video_equalizer_wgt = video_equalizer.Video_equalizer(equalizer)
+        self.video_equalizer_wgt.sendEventSignal.connect(update_parameter)
         # send key press events received by widget to main window
-        self.w.sendKeyPressSignal.connect(self.signal_from_widget)
-        #self.w.equalizer = equalizer
+        self.video_equalizer_wgt.sendKeyPressSignal.connect(self.signal_from_widget)
 
-        self.w.show()
+        self.video_equalizer_wgt.show()
 
     def block_dockwidgets(self):
         """
@@ -3796,8 +3795,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         def close_measurement_widget():
 
-            print("close measurement widget")
-
             self.geometric_measurements_mode = False
             for n_player, dw in enumerate(self.dw_player):
                 dw.frame_viewer.clear()
@@ -5182,7 +5179,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
     def close_tool_windows(self):
         """
-        close tool windows: spectrogram, measurements, coding pad
+        close tool windows:
+            spectrogram
+            measurements
+            coding pad
+            video_equalizer
         """
 
         logging.debug("function: close_tool_windows")
@@ -5276,6 +5277,13 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             try:
                 self.mapCreatorWindow.close()
                 del self.mapCreatorWindow
+            except Exception:
+                pass
+
+        if hasattr(self, "video_equalizer_wgt"):
+            try:
+                self.video_equalizer_wgt.close()
+                del self.video_equalizer_wgt
             except Exception:
                 pass
 
