@@ -2659,8 +2659,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
             if self.playMode == FFMPEG:
                 # get time in current media
-                currentMedia, frameCurrentMedia = self.getCurrentMediaByFrame(PLAYER1, self.FFmpegGlobalFrame, self.fps)
-                current_media_time = float(frameCurrentMedia / self.fps)
+                currentMedia, frameCurrentMedia = self.getCurrentMediaByFrame(PLAYER1, self.FFmpegGlobalFrame, self.FFmpegTimerTick)
+                current_media_time = float(frameCurrentMedia / self.FFmpegTimerTick)
 
             tmp_dir = self.ffmpeg_cache_dir if self.ffmpeg_cache_dir and os.path.isdir(
                 self.ffmpeg_cache_dir) else tempfile.gettempdir()
@@ -3647,7 +3647,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             frameCurrentMedia
         """
         currentMedia, frameCurrentMedia = "", 0
-        frameMs = 1000 / fps
+
+        '''frameMs = 1000 / fps'''
+        frameMs = 1000 / self.FFmpegTimerTick
+
         for idx, media in enumerate(self.pj[OBSERVATIONS][self.observationId][FILE][player]):
             if requiredFrame * frameMs < sum(self.dw_player[int(player) - 1].media_durations[0:idx + 1]):
                 currentMedia = media
@@ -3735,7 +3738,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         logging.debug("ffmpeg_timer_out function")
         logging.debug(f"fps {self.fps}")
 
-        frameMs = 1000 / self.fps
+        
+        '''frameMs = 1000 / self.fps'''
+        frameMs = 1000 / self.FFmpegTimerTick
 
         logging.debug(f"frame Ms {frameMs}")
 
@@ -3811,7 +3816,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     self.statusbar.showMessage("Extracting frames to disk", 0)
                     QApplication.processEvents()
 
-                    utilities.extract_frames(self.ffmpeg_bin, frameCurrentMedia, (frameCurrentMedia - 1) / self.fps,
+                    utilities.extract_frames(self.ffmpeg_bin, frameCurrentMedia,
+                                             #(frameCurrentMedia - 1) / self.fps,
+                                            (frameCurrentMedia - 1) / self.FFmpegTimerTick,
                                              current_media_full_path, round(self.fps), self.imageDirectory, md5FileName,
                                              self.frame_bitmap_format.lower(), self.frame_resize, self.fbf_cache_size)
                     '''
@@ -3822,7 +3829,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     if not os.path.isfile(frame_image_path):
 
                         logging.warning(
-                            f"frame not found: {frame_image_path} {frameCurrentMedia} {int(frameCurrentMedia / self.fps)}"
+                            f"frame not found: {frame_image_path} {frameCurrentMedia} {int(frameCurrentMedia / self.FFmpegTimerTick)}"
                         )
 
                         return
@@ -8767,7 +8774,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
             self.fps = all_fps[0]
 
-            globalCurrentFrame = round(globalTime / (1000 / self.fps))
+            '''globalCurrentFrame = round(globalTime / (1000 / self.fps))'''
+            globalCurrentFrame = round(globalTime / (1000 / self.FFmpegTimerTick))
 
             self.FFmpegGlobalFrame = globalCurrentFrame
 
@@ -10211,7 +10219,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             if self.playerType == VLC:
                 if self.playMode == FFMPEG:
                     # cumulative time
-                    memLaps = Decimal(self.FFmpegGlobalFrame * (1000 / self.fps) / 1000).quantize(Decimal(".001"))
+                    memLaps = Decimal(self.FFmpegGlobalFrame * (1000 / self.FFmpegTimerTick) / 1000).quantize(Decimal(".001"))
                     return memLaps
                 elif self.playMode == VLC:
                     # cumulative time
