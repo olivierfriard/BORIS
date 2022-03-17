@@ -17,7 +17,6 @@ This file is part of BORIS.
 
   You should have received a copy of the GNU General Public License
   along with this program; if not see <http://www.gnu.org/licenses/>.
-
 """
 
 __version__ = "7.13.1"
