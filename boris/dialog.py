@@ -21,6 +21,8 @@ This file is part of BORIS.
 """
 
 import logging
+import traceback
+import sys
 
 from PyQt5.QtCore import *
 from PyQt5.QtGui import *
@@ -31,7 +33,6 @@ from . import param_panel
 from . import project_functions
 
 from . import utilities
-# from . import utilities as util
 
 from . import version
 
@@ -52,6 +53,7 @@ def MessageDialog(title, text, buttons):
     return message.clickedButton().text()
 
 
+'''
 def error_message_box(task, error_type, error_file_name, error_lineno):
     # do NOT use this function directly, use error_message function
     """
@@ -59,7 +61,7 @@ def error_message_box(task, error_type, error_file_name, error_lineno):
 
     """
     QMessageBox.critical(None, cfg.programName, (f"BORIS version: {version.__version__}<br>"
-                                                 f"An error occured during the execution of: <b>{task}</b>.<br>"
+                                                 f"An error occured during the execution of <b>{task}</b>.<br>"
                                                  f"Error: {error_type}<br>"
                                                  f"in {error_file_name} "
                                                  f"at line # {error_lineno}<br><br>"
@@ -68,6 +70,7 @@ def error_message_box(task, error_type, error_file_name, error_lineno):
                                                  'https://github.com/olivierfriard/BORIS/issues</a><br>'
                                                  "or by email (See the About page on the BORIS web site.<br><br>"
                                                  "Thank you for your collaboration!"))
+'''
 
 
 def error_message_box2(error_traceback):
@@ -76,24 +79,40 @@ def error_message_box2(error_traceback):
     show a critical dialog
 
     """
-    QMessageBox.critical(None, cfg.programName, (f"BORIS version: {version.__version__}<br><br>"
-                                                 f"<b>An error has occured</b>:<br>"
-                                                 f"{error_traceback}<br><br>"
-                                                 "to improve the software please report this problem at:<br>"
-                                                 '<a href="https://github.com/olivierfriard/BORIS/issues">'
-                                                 'https://github.com/olivierfriard/BORIS/issues</a><br>'
-                                                 "or by email (See the About page on the BORIS web site.<br><br>"
-                                                 "Thank you for your collaboration!"))
+    QMessageBox.critical(
+        None,
+        cfg.programName,
+        (
+            f"BORIS version: {version.__version__}<br><br>"
+            f"<b>An error has occured</b>:<br>"
+            f"{error_traceback}<br><br>"
+            "to improve the software please report this problem at:<br>"
+            '<a href="https://github.com/olivierfriard/BORIS/issues">'
+            "https://github.com/olivierfriard/BORIS/issues</a><br>"
+            "or by email (See the About page on the BORIS web site.<br><br>"
+            "Thank you for your collaboration!"
+        ),
+    )
 
 
-def error_message(task: str, exc_info: tuple) -> None:
+'''
+def error_message(task: str) -> None:
     """
     Show details about the error in a message box
     write entry to log as CRITICAL
+
+    usage:
+    dialog.error_message(sys._getframe().f_code.co_name)
     """
-    error_type, error_file_name, error_lineno = utilities.error_info(exc_info)
+
+    exc_type, exc_obj, exc_tb = sys.exc_info()
+    error_file_name = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
+    error_type = f"{exc_type}: {exc_obj}"
+    error_lineno = exc_tb.tb_lineno
+
     logging.critical(f"Error during {task}: {error_type} in {error_file_name} at line #{error_lineno}")
     error_message_box(task, error_type, error_file_name, error_lineno)
+'''
 
 
 def error_message2() -> None:
@@ -102,13 +121,41 @@ def error_message2() -> None:
     write entry to log as CRITICAL
     """
 
-    error_traceback = utilities.error_info2()
+    error_traceback = traceback.format_exc().replace("Traceback (most recent call last):", "").replace("\n", " ")
+
     logging.critical(error_traceback)
     error_message_box2(error_traceback)
 
 
-class Info_widget(QWidget):
+def error_message3(exception_type, exception_value, traceback_object):
 
+    exception_text = "".join(traceback.format_exception(exception_type, exception_value, traceback_object))
+    logging.critical(exception_text)
+
+    # error_message_box2(exception_text.replace("\r\n", "\n").replace("\n", "<br>"))
+
+    errorbox = QMessageBox()
+    errorbox.setWindowTitle("BORIS error occured")
+    errorbox.setText(exception_text.replace("\r\n", "\n").replace("\n", "<br>"))
+    errorbox.setTextFormat(Qt.RichText)
+    errorbox.setStandardButtons(QMessageBox.Abort)
+
+    continueButton = errorbox.addButton("Ignore and try to continue", QMessageBox.RejectRole)
+
+    ret = errorbox.exec_()
+    print(ret)
+    print(QMessageBox.Abort)
+
+    if ret == QMessageBox.Abort:
+        sys.exit(1)
+    else:
+        try:
+            sys._excepthook(exception_type, exception_value, traceback_object)
+        except:
+            pass
+
+
+class Info_widget(QWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
 
@@ -173,20 +220,35 @@ class Video_overlay_dialog(QDialog):
 
     def ok(self):
         if not self.le_file_path.text():
-            QMessageBox.warning(None, cfg.programName, "Select a file containing a PNG image",
-                                QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
+            QMessageBox.warning(
+                None,
+                cfg.programName,
+                "Select a file containing a PNG image",
+                QMessageBox.Ok | QMessageBox.Default,
+                QMessageBox.NoButton,
+            )
             return
 
         if self.le_overlay_position.text() and "," not in self.le_overlay_position.text():
-            QMessageBox.warning(None, cfg.programName, "The overlay position must be in x,y format",
-                                QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
+            QMessageBox.warning(
+                None,
+                cfg.programName,
+                "The overlay position must be in x,y format",
+                QMessageBox.Ok | QMessageBox.Default,
+                QMessageBox.NoButton,
+            )
             return
         if self.le_overlay_position.text():
             try:
                 [int(x.strip()) for x in self.le_overlay_position.text().split(",")]
             except Exception:
-                QMessageBox.warning(None, cfg.programName, "The overlay position must be in x,y format",
-                                    QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
+                QMessageBox.warning(
+                    None,
+                    cfg.programName,
+                    "The overlay position must be in x,y format",
+                    QMessageBox.Ok | QMessageBox.Default,
+                    QMessageBox.NoButton,
+                )
                 return
         self.accept()
 
@@ -194,7 +256,6 @@ class Video_overlay_dialog(QDialog):
 class Input_dialog(QDialog):
     """
     dialog for user input. Elements can be checkbox, lineedit or spinbox
-
     """
 
     def __init__(self, label_caption, elements_list):
@@ -235,7 +296,8 @@ class Input_dialog(QDialog):
                 self.elements[element[1]].addItems([x[0] for x in element[2]])  # take first element of tuple
                 try:
                     self.elements[element[1]].setCurrentIndex(
-                        [idx for idx, x in enumerate(element[2]) if x[1] == "selected"][0])
+                        [idx for idx, x in enumerate(element[2]) if x[1] == "selected"][0]
+                    )
                 except:
                     self.elements[element[1]].setCurrentIndex(0)
                 hbox.addWidget(self.elements[element[1]])
@@ -471,13 +533,23 @@ class EditSelectedEvents(QDialog):
 
     def pbOK_clicked(self):
         if not self.rbSubject.isChecked() and not self.rbBehavior.isChecked() and not self.rbComment.isChecked():
-            QMessageBox.warning(None, cfg.programName, "You must select a field to be edited",
-                                QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
+            QMessageBox.warning(
+                None,
+                cfg.programName,
+                "You must select a field to be edited",
+                QMessageBox.Ok | QMessageBox.Default,
+                QMessageBox.NoButton,
+            )
             return
 
         if (self.rbSubject.isChecked() or self.rbBehavior.isChecked()) and self.newText.selectedItems() == []:
-            QMessageBox.warning(None, cfg.programName, "You must select a new value from the list",
-                                QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
+            QMessageBox.warning(
+                None,
+                cfg.programName,
+                "You must select a new value from the list",
+                QMessageBox.Ok | QMessageBox.Default,
+                QMessageBox.NoButton,
+            )
             return
 
         self.accept()
@@ -556,7 +628,7 @@ class FindReplaceEvents(QWidget):
     """
 
     clickSignal = pyqtSignal(str)
-    '''sendEventSignal = pyqtSignal(QEvent)'''
+    """sendEventSignal = pyqtSignal(QEvent)"""
 
     def __init__(self):
         super().__init__()
@@ -878,14 +950,16 @@ def extract_observed_behaviors(pj, selected_observations, selectedSubjects):
 '''
 
 
-def choose_obs_subj_behav_category(pj: dict,
-                                   selected_observations: list,
-                                   maxTime=0,
-                                   flagShowIncludeModifiers: bool = True,
-                                   flagShowExcludeBehaviorsWoEvents: bool = True,
-                                   by_category: bool = False,
-                                   show_time: bool = False,
-                                   timeFormat: str = cfg.HHMMSS):
+def choose_obs_subj_behav_category(
+    pj: dict,
+    selected_observations: list,
+    maxTime=0,
+    flagShowIncludeModifiers: bool = True,
+    flagShowExcludeBehaviorsWoEvents: bool = True,
+    by_category: bool = False,
+    show_time: bool = False,
+    timeFormat: str = cfg.HHMMSS,
+):
     """
     show window for:
       - selection of subjects
@@ -925,22 +999,22 @@ def choose_obs_subj_behav_category(pj: dict,
     if timeFormat == cfg.HHMMSS:
         paramPanelWindow.start_time.set_format_hhmmss()
         paramPanelWindow.end_time.set_format_hhmmss()
-        '''
+        """
         paramPanelWindow.teStartTime.setTime(QTime.fromString("00:00:00.000", "hh:mm:ss.zzz"))
         paramPanelWindow.teEndTime.setTime(QTime.fromString(utilities.seconds2time(maxTime), "hh:mm:ss.zzz"))
         paramPanelWindow.dsbStartTime.setVisible(False)
         paramPanelWindow.dsbEndTime.setVisible(False)
-        '''
+        """
 
     if timeFormat == cfg.S:
         paramPanelWindow.start_time.set_format_s()
         paramPanelWindow.end_time.set_format_s()
-        '''
+        """
         paramPanelWindow.dsbStartTime.setValue(0.0)
         paramPanelWindow.dsbEndTime.setValue(maxTime)
         paramPanelWindow.teStartTime.setVisible(False)
         paramPanelWindow.teEndTime.setVisible(False)
-        '''
+        """
     paramPanelWindow.start_time.set_time(0)
     paramPanelWindow.end_time.set_time(maxTime)
 
@@ -977,25 +1051,26 @@ def choose_obs_subj_behav_category(pj: dict,
             paramPanelWindow.ch.setChecked(True)
         paramPanelWindow.lwSubjects.setItemWidget(paramPanelWindow.item, paramPanelWindow.ch)
 
-    logging.debug(f'selectedSubjects: {selectedSubjects}')
+    logging.debug(f"selectedSubjects: {selectedSubjects}")
 
     if selected_observations:
-        observedBehaviors = paramPanelWindow.extract_observed_behaviors(selected_observations,
-                                                                        selectedSubjects)  # not sorted
+        observedBehaviors = paramPanelWindow.extract_observed_behaviors(
+            selected_observations, selectedSubjects
+        )  # not sorted
     else:
         # load all behaviors
         observedBehaviors = [pj[cfg.ETHOGRAM][x][cfg.BEHAVIOR_CODE] for x in pj[cfg.ETHOGRAM]]
 
-    logging.debug(f'observed behaviors: {observedBehaviors}')
+    logging.debug(f"observed behaviors: {observedBehaviors}")
 
     if cfg.BEHAVIORAL_CATEGORIES in pj:
         categories = pj[cfg.BEHAVIORAL_CATEGORIES][:]
         # check if behavior not included in a category
         try:
             if "" in [
-                    pj[cfg.ETHOGRAM][idx][cfg.BEHAVIOR_CATEGORY]
-                    for idx in pj[cfg.ETHOGRAM]
-                    if cfg.BEHAVIOR_CATEGORY in pj[cfg.ETHOGRAM][idx]
+                pj[cfg.ETHOGRAM][idx][cfg.BEHAVIOR_CATEGORY]
+                for idx in pj[cfg.ETHOGRAM]
+                if cfg.BEHAVIOR_CATEGORY in pj[cfg.ETHOGRAM][idx]
             ]:
                 categories += [""]
         except Exception:
@@ -1024,12 +1099,15 @@ def choose_obs_subj_behav_category(pj: dict,
 
         for behavior in [pj[cfg.ETHOGRAM][x][cfg.BEHAVIOR_CODE] for x in utilities.sorted_keys(pj[cfg.ETHOGRAM])]:
 
-            if ((categories == ["###no category###"]) or (behavior in [
+            if (categories == ["###no category###"]) or (
+                behavior
+                in [
                     pj[cfg.ETHOGRAM][x][cfg.BEHAVIOR_CODE]
                     for x in pj[cfg.ETHOGRAM]
-                    if cfg.BEHAVIOR_CATEGORY in pj[cfg.ETHOGRAM][x] and
-                    pj[cfg.ETHOGRAM][x][cfg.BEHAVIOR_CATEGORY] == category
-            ])):
+                    if cfg.BEHAVIOR_CATEGORY in pj[cfg.ETHOGRAM][x]
+                    and pj[cfg.ETHOGRAM][x][cfg.BEHAVIOR_CATEGORY] == category
+                ]
+            ):
 
                 paramPanelWindow.item = QListWidgetItem(behavior)
                 if behavior in observedBehaviors:
@@ -1057,17 +1135,22 @@ def choose_obs_subj_behav_category(pj: dict,
 
     startTime = paramPanelWindow.start_time.get_time()
     endTime = paramPanelWindow.end_time.get_time()
-    '''
+    """
     if timeFormat == HHMMSS:
         startTime = utilities.time2seconds(paramPanelWindow.teStartTime.time().toString(HHMMSSZZZ))
         endTime = utilities.time2seconds(paramPanelWindow.teEndTime.time().toString(HHMMSSZZZ))
     if timeFormat == S:
         startTime = Decimal(paramPanelWindow.dsbStartTime.value())
         endTime = Decimal(paramPanelWindow.dsbEndTime.value())
-    '''
+    """
     if startTime > endTime:
-        QMessageBox.warning(None, cfg.programName, "The start time is greater than the end time",
-                            QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
+        QMessageBox.warning(
+            None,
+            cfg.programName,
+            "The start time is greater than the end time",
+            QMessageBox.Ok | QMessageBox.Default,
+            QMessageBox.NoButton,
+        )
         return {cfg.SELECTED_SUBJECTS: [], cfg.SELECTED_BEHAVIORS: []}
 
     if paramPanelWindow.rb_full.isChecked():
@@ -1084,5 +1167,5 @@ def choose_obs_subj_behav_category(pj: dict,
         cfg.EXCLUDE_BEHAVIORS: paramPanelWindow.cbExcludeBehaviors.isChecked(),
         "time": time_param,
         cfg.START_TIME: startTime,
-        cfg.END_TIME: endTime
+        cfg.END_TIME: endTime,
     }

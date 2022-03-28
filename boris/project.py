@@ -55,9 +55,7 @@ from .config import (programName, behavioursFields, tw_indVarFields, subjectsFie
 from .project_ui import Ui_dlgProject
 
 from . import utilities as util
-'''
-import boris.utilities as utilities
-'''
+
 
 from . import dialog
 
@@ -526,7 +524,7 @@ class projectDialog(QDialog, Ui_dlgProject):
                 QMessageBox.critical(None, cfg.programName, msg, QMessageBox.Ok | QMessageBox.Default,
                                      QMessageBox.NoButton)
         except Exception:
-            dialog.error_message(sys._getframe().f_code.co_name, sys.exc_info())
+            dialog.error_message2()
 
     def leLabel_changed(self):
         try:

@@ -108,6 +108,7 @@ if platform.python_version() < "3.6":
 if sys.platform == "darwin":  # for MacOS
     os.environ["LC_ALL"] = "en_US.UTF-8"
 
+
 # check if argument
 usage = 'usage: %prog [options] [-p PROJECT_PATH] [-o "OBSERVATION ID"]'
 parser = OptionParser(usage=usage)
@@ -381,6 +382,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         super(MainWindow, self).__init__(parent)
         self.setupUi(self)
 
+        sys.excepthook = self.excepthook
+
         self.ffmpeg_bin = ffmpeg_bin
         # set icons
         self.setWindowIcon(QIcon(":/small_logo"))
@@ -469,6 +472,13 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.menu_options()
         self.connections()
         self.readConfigFile()
+        1 / 0
+
+    def excepthook(self, exception_type, exception_value, traceback_object):
+        """
+        error management
+        """
+        dialog.error_message3(exception_type, exception_value, traceback_object)
 
     def menu_options(self):
         """
@@ -895,6 +905,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         """
         Video equalizer
         """
+
         def update_parameter(n_player, parameter, value):
             """
             update player parameter with value received by signal
@@ -5306,6 +5317,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         logging.info(f"Close observation {self.playerType}")
 
         try:
+
+            logging.info(f"Check state events")
+
             # check observation events
             flag_ok, msg = project_functions.check_state_events_obs(
                 self.observationId, self.pj[ETHOGRAM], self.pj[OBSERVATIONS][self.observationId], time_format=HHMMSS
@@ -5356,10 +5370,13 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     else:
                         return
 
+            logging.info(f"Check state events done")
+
             self.saved_state = self.saveState()
 
             if self.playerType == VLC:
 
+                logging.info(f"Stop plot timer")
                 self.plot_timer.stop()
 
                 if self.playMode == MPV:
@@ -5368,6 +5385,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                             str(i + 1) in self.pj[OBSERVATIONS][self.observationId][FILE]
                             and self.pj[OBSERVATIONS][self.observationId][FILE][str(i + 1)]
                         ):
+                            logging.info(f"Stop player {i + 1}")
                             player.player.stop()
 
                 self.verticalLayout_3.removeWidget(self.video_slider)
@@ -5392,11 +5410,15 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 for pd in self.plot_data:
                     self.plot_data[pd].close_plot()
 
+            logging.info(f"close tool window")
+
             self.close_tool_windows()
 
             if self.playerType == VLC:
 
                 for dw in self.dw_player:
+
+                    logging.info(f"remove dock widget")
                     self.removeDockWidget(dw)
                     # dw.player.quit()
                     dw.deleteLater()

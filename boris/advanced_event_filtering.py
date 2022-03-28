@@ -28,11 +28,24 @@ from . import portion as Interval
 import tablib
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QIcon
-from PyQt5.QtWidgets import (QDialog, QFileDialog, QHBoxLayout, QLabel, QLineEdit, QListWidget, QMessageBox,
-                             QPushButton, QRadioButton, QSizePolicy, QSpacerItem, QTableWidget, QTableWidgetItem,
-                             QVBoxLayout)
+from PyQt5.QtWidgets import (
+    QDialog,
+    QFileDialog,
+    QHBoxLayout,
+    QLabel,
+    QLineEdit,
+    QListWidget,
+    QMessageBox,
+    QPushButton,
+    QRadioButton,
+    QSizePolicy,
+    QSpacerItem,
+    QTableWidget,
+    QTableWidgetItem,
+    QVBoxLayout,
+)
 
-from . import (db_functions, dialog, project_functions, select_observations, utilities)
+from . import db_functions, dialog, project_functions, select_observations, utilities
 from . import config as cfg
 
 
@@ -234,13 +247,15 @@ class Advanced_event_filtering_dialog(QDialog):
             self.out = []
             for obs_id in summary:
 
-                self.out.append([
-                    obs_id,
-                    str(len(summary[obs_id])),
-                    str(round(sum(summary[obs_id]), 3)),
-                    str(round(statistics.mean(summary[obs_id]), 3)),
-                    str(round(statistics.stdev(summary[obs_id]), 3)) if len(summary[obs_id]) > 1 else "NA"
-                ])
+                self.out.append(
+                    [
+                        obs_id,
+                        str(len(summary[obs_id])),
+                        str(round(sum(summary[obs_id]), 3)),
+                        str(round(statistics.mean(summary[obs_id]), 3)),
+                        str(round(statistics.stdev(summary[obs_id]), 3)) if len(summary[obs_id]) > 1 else "NA",
+                    ]
+                )
 
             self.lb_results.setText(f"Results ({len(summary)} observation{'s'*(len(summary) > 1)})")
             self.tw.setRowCount(len(summary))
@@ -260,9 +275,12 @@ class Advanced_event_filtering_dialog(QDialog):
         """
 
         extended_file_formats = [
-            "Tab Separated Values (*.tsv)", "Comma Separated Values (*.csv)", "Open Document Spreadsheet ODS (*.ods)",
-            "Microsoft Excel Spreadsheet XLSX (*.xlsx)", "Legacy Microsoft Excel Spreadsheet XLS (*.xls)",
-            "HTML (*.html)"
+            "Tab Separated Values (*.tsv)",
+            "Comma Separated Values (*.csv)",
+            "Open Document Spreadsheet ODS (*.ods)",
+            "Microsoft Excel Spreadsheet XLSX (*.xlsx)",
+            "Legacy Microsoft Excel Spreadsheet XLS (*.xls)",
+            "HTML (*.html)",
         ]
         file_formats = ["tsv", "csv", "ods", "xlsx", "xls", "html"]
 
@@ -276,8 +294,12 @@ class Advanced_event_filtering_dialog(QDialog):
             file_name = str(pathlib.Path(file_name)) + "." + output_format
             # check if file with new extension already exists
             if pathlib.Path(file_name).is_file():
-                if dialog.MessageDialog(cfg.programName, f"The file {file_name} already exists.",
-                                        [cfg.CANCEL, cfg.OVERWRITE]) == cfg.CANCEL:
+                if (
+                    dialog.MessageDialog(
+                        cfg.programName, f"The file {file_name} already exists.", [cfg.CANCEL, cfg.OVERWRITE]
+                    )
+                    == cfg.CANCEL
+                ):
                     return
 
         if self.rb_details.isChecked():
@@ -308,7 +330,8 @@ def event_filtering(pj: dict):
     """
 
     result, selected_observations = select_observations.select_observations(
-        pj, cfg.MULTIPLE, "Select observations for advanced event filtering")
+        pj, cfg.MULTIPLE, "Select observations for advanced event filtering"
+    )
     if not selected_observations:
         return
 
@@ -342,20 +365,22 @@ def event_filtering(pj: dict):
     if max_obs_length == -1:  # media length not available, user choose to not use events
         return
 
-    parameters = dialog.choose_obs_subj_behav_category(pj,
-                                                       selected_observations,
-                                                       maxTime=max_obs_length,
-                                                       flagShowIncludeModifiers=False,
-                                                       flagShowExcludeBehaviorsWoEvents=False,
-                                                       by_category=False)
+    parameters = dialog.choose_obs_subj_behav_category(
+        pj,
+        selected_observations,
+        maxTime=max_obs_length,
+        flagShowIncludeModifiers=False,
+        flagShowExcludeBehaviorsWoEvents=False,
+        by_category=False,
+    )
 
     if not parameters[cfg.SELECTED_SUBJECTS] or not parameters[cfg.SELECTED_BEHAVIORS]:
         QMessageBox.warning(None, cfg.programName, "Select subject(s) and behavior(s) to analyze")
         return
 
-    _, _, db_connector = db_functions.load_aggregated_events_in_db(pj, parameters[cfg.SELECTED_SUBJECTS],
-                                                                   selected_observations,
-                                                                   parameters[cfg.SELECTED_BEHAVIORS])
+    _, _, db_connector = db_functions.load_aggregated_events_in_db(
+        pj, parameters[cfg.SELECTED_SUBJECTS], selected_observations, parameters[cfg.SELECTED_BEHAVIORS]
+    )
 
     cursor = db_connector.cursor()
 
