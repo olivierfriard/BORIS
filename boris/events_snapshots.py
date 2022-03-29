@@ -350,7 +350,7 @@ def extract_events(self):
     in case of point event, from -n to +n seconds are extracted (n is asked to user)
     """
 
-    result, selected_observations = self.selectObservations(cfg.MULTIPLE)
+    _, selected_observations = self.selectObservations(cfg.MULTIPLE)
     if not selected_observations:
         return
 
