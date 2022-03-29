@@ -110,7 +110,7 @@ def connections(self):
     self.actionExport_events_as_Praat_TextGrid.triggered.connect(self.export_state_events_as_textgrid)
     self.actionJWatcher.triggered.connect(lambda: self.export_tabular_events("jwatcher"))
 
-    self.actionExtract_events_from_media_files.triggered.connect(self.extract_events)
+    self.actionExtract_events_from_media_files.triggered.connect(lambda: events_snapshots.extract_events(self))
     self.actionExtract_frames_from_media_files.triggered.connect(lambda: events_snapshots.events_snapshots(self))
 
     self.actionCohen_s_kappa.triggered.connect(lambda: irr.irr_cohen_kappa(self))
