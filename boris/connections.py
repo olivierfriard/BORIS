@@ -1,9 +1,32 @@
+"""
+BORIS
+Behavioral Observation Research Interactive Software
+Copyright 2012-2022 Olivier Friard
+
+  This program is free software; you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation; either version 2 of the License, or
+  (at your option) any later version.
+
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+
+  You should have received a copy of the GNU General Public License
+  along with this program; if not, write to the Free Software
+  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
+  MA 02110-1301, USA.
+"""
+
+
 from PyQt5.QtWidgets import QAction
 from PyQt5.QtCore import QTimer, Qt
 from . import config as cfg
 from . import video_equalizer
 from . import behavior_binary_table
 from . import transitions
+from . import import_observations
 
 
 def connections(self):
@@ -67,7 +90,7 @@ def connections(self):
 
     self.actionMedia_file_information.triggered.connect(self.media_file_info)
 
-    self.actionLoad_observations_file.triggered.connect(self.import_observations)
+    self.actionLoad_observations_file.triggered.connect(lambda: import_observations.import_observations(self))
 
     self.actionExportEvents_2.triggered.connect(lambda: self.export_tabular_events("tabular"))
 

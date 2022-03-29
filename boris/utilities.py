@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """
 BORIS
 Behavioral Observation Research Interactive Software
@@ -133,7 +132,8 @@ def convert_time_to_decimal(pj: dict) -> dict:
             pj[cfg.OBSERVATIONS][obsId]["time offset"] = Decimal(str(pj[cfg.OBSERVATIONS][obsId]["time offset"]))
         for idx, event in enumerate(pj[cfg.OBSERVATIONS][obsId][cfg.EVENTS]):
             pj[cfg.OBSERVATIONS][obsId][cfg.EVENTS][idx][cfg.pj_obs_fields["time"]] = Decimal(
-                pj[cfg.OBSERVATIONS][obsId][cfg.EVENTS][idx][cfg.pj_obs_fields["time"]]).quantize(Decimal(".001"))
+                pj[cfg.OBSERVATIONS][obsId][cfg.EVENTS][idx][cfg.pj_obs_fields["time"]]
+            ).quantize(Decimal(".001"))
 
     return pj
 
@@ -211,11 +211,9 @@ def txt2np_array(file_name: str, columns_str: str, substract_first_value: str, c
         return False, f"{sys.exc_info()[1]}", np.array([])
 
     try:
-        data = np.loadtxt(file_name,
-                          delimiter=dialect.delimiter,
-                          usecols=columns,
-                          skiprows=has_header,
-                          converters=np_converters)
+        data = np.loadtxt(
+            file_name, delimiter=dialect.delimiter, usecols=columns, skiprows=has_header, converters=np_converters
+        )
     except Exception:
         return False, f"{sys.exc_info()[1]}", np.array([])
 
@@ -297,7 +295,8 @@ def aggregate_events(pj: dict, obs_id: str) -> dict:
                     if f"{subject}|{code}|{modifier}" not in intervals_behav:
                         intervals_behav[f"{subject}|{code}|{modifier}"] = []
                     intervals_behav[f"{subject}|{code}|{modifier}"].append(
-                        (mem_behav[f"{subject}|{code}|{modifier}"], time_))
+                        (mem_behav[f"{subject}|{code}|{modifier}"], time_)
+                    )
 
                     mem_behav[f"{subject}|{code}|{modifier}"] = 0
                 else:
@@ -309,11 +308,9 @@ def aggregate_events(pj: dict, obs_id: str) -> dict:
         return {"error": ""}
 
 
-def get_current_states_modifiers_by_subject(state_behaviors_codes: list,
-                                            events: list,
-                                            subjects: dict,
-                                            time: Decimal,
-                                            include_modifiers: bool = False) -> dict:
+def get_current_states_modifiers_by_subject(
+    state_behaviors_codes: list, events: list, subjects: dict, time: Decimal, include_modifiers: bool = False
+) -> dict:
     """
     get current states and modifiers (if requested) for subjects at given time
 
@@ -333,10 +330,13 @@ def get_current_states_modifiers_by_subject(state_behaviors_codes: list,
         for idx in subjects:
             current_states[idx] = []
             for sbc in state_behaviors_codes:
-                bl = [(x[cfg.EVENT_BEHAVIOR_FIELD_IDX], x[cfg.EVENT_MODIFIER_FIELD_IDX])
-                      for x in events
-                      if x[cfg.EVENT_SUBJECT_FIELD_IDX] == subjects[idx][cfg.SUBJECT_NAME] and
-                      x[cfg.EVENT_BEHAVIOR_FIELD_IDX] == sbc and x[cfg.EVENT_TIME_FIELD_IDX] <= time]
+                bl = [
+                    (x[cfg.EVENT_BEHAVIOR_FIELD_IDX], x[cfg.EVENT_MODIFIER_FIELD_IDX])
+                    for x in events
+                    if x[cfg.EVENT_SUBJECT_FIELD_IDX] == subjects[idx][cfg.SUBJECT_NAME]
+                    and x[cfg.EVENT_BEHAVIOR_FIELD_IDX] == sbc
+                    and x[cfg.EVENT_TIME_FIELD_IDX] <= time
+                ]
 
                 if len(bl) % 2:  # test if odd
                     current_states[idx].append(bl[-1][0] + f" ({bl[-1][1]})" * (bl[-1][1] != ""))
@@ -345,19 +345,26 @@ def get_current_states_modifiers_by_subject(state_behaviors_codes: list,
         for idx in subjects:
             current_states[idx] = []
             for sbc in state_behaviors_codes:
-                if len([
-                        x[cfg.EVENT_BEHAVIOR_FIELD_IDX]
-                        for x in events
-                        if x[cfg.EVENT_SUBJECT_FIELD_IDX] == subjects[idx][cfg.SUBJECT_NAME] and
-                        x[cfg.EVENT_BEHAVIOR_FIELD_IDX] == sbc and x[cfg.EVENT_TIME_FIELD_IDX] <= time
-                ]) % 2:  # test if odd
+                if (
+                    len(
+                        [
+                            x[cfg.EVENT_BEHAVIOR_FIELD_IDX]
+                            for x in events
+                            if x[cfg.EVENT_SUBJECT_FIELD_IDX] == subjects[idx][cfg.SUBJECT_NAME]
+                            and x[cfg.EVENT_BEHAVIOR_FIELD_IDX] == sbc
+                            and x[cfg.EVENT_TIME_FIELD_IDX] <= time
+                        ]
+                    )
+                    % 2
+                ):  # test if odd
                     current_states[idx].append(sbc)
 
     return current_states
 
 
-def get_current_states_modifiers_by_subject_2(state_behaviors_codes: list, events: list, subjects: dict,
-                                              time: Decimal) -> dict:
+def get_current_states_modifiers_by_subject_2(
+    state_behaviors_codes: list, events: list, subjects: dict, time: Decimal
+) -> dict:
     """
     get current states and modifiers for subjects at given time
     differs from get_current_states_modifiers_by_subject in the output format: [behavior, modifiers]
@@ -376,10 +383,13 @@ def get_current_states_modifiers_by_subject_2(state_behaviors_codes: list, event
     for idx in subjects:
         current_states[idx] = []
         for sbc in state_behaviors_codes:
-            bl = [(x[cfg.EVENT_BEHAVIOR_FIELD_IDX], x[cfg.EVENT_MODIFIER_FIELD_IDX])
-                  for x in events
-                  if x[cfg.EVENT_SUBJECT_FIELD_IDX] == subjects[idx][cfg.SUBJECT_NAME] and
-                  x[cfg.EVENT_BEHAVIOR_FIELD_IDX] == sbc and x[cfg.EVENT_TIME_FIELD_IDX] <= time]
+            bl = [
+                (x[cfg.EVENT_BEHAVIOR_FIELD_IDX], x[cfg.EVENT_MODIFIER_FIELD_IDX])
+                for x in events
+                if x[cfg.EVENT_SUBJECT_FIELD_IDX] == subjects[idx][cfg.SUBJECT_NAME]
+                and x[cfg.EVENT_BEHAVIOR_FIELD_IDX] == sbc
+                and x[cfg.EVENT_TIME_FIELD_IDX] <= time
+            ]
 
             if len(bl) % 2:  # test if odd
                 current_states[idx].append(bl[-1])
@@ -387,12 +397,14 @@ def get_current_states_modifiers_by_subject_2(state_behaviors_codes: list, event
     return current_states
 
 
-def get_current_points_by_subject(point_behaviors_codes: list,
-                                  events: list,
-                                  subjects: dict,
-                                  time: Decimal,
-                                  tolerance: Decimal,
-                                  include_modifiers: bool = False) -> dict:
+def get_current_points_by_subject(
+    point_behaviors_codes: list,
+    events: list,
+    subjects: dict,
+    time: Decimal,
+    tolerance: Decimal,
+    include_modifiers: bool = False,
+) -> dict:
     """
     get point events for subjects between given time (time) and (time + tolerance)
     includes modifiers
@@ -412,7 +424,7 @@ def get_current_points_by_subject(point_behaviors_codes: list,
     for idx in subjects:
         current_points[idx] = []
         for sbc in point_behaviors_codes:
-            #if include_modifiers:
+            # if include_modifiers:
             point_events = [
                 (x[cfg.EVENT_BEHAVIOR_FIELD_IDX], x[cfg.EVENT_MODIFIER_FIELD_IDX])
                 for x in events
@@ -421,7 +433,7 @@ def get_current_points_by_subject(point_behaviors_codes: list,
                 and time <= x[cfg.EVENT_TIME_FIELD_IDX] < (time + tolerance)
             ]
 
-            #else:
+            # else:
             #    point_events = [x[EVENT_BEHAVIOR_FIELD_IDX] for x in events
             #                    if x[EVENT_SUBJECT_FIELD_IDX] == subjects[idx]["name"]
             #                    and x[EVENT_BEHAVIOR_FIELD_IDX] == sbc
@@ -526,10 +538,12 @@ def extract_wav(ffmpeg_bin: str, media_file_path: str, tmp_dir: str) -> str:
             return str(wav_file_path)
         # extract wav file using FFmpeg
 
-        p = subprocess.Popen(f'"{ffmpeg_bin}" -i "{media_file_path}" -y -ac 1 -vn "{wav_file_path}"',
-                             stdout=subprocess.PIPE,
-                             stderr=subprocess.PIPE,
-                             shell=True)
+        p = subprocess.Popen(
+            f'"{ffmpeg_bin}" -i "{media_file_path}" -y -ac 1 -vn "{wav_file_path}"',
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            shell=True,
+        )
         out, error = p.communicate()
         out, error = out.decode("utf-8"), error.decode("utf-8")
         logging.debug(f"{out}, {error}")
@@ -581,8 +595,9 @@ def seconds_of_day(dt) -> Decimal:
     return the number of seconds since start of the day
     """
 
-    return Decimal(
-        (dt - datetime.datetime.combine(dt.date(), datetime.time(0))).total_seconds()).quantize(Decimal("0.001"))
+    return Decimal((dt - datetime.datetime.combine(dt.date(), datetime.time(0))).total_seconds()).quantize(
+        Decimal("0.001")
+    )
 
 
 def sorted_keys(d: dict) -> list:
@@ -618,7 +633,7 @@ def distance(p1, p2):
     """
     x1, y1 = p1
     x2, y2 = p2
-    return ((x1 - x2)**2 + (y1 - y2)**2)**0.5
+    return ((x1 - x2) ** 2 + (y1 - y2) ** 2) ** 0.5
 
 
 def angle(vertex: tuple, side1: tuple, side2: tuple) -> float:
@@ -634,8 +649,14 @@ def angle(vertex: tuple, side1: tuple, side2: tuple) -> float:
     Returns:
         float: angle between side1 - vertex - side2
     """
-    return math.acos((distance(vertex, side1)**2 + distance(vertex, side2)**2 - distance(side1, side2)**2) /
-                     (2 * distance(vertex, side1) * distance(vertex, side2))) / math.pi * 180
+    return (
+        math.acos(
+            (distance(vertex, side1) ** 2 + distance(vertex, side2) ** 2 - distance(side1, side2) ** 2)
+            / (2 * distance(vertex, side1) * distance(vertex, side2))
+        )
+        / math.pi
+        * 180
+    )
 
 
 def mem_info():
@@ -653,7 +674,7 @@ def mem_info():
     if sys.platform.startswith("linux"):
         try:
             process = subprocess.run(["free", "-m"], stdout=subprocess.PIPE)
-            #out, err = process.communicate()
+            # out, err = process.communicate()
             out = process.stdout
             _, tot_mem, used_mem, _, _, _, available_mem = [
                 x.decode("utf-8") for x in out.split(b"\n")[1].split(b" ") if x != b""
@@ -661,7 +682,7 @@ def mem_info():
             return False, {
                 "total_memory": int(tot_mem),
                 "used_memory": int(used_mem),
-                "free_memory": int(available_mem)
+                "free_memory": int(available_mem),
             }
         except Exception:
             return True, {"msg": error_info(sys.exc_info())[0]}
@@ -678,8 +699,9 @@ def mem_info():
     if sys.platform.startswith("win"):
 
         try:
-            output = subprocess.run(["wmic", "computersystem", "get", "TotalPhysicalMemory", "/", "Value"],
-                                    stdout=subprocess.PIPE)
+            output = subprocess.run(
+                ["wmic", "computersystem", "get", "TotalPhysicalMemory", "/", "Value"], stdout=subprocess.PIPE
+            )
             tot_mem = int(output.stdout.strip().split(b"=")[-1].decode("utf-8")) / 1024 / 1024
 
             output = subprocess.run(["wmic", "OS", "get", "FreePhysicalMemory", "/", "Value"], stdout=subprocess.PIPE)
@@ -830,17 +852,16 @@ def test_ffmpeg_path(FFmpegPath):
         str: message
     """
 
-    out, error = subprocess.Popen(f'"{FFmpegPath}" -version',
-                                  stdout=subprocess.PIPE,
-                                  stderr=subprocess.PIPE,
-                                  shell=True).communicate()
+    out, error = subprocess.Popen(
+        f'"{FFmpegPath}" -version', stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True
+    ).communicate()
     logging.debug(f"test ffmpeg path output: {out}")
     logging.debug(f"test ffmpeg path error: {error}")
 
-    if (b'avconv' in out) or (b'the Libav developers' in error):
-        return False, 'Please use FFmpeg from https://www.ffmpeg.org in place of FFmpeg from Libav project.'
+    if (b"avconv" in out) or (b"the Libav developers" in error):
+        return False, "Please use FFmpeg from https://www.ffmpeg.org in place of FFmpeg from Libav project."
 
-    if (b'ffmpeg version' not in out) and (b'ffmpeg version' not in error):
+    if (b"ffmpeg version" not in out) and (b"ffmpeg version" not in error):
         return False, "FFmpeg is required but it was not found...<br>See https://www.ffmpeg.org"
 
     return True, ""
@@ -989,7 +1010,7 @@ def accurate_media_analysis(ffmpeg_bin: str, file_name: str) -> dict:
     except Exception:
         hasAudio = False
 
-    #if duration == 0 or bitrate == -1:
+    # if duration == 0 or bitrate == -1:
     if not hasVideo and not hasAudio:
         return {"error": "This file does not seem to be a media file"}
 
@@ -1001,7 +1022,7 @@ def accurate_media_analysis(ffmpeg_bin: str, file_name: str) -> dict:
         "has_video": hasVideo,
         "has_audio": hasAudio,
         "bitrate": bitrate,
-        "resolution": resolution
+        "resolution": resolution,
     }
 
 
