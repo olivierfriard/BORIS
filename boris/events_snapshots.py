@@ -260,9 +260,9 @@ def events_snapshots(self):
                                                 "At the moment it no possible to extract frames "
                                                 "for this type of event.<br>"
                                             ),
-                                            [OK, "Abort"],
+                                            [cfg.OK, "Abort"],
                                         )
-                                        if response == OK:
+                                        if response == cfg.OK:
                                             continue
                                         if response == "Abort":
                                             return
