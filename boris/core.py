@@ -97,6 +97,9 @@ from boris.utilities import *
 from boris import player_dock_widget
 
 from . import video_equalizer
+from . import project_server
+from . import menu_options as menu_options
+from . import connections as connections
 
 __version__ = version.__version__
 __version_date__ = version.__version_date__
@@ -153,87 +156,6 @@ if not r:
     )
 
 video = 0
-
-
-class ProjectServerThread(QThread):
-    """
-    thread for serving project to BORIS mobile app
-    """
-
-    signal = pyqtSignal(dict)
-
-    def __init__(self, message):
-        QThread.__init__(self)
-        self.message = message
-
-    def __del__(self):
-        self.wait()
-
-    def run(self):
-
-        BUFFER_SIZE = 1024
-
-        s = socket.socket()
-        s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-        s.settimeout(1800)
-
-        s.bind((get_ip_address(), 0))
-        self.signal.emit({"URL": f"{s.getsockname()[0]}:{s.getsockname()[1]}"})
-
-        s.listen(5)
-        while 1:
-            try:
-                c, addr = s.accept()
-
-                logging.debug(f"Got connection from {addr}")
-
-            except socket.timeout:
-                s.close()
-
-                logging.debug("Project server timeout")
-
-                self.signal.emit({"MESSAGE": "Project server timeout"})
-                return
-
-            rq = c.recv(BUFFER_SIZE)
-
-            logging.debug(f"request: {rq}")
-
-            if rq == b"get":
-                msg = self.message
-                while msg:
-                    c.send(msg[0:BUFFER_SIZE])
-                    msg = msg[BUFFER_SIZE:]
-                c.close()
-
-                logging.debug("Project sent")
-
-                self.signal.emit({"MESSAGE": f"Project sent to {addr[0]}"})
-
-            if rq == b"stop":
-                c.close()
-
-                logging.debug("server stopped")
-
-                self.signal.emit({"MESSAGE": "The server is now stopped"})
-                return
-
-            # receive an observation
-            if rq == b"put":
-                c.send(b"SEND")
-                c.close()
-                c2, addr = s.accept()
-                rq2 = b""
-                while 1:
-                    d = c2.recv(BUFFER_SIZE)
-                    if d:
-                        rq2 += d
-                        if rq2.endswith(b"#####"):
-                            break
-                    else:
-                        break
-                c2.close()
-                self.signal.emit({"RECEIVED": f"{rq2.decode('utf-8')}", "SENDER": addr})
 
 
 ROW = -1  # red triangle
@@ -469,10 +391,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         self.config_param = INIT_PARAM
 
-        self.menu_options()
-        self.connections()
+        menu_options.update_menu(self)
+        connections.connections(self)
         self.readConfigFile()
-        1 / 0
+
+        # 1 / 0
 
     def excepthook(self, exception_type, exception_value, traceback_object):
         """
@@ -480,164 +403,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         """
         dialog.error_message3(exception_type, exception_value, traceback_object)
 
-    def menu_options(self):
-        """
-        enable/disable menu option
-        """
-        logging.debug("function: menu_options")
-
-        flag = self.project
-
-        if not self.project:
-            pn = ""
-        else:
-            if self.pj["project_name"]:
-                pn = self.pj["project_name"]
-            else:
-                if self.projectFileName:
-                    pn = f"Unnamed project ({self.projectFileName})"
-                else:
-                    pn = "Unnamed project"
-
-        self.setWindowTitle(
-            "{}{}{}".format(
-                self.observationId + " - " * (self.observationId != ""), pn + (" - " * (pn != "")), programName
-            )
-        )
-
-        # enabled if project loaded
-        for action in (
-            self.actionEdit_project,
-            self.actionSave_project,
-            self.actionSave_project_as,
-            self.actionCheck_project,
-            self.actionClose_project,
-            self.actionSend_project,
-            self.actionNew_observation,
-            self.actionRemove_path_from_media_files,
-            self.action_obs_list,
-            self.actionExport_observations_list,
-            self.actionExplore_project,
-            self.menuExport_events,
-            self.actionLoad_observations_file,
-            self.actionExportEvents_2,
-            self.actionExport_aggregated_events,
-        ):
-            action.setEnabled(flag)
-
-        # observations
-
-        # enabled if project contain one or more observations
-        for w in [
-            self.actionOpen_observation,
-            self.actionEdit_observation_2,
-            self.actionView_observation,
-            self.actionObservationsList,
-            self.action_obs_list,
-            self.actionExport_observations_list,
-            self.actionCheckStateEvents,
-            self.actionExplore_project,
-            self.actionClose_unpaired_events,
-            self.menuExport_events,
-            self.menuCreate_subtitles_2,
-            self.actionExtract_events_from_media_files,
-            self.actionExtract_frames_from_media_files,
-        ]:
-            w.setEnabled(self.pj[OBSERVATIONS] != {})
-
-        # enabled if current observation
-        flagObs = self.observationId != ""
-        for action in (
-            self.actionAdd_event,
-            self.actionClose_observation,
-            self.actionDelete_all_observations,
-            self.actionSelect_observations,
-            self.actionDelete_selected_observations,
-            self.actionEdit_event,
-            self.actionEdit_event_time,
-            self.actionCopy_events,
-            self.actionPaste_events,
-            self.actionFind_events,
-            self.actionFind_replace_events,
-            self.actionCloseObs,
-            self.actionCurrent_Time_Budget,
-            self.actionPlot_current_observation,
-            self.actionFind_in_current_obs,
-            self.actionEdit_selected_events,
-        ):
-            action.setEnabled(self.observationId != "")
-
-        # self.actionExportEventString.setEnabled(flag)
-        self.menuas_behavioural_sequences.setEnabled(flag)
-        self.actionExport_events_as_Praat_TextGrid.setEnabled(flag)
-        self.actionJWatcher.setEnabled(flag)
-
-        self.actionCheckStateEvents.setEnabled(flag)
-        self.actionCheckStateEventsSingleObs.setEnabled(flag)
-        self.actionClose_unpaired_events.setEnabled(flag)
-        self.actionRunEventOutside.setEnabled(flag)
-
-        # enabled if media observation
-        for action in (
-            self.actionMedia_file_information,
-            self.actionJumpForward,
-            self.actionJumpBackward,
-            self.actionJumpTo,
-            self.actionZoom_level,
-            self.actionDisplay_subtitles,
-            self.actionPlay,
-            self.actionReset,
-            self.actionFaster,
-            self.actionSlower,
-            self.actionNormalSpeed,
-            self.actionPrevious,
-            self.actionNext,
-            self.actionSnapshot,
-            self.actionFrame_backward,
-            self.actionFrame_forward,
-            self.actionVideo_equalizer,
-        ):
-
-            action.setEnabled(self.playerType == VLC)
-
-        # Tools
-        self.actionShow_spectrogram.setEnabled(self.playerType == VLC)
-        self.actionShow_the_sound_waveform.setEnabled(self.playerType == VLC)
-        self.actionPlot_events_in_real_time.setEnabled(flagObs)
-
-        self.actionShow_data_files.setEnabled(self.playerType == VLC)
-        self.menuImage_overlay_on_video_2.setEnabled(self.playerType == VLC)
-
-        self.actionAdd_image_overlay_on_video.setEnabled(self.playerType == VLC)
-        self.actionRemove_image_overlay.setEnabled(self.playerType == VLC)
-
-        # geometric measurements
-        self.action_geometric_measurements.setEnabled(flagObs and self.geometric_measurements_mode == False)
-        self.actionCoding_pad.setEnabled(flagObs)
-        self.actionSubjects_pad.setEnabled(flagObs)
-        self.actionBehaviors_coding_map.setEnabled(flagObs)
-
-        # Analysis
-        for w in [
-            self.actionTime_budget,
-            self.actionTime_budget_by_behaviors_category,
-            self.actionTime_budget_report,
-            self.action_behavior_binary_table,
-            self.action_advanced_event_filtering,
-            self.menuPlot_events,
-            self.menuInter_rater_reliability,
-            self.menuSimilarities,
-            self.menuCreate_transitions_matrix,
-            self.actionSynthetic_binned_time_budget,
-        ]:
-            w.setEnabled(self.pj[OBSERVATIONS] != {})
-
-        # statusbar labels
-        for w in [self.lbTimeOffset, self.lbSpeed, self.lb_obs_time_interval]:
-            w.setVisible(self.playerType == VLC)
-
-        logging.debug("function: menu_options finished")
-
+    '''
     def connections(self):
 
         # menu file
@@ -900,6 +666,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.automaticBackupTimer.start(self.automaticBackup * 60000)
 
         self.pb_live_obs.clicked.connect(self.start_live_observation)
+    '''
 
     def video_equalizer_show(self):
         """
@@ -1427,7 +1194,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             if include_obs == NO:
                 cp_project[OBSERVATIONS] = {}
 
-            self.server_thread = ProjectServerThread(
+            self.server_thread = project_server.ProjectServerThread(
                 message=str.encode(
                     str(json.dumps(cp_project, indent=None, separators=(",", ":"), default=decimal_default))
                 )
@@ -3032,7 +2799,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     if not self.initialize_new_observation_mpv():
                         self.observationId = ""
                         self.twEvents.setRowCount(0)
-                        self.menu_options()
+                        menu_options.update_menu(self)
                         return "Error: loading observation problem"
 
                 if mode == "view":
@@ -3040,7 +2807,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     self.playMode = ""
                     self.dwObservations.setVisible(True)
 
-            self.menu_options()
+            menu_options.update_menu(self)
             # title of dock widget  “  ”
             self.dwObservations.setWindowTitle(f"Events for “{self.observationId}” observation")
             return ""
@@ -3712,7 +3479,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 # category colors
                 self.behav_category_colors = preferencesWindow.te_category_colors.toPlainText().split()
 
-                self.menu_options()
+                menu_options.update_menu(self)
 
                 self.saveConfigFile()
 
@@ -3812,7 +3579,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 dw.stack.setCurrentIndex(0)
                 dw.setWindowTitle(f"Player #{n_player + 1}")
             self.measurement_w.close()
-            self.menu_options()
+            menu_options.update_menu(self)
 
         """ to be deleted 2021-09-03
         def clear_measurements():
@@ -3822,7 +3589,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.geometric_measurements_mode = True
         self.pause_video()
 
-        self.menu_options()
+        menu_options.update_menu(self)
 
         self.measurement_w = measurement_widget.wgMeasurement()
         self.measurement_w.draw_mem = {}
@@ -4251,7 +4018,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     self.overlays[i] = self.dw_player[i].player.create_image_overlay()
                     self.resize_dw(i)
 
-        self.menu_options()
+        menu_options.update_menu(self)
 
         self.actionPlay.setIcon(QIcon(":/play"))
 
@@ -4661,7 +4428,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         self.w_obs_info.setVisible(True)
 
-        self.menu_options()
+        menu_options.update_menu(self)
 
         self.liveObservationStarted = False
         self.pb_live_obs.setText("Start live observation")
@@ -5165,7 +4932,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
             if rv == 1:  # save
                 self.observationId = ""
-                self.menu_options()
+                menu_options.update_menu(self)
 
             if rv == 2:  # start
                 self.observationId = new_obs_id
@@ -5186,7 +4953,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
                     self.initialize_new_observation_mpv()
 
-                self.menu_options()
+                menu_options.update_menu(self)
 
     def close_tool_windows(self):
         """
@@ -5452,7 +5219,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 w.clear()
             self.play_rate, self.playerType = 1, ""
 
-            self.menu_options()
+            menu_options.update_menu(self)
 
         except Exception:
             dialog.error_message2()
@@ -7534,7 +7301,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.recent_projects = [str(self.projectFileName)] + self.recent_projects
             self.recent_projects = self.recent_projects[:10]
             self.set_recent_projects_menu()
-        self.menu_options()
+        menu_options.update_menu(self)
 
     def open_project_activated(self):
         """
@@ -7730,7 +7497,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         self.project = False
         self.readConfigFile()
-        self.menu_options()
+        menu_options.update_menu(self)
 
         self.initialize_new_project(flag_new=False)
 
@@ -7991,7 +7758,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
                 self.initialize_new_project()
 
-                self.menu_options()
+                menu_options.update_menu(self)
 
             self.projectWindowGeometry = newProjectWindow.saveGeometry()
 

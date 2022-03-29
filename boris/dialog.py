@@ -24,23 +24,42 @@ import logging
 import traceback
 import sys
 
-from PyQt5.QtCore import *
-from PyQt5.QtGui import *
-from PyQt5.QtWidgets import *
+from PyQt5.QtGui import QFont
+from PyQt5.QtCore import pyqtSignal, Qt
+from PyQt5.QtWidgets import (
+    QWidget,
+    QLabel,
+    QListWidget,
+    QDialog,
+    QMessageBox,
+    QVBoxLayout,
+    QHBoxLayout,
+    QLineEdit,
+    QPushButton,
+    QSpinBox,
+    QComboBox,
+    QCheckBox,
+    QPlainTextEdit,
+    QSpacerItem,
+    QSizePolicy,
+    QFileDialog,
+    QTableWidget,
+    QTableView,
+    QListWidgetItem,
+    QAbstractItemView,
+    QRadioButton,
+)
 
 from . import duration_widget
 from . import param_panel
 from . import project_functions
-
 from . import utilities
-
 from . import version
-
 from . import config as cfg
 
 
 def MessageDialog(title, text, buttons):
-    response = ""
+
     message = QMessageBox()
     message.setWindowTitle(title)
     message.setText(text)
@@ -134,9 +153,21 @@ def error_message3(exception_type, exception_value, traceback_object):
 
     # error_message_box2(exception_text.replace("\r\n", "\n").replace("\n", "<br>"))
 
+    error_text = exception_text.replace("\r\n", "\n").replace("\n", "<br>")
+    text = (
+        f"BORIS version: {version.__version__}<br><br>"
+        f"<b>An error has occured</b>:<br>"
+        f"{error_text}<br><br>"
+        "to improve the software please report this problem at:<br>"
+        '<a href="https://github.com/olivierfriard/BORIS/issues">'
+        "https://github.com/olivierfriard/BORIS/issues</a><br>"
+        "or by email (See the About page on the BORIS web site.<br><br>"
+        "Thank you for your collaboration!"
+    )
+
     errorbox = QMessageBox()
     errorbox.setWindowTitle("BORIS error occured")
-    errorbox.setText(exception_text.replace("\r\n", "\n").replace("\n", "<br>"))
+    errorbox.setText(text)
     errorbox.setTextFormat(Qt.RichText)
     errorbox.setStandardButtons(QMessageBox.Abort)
 
@@ -148,11 +179,6 @@ def error_message3(exception_type, exception_value, traceback_object):
 
     if ret == QMessageBox.Abort:
         sys.exit(1)
-    else:
-        try:
-            sys._excepthook(exception_type, exception_value, traceback_object)
-        except:
-            pass
 
 
 class Info_widget(QWidget):
@@ -628,7 +654,9 @@ class FindReplaceEvents(QWidget):
     """
 
     clickSignal = pyqtSignal(str)
-    """sendEventSignal = pyqtSignal(QEvent)"""
+    """
+    sendEventSignal = pyqtSignal(QEvent)
+    """
 
     def __init__(self):
         super().__init__()
