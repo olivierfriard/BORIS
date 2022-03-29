@@ -75,7 +75,6 @@ class Video_equalizer(QDialog, Ui_Equalizer):
         self.hs_hue.setValue(self.equalizer[n_player]["hs_hue"])
         self.lb_hue.setText(str(self.equalizer[n_player]["hs_hue"]))
 
-
     def player_changed(self, index):
 
         self.initialize(index)
@@ -97,7 +96,6 @@ class Video_equalizer(QDialog, Ui_Equalizer):
                 self.equalizer[n_player][parameter] = 0
                 self.sendEventSignal.emit(n_player, parameter, 0)
 
-
     def parameter_changed(self):
         """
         Send signal when horizontal slider value changed
@@ -109,20 +107,59 @@ class Video_equalizer(QDialog, Ui_Equalizer):
 
         self.initialize(self.cb_player.currentIndex())
 
-
     def eventFilter(self, receiver, event):
         """
         send event (if keypress) to main window
         """
-        if (event.type() == QEvent.KeyPress):
+        if event.type() == QEvent.KeyPress:
             self.sendKeyPressSignal.emit(event)
             return True
         else:
             return False
 
 
-if __name__ == '__main__':
+def video_equalizer_show(self):
+    """
+    Video equalizer
+    """
+
+    def update_parameter(n_player, parameter, value):
+        """
+        update player parameter with value received by signal
+        """
+        if parameter == "hs_brightness":
+            self.dw_player[n_player].player.brightness = value
+        if parameter == "hs_contrast":
+            self.dw_player[n_player].player.contrast = value
+        if parameter == "hs_saturation":
+            self.dw_player[n_player].player.saturation = value
+        if parameter == "hs_gamma":
+            self.dw_player[n_player].player.gamma = value
+        if parameter == "hs_hue":
+            self.dw_player[n_player].player.hue = value
+
+    # send current parameters
+    equalizer = {}
+    for n_player, _ in enumerate(self.dw_player):
+        equalizer[n_player] = {
+            "hs_brightness": self.dw_player[n_player].player.brightness,
+            "hs_contrast": self.dw_player[n_player].player.contrast,
+            "hs_saturation": self.dw_player[n_player].player.saturation,
+            "hs_gamma": self.dw_player[n_player].player.gamma,
+            "hs_hue": self.dw_player[n_player].player.hue,
+        }
+
+    self.video_equalizer_wgt = Video_equalizer(equalizer)
+    self.video_equalizer_wgt.sendEventSignal.connect(update_parameter)
+    # send key press events received by widget to main window
+    self.video_equalizer_wgt.sendKeyPressSignal.connect(self.signal_from_widget)
+
+    self.video_equalizer_wgt.show()
+
+
+if __name__ == "__main__":
     import sys
+
     app = QApplication(sys.argv)
     w = Video_equalizer()
     w.show()

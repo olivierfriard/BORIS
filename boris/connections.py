@@ -1,9 +1,15 @@
 from PyQt5.QtWidgets import QAction
 from PyQt5.QtCore import QTimer, Qt
 from . import config as cfg
+from . import video_equalizer
+from . import behavior_binary_table
+from . import transitions
 
 
 def connections(self):
+    """
+    create connections between widgets and functions
+    """
 
     # menu file
     self.actionNew_project.triggered.connect(self.new_project_activated)
@@ -84,8 +90,8 @@ def connections(self):
     self.actionCohen_s_kappa.triggered.connect(self.irr_cohen_kappa)
     self.actionNeedleman_Wunsch.triggered.connect(self.needleman_wunch)
 
-    self.actionAll_transitions.triggered.connect(lambda: self.transitions_matrix("frequency"))
-    self.actionNumber_of_transitions.triggered.connect(lambda: self.transitions_matrix("number"))
+    self.actionAll_transitions.triggered.connect(lambda: transitions.transitions_matrix(self, "frequency"))
+    self.actionNumber_of_transitions.triggered.connect(lambda: transitions.transitions_matrix(self, "number"))
 
     self.actionFrequencies_of_transitions_after_behaviors.triggered.connect(
         lambda: self.transitions_matrix("frequencies_after_behaviors")
@@ -95,7 +101,7 @@ def connections(self):
     self.actionJumpTo.triggered.connect(self.jump_to)
     self.actionZoom_level.triggered.connect(self.zoom_level)
     self.actionDisplay_subtitles.triggered.connect(self.display_subtitles)
-    self.actionVideo_equalizer.triggered.connect(self.video_equalizer_show)
+    self.actionVideo_equalizer.triggered.connect(lambda: video_equalizer.video_equalizer_show(self))
 
     # menu Tools
     self.action_block_dockwidgets.triggered.connect(self.block_dockwidgets)
@@ -138,7 +144,7 @@ def connections(self):
     self.actionPlot_events1.setVisible(False)
     self.actionPlot_events2.triggered.connect(lambda: self.plot_events_triggered(mode="list"))
 
-    self.action_behavior_binary_table.triggered.connect(self.create_behavior_binary_table)
+    self.action_behavior_binary_table.triggered.connect(lambda: behavior_binary_table.behavior_binary_table(self.pj))
 
     self.action_advanced_event_filtering.triggered.connect(self.advanced_event_filtering)
 

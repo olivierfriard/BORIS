@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """
 BORIS
 Behavioral Observation Research Interactive Software
@@ -24,6 +23,16 @@ This file is part of BORIS.
 import os
 import sys
 import logging
+import tempfile
+import subprocess
+from . import config as cfg
+from . import export_observation
+from . import dialog
+
+from PyQt5.QtWidgets import (
+    QMessageBox,
+    QFileDialog,
+)
 
 
 def behavioral_strings_analysis(strings, behaviouralStringsSeparator):
@@ -108,11 +117,11 @@ def observed_transitions_matrix(sequences, behaviours, mode="frequency"):
 
 def create_transitions_gv_from_matrix(matrix, cutoff_all=0, cutoff_behavior=0, edge_label="percent_node"):
     """
-        create code for GraphViz
-        matrix: matrix of frequency
-        edge_label: (percent_node, fraction_node)
-        return string containing graphviz code
-        """
+    create code for GraphViz
+    matrix: matrix of frequency
+    edge_label: (percent_node, fraction_node)
+    return string containing graphviz code
+    """
 
     behaviours = matrix.split("\n")[0].strip().split("\t")
     transitions = {}
@@ -123,7 +132,7 @@ def create_transitions_gv_from_matrix(matrix, cutoff_all=0, cutoff_behavior=0, e
 
         transitions[row.split("\t")[0]] = {}
         for idx, r in enumerate(row.split("\t")[1:]):
-            if '.' in r:
+            if "." in r:
                 transitions[row.split("\t")[0]][behaviours[idx]] = float(r)
             else:
                 transitions[row.split("\t")[0]][behaviours[idx]] = int(r)
@@ -140,7 +149,8 @@ def create_transitions_gv_from_matrix(matrix, cutoff_all=0, cutoff_behavior=0, e
                 if edge_label == "percent_node":
                     if transitions[behaviour1][behaviour2] > cutoff_all:
                         out += '"{behaviour1}" -> "{behaviour2}" [label="{label:0.3f}"];\n'.format(
-                            behaviour1=behaviour1, behaviour2=behaviour2, label=transitions[behaviour1][behaviour2])
+                            behaviour1=behaviour1, behaviour2=behaviour2, label=transitions[behaviour1][behaviour2]
+                        )
 
                 if edge_label == "fraction_node":
                     transition_sum = sum(transitions[behaviour1].values())
@@ -148,7 +158,195 @@ def create_transitions_gv_from_matrix(matrix, cutoff_all=0, cutoff_behavior=0, e
                         out += """"{behaviour1}" -> "{behaviour2}" [label="{label}%"];\n""".format(
                             behaviour1=behaviour1,
                             behaviour2=behaviour2,
-                            label=round(transitions[behaviour1][behaviour2] / transition_sum * 100, 1))
+                            label=round(transitions[behaviour1][behaviour2] / transition_sum * 100, 1),
+                        )
 
-    out += '\n}'
+    out += "\n}"
     return out
+
+
+def transitions_matrix(self, mode):
+    """
+    create transitions frequencies matrix with selected observations, subjects and behaviors
+    mode:
+    * frequency
+    * number
+    * frequencies_after_behaviors
+    """
+    # ask user observations to analyze
+    result, selectedObservations = self.selectObservations(cfg.MULTIPLE)
+    if not selectedObservations:
+        return
+
+    plot_parameters = self.choose_obs_subj_behav_category(
+        selectedObservations, maxTime=0, flagShowIncludeModifiers=True, flagShowExcludeBehaviorsWoEvents=False
+    )
+
+    if not plot_parameters["selected subjects"] or not plot_parameters["selected behaviors"]:
+        return
+
+    flagMulti = False
+    if len(plot_parameters[cfg.SELECTED_SUBJECTS]) == 1:
+
+        fn = QFileDialog().getSaveFileName(
+            None,
+            "Create matrix of transitions " + mode,
+            "",
+            "Transitions matrix files (*.txt *.tsv);;All files (*)",
+        )
+        fileName = fn[0] if type(fn) is tuple else fn  # PyQt4/5
+
+    else:
+        exportDir = QFileDialog(self).getExistingDirectory(
+            self,
+            "Choose a directory to save the transitions matrices",
+            os.path.expanduser("~"),
+            options=QFileDialog(self).ShowDirsOnly,
+        )
+        if not exportDir:
+            return
+        flagMulti = True
+
+    flag_overwrite_all = False
+    for subject in plot_parameters[cfg.SELECTED_SUBJECTS]:
+
+        logging.debug(f"subjects: {subject}")
+
+        strings_list = []
+        for obsId in selectedObservations:
+            strings_list.append(
+                export_observation.events_to_behavioral_sequences(
+                    self.pj, obsId, subject, plot_parameters, self.behaviouralStringsSeparator
+                )
+            )
+
+        sequences, observed_behaviors = behavioral_strings_analysis(strings_list, self.behaviouralStringsSeparator)
+
+        observed_matrix = observed_transitions_matrix(
+            sequences, sorted(list(set(observed_behaviors + plot_parameters[cfg.SELECTED_BEHAVIORS]))), mode=mode
+        )
+
+        if not observed_matrix:
+            QMessageBox.warning(self, cfg.programName, f"No transitions found for <b>{subject}</b>")
+            continue
+
+        logging.debug(f"observed_matrix {mode}:\n{observed_matrix}")
+
+        if flagMulti:
+            try:
+
+                nf = f"{exportDir}{os.sep}{subject}_transitions_{mode}_matrix.tsv"
+
+                if os.path.isfile(nf) and not flag_overwrite_all:
+                    answer = dialog.MessageDialog(
+                        cfg.programName,
+                        f"A file with same name already exists.<br><b>{nf}</b>",
+                        ["Overwrite", "Overwrite all", cfg.CANCEL],
+                    )
+                    if answer == cfg.CANCEL:
+                        continue
+                    if answer == "Overwrite all":
+                        flag_overwrite_all = True
+
+                with open(nf, "w") as outfile:
+                    outfile.write(observed_matrix)
+            except Exception:
+                QMessageBox.critical(self, cfg.programName, f"The file {nf} can not be saved")
+        else:
+            try:
+                with open(fileName, "w") as outfile:
+                    outfile.write(observed_matrix)
+
+            except Exception:
+                QMessageBox.critical(self, cfg.programName, f"The file {fileName} can not be saved")
+
+
+def transitions_dot_script(self):
+    """
+    create dot script (graphviz language) from transitions frequencies matrix
+    """
+
+    fn = QFileDialog().getOpenFileNames(
+        self,
+        "Select one or more transitions matrix files",
+        "",
+        "Transitions matrix files (*.txt *.tsv);;All files (*)",
+    )
+    fileNames = fn[0] if type(fn) is tuple else fn
+
+    out = ""
+    try:
+        for fileName in fileNames:
+            with open(fileName, "r") as infile:
+                gv = create_transitions_gv_from_matrix(
+                    infile.read(), cutoff_all=0, cutoff_behavior=0, edge_label="percent_node"
+                )
+                with open(fileName + ".gv", "w") as f:
+                    f.write(gv)
+
+                out += f"<b>{fileName}.gv</b> created<br>"
+
+    except Exception:
+        dialog.error_message2()
+
+    if out:
+        QMessageBox.information(
+            self,
+            cfg.programName,
+            (f"{out}<br><br>The DOT scripts can be used with Graphviz or WebGraphviz " "to generate diagram"),
+        )
+
+
+def transitions_flow_diagram(self):
+    """
+    create flow diagram with graphviz (if installed) from transitions matrix
+    """
+
+    # check if dot present in path
+    result = subprocess.getoutput("dot -V")
+    if "graphviz" not in result:
+        QMessageBox.critical(
+            self,
+            cfg.programName,
+            (
+                "The GraphViz package is not installed.<br>"
+                "The <b>dot</b> program was not found in the path.<br><br>"
+                'Go to <a href="http://www.graphviz.org">'
+                "http://www.graphviz.org</a> for information"
+            ),
+        )
+        return
+
+    fn = QFileDialog(self).getOpenFileNames(
+        self,
+        "Select one or more transitions matrix files",
+        "",
+        "Transitions matrix files (*.txt *.tsv);;All files (*)",
+    )
+    fileNames = fn[0] if type(fn) is tuple else fn
+
+    out = ""
+    try:
+        for fileName in fileNames:
+            with open(fileName, "r") as infile:
+                gv = create_transitions_gv_from_matrix(
+                    infile.read(), cutoff_all=0, cutoff_behavior=0, edge_label="percent_node"
+                )
+
+                with open(tempfile.gettempdir() + os.sep + os.path.basename(fileName) + ".tmp.gv", "w") as f:
+                    f.write(gv)
+                result = subprocess.getoutput(
+                    (
+                        f'dot -Tpng -o "{fileName}.png" '
+                        f'"{tempfile.gettempdir() + os.sep + os.path.basename(fileName)}.tmp.gv"'
+                    )
+                )
+                if not result:
+                    out += f"<b>{fileName}.png</b> created<br>"
+                else:
+                    out += f"Problem with <b>{fileName}</b><br>"
+    except Exception:
+        dialog.error_message2()
+
+    if out:
+        QMessageBox.information(self, programName, out)
