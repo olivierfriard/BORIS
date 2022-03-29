@@ -1086,6 +1086,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 ]
                 self.subjects_pad.compose()
 
+    '''
     def events_snapshots(self):
         """
         create snapshots corresponding to coded events
@@ -1394,6 +1395,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         except Exception:
             dialog.error_message2()
+    '''
 
     def extract_events(self):
         """
