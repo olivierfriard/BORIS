@@ -11231,7 +11231,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
                 except Exception:
                     QMessageBox.critical(self, programName, f"The file {fileName} can not be saved")
-    '''
+
 
     def transitions_dot_script(self):
         """
@@ -11321,6 +11321,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         if out:
             QMessageBox.information(self, programName, out)
+    '''
 
     def closeEvent(self, event):
         """

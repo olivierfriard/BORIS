@@ -261,13 +261,13 @@ def transitions_matrix(self, mode):
                 QMessageBox.critical(self, cfg.programName, f"The file {fileName} can not be saved")
 
 
-def transitions_dot_script(self):
+def transitions_dot_script():
     """
     create dot script (graphviz language) from transitions frequencies matrix
     """
 
     fn = QFileDialog().getOpenFileNames(
-        self,
+        None,
         "Select one or more transitions matrix files",
         "",
         "Transitions matrix files (*.txt *.tsv);;All files (*)",
@@ -291,7 +291,7 @@ def transitions_dot_script(self):
 
     if out:
         QMessageBox.information(
-            self,
+            None,
             cfg.programName,
             (f"{out}<br><br>The DOT scripts can be used with Graphviz or WebGraphviz " "to generate diagram"),
         )
@@ -306,7 +306,7 @@ def transitions_flow_diagram(self):
     result = subprocess.getoutput("dot -V")
     if "graphviz" not in result:
         QMessageBox.critical(
-            self,
+            None,
             cfg.programName,
             (
                 "The GraphViz package is not installed.<br>"
@@ -317,8 +317,8 @@ def transitions_flow_diagram(self):
         )
         return
 
-    fn = QFileDialog(self).getOpenFileNames(
-        self,
+    fn = QFileDialog().getOpenFileNames(
+        None,
         "Select one or more transitions matrix files",
         "",
         "Transitions matrix files (*.txt *.tsv);;All files (*)",
@@ -349,4 +349,4 @@ def transitions_flow_diagram(self):
         dialog.error_message2()
 
     if out:
-        QMessageBox.information(self, programName, out)
+        QMessageBox.information(self, cfg.programName, out)

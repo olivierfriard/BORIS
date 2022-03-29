@@ -128,8 +128,8 @@ def connections(self):
     self.actionRotate_video.triggered.connect(lambda: self.ffmpeg_process("rotate"))
     self.actionMedia_file_information_2.triggered.connect(self.media_file_info)
 
-    self.actionCreate_transitions_flow_diagram.triggered.connect(self.transitions_dot_script)
-    self.actionCreate_transitions_flow_diagram_2.triggered.connect(self.transitions_flow_diagram)
+    self.actionCreate_transitions_flow_diagram.triggered.connect(transitions.transitions_dot_script)
+    self.actionCreate_transitions_flow_diagram_2.triggered.connect(transitions.transitions_flow_diagram)
 
     # menu Analysis
     self.actionTime_budget.triggered.connect(lambda: self.time_budget(mode="by_behavior"))
