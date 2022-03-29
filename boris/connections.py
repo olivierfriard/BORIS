@@ -27,6 +27,9 @@ from . import video_equalizer
 from . import behavior_binary_table
 from . import transitions
 from . import import_observations
+from . import irr
+from . import project_server
+from . import events_snapshots
 
 
 def connections(self):
@@ -45,7 +48,7 @@ def connections(self):
     self.actionClose_project.triggered.connect(self.close_project)
 
     self.actionRemove_path_from_media_files.triggered.connect(self.remove_media_files_path)
-    self.actionSend_project.triggered.connect(self.send_project_via_socket)
+    self.actionSend_project.triggered.connect(lambda: project_server.send_project_via_socket(self))
 
     self.menuCreate_subtitles_2.triggered.connect(self.create_subtitles)
 
@@ -108,10 +111,10 @@ def connections(self):
     self.actionJWatcher.triggered.connect(lambda: self.export_tabular_events("jwatcher"))
 
     self.actionExtract_events_from_media_files.triggered.connect(self.extract_events)
-    self.actionExtract_frames_from_media_files.triggered.connect(self.events_snapshots)
+    self.actionExtract_frames_from_media_files.triggered.connect(lambda: events_snapshots.events_snapshots(self))
 
-    self.actionCohen_s_kappa.triggered.connect(self.irr_cohen_kappa)
-    self.actionNeedleman_Wunsch.triggered.connect(self.needleman_wunch)
+    self.actionCohen_s_kappa.triggered.connect(lambda: irr.irr_cohen_kappa(self))
+    self.actionNeedleman_Wunsch.triggered.connect(lambda: irr.needleman_wunch(self))
 
     self.actionAll_transitions.triggered.connect(lambda: transitions.transitions_matrix(self, "frequency"))
     self.actionNumber_of_transitions.triggered.connect(lambda: transitions.transitions_matrix(self, "number"))

@@ -1,7 +1,14 @@
 import logging
 import socket
-from .utilities import get_ip_address
-from PyQt5.QtCore import QThread, pyqtSignal
+import json
+import datetime
+
+from . import config as cfg
+from . import utilities as util
+from . import dialog
+
+from PyQt5.QtCore import QThread, pyqtSignal, Qt
+from PyQt5.QtWidgets import QListWidgetItem, QLineEdit, QInputDialog, QApplication
 
 
 class ProjectServerThread(QThread):
@@ -26,7 +33,7 @@ class ProjectServerThread(QThread):
         s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         s.settimeout(1800)
 
-        s.bind((get_ip_address(), 0))
+        s.bind((util.get_ip_address(), 0))
         self.signal.emit({"URL": f"{s.getsockname()[0]}:{s.getsockname()[1]}"})
 
         s.listen(5)
@@ -83,3 +90,124 @@ class ProjectServerThread(QThread):
                         break
                 c2.close()
                 self.signal.emit({"RECEIVED": f"{rq2.decode('utf-8')}", "SENDER": addr})
+
+
+def send_project_via_socket(self):
+    """
+    send project to a device via socket
+    """
+
+    def receive_signal(msg_dict):
+
+        if "RECEIVED" in msg_dict:
+            try:
+                sent_obs = json.loads(msg_dict["RECEIVED"][:-5])  # cut final
+            except Exception:
+                logging.debug("error receiving observation")
+                del self.w
+                self.actionSend_project.setText("Project server")
+                return
+
+            logging.debug(f"decoded {type(sent_obs)} length: {len(sent_obs)}")
+
+            flag_msg = False
+            mem_obsid = ""
+            for obsId in sent_obs:
+
+                self.w.lwi.addItem(
+                    QListWidgetItem(f"{datetime.datetime.now().isoformat()}: Observation {obsId} received")
+                )
+                self.w.lwi.scrollToBottom()
+
+                if obsId in self.pj[cfg.OBSERVATIONS]:
+                    flag_msg = True
+                    response = dialog.MessageDialog(
+                        cfg.programName,
+                        (
+                            f"An observation with the same id<br><b>{obsId}</b><br>"
+                            f"received from<br><b>{msg_dict['SENDER'][0]}</b><br>"
+                            "already exists in the current project."
+                        ),
+                        [cfg.OVERWRITE, "Rename received observation", cfg.CANCEL],
+                    )
+
+                    if response == cfg.CANCEL:
+                        return
+                    self.projectChanged = True
+                    if response == cfg.OVERWRITE:
+                        self.pj[cfg.OBSERVATIONS][obsId] = dict(sent_obs[obsId])
+
+                    if response == "Rename received observation":
+                        new_id = obsId
+                        while new_id in self.pj[cfg.OBSERVATIONS]:
+                            new_id, ok = QInputDialog.getText(
+                                self,
+                                f"Rename observation received from {msg_dict['SENDER'][0]}",
+                                "New observation id:",
+                                QLineEdit.Normal,
+                                new_id,
+                            )
+
+                        self.pj[cfg.OBSERVATIONS][new_id] = dict(sent_obs[obsId])
+
+                else:
+                    self.pj[cfg.OBSERVATIONS][obsId] = dict(sent_obs[obsId])
+                    self.projectChanged = True
+                    mem_obsid = obsId
+
+        elif "URL" in msg_dict:
+            self.tcp_port = int(msg_dict["URL"].split(":")[-1])
+            self.w.label.setText(f"Project server URL:<br><b>{msg_dict['URL']}</b><br><br>Timeout: 30 minutes")
+
+        else:
+            if "stopped" in msg_dict["MESSAGE"] or "timeout" in msg_dict["MESSAGE"]:
+                del self.w
+                self.actionSend_project.setText("Project server")
+            else:
+                self.w.lwi.addItem(QListWidgetItem(f"{datetime.datetime.now().isoformat()}: {msg_dict['MESSAGE']}"))
+                self.w.lwi.scrollToBottom()
+
+    if "server" in self.actionSend_project.text():
+
+        include_obs = cfg.NO
+        if self.pj[cfg.OBSERVATIONS]:
+            include_obs = dialog.MessageDialog(cfg.programName, "Include observations?", [cfg.YES, cfg.NO, cfg.CANCEL])
+            if include_obs == cfg.CANCEL:
+                return
+
+        self.w = dialog.Info_widget()
+        self.w.resize(450, 100)
+        self.w.setWindowFlags(Qt.WindowStaysOnTopHint)
+        self.w.setWindowTitle("Project server")
+        self.w.label.setText("")
+        self.w.show()
+        QApplication.processEvents()
+
+        cp_project = dict(self.pj)
+        if include_obs == cfg.NO:
+            cp_project[cfg.OBSERVATIONS] = {}
+
+        self.server_thread = ProjectServerThread(
+            message=str.encode(
+                str(json.dumps(cp_project, indent=None, separators=(",", ":"), default=util.decimal_default))
+            )
+        )
+        self.server_thread.signal.connect(receive_signal)
+
+        self.server_thread.start()
+
+        self.actionSend_project.setText("Stop serving project")
+
+    # send stop msg to project server
+    elif "serving" in self.actionSend_project.text():
+
+        s = socket.socket()
+        s.connect((util.get_ip_address(), self.tcp_port))
+        s.send(str.encode("stop"))
+        received = ""
+        while 1:
+            data = s.recv(20)  # BUFFER_SIZE = 20
+            if not data:
+                break
+            received += data
+        s.close

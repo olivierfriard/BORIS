@@ -297,7 +297,7 @@ def transitions_dot_script():
         )
 
 
-def transitions_flow_diagram(self):
+def transitions_flow_diagram():
     """
     create flow diagram with graphviz (if installed) from transitions matrix
     """
@@ -349,4 +349,4 @@ def transitions_flow_diagram(self):
         dialog.error_message2()
 
     if out:
-        QMessageBox.information(self, cfg.programName, out)
+        QMessageBox.information(None, cfg.programName, out)
