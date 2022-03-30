@@ -30,6 +30,7 @@ from . import import_observations
 from . import irr
 from . import project_server
 from . import events_snapshots
+from . import state_events as state_events
 
 
 def connections(self):
@@ -72,9 +73,11 @@ def connections(self):
 
     self.actionExport_observations_list.triggered.connect(self.export_observations_list_clicked)
 
-    self.actionCheckStateEvents.triggered.connect(lambda: self.check_state_events("all"))
-    self.actionCheckStateEventsSingleObs.triggered.connect(lambda: self.check_state_events("current"))
-    self.actionClose_unpaired_events.triggered.connect(self.fix_unpaired_events)
+    self.actionCheckStateEvents.triggered.connect(lambda: state_events.check_state_events(self, mode="all"))
+    self.actionCheckStateEventsSingleObs.triggered.connect(
+        lambda: state_events.check_state_events(self, mode="current")
+    )
+    self.actionClose_unpaired_events.triggered.connect(lambda: state_events.fix_unpaired_events(self))
     self.actionRunEventOutside.triggered.connect(self.run_event_outside)
 
     self.actionSelect_observations.triggered.connect(self.select_events_between_activated)

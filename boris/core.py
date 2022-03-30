@@ -29,7 +29,6 @@ import os
 import pathlib
 import platform
 import re
-import socket
 import subprocess
 import sys
 import tempfile
@@ -64,7 +63,6 @@ from boris import export_observation
 from boris import gui_utilities
 
 # from boris import behavior_binary_table
-from boris import irr
 from boris import map_creator
 from boris import measurement_widget
 from boris import modifiers_coding_map
@@ -85,7 +83,6 @@ from boris import select_modifiers
 from boris import select_observations
 from boris import subjects_pad
 from boris import time_budget_functions
-from boris import transitions
 from boris import utilities
 from boris import version
 from boris.core_ui import *
@@ -97,7 +94,6 @@ from boris.time_budget_widget import timeBudgetResults
 from boris.utilities import *
 from boris import player_dock_widget
 
-from . import project_server
 from . import menu_options as menu_options
 from . import connections as connections
 
@@ -1609,152 +1605,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         if selected_observations:
             self.new_observation(mode=EDIT, obsId=selected_observations[0])
-
-    def check_state_events(self, mode="all"):
-        """
-        check state events for each subject
-        use check_state_events_obs function in project_functions.py
-
-        Args:
-            mode (str): current: check current observation / all: ask user to select observations
-        """
-
-        tot_out = ""
-        if mode == "current":
-            if self.observationId:
-                r, msg = project_functions.check_state_events_obs(
-                    self.observationId, self.pj[ETHOGRAM], self.pj[OBSERVATIONS][self.observationId], self.timeFormat
-                )
-                tot_out = f"Observation: <strong>{self.observationId}</strong><br>{msg}<br><br>"
-
-        if mode == "all":
-            if not self.pj[OBSERVATIONS]:
-                QMessageBox.warning(
-                    self,
-                    programName,
-                    "The project does not contain any observation",
-                    QMessageBox.Ok | QMessageBox.Default,
-                    QMessageBox.NoButton,
-                )
-                return
-
-            # ask user observations to analyze
-            _, selectedObservations = self.selectObservations(MULTIPLE)
-            if not selectedObservations:
-                return
-
-            for obsId in sorted(selectedObservations):
-                r, msg = project_functions.check_state_events_obs(
-                    obsId, self.pj[ETHOGRAM], self.pj[OBSERVATIONS][obsId], self.timeFormat
-                )
-
-                tot_out += f"<strong>{obsId}</strong><br>{msg}<br>"
-
-        results = dialog.Results_dialog()
-        results.setWindowTitle("Check state events")
-        results.ptText.clear()
-        results.ptText.setReadOnly(True)
-        results.ptText.appendHtml(tot_out)
-        results.exec_()
-
-    def fix_unpaired_events(self):
-        """
-        fix unpaired state events
-        """
-
-        if self.observationId:
-
-            r, msg = project_functions.check_state_events_obs(
-                self.observationId, self.pj[ETHOGRAM], self.pj[OBSERVATIONS][self.observationId]
-            )
-            if "not PAIRED" not in msg:
-                QMessageBox.information(
-                    self,
-                    programName,
-                    "All state events are already paired",
-                    QMessageBox.Ok | QMessageBox.Default,
-                    QMessageBox.NoButton,
-                )
-                return
-
-            w = dialog.Ask_time(self.timeFormat)
-            w.setWindowTitle("Fix UNPAIRED state events")
-            w.label.setText("Fix UNPAIRED events at time")
-
-            if w.exec_():
-                fix_at_time = w.time_widget.get_time()
-
-                events_to_add = project_functions.fix_unpaired_state_events(
-                    self.observationId,
-                    self.pj[ETHOGRAM],
-                    self.pj[OBSERVATIONS][self.observationId],
-                    fix_at_time - Decimal("0.001"),
-                )
-
-                if events_to_add:
-                    self.pj[OBSERVATIONS][self.observationId][EVENTS].extend(events_to_add)
-                    self.projectChanged = True
-                    self.pj[OBSERVATIONS][self.observationId][EVENTS].sort()
-                    self.loadEventsInTW(self.observationId)
-                    item = self.twEvents.item(
-                        [
-                            i
-                            for i, t in enumerate(self.pj[OBSERVATIONS][self.observationId][EVENTS])
-                            if t[0] == fix_at_time
-                        ][0],
-                        0,
-                    )
-                    self.twEvents.scrollToItem(item)
-
-        # selected observations
-        else:
-            result, selected_observations = self.selectObservations(MULTIPLE)
-            if not selected_observations:
-                return
-
-            # check if state events are paired
-            out = ""
-            not_paired_obs_list = []
-            for obs_id in selected_observations:
-                r, msg = project_functions.check_state_events_obs(
-                    obs_id, self.pj[ETHOGRAM], self.pj[OBSERVATIONS][obs_id]
-                )
-                if "NOT PAIRED" in msg.upper():
-                    fix_at_time = max(x[0] for x in self.pj[OBSERVATIONS][obs_id][EVENTS])
-                    events_to_add = project_functions.fix_unpaired_state_events(
-                        obs_id, self.pj[ETHOGRAM], self.pj[OBSERVATIONS][obs_id], fix_at_time
-                    )
-                    if events_to_add:
-                        events_backup = self.pj[OBSERVATIONS][obs_id][EVENTS][:]
-                        self.pj[OBSERVATIONS][obs_id][EVENTS].extend(events_to_add)
-
-                        # check if modified obs if fixed
-                        r, msg = project_functions.check_state_events_obs(
-                            obs_id, self.pj[ETHOGRAM], self.pj[OBSERVATIONS][obs_id]
-                        )
-                        if "NOT PAIRED" in msg.upper():
-                            out += f"The observation <b>{obs_id}</b> can not be automatically fixed.<br><br>"
-                            self.pj[OBSERVATIONS][obs_id][EVENTS] = events_backup
-                        else:
-                            out += f"<b>{obs_id}</b><br>"
-                            self.projectChanged = True
-            if out:
-                out = "The following observations were modified to fix the unpaired state events:<br><br>" + out
-                self.results = dialog.Results_dialog()
-                self.results.setWindowTitle(programName + " - Fixed observations")
-                self.results.ptText.setReadOnly(True)
-                self.results.ptText.appendHtml(out)
-                self.results.pbSave.setVisible(False)
-                self.results.pbCancel.setVisible(True)
-                self.results.exec_()
-            else:
-                QMessageBox.information(
-                    self,
-                    programName,
-                    "All state events are already paired",
-                    QMessageBox.Ok | QMessageBox.Default,
-                    QMessageBox.NoButton,
-                )
 
     def observations_list(self):
         """
