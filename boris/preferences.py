@@ -30,6 +30,7 @@ from . import gui_utilities
 from . import menu_options
 from . import dialog
 from . import config as cfg
+from . import config_file
 
 from .preferences_ui import Ui_prefDialog
 
@@ -305,7 +306,7 @@ def preferences(self):
 
             menu_options.update_menu(self)
 
-            self.saveConfigFile()
+            config_file.save(self)
 
     except Exception:
         dialog.error_message2()

@@ -21,13 +21,13 @@ This file is part of BORIS.
 """
 
 import os
-import sys
 import logging
 import tempfile
 import subprocess
 from . import config as cfg
 from . import export_observation
 from . import dialog
+from . import select_subj_behav
 
 from PyQt5.QtWidgets import (
     QMessageBox,
@@ -178,8 +178,8 @@ def transitions_matrix(self, mode):
     if not selectedObservations:
         return
 
-    plot_parameters = self.choose_obs_subj_behav_category(
-        selectedObservations, maxTime=0, flagShowIncludeModifiers=True, flagShowExcludeBehaviorsWoEvents=False
+    plot_parameters = select_subj_behav.choose_obs_subj_behav_category(
+        self, selectedObservations, maxTime=0, flagShowIncludeModifiers=True, flagShowExcludeBehaviorsWoEvents=False
     )
 
     if not plot_parameters["selected subjects"] or not plot_parameters["selected behaviors"]:

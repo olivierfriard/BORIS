@@ -31,6 +31,7 @@ from . import config as cfg
 from . import dialog
 from . import db_functions
 from . import project_functions
+from . import select_subj_behav
 
 from PyQt5.QtWidgets import QMessageBox, QInputDialog
 
@@ -298,8 +299,8 @@ def irr_cohen_kappa(self):
     if not selected_observations:
         return
 
-    plot_parameters = self.choose_obs_subj_behav_category(
-        selected_observations, maxTime=0, flagShowIncludeModifiers=True, flagShowExcludeBehaviorsWoEvents=False
+    plot_parameters = select_subj_behav.choose_obs_subj_behav_category(
+        self, selected_observations, maxTime=0, flagShowIncludeModifiers=True, flagShowExcludeBehaviorsWoEvents=False
     )
 
     if not plot_parameters[cfg.SELECTED_SUBJECTS] or not plot_parameters[cfg.SELECTED_BEHAVIORS]:
@@ -602,8 +603,8 @@ def needleman_wunch(self):
     if not selected_observations:
         return
 
-    plot_parameters = self.choose_obs_subj_behav_category(
-        selected_observations, maxTime=0, flagShowIncludeModifiers=True, flagShowExcludeBehaviorsWoEvents=False
+    plot_parameters = select_subj_behav.choose_obs_subj_behav_category(
+        self, selected_observations, maxTime=0, flagShowIncludeModifiers=True, flagShowExcludeBehaviorsWoEvents=False
     )
 
     if not plot_parameters[cfg.SELECTED_SUBJECTS] or not plot_parameters[cfg.SELECTED_BEHAVIORS]:

@@ -33,6 +33,7 @@ from . import utilities as util
 from . import dialog
 from . import project_functions
 from . import db_functions
+from . import select_subj_behav
 
 from PyQt5.QtWidgets import QInputDialog, QMessageBox, QFileDialog
 
@@ -98,8 +99,8 @@ def events_snapshots(self):
     if not selected_observations:
         return
 
-    parameters = self.choose_obs_subj_behav_category(
-        selected_observations, maxTime=0, flagShowIncludeModifiers=False, flagShowExcludeBehaviorsWoEvents=False
+    parameters = select_subj_behav.choose_obs_subj_behav_category(
+        self, selected_observations, maxTime=0, flagShowIncludeModifiers=False, flagShowExcludeBehaviorsWoEvents=False
     )
 
     if not parameters[cfg.SELECTED_SUBJECTS] or not parameters[cfg.SELECTED_BEHAVIORS]:
@@ -376,8 +377,8 @@ def extract_events(self):
     if not selected_observations:
         return
 
-    parameters = self.choose_obs_subj_behav_category(
-        selected_observations, maxTime=0, flagShowIncludeModifiers=False, flagShowExcludeBehaviorsWoEvents=False
+    parameters = select_subj_behav.choose_obs_subj_behav_category(
+        self, selected_observations, maxTime=0, flagShowIncludeModifiers=False, flagShowExcludeBehaviorsWoEvents=False
     )
 
     if not parameters[cfg.SELECTED_SUBJECTS] or not parameters[cfg.SELECTED_BEHAVIORS]:

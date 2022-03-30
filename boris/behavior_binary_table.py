@@ -35,6 +35,7 @@ from . import project_functions
 from . import select_observations
 from . import utilities
 from . import config as cfg
+from . import select_subj_behav
 
 
 def create_behavior_binary_table(
@@ -164,7 +165,7 @@ def create_behavior_binary_table(
     return results_df
 
 
-def behavior_binary_table(pj: dict):
+def behavior_binary_table(self):
     """
     ask user for parameters for behavior binary table
     call create_behavior_binary_table
@@ -181,7 +182,7 @@ def behavior_binary_table(pj: dict):
     )
 
     _, selected_observations = select_observations.select_observations(
-        pj, cfg.MULTIPLE, "Select observations for the behavior binary table"
+        self.pj, cfg.MULTIPLE, "Select observations for the behavior binary table"
     )
 
     if not selected_observations:
@@ -190,7 +191,9 @@ def behavior_binary_table(pj: dict):
     out = ""
     not_paired_obs_list = []
     for obs_id in selected_observations:
-        r, msg = project_functions.check_state_events_obs(obs_id, pj[cfg.ETHOGRAM], pj[cfg.OBSERVATIONS][obs_id])
+        r, msg = project_functions.check_state_events_obs(
+            obs_id, self.pj[cfg.ETHOGRAM], self.pj[cfg.OBSERVATIONS][obs_id]
+        )
 
         if not r:
             out += f"Observation: <strong>{obs_id}</strong><br>{msg}<br>"
@@ -211,12 +214,12 @@ def behavior_binary_table(pj: dict):
     if not selected_observations:
         return
 
-    max_obs_length, _ = project_functions.observation_length(pj, selected_observations)
+    max_obs_length, _ = project_functions.observation_length(self.pj, selected_observations)
     if max_obs_length == -1:  # media length not available, user choose to not use events
         return
 
-    parameters = dialog.choose_obs_subj_behav_category(
-        pj,
+    parameters = select_subj_behav.choose_obs_subj_behav_category(
+        self,
         selected_observations,
         maxTime=max_obs_length,
         flagShowIncludeModifiers=True,
@@ -234,7 +237,7 @@ def behavior_binary_table(pj: dict):
         return
     time_interval = utilities.float2decimal(i)
 
-    results_df = create_behavior_binary_table(pj, selected_observations, parameters, time_interval)
+    results_df = create_behavior_binary_table(self.pj, selected_observations, parameters, time_interval)
 
     if "error" in results_df:
         QMessageBox.warning(None, cfg.programName, results_df["msg"])

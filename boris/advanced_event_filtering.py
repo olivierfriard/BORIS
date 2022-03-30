@@ -24,6 +24,8 @@ import re
 import statistics
 import sys
 
+from boris import select_subj_behav
+
 from . import portion as Interval
 import tablib
 from PyQt5.QtCore import Qt
@@ -45,8 +47,13 @@ from PyQt5.QtWidgets import (
     QVBoxLayout,
 )
 
-from . import db_functions, dialog, project_functions, select_observations, utilities
+from . import db_functions
+from . import dialog
+from . import project_functions
+from . import select_observations
+from . import utilities as util
 from . import config as cfg
+from . import select_subj_behav
 
 
 def icc(i: list):
@@ -221,7 +228,7 @@ class Advanced_event_filtering_dialog(QDialog):
                 self.out.append([obs_id, "subject / behavior not found", "NA", "NA", "NA"])
             except Exception:
                 # out += f"Error in {self.logic.text()}" + "\n"
-                error_type, _, _ = utilities.error_info(sys.exc_info())
+                error_type, _, _ = util.error_info(sys.exc_info())
                 self.out.append([obs_id, f"Error in {self.logic.text()}: {error_type} ", "NA", "NA", "NA"])
                 flag_error = True
 
@@ -306,7 +313,7 @@ class Advanced_event_filtering_dialog(QDialog):
             tablib_dataset = tablib.Dataset(headers=self.details_header)
         if self.rb_summary.isChecked():
             tablib_dataset = tablib.Dataset(headers=self.summary_header)
-        tablib_dataset.title = utilities.safe_xl_worksheet_title(self.logic.text(), output_format)
+        tablib_dataset.title = util.safe_xl_worksheet_title(self.logic.text(), output_format)
 
         [tablib_dataset.append(x) for x in self.out]
 
@@ -323,14 +330,14 @@ class Advanced_event_filtering_dialog(QDialog):
             QMessageBox.critical(self, cfg.programName, f"The file {file_name} can not be saved")
 
 
-def event_filtering(pj: dict):
+def event_filtering(self):
     """
     advanced event filtering
     the python-intervals module is used to do operations on intervals (intersection, union)
     """
 
     result, selected_observations = select_observations.select_observations(
-        pj, cfg.MULTIPLE, "Select observations for advanced event filtering"
+        self.pj, cfg.MULTIPLE, "Select observations for advanced event filtering"
     )
     if not selected_observations:
         return
@@ -339,7 +346,9 @@ def event_filtering(pj: dict):
     out = ""
     not_paired_obs_list = []
     for obs_id in selected_observations:
-        r, msg = project_functions.check_state_events_obs(obs_id, pj[cfg.ETHOGRAM], pj[cfg.OBSERVATIONS][obs_id])
+        r, msg = project_functions.check_state_events_obs(
+            obs_id, self.pj[cfg.ETHOGRAM], self.pj[cfg.OBSERVATIONS][obs_id]
+        )
 
         if not r:
             out += f"Observation: <strong>{obs_id}</strong><br>{msg}<br>"
@@ -361,12 +370,12 @@ def event_filtering(pj: dict):
         return
 
     # observations length
-    max_obs_length, selectedObsTotalMediaLength = project_functions.observation_length(pj, selected_observations)
+    max_obs_length, selectedObsTotalMediaLength = project_functions.observation_length(self.pj, selected_observations)
     if max_obs_length == -1:  # media length not available, user choose to not use events
         return
 
-    parameters = dialog.choose_obs_subj_behav_category(
-        pj,
+    parameters = select_subj_behav.choose_obs_subj_behav_category(
+        self,
         selected_observations,
         maxTime=max_obs_length,
         flagShowIncludeModifiers=False,
@@ -379,7 +388,7 @@ def event_filtering(pj: dict):
         return
 
     _, _, db_connector = db_functions.load_aggregated_events_in_db(
-        pj, parameters[cfg.SELECTED_SUBJECTS], selected_observations, parameters[cfg.SELECTED_BEHAVIORS]
+        self.pj, parameters[cfg.SELECTED_SUBJECTS], selected_observations, parameters[cfg.SELECTED_BEHAVIORS]
     )
 
     cursor = db_connector.cursor()

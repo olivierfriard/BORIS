@@ -32,7 +32,11 @@ from . import project_server
 from . import events_snapshots
 from . import state_events as state_events
 from . import preferences
-from . import measurement_widget
+from . import geometric_measurement
+from . import synthetic_time_budget
+from . import export_events
+from . import coding_pad
+from . import time_budget_widget
 
 
 def connections(self):
@@ -100,20 +104,20 @@ def connections(self):
 
     self.actionLoad_observations_file.triggered.connect(lambda: import_observations.import_observations(self))
 
-    self.actionExportEvents_2.triggered.connect(lambda: self.export_tabular_events("tabular"))
+    self.actionExportEvents_2.triggered.connect(lambda: export_events.export_tabular_events(self, mode="tabular"))
 
     # behavioral sequences
     # self.actionExportEventString.triggered.connect(lambda: self.export_events_as_behavioral_sequences(timed=False))
     self.actionseparated_subjects.triggered.connect(
-        lambda: self.export_events_as_behavioral_sequences(separated_subjects=True, timed=False)
+        lambda: export_events.export_events_as_behavioral_sequences(self, separated_subjects=True, timed=False)
     )
     self.actiongrouped_subjects.triggered.connect(
-        lambda: self.export_events_as_behavioral_sequences(separated_subjects=False, timed=False)
+        lambda: export_events.export_events_as_behavioral_sequences(self, separated_subjects=False, timed=False)
     )
 
     self.actionExport_aggregated_events.triggered.connect(self.export_aggregated_events)
     self.actionExport_events_as_Praat_TextGrid.triggered.connect(self.export_state_events_as_textgrid)
-    self.actionJWatcher.triggered.connect(lambda: self.export_tabular_events("jwatcher"))
+    self.actionJWatcher.triggered.connect(lambda: export_events.export_tabular_events(self, "jwatcher"))
 
     self.actionExtract_events_from_media_files.triggered.connect(lambda: events_snapshots.extract_events(self))
     self.actionExtract_frames_from_media_files.triggered.connect(lambda: events_snapshots.events_snapshots(self))
@@ -145,10 +149,10 @@ def connections(self):
     self.actionPlot_events_in_real_time.triggered.connect(lambda: self.show_plot_widget("plot_events", warning=False))
 
     self.actionShow_data_files.triggered.connect(self.show_data_files)
-    self.action_geometric_measurements.triggered.connect(lambda: measurement_widget.geometric_measurements(self))
+    self.action_geometric_measurements.triggered.connect(lambda: geometric_measurement.show_widget(self))
     self.actionBehaviors_coding_map.triggered.connect(self.show_behaviors_coding_map)
 
-    self.actionCoding_pad.triggered.connect(self.show_coding_pad)
+    self.actionCoding_pad.triggered.connect(lambda: coding_pad.show_coding_pad(self))
     self.actionSubjects_pad.triggered.connect(self.show_subjects_pad)
 
     # image overlay on video
@@ -163,11 +167,15 @@ def connections(self):
     self.actionCreate_transitions_flow_diagram_2.triggered.connect(transitions.transitions_flow_diagram)
 
     # menu Analysis
-    self.actionTime_budget.triggered.connect(lambda: self.time_budget(mode="by_behavior"))
-    self.actionTime_budget_by_behaviors_category.triggered.connect(lambda: self.time_budget(mode="by_category"))
+    self.actionTime_budget.triggered.connect(lambda: time_budget_widget.time_budget(self, mode="by_behavior"))
+    self.actionTime_budget_by_behaviors_category.triggered.connect(
+        lambda: time_budget_widget.time_budget(self, mode="by_category")
+    )
 
-    self.actionTime_budget_report.triggered.connect(self.synthetic_time_budget)
-    self.actionSynthetic_binned_time_budget.triggered.connect(self.synthetic_binned_time_budget)
+    self.actionTime_budget_report.triggered.connect(lambda: synthetic_time_budget.synthetic_time_budget(self))
+    self.actionSynthetic_binned_time_budget.triggered.connect(
+        lambda: synthetic_time_budget.synthetic_binned_time_budget(self)
+    )
 
     self.actionBehavior_bar_plot.triggered.connect(self.behaviors_bar_plot)
     self.actionBehavior_bar_plot.setVisible(True)
@@ -175,7 +183,7 @@ def connections(self):
     self.actionPlot_events1.setVisible(False)
     self.actionPlot_events2.triggered.connect(lambda: self.plot_events_triggered(mode="list"))
 
-    self.action_behavior_binary_table.triggered.connect(lambda: behavior_binary_table.behavior_binary_table(self.pj))
+    self.action_behavior_binary_table.triggered.connect(lambda: behavior_binary_table.behavior_binary_table(self))
 
     self.action_advanced_event_filtering.triggered.connect(self.advanced_event_filtering)
 
@@ -195,8 +203,19 @@ def connections(self):
     self.actionSlower.triggered.connect(self.video_slower_activated)
     self.actionNormalSpeed.triggered.connect(self.video_normalspeed_activated)
 
+    self.actionPrevious.triggered.connect(self.previous_media_file)
+    self.actionNext.triggered.connect(self.next_media_file)
+
+    self.actionSnapshot.triggered.connect(self.snapshot)
+    """self.actionFrame_by_frame.triggered.connect(self.switch_playing_mode)"""
+
+    self.actionFrame_backward.triggered.connect(self.previous_frame)
+    self.actionFrame_forward.triggered.connect(self.next_frame)
+
     self.actionCloseObs.triggered.connect(self.close_observation)
-    self.actionCurrent_Time_Budget.triggered.connect(lambda: self.time_budget(mode="by_behavior", mode2="current"))
+    self.actionCurrent_Time_Budget.triggered.connect(
+        lambda: time_budget_widget.time_budget(self, mode="by_behavior", mode2="current")
+    )
     self.actionPlot_current_observation.triggered.connect(lambda: self.plot_events_triggered(mode="current"))
     self.actionFind_in_current_obs.triggered.connect(self.find_events)
 
