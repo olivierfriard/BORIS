@@ -7,6 +7,7 @@ from . import version
 from . import config as cfg
 from . import utilities as util
 
+from PyQt5.QtCore import QT_VERSION_STR, PYQT_VERSION_STR
 from PyQt5.QtGui import QPixmap
 from PyQt5.QtWidgets import QMessageBox
 
@@ -73,7 +74,7 @@ def actionAbout_activated(self):
         f"Operating system: {current_system.system} {current_system.release} {current_system.version} \n"
         f"CPU: {current_system.machine} {current_system.processor}\n\n"
         f"Python {platform.python_version()} ({'64-bit' if sys.maxsize > 2**32 else '32-bit'})"
-        f" - Qt {cfg.QT_VERSION_STR} - PyQt{cfg.PYQT_VERSION_STR}\n\n"
+        f" - Qt {QT_VERSION_STR} - PyQt {PYQT_VERSION_STR}\n\n"
     )
 
     r, memory = util.mem_info()

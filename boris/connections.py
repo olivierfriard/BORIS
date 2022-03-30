@@ -38,6 +38,8 @@ from . import export_events
 from . import coding_pad
 from . import time_budget_widget
 from . import about
+from . import behaviors_coding_map
+from . import media_file
 
 
 def connections(self):
@@ -101,7 +103,7 @@ def connections(self):
     self.actionDelete_all_observations.triggered.connect(self.delete_all_events)
     self.actionDelete_selected_observations.triggered.connect(self.delete_selected_events)
 
-    self.actionMedia_file_information.triggered.connect(self.media_file_info)
+    self.actionMedia_file_information.triggered.connect(lambda: media_file.get_info(self))
 
     self.actionLoad_observations_file.triggered.connect(lambda: import_observations.import_observations(self))
 
@@ -153,7 +155,7 @@ def connections(self):
 
     self.actionShow_data_files.triggered.connect(self.show_data_files)
     self.action_geometric_measurements.triggered.connect(lambda: geometric_measurement.show_widget(self))
-    self.actionBehaviors_coding_map.triggered.connect(self.show_behaviors_coding_map)
+    self.actionBehaviors_coding_map.triggered.connect(lambda: behaviors_coding_map.show_behaviors_coding_map(self))
 
     self.actionCoding_pad.triggered.connect(lambda: coding_pad.show_coding_pad(self))
     self.actionSubjects_pad.triggered.connect(self.show_subjects_pad)
@@ -164,7 +166,7 @@ def connections(self):
 
     self.actionRecode_resize_video.triggered.connect(lambda: self.ffmpeg_process("reencode_resize"))
     self.actionRotate_video.triggered.connect(lambda: self.ffmpeg_process("rotate"))
-    self.actionMedia_file_information_2.triggered.connect(self.media_file_info)
+    self.actionMedia_file_information_2.triggered.connect(lambda: media_file.get_info(self))
 
     self.actionCreate_transitions_flow_diagram.triggered.connect(transitions.transitions_dot_script)
     self.actionCreate_transitions_flow_diagram_2.triggered.connect(transitions.transitions_flow_diagram)

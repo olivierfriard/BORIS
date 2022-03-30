@@ -56,17 +56,13 @@ from PIL.ImageQt import ImageQt, Image
 
 from boris import behav_coding_map_creator
 from boris import behaviors_coding_map
-from boris import coding_pad
-from boris import db_functions
 from boris import dialog
-from boris import export_observation
 from boris import gui_utilities
 
 from boris import map_creator
 from boris import geometric_measurement
 from boris import modifiers_coding_map
 from boris import observation
-from boris import observations_list
 from boris import advanced_event_filtering
 from boris import otx_parser
 from boris import param_panel
@@ -80,7 +76,6 @@ from boris import core_qrc
 from boris import select_modifiers
 from boris import select_observations
 from boris import subjects_pad
-from boris import time_budget_functions
 from boris import utilities
 from boris import version
 from boris.core_ui import *
@@ -4469,122 +4464,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 QMessageBox.NoButton,
             )
 
-    def media_file_info(self):
-        """
-        show info about media file (current media file if observation opened)
-        """
-
-        if self.observationId and self.playerType == VLC:
-
-            tot_output = ""
-
-            for i, dw in enumerate(self.dw_player):
-                if not (
-                    str(i + 1) in self.pj[OBSERVATIONS][self.observationId][FILE]
-                    and self.pj[OBSERVATIONS][self.observationId][FILE][str(i + 1)]
-                ):
-                    continue
-
-                logging.info(f"Video format: {dw.player.video_format}")
-                logging.info(f"number of media in media list: {dw.player.playlist_count}")
-                logging.info(f"Current time position: {dw.player.time_pos}  duration: {dw.player.duration}")
-
-                logging.info(f"FPS: {dw.player.container_fps}")
-
-                # logging.info("Rate: {}".format(player.mediaplayer.get_rate()))
-                logging.info(f"Video size: {dw.player.width}x{dw.player.height}  ratio: ")
-
-                logging.info(f"Aspect ratio: {round(dw.player.width / dw.player.height, 3)}")
-                # logging.info("is seekable? {0}".format(player.mediaplayer.is_seekable()))
-                # logging.info("has_vout? {0}".format(player.mediaplayer.has_vout()))
-
-                mpv_output = (
-                    "<b>MPV information</b><br>"
-                    f"Video format: {dw.player.video_format}<br>"
-                    # "State: {}<br>"
-                    # "Media Resource Location: {}<br>"
-                    # "File name: {}<br>"
-                    # "Track: {}/{}<br>"
-                    f"Number of media in media list: {dw.player.playlist_count}<br>"
-                    f"Current time position: {dw.player.time_pos}<br>"
-                    f"duration: {dw.player.duration}<br>"
-                    # "Position: {} %<br>"
-                    f"FPS: {dw.player.container_fps}<br>"
-                    # "Rate: {}<br>"
-                    f"Video size: {dw.player.width}x{dw.player.height}<br>"
-                    # "Scale: {}<br>"
-                    f"Aspect ratio: {round(dw.player.width / dw.player.height, 3)}<br>"
-                    # "is seekable? {}<br>"
-                    # "has_vout? {}<br>"
-                )
-
-                # FFmpeg analysis
-                ffmpeg_output = "<br><b>FFmpeg analysis</b><br>"
-
-                for filePath in self.pj[OBSERVATIONS][self.observationId][FILE][str(i + 1)]:
-                    media_full_path = project_functions.media_full_path(filePath, self.projectFileName)
-                    r = utilities.accurate_media_analysis(self.ffmpeg_bin, media_full_path)
-                    nframes = r["frames_number"]
-                    if "error" in r:
-                        ffmpeg_output += "File path: {filePath}<br><br>{error}<br><br>".format(
-                            filePath=media_full_path, error=r["error"]
-                        )
-                    else:
-                        ffmpeg_output += (
-                            "File path: {}<br>Duration: {}<br>Bitrate: {}k<br>"
-                            "FPS: {}<br>Has video: {}<br>Has audio: {}<br><br>"
-                        ).format(
-                            media_full_path,
-                            self.convertTime(r["duration"]),
-                            r["bitrate"],
-                            r["fps"],
-                            r["has_video"],
-                            r["has_audio"],
-                        )
-
-                    ffmpeg_output += "Total duration: {} (hh:mm:ss.sss)".format(
-                        self.convertTime(sum(self.dw_player[i].media_durations) / 1000)
-                    )
-
-                tot_output += mpv_output + ffmpeg_output + "<br><hr>"
-
-            self.results = dialog.ResultsWidget()
-            self.results.setWindowTitle(programName + " - Media file information")
-            self.results.ptText.setReadOnly(True)
-            self.results.ptText.appendHtml(tot_output)
-            self.results.show()
-
-        else:  # no open observation
-
-            fn = QFileDialog().getOpenFileName(self, "Select a media file", "", "Media files (*)")
-            filePath = fn[0] if type(fn) is tuple else fn
-
-            if filePath:
-                self.results = dialog.ResultsWidget()
-                self.results.setWindowTitle(programName + " - Media file information")
-                self.results.ptText.setReadOnly(True)
-                self.results.ptText.appendHtml("<br><b>FFmpeg analysis</b><hr>")
-                r = utilities.accurate_media_analysis(self.ffmpeg_bin, filePath)
-                if "error" in r:
-                    self.results.ptText.appendHtml(
-                        "File path: {filePath}<br><br>{error}<br><br>".format(filePath=filePath, error=r["error"])
-                    )
-                else:
-                    self.results.ptText.appendHtml(
-                        (
-                            "File path: {}<br>Duration: {}<br>Bitrate: {}k<br>"
-                            "FPS: {}<br>Has video: {}<br>Has audio: {}<br><br>"
-                        ).format(
-                            filePath,
-                            self.convertTime(r["duration"]),
-                            r["bitrate"],
-                            r["fps"],
-                            r["has_video"],
-                            r["has_audio"],
-                        )
-                    )
-
-                self.results.show()
 
     def next_frame(self):
         """
@@ -5175,40 +5054,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             dialog.error_message2()
     """
 
-    def show_behaviors_coding_map(self):
-        """
-        show a behavior coding map
-        """
-
-        if BEHAVIORS_CODING_MAP not in self.pj or not self.pj[BEHAVIORS_CODING_MAP]:
-            QMessageBox.warning(self, programName, "No behaviors coding map found in current project")
-            return
-
-        items = [x["name"] for x in self.pj[BEHAVIORS_CODING_MAP]]
-        if len(items) == 1:
-            coding_map_name = items[0]
-        else:
-            item, ok = QInputDialog.getItem(self, "Select a coding map", "list of coding maps", items, 0, False)
-            if ok and item:
-                coding_map_name = item
-            else:
-                return
-
-        if self.bcm_dict.get(coding_map_name, None) is not None:
-            # if coding_map_name in self.bcm_dict and :
-            self.bcm_dict[coding_map_name].show()
-        else:
-            self.bcm_dict[coding_map_name] = behaviors_coding_map.BehaviorsCodingMapWindowClass(
-                self.pj[BEHAVIORS_CODING_MAP][items.index(coding_map_name)], idx=items.index(coding_map_name)
-            )
-
-            self.bcm_dict[coding_map_name].clickSignal.connect(self.click_signal_from_behaviors_coding_map)
-
-            # self.bcm_dict[coding_map_name].close_signal.connect(self.close_behaviors_coding_map)
-
-            self.bcm_dict[coding_map_name].resize(CODING_MAP_RESIZE_W, CODING_MAP_RESIZE_W)
-            self.bcm_dict[coding_map_name].setWindowFlags(Qt.WindowStaysOnTopHint)
-            self.bcm_dict[coding_map_name].show()
 
     def add_image_overlay(self):
         """
