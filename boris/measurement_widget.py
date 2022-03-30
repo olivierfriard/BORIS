@@ -21,18 +21,30 @@ This file is part of BORIS.
 """
 
 import logging
+from . import menu_options
 
-from PyQt5.QtCore import pyqtSignal
-from PyQt5.QtWidgets import (QApplication, QWidget, QRadioButton, QLabel, QHBoxLayout, QVBoxLayout, QLineEdit,
-                             QPlainTextEdit, QCheckBox, QPushButton, QFileDialog, QMessageBox)
+from PyQt5.QtCore import pyqtSignal, Qt
+from PyQt5.QtWidgets import (
+    QApplication,
+    QWidget,
+    QRadioButton,
+    QLabel,
+    QHBoxLayout,
+    QVBoxLayout,
+    QLineEdit,
+    QPlainTextEdit,
+    QCheckBox,
+    QPushButton,
+    QFileDialog,
+    QMessageBox,
+)
 from . import dialog
 
 from . import config as cfg
 
 
 class wgMeasurement(QWidget):
-    """
-    """
+    """ """
 
     closeSignal, clearSignal = pyqtSignal(), pyqtSignal()
     flagSaved = True
@@ -122,8 +134,10 @@ class wgMeasurement(QWidget):
         print("pb close clicked")
         if not self.flagSaved:
             response = dialog.MessageDialog(
-                cfg.programName, "The current measurements are not saved. Do you want to save results before closing?",
-                [cfg.YES, cfg.NO, cfg.CANCEL])
+                cfg.programName,
+                "The current measurements are not saved. Do you want to save results before closing?",
+                [cfg.YES, cfg.NO, cfg.CANCEL],
+            )
             if response == cfg.YES:
                 self.pbSave_clicked()
             if response == cfg.CANCEL:
@@ -135,8 +149,9 @@ class wgMeasurement(QWidget):
         save results
         """
         if self.pte.toPlainText():
-            fileName, _ = QFileDialog().getSaveFileName(self, "Save geometric measurements", "",
-                                                        "Text files (*.txt);;All files (*)")
+            fileName, _ = QFileDialog().getSaveFileName(
+                self, "Save geometric measurements", "", "Text files (*.txt);;All files (*)"
+            )
             if fileName:
                 try:
                     with open(fileName, "w") as f:
@@ -148,9 +163,50 @@ class wgMeasurement(QWidget):
             QMessageBox.information(self, cfg.programName, "There are no measurements to save")
 
 
-if __name__ == '__main__':
+def geometric_measurements(self):
+    """
+    active the geometric measurement widget
+    """
+
+    def close_measurement_widget():
+
+        self.geometric_measurements_mode = False
+        for n_player, dw in enumerate(self.dw_player):
+            dw.frame_viewer.clear()
+            dw.stack.setCurrentIndex(0)
+            dw.setWindowTitle(f"Player #{n_player + 1}")
+        self.measurement_w.close()
+        menu_options.update_menu(self)
+
+    """ to be deleted 2021-09-03
+    def clear_measurements():
+        pass
+    """
+
+    self.geometric_measurements_mode = True
+    self.pause_video()
+
+    menu_options.update_menu(self)
+
+    self.measurement_w = wgMeasurement()
+    self.measurement_w.draw_mem = {}
+    self.measurement_w.setWindowFlags(Qt.WindowStaysOnTopHint)
+    self.measurement_w.closeSignal.connect(close_measurement_widget)
+    """ to be deleted 2021-09-03
+    self.measurement_w.clearSignal.connect(clear_measurements)
+    """
+    self.measurement_w.show()
+
+    for _, dw in enumerate(self.dw_player):
+        dw.setWindowTitle("Geometric measurements")
+        dw.stack.setCurrentIndex(1)
+        self.extract_frame(dw)
+
+
+if __name__ == "__main__":
 
     import sys
+
     app = QApplication(sys.argv)
     w = wgMeasurement(logging.getLogger().getEffectiveLevel())
     w.show()

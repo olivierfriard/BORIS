@@ -32,6 +32,7 @@ from . import project_server
 from . import events_snapshots
 from . import state_events as state_events
 from . import preferences
+from . import measurement_widget
 
 
 def connections(self):
@@ -144,7 +145,7 @@ def connections(self):
     self.actionPlot_events_in_real_time.triggered.connect(lambda: self.show_plot_widget("plot_events", warning=False))
 
     self.actionShow_data_files.triggered.connect(self.show_data_files)
-    self.action_geometric_measurements.triggered.connect(self.geometric_measurements)
+    self.action_geometric_measurements.triggered.connect(lambda: measurement_widget.geometric_measurements(self))
     self.actionBehaviors_coding_map.triggered.connect(self.show_behaviors_coding_map)
 
     self.actionCoding_pad.triggered.connect(self.show_coding_pad)

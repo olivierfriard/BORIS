@@ -28,11 +28,12 @@ import sys
 from . import dialog
 from . import gui_utilities
 from . import menu_options
+from . import dialog
 from . import config as cfg
 
 from .preferences_ui import Ui_prefDialog
 
-from PyQt5.QtWidgets import QDialog, QFileDialog, MessageDialog
+from PyQt5.QtWidgets import QDialog, QFileDialog
 
 
 class Preferences(QDialog, Ui_prefDialog):
@@ -58,7 +59,7 @@ class Preferences(QDialog, Ui_prefDialog):
         allow user to delete the config file (.boris)
         """
         if (
-            MessageDialog(
+            dialog.MessageDialog(
                 "BORIS",
                 ("Refresh will re-initialize " "all your preferences and close BORIS"),
                 [cfg.CANCEL, "Refresh preferences"],
@@ -101,7 +102,7 @@ def preferences(self):
     """
 
     try:
-        preferencesWindow = preferences.Preferences()
+        preferencesWindow = Preferences()
         preferencesWindow.tabWidget.setCurrentIndex(0)
 
         if self.timeFormat == cfg.S:
