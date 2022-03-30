@@ -31,6 +31,7 @@ from . import irr
 from . import project_server
 from . import events_snapshots
 from . import state_events as state_events
+from . import preferences
 
 
 def connections(self):
@@ -53,7 +54,7 @@ def connections(self):
 
     self.menuCreate_subtitles_2.triggered.connect(self.create_subtitles)
 
-    self.actionPreferences.triggered.connect(self.preferences)
+    self.actionPreferences.triggered.connect(lambda: preferences.preferences(self))
 
     self.actionQuit.triggered.connect(self.actionQuit_activated)
 

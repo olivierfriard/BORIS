@@ -100,7 +100,7 @@ def fix_unpaired_events(self):
         )
         if "not PAIRED" not in msg:
             QMessageBox.information(
-                self,
+                None,
                 cfg.programName,
                 "All state events are already paired",
                 QMessageBox.Ok | QMessageBox.Default,
@@ -180,8 +180,8 @@ def fix_unpaired_events(self):
             self.results.exec_()
         else:
             QMessageBox.information(
-                self,
-                programName,
+                None,
+                cfg.programName,
                 "All state events are already paired",
                 QMessageBox.Ok | QMessageBox.Default,
                 QMessageBox.NoButton,
