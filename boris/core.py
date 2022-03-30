@@ -4464,7 +4464,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 QMessageBox.NoButton,
             )
 
-
     def next_frame(self):
         """
         show next frame
@@ -4814,11 +4813,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             #pid = subprocess.Popen(args,executable=ex,cwd=os.path.split(ex)[0])
             """
 
-            # Extract Information:
-            #   videoname of current observation
-            #   timeinterval
-            #   custom execution
-
     def edit_event(self):
         """
         edit event corresponding to the selected row in twEvents
@@ -5053,7 +5047,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         except Exception:
             dialog.error_message2()
     """
-
 
     def add_image_overlay(self):
         """
