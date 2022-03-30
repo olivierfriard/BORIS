@@ -22,16 +22,33 @@ Copyright 2012-2022 Olivier Friard
 
 """
 
-import os
-import pathlib
-import logging
 from PyQt5.QtCore import Qt, QSettings
 from PyQt5.QtWidgets import QAbstractItemView
 
 from boris import observations_list
-from boris.config import (INDEPENDENT_VARIABLES, OBSERVATIONS, DESCRIPTION, TEXT, NUMERIC, TYPE, MEDIA, FILE, LIVE,
-                          OPEN, VIEW, EDIT, ETHOGRAM, EVENTS, SINGLE, MULTIPLE, SELECT1, NO_FOCAL_SUBJECT, HHMMSS,
-                          STATE, BEHAVIOR_CODE)
+from boris.config import (
+    INDEPENDENT_VARIABLES,
+    OBSERVATIONS,
+    DESCRIPTION,
+    TEXT,
+    NUMERIC,
+    TYPE,
+    MEDIA,
+    FILE,
+    LIVE,
+    OPEN,
+    VIEW,
+    EDIT,
+    ETHOGRAM,
+    EVENTS,
+    SINGLE,
+    MULTIPLE,
+    SELECT1,
+    NO_FOCAL_SUBJECT,
+    HHMMSS,
+    STATE,
+    BEHAVIOR_CODE,
+)
 from boris import gui_utilities
 from boris import utilities
 from boris import project_functions
@@ -109,15 +126,15 @@ def select_observations(pj: dict, mode: str, windows_title: str = "") -> tuple:
             not_paired.append(obs)
 
         # check exhaustivity of observation
-        exhaustivity = project_functions.check_observation_exhaustivity(pj[OBSERVATIONS][obs][EVENTS], [],
-                                                                        state_events_list)
+        exhaustivity = project_functions.check_observation_exhaustivity(
+            pj[OBSERVATIONS][obs][EVENTS], [], state_events_list
+        )
 
         data.append([obs, date, descr, subjectsList, observed_interval_str, str(exhaustivity), media] + indepvar)
 
-    obsList = observations_list.observationsList_widget(data,
-                                                        header=obsListFields + indepVarHeader,
-                                                        column_type=column_type,
-                                                        not_paired=not_paired)
+    obsList = observations_list.observationsList_widget(
+        data, header=obsListFields + indepVarHeader, column_type=column_type, not_paired=not_paired
+    )
     if windows_title:
         obsList.setWindowTitle(windows_title)
 

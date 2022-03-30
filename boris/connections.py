@@ -115,8 +115,10 @@ def connections(self):
         lambda: export_events.export_events_as_behavioral_sequences(self, separated_subjects=False, timed=False)
     )
 
-    self.actionExport_aggregated_events.triggered.connect(self.export_aggregated_events)
-    self.actionExport_events_as_Praat_TextGrid.triggered.connect(self.export_state_events_as_textgrid)
+    self.actionExport_aggregated_events.triggered.connect(lambda: export_events.export_aggregated_events(self))
+    self.actionExport_events_as_Praat_TextGrid.triggered.connect(
+        lambda: export_events.export_state_events_as_textgrid(self)
+    )
     self.actionJWatcher.triggered.connect(lambda: export_events.export_tabular_events(self, "jwatcher"))
 
     self.actionExtract_events_from_media_files.triggered.connect(lambda: events_snapshots.extract_events(self))

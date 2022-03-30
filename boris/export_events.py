@@ -508,3 +508,244 @@ def export_aggregated_events(self):
         r, msg = export_observation.dataset_write(data, fileName, outputFormat)
         if not r:
             QMessageBox.warning(None, cfg.programName, msg, QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
+
+
+def export_state_events_as_textgrid(self):
+    """
+    export state events as Praat textgrid
+    """
+
+    _, selectedObservations = select_observations.select_observations(self.pj, mode=cfg.MULTIPLE, windows_title="")
+
+    if not selectedObservations:
+        return
+
+    plot_parameters = select_subj_behav.choose_obs_subj_behav_category(
+        self,
+        selectedObservations,
+        maxTime=0,
+        flagShowIncludeModifiers=False,
+        flagShowExcludeBehaviorsWoEvents=False,
+    )
+
+    if not plot_parameters[cfg.SELECTED_SUBJECTS] or not plot_parameters[cfg.SELECTED_BEHAVIORS]:
+        return
+
+    # check if state events are paired
+    out = ""
+    not_paired_obs_list = []
+    for obsId in selectedObservations:
+        r, msg = project_functions.check_state_events_obs(
+            obsId, self.pj[cfg.ETHOGRAM], self.pj[cfg.OBSERVATIONS][obsId], self.timeFormat
+        )
+
+        if not r:
+            # check if unpaired behavior is included in behaviors to extract
+            for behav in plot_parameters[cfg.SELECTED_BEHAVIORS]:
+                if f"behavior <b>{behav}</b>" in msg:
+                    out += f"Observation: <strong>{obsId}</strong><br>{msg}<br>"
+                    not_paired_obs_list.append(obsId)
+
+    if out:
+        out = "The observations with UNPAIRED state events will be removed from the analysis<br><br>" + out
+        results = dialog.Results_dialog()
+        results.setWindowTitle(f"{cfg.programName} - Check selected observations and selected behaviors")
+        results.ptText.setReadOnly(True)
+        results.ptText.appendHtml(out)
+        results.pbSave.setVisible(False)
+        results.pbCancel.setVisible(True)
+
+        if not results.exec_():
+            return
+
+    # remove observations with unpaired state events
+    selectedObservations = [x for x in selectedObservations if x not in not_paired_obs_list]
+    if not selectedObservations:
+        return
+
+    exportDir = QFileDialog(self).getExistingDirectory(
+        self, "Export events as Praat TextGrid", os.path.expanduser("~"), options=QFileDialog(self).ShowDirsOnly
+    )
+    if not exportDir:
+        return
+
+    try:
+        mem_command = ""
+        for obsId in selectedObservations:
+
+            subjectheader = (
+                "    item [{subjectIdx}]:\n"
+                '        class = "IntervalTier"\n'
+                '        name = "{subject}"\n'
+                "        xmin = {intervalsMin}\n"
+                "        xmax = {intervalsMax}\n"
+                "        intervals: size = {intervalsSize}\n"
+            )
+
+            template = (
+                "        intervals [{count}]:\n"
+                "            xmin = {xmin}\n"
+                "            xmax = {xmax}\n"
+                '            text = "{name}"\n'
+            )
+
+            flagUnpairedEventFound = False
+
+            totalMediaDuration = round(project_functions.observation_total_length(self.pj[cfg.OBSERVATIONS][obsId]), 3)
+
+            cursor = db_functions.load_events_in_db(
+                self.pj,
+                plot_parameters[cfg.SELECTED_SUBJECTS],
+                selectedObservations,
+                plot_parameters[cfg.SELECTED_BEHAVIORS],
+                time_interval=cfg.TIME_FULL_OBS,
+            )
+
+            cursor.execute(
+                (
+                    "SELECT count(distinct subject) FROM events "
+                    "WHERE observation = ? AND subject IN ({}) AND type = 'STATE' ".format(
+                        ",".join(["?"] * len(plot_parameters[cfg.SELECTED_SUBJECTS]))
+                    )
+                ),
+                [obsId] + plot_parameters[cfg.SELECTED_SUBJECTS],
+            )
+
+            subjectsNum = int(list(cursor.fetchall())[0][0])
+
+            subjectsMin, subjectsMax = 0, totalMediaDuration
+
+            out = (
+                'File type = "ooTextFile"\n'
+                'Object class = "TextGrid"\n'
+                "\n"
+                f"xmin = {subjectsMin}\n"
+                f"xmax = {subjectsMax}\n"
+                "tiers? <exists>\n"
+                f"size = {subjectsNum}\n"
+                "item []:\n"
+            )
+
+            subjectIdx = 0
+            for subject in plot_parameters[cfg.SELECTED_SUBJECTS]:
+                if subject not in [
+                    x[cfg.EVENT_SUBJECT_FIELD_IDX] for x in self.pj[cfg.OBSERVATIONS][obsId][cfg.EVENTS]
+                ]:
+                    continue
+
+                subjectIdx += 1
+
+                cursor.execute(
+                    "SELECT count(*) FROM events WHERE observation = ? AND subject = ? AND type = 'STATE' ",
+                    (obsId, subject),
+                )
+                intervalsSize = int(list(cursor.fetchall())[0][0] / 2)
+
+                intervalsMin, intervalsMax = 0, totalMediaDuration
+
+                out += subjectheader
+
+                cursor.execute(
+                    (
+                        "SELECT occurence, code FROM events "
+                        "WHERE observation = ? AND subject = ? AND type = 'STATE' order by occurence"
+                    ),
+                    (obsId, subject),
+                )
+
+                rows = [{"occurence": util.float2decimal(r["occurence"]), "code": r["code"]} for r in cursor.fetchall()]
+                if not rows:
+                    continue
+
+                count = 0
+
+                # check if 1st behavior starts at the beginning
+
+                if rows[0]["occurence"] > 0:
+                    count += 1
+                    out += template.format(count=count, name="null", xmin=0.0, xmax=rows[0]["occurence"])
+
+                for idx, row in enumerate(rows):
+                    if idx % 2 == 0:
+
+                        # check if events not interlacced
+                        if row["code"] != rows[idx + 1]["code"]:
+                            QMessageBox.critical(
+                                None,
+                                cfg.programName,
+                                "The events are interlaced. It is not possible to produce the Praat TextGrid file",
+                                QMessageBox.Ok | QMessageBox.Default,
+                                QMessageBox.NoButton,
+                            )
+                            return
+
+                        count += 1
+                        out += template.format(
+                            count=count, name=row["code"], xmin=row["occurence"], xmax=rows[idx + 1]["occurence"]
+                        )
+
+                        # check if difference is > 0.001
+                        if len(rows) > idx + 2:
+                            if rows[idx + 2]["occurence"] - rows[idx + 1]["occurence"] > 0.001:
+
+                                out += template.format(
+                                    count=count + 1,
+                                    name="null",
+                                    xmin=rows[idx + 1]["occurence"],
+                                    xmax=rows[idx + 2]["occurence"],
+                                )
+                                count += 1
+                            else:
+                                rows[idx + 2]["occurence"] = rows[idx + 1]["occurence"]
+
+                # check if last event ends at the end of media file
+                if rows[-1]["occurence"] < project_functions.observation_total_length(self.pj[cfg.OBSERVATIONS][obsId]):
+                    count += 1
+                    out += template.format(
+                        count=count, name="null", xmin=rows[-1]["occurence"], xmax=totalMediaDuration
+                    )
+
+                # add info
+                out = out.format(
+                    subjectIdx=subjectIdx,
+                    subject=subject,
+                    intervalsSize=count,
+                    intervalsMin=intervalsMin,
+                    intervalsMax=intervalsMax,
+                )
+
+            # check if file already exists
+            if (
+                mem_command != cfg.OVERWRITE_ALL
+                and pl.Path(f"{pl.Path(exportDir) / util.safeFileName(obsId)}.textGrid").is_file()
+            ):
+                if mem_command == "Skip all":
+                    continue
+                mem_command = dialog.MessageDialog(
+                    cfg.programName,
+                    f"The file <b>{pl.Path(exportDir) / util.safeFileName(obsId)}.textGrid</b> already exists.",
+                    [cfg.OVERWRITE, cfg.OVERWRITE_ALL, "Skip", "Skip all", cfg.CANCEL],
+                )
+                if mem_command == cfg.CANCEL:
+                    return
+                if mem_command in ["Skip", "Skip all"]:
+                    continue
+
+            try:
+                with open(f"{pl.Path(exportDir) / util.safeFileName(obsId)}.textGrid", "w") as f:
+                    f.write(out)
+
+                if flagUnpairedEventFound:
+                    QMessageBox.warning(
+                        self,
+                        cfg.programName,
+                        "Some state events are not paired. They were excluded from export",
+                        QMessageBox.Ok | QMessageBox.Default,
+                        QMessageBox.NoButton,
+                    )
+
+            except Exception:
+                dialog.error_message2()
+
+    except Exception:
+        dialog.error_message2()
