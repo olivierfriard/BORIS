@@ -37,6 +37,7 @@ from . import synthetic_time_budget
 from . import export_events
 from . import coding_pad
 from . import time_budget_widget
+from . import about
 
 
 def connections(self):
@@ -45,7 +46,7 @@ def connections(self):
     """
 
     # menu file
-    self.actionNew_project.triggered.connect(self.new_project_activated)
+    self.actionNew_project.triggered.connect(lambda: self.edit_project(cfg.NEW))
     self.actionOpen_project.triggered.connect(self.open_project_activated)
     self.actionNoldus_Observer_template.triggered.connect(self.import_project_from_observer_template)
     self.actionEdit_project.triggered.connect(self.edit_project_activated)
@@ -191,7 +192,7 @@ def connections(self):
 
     # menu Help
     self.actionUser_guide.triggered.connect(self.actionUser_guide_triggered)
-    self.actionAbout.triggered.connect(self.actionAbout_activated)
+    self.actionAbout.triggered.connect(lambda: about.actionAbout_activated(self))
     self.actionCheckUpdate.triggered.connect(self.actionCheckUpdate_activated)
 
     # toolbar
