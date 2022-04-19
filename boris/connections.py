@@ -21,6 +21,8 @@ Copyright 2012-2022 Olivier Friard
 
 from PyQt5.QtWidgets import QAction
 from PyQt5.QtCore import QTimer, Qt
+
+
 from . import config as cfg
 from . import video_equalizer
 from . import behavior_binary_table
@@ -40,6 +42,8 @@ from . import about
 from . import behaviors_coding_map
 from . import media_file
 from . import event_operations
+from . import image_overlay
+from . import video_operations
 
 
 def connections(self):
@@ -75,16 +79,17 @@ def connections(self):
 
     self.actionClose_observation.triggered.connect(self.close_observation)
 
-    self.actionAdd_event.triggered.connect(self.add_event)
+    self.actionAdd_event.triggered.connect(lambda: event_operations.add_event(self))
     self.actionEdit_event.triggered.connect(lambda: event_operations.edit_event(self))
-    self.actionFilter_events.triggered.connect(self.filter_events)
-    self.actionShow_all_events.triggered.connect(self.show_all_events)
+    self.actionFilter_events.triggered.connect(lambda: event_operations.filter_events(self))
+    self.actionShow_all_events.triggered.connect(lambda: event_operations.show_all_events(self))
 
     self.actionExport_observations_list.triggered.connect(self.export_observations_list_clicked)
 
     self.actionCheckStateEvents.triggered.connect(lambda: state_events.check_state_events(self, mode="all"))
     self.actionCheckStateEventsSingleObs.triggered.connect(
-        lambda: state_events.check_state_events(self, mode="current"))
+        lambda: state_events.check_state_events(self, mode="current")
+    )
     self.actionClose_unpaired_events.triggered.connect(lambda: state_events.fix_unpaired_events(self))
     self.actionRunEventOutside.triggered.connect(self.run_event_outside)
 
@@ -97,7 +102,7 @@ def connections(self):
     self.actionPaste_events.triggered.connect(lambda: event_operations.paste_clipboard_to_events(self))
 
     self.actionExplore_project.triggered.connect(self.explore_project)
-    self.actionFind_events.triggered.connect(self.find_events)
+    self.actionFind_events.triggered.connect(lambda: event_operations.find_events(self))
     self.actionFind_replace_events.triggered.connect(self.find_replace_events)
     self.actionDelete_all_observations.triggered.connect(lambda: event_operations.delete_all_events(self))
     self.actionDelete_selected_observations.triggered.connect(lambda: event_operations.delete_selected_events(self))
@@ -111,13 +116,16 @@ def connections(self):
     # behavioral sequences
     # self.actionExportEventString.triggered.connect(lambda: self.export_events_as_behavioral_sequences(timed=False))
     self.actionseparated_subjects.triggered.connect(
-        lambda: export_events.export_events_as_behavioral_sequences(self, separated_subjects=True, timed=False))
+        lambda: export_events.export_events_as_behavioral_sequences(self, separated_subjects=True, timed=False)
+    )
     self.actiongrouped_subjects.triggered.connect(
-        lambda: export_events.export_events_as_behavioral_sequences(self, separated_subjects=False, timed=False))
+        lambda: export_events.export_events_as_behavioral_sequences(self, separated_subjects=False, timed=False)
+    )
 
     self.actionExport_aggregated_events.triggered.connect(lambda: export_events.export_aggregated_events(self))
     self.actionExport_events_as_Praat_TextGrid.triggered.connect(
-        lambda: export_events.export_state_events_as_textgrid(self))
+        lambda: export_events.export_state_events_as_textgrid(self)
+    )
     self.actionJWatcher.triggered.connect(lambda: export_events.export_tabular_events(self, "jwatcher"))
 
     self.actionExtract_events_from_media_files.triggered.connect(lambda: events_snapshots.extract_events(self))
@@ -130,12 +138,13 @@ def connections(self):
     self.actionNumber_of_transitions.triggered.connect(lambda: transitions.transitions_matrix(self, "number"))
 
     self.actionFrequencies_of_transitions_after_behaviors.triggered.connect(
-        lambda: self.transitions_matrix("frequencies_after_behaviors"))
+        lambda: self.transitions_matrix("frequencies_after_behaviors")
+    )
 
     # menu playback
     self.actionJumpTo.triggered.connect(self.jump_to)
-    self.actionZoom_level.triggered.connect(self.zoom_level)
-    self.actionDisplay_subtitles.triggered.connect(self.display_subtitles)
+    self.actionZoom_level.triggered.connect(lambda: video_operations.zoom_level(self))
+    self.actionDisplay_subtitles.triggered.connect(lambda: video_operations.display_subtitles(self))
     self.actionVideo_equalizer.triggered.connect(lambda: video_equalizer.video_equalizer_show(self))
 
     # menu Tools
@@ -156,8 +165,8 @@ def connections(self):
     self.actionSubjects_pad.triggered.connect(self.show_subjects_pad)
 
     # image overlay on video
-    self.actionAdd_image_overlay_on_video.triggered.connect(self.add_image_overlay)
-    self.actionRemove_image_overlay.triggered.connect(self.remove_image_overlay)
+    self.actionAdd_image_overlay_on_video.triggered.connect(lambda: image_overlay.add_image_overlay(self))
+    self.actionRemove_image_overlay.triggered.connect(lambda: image_overlay.remove_image_overlay(self))
 
     self.actionRecode_resize_video.triggered.connect(lambda: self.ffmpeg_process("reencode_resize"))
     self.actionRotate_video.triggered.connect(lambda: self.ffmpeg_process("rotate"))
@@ -169,11 +178,13 @@ def connections(self):
     # menu Analysis
     self.actionTime_budget.triggered.connect(lambda: time_budget_widget.time_budget(self, mode="by_behavior"))
     self.actionTime_budget_by_behaviors_category.triggered.connect(
-        lambda: time_budget_widget.time_budget(self, mode="by_category"))
+        lambda: time_budget_widget.time_budget(self, mode="by_category")
+    )
 
     self.actionTime_budget_report.triggered.connect(lambda: synthetic_time_budget.synthetic_time_budget(self))
     self.actionSynthetic_binned_time_budget.triggered.connect(
-        lambda: synthetic_time_budget.synthetic_binned_time_budget(self))
+        lambda: synthetic_time_budget.synthetic_binned_time_budget(self)
+    )
 
     self.actionBehavior_bar_plot.triggered.connect(self.behaviors_bar_plot)
     self.actionBehavior_bar_plot.setVisible(True)
@@ -197,14 +208,14 @@ def connections(self):
     self.actionJumpBackward.triggered.connect(self.jumpBackward_activated)
     self.actionJumpForward.triggered.connect(self.jumpForward_activated)
 
-    self.actionFaster.triggered.connect(self.video_faster_activated)
-    self.actionSlower.triggered.connect(self.video_slower_activated)
-    self.actionNormalSpeed.triggered.connect(self.video_normalspeed_activated)
+    self.actionFaster.triggered.connect(lambda: video_operations.video_faster_activated(self))
+    self.actionSlower.triggered.connect(lambda: video_operations.video_slower_activated(self))
+    self.actionNormalSpeed.triggered.connect(lambda: video_operations.video_normalspeed_activated(self))
 
     self.actionPrevious.triggered.connect(self.previous_media_file)
     self.actionNext.triggered.connect(self.next_media_file)
 
-    self.actionSnapshot.triggered.connect(self.snapshot)
+    self.actionSnapshot.triggered.connect(lambda: video_operations.snapshot(self))
     """self.actionFrame_by_frame.triggered.connect(self.switch_playing_mode)"""
 
     self.actionFrame_backward.triggered.connect(self.previous_frame)
@@ -212,9 +223,10 @@ def connections(self):
 
     self.actionCloseObs.triggered.connect(self.close_observation)
     self.actionCurrent_Time_Budget.triggered.connect(
-        lambda: time_budget_widget.time_budget(self, mode="by_behavior", mode2="current"))
+        lambda: time_budget_widget.time_budget(self, mode="by_behavior", mode2="current")
+    )
     self.actionPlot_current_observation.triggered.connect(lambda: self.plot_events_triggered(mode="current"))
-    self.actionFind_in_current_obs.triggered.connect(self.find_events)
+    self.actionFind_in_current_obs.triggered.connect(lambda: event_operations.find_events(self))
 
     # table Widget double click
     self.twEvents.itemDoubleClicked.connect(self.twEvents_doubleClicked)
