@@ -54,30 +54,31 @@ from PyQt5.QtMultimedia import QSound
 from PyQt5.QtWidgets import *
 from PIL.ImageQt import ImageQt, Image
 
-from boris import behav_coding_map_creator
-from boris import behaviors_coding_map
-from boris import dialog
-from boris import gui_utilities
+from . import behav_coding_map_creator
+from . import about
+from . import behaviors_coding_map
+from . import dialog
+from . import gui_utilities
 
-from boris import map_creator
-from boris import geometric_measurement
-from boris import modifiers_coding_map
-from boris import observation
-from boris import advanced_event_filtering
-from boris import otx_parser
-from boris import param_panel
-from boris import plot_data_module
-from boris import plot_events
-from boris import plot_spectrogram_rt
-from boris import plot_waveform_rt
-from boris import plot_events_rt
-from boris import project_functions
-from boris import core_qrc
-from boris import select_modifiers
-from boris import select_observations
-from boris import subjects_pad
-from boris import utilities
-from boris import version
+from . import map_creator
+from . import geometric_measurement
+from . import modifiers_coding_map
+from . import observation
+from . import advanced_event_filtering
+from . import otx_parser
+from . import param_panel
+from . import plot_data_module
+from . import plot_events
+from . import plot_spectrogram_rt
+from . import plot_waveform_rt
+from . import plot_events_rt
+from . import project_functions
+from . import core_qrc
+from . import select_modifiers
+from . import select_observations
+from . import subjects_pad
+from . import utilities
+from . import version
 from boris.core_ui import *
 from boris.config import *
 import boris.config as cfg
@@ -85,7 +86,7 @@ from boris.edit_event import DlgEditEvent, EditSelectedEvents
 from boris.project import *
 from boris.time_budget_widget import timeBudgetResults
 from boris.utilities import *
-from boris import player_dock_widget
+from . import player_dock_widget
 
 from . import menu_options as menu_options
 from . import connections as connections
@@ -5800,117 +5801,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 self.update_subject(self.twSubjects.item(self.twSubjects.selectedIndexes()[0].row(), 1).text())
         else:
             self.no_observation()
-
-    '''
-    def edit_time_selected_events(self):
-        """
-        edit time of one or more selected events
-        """
-        # list of rows to edit
-        twEvents_rows_to_shift = set([item.row() for item in self.twEvents.selectedIndexes()])
-
-        if not len(twEvents_rows_to_shift):
-            QMessageBox.warning(self, programName, "No event selected!")
-            return
-
-        d, ok = QInputDialog.getDouble(self, "Time value", "Value to add or subtract (use negative value):", 0, -86400,
-                                       86400, 3)
-        if ok and d:
-            if (dialog.MessageDialog(
-                    programName,
-                (f"Confirm the {'addition' if d > 0 else 'subtraction'} of {abs(d)} seconds "
-                 "to all selected events in the current observation?"),
-                [YES, NO],
-            ) == NO):
-                return
-
-            tsb_to_shift = []
-            for row in twEvents_rows_to_shift:
-                tsb_to_shift.append([
-                    time2seconds(self.twEvents.item(row, EVENT_TIME_FIELD_IDX).text())
-                    if self.timeFormat == HHMMSS else Decimal(self.twEvents.item(row, EVENT_TIME_FIELD_IDX).text()),
-                    self.twEvents.item(row, EVENT_SUBJECT_FIELD_IDX).text(),
-                    self.twEvents.item(row, EVENT_BEHAVIOR_FIELD_IDX).text(),
-                ])
-
-            for idx, event in enumerate(self.pj[OBSERVATIONS][self.observationId][EVENTS]):
-                """if idx in rows_to_edit:"""
-                if [
-                        event[EVENT_TIME_FIELD_IDX],
-                        event[EVENT_SUBJECT_FIELD_IDX],
-                        event[EVENT_BEHAVIOR_FIELD_IDX],
-                ] in tsb_to_shift:
-                    self.pj[OBSERVATIONS][self.observationId][EVENTS][idx][EVENT_TIME_FIELD_IDX] += Decimal(f"{d:.3f}")
-                    self.projectChanged = True
-
-            self.pj[OBSERVATIONS][self.observationId][EVENTS] = sorted(
-                self.pj[OBSERVATIONS][self.observationId][EVENTS])
-            self.loadEventsInTW(self.observationId)
-    '''
-
-    def copy_selected_events(self):
-        """
-        copy selected events to clipboard
-        """
-        twEvents_rows_to_copy = set([item.row() for item in self.twEvents.selectedIndexes()])
-        if not len(twEvents_rows_to_copy):
-            QMessageBox.warning(self, programName, "No event selected!")
-            return
-
-        tsb_to_copy = []
-        for row in twEvents_rows_to_copy:
-            tsb_to_copy.append([
-                time2seconds(self.twEvents.item(row, EVENT_TIME_FIELD_IDX).text())
-                if self.timeFormat == HHMMSS else Decimal(self.twEvents.item(row, EVENT_TIME_FIELD_IDX).text()),
-                self.twEvents.item(row, EVENT_SUBJECT_FIELD_IDX).text(),
-                self.twEvents.item(row, EVENT_BEHAVIOR_FIELD_IDX).text(),
-            ])
-
-        copied_events = []
-        for idx, event in enumerate(self.pj[OBSERVATIONS][self.observationId][EVENTS]):
-            if [
-                    event[EVENT_TIME_FIELD_IDX],
-                    event[EVENT_SUBJECT_FIELD_IDX],
-                    event[EVENT_BEHAVIOR_FIELD_IDX],
-            ] in tsb_to_copy:
-                copied_events.append("\t".join([str(x) for x in self.pj[OBSERVATIONS][self.observationId][EVENTS][idx]
-                                               ]))
-
-        cb = QApplication.clipboard()
-        cb.clear(mode=cb.Clipboard)
-        cb.setText("\n".join(copied_events), mode=cb.Clipboard)
-
-    def paste_clipboard_to_events(self):
-        """
-        paste clipboard to events
-        """
-
-        cb = QApplication.clipboard()
-        cb_text = cb.text()
-        cb_text_splitted = cb_text.split("\n")
-        length = []
-        content = []
-        for l in cb_text_splitted:
-            length.append(len(l.split("\t")))
-            content.append(l.split("\t"))
-        if set(length) != set([5]):
-            QMessageBox.warning(
-                self,
-                programName,
-                ("The clipboard does not contain events!\n"
-                 "Events must be organized in 5 columns separated by TAB character"),
-            )
-            return
-
-        for event in content:
-            event[0] = Decimal(event[0])
-            if event in self.pj[OBSERVATIONS][self.observationId][EVENTS]:
-                continue
-            self.pj[OBSERVATIONS][self.observationId][EVENTS].append(event)
-            self.projectChanged = True
-
-        self.pj[OBSERVATIONS][self.observationId][EVENTS] = sorted(self.pj[OBSERVATIONS][self.observationId][EVENTS])
-        self.loadEventsInTW(self.observationId)
 
     def click_signal_find_in_events(self, msg):
         """

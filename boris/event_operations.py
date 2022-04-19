@@ -28,7 +28,7 @@ from . import utilities as util
 from . import dialog
 from .edit_event import DlgEditEvent, EditSelectedEvents
 
-from PyQt5.QtWidgets import QMessageBox, QInputDialog, QLineEdit, QAbstractItemView
+from PyQt5.QtWidgets import QMessageBox, QInputDialog, QLineEdit, QAbstractItemView, QApplication
 from PyQt5.QtCore import QTime
 
 
@@ -380,3 +380,70 @@ def edit_time_selected_events(self):
         self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS] = sorted(
             self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS])
         self.loadEventsInTW(self.observationId)
+
+
+def copy_selected_events(self):
+    """
+    copy selected events to clipboard
+    """
+    twEvents_rows_to_copy = set([item.row() for item in self.twEvents.selectedIndexes()])
+    if not len(twEvents_rows_to_copy):
+        QMessageBox.warning(self, cfg.programName, "No event selected!")
+        return
+
+    tsb_to_copy = []
+    for row in twEvents_rows_to_copy:
+        tsb_to_copy.append([
+            util.time2seconds(self.twEvents.item(row, cfg.EVENT_TIME_FIELD_IDX).text())
+            if self.timeFormat == cfg.HHMMSS else Decimal(self.twEvents.item(row, cfg.EVENT_TIME_FIELD_IDX).text()),
+            self.twEvents.item(row, cfg.EVENT_SUBJECT_FIELD_IDX).text(),
+            self.twEvents.item(row, cfg.EVENT_BEHAVIOR_FIELD_IDX).text(),
+        ])
+
+    copied_events = []
+    for idx, event in enumerate(self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS]):
+        if [
+                event[cfg.EVENT_TIME_FIELD_IDX],
+                event[cfg.EVENT_SUBJECT_FIELD_IDX],
+                event[cfg.EVENT_BEHAVIOR_FIELD_IDX],
+        ] in tsb_to_copy:
+            copied_events.append("\t".join(
+                [str(x) for x in self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS][idx]]))
+
+    cb = QApplication.clipboard()
+    cb.clear(mode=cb.Clipboard)
+    cb.setText("\n".join(copied_events), mode=cb.Clipboard)
+
+
+def paste_clipboard_to_events(self):
+    """
+    paste clipboard to events
+    """
+
+    cb = QApplication.clipboard()
+    cb_text = cb.text()
+    cb_text_splitted = cb_text.split("\n")
+    length = []
+    content = []
+    for l in cb_text_splitted:
+        length.append(len(l.split("\t")))
+        content.append(l.split("\t"))
+    if set(length) != set([5]):
+        QMessageBox.warning(
+            self,
+            cfg.programName,
+            ("The clipboard does not contain events!\n"
+             "Events must be organized in 5 columns separated by TAB character"),
+        )
+        return
+
+    for event in content:
+        event[0] = Decimal(event[0])
+        if event in self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS]:
+            continue
+        self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS].append(event)
+        self.projectChanged = True
+
+    self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS] = sorted(
+        self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS])
+    self.loadEventsInTW(self.observationId)

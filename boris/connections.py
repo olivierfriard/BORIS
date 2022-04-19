@@ -93,8 +93,8 @@ def connections(self):
     self.actionEdit_selected_events.triggered.connect(lambda: event_operations.edit_selected_events(self))
     self.actionEdit_event_time.triggered.connect(lambda: event_operations.edit_time_selected_events(self))
 
-    self.actionCopy_events.triggered.connect(self.copy_selected_events)
-    self.actionPaste_events.triggered.connect(self.paste_clipboard_to_events)
+    self.actionCopy_events.triggered.connect(lambda: event_operations.copy_selected_events(self))
+    self.actionPaste_events.triggered.connect(lambda: event_operations.paste_clipboard_to_events(self))
 
     self.actionExplore_project.triggered.connect(self.explore_project)
     self.actionFind_events.triggered.connect(self.find_events)
