@@ -5801,6 +5801,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         else:
             self.no_observation()
 
+    '''
     def edit_time_selected_events(self):
         """
         edit time of one or more selected events
@@ -5845,6 +5846,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.pj[OBSERVATIONS][self.observationId][EVENTS] = sorted(
                 self.pj[OBSERVATIONS][self.observationId][EVENTS])
             self.loadEventsInTW(self.observationId)
+    '''
 
     def copy_selected_events(self):
         """

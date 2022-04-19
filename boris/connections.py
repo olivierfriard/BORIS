@@ -91,7 +91,7 @@ def connections(self):
     self.actionSelect_observations.triggered.connect(lambda: event_operations.select_events_between_activated(self))
 
     self.actionEdit_selected_events.triggered.connect(lambda: event_operations.edit_selected_events(self))
-    self.actionEdit_event_time.triggered.connect(self.edit_time_selected_events)
+    self.actionEdit_event_time.triggered.connect(lambda: event_operations.edit_time_selected_events(self))
 
     self.actionCopy_events.triggered.connect(self.copy_selected_events)
     self.actionPaste_events.triggered.connect(self.paste_clipboard_to_events)

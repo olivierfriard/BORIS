@@ -230,10 +230,6 @@ def edit_selected_events(self):
             self.loadEventsInTW(self.observationId)
 
 
-
-
-
-
 def edit_event(self):
     """
     edit event corresponding to the selected row in twEvents
@@ -251,16 +247,16 @@ def edit_event(self):
         twEvents_row = self.twEvents.selectedItems()[0].row()
 
         tsb_to_edit = [
-            util.time2seconds(self.twEvents.item(twEvents_row, cfg.EVENT_TIME_FIELD_IDX).text()) if self.timeFormat == cfg.HHMMSS
-            else Decimal(self.twEvents.item(twEvents_row, cfg.EVENT_TIME_FIELD_IDX).text()),
+            util.time2seconds(self.twEvents.item(twEvents_row, cfg.EVENT_TIME_FIELD_IDX).text()) if self.timeFormat
+            == cfg.HHMMSS else Decimal(self.twEvents.item(twEvents_row, cfg.EVENT_TIME_FIELD_IDX).text()),
             self.twEvents.item(twEvents_row, cfg.EVENT_SUBJECT_FIELD_IDX).text(),
             self.twEvents.item(twEvents_row, cfg.EVENT_BEHAVIOR_FIELD_IDX).text(),
         ]
 
         row = [
-            idx for idx, event in enumerate(self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS])
-            if [event[cfg.EVENT_TIME_FIELD_IDX], event[cfg.EVENT_SUBJECT_FIELD_IDX], event[cfg.EVENT_BEHAVIOR_FIELD_IDX]] ==
-            tsb_to_edit
+            idx for idx, event in enumerate(self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS]) if [
+                event[cfg.EVENT_TIME_FIELD_IDX], event[cfg.EVENT_SUBJECT_FIELD_IDX], event[cfg.EVENT_BEHAVIOR_FIELD_IDX]
+            ] == tsb_to_edit
         ][0]
 
         editWindow = DlgEditEvent(
@@ -276,7 +272,8 @@ def edit_event(self):
 
         editWindow.cobSubject.addItems(sortedSubjects)
 
-        if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS][row][cfg.EVENT_SUBJECT_FIELD_IDX] in sortedSubjects:
+        if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS][row][
+                cfg.EVENT_SUBJECT_FIELD_IDX] in sortedSubjects:
             editWindow.cobSubject.setCurrentIndex(
                 sortedSubjects.index(
                     self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS][row][cfg.EVENT_SUBJECT_FIELD_IDX]))
@@ -285,7 +282,7 @@ def edit_event(self):
                 self,
                 cfg.programName,
                 (f"The subject <b>{self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS][row][cfg.EVENT_SUBJECT_FIELD_IDX]}</b> "
-                    "does not exist more in the subject's list"),
+                 "does not exist more in the subject's list"),
             )
             editWindow.cobSubject.setCurrentIndex(0)
 
@@ -295,7 +292,8 @@ def edit_event(self):
         # check if selected code is in code's list (no modification of codes)
         if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS][row][cfg.EVENT_BEHAVIOR_FIELD_IDX] in sortedCodes:
             editWindow.cobCode.setCurrentIndex(
-                sortedCodes.index(self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS][row][cfg.EVENT_BEHAVIOR_FIELD_IDX]))
+                sortedCodes.index(
+                    self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS][row][cfg.EVENT_BEHAVIOR_FIELD_IDX]))
         else:
             logging.warning((
                 f"The behaviour {self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS][row][cfg.EVENT_BEHAVIOR_FIELD_IDX]} "
@@ -304,7 +302,7 @@ def edit_event(self):
                 self,
                 cfg.programName,
                 (f"The behaviour <b>{self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS][row][cfg.EVENT_BEHAVIOR_FIELD_IDX]}</b> "
-                    "does not exist more in the ethogram"),
+                 "does not exist more in the ethogram"),
             )
             editWindow.cobCode.setCurrentIndex(0)
 
@@ -336,3 +334,49 @@ def edit_event(self):
 
     except Exception:
         dialog.error_message2()
+
+
+def edit_time_selected_events(self):
+    """
+    edit time of one or more selected events
+    """
+    # list of rows to edit
+    twEvents_rows_to_shift = set([item.row() for item in self.twEvents.selectedIndexes()])
+
+    if not len(twEvents_rows_to_shift):
+        QMessageBox.warning(self, cfg.programName, "No event selected!")
+        return
+
+    d, ok = QInputDialog.getDouble(self, "Time value", "Value to add or subtract (use negative value):", 0, -86400,
+                                   86400, 3)
+    if ok and d:
+        if (dialog.MessageDialog(
+                cfg.programName,
+            (f"Confirm the {'addition' if d > 0 else 'subtraction'} of {abs(d)} seconds "
+             "to all selected events in the current observation?"),
+            [cfg.YES, cfg.NO],
+        ) == cfg.NO):
+            return
+
+        tsb_to_shift = []
+        for row in twEvents_rows_to_shift:
+            tsb_to_shift.append([
+                util.time2seconds(self.twEvents.item(row, cfg.EVENT_TIME_FIELD_IDX).text())
+                if self.timeFormat == cfg.HHMMSS else Decimal(self.twEvents.item(row, cfg.EVENT_TIME_FIELD_IDX).text()),
+                self.twEvents.item(row, cfg.EVENT_SUBJECT_FIELD_IDX).text(),
+                self.twEvents.item(row, cfg.EVENT_BEHAVIOR_FIELD_IDX).text(),
+            ])
+
+        for idx, event in enumerate(self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS]):
+            if [
+                    event[cfg.EVENT_TIME_FIELD_IDX],
+                    event[cfg.EVENT_SUBJECT_FIELD_IDX],
+                    event[cfg.EVENT_BEHAVIOR_FIELD_IDX],
+            ] in tsb_to_shift:
+                self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS][idx][cfg.EVENT_TIME_FIELD_IDX] += Decimal(
+                    f"{d:.3f}")
+                self.projectChanged = True
+
+        self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS] = sorted(
+            self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS])
+        self.loadEventsInTW(self.observationId)
