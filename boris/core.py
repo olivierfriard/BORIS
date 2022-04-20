@@ -77,7 +77,7 @@ from . import core_qrc
 from . import select_modifiers
 from . import select_observations
 from . import subjects_pad
-from . import utilities
+from . import utilities as util
 from . import version
 from . import cmd_arguments
 from boris.core_ui import *
@@ -130,7 +130,7 @@ logging.debug(f"CPU: {current_system.machine} {current_system.processor}")
 logging.debug(f"Python {platform.python_version()} ({'64-bit' if sys.maxsize > 2**32 else '32-bit'})")
 logging.debug(f"Qt {QT_VERSION_STR} - PyQt{PYQT_VERSION_STR}")
 
-r, memory = utilities.mem_info()
+r, memory = util.mem_info()
 if not r:
     logging.debug((f"Memory (RAM)  Total: {memory.get('total_memory', 'Not available'):.2f} Mb  "
                    f"Free: {memory.get('free_memory', 'Not available'):.2f} Mb"))
@@ -555,7 +555,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 current_bitrate = 2000
                 current_resolution = 1024
 
-                r = utilities.accurate_media_analysis(self.ffmpeg_bin, fileNames[0])
+                r = util.accurate_media_analysis(self.ffmpeg_bin, fileNames[0])
                 if "error" in r:
                     QMessageBox.warning(self, programName, f"{fileNames[0]}. {r['error']}")
                 elif r["has_video"]:
