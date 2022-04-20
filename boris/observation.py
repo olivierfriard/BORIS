@@ -33,12 +33,11 @@ from . import dialog
 from . import duration_widget
 from . import plot_data_module
 from . import project_functions
-from . import utilities
+from . import utilities as util
 
 from . import config as cfg
 
 from .observation_ui import Ui_Form
-from .utilities import *
 
 
 class AssignConverter(QDialog):
@@ -315,7 +314,7 @@ class Observation(QDialog, Ui_Form):
             columns_to_plot = "1,2"  # columns to plot by default
 
             # check data file
-            r = utilities.check_txt_file(file_name)  # check_txt_file defined in utilities
+            r = util.check_txt_file(file_name)  # check_txt_file defined in utilities
 
             if "error" in r:
                 QMessageBox.critical(self, cfg.programName, r["error"])
@@ -325,7 +324,7 @@ class Observation(QDialog, Ui_Form):
                 QMessageBox.critical(self, cfg.programName, "This file does not contain a constant number of columns")
                 return
 
-            header = utilities.return_file_header(file_name, row_number=10)
+            header = util.return_file_header(file_name, row_number=10)
 
             if header:
                 w = dialog.View_data_head()
@@ -407,12 +406,12 @@ class Observation(QDialog, Ui_Form):
                 data_file_path = project_functions.media_full_path(
                     self.tw_data_files.item(self.tw_data_files.selectedIndexes()[0].row(), 0).text(), self.project_path)
 
-            file_parameters = utilities.check_txt_file(data_file_path)
+            file_parameters = util.check_txt_file(data_file_path)
             if "error" in file_parameters:
                 QMessageBox.critical(self, cfg.programName,
                                      f"Error on file {data_file_path}: {file_parameters['error']}")
                 return
-            header = utilities.return_file_header(data_file_path)
+            header = util.return_file_header(data_file_path)
 
             if header:
 
@@ -484,7 +483,7 @@ class Observation(QDialog, Ui_Form):
                         w.show()
                         QApplication.processEvents()
 
-                        if utilities.extract_wav(self.ffmpeg_bin, media_file_path, self.tmp_dir) == "":
+                        if util.extract_wav(self.ffmpeg_bin, media_file_path, self.tmp_dir) == "":
                             QMessageBox.critical(self, cfg.programName,
                                                  f"Error during extracting WAV of the media file {media_file_path}")
                             flag_wav_produced = False
@@ -547,10 +546,10 @@ class Observation(QDialog, Ui_Form):
                 players_list.append(int(self.twVideo1.cellWidget(row, 0).currentText()))
                 if int(self.twVideo1.cellWidget(row, 0).currentText()) not in players:
                     players[int(self.twVideo1.cellWidget(
-                        row, 0).currentText())] = [utilities.time2seconds(self.twVideo1.item(row, 3).text())]
+                        row, 0).currentText())] = [util.time2seconds(self.twVideo1.item(row, 3).text())]
                 else:
                     players[int(self.twVideo1.cellWidget(row, 0).currentText())].append(
-                        utilities.time2seconds(self.twVideo1.item(row, 3).text()))
+                        util.time2seconds(self.twVideo1.item(row, 3).text()))
 
             # check if player #1 is used
             if not players_list or min(players_list) > 1:
@@ -665,7 +664,7 @@ class Observation(QDialog, Ui_Form):
              str: error message or empty string
         """
 
-        r = utilities.accurate_media_analysis(self.ffmpeg_bin, file_path)
+        r = util.accurate_media_analysis(self.ffmpeg_bin, file_path)
         if "error" in r:
             return False, r["error"]
         else:
@@ -767,7 +766,7 @@ class Observation(QDialog, Ui_Form):
 
         for col_idx, s in enumerate([
                 None, 0, file_name,
-                seconds2time(self.mediaDurations[file_name]), f"{self.mediaFPS[file_name]:.2f}",
+                util.seconds2time(self.mediaDurations[file_name]), f"{self.mediaFPS[file_name]:.2f}",
                 self.mediaHasVideo[file_name], self.mediaHasAudio[file_name]
         ]):
             if col_idx == 0:  # player combobox

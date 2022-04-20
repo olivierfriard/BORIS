@@ -34,7 +34,6 @@ class StyledItemDelegateTriangle(QStyledItemDelegate):
     def __init__(self, row, parent=None):
         super(StyledItemDelegateTriangle, self).__init__(parent)
         self.row = row
-        print(self.row)
 
     def paint(self, painter, option, index):
 

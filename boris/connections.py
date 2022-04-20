@@ -22,7 +22,6 @@ Copyright 2012-2022 Olivier Friard
 from PyQt5.QtWidgets import QAction
 from PyQt5.QtCore import QTimer, Qt
 
-
 from . import config as cfg
 from . import video_equalizer
 from . import behavior_binary_table
@@ -44,6 +43,7 @@ from . import media_file
 from . import event_operations
 from . import image_overlay
 from . import video_operations
+from . import observation_operations
 
 
 def connections(self):
@@ -71,11 +71,13 @@ def connections(self):
     self.actionQuit.triggered.connect(self.actionQuit_activated)
 
     # menu observations
-    self.actionNew_observation.triggered.connect(self.new_observation_triggered)
-    self.actionOpen_observation.triggered.connect(lambda: self.open_observation("start"))
-    self.actionView_observation.triggered.connect(lambda: self.open_observation(cfg.VIEW))
-    self.actionEdit_observation_2.triggered.connect(self.edit_observation)
-    self.actionObservationsList.triggered.connect(self.observations_list)
+    self.actionNew_observation.triggered.connect(
+        lambda: observation_operations.new_observation(self, mode=cfg.NEW, obsId=""))
+
+    self.actionOpen_observation.triggered.connect(lambda: observation_operations.open_observation(self, mode="start"))
+    self.actionView_observation.triggered.connect(lambda: observation_operations.open_observation(self, mode=cfg.VIEW))
+    self.actionEdit_observation_2.triggered.connect(lambda: observation_operations.edit_observation(self))
+    self.actionObservationsList.triggered.connect(lambda: observation_operations.observations_list(self))
 
     self.actionClose_observation.triggered.connect(self.close_observation)
 
@@ -84,12 +86,12 @@ def connections(self):
     self.actionFilter_events.triggered.connect(lambda: event_operations.filter_events(self))
     self.actionShow_all_events.triggered.connect(lambda: event_operations.show_all_events(self))
 
-    self.actionExport_observations_list.triggered.connect(self.export_observations_list_clicked)
+    self.actionExport_observations_list.triggered.connect(
+        lambda: observation_operations.export_observations_list_clicked(self))
 
     self.actionCheckStateEvents.triggered.connect(lambda: state_events.check_state_events(self, mode="all"))
     self.actionCheckStateEventsSingleObs.triggered.connect(
-        lambda: state_events.check_state_events(self, mode="current")
-    )
+        lambda: state_events.check_state_events(self, mode="current"))
     self.actionClose_unpaired_events.triggered.connect(lambda: state_events.fix_unpaired_events(self))
     self.actionRunEventOutside.triggered.connect(self.run_event_outside)
 
@@ -116,16 +118,13 @@ def connections(self):
     # behavioral sequences
     # self.actionExportEventString.triggered.connect(lambda: self.export_events_as_behavioral_sequences(timed=False))
     self.actionseparated_subjects.triggered.connect(
-        lambda: export_events.export_events_as_behavioral_sequences(self, separated_subjects=True, timed=False)
-    )
+        lambda: export_events.export_events_as_behavioral_sequences(self, separated_subjects=True, timed=False))
     self.actiongrouped_subjects.triggered.connect(
-        lambda: export_events.export_events_as_behavioral_sequences(self, separated_subjects=False, timed=False)
-    )
+        lambda: export_events.export_events_as_behavioral_sequences(self, separated_subjects=False, timed=False))
 
     self.actionExport_aggregated_events.triggered.connect(lambda: export_events.export_aggregated_events(self))
     self.actionExport_events_as_Praat_TextGrid.triggered.connect(
-        lambda: export_events.export_state_events_as_textgrid(self)
-    )
+        lambda: export_events.export_state_events_as_textgrid(self))
     self.actionJWatcher.triggered.connect(lambda: export_events.export_tabular_events(self, "jwatcher"))
 
     self.actionExtract_events_from_media_files.triggered.connect(lambda: events_snapshots.extract_events(self))
@@ -138,8 +137,7 @@ def connections(self):
     self.actionNumber_of_transitions.triggered.connect(lambda: transitions.transitions_matrix(self, "number"))
 
     self.actionFrequencies_of_transitions_after_behaviors.triggered.connect(
-        lambda: self.transitions_matrix("frequencies_after_behaviors")
-    )
+        lambda: self.transitions_matrix("frequencies_after_behaviors"))
 
     # menu playback
     self.actionJumpTo.triggered.connect(self.jump_to)
@@ -178,13 +176,11 @@ def connections(self):
     # menu Analysis
     self.actionTime_budget.triggered.connect(lambda: time_budget_widget.time_budget(self, mode="by_behavior"))
     self.actionTime_budget_by_behaviors_category.triggered.connect(
-        lambda: time_budget_widget.time_budget(self, mode="by_category")
-    )
+        lambda: time_budget_widget.time_budget(self, mode="by_category"))
 
     self.actionTime_budget_report.triggered.connect(lambda: synthetic_time_budget.synthetic_time_budget(self))
     self.actionSynthetic_binned_time_budget.triggered.connect(
-        lambda: synthetic_time_budget.synthetic_binned_time_budget(self)
-    )
+        lambda: synthetic_time_budget.synthetic_binned_time_budget(self))
 
     self.actionBehavior_bar_plot.triggered.connect(self.behaviors_bar_plot)
     self.actionBehavior_bar_plot.setVisible(True)
@@ -202,7 +198,7 @@ def connections(self):
     self.actionCheckUpdate.triggered.connect(self.actionCheckUpdate_activated)
 
     # toolbar
-    self.action_obs_list.triggered.connect(self.observations_list)
+    self.action_obs_list.triggered.connect(lambda: observation_operations.observations_list(self))
     self.actionPlay.triggered.connect(self.play_activated)
     self.actionReset.triggered.connect(self.reset_activated)
     self.actionJumpBackward.triggered.connect(self.jumpBackward_activated)
@@ -223,8 +219,7 @@ def connections(self):
 
     self.actionCloseObs.triggered.connect(self.close_observation)
     self.actionCurrent_Time_Budget.triggered.connect(
-        lambda: time_budget_widget.time_budget(self, mode="by_behavior", mode2="current")
-    )
+        lambda: time_budget_widget.time_budget(self, mode="by_behavior", mode2="current"))
     self.actionPlot_current_observation.triggered.connect(lambda: self.plot_events_triggered(mode="current"))
     self.actionFind_in_current_obs.triggered.connect(lambda: event_operations.find_events(self))
 

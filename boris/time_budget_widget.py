@@ -27,6 +27,8 @@ import tablib
 from decimal import Decimal
 import pathlib as pl
 
+from . import observation_operations
+
 from . import utilities as util
 from . import project_functions
 from . import select_subj_behav
@@ -37,19 +39,8 @@ from . import db_functions
 from . import time_budget_functions
 from . import select_observations
 
-from PyQt5.QtWidgets import (
-    QPushButton,
-    QSpacerItem,
-    QHBoxLayout,
-    QTableWidget,
-    QListWidget,
-    QVBoxLayout,
-    QLabel,
-    QSizePolicy,
-    QWidget,
-    QFileDialog,
-    QTableWidgetItem,
-)
+from PyQt5.QtWidgets import (QPushButton, QSpacerItem, QHBoxLayout, QTableWidget, QListWidget, QVBoxLayout, QLabel,
+                             QSizePolicy, QWidget, QFileDialog, QTableWidgetItem, QInputDialog)
 from PyQt5.QtCore import Qt
 
 
@@ -143,9 +134,8 @@ class timeBudgetResults(QWidget):
         ]
         file_formats = ["tsv", "csv", "ods", "xlsx", "xls", "html"]
 
-        file_name, filter_ = QFileDialog().getSaveFileName(
-            self, "Save Time budget analysis", "", ";;".join(extended_file_formats)
-        )
+        file_name, filter_ = QFileDialog().getSaveFileName(self, "Save Time budget analysis", "",
+                                                           ";;".join(extended_file_formats))
 
         if not file_name:
             return
@@ -155,22 +145,15 @@ class timeBudgetResults(QWidget):
             file_name = str(pl.Path(file_name)) + "." + outputFormat
             # check if file with new extension already exists
             if pl.Path(file_name).is_file():
-                if (
-                    dialog.MessageDialog(
-                        cfg.programName, f"The file {file_name} already exists.", [cfg.CANCEL, cfg.OVERWRITE]
-                    )
-                    == cfg.CANCEL
-                ):
+                if (dialog.MessageDialog(cfg.programName, f"The file {file_name} already exists.",
+                                         [cfg.CANCEL, cfg.OVERWRITE]) == cfg.CANCEL):
                     return
 
         rows = []
 
         # 1 observation
-        if (
-            self.lw.count() == 1
-            and self.config_param.get(cfg.TIME_BUDGET_FORMAT, cfg.DEFAULT_TIME_BUDGET_FORMAT)
-            == cfg.COMPACT_TIME_BUDGET_FORMAT
-        ):
+        if (self.lw.count() == 1 and self.config_param.get(cfg.TIME_BUDGET_FORMAT, cfg.DEFAULT_TIME_BUDGET_FORMAT)
+                == cfg.COMPACT_TIME_BUDGET_FORMAT):
             col1, indep_var_label = [], []
             # add obs id
             col1.append(self.lw.item(0).text())
@@ -208,19 +191,16 @@ class timeBudgetResults(QWidget):
                 rows.append([""])
                 rows.append(["Observation id", self.lw.item(idx).text()])
                 rows.append(["Observation date", self.pj[cfg.OBSERVATIONS][self.lw.item(idx).text()].get("date", "")])
-                rows.append(
-                    [
-                        "Description",
-                        util.eol2space(self.pj[cfg.OBSERVATIONS][self.lw.item(idx).text()].get(cfg.DESCRIPTION, "")),
-                    ]
-                )
+                rows.append([
+                    "Description",
+                    util.eol2space(self.pj[cfg.OBSERVATIONS][self.lw.item(idx).text()].get(cfg.DESCRIPTION, "")),
+                ])
 
                 if cfg.INDEPENDENT_VARIABLES in self.pj[cfg.OBSERVATIONS][self.lw.item(idx).text()]:
                     rows.append(["Independent variables:"])
                     for var in self.pj[cfg.OBSERVATIONS][self.lw.item(idx).text()][cfg.INDEPENDENT_VARIABLES]:
                         rows.append(
-                            [var, self.pj[cfg.OBSERVATIONS][self.lw.item(idx).text()][cfg.INDEPENDENT_VARIABLES][var]]
-                        )
+                            [var, self.pj[cfg.OBSERVATIONS][self.lw.item(idx).text()][cfg.INDEPENDENT_VARIABLES][var]])
 
             if self.excluded_behaviors_list.text():
                 s1, s2 = self.excluded_behaviors_list.text().split(": ")
@@ -287,17 +267,14 @@ def time_budget(self, mode: str, mode2: str = "list"):
             if event[cfg.EVENT_BEHAVIOR_FIELD_IDX] not in ethogram_behavior_codes:
                 behaviors_not_defined.append(event[cfg.EVENT_BEHAVIOR_FIELD_IDX])
     if set(sorted(behaviors_not_defined)):
-        out += (
-            "The following behaviors are not defined in the ethogram: "
-            f"<b>{', '.join(set(sorted(behaviors_not_defined)))}</b><br><br>"
-        )
+        out += ("The following behaviors are not defined in the ethogram: "
+                f"<b>{', '.join(set(sorted(behaviors_not_defined)))}</b><br><br>")
 
     # check if state events are paired
     not_paired_obs_list = []
     for obs_id in selectedObservations:
-        r, msg = project_functions.check_state_events_obs(
-            obs_id, self.pj[cfg.ETHOGRAM], self.pj[cfg.OBSERVATIONS][obs_id], self.timeFormat
-        )
+        r, msg = project_functions.check_state_events_obs(obs_id, self.pj[cfg.ETHOGRAM],
+                                                          self.pj[cfg.OBSERVATIONS][obs_id], self.timeFormat)
 
         if not r:
             out += f"Observation: <strong>{obs_id}</strong><br>{msg}<br>"
@@ -317,12 +294,10 @@ def time_budget(self, mode: str, mode2: str = "list"):
 
     flagGroup = False
     if len(selectedObservations) > 1:
-        flagGroup = (
-            dialog.MessageDialog(cfg.programName, "Group observations in one time budget analysis?", [cfg.YES, cfg.NO])
-            == cfg.YES
-        )
+        flagGroup = (dialog.MessageDialog(cfg.programName, "Group observations in one time budget analysis?",
+                                          [cfg.YES, cfg.NO]) == cfg.YES)
 
-    max_obs_length, selectedObsTotalMediaLength = self.observation_length(selectedObservations)
+    max_obs_length, selectedObsTotalMediaLength = observation_operations.observation_length(self, selectedObservations)
     if max_obs_length == -1:  # media length not available, user choose to not use events
         return
 
@@ -341,7 +316,8 @@ def time_budget(self, mode: str, mode2: str = "list"):
     # ask for excluding behaviors durations from total time
     cancel_pressed, parameters[cfg.EXCLUDED_BEHAVIORS] = self.filter_behaviors(
         title="Select behaviors to exclude",
-        text=("The duration of the selected behaviors will " "be subtracted from the total time"),
+        text=("The duration of the selected behaviors will "
+              "be subtracted from the total time"),
         table="",
         behavior_type=[cfg.STATE_EVENT],
     )
@@ -412,46 +388,30 @@ def time_budget(self, mode: str, mode2: str = "list"):
                             # logging.debug("modifier #{}#".format(modifier[0]))
 
                             # insert events at boundaries of time interval
-                            if (
-                                len(
+                            if (len(
                                     cursor.execute(
-                                        (
-                                            "SELECT * FROM events "
-                                            "WHERE observation = ? AND subject = ? AND code = ? AND modifiers = ? "
-                                            "AND occurence < ?"
-                                        ),
+                                        ("SELECT * FROM events "
+                                         "WHERE observation = ? AND subject = ? AND code = ? AND modifiers = ? "
+                                         "AND occurence < ?"),
                                         (obsId, subj, behav, modifier[0], min_time),
-                                    ).fetchall()
-                                )
-                                % 2
-                            ):
+                                    ).fetchall()) % 2):
 
                                 cursor.execute(
-                                    (
-                                        "INSERT INTO events (observation, subject, code, type, modifiers, occurence) "
-                                        "VALUES (?,?,?,?,?,?)"
-                                    ),
+                                    ("INSERT INTO events (observation, subject, code, type, modifiers, occurence) "
+                                     "VALUES (?,?,?,?,?,?)"),
                                     (obsId, subj, behav, "STATE", modifier[0], min_time),
                                 )
 
-                            if (
-                                len(
+                            if (len(
                                     cursor.execute(
-                                        (
-                                            "SELECT * FROM events WHERE observation = ? AND subject = ? AND code = ? "
-                                            "AND modifiers = ? AND occurence > ?"
-                                        ),
+                                        ("SELECT * FROM events WHERE observation = ? AND subject = ? AND code = ? "
+                                         "AND modifiers = ? AND occurence > ?"),
                                         (obsId, subj, behav, modifier[0], max_time),
-                                    ).fetchall()
-                                )
-                                % 2
-                            ):
+                                    ).fetchall()) % 2):
 
                                 cursor.execute(
-                                    (
-                                        "INSERT INTO events (observation, subject, code, type, modifiers, occurence) "
-                                        "VALUES (?,?,?,?,?,?)"
-                                    ),
+                                    ("INSERT INTO events (observation, subject, code, type, modifiers, occurence) "
+                                     "VALUES (?,?,?,?,?,?)"),
                                     (obsId, subj, behav, "STATE", modifier[0], max_time),
                                 )
                         try:
@@ -467,9 +427,11 @@ def time_budget(self, mode: str, mode2: str = "list"):
                 (obsId, min_time, max_time),
             )
 
-        out, categories = time_budget_functions.time_budget_analysis(
-            self.pj[cfg.ETHOGRAM], cursor, selectedObservations, parameters, by_category=(mode == "by_category")
-        )
+        out, categories = time_budget_functions.time_budget_analysis(self.pj[cfg.ETHOGRAM],
+                                                                     cursor,
+                                                                     selectedObservations,
+                                                                     parameters,
+                                                                     by_category=(mode == "by_category"))
 
         # check excluded behaviors
         excl_behaviors_total_time = {}
@@ -477,9 +439,8 @@ def time_budget(self, mode: str, mode2: str = "list"):
             if element["subject"] not in excl_behaviors_total_time:
                 excl_behaviors_total_time[element["subject"]] = 0
             if element["behavior"] in parameters[cfg.EXCLUDED_BEHAVIORS]:
-                excl_behaviors_total_time[element["subject"]] += (
-                    element["duration"] if not isinstance(element["duration"], str) else 0
-                )
+                excl_behaviors_total_time[element["subject"]] += (element["duration"]
+                                                                  if not isinstance(element["duration"], str) else 0)
 
         # widget for results visualization
         self.tb = timeBudgetResults(self.pj, self.config_param)
@@ -499,27 +460,23 @@ def time_budget(self, mode: str, mode2: str = "list"):
             if total_observation_time:
                 if self.timeFormat == cfg.HHMMSS:
                     self.tb.lbTotalObservedTime.setText(
-                        f"Total observation length: {util.seconds2time(total_observation_time)}"
-                    )
+                        f"Total observation length: {util.seconds2time(total_observation_time)}")
                 if self.timeFormat == cfg.S:
                     self.tb.lbTotalObservedTime.setText(
-                        f"Total observation length: {float(total_observation_time):0.3f}"
-                    )
+                        f"Total observation length: {float(total_observation_time):0.3f}")
             else:
                 self.tb.lbTotalObservedTime.setText("Total observation length: not available")
         else:
             if self.timeFormat == cfg.HHMMSS:
                 self.tb.lbTotalObservedTime.setText(
-                    f"Analysis from {util.seconds2time(min_time)} to {util.seconds2time(max_time)}"
-                )
+                    f"Analysis from {util.seconds2time(min_time)} to {util.seconds2time(max_time)}")
             if self.timeFormat == cfg.S:
                 self.tb.lbTotalObservedTime.setText(f"Analysis from {float(min_time):0.3f} to {float(max_time):0.3f} s")
 
         # behaviors excluded from total time
         if parameters[cfg.EXCLUDED_BEHAVIORS]:
-            self.tb.excluded_behaviors_list.setText(
-                "Behaviors excluded from total time: " + (", ".join(parameters[cfg.EXCLUDED_BEHAVIORS]))
-            )
+            self.tb.excluded_behaviors_list.setText("Behaviors excluded from total time: " +
+                                                    (", ".join(parameters[cfg.EXCLUDED_BEHAVIORS])))
         else:
             self.tb.excluded_behaviors_list.setVisible(False)
 
@@ -573,10 +530,8 @@ def time_budget(self, mode: str, mode2: str = "list"):
                 elif row["duration"] not in ["-", cfg.UNPAIRED] and selectedObsTotalMediaLength:
                     tot_time = float(total_observation_time)
                     # substract time of excluded behaviors from the total for the subject
-                    if (
-                        row["subject"] in excl_behaviors_total_time
-                        and row["behavior"] not in parameters[cfg.EXCLUDED_BEHAVIORS]
-                    ):
+                    if (row["subject"] in excl_behaviors_total_time and
+                            row["behavior"] not in parameters[cfg.EXCLUDED_BEHAVIORS]):
                         tot_time -= excl_behaviors_total_time[row["subject"]]
                     item = QTableWidgetItem(str(round(row["duration"] / tot_time * 100, 1)) if tot_time > 0 else "-")
                 else:
@@ -656,9 +611,7 @@ def time_budget(self, mode: str, mode2: str = "list"):
             "xls legacy",
         ]
 
-        item, ok = dialog.Input_dialog.getItem(
-            self, "Time budget analysis format", "Available formats", items, 0, False
-        )
+        item, ok = QInputDialog.getItem(self, "Time budget analysis format", "Available formats", items, 0, False)
         if not ok:
             return
 
@@ -723,9 +676,8 @@ def time_budget(self, mode: str, mode2: str = "list"):
         mem_command = ""
         for obsId in selectedObservations:
 
-            cursor = db_functions.load_events_in_db(
-                self.pj, parameters[cfg.SELECTED_SUBJECTS], [obsId], parameters[cfg.SELECTED_BEHAVIORS]
-            )
+            cursor = db_functions.load_events_in_db(self.pj, parameters[cfg.SELECTED_SUBJECTS], [obsId],
+                                                    parameters[cfg.SELECTED_BEHAVIORS])
 
             obs_length = project_functions.observation_total_length(self.pj[cfg.OBSERVATIONS][obsId])
 
@@ -761,8 +713,7 @@ def time_budget(self, mode: str, mode2: str = "list"):
                 for subj in parameters[cfg.SELECTED_SUBJECTS]:
                     for behav in parameters[cfg.SELECTED_BEHAVIORS]:
                         if cfg.POINT in project_functions.event_type(
-                            behav, self.pj[cfg.ETHOGRAM]
-                        ):  # self.eventType(behav).upper():
+                                behav, self.pj[cfg.ETHOGRAM]):  # self.eventType(behav).upper():
                             continue
                         # extract modifiers
                         # if plot_parameters["include modifiers"]:
@@ -775,43 +726,27 @@ def time_budget(self, mode: str, mode2: str = "list"):
 
                         for modifier in distinct_modifiers:
 
-                            if (
-                                len(
+                            if (len(
                                     cursor.execute(
-                                        (
-                                            "SELECT * FROM events "
-                                            "WHERE observation = ? AND subject = ? "
-                                            "AND code = ? AND modifiers = ? AND occurence < ?"
-                                        ),
+                                        ("SELECT * FROM events "
+                                         "WHERE observation = ? AND subject = ? "
+                                         "AND code = ? AND modifiers = ? AND occurence < ?"),
                                         (obsId, subj, behav, modifier[0], min_time),
-                                    ).fetchall()
-                                )
-                                % 2
-                            ):
+                                    ).fetchall()) % 2):
                                 cursor.execute(
-                                    (
-                                        "INSERT INTO events (observation, subject, code, type, modifiers, occurence) "
-                                        "VALUES (?,?,?,?,?,?)"
-                                    ),
+                                    ("INSERT INTO events (observation, subject, code, type, modifiers, occurence) "
+                                     "VALUES (?,?,?,?,?,?)"),
                                     (obsId, subj, behav, "STATE", modifier[0], min_time),
                                 )
-                            if (
-                                len(
+                            if (len(
                                     cursor.execute(
-                                        (
-                                            "SELECT * FROM events WHERE observation = ? AND subject = ? AND code = ?"
-                                            " AND modifiers = ? AND occurence > ?"
-                                        ),
+                                        ("SELECT * FROM events WHERE observation = ? AND subject = ? AND code = ?"
+                                         " AND modifiers = ? AND occurence > ?"),
                                         (obsId, subj, behav, modifier[0], max_time),
-                                    ).fetchall()
-                                )
-                                % 2
-                            ):
+                                    ).fetchall()) % 2):
                                 cursor.execute(
-                                    (
-                                        "INSERT INTO events (observation, subject, code, type, modifiers, occurence) "
-                                        "VALUES (?,?,?,?,?,?)"
-                                    ),
+                                    ("INSERT INTO events (observation, subject, code, type, modifiers, occurence) "
+                                     "VALUES (?,?,?,?,?,?)"),
                                     (obsId, subj, behav, cfg.STATE, modifier[0], max_time),
                                 )
                         try:
@@ -824,9 +759,10 @@ def time_budget(self, mode: str, mode2: str = "list"):
                 (obsId, min_time, max_time),
             )
 
-            out, categories = time_budget_functions.time_budget_analysis(
-                self.pj[cfg.ETHOGRAM], cursor, [obsId], parameters, by_category=(mode == "by_category")
-            )
+            out, categories = time_budget_functions.time_budget_analysis(self.pj[cfg.ETHOGRAM],
+                                                                         cursor, [obsId],
+                                                                         parameters,
+                                                                         by_category=(mode == "by_category"))
 
             # check excluded behaviors
             excl_behaviors_total_time = {}
@@ -834,15 +770,12 @@ def time_budget(self, mode: str, mode2: str = "list"):
                 if element["subject"] not in excl_behaviors_total_time:
                     excl_behaviors_total_time[element["subject"]] = 0
                 if element["behavior"] in parameters[cfg.EXCLUDED_BEHAVIORS]:
-                    excl_behaviors_total_time[element["subject"]] += (
-                        element["duration"] if element["duration"] != "NA" else 0
-                    )
+                    excl_behaviors_total_time[element["subject"]] += (element["duration"]
+                                                                      if element["duration"] != "NA" else 0)
 
             # compact format
-            if (
-                self.config_param.get(cfg.TIME_BUDGET_FORMAT, cfg.DEFAULT_TIME_BUDGET_FORMAT)
-                == cfg.COMPACT_TIME_BUDGET_FORMAT
-            ):
+            if (self.config_param.get(cfg.TIME_BUDGET_FORMAT,
+                                      cfg.DEFAULT_TIME_BUDGET_FORMAT) == cfg.COMPACT_TIME_BUDGET_FORMAT):
                 rows = []
                 col1 = []
                 # observation id
@@ -857,16 +790,11 @@ def time_budget(self, mode: str, mode2: str = "list"):
                     for idx in self.pj[cfg.INDEPENDENT_VARIABLES]:
                         indep_var_label.append(self.pj[cfg.INDEPENDENT_VARIABLES][idx]["label"])
 
-                        if (
-                            cfg.INDEPENDENT_VARIABLES in self.pj[cfg.OBSERVATIONS][obsId]
-                            and self.pj[cfg.INDEPENDENT_VARIABLES][idx]["label"]
-                            in self.pj[cfg.OBSERVATIONS][obsId][cfg.INDEPENDENT_VARIABLES]
-                        ):
-                            indep_var_values.append(
-                                self.pj[cfg.OBSERVATIONS][obsId][cfg.INDEPENDENT_VARIABLES][
-                                    self.pj[cfg.INDEPENDENT_VARIABLES][idx]["label"]
-                                ]
-                            )
+                        if (cfg.INDEPENDENT_VARIABLES in self.pj[cfg.OBSERVATIONS][obsId] and
+                                self.pj[cfg.INDEPENDENT_VARIABLES][idx]["label"]
+                                in self.pj[cfg.OBSERVATIONS][obsId][cfg.INDEPENDENT_VARIABLES]):
+                            indep_var_values.append(self.pj[cfg.OBSERVATIONS][obsId][cfg.INDEPENDENT_VARIABLES][self.pj[
+                                cfg.INDEPENDENT_VARIABLES][idx]["label"]])
 
                 header.extend(indep_var_label)
                 col1.extend(indep_var_values)
@@ -890,10 +818,8 @@ def time_budget(self, mode: str, mode2: str = "list"):
                         elif row["duration"] not in ["-", cfg.UNPAIRED] and selectedObsTotalMediaLength:
                             tot_time = float(max_time - min_time)
                             # substract duration of excluded behaviors from total time for each subject
-                            if (
-                                row["subject"] in excl_behaviors_total_time
-                                and row["behavior"] not in parameters[cfg.EXCLUDED_BEHAVIORS]
-                            ):
+                            if (row["subject"] in excl_behaviors_total_time and
+                                    row["behavior"] not in parameters[cfg.EXCLUDED_BEHAVIORS]):
                                 tot_time -= excl_behaviors_total_time[row["subject"]]
                             # % of tot time
                             values.append(round(row["duration"] / tot_time * 100, 1) if tot_time > 0 else "-")
@@ -924,10 +850,8 @@ def time_budget(self, mode: str, mode2: str = "list"):
                             rows.append(col1 + values)
 
             # long format
-            if (
-                self.config_param.get(cfg.TIME_BUDGET_FORMAT, cfg.DEFAULT_TIME_BUDGET_FORMAT)
-                == cfg.LONG_TIME_BUDGET_FORMAT
-            ):
+            if (self.config_param.get(cfg.TIME_BUDGET_FORMAT,
+                                      cfg.DEFAULT_TIME_BUDGET_FORMAT) == cfg.LONG_TIME_BUDGET_FORMAT):
 
                 rows = []
                 # observation id
@@ -940,16 +864,11 @@ def time_budget(self, mode: str, mode2: str = "list"):
                     for idx in self.pj[cfg.INDEPENDENT_VARIABLES]:
                         labels.append(self.pj[cfg.INDEPENDENT_VARIABLES][idx]["label"])
 
-                        if (
-                            cfg.INDEPENDENT_VARIABLES in self.pj[cfg.OBSERVATIONS][obsId]
-                            and self.pj[cfg.INDEPENDENT_VARIABLES][idx]["label"]
-                            in self.pj[cfg.OBSERVATIONS][obsId][cfg.INDEPENDENT_VARIABLES]
-                        ):
-                            values.append(
-                                self.pj[cfg.OBSERVATIONS][obsId][cfg.INDEPENDENT_VARIABLES][
-                                    self.pj[cfg.INDEPENDENT_VARIABLES][idx]["label"]
-                                ]
-                            )
+                        if (cfg.INDEPENDENT_VARIABLES in self.pj[cfg.OBSERVATIONS][obsId] and
+                                self.pj[cfg.INDEPENDENT_VARIABLES][idx]["label"]
+                                in self.pj[cfg.OBSERVATIONS][obsId][cfg.INDEPENDENT_VARIABLES]):
+                            values.append(self.pj[cfg.OBSERVATIONS][obsId][cfg.INDEPENDENT_VARIABLES][self.pj[
+                                cfg.INDEPENDENT_VARIABLES][idx]["label"]])
 
                 rows.append(labels)
                 rows.append(values)
@@ -974,10 +893,8 @@ def time_budget(self, mode: str, mode2: str = "list"):
                         elif row["duration"] not in ["-", cfg.UNPAIRED] and selectedObsTotalMediaLength:
                             tot_time = float(max_time - min_time)
                             # substract duration of excluded behaviors from total time for each subject
-                            if (
-                                row["subject"] in excl_behaviors_total_time
-                                and row["behavior"] not in parameters[cfg.EXCLUDED_BEHAVIORS]
-                            ):
+                            if (row["subject"] in excl_behaviors_total_time and
+                                    row["behavior"] not in parameters[cfg.EXCLUDED_BEHAVIORS]):
                                 tot_time -= excl_behaviors_total_time[row["subject"]]
                             values.append(round(row["duration"] / tot_time * 100, 1) if tot_time > 0 else "-")
                         else:

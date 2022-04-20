@@ -219,13 +219,10 @@ class Plot_events_RT(QWidget):
             force_plot (bool): force plot even if media paused
         """
 
-        print('init plot events')
-
         self.events = self.aggregate_events(self.events_list, current_time - self.interval / 2,
                                             current_time + self.interval / 2)
 
         if not force_plot and current_time == self.time_mem:
-            print("not force and current_time == self.time_mem")
             return
 
         self.time_mem = current_time
@@ -266,8 +263,6 @@ class Plot_events_RT(QWidget):
         self.ax.axvline(x=current_time, color=self.cursor_color, linestyle="-")
 
         self.ax.barh(y=np.array(self.behaviors), width=self.durations, left=self.lefts, color=self.colors, height=0.5)
-
-        #self.figure.subplots_adjust(wspace=0, hspace=0)
 
         self.canvas.draw()
         self.figure.canvas.flush_events()

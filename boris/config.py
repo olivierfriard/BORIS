@@ -136,6 +136,7 @@ DATA_PLOT_FIELDS = {
 DATA_PLOT_STYLES = ["b-", "r-", "g-", "bo", "ro", "go"]
 
 BEHAVIOR_CODE = "code"
+SUBJECT = "subject"
 BEHAVIOR_KEY = "key"
 BEHAVIOR_CATEGORY = "category"
 
@@ -337,7 +338,7 @@ POINT_EVENT_ST_DURATION = 0.5
 VIDEO_TAB = 0
 FRAME_TAB = 1
 
-slider_maximum = 1000
+SLIDER_MAXIMUM = 1000
 
 FRAME_BITMAP_FORMAT_LIST = ["JPG", "PNG"]
 FRAME_DEFAULT_BITMAP_FORMAT = "JPG"
