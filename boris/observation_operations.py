@@ -204,7 +204,7 @@ def edit_observation(self):
         self.new_observation(mode=cfg.EDIT, obsId=selected_observations[0])
 
 
-def observation_length(self, selected_observations: list) -> tuple:
+def observation_length(pj: dict, selected_observations: list) -> tuple:
     """
     max length of selected observations
     total media length
@@ -219,7 +219,7 @@ def observation_length(self, selected_observations: list) -> tuple:
     selectedObsTotalMediaLength = Decimal("0.0")
     max_obs_length = 0
     for obs_id in selected_observations:
-        obs_length = project_functions.observation_total_length(self.pj[cfg.OBSERVATIONS][obs_id])
+        obs_length = project_functions.observation_total_length(pj[cfg.OBSERVATIONS][obs_id])
         if obs_length in [Decimal("0"), Decimal("-1")]:
             selectedObsTotalMediaLength = -1
             break
@@ -238,9 +238,9 @@ def observation_length(self, selected_observations: list) -> tuple:
             maxTime = 0  # max length for all events all subjects
             max_length = 0
             for obs_id in selected_observations:
-                if self.pj[cfg.OBSERVATIONS][obs_id][cfg.EVENTS]:
-                    maxTime += max(self.pj[cfg.OBSERVATIONS][obs_id][cfg.EVENTS])[0]
-                    max_length = max(max_length, max(self.pj[cfg.OBSERVATIONS][obs_id][cfg.EVENTS])[0])
+                if pj[cfg.OBSERVATIONS][obs_id][cfg.EVENTS]:
+                    maxTime += max(pj[cfg.OBSERVATIONS][obs_id][cfg.EVENTS])[0]
+                    max_length = max(max_length, max(pj[cfg.OBSERVATIONS][obs_id][cfg.EVENTS])[0])
 
             logging.debug(f"max time all events all subjects: {maxTime}")
 

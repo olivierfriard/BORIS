@@ -22,14 +22,12 @@ Copyright 2012-2022 Olivier Friard
 
 """
 
-from PyQt5.QtCore import Qt, QSettings
+from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import QAbstractItemView
 
-from . import observations_list
 from . import config as cfg
-from . import gui_utilities
+from . import gui_utilities, observations_list, project_functions
 from . import utilities as util
-from . import project_functions
 
 
 def select_observations(pj: dict, mode: str, windows_title: str = "") -> tuple:

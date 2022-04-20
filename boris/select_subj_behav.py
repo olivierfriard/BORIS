@@ -1,14 +1,34 @@
+"""
+BORIS
+Behavioral Observation Research Interactive Software
+Copyright 2012-2022 Olivier Friard
+
+This file is part of BORIS.
+
+  BORIS is free software; you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation; either version 3 of the License, or
+  any later version.
+
+  BORIS is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+
+  You should have received a copy of the GNU General Public License
+  along with this program; if not see <http://www.gnu.org/licenses/>.
+
+"""
+
 import logging
 
-from . import gui_utilities
-from . import param_panel
-from . import project_functions
-from . import config as cfg
-from . import utilities as util
-
-from PyQt5.QtWidgets import QCheckBox, QListWidgetItem, QMessageBox
-from PyQt5.QtGui import QFont
 from PyQt5.QtCore import Qt
+from PyQt5.QtGui import QFont
+from PyQt5.QtWidgets import QCheckBox, QListWidgetItem, QMessageBox
+
+from . import config as cfg
+from . import gui_utilities, param_panel, project_functions
+from . import utilities as util
 
 
 def choose_obs_subj_behav_category(
@@ -115,9 +135,9 @@ def choose_obs_subj_behav_category(
         # check if behavior not included in a category
         try:
             if "" in [
-                self.pj[cfg.ETHOGRAM][idx][cfg.BEHAVIOR_CATEGORY]
-                for idx in self.pj[cfg.ETHOGRAM]
-                if cfg.BEHAVIOR_CATEGORY in self.pj[cfg.ETHOGRAM][idx]
+                    self.pj[cfg.ETHOGRAM][idx][cfg.BEHAVIOR_CATEGORY]
+                    for idx in self.pj[cfg.ETHOGRAM]
+                    if cfg.BEHAVIOR_CATEGORY in self.pj[cfg.ETHOGRAM][idx]
             ]:
                 categories += [""]
         except Exception:
@@ -146,15 +166,12 @@ def choose_obs_subj_behav_category(
 
         for behavior in [self.pj[cfg.ETHOGRAM][x][cfg.BEHAVIOR_CODE] for x in util.sorted_keys(self.pj[cfg.ETHOGRAM])]:
 
-            if (categories == ["###no category###"]) or (
-                behavior
-                in [
+            if (categories == ["###no category###"]) or (behavior in [
                     self.pj[cfg.ETHOGRAM][x][cfg.BEHAVIOR_CODE]
                     for x in self.pj[cfg.ETHOGRAM]
-                    if cfg.BEHAVIOR_CATEGORY in self.pj[cfg.ETHOGRAM][x]
-                    and self.pj[cfg.ETHOGRAM][x][cfg.BEHAVIOR_CATEGORY] == category
-                ]
-            ):
+                    if cfg.BEHAVIOR_CATEGORY in self.pj[cfg.ETHOGRAM][x] and
+                    self.pj[cfg.ETHOGRAM][x][cfg.BEHAVIOR_CATEGORY] == category
+            ]):
 
                 paramPanelWindow.item = QListWidgetItem(behavior)
                 if behavior in observedBehaviors:

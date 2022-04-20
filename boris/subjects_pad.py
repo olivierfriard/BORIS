@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """
 BORIS
 Behavioral Observation Research Interactive Software
@@ -20,13 +19,12 @@ Copyright 2012-2022 Olivier Friard
   MA 02110-1301, USA.
 """
 
-from PyQt5.QtGui import *
 from PyQt5.QtCore import *
+from PyQt5.QtGui import *
 from PyQt5.QtWidgets import *
 
-import sys
-from boris.config import *
-from boris.utilities import *
+from . import config as cfg
+from . import utilities as util
 
 
 class SubjectsPad(QWidget):
@@ -49,9 +47,9 @@ class SubjectsPad(QWidget):
         for i in reversed(range(self.grid.count())):
             self.grid.itemAt(i).widget().setParent(None)
 
-        subjects_list = [["", self.pj[SUBJECTS][x]["name"]]
-                         for x in sorted_keys(self.pj[SUBJECTS])
-                         if self.pj[SUBJECTS][x]["name"] in self.filtered_subjects]
+        subjects_list = [["", self.pj[cfg.SUBJECTS][x]["name"]]
+                         for x in util.sorted_keys(self.pj[cfg.SUBJECTS])
+                         if self.pj[cfg.SUBJECTS][x]["name"] in self.filtered_subjects]
         dim = int(len(subjects_list)**0.5 + 0.999)
 
         c = 0

@@ -21,19 +21,20 @@ Copyright 2012-2022 Olivier Friard
 
 """
 
+import logging
+import sys
+import time
+from decimal import Decimal
+
+import numpy as np
+from matplotlib.backends.backend_qt5agg import \
+    FigureCanvasQTAgg as FigureCanvas
+from matplotlib.figure import Figure
 from PyQt5.QtCore import *
 from PyQt5.QtGui import *
 from PyQt5.QtWidgets import *
 
-from matplotlib.figure import Figure
-from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
-import sys
-import numpy as np
-import time
-import logging
-from decimal import Decimal
-
-from boris.utilities import txt2np_array
+from . import utilities as util
 
 
 class MyMplCanvas(FigureCanvas):
@@ -117,7 +118,7 @@ class Plot_data(QWidget):
         self.y_label = y_label
         self.error_msg = ""
 
-        result, error_msg, data = txt2np_array(
+        result, error_msg, data = util.txt2np_array(
             file_name,
             columns_to_plot,
             substract_first_value,

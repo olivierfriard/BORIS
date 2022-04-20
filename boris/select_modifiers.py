@@ -21,15 +21,14 @@ This file is part of BORIS.
 
 """
 
-from PyQt5.QtGui import *
-from PyQt5.QtCore import *
-from PyQt5.QtWidgets import *
-
 import re
 
-from . import config as cfg
+from PyQt5.QtCore import *
+from PyQt5.QtGui import *
+from PyQt5.QtWidgets import *
 
-from .utilities import sorted_keys
+from . import config as cfg
+from . import utilities as util
 
 
 class ModifiersList(QDialog):
@@ -51,7 +50,7 @@ class ModifiersList(QDialog):
         Hlayout = QHBoxLayout()
         self.modifiersSetNumber = 0
 
-        for idx in sorted_keys(modifiers_dict):
+        for idx in util.sorted_keys(modifiers_dict):
 
             if self.modifiers_dict[idx]["type"] not in [
                     cfg.SINGLE_SELECTION, cfg.MULTI_SELECTION, cfg.NUMERIC_MODIFIER
@@ -229,7 +228,7 @@ class ModifiersList(QDialog):
         returns list of selected modifiers
         """
         modifiers = []
-        for idx in sorted_keys(self.modifiers_dict):
+        for idx in util.sorted_keys(self.modifiers_dict):
 
             if self.modifiers_dict[idx]["type"] in [cfg.SINGLE_SELECTION, cfg.MULTI_SELECTION, cfg.NUMERIC_MODIFIER]:
                 self.modifiers_dict[idx]["selected"] = []
@@ -265,7 +264,7 @@ class ModifiersList(QDialog):
 
     def pbOK_clicked(self):
 
-        for idx in sorted_keys(self.modifiers_dict):
+        for idx in util.sorted_keys(self.modifiers_dict):
             if self.modifiers_dict[idx]["type"] == cfg.NUMERIC_MODIFIER:
                 if self.modifiers_dict[idx]["widget"].text():
                     try:

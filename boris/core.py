@@ -1157,8 +1157,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             return
         """
 
-        logging.debug(f"plot_timer_out")
-
         if hasattr(self, "plot_events"):
 
             if not self.plot_events.visibleRegion().isEmpty():
@@ -2624,8 +2622,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             else:
                 return
 
-        (max_obs_length,
-         selectedObsTotalMediaLength) = observation_operations.observation_length(self, selected_observations)
+        (max_obs_length, _) = observation_operations.observation_length(self.pj, selected_observations)
         if max_obs_length == -1:  # media length not available, user choose to not use events
             return
 

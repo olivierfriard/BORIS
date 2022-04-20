@@ -21,18 +21,17 @@ Copyright 2012-2022 Olivier Friard
 
 """
 
-
+import datetime
+import json
 import logging
 import socket
-import json
-import datetime
+
+from PyQt5.QtCore import Qt, QThread, pyqtSignal
+from PyQt5.QtWidgets import (QApplication, QInputDialog, QLineEdit, QListWidgetItem)
 
 from . import config as cfg
-from . import utilities as util
 from . import dialog
-
-from PyQt5.QtCore import QThread, pyqtSignal, Qt
-from PyQt5.QtWidgets import QListWidgetItem, QLineEdit, QInputDialog, QApplication
+from . import utilities as util
 
 
 class ProjectServerThread(QThread):
@@ -139,19 +138,16 @@ def send_project_via_socket(self):
             for obsId in sent_obs:
 
                 self.w.lwi.addItem(
-                    QListWidgetItem(f"{datetime.datetime.now().isoformat()}: Observation {obsId} received")
-                )
+                    QListWidgetItem(f"{datetime.datetime.now().isoformat()}: Observation {obsId} received"))
                 self.w.lwi.scrollToBottom()
 
                 if obsId in self.pj[cfg.OBSERVATIONS]:
                     flag_msg = True
                     response = dialog.MessageDialog(
                         cfg.programName,
-                        (
-                            f"An observation with the same id<br><b>{obsId}</b><br>"
-                            f"received from<br><b>{msg_dict['SENDER'][0]}</b><br>"
-                            "already exists in the current project."
-                        ),
+                        (f"An observation with the same id<br><b>{obsId}</b><br>"
+                         f"received from<br><b>{msg_dict['SENDER'][0]}</b><br>"
+                         "already exists in the current project."),
                         [cfg.OVERWRITE, "Rename received observation", cfg.CANCEL],
                     )
 
@@ -211,11 +207,8 @@ def send_project_via_socket(self):
         if include_obs == cfg.NO:
             cp_project[cfg.OBSERVATIONS] = {}
 
-        self.server_thread = ProjectServerThread(
-            message=str.encode(
-                str(json.dumps(cp_project, indent=None, separators=(",", ":"), default=util.decimal_default))
-            )
-        )
+        self.server_thread = ProjectServerThread(message=str.encode(
+            str(json.dumps(cp_project, indent=None, separators=(",", ":"), default=util.decimal_default))))
         self.server_thread.signal.connect(receive_signal)
 
         self.server_thread.start()

@@ -1,3 +1,25 @@
+"""
+BORIS
+Behavioral Observation Research Interactive Software
+Copyright 2012-2022 Olivier Friard
+
+This file is part of BORIS.
+
+  BORIS is free software; you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation; either version 3 of the License, or
+  any later version.
+
+  BORIS is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+
+  You should have received a copy of the GNU General Public License
+  along with this program; if not see <http://www.gnu.org/licenses/>.
+
+"""
+
 import logging
 
 from . import config as cfg
@@ -17,10 +39,8 @@ def get_info(self):
         tot_output = ""
 
         for i, dw in enumerate(self.dw_player):
-            if not (
-                str(i + 1) in self.pj[cfg.OBSERVATIONS][self.observationId][cfg.FILE]
-                and self.pj[cfg.OBSERVATIONS][self.observationId][cfg.FILE][str(i + 1)]
-            ):
+            if not (str(i + 1) in self.pj[cfg.OBSERVATIONS][self.observationId][cfg.FILE] and
+                    self.pj[cfg.OBSERVATIONS][self.observationId][cfg.FILE][str(i + 1)]):
                 continue
 
             logging.info(f"Video format: {dw.player.video_format}")
@@ -64,25 +84,21 @@ def get_info(self):
                 r = util.accurate_media_analysis(self.ffmpeg_bin, media_full_path)
                 nframes = r["frames_number"]
                 if "error" in r:
-                    ffmpeg_output += "File path: {filePath}<br><br>{error}<br><br>".format(
-                        filePath=media_full_path, error=r["error"]
-                    )
+                    ffmpeg_output += "File path: {filePath}<br><br>{error}<br><br>".format(filePath=media_full_path,
+                                                                                           error=r["error"])
                 else:
-                    ffmpeg_output += (
-                        "File path: {}<br>Duration: {}<br>Bitrate: {}k<br>"
-                        "FPS: {}<br>Has video: {}<br>Has audio: {}<br><br>"
-                    ).format(
-                        media_full_path,
-                        self.convertTime(r["duration"]),
-                        r["bitrate"],
-                        r["fps"],
-                        r["has_video"],
-                        r["has_audio"],
-                    )
+                    ffmpeg_output += ("File path: {}<br>Duration: {}<br>Bitrate: {}k<br>"
+                                      "FPS: {}<br>Has video: {}<br>Has audio: {}<br><br>").format(
+                                          media_full_path,
+                                          self.convertTime(r["duration"]),
+                                          r["bitrate"],
+                                          r["fps"],
+                                          r["has_video"],
+                                          r["has_audio"],
+                                      )
 
                 ffmpeg_output += "Total duration: {} (hh:mm:ss.sss)".format(
-                    self.convertTime(sum(self.dw_player[i].media_durations) / 1000)
-                )
+                    self.convertTime(sum(self.dw_player[i].media_durations) / 1000))
 
             tot_output += mpv_output + ffmpeg_output + "<br><hr>"
 
@@ -104,22 +120,17 @@ def get_info(self):
             self.results.ptText.appendHtml("<br><b>FFmpeg analysis</b><hr>")
             r = util.accurate_media_analysis(self.ffmpeg_bin, filePath)
             if "error" in r:
-                self.results.ptText.appendHtml(
-                    "File path: {filePath}<br><br>{error}<br><br>".format(filePath=filePath, error=r["error"])
-                )
+                self.results.ptText.appendHtml("File path: {filePath}<br><br>{error}<br><br>".format(filePath=filePath,
+                                                                                                     error=r["error"]))
             else:
-                self.results.ptText.appendHtml(
-                    (
-                        "File path: {}<br>Duration: {}<br>Bitrate: {}k<br>"
-                        "FPS: {}<br>Has video: {}<br>Has audio: {}<br><br>"
-                    ).format(
-                        filePath,
-                        self.convertTime(r["duration"]),
-                        r["bitrate"],
-                        r["fps"],
-                        r["has_video"],
-                        r["has_audio"],
-                    )
-                )
+                self.results.ptText.appendHtml(("File path: {}<br>Duration: {}<br>Bitrate: {}k<br>"
+                                                "FPS: {}<br>Has video: {}<br>Has audio: {}<br><br>").format(
+                                                    filePath,
+                                                    self.convertTime(r["duration"]),
+                                                    r["bitrate"],
+                                                    r["fps"],
+                                                    r["has_video"],
+                                                    r["has_audio"],
+                                                ))
 
             self.results.show()

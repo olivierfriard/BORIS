@@ -287,6 +287,7 @@ def otx_to_boris(file_path: str) -> dict:
             "possible values": variables[k]["predefined_values"] if "predefined_values" in variables[k] else "",
         }
 
+    # TODO: add EMPTY_PROJECT
     project = {
         "time_format": "hh:mm:ss",
         "project_name": project_name,

@@ -31,8 +31,8 @@ import binascii
 import os
 import io
 
-from boris.config import *
-from boris import dialog
+from . import config as cfg
+from . import dialog
 
 designColor = QColor(255, 0, 0, 128)  # red opacity: 50%
 penWidth = 0
@@ -582,7 +582,7 @@ class BehaviorsMapCreatorWindow(QMainWindow):
                                "To reuse the same name the existing coding map must be deleted (File > Edit project)"))
             if ok and map_name and map_name.upper() not in self.bcm_list:
                 self.mapName = map_name
-                self.setWindowTitle(f"{programName} - Behaviors coding map creator - {self.mapName}")
+                self.setWindowTitle(f"{cfg.programName} - Behaviors coding map creator - {self.mapName}")
                 break
             if not ok:
                 return
@@ -594,14 +594,15 @@ class BehaviorsMapCreatorWindow(QMainWindow):
 
         if self.flagMapChanged:
 
-            response = dialog.MessageDialog(programName + " - Behaviors coding map creator",
-                                            "What to do about the current unsaved coding map?", [SAVE, DISCARD, CANCEL])
+            response = dialog.MessageDialog(cfg.programName + " - Behaviors coding map creator",
+                                            "What to do about the current unsaved coding map?",
+                                            [cfg.SAVE, cfg.DISCARD, cfg.CANCEL])
 
-            if response == SAVE:
+            if response == cfg.SAVE:
                 if not self.saveMap_clicked():
                     return
 
-            if response == CANCEL:
+            if response == cfg.CANCEL:
                 return
 
         self.cancelMap()
@@ -625,7 +626,7 @@ class BehaviorsMapCreatorWindow(QMainWindow):
             return
         '''
 
-        self.setWindowTitle(f"{programName} - Behaviors coding map creator tool - {self.mapName}")
+        self.setWindowTitle(f"{cfg.programName} - Behaviors coding map creator tool - {self.mapName}")
 
         self.btLoad.setVisible(True)
         self.statusBar().showMessage('Click "Load bitmap" button to select and load a bitmap into the viewer')
@@ -638,7 +639,7 @@ class BehaviorsMapCreatorWindow(QMainWindow):
         show it in view scene
         """
         if self.flagMapChanged:
-            response = dialog.MessageDialog(programName + " - Behaviors coding map creator",
+            response = dialog.MessageDialog(cfg.programName + " - Behaviors coding map creator",
                                             "What to do about the current unsaved coding map?",
                                             ['Save', 'Discard', 'Cancel'])
 
@@ -654,18 +655,18 @@ class BehaviorsMapCreatorWindow(QMainWindow):
             try:
                 self.codingMap = json.loads(open(fileName, "r").read())
             except Exception:
-                QMessageBox.critical(self, programName, f"The file {fileName} is not a behaviors coding map.")
+                QMessageBox.critical(self, cfg.programName, f"The file {fileName} is not a behaviors coding map.")
                 return
 
             if "coding_map_type" not in self.codingMap or self.codingMap[
                     "coding_map_type"] != "BORIS behaviors coding map":
-                QMessageBox.critical(self, programName, f"The file {fileName} is not a BORIS behaviors coding map.")
+                QMessageBox.critical(self, cfg.programName, f"The file {fileName} is not a BORIS behaviors coding map.")
 
             self.cancelMap()
 
             self.mapName = self.codingMap["name"]
 
-            self.setWindowTitle(f"{programName} - Behaviors coding map creator - {self.mapName}")
+            self.setWindowTitle(f"{cfg.programName} - Behaviors coding map creator - {self.mapName}")
 
             self.bitmapFileName = True
 
@@ -793,7 +794,7 @@ class BehaviorsMapCreatorWindow(QMainWindow):
     def newArea(self):
 
         if not self.bitmapFileName:
-            QMessageBox.critical(self, programName, "A bitmap must be loaded before to define areas")
+            QMessageBox.critical(self, cfg.programName, "A bitmap must be loaded before to define areas")
             return
 
         if self.selectedPolygon:
@@ -819,16 +820,16 @@ class BehaviorsMapCreatorWindow(QMainWindow):
     def saveArea(self):
 
         if not self.closedPolygon:
-            QMessageBox.critical(self, programName, ("You must close your area before saving it.\n"
-                                                     "The last vertex must correspond to the first one."))
+            QMessageBox.critical(self, cfg.programName, ("You must close your area before saving it.\n"
+                                                         "The last vertex must correspond to the first one."))
 
         if len(self.view.points) < 3:
-            QMessageBox.critical(self, programName, "You must define a closed area")
+            QMessageBox.critical(self, cfg.programName, "You must define a closed area")
             return
 
         # check if no area code
         if not self.leAreaCode.text():
-            QMessageBox.critical(self, programName, "You must define a code for the new behavior area")
+            QMessageBox.critical(self, cfg.programName, "You must define a code for the new behavior area")
             return
 
         # remove all lines
@@ -966,10 +967,11 @@ class BehaviorsMapCreatorWindow(QMainWindow):
             self.pixmap.load(self.bitmapFileName)
 
             # scale image
-            if self.pixmap.size().width() > CODING_MAP_RESIZE_W or self.pixmap.size().height() > CODING_MAP_RESIZE_H:
-                self.pixmap = self.pixmap.scaled(CODING_MAP_RESIZE_W, CODING_MAP_RESIZE_H, Qt.KeepAspectRatio)
+            if self.pixmap.size().width() > cfg.CODING_MAP_RESIZE_W or self.pixmap.size().height(
+            ) > cfg.CODING_MAP_RESIZE_H:
+                self.pixmap = self.pixmap.scaled(cfg.CODING_MAP_RESIZE_W, cfg.CODING_MAP_RESIZE_H, Qt.KeepAspectRatio)
                 QMessageBox.information(
-                    self, programName,
+                    self, cfg.programName,
                     (f"The bitmap was resized to {self.pixmap.size().width()}x{self.pixmap.size().height()} pixels\n"
                      "The original file was not modified"))
 
@@ -996,6 +998,6 @@ if __name__ == '__main__':
     import sys
     app = QApplication(sys.argv)
     window = BehaviorsMapCreatorWindow(["North zone", "East zone", "South zone", "West zone"])
-    window.resize(CODING_MAP_RESIZE_W, CODING_MAP_RESIZE_H)
+    window.resize(cfg.CODING_MAP_RESIZE_W, cfg.CODING_MAP_RESIZE_H)
     window.show()
     sys.exit(app.exec_())

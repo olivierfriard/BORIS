@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """
 BORIS
 Behavioral Observation Research Interactive Software
@@ -21,18 +20,16 @@ This file is part of BORIS.
 
 """
 
-from PyQt5.QtGui import *
-from PyQt5.QtCore import *
-from PyQt5.QtWidgets import *
-
-import decimal
-from decimal import getcontext
-import json
 import binascii
+from decimal import Decimal, getcontext, ROUND_DOWN
+import json
 import os
 
-from . import config as cfg
+from PyQt5.QtCore import *
+from PyQt5.QtGui import *
+from PyQt5.QtWidgets import *
 
+from . import config as cfg
 from . import dialog
 
 designColor = QColor(255, 0, 0, 128)  # red opacity: 50%
@@ -51,11 +48,10 @@ def intersection(A, B, C, D):
     """
     getcontext().prec = 28
 
-    Dec = decimal.Decimal
-    xa, ya = Dec(str(A[0])), Dec(str(A[1]))
-    xb, yb = Dec(str(B[0])), Dec(str(B[1]))
-    xc, yc = Dec(str(C[0])), Dec(str(C[1]))
-    xd, yd = Dec(str(D[0])), Dec(str(D[1]))
+    xa, ya = Decimal(str(A[0])), Decimal(str(A[1]))
+    xb, yb = Decimal(str(B[0])), Decimal(str(B[1]))
+    xc, yc = Decimal(str(C[0])), Decimal(str(C[1]))
+    xd, yd = Decimal(str(D[0])), Decimal(str(D[1]))
 
     # check if first segment is vertical
     if xa == xb:
@@ -75,11 +71,11 @@ def intersection(A, B, C, D):
         xm = ((xd * xa * yc - xd * xb * yc - xd * xa * yb - xc * xa * yd + xc * xa * yb + xd * ya * xb + xc * xb * yd -
                xc * ya * xb) /
               (-yb * xd + yb * xc + ya * xd - ya * xc + xb * yd - xb * yc - xa * yd + xa * yc)).quantize(
-                  Dec('.001'), rounding=decimal.ROUND_DOWN)
+                  Decimal('.001'), rounding=ROUND_DOWN)
         ym = ((yb * xc * yd - yb * yc * xd - ya * xc * yd + ya * yc * xd - xa * yb * yd + xa * yb * yc + ya * xb * yd -
                ya * xb * yc) /
               (-yb * xd + yb * xc + ya * xd - ya * xc + xb * yd - xb * yc - xa * yd + xa * yc)).quantize(
-                  Dec('.001'), rounding=decimal.ROUND_DOWN)
+                  Decimal('.001'), rounding=ROUND_DOWN)
 
     xmin1, xmax1 = min(xa, xb), max(xa, xb)
     xmin2, xmax2 = min(xc, xd), max(xc, xd)
@@ -776,11 +772,6 @@ class ModifiersMapCreatorWindow(QMainWindow):
         """
         remove selected area from map
         """
-        print("cancel")
-
-        print(self.selectedPolygon)
-        print(self.closedPolygon)
-        print(self.view.elList)
 
         if self.selectedPolygon:
             print("selected polygon")
@@ -791,12 +782,6 @@ class ModifiersMapCreatorWindow(QMainWindow):
             del self.areasList[self.selectedPolygonAreaCode]
 
             self.flagMapChanged = True
-
-        # remove all lines
-        '''
-        for l in self.view.elList:
-            self.view.scene().removeItem(l)
-        '''
 
         self.view.elList = []
 
@@ -822,7 +807,6 @@ class ModifiersMapCreatorWindow(QMainWindow):
         self.polygonsList2 = {}
         self.view.scene().clear()
         self.btLoad.setVisible(False)
-        '''self.btCancelMap.setVisible(False)'''
         self.btDeleteArea.setVisible(False)
         self.btNewArea.setVisible(False)
         self.saveMapAction.setEnabled(False)

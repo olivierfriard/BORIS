@@ -30,6 +30,8 @@ import tablib
 from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import QFileDialog, QInputDialog, QMessageBox
 
+from . import observation_operations
+
 from . import dialog
 from . import project_functions
 from . import select_observations
@@ -72,7 +74,7 @@ def create_behavior_binary_table(pj: dict, selected_observations: list, paramete
 
         # check observation interval
         if parameters_obs["time"] == cfg.TIME_FULL_OBS:
-            max_obs_length, _ = project_functions.observation_length(pj, [obs_id])
+            max_obs_length, _ = observation_operations.observation_length(pj, [obs_id])
             start_time = dc("0.000")
             end_time = dc(max_obs_length)
 

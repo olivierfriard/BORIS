@@ -19,18 +19,16 @@ Copyright 2012-2022 Olivier Friard
   MA 02110-1301, USA.
 """
 
-from . import dialog
 import math
 import statistics
 from decimal import Decimal as dec
 
 import tablib
-from . import portion as I
 
-from . import db_functions
-from . import project_functions
-from . import utilities as util
 from . import config as cfg
+from . import db_functions, dialog
+from . import portion as I
+from . import project_functions
 
 
 def default_value(ethogram, behav, param):

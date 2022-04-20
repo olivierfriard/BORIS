@@ -20,19 +20,15 @@ This file is part of BORIS.
 
 """
 
-import os
 import logging
-import tempfile
+import os
 import subprocess
-from . import config as cfg
-from . import export_observation
-from . import dialog
-from . import select_subj_behav
+import tempfile
 
-from PyQt5.QtWidgets import (
-    QMessageBox,
-    QFileDialog,
-)
+from PyQt5.QtWidgets import QFileDialog, QMessageBox
+
+from . import config as cfg
+from . import dialog, export_observation, select_subj_behav
 
 
 def behavioral_strings_analysis(strings, behaviouralStringsSeparator):
@@ -149,8 +145,7 @@ def create_transitions_gv_from_matrix(matrix, cutoff_all=0, cutoff_behavior=0, e
                 if edge_label == "percent_node":
                     if transitions[behaviour1][behaviour2] > cutoff_all:
                         out += '"{behaviour1}" -> "{behaviour2}" [label="{label:0.3f}"];\n'.format(
-                            behaviour1=behaviour1, behaviour2=behaviour2, label=transitions[behaviour1][behaviour2]
-                        )
+                            behaviour1=behaviour1, behaviour2=behaviour2, label=transitions[behaviour1][behaviour2])
 
                 if edge_label == "fraction_node":
                     transition_sum = sum(transitions[behaviour1].values())
@@ -178,9 +173,11 @@ def transitions_matrix(self, mode):
     if not selectedObservations:
         return
 
-    plot_parameters = select_subj_behav.choose_obs_subj_behav_category(
-        self, selectedObservations, maxTime=0, flagShowIncludeModifiers=True, flagShowExcludeBehaviorsWoEvents=False
-    )
+    plot_parameters = select_subj_behav.choose_obs_subj_behav_category(self,
+                                                                       selectedObservations,
+                                                                       maxTime=0,
+                                                                       flagShowIncludeModifiers=True,
+                                                                       flagShowExcludeBehaviorsWoEvents=False)
 
     if not plot_parameters["selected subjects"] or not plot_parameters["selected behaviors"]:
         return
@@ -215,16 +212,13 @@ def transitions_matrix(self, mode):
         strings_list = []
         for obsId in selectedObservations:
             strings_list.append(
-                export_observation.events_to_behavioral_sequences(
-                    self.pj, obsId, subject, plot_parameters, self.behaviouralStringsSeparator
-                )
-            )
+                export_observation.events_to_behavioral_sequences(self.pj, obsId, subject, plot_parameters,
+                                                                  self.behaviouralStringsSeparator))
 
         sequences, observed_behaviors = behavioral_strings_analysis(strings_list, self.behaviouralStringsSeparator)
 
         observed_matrix = observed_transitions_matrix(
-            sequences, sorted(list(set(observed_behaviors + plot_parameters[cfg.SELECTED_BEHAVIORS]))), mode=mode
-        )
+            sequences, sorted(list(set(observed_behaviors + plot_parameters[cfg.SELECTED_BEHAVIORS]))), mode=mode)
 
         if not observed_matrix:
             QMessageBox.warning(self, cfg.programName, f"No transitions found for <b>{subject}</b>")
@@ -278,9 +272,10 @@ def transitions_dot_script():
     try:
         for fileName in fileNames:
             with open(fileName, "r") as infile:
-                gv = create_transitions_gv_from_matrix(
-                    infile.read(), cutoff_all=0, cutoff_behavior=0, edge_label="percent_node"
-                )
+                gv = create_transitions_gv_from_matrix(infile.read(),
+                                                       cutoff_all=0,
+                                                       cutoff_behavior=0,
+                                                       edge_label="percent_node")
                 with open(fileName + ".gv", "w") as f:
                     f.write(gv)
 
@@ -293,7 +288,8 @@ def transitions_dot_script():
         QMessageBox.information(
             None,
             cfg.programName,
-            (f"{out}<br><br>The DOT scripts can be used with Graphviz or WebGraphviz " "to generate diagram"),
+            (f"{out}<br><br>The DOT scripts can be used with Graphviz or WebGraphviz "
+             "to generate diagram"),
         )
 
 
@@ -308,12 +304,10 @@ def transitions_flow_diagram():
         QMessageBox.critical(
             None,
             cfg.programName,
-            (
-                "The GraphViz package is not installed.<br>"
-                "The <b>dot</b> program was not found in the path.<br><br>"
-                'Go to <a href="http://www.graphviz.org">'
-                "http://www.graphviz.org</a> for information"
-            ),
+            ("The GraphViz package is not installed.<br>"
+             "The <b>dot</b> program was not found in the path.<br><br>"
+             'Go to <a href="http://www.graphviz.org">'
+             "http://www.graphviz.org</a> for information"),
         )
         return
 
@@ -329,18 +323,16 @@ def transitions_flow_diagram():
     try:
         for fileName in fileNames:
             with open(fileName, "r") as infile:
-                gv = create_transitions_gv_from_matrix(
-                    infile.read(), cutoff_all=0, cutoff_behavior=0, edge_label="percent_node"
-                )
+                gv = create_transitions_gv_from_matrix(infile.read(),
+                                                       cutoff_all=0,
+                                                       cutoff_behavior=0,
+                                                       edge_label="percent_node")
 
                 with open(tempfile.gettempdir() + os.sep + os.path.basename(fileName) + ".tmp.gv", "w") as f:
                     f.write(gv)
                 result = subprocess.getoutput(
-                    (
-                        f'dot -Tpng -o "{fileName}.png" '
-                        f'"{tempfile.gettempdir() + os.sep + os.path.basename(fileName)}.tmp.gv"'
-                    )
-                )
+                    (f'dot -Tpng -o "{fileName}.png" '
+                     f'"{tempfile.gettempdir() + os.sep + os.path.basename(fileName)}.tmp.gv"'))
                 if not result:
                     out += f"<b>{fileName}.png</b> created<br>"
                 else:

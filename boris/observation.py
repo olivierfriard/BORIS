@@ -25,18 +25,14 @@ import logging
 import os
 from pathlib import Path
 
-from PyQt5.QtCore import *
-from PyQt5.QtGui import *
-from PyQt5.QtWidgets import *
-
-from . import dialog
-from . import duration_widget
-from . import plot_data_module
-from . import project_functions
-from . import utilities as util
+from PyQt5.QtCore import Qt
+from PyQt5.QtGui import QColor
+from PyQt5.QtWidgets import (QDialog, QVBoxLayout, QHBoxLayout, QLabel, QComboBox, QPushButton, QMessageBox,
+                             QSpacerItem, QSizePolicy, QFileDialog, QTableWidgetItem, QApplication)
 
 from . import config as cfg
-
+from . import dialog, duration_widget, plot_data_module, project_functions
+from . import utilities as util
 from .observation_ui import Ui_Form
 
 

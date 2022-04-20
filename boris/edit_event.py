@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """
 BORIS
 Behavioral Observation Research Interactive Software
@@ -21,16 +20,12 @@ This file is part of BORIS.
 
 """
 
-import logging
+from PyQt5.QtWidgets import (QApplication, QDialog, QHBoxLayout, QLabel, QLineEdit, QListWidget, QMessageBox,
+                             QPushButton, QRadioButton, QVBoxLayout)
 
-from PyQt5.QtCore import *
-from PyQt5.QtGui import *
-from PyQt5.QtWidgets import *
-
-from boris import duration_widget
-from boris.config import HHMMSS, HHMMSSZZZ, S, programName
-from boris.edit_event_ui import Ui_Form
-from boris.utilities import seconds2time
+from . import config as cfg
+from . import duration_widget
+from .edit_event_ui import Ui_Form
 
 
 class DlgEditEvent(QDialog, Ui_Form):
@@ -39,7 +34,7 @@ class DlgEditEvent(QDialog, Ui_Form):
                  log_level,
                  time_value=0,
                  current_time=0,
-                 time_format=S,
+                 time_format=cfg.S,
                  show_set_current_time=False,
                  parent=None):
 
@@ -54,9 +49,9 @@ class DlgEditEvent(QDialog, Ui_Form):
         self.teTime.setVisible(False)
 
         self.time_widget = duration_widget.Duration_widget(self.time_value)
-        if time_format == S:
+        if time_format == cfg.S:
             self.time_widget.set_format_s()
-        if time_format == HHMMSS:
+        if time_format == cfg.HHMMSS:
             self.time_widget.set_format_hhmmss()
 
         self.horizontalLayout_2.insertWidget(0, self.time_widget)
@@ -140,12 +135,12 @@ class EditSelectedEvents(QDialog):
 
     def pbOK_clicked(self):
         if not self.rbSubject.isChecked() and not self.rbBehavior.isChecked() and not self.rbComment.isChecked():
-            QMessageBox.warning(None, programName, "You must select a field to be edited",
+            QMessageBox.warning(None, cfg.programName, "You must select a field to be edited",
                                 QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
             return
 
         if (self.rbSubject.isChecked() or self.rbBehavior.isChecked()) and self.newText.selectedItems() == []:
-            QMessageBox.warning(None, programName, "You must select a new value from the list",
+            QMessageBox.warning(None, cfg.programName, "You must select a new value from the list",
                                 QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
             return
 
@@ -158,6 +153,6 @@ class EditSelectedEvents(QDialog):
 if __name__ == '__main__':
     import sys
     app = QApplication(sys.argv)
-    w = DlgEditEvent(None, time_value=3.141, current_time=0, time_format=S, show_set_current_time=True)
+    w = DlgEditEvent(None, time_value=3.141, current_time=0, time_format=cfg.S, show_set_current_time=True)
     w.show()
     sys.exit(app.exec_())

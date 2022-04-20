@@ -25,7 +25,7 @@ import os
 
 os.environ["PATH"] = os.path.dirname(__file__) + os.sep + "misc" + os.pathsep + os.environ["PATH"]
 
-from boris import mpv
+from . import mpv
 from PyQt5.QtWidgets import (QLabel, QDockWidget, QWidget, QHBoxLayout, QSlider, QSizePolicy, QStackedWidget)
 from PyQt5.QtCore import (pyqtSignal, QEvent, Qt)
 

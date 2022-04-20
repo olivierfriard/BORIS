@@ -21,9 +21,10 @@ Copyright 2012-2022 Olivier Friard
 
 """
 
-from math import log2
-import pathlib as pl
 import logging
+import pathlib as pl
+from math import log2
+
 from . import config as cfg
 from . import dialog
 
@@ -31,7 +32,7 @@ from . import dialog
 def snapshot(self):
     """
     take snapshot of current video at current position
-    snapshot is saved on media path
+    snapshot is saved on media path following the template: MEDIA-FILE-NAME_TIME-POSITION.png
     """
 
     if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE] in [cfg.MEDIA]:
@@ -39,16 +40,16 @@ def snapshot(self):
         if self.playerType == cfg.VLC:
 
             for i, player in enumerate(self.dw_player):
-                if (
-                    str(i + 1) in self.pj[cfg.OBSERVATIONS][self.observationId][cfg.FILE]
-                    and self.pj[cfg.OBSERVATIONS][self.observationId][cfg.FILE][str(i + 1)]
-                ):
+                if (str(i + 1) in self.pj[cfg.OBSERVATIONS][self.observationId][cfg.FILE] and
+                        self.pj[cfg.OBSERVATIONS][self.observationId][cfg.FILE][str(i + 1)]):
 
                     p = pl.Path(self.dw_player[0].player.playlist[self.dw_player[0].player.playlist_pos]["filename"])
 
-                    snapshot_file_path = str(p.parent / f"{p.stem}_{player.player.time_pos}.png")
+                    snapshot_file_path = str(p.parent / f"{p.stem}_{player.player.time_pos:0.3f}.png")
 
                     player.player.screenshot_to_file(snapshot_file_path)
+
+                    logging.debug(f"video snapshot saved in {snapshot_file_path}")
 
 
 def zoom_level(self):
@@ -71,12 +72,13 @@ def zoom_level(self):
 
     for idx, dw in enumerate(self.dw_player):
         if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO][cfg.ZOOM_LEVEL].get(
-            str(idx + 1), dw.player.video_zoom
-        ) != float(zl.elements[f"Player #{idx + 1}"].currentText()):
+                str(idx + 1), dw.player.video_zoom) != float(zl.elements[f"Player #{idx + 1}"].currentText()):
             dw.player.video_zoom = log2(float(zl.elements[f"Player #{idx + 1}"].currentText()))
+
+            logging.debug(f"video zoom changed in {dw.player.video_zoom} for player {idx + 1}")
+
             self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO][cfg.ZOOM_LEVEL][str(idx + 1)] = float(
-                zl.elements[f"Player #{idx + 1}"].currentText()
-            )
+                zl.elements[f"Player #{idx + 1}"].currentText())
             self.projectChanged = True
 
 
@@ -88,8 +90,7 @@ def display_subtitles(self):
     for idx, dw in enumerate(self.dw_player):
         if cfg.DISPLAY_MEDIA_SUBTITLES in self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO]:
             default = self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO][cfg.DISPLAY_MEDIA_SUBTITLES].get(
-                str(idx + 1), dw.player.sub_visibility
-            )
+                str(idx + 1), dw.player.sub_visibility)
         else:
             default = dw.player.sub_visibility
         players_list.append(("cb", f"Player #{idx + 1}", default))
@@ -102,16 +103,14 @@ def display_subtitles(self):
         self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO][cfg.DISPLAY_MEDIA_SUBTITLES] = {}
 
     for idx, dw in enumerate(self.dw_player):
-        if (
-            self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO][cfg.DISPLAY_MEDIA_SUBTITLES].get(
-                str(idx + 1), dw.player.sub_visibility
-            )
-            != st.elements[f"Player #{idx + 1}"].isChecked()
-        ):
+        if (self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO][cfg.DISPLAY_MEDIA_SUBTITLES].get(
+                str(idx + 1), dw.player.sub_visibility) != st.elements[f"Player #{idx + 1}"].isChecked()):
             dw.player.sub_visibility = st.elements[f"Player #{idx + 1}"].isChecked()
-            self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO][cfg.DISPLAY_MEDIA_SUBTITLES][
-                str(idx + 1)
-            ] = st.elements[f"Player #{idx + 1}"].isChecked()
+
+            logging.debug(f"subtitle visibility for player {idx + 1}: {dw.player.sub_visibility}")
+
+            self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO][cfg.DISPLAY_MEDIA_SUBTITLES][str(
+                idx + 1)] = st.elements[f"Player #{idx + 1}"].isChecked()
             self.projectChanged = True
 
 
@@ -123,10 +122,8 @@ def video_normalspeed_activated(self):
     if self.playerType == cfg.VLC and self.playMode == cfg.MPV:
         self.play_rate = 1
         for i, player in enumerate(self.dw_player):
-            if (
-                str(i + 1) in self.pj[cfg.OBSERVATIONS][self.observationId][cfg.FILE]
-                and self.pj[cfg.OBSERVATIONS][self.observationId][cfg.FILE][str(i + 1)]
-            ):
+            if (str(i + 1) in self.pj[cfg.OBSERVATIONS][self.observationId][cfg.FILE] and
+                    self.pj[cfg.OBSERVATIONS][self.observationId][cfg.FILE][str(i + 1)]):
                 player.player.speed = self.play_rate
 
         self.lbSpeed.setText(f"x{self.play_rate:.3f}")
@@ -144,10 +141,8 @@ def video_faster_activated(self):
         if self.play_rate + self.play_rate_step <= 60:
             self.play_rate += self.play_rate_step
             for i, player in enumerate(self.dw_player):
-                if (
-                    str(i + 1) in self.pj[cfg.OBSERVATIONS][self.observationId][cfg.FILE]
-                    and self.pj[cfg.OBSERVATIONS][self.observationId][cfg.FILE][str(i + 1)]
-                ):
+                if (str(i + 1) in self.pj[cfg.OBSERVATIONS][self.observationId][cfg.FILE] and
+                        self.pj[cfg.OBSERVATIONS][self.observationId][cfg.FILE][str(i + 1)]):
                     player.player.speed = self.play_rate
             self.lbSpeed.setText(f"x{self.play_rate:.3f}")
 

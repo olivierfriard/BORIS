@@ -21,15 +21,14 @@ This file is part of BORIS.
 """
 
 import logging
-from . import dialog
-from . import project_functions
-from . import config as cfg
-from . import utilities as util
-from . import param_panel
 
-from PyQt5.QtWidgets import (QFileDialog, QTableWidgetItem, QApplication, QMessageBox, QListWidgetItem)
-from PyQt5.QtCore import (Qt)
-from PyQt5.QtGui import (QColor, QFont)
+from PyQt5.QtCore import Qt
+from PyQt5.QtGui import QColor, QFont
+from PyQt5.QtWidgets import (QApplication, QFileDialog, QListWidgetItem, QMessageBox, QTableWidgetItem)
+
+from . import config as cfg
+from . import dialog, param_panel, project_functions
+from . import utilities as util
 
 
 def check_text_file_type(rows):

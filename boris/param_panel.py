@@ -22,16 +22,12 @@ This file is part of BORIS.
 """
 
 import logging
-import os
-import sys
 
 from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import QDialog
 
-from . import duration_widget
-
 from . import config as cfg
-
+from . import duration_widget
 from .param_panel_ui import Ui_Dialog
 
 

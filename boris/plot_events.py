@@ -37,12 +37,9 @@ from matplotlib import colors as mcolors
 from matplotlib.dates import (HOURLY, MICROSECONDLY, MINUTELY, MONTHLY, SECONDLY, WEEKLY, DateFormatter, RRuleLocator,
                               rrulewrapper)
 
-from . import db_functions
-from . import project_functions
-from . import utilities as util
 from . import config as cfg
-
-# plt_colors = dict(mcolors.BASE_COLORS, **mcolors.CSS4_COLORS)
+from . import db_functions, project_functions
+from . import utilities as util
 
 
 def default_value(ethogram, behavior, parameter):

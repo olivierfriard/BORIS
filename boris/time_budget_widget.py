@@ -22,26 +22,19 @@ This file is part of BORIS.
 
 import logging
 import os
-import re
-import tablib
-from decimal import Decimal
 import pathlib as pl
+import re
+from decimal import Decimal
 
-from . import observation_operations
-
-from . import utilities as util
-from . import project_functions
-from . import select_subj_behav
-from . import dialog
-from . import config as cfg
-from . import gui_utilities
-from . import db_functions
-from . import time_budget_functions
-from . import select_observations
-
-from PyQt5.QtWidgets import (QPushButton, QSpacerItem, QHBoxLayout, QTableWidget, QListWidget, QVBoxLayout, QLabel,
-                             QSizePolicy, QWidget, QFileDialog, QTableWidgetItem, QInputDialog)
+import tablib
 from PyQt5.QtCore import Qt
+from PyQt5.QtWidgets import (QFileDialog, QHBoxLayout, QInputDialog, QLabel, QListWidget, QPushButton, QSizePolicy,
+                             QSpacerItem, QTableWidget, QTableWidgetItem, QVBoxLayout, QWidget)
+
+from . import config as cfg
+from . import (db_functions, dialog, gui_utilities, observation_operations, project_functions, select_observations,
+               select_subj_behav, time_budget_functions)
+from . import utilities as util
 
 
 class timeBudgetResults(QWidget):
@@ -297,7 +290,8 @@ def time_budget(self, mode: str, mode2: str = "list"):
         flagGroup = (dialog.MessageDialog(cfg.programName, "Group observations in one time budget analysis?",
                                           [cfg.YES, cfg.NO]) == cfg.YES)
 
-    max_obs_length, selectedObsTotalMediaLength = observation_operations.observation_length(self, selectedObservations)
+    max_obs_length, selectedObsTotalMediaLength = observation_operations.observation_length(
+        self.pj, selectedObservations)
     if max_obs_length == -1:  # media length not available, user choose to not use events
         return
 

@@ -32,34 +32,15 @@ import urllib.request
 
 import tablib
 from PyQt5.QtCore import Qt
-from PyQt5.QtGui import *
-from PyQt5.QtWidgets import *
+from PyQt5.QtGui import QColor
+from PyQt5.QtWidgets import (QDialog, QLabel, QVBoxLayout, QHBoxLayout, QPushButton, QSpacerItem, QListWidget,
+                             QListWidgetItem, QInputDialog, QSizePolicy, QMessageBox, QLineEdit, QFileDialog,
+                             QTableWidgetItem, QHeaderView, QCheckBox)
 
 from . import add_modifier
-
-from . import export_observation
-from . import param_panel
-from . import exclusion_matrix
-from . import project_import
-
 from . import config as cfg
-'''
-from .config import (programName, behavioursFields, tw_indVarFields, subjectsFields, function_keys, REMOVE, YES, CANCEL,
-                     MULTI_SELECTION, OK, OBSERVATIONS, EVENTS, TIMESTAMP, NUMERIC, SET_OF_VALUES, SET_OF_VALUES_idx,
-                     EVENT_BEHAVIOR_FIELD_IDX, EVENT_SUBJECT_FIELD_IDX, INDEPENDENT_VARIABLES, CONVERTERS, CODING_MAP,
-                     BEHAVIORAL_CATEGORIES, ETHOGRAM, BEHAVIOR_CATEGORY, SUBJECTS, BEHAVIOR_CODE, BEHAVIORS_CODING_MAP,
-                     AVAILABLE_INDEP_VAR_TYPES, NUMERIC_idx, BEHAVIOR_TYPES, PROJECT_BEHAVIORS_KEY_FIELD_IDX,
-                     PROJECT_BEHAVIORS_CODE_FIELD_IDX, TYPE, HHMMSS, S, NO)
-'''
-
+from . import dialog, exclusion_matrix, export_observation, project_import
 from .project_ui import Ui_dlgProject
-
-from . import utilities as util
-
-
-from . import dialog
-
-from . import project_functions
 
 
 class BehavioralCategories(QDialog):

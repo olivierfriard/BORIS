@@ -19,6 +19,7 @@ Copyright 2012-2022 Olivier Friard
   MA 02110-1301, USA.
 """
 
+import gzip
 import json
 import logging
 import os
@@ -26,15 +27,13 @@ import pathlib
 import sys
 from decimal import Decimal as dec
 from shutil import copyfile
-import gzip
-from . import portion as I
 
-from . import db_functions
-from . import dialog
 import tablib
-from . import utilities as util
 
 from . import config as cfg
+from . import db_functions
+from . import portion as I
+from . import utilities as util
 
 
 def check_observation_exhaustivity(events: list, ethogram: list, state_events_list: list = []):
@@ -718,53 +717,6 @@ def observation_total_length(observation: dict):
     logging.critical("observation not LIVE nor MEDIA")
 
     return dec("0.0")
-
-
-def observation_length(pj, selected_observations: list) -> tuple:
-    """
-    max length of selected observations
-    total media length
-
-    Args:
-        selected_observations (list): list of selected observations
-
-    Returns:
-        float: maximum media length for all observations
-        float: total media length for all observations
-    """
-    selectedObsTotalMediaLength = dec("0.0")
-    max_obs_length = 0
-    for obs_id in selected_observations:
-        obs_length = observation_total_length(pj[cfg.OBSERVATIONS][obs_id])
-        if obs_length in [dec("0"), dec("-1")]:
-            selectedObsTotalMediaLength = -1
-            break
-        max_obs_length = max(max_obs_length, obs_length)
-        selectedObsTotalMediaLength += obs_length
-
-    # an observation media length is not available
-    if selectedObsTotalMediaLength == -1:
-        # propose to user to use max event time
-        if dialog.MessageDialog(cfg.programName,
-                                (f"A media length is not available for the observation <b>{obs_id}</b>.<br>"
-                                 "Use last event time as media length?"), [cfg.YES, cfg.NO]) == cfg.YES:
-            maxTime = 0  # max length for all events all subjects
-            max_length = 0
-            for obs_id in selected_observations:
-                if pj[cfg.OBSERVATIONS][obs_id][cfg.EVENTS]:
-                    maxTime += max(pj[cfg.OBSERVATIONS][obs_id][cfg.EVENTS])[0]
-                    max_length = max(max_length, max(pj[cfg.OBSERVATIONS][obs_id][cfg.EVENTS])[0])
-
-            logging.debug(f"max time all events all subjects: {maxTime}")
-
-            max_obs_length = max_length
-            selectedObsTotalMediaLength = maxTime
-
-        else:
-            max_obs_length = -1
-            selectedObsTotalMediaLength = dec("-1")
-
-    return max_obs_length, selectedObsTotalMediaLength
 
 
 def events_start_stop(ethogram, events):
