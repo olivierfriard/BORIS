@@ -8,7 +8,7 @@ BORIS is a free and open-source software available for GNU/Linux, Windows and Ma
 
 It provides also some analysis tools like time budget.
 
-The BORIS paper has more than 400 citations in scientific publications with peer-reviewing.
+The BORIS paper has more than 800 citations in scientific publications with peer-reviewing.
 
 See http://www.boris.unito.it
 
