@@ -11,8 +11,6 @@ pytest test_utilities.py
 """
 
 import pytest
-import hashlib
-import glob
 import os
 import sys
 from decimal import Decimal
