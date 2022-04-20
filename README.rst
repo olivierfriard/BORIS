@@ -8,7 +8,7 @@ BORIS is a free and open-source software available for GNU/Linux, Windows and Ma
 
 It provides also some analysis tools like time budget.
 
-The `BORIS publication <https://besjournals.onlinelibrary.wiley.com/doi/full/10.1111/2041-210X.12584>`_ has more than 500 citations in scientific publications with peer-reviewing.
+The `BORIS publication <https://besjournals.onlinelibrary.wiley.com/doi/full/10.1111/2041-210X.12584>`_ has more than 800 citations in scientific publications with peer-reviewing.
 
 See http://www.boris.unito.it
 
@@ -72,7 +72,7 @@ Licence
 
 Distributed with a `GPL v.3 license <LICENSE.TXT>`_::
 
-Copyright (C) 2012-2021 Olivier Friard
+Copyright (C) 2012-2022 Olivier Friard
 
 
 
