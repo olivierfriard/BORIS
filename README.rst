@@ -65,7 +65,7 @@ Licence
 
 Distributed with a `GPL v.3 license <LICENSE.TXT>`_::
 
-Copyright (C) 2012-2021 Olivier Friard
+Copyright (C) 2012-2022 Olivier Friard
 
 
 
