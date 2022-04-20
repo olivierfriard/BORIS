@@ -31,9 +31,8 @@ from . import portion as I
 
 from . import db_functions
 from . import dialog
-from . import select_observations
 import tablib
-from . import utilities
+from . import utilities as util
 
 from . import config as cfg
 
@@ -257,7 +256,7 @@ def check_state_events_obs(obsId: str, ethogram: dict, observation: dict, time_f
                                     modifier=("(modifier " + event[1] + ") ") if event[1] else "",
                                     subject=subject if subject else cfg.NO_FOCAL_SUBJECT,
                                     time=memTime[str(event)]
-                                    if time_format == cfg.S else utilities.seconds2time(memTime[str(event)]),
+                                    if time_format == cfg.S else util.seconds2time(memTime[str(event)]),
                                 )
 
     return (False, out) if out else (True, "No problem detected")
@@ -425,9 +424,9 @@ def create_subtitles(pj: dict, selected_observations: list, parameters: dict, ex
                             "{modifiers}"
                             "{col2}\n\n").format(
                                 idx=idx + 1,
-                                start=utilities.seconds2time(row["start"]).replace(".", ","),
-                                stop=utilities.seconds2time(row["stop"] if row["type"] == cfg.STATE else row["stop"] +
-                                                            cfg.POINT_EVENT_ST_DURATION).replace(".", ","),
+                                start=util.seconds2time(row["start"]).replace(".", ","),
+                                stop=util.seconds2time(row["stop"] if row["type"] == cfg.STATE else row["stop"] +
+                                                       cfg.POINT_EVENT_ST_DURATION).replace(".", ","),
                                 col1=col1,
                                 col2=col2,
                                 subject=row["subject"],
@@ -435,9 +434,9 @@ def create_subtitles(pj: dict, selected_observations: list, parameters: dict, ex
                                 modifiers=modifiers_str,
                             )
                 '''
-                file_name = str(pathlib.Path(pathlib.Path(export_dir) / utilities.safeFileName(obsId)).with suffix(".srt"))
+                file_name = str(pathlib.Path(pathlib.Path(export_dir) / util.safeFileName(obsId)).with suffix(".srt"))
                 '''
-                file_name = f"{pathlib.Path(export_dir) / utilities.safeFileName(obsId)}.srt"
+                file_name = f"{pathlib.Path(export_dir) / util.safeFileName(obsId)}.srt"
                 try:
                     with open(file_name, "w") as f:
                         f.write(out)
@@ -477,22 +476,22 @@ def create_subtitles(pj: dict, selected_observations: list, parameters: dict, ex
                             else:
                                 modifiers_str = ""
 
-                            out += ("{idx}\n"
-                                    "{start} --> {stop}\n"
-                                    "{col1}{subject}: {behavior}"
-                                    "{modifiers}"
-                                    "{col2}\n\n").format(
-                                        idx=idx + 1,
-                                        start=utilities.seconds2time(row["start"] - init).replace(".", ","),
-                                        stop=utilities.seconds2time(
-                                            (row["stop"] if row["type"] == cfg.STATE else row["stop"] +
-                                             cfg.POINT_EVENT_ST_DURATION) - init).replace(".", ","),
-                                        col1=col1,
-                                        col2=col2,
-                                        subject=row["subject"],
-                                        behavior=row["behavior"],
-                                        modifiers=modifiers_str,
-                                    )
+                            out += (
+                                "{idx}\n"
+                                "{start} --> {stop}\n"
+                                "{col1}{subject}: {behavior}"
+                                "{modifiers}"
+                                "{col2}\n\n").format(
+                                    idx=idx + 1,
+                                    start=util.seconds2time(row["start"] - init).replace(".", ","),
+                                    stop=util.seconds2time((row["stop"] if row["type"] == cfg.STATE else row["stop"] +
+                                                            cfg.POINT_EVENT_ST_DURATION) - init).replace(".", ","),
+                                    col1=col1,
+                                    col2=col2,
+                                    subject=row["subject"],
+                                    behavior=row["behavior"],
+                                    modifiers=modifiers_str,
+                                )
                         '''
                         file_name = str(pathlib.Path(pathlib.Path(export_dir) / pathlib.Path(mediaFile).name).with suffix(".srt"))
                         '''
@@ -530,7 +529,7 @@ def export_observations_list(pj: dict, selected_observations: list, file_name: s
 
     indep_var_header = []
     if cfg.INDEPENDENT_VARIABLES in pj:
-        for idx in utilities.sorted_keys(pj[cfg.INDEPENDENT_VARIABLES]):
+        for idx in util.sorted_keys(pj[cfg.INDEPENDENT_VARIABLES]):
             indep_var_header.append(pj[cfg.INDEPENDENT_VARIABLES][idx]["label"])
     data.headers.extend(indep_var_header)
 
@@ -780,7 +779,7 @@ def events_start_stop(ethogram, events):
         list: list of events with type (POINT or STATE)
     """
 
-    state_events_list = utilities.state_behavior_codes(ethogram)  # from utilities
+    state_events_list = util.state_behavior_codes(ethogram)
 
     events_flagged = []
     for event in events:
@@ -869,7 +868,7 @@ def open_project_json(projectFileName: str) -> tuple:
         return projectFileName, projectChanged, {f"error": f"Error on file {projectFileName}: {sys.exc_info()[1]}"}, msg
 
     # transform time to decimal
-    pj = utilities.convert_time_to_decimal(pj)
+    pj = util.convert_time_to_decimal(pj)
 
     # add coding_map key to old project files
     if "coding_map" not in pj:
@@ -934,8 +933,7 @@ def open_project_json(projectFileName: str) -> tuple:
 
     # check if project format version < 4 (modifiers were str)
     project_lowerthan4 = False
-    if "project_format_version" in pj and utilities.versiontuple(
-            pj["project_format_version"]) < utilities.versiontuple("4.0"):
+    if "project_format_version" in pj and util.versiontuple(pj["project_format_version"]) < util.versiontuple("4.0"):
         for idx in pj[cfg.ETHOGRAM]:
             if pj[cfg.ETHOGRAM][idx]["modifiers"]:
                 if isinstance(pj[cfg.ETHOGRAM][idx]["modifiers"], str):
@@ -974,13 +972,13 @@ def open_project_json(projectFileName: str) -> tuple:
 
                 for media_file_path in pj[cfg.OBSERVATIONS][obs]["file"][player]:
                     # FIX: ffmpeg path
-                    ret, msg = utilities.check_ffmpeg_path()
+                    ret, msg = util.check_ffmpeg_path()
                     if not ret:
                         return projectFileName, projectChanged, {"error": "FFmpeg path not found"}, ""
                     else:
                         ffmpeg_bin = msg
 
-                    r = utilities.accurate_media_analysis(ffmpeg_bin, media_file_path)
+                    r = util.accurate_media_analysis(ffmpeg_bin, media_file_path)
 
                     if "duration" in r and r["duration"]:
                         pj[cfg.OBSERVATIONS][obs][cfg.MEDIA_INFO][cfg.LENGTH][media_file_path] = float(r["duration"])

@@ -5,6 +5,8 @@ import re
 import sys
 import tablib
 import pathlib as pl
+
+from . import observation_operations
 from . import utilities as util
 from . import config as cfg
 from . import select_observations
@@ -30,8 +32,7 @@ def export_events_as_behavioral_sequences(self, separated_subjects=False, timed=
 
     # ask user for observations to analyze
     result, selected_observations = select_observations.select_observations(
-        self.pj, cfg.MULTIPLE, "Select observations to export as behavioral sequences"
-    )
+        self.pj, cfg.MULTIPLE, "Select observations to export as behavioral sequences")
 
     if not selected_observations:
         return
@@ -47,9 +48,8 @@ def export_events_as_behavioral_sequences(self, separated_subjects=False, timed=
     if not parameters[cfg.SELECTED_SUBJECTS] or not parameters[cfg.SELECTED_BEHAVIORS]:
         return
 
-    fn = QFileDialog().getSaveFileName(
-        self, "Export events as behavioral sequences", "", "Text files (*.txt);;All files (*)"
-    )
+    fn = QFileDialog().getSaveFileName(self, "Export events as behavioral sequences", "",
+                                       "Text files (*.txt);;All files (*)")
     file_name = fn[0] if type(fn) is tuple else fn
 
     if file_name:
@@ -96,17 +96,14 @@ def export_tabular_events(self, mode: str = "tabular"):
             if event[cfg.EVENT_BEHAVIOR_FIELD_IDX] not in ethogram_behavior_codes:
                 behaviors_not_defined.append(event[cfg.EVENT_BEHAVIOR_FIELD_IDX])
     if set(sorted(behaviors_not_defined)):
-        out += (
-            "The following behaviors are not defined in the ethogram: "
-            f"<b>{', '.join(set(sorted(behaviors_not_defined)))}</b><br><br>"
-        )
+        out += ("The following behaviors are not defined in the ethogram: "
+                f"<b>{', '.join(set(sorted(behaviors_not_defined)))}</b><br><br>")
 
     # check if state events are paired
     not_paired_obs_list = []
     for obsId in selectedObservations:
-        r, msg = project_functions.check_state_events_obs(
-            obsId, self.pj[cfg.ETHOGRAM], self.pj[cfg.OBSERVATIONS][obsId], self.timeFormat
-        )
+        r, msg = project_functions.check_state_events_obs(obsId, self.pj[cfg.ETHOGRAM],
+                                                          self.pj[cfg.OBSERVATIONS][obsId], self.timeFormat)
 
         if not r:
             out += f"Observation: <strong>{obsId}</strong><br>{msg}<br>"
@@ -171,9 +168,8 @@ def export_tabular_events(self, mode: str = "tabular"):
             ]
             file_formats = ["tsv", "csv", "ods", "xlsx", "xls", "html"]
 
-            fileName, filter_ = QFileDialog().getSaveFileName(
-                self, "Export events", "", ";;".join(extended_file_formats)
-            )
+            fileName, filter_ = QFileDialog().getSaveFileName(self, "Export events", "",
+                                                              ";;".join(extended_file_formats))
             if not fileName:
                 return
 
@@ -182,18 +178,15 @@ def export_tabular_events(self, mode: str = "tabular"):
                 fileName = str(pl.Path(fileName)) + "." + outputFormat
                 # check if file with new extension already exists
                 if pl.Path(fileName).is_file():
-                    if (
-                        dialog.MessageDialog(
-                            cfg.programName, f"The file {fileName} already exists.", [cfg.CANCEL, cfg.OVERWRITE]
-                        )
-                        == cfg.CANCEL
-                    ):
+                    if (dialog.MessageDialog(cfg.programName, f"The file {fileName} already exists.",
+                                             [cfg.CANCEL, cfg.OVERWRITE]) == cfg.CANCEL):
                         return
 
     if mode == "jwatcher":
-        exportDir = QFileDialog().getExistingDirectory(
-            self, "Choose a directory to export events", os.path.expanduser("~"), options=QFileDialog.ShowDirsOnly
-        )
+        exportDir = QFileDialog().getExistingDirectory(self,
+                                                       "Choose a directory to export events",
+                                                       os.path.expanduser("~"),
+                                                       options=QFileDialog.ShowDirsOnly)
         if not exportDir:
             return
 
@@ -225,9 +218,8 @@ def export_tabular_events(self, mode: str = "tabular"):
         if mode == "jwatcher":
             export_function = export_observation.export_events_jwatcher
 
-        r, msg = export_function(
-            parameters, obsId, self.pj[cfg.OBSERVATIONS][obsId], self.pj[cfg.ETHOGRAM], fileName, outputFormat
-        )
+        r, msg = export_function(parameters, obsId, self.pj[cfg.OBSERVATIONS][obsId], self.pj[cfg.ETHOGRAM], fileName,
+                                 outputFormat)
 
         if not r and msg:
             QMessageBox.critical(None, cfg.programName, msg, QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
@@ -239,18 +231,16 @@ def export_aggregated_events(self):
     Formats can be SQL (sql), SDIS (sds) or Tabular format (tsv, csv, ods, xlsx, xls, html)
     """
 
-    result, selectedObservations = select_observations.select_observations(
-        self.pj, cfg.MULTIPLE, "Select observations for exporting events"
-    )
+    result, selectedObservations = select_observations.select_observations(self.pj, cfg.MULTIPLE,
+                                                                           "Select observations for exporting events")
     if not selectedObservations:
         return
 
     # check if state events are paired
     out, not_paired_obs_list = "", []
     for obsId in selectedObservations:
-        r, msg = project_functions.check_state_events_obs(
-            obsId, self.pj[cfg.ETHOGRAM], self.pj[cfg.OBSERVATIONS][obsId], self.timeFormat
-        )
+        r, msg = project_functions.check_state_events_obs(obsId, self.pj[cfg.ETHOGRAM],
+                                                          self.pj[cfg.OBSERVATIONS][obsId], self.timeFormat)
         if not r:
             out += f"Observation: <strong>{obsId}</strong><br>{msg}<br>"
             not_paired_obs_list.append(obsId)
@@ -262,7 +252,7 @@ def export_aggregated_events(self):
         self.results.show()
         return
 
-    max_obs_length, selectedObsTotalMediaLength = self.observation_length(selectedObservations)
+    max_obs_length, selectedObsTotalMediaLength = observation_operations.observation_length(self, selectedObservations)
 
     logging.debug(f"max_obs_length:{max_obs_length}  selectedObsTotalMediaLength:{selectedObsTotalMediaLength}")
 
@@ -283,12 +273,8 @@ def export_aggregated_events(self):
     # check for grouping results
     flag_group = True
     if len(selectedObservations) > 1:
-        flag_group = (
-            dialog.MessageDialog(
-                cfg.programName, "Group events from selected observations in one file?", [cfg.YES, cfg.NO]
-            )
-            == cfg.YES
-        )
+        flag_group = (dialog.MessageDialog(cfg.programName, "Group events from selected observations in one file?",
+                                           [cfg.YES, cfg.NO]) == cfg.YES)
 
     extended_file_formats = [
         "Tab Separated Values (*.tsv)",
@@ -313,9 +299,8 @@ def export_aggregated_events(self):
             "sql",
         ]  # must be in same order than extended_file_formats
 
-        fileName, filter_ = QFileDialog().getSaveFileName(
-            self, "Export aggregated events", "", ";;".join(extended_file_formats)
-        )
+        fileName, filter_ = QFileDialog().getSaveFileName(self, "Export aggregated events", "",
+                                                          ";;".join(extended_file_formats))
 
         if not fileName:
             return
@@ -325,12 +310,8 @@ def export_aggregated_events(self):
             # check if file with new extension already exists
             fileName = str(pl.Path(fileName)) + "." + outputFormat
             if pl.Path(fileName).is_file():
-                if (
-                    dialog.MessageDialog(
-                        cfg.programName, f"The file {fileName} already exists.", [cfg.CANCEL, cfg.OVERWRITE]
-                    )
-                    == cfg.CANCEL
-                ):
+                if (dialog.MessageDialog(cfg.programName, f"The file {fileName} already exists.",
+                                         [cfg.CANCEL, cfg.OVERWRITE]) == cfg.CANCEL):
                     return
 
     else:  # not grouping
@@ -350,16 +331,16 @@ def export_aggregated_events(self):
             return
         outputFormat = re.sub(".* \(\*\.", "", item)[:-1]
 
-        exportDir = QFileDialog().getExistingDirectory(
-            self, "Choose a directory to export events", os.path.expanduser("~"), options=QFileDialog.ShowDirsOnly
-        )
+        exportDir = QFileDialog().getExistingDirectory(self,
+                                                       "Choose a directory to export events",
+                                                       os.path.expanduser("~"),
+                                                       options=QFileDialog.ShowDirsOnly)
         if not exportDir:
             return
 
     if outputFormat == "sql":
-        _, _, conn = db_functions.load_aggregated_events_in_db(
-            self.pj, parameters[cfg.SELECTED_SUBJECTS], selectedObservations, parameters[cfg.SELECTED_BEHAVIORS]
-        )
+        _, _, conn = db_functions.load_aggregated_events_in_db(self.pj, parameters[cfg.SELECTED_SUBJECTS],
+                                                               selectedObservations, parameters[cfg.SELECTED_BEHAVIORS])
         try:
             with open(fileName, "w") as f:
                 for line in conn.iterdump():
@@ -368,9 +349,8 @@ def export_aggregated_events(self):
 
             errorMsg = sys.exc_info()[1]
             logging.critical(errorMsg)
-            QMessageBox.critical(
-                None, cfg.programName, str(errorMsg), QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton
-            )
+            QMessageBox.critical(None, cfg.programName, str(errorMsg), QMessageBox.Ok | QMessageBox.Default,
+                                 QMessageBox.NoButton)
         return
 
     header = ["Observation id", "Observation date", "Description", "Media file", "Total length", "FPS"]
@@ -412,9 +392,8 @@ def export_aggregated_events(self):
             data.title = obsId
             r, msg = export_observation.dataset_write(data, fileName, outputFormat)
             if not r:
-                QMessageBox.warning(
-                    None, cfg.programName, msg, QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton
-                )
+                QMessageBox.warning(None, cfg.programName, msg, QMessageBox.Ok | QMessageBox.Default,
+                                    QMessageBox.NoButton)
             data = tablib.Dataset()
 
     data = tablib.Dataset(*sorted(list(data), key=lambda x: float(x[start_idx])), headers=header)
@@ -460,9 +439,8 @@ def export_aggregated_events(self):
         return
 
     if outputFormat == "sds":  # SDIS format
-        out = ("% SDIS file created by BORIS (www.boris.unito.it) " "at {}\nTimed <seconds>;\n").format(
-            util.datetime_iso8601(datetime.datetime.now())
-        )
+        out = ("% SDIS file created by BORIS (www.boris.unito.it) "
+               "at {}\nTimed <seconds>;\n").format(util.datetime_iso8601(datetime.datetime.now()))
         for obsId in selectedObservations:
             # observation id
             out += "\n<{}>\n".format(obsId)
@@ -477,9 +455,8 @@ def export_aggregated_events(self):
                     # replace various char by _
                     for char in [" ", "-", "/"]:
                         subject = subject.replace(char, "_")
-                    event_start = "{0:.3f}".format(
-                        float(event[start_idx])
-                    )  # start event (from end for independent variables)
+                    event_start = "{0:.3f}".format(float(
+                        event[start_idx]))  # start event (from end for independent variables)
                     if not event[stop_idx]:  # stop event (from end)
                         event_stop = "{0:.3f}".format(float(event[start_idx]) + 0.001)
                     else:
@@ -494,10 +471,8 @@ def export_aggregated_events(self):
                 fileName = f"{pl.Path(exportDir) / util.safeFileName(obsId)}.{outputFormat}"
                 with open(fileName, "wb") as f:
                     f.write(str.encode(out))
-                out = (
-                    "% SDIS file created by BORIS (www.boris.unito.it) "
-                    f"at {util.datetime_iso8601(datetime.datetime.now())}\nTimed <seconds>;\n"
-                )
+                out = ("% SDIS file created by BORIS (www.boris.unito.it) "
+                       f"at {util.datetime_iso8601(datetime.datetime.now())}\nTimed <seconds>;\n")
 
         if flag_group:
             with open(fileName, "wb") as f:
@@ -535,9 +510,8 @@ def export_state_events_as_textgrid(self):
     out = ""
     not_paired_obs_list = []
     for obsId in selectedObservations:
-        r, msg = project_functions.check_state_events_obs(
-            obsId, self.pj[cfg.ETHOGRAM], self.pj[cfg.OBSERVATIONS][obsId], self.timeFormat
-        )
+        r, msg = project_functions.check_state_events_obs(obsId, self.pj[cfg.ETHOGRAM],
+                                                          self.pj[cfg.OBSERVATIONS][obsId], self.timeFormat)
 
         if not r:
             # check if unpaired behavior is included in behaviors to extract
@@ -563,9 +537,10 @@ def export_state_events_as_textgrid(self):
     if not selectedObservations:
         return
 
-    exportDir = QFileDialog(self).getExistingDirectory(
-        self, "Export events as Praat TextGrid", os.path.expanduser("~"), options=QFileDialog(self).ShowDirsOnly
-    )
+    exportDir = QFileDialog(self).getExistingDirectory(self,
+                                                       "Export events as Praat TextGrid",
+                                                       os.path.expanduser("~"),
+                                                       options=QFileDialog(self).ShowDirsOnly)
     if not exportDir:
         return
 
@@ -573,21 +548,17 @@ def export_state_events_as_textgrid(self):
         mem_command = ""
         for obsId in selectedObservations:
 
-            subjectheader = (
-                "    item [{subjectIdx}]:\n"
-                '        class = "IntervalTier"\n'
-                '        name = "{subject}"\n'
-                "        xmin = {intervalsMin}\n"
-                "        xmax = {intervalsMax}\n"
-                "        intervals: size = {intervalsSize}\n"
-            )
+            subjectheader = ("    item [{subjectIdx}]:\n"
+                             '        class = "IntervalTier"\n'
+                             '        name = "{subject}"\n'
+                             "        xmin = {intervalsMin}\n"
+                             "        xmax = {intervalsMax}\n"
+                             "        intervals: size = {intervalsSize}\n")
 
-            template = (
-                "        intervals [{count}]:\n"
-                "            xmin = {xmin}\n"
-                "            xmax = {xmax}\n"
-                '            text = "{name}"\n'
-            )
+            template = ("        intervals [{count}]:\n"
+                        "            xmin = {xmin}\n"
+                        "            xmax = {xmax}\n"
+                        '            text = "{name}"\n')
 
             flagUnpairedEventFound = False
 
@@ -602,12 +573,9 @@ def export_state_events_as_textgrid(self):
             )
 
             cursor.execute(
-                (
-                    "SELECT count(distinct subject) FROM events "
-                    "WHERE observation = ? AND subject IN ({}) AND type = 'STATE' ".format(
-                        ",".join(["?"] * len(plot_parameters[cfg.SELECTED_SUBJECTS]))
-                    )
-                ),
+                ("SELECT count(distinct subject) FROM events "
+                 "WHERE observation = ? AND subject IN ({}) AND type = 'STATE' ".format(",".join(
+                     ["?"] * len(plot_parameters[cfg.SELECTED_SUBJECTS])))),
                 [obsId] + plot_parameters[cfg.SELECTED_SUBJECTS],
             )
 
@@ -615,21 +583,19 @@ def export_state_events_as_textgrid(self):
 
             subjectsMin, subjectsMax = 0, totalMediaDuration
 
-            out = (
-                'File type = "ooTextFile"\n'
-                'Object class = "TextGrid"\n'
-                "\n"
-                f"xmin = {subjectsMin}\n"
-                f"xmax = {subjectsMax}\n"
-                "tiers? <exists>\n"
-                f"size = {subjectsNum}\n"
-                "item []:\n"
-            )
+            out = ('File type = "ooTextFile"\n'
+                   'Object class = "TextGrid"\n'
+                   "\n"
+                   f"xmin = {subjectsMin}\n"
+                   f"xmax = {subjectsMax}\n"
+                   "tiers? <exists>\n"
+                   f"size = {subjectsNum}\n"
+                   "item []:\n")
 
             subjectIdx = 0
             for subject in plot_parameters[cfg.SELECTED_SUBJECTS]:
                 if subject not in [
-                    x[cfg.EVENT_SUBJECT_FIELD_IDX] for x in self.pj[cfg.OBSERVATIONS][obsId][cfg.EVENTS]
+                        x[cfg.EVENT_SUBJECT_FIELD_IDX] for x in self.pj[cfg.OBSERVATIONS][obsId][cfg.EVENTS]
                 ]:
                     continue
 
@@ -646,10 +612,8 @@ def export_state_events_as_textgrid(self):
                 out += subjectheader
 
                 cursor.execute(
-                    (
-                        "SELECT occurence, code FROM events "
-                        "WHERE observation = ? AND subject = ? AND type = 'STATE' order by occurence"
-                    ),
+                    ("SELECT occurence, code FROM events "
+                     "WHERE observation = ? AND subject = ? AND type = 'STATE' order by occurence"),
                     (obsId, subject),
                 )
 
@@ -680,9 +644,10 @@ def export_state_events_as_textgrid(self):
                             return
 
                         count += 1
-                        out += template.format(
-                            count=count, name=row["code"], xmin=row["occurence"], xmax=rows[idx + 1]["occurence"]
-                        )
+                        out += template.format(count=count,
+                                               name=row["code"],
+                                               xmin=row["occurence"],
+                                               xmax=rows[idx + 1]["occurence"])
 
                         # check if difference is > 0.001
                         if len(rows) > idx + 2:
@@ -701,9 +666,10 @@ def export_state_events_as_textgrid(self):
                 # check if last event ends at the end of media file
                 if rows[-1]["occurence"] < project_functions.observation_total_length(self.pj[cfg.OBSERVATIONS][obsId]):
                     count += 1
-                    out += template.format(
-                        count=count, name="null", xmin=rows[-1]["occurence"], xmax=totalMediaDuration
-                    )
+                    out += template.format(count=count,
+                                           name="null",
+                                           xmin=rows[-1]["occurence"],
+                                           xmax=totalMediaDuration)
 
                 # add info
                 out = out.format(
@@ -715,10 +681,8 @@ def export_state_events_as_textgrid(self):
                 )
 
             # check if file already exists
-            if (
-                mem_command != cfg.OVERWRITE_ALL
-                and pl.Path(f"{pl.Path(exportDir) / util.safeFileName(obsId)}.textGrid").is_file()
-            ):
+            if (mem_command != cfg.OVERWRITE_ALL and
+                    pl.Path(f"{pl.Path(exportDir) / util.safeFileName(obsId)}.textGrid").is_file()):
                 if mem_command == "Skip all":
                     continue
                 mem_command = dialog.MessageDialog(

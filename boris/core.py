@@ -68,9 +68,9 @@ from . import project_functions
 from . import select_modifiers
 from . import select_observations
 from . import subjects_pad
-from . import utilities as util
 from . import version
 from . import cmd_arguments
+from . import core_qrc
 from .core_ui import Ui_MainWindow
 
 from . import config as cfg

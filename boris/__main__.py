@@ -1,4 +1,3 @@
-#!python3
 """
 BORIS
 Behavioral Observation Research Interactive Software

@@ -21,7 +21,6 @@ This file is part of BORIS.
 """
 
 import datetime as dt
-import json
 import logging
 import pathlib
 import sys
@@ -38,10 +37,10 @@ from matplotlib import colors as mcolors
 from matplotlib.dates import (HOURLY, MICROSECONDLY, MINUTELY, MONTHLY, SECONDLY, WEEKLY, DateFormatter, RRuleLocator,
                               rrulewrapper)
 
-from boris import db_functions
-from boris import project_functions
-from boris import utilities
-from boris.config import *
+from . import db_functions
+from . import project_functions
+from . import utilities as util
+from . import config as cfg
 
 # plt_colors = dict(mcolors.BASE_COLORS, **mcolors.CSS4_COLORS)
 
@@ -100,7 +99,7 @@ def create_behaviors_bar_plot(pj: dict,
                               param: dict,
                               plot_directory: str,
                               output_format: str,
-                              plot_colors: list = BEHAVIORS_PLOT_COLORS):
+                              plot_colors: list = cfg.BEHAVIORS_PLOT_COLORS):
     """
     time budget bar plot
 
@@ -114,11 +113,11 @@ def create_behaviors_bar_plot(pj: dict,
         dict:
     """
 
-    selected_subjects = param[SELECTED_SUBJECTS]
-    selected_behaviors = param[SELECTED_BEHAVIORS]
+    selected_subjects = param[cfg.SELECTED_SUBJECTS]
+    selected_behaviors = param[cfg.SELECTED_BEHAVIORS]
     time_interval = param["time"]
-    start_time = param[START_TIME]
-    end_time = param[END_TIME]
+    start_time = param[cfg.START_TIME]
+    end_time = param[cfg.END_TIME]
 
     parameters = ["duration", "number of occurences"]
 
@@ -130,7 +129,7 @@ def create_behaviors_bar_plot(pj: dict,
     try:
 
         # extract all behaviors from ethogram for colors in plot
-        all_behaviors = utilities.all_behaviors(pj[ETHOGRAM])
+        all_behaviors = util.all_behaviors(pj[cfg.ETHOGRAM])
 
         for obs_id in selected_observations:
 
@@ -151,7 +150,7 @@ def create_behaviors_bar_plot(pj: dict,
             cursor.execute("SELECT distinct subject FROM aggregated_events WHERE observation = ?", (obs_id,))
             distinct_subjects = [rows["subject"] for rows in cursor.fetchall()]
 
-            behaviors = init_behav(pj[ETHOGRAM], distinct_subjects, distinct_behav, parameters)
+            behaviors = init_behav(pj[cfg.ETHOGRAM], distinct_subjects, distinct_behav, parameters)
 
             # plot creation
             if len(distinct_subjects) > 1:
@@ -174,25 +173,25 @@ def create_behaviors_bar_plot(pj: dict,
             cursor.execute("UPDATE aggregated_events SET modifiers = ''")
 
             # time
-            obs_length = project_functions.observation_total_length(pj[OBSERVATIONS][obs_id])
+            obs_length = project_functions.observation_total_length(pj[cfg.OBSERVATIONS][obs_id])
             if obs_length == -1:
                 obs_length = 0
 
-            if param["time"] == TIME_FULL_OBS:
+            if param["time"] == cfg.TIME_FULL_OBS:
                 min_time = float(0)
                 max_time = float(obs_length)
 
-            if param["time"] == TIME_EVENTS:
+            if param["time"] == cfg.TIME_EVENTS:
                 try:
-                    min_time = float(pj[OBSERVATIONS][obs_id][EVENTS][0][0])
+                    min_time = float(pj[cfg.OBSERVATIONS][obs_id][cfg.EVENTS][0][0])
                 except Exception:
                     min_time = float(0)
                 try:
-                    max_time = float(pj[OBSERVATIONS][obs_id][EVENTS][-1][0])
+                    max_time = float(pj[cfg.OBSERVATIONS][obs_id][cfg.EVENTS][-1][0])
                 except Exception:
                     max_time = float(obs_length)
 
-            if param["time"] == TIME_ARBITRARY_INTERVAL:
+            if param["time"] == cfg.TIME_ARBITRARY_INTERVAL:
                 min_time = float(start_time)
                 max_time = float(end_time)
 
@@ -237,7 +236,7 @@ def create_behaviors_bar_plot(pj: dict,
                             "number of occurences"] = 0 if row["count"] is None else row["count"]
 
                     # total duration
-                    if STATE in project_functions.event_type(behavior, pj[ETHOGRAM]):
+                    if cfg.STATE in project_functions.event_type(behavior, pj[cfg.ETHOGRAM]):
                         cursor.execute(("SELECT SUM(stop - start) AS duration FROM aggregated_events "
                                         "WHERE observation = ? AND subject = ? AND behavior = ?"), (
                                             obs_id,
@@ -251,21 +250,21 @@ def create_behaviors_bar_plot(pj: dict,
 
                 for behavior in sorted(distinct_behav):
 
-                    if param[EXCLUDE_BEHAVIORS] and behaviors[subject][behavior]["number of occurences"] == 0:
+                    if param[cfg.EXCLUDE_BEHAVIORS] and behaviors[subject][behavior]["number of occurences"] == 0:
                         continue
 
                     n_occurences.append(behaviors[subject][behavior]["number of occurences"])
                     x_labels.append(behavior)
                     try:
-                        colors.append(utilities.behavior_color(plot_colors, all_behaviors.index(behavior)))
+                        colors.append(util.behavior_color(plot_colors, all_behaviors.index(behavior)))
                     except Exception:
                         colors.append("darkgray")
 
-                    if STATE in project_functions.event_type(behavior, pj[ETHOGRAM]):
+                    if cfg.STATE in project_functions.event_type(behavior, pj[cfg.ETHOGRAM]):
                         durations.append(behaviors[subject][behavior]["duration"])
                         x_labels_duration.append(behavior)
                         try:
-                            colors_duration.append(utilities.behavior_color(plot_colors, all_behaviors.index(behavior)))
+                            colors_duration.append(util.behavior_color(plot_colors, all_behaviors.index(behavior)))
                         except Exception:
                             colors_duration.append("darkgray")
 
@@ -307,10 +306,9 @@ def create_behaviors_bar_plot(pj: dict,
 
             if plot_directory:
                 # output_file_name = f"{pathlib.Path(plot_directory) / utilities.safeFileName(obs_id)}.{output_format}"
-                fig.savefig(f"{pathlib.Path(plot_directory) / utilities.safeFileName(obs_id)}.duration.{output_format}")
+                fig.savefig(f"{pathlib.Path(plot_directory) / util.safeFileName(obs_id)}.duration.{output_format}")
                 fig2.savefig(
-                    f"{pathlib.Path(plot_directory) / utilities.safeFileName(obs_id)}.number_of_occurences.{output_format}"
-                )
+                    f"{pathlib.Path(plot_directory) / util.safeFileName(obs_id)}.number_of_occurences.{output_format}")
                 plt.close()
             else:
                 fig.show()
@@ -319,7 +317,7 @@ def create_behaviors_bar_plot(pj: dict,
         return {}
 
     except Exception:
-        error_type, error_file_name, error_lineno = utilities.error_info(sys.exc_info())
+        error_type, error_file_name, error_lineno = util.error_info(sys.exc_info())
         logging.critical(f"Error in time budget bar plot: {error_type} {error_file_name} {error_lineno}")
         return {"error": True, "exception": sys.exc_info()}
 
@@ -327,7 +325,7 @@ def create_behaviors_bar_plot(pj: dict,
 def create_events_plot(pj,
                        selected_observations,
                        parameters,
-                       plot_colors=BEHAVIORS_PLOT_COLORS,
+                       plot_colors=cfg.BEHAVIORS_PLOT_COLORS,
                        plot_directory="",
                        file_format="png"):
     """
@@ -335,12 +333,12 @@ def create_events_plot(pj,
     with matplotlib barh function (https://matplotlib.org/3.1.0/api/_as_gen/matplotlib.pyplot.barh.html)
     """
 
-    selected_subjects = parameters[SELECTED_SUBJECTS]
-    selected_behaviors = parameters[SELECTED_BEHAVIORS]
-    include_modifiers = parameters[INCLUDE_MODIFIERS]
-    interval = parameters[TIME_INTERVAL]
-    start_time = parameters[START_TIME]
-    end_time = parameters[END_TIME]
+    selected_subjects = parameters[cfg.SELECTED_SUBJECTS]
+    selected_behaviors = parameters[cfg.SELECTED_BEHAVIORS]
+    include_modifiers = parameters[cfg.INCLUDE_MODIFIERS]
+    interval = parameters[cfg.TIME_INTERVAL]
+    start_time = parameters[cfg.START_TIME]
+    end_time = parameters[cfg.END_TIME]
 
     ok, msg, db_connector = db_functions.load_aggregated_events_in_db(pj, selected_subjects, selected_observations,
                                                                       selected_behaviors)
@@ -364,7 +362,7 @@ def create_events_plot(pj,
     distinct_behav_modif = sorted(distinct_behav_modif)
     max_len = len(distinct_behav_modif)
 
-    all_behaviors = [pj[ETHOGRAM][x][BEHAVIOR_CODE] for x in utilities.sorted_keys(pj[ETHOGRAM])]
+    all_behaviors = [pj[cfg.ETHOGRAM][x][cfg.BEHAVIOR_CODE] for x in util.sorted_keys(pj[cfg.ETHOGRAM])]
 
     par1 = 1
     bar_height = 0.5
@@ -401,25 +399,25 @@ def create_events_plot(pj,
         max_len = len(distinct_behav_modif)
 
         # time
-        obs_length = project_functions.observation_total_length(pj[OBSERVATIONS][obs_id])
+        obs_length = project_functions.observation_total_length(pj[cfg.OBSERVATIONS][obs_id])
         if obs_length == -1:  # media length not available
-            interval = TIME_EVENTS
+            interval = cfg.TIME_EVENTS
 
-        if interval == TIME_FULL_OBS:
+        if interval == cfg.TIME_FULL_OBS:
             min_time = float(0)
             max_time = float(obs_length)
 
-        if interval == TIME_EVENTS:
+        if interval == cfg.TIME_EVENTS:
             try:
-                min_time = float(pj[OBSERVATIONS][obs_id][EVENTS][0][0])
+                min_time = float(pj[cfg.OBSERVATIONS][obs_id][cfg.EVENTS][0][0])
             except Exception:
                 min_time = float(0)
             try:
-                max_time = float(pj[OBSERVATIONS][obs_id][EVENTS][-1][0])
+                max_time = float(pj[cfg.OBSERVATIONS][obs_id][cfg.EVENTS][-1][0])
             except Exception:
                 max_time = float(obs_length)
 
-        if interval == TIME_ARBITRARY_INTERVAL:
+        if interval == cfg.TIME_ARBITRARY_INTERVAL:
             min_time = float(start_time)
             max_time = float(end_time)
 
@@ -489,14 +487,13 @@ def create_events_plot(pj,
                     bars[behavior_modifiers_str].append((row["start"], row["stop"]))
 
                     start_date = matplotlib.dates.date2num(init + dt.timedelta(seconds=row["start"]))
-                    end_date = matplotlib.dates.date2num(init +
-                                                         dt.timedelta(seconds=row["stop"] + POINT_EVENT_PLOT_DURATION *
-                                                                      (row["stop"] == row["start"])))
+                    end_date = matplotlib.dates.date2num(init + dt.timedelta(
+                        seconds=row["stop"] + cfg.POINT_EVENT_PLOT_DURATION * (row["stop"] == row["start"])))
                     try:
-                        bar_color = utilities.behavior_color(plot_colors, all_behaviors.index(behavior))
+                        bar_color = util.behavior_color(plot_colors, all_behaviors.index(behavior))
                     except Exception:
                         bar_color = "darkgray"
-                    bar_color = POINT_EVENT_PLOT_COLOR if row["stop"] == row["start"] else bar_color
+                    bar_color = cfg.POINT_EVENT_PLOT_COLOR if row["stop"] == row["start"] else bar_color
 
                     # sage colors removed from matplotlib colors list
                     if bar_color in ["sage", "darksage", "lightsage"]:
@@ -544,6 +541,6 @@ def create_events_plot(pj,
         plt.tight_layout()
 
         if len(selected_observations) > 1:
-            plt.savefig(f"{pathlib.Path(plot_directory) / utilities.safeFileName(obs_id)}.{file_format}")
+            plt.savefig(f"{pathlib.Path(plot_directory) / util.safeFileName(obs_id)}.{file_format}")
         else:
             plt.show()

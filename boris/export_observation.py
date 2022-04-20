@@ -25,13 +25,13 @@ import os
 import sys
 import datetime
 import pathlib
-from boris import dialog
+from . import dialog
 from decimal import Decimal
 
-from boris.config import *
-from boris import utilities
-from boris import project_functions
-from boris import db_functions
+from . import config as cfg
+from . import utilities as util
+from . import project_functions
+from . import db_functions
 
 
 def export_events_jwatcher(parameters: list, obsId: str, observation: list, ethogram: dict, file_name: str,
@@ -56,17 +56,17 @@ def export_events_jwatcher(parameters: list, obsId: str, observation: list, etho
 
             # select events for current subject
             events = []
-            for event in observation[EVENTS]:
-                if event[SUBJECT_EVENT_FIELD] == subject or (subject == "No focal subject" and
-                                                             event[SUBJECT_EVENT_FIELD] == ""):
+            for event in observation[cfg.EVENTS]:
+                if event[cfg.SUBJECT_EVENT_FIELD] == subject or (subject == "No focal subject" and
+                                                                 event[cfg.SUBJECT_EVENT_FIELD] == ""):
                     events.append(event)
 
             if not events:
                 continue
 
             total_length = 0  # in seconds
-            if observation[EVENTS]:
-                total_length = observation[EVENTS][-1][0] - observation[EVENTS][0][
+            if observation[cfg.EVENTS]:
+                total_length = observation[cfg.EVENTS][-1][0] - observation[cfg.EVENTS][0][
                     0]  # last event time - first event time
 
             file_name_subject = str(
@@ -103,16 +103,17 @@ def export_events_jwatcher(parameters: list, obsId: str, observation: list, etho
             all_observed_behaviors = []
             mem_number_of_state_events = {}
             for event in events:
-                behav_code = event[EVENT_BEHAVIOR_FIELD_IDX]
+                behav_code = event[cfg.EVENT_BEHAVIOR_FIELD_IDX]
 
                 try:
                     behavior_key = [
-                        ethogram[k][BEHAVIOR_KEY] for k in ethogram if ethogram[k][BEHAVIOR_CODE] == behav_code
+                        ethogram[k][cfg.BEHAVIOR_KEY] for k in ethogram if ethogram[k][cfg.BEHAVIOR_CODE] == behav_code
                     ][0]
                 except Exception:
                     # coded behavior not defined in ethogram
                     continue
-                if [ethogram[k][TYPE] for k in ethogram if ethogram[k][BEHAVIOR_CODE] == behav_code] == [STATE_EVENT]:
+                if [ethogram[k][cfg.TYPE] for k in ethogram if ethogram[k][cfg.BEHAVIOR_CODE] == behav_code
+                   ] == [cfg.STATE_EVENT]:
                     if behav_code in mem_number_of_state_events:
                         mem_number_of_state_events[behav_code] += 1
                     else:
@@ -121,9 +122,9 @@ def export_events_jwatcher(parameters: list, obsId: str, observation: list, etho
                     if mem_number_of_state_events[behav_code] % 2 == 0:
                         continue
 
-                rows.append(f"{int(event[EVENT_TIME_FIELD_IDX] * 1000)}, {behavior_key}")
-                if (event[EVENT_BEHAVIOR_FIELD_IDX], behavior_key) not in all_observed_behaviors:
-                    all_observed_behaviors.append((event[EVENT_BEHAVIOR_FIELD_IDX], behavior_key))
+                rows.append(f"{int(event[cfg.EVENT_TIME_FIELD_IDX] * 1000)}, {behavior_key}")
+                if (event[cfg.EVENT_BEHAVIOR_FIELD_IDX], behavior_key) not in all_observed_behaviors:
+                    all_observed_behaviors.append((event[cfg.EVENT_BEHAVIOR_FIELD_IDX], behavior_key))
 
             rows.append(f"{int(events[-1][0] * 1000)}, EOF\n")
 
@@ -137,11 +138,12 @@ def export_events_jwatcher(parameters: list, obsId: str, observation: list, etho
             fmf_file_path = pathlib.Path(file_name_subject).with_suffix(".fmf")
             fmf_creation_answer = ""
             if fmf_file_path.exists():
-                fmf_creation_answer = dialog.MessageDialog(programName, (f"The {fmf_file_path} file already exists.<br>"
-                                                                         "What do you want to do?"),
-                                                           [OVERWRITE, "Skip file creation", CANCEL])
+                fmf_creation_answer = dialog.MessageDialog(cfg.programName,
+                                                           (f"The {fmf_file_path} file already exists.<br>"
+                                                            "What do you want to do?"),
+                                                           [cfg.OVERWRITE, "Skip file creation", cfg.CANCEL])
 
-                if fmf_creation_answer == CANCEL:
+                if fmf_creation_answer == cfg.CANCEL:
                     return True, ""
 
             rows = []
@@ -152,8 +154,9 @@ def export_events_jwatcher(parameters: list, obsId: str, observation: list, etho
             rows.append("#-----------------------------------------------------------")
             for (behav, key) in all_observed_behaviors:
                 rows.append(f"Behaviour.name.{key}={behav}")
-                behav_description = [ethogram[k][DESCRIPTION] for k in ethogram if ethogram[k][BEHAVIOR_CODE] == behav
-                                    ][0]
+                behav_description = [
+                    ethogram[k][cfg.DESCRIPTION] for k in ethogram if ethogram[k][cfg.BEHAVIOR_CODE] == behav
+                ][0]
                 rows.append(f"Behaviour.description.{key}={behav_description}")
 
             rows.append(f"DurationMilliseconds={int(float(total_length) * 1000)}")
@@ -167,7 +170,7 @@ def export_events_jwatcher(parameters: list, obsId: str, observation: list, etho
             rows.append("Notes=")
             rows.append("Supplementary=\n")
 
-            if fmf_creation_answer == OVERWRITE or fmf_creation_answer == "":
+            if fmf_creation_answer == cfg.OVERWRITE or fmf_creation_answer == "":
                 try:
                     with open(fmf_file_path, "w") as f_out:
                         f_out.write("\n".join(rows))
@@ -178,10 +181,11 @@ def export_events_jwatcher(parameters: list, obsId: str, observation: list, etho
             faf_file_path = pathlib.Path(file_name_subject).with_suffix(".faf")
             faf_creation_answer = ""
             if faf_file_path.exists():
-                faf_creation_answer = dialog.MessageDialog(programName, (f"The {faf_file_path} file already exists.<br>"
-                                                                         "What do you want to do?"),
-                                                           [OVERWRITE, "Skip file creation", CANCEL])
-                if faf_creation_answer == CANCEL:
+                faf_creation_answer = dialog.MessageDialog(cfg.programName,
+                                                           (f"The {faf_file_path} file already exists.<br>"
+                                                            "What do you want to do?"),
+                                                           [cfg.OVERWRITE, "Skip file creation", cfg.CANCEL])
+                if faf_creation_answer == cfg.CANCEL:
                     return True, ""
 
             rows = []
@@ -263,7 +267,7 @@ def export_events_jwatcher(parameters: list, obsId: str, observation: list, etho
                 rows.append(f"Behavior.switchesOff.{key}=")
                 rows.append("")
 
-            if faf_creation_answer == "" or faf_creation_answer == OVERWRITE:
+            if faf_creation_answer == "" or faf_creation_answer == cfg.OVERWRITE:
                 try:
                     with open(pathlib.Path(file_name_subject).with_suffix(".faf"), "w") as f_out:
                         f_out.write("\n".join(rows))
@@ -296,20 +300,20 @@ def export_events(parameters, obsId, observation, ethogram, file_name, output_fo
 
     total_length = f"{project_functions.observation_total_length(observation):.3f}"
 
-    eventsWithStatus = project_functions.events_start_stop(ethogram, observation[EVENTS])
+    eventsWithStatus = project_functions.events_start_stop(ethogram, observation[cfg.EVENTS])
 
     # check max number of modifiers
     max_modifiers = 0
     for event in eventsWithStatus:
-        for c in pj_events_fields:
-            if c == "modifier" and event[pj_obs_fields[c]]:
-                max_modifiers = max(max_modifiers, len(event[pj_obs_fields[c]].split("|")))
+        for c in cfg.pj_events_fields:
+            if c == "modifier" and event[cfg.pj_obs_fields[c]]:
+                max_modifiers = max(max_modifiers, len(event[cfg.pj_obs_fields[c]].split("|")))
 
     # media file number
     mediaNb = 0
-    if observation["type"] == MEDIA:
-        for player in observation[FILE]:
-            mediaNb += len(observation[FILE][player])
+    if observation["type"] == cfg.MEDIA:
+        for player in observation[cfg.FILE]:
+            mediaNb += len(observation[cfg.FILE][player])
 
     rows = []
 
@@ -318,17 +322,17 @@ def export_events(parameters, obsId, observation, ethogram, file_name, output_fo
     rows.append([""])
 
     # media file name
-    if observation["type"] in [MEDIA]:
+    if observation["type"] in [cfg.MEDIA]:
         rows.append(["Media file(s)"])
-    elif observation["type"] in [LIVE]:
+    elif observation["type"] in [cfg.LIVE]:
         rows.append(["Live observation"])
     else:
         rows.append(["?"])
     rows.append([""])
 
-    if observation[TYPE] in [MEDIA]:
-        for player in sorted(list(observation[FILE].keys())):
-            for media in observation[FILE][player]:
+    if observation[cfg.TYPE] in [cfg.MEDIA]:
+        for player in sorted(list(observation[cfg.FILE].keys())):
+            for media in observation[cfg.FILE][player]:
                 rows.append([f"Player #{player}", media])
     rows.append([""])
 
@@ -339,7 +343,7 @@ def export_events(parameters, obsId, observation, ethogram, file_name, output_fo
 
     # description
     if "description" in observation:
-        rows.append(["Description", utilities.eol2space(observation["description"])])
+        rows.append(["Description", util.eol2space(observation["description"])])
     rows.append([""])
 
     # time offset
@@ -348,11 +352,11 @@ def export_events(parameters, obsId, observation, ethogram, file_name, output_fo
     rows.append([""])
 
     # independent variables
-    if INDEPENDENT_VARIABLES in observation:
+    if cfg.INDEPENDENT_VARIABLES in observation:
         rows.extend([["independent variables"], ["variable", "value"]])
 
-        for variable in observation[INDEPENDENT_VARIABLES]:
-            rows.append([variable, observation[INDEPENDENT_VARIABLES][variable]])
+        for variable in observation[cfg.INDEPENDENT_VARIABLES]:
+            rows.append([variable, observation[cfg.INDEPENDENT_VARIABLES][variable]])
 
     rows.append([""])
 
@@ -372,59 +376,60 @@ def export_events(parameters, obsId, observation, ethogram, file_name, output_fo
     rows.append(header)
 
     duration1 = []  # in seconds
-    if observation["type"] in [MEDIA]:
+    if observation["type"] in [cfg.MEDIA]:
         try:
-            for mediaFile in observation[FILE][PLAYER1]:
-                duration1.append(observation[MEDIA_INFO]["length"][mediaFile])
+            for mediaFile in observation[cfg.FILE][cfg.PLAYER1]:
+                duration1.append(observation[cfg.MEDIA_INFO]["length"][mediaFile])
         except KeyError:
             pass
 
     for event in eventsWithStatus:
-        if (((event[SUBJECT_EVENT_FIELD] in parameters["selected subjects"]) or
-             (event[SUBJECT_EVENT_FIELD] == "" and NO_FOCAL_SUBJECT in parameters["selected subjects"])) and
-            (event[BEHAVIOR_EVENT_FIELD] in parameters["selected behaviors"])):
+        if (((event[cfg.SUBJECT_EVENT_FIELD] in parameters["selected subjects"]) or
+             (event[cfg.SUBJECT_EVENT_FIELD] == "" and cfg.NO_FOCAL_SUBJECT in parameters["selected subjects"])) and
+            (event[cfg.BEHAVIOR_EVENT_FIELD] in parameters["selected behaviors"])):
 
             fields = []
-            fields.append(utilities.intfloatstr(str(event[EVENT_TIME_FIELD_IDX])))
+            fields.append(util.intfloatstr(str(event[cfg.EVENT_TIME_FIELD_IDX])))
 
-            if observation["type"] in [MEDIA]:
+            if observation["type"] in [cfg.MEDIA]:
 
-                time_ = event[EVENT_TIME_FIELD_IDX] - observation[TIME_OFFSET]
+                time_ = event[cfg.EVENT_TIME_FIELD_IDX] - observation[cfg.TIME_OFFSET]
                 if time_ < 0:
                     time_ = 0
 
                 if duration1:
                     mediaFileIdx = [idx1 for idx1, x in enumerate(duration1) if time_ >= sum(duration1[0:idx1])][-1]
-                    fields.append(observation[FILE][PLAYER1][mediaFileIdx])
+                    fields.append(observation[cfg.FILE][cfg.PLAYER1][mediaFileIdx])
                     fields.append(total_length)
                     # FPS
                     try:
-                        fields.append(observation[MEDIA_INFO]["fps"][observation[FILE][PLAYER1][mediaFileIdx]])  # fps
+                        fields.append(
+                            observation[cfg.MEDIA_INFO]["fps"][observation[cfg.FILE][cfg.PLAYER1][mediaFileIdx]])  # fps
                     except KeyError:
                         fields.append("NA")
                 else:
                     fields.append("NA")  # media file
                     fields.append("NA")  # FPS
 
-            if observation["type"] in [LIVE]:
-                fields.append(LIVE)  # media
+            if observation["type"] in [cfg.LIVE]:
+                fields.append(cfg.LIVE)  # media
                 fields.append(total_length)  # total length
                 fields.append("NA")  # FPS
 
-            fields.append(event[EVENT_SUBJECT_FIELD_IDX])
-            fields.append(event[EVENT_BEHAVIOR_FIELD_IDX])
+            fields.append(event[cfg.EVENT_SUBJECT_FIELD_IDX])
+            fields.append(event[cfg.EVENT_BEHAVIOR_FIELD_IDX])
 
             # behavioral category
 
             try:
-                behav_category = behavioral_category[event[EVENT_BEHAVIOR_FIELD_IDX]]
+                behav_category = behavioral_category[event[cfg.EVENT_BEHAVIOR_FIELD_IDX]]
             except Exception:
                 behav_category = ""
             fields.append(behav_category)
 
             # modifiers
             if max_modifiers:
-                modifiers = event[EVENT_MODIFIER_FIELD_IDX].split("|")
+                modifiers = event[cfg.EVENT_MODIFIER_FIELD_IDX].split("|")
                 while len(modifiers) < max_modifiers:
                     modifiers.append("")
 
@@ -432,7 +437,7 @@ def export_events(parameters, obsId, observation, ethogram, file_name, output_fo
                     fields.append(m)
 
             # comment
-            fields.append(event[EVENT_COMMENT_FIELD_IDX].replace(os.linesep, " "))
+            fields.append(event[cfg.EVENT_COMMENT_FIELD_IDX].replace(os.linesep, " "))
             # status
             fields.append(event[-1])
 
@@ -441,7 +446,7 @@ def export_events(parameters, obsId, observation, ethogram, file_name, output_fo
     maxLen = max([len(r) for r in rows])
     data = tablib.Dataset()
 
-    data.title = utilities.safe_xl_worksheet_title(obsId, output_format)
+    data.title = util.safe_xl_worksheet_title(obsId, output_format)
     '''
     if output_format in ["xls", "xlsx"]:
         for forbidden_char in EXCEL_FORBIDDEN_CHARACTERS:
@@ -452,7 +457,7 @@ def export_events(parameters, obsId, observation, ethogram, file_name, output_fo
     '''
 
     for row in rows:
-        data.append(utilities.complete(row, maxLen))
+        data.append(util.complete(row, maxLen))
 
     r, msg = dataset_write(data, file_name, output_format)
 
@@ -489,7 +494,7 @@ def dataset_write(dataset, file_name, output_format):
                 f.write(dataset.ods)
             return True, ""
 
-        dataset.title = utilities.safe_xl_worksheet_title(dataset.title, output_format)
+        dataset.title = util.safe_xl_worksheet_title(dataset.title, output_format)
         '''
         if output_format in ["xls", "xlsx"]:
             # check worksheet title
@@ -535,32 +540,32 @@ def export_aggregated_events(pj: dict, parameters: dict, obsId: str):
     logging.debug(f"function: export aggregated events {parameters} {obsId}")
 
     interval = parameters["time"]
-    start_time = parameters[START_TIME]
-    end_time = parameters[END_TIME]
+    start_time = parameters[cfg.START_TIME]
+    end_time = parameters[cfg.END_TIME]
 
     data = tablib.Dataset()
-    observation = pj[OBSERVATIONS][obsId]
+    observation = pj[cfg.OBSERVATIONS][obsId]
 
     # obs description
     obs_description = observation["description"]
 
     duration1 = []  # in seconds
-    if observation[TYPE] in [MEDIA]:
+    if observation[cfg.TYPE] in [cfg.MEDIA]:
         try:
-            for mediaFile in observation[FILE][PLAYER1]:
-                if MEDIA_INFO in observation:
-                    duration1.append(observation[MEDIA_INFO]["length"][mediaFile])
+            for mediaFile in observation[cfg.FILE][cfg.PLAYER1]:
+                if cfg.MEDIA_INFO in observation:
+                    duration1.append(observation[cfg.MEDIA_INFO]["length"][mediaFile])
         except Exception:
             duration1 = []
 
-    obs_length = project_functions.observation_total_length(pj[OBSERVATIONS][obsId])
+    obs_length = project_functions.observation_total_length(pj[cfg.OBSERVATIONS][obsId])
     if obs_length == Decimal("-1"):  # media length not available
-        interval = TIME_EVENTS
+        interval = cfg.TIME_EVENTS
 
     logging.debug(f"obs_length: {obs_length}")
 
-    ok, msg, connector = db_functions.load_aggregated_events_in_db(pj, parameters[SELECTED_SUBJECTS], [obsId],
-                                                                   parameters[SELECTED_BEHAVIORS])
+    ok, msg, connector = db_functions.load_aggregated_events_in_db(pj, parameters[cfg.SELECTED_SUBJECTS], [obsId],
+                                                                   parameters[cfg.SELECTED_BEHAVIORS])
     if connector is None:
         logging.critical(f"error when loading aggregated events in DB")
         return data
@@ -568,21 +573,21 @@ def export_aggregated_events(pj: dict, parameters: dict, obsId: str):
     # time
     cursor = connector.cursor()
 
-    if interval == TIME_FULL_OBS:
+    if interval == cfg.TIME_FULL_OBS:
         min_time = float(0)
         max_time = float(obs_length)
 
-    if interval == TIME_EVENTS:
+    if interval == cfg.TIME_EVENTS:
         try:
-            min_time = float(pj[OBSERVATIONS][obsId][EVENTS][0][0])
+            min_time = float(pj[cfg.OBSERVATIONS][obsId][cfg.EVENTS][0][0])
         except Exception:
             min_time = float(0)
         try:
-            max_time = float(pj[OBSERVATIONS][obsId][EVENTS][-1][0])
+            max_time = float(pj[cfg.OBSERVATIONS][obsId][cfg.EVENTS][-1][0])
         except Exception:
             max_time = float(obs_length)
 
-    if interval == TIME_ARBITRARY_INTERVAL:
+    if interval == cfg.TIME_ARBITRARY_INTERVAL:
         min_time = float(start_time)
         max_time = float(end_time)
 
@@ -623,11 +628,11 @@ def export_aggregated_events(pj: dict, parameters: dict, obsId: str):
             max_time,
         ))
 
-    behavioral_category = project_functions.behavior_category(pj[ETHOGRAM])
+    behavioral_category = project_functions.behavior_category(pj[cfg.ETHOGRAM])
 
-    for subject in parameters[SELECTED_SUBJECTS]:
+    for subject in parameters[cfg.SELECTED_SUBJECTS]:
 
-        for behavior in parameters[SELECTED_BEHAVIORS]:
+        for behavior in parameters[cfg.SELECTED_BEHAVIORS]:
 
             cursor.execute(
                 "SELECT distinct modifiers FROM aggregated_events where subject=? AND behavior=? order by modifiers", (
@@ -646,44 +651,46 @@ def export_aggregated_events(pj: dict, parameters: dict, obsId: str):
 
                 for row in rows:
 
-                    if observation[TYPE] in [MEDIA]:
+                    if observation[cfg.TYPE] in [cfg.MEDIA]:
                         if duration1:
                             mediaFileIdx = [
-                                idx1 for idx1, x in enumerate(duration1) if row["start"] >= sum(duration1[0:idx1])
+                                idx1 for idx1, _ in enumerate(duration1) if row["start"] >= sum(duration1[0:idx1])
                             ][-1]
-                            mediaFileString = observation[FILE][PLAYER1][mediaFileIdx]
+                            mediaFileString = observation[cfg.FILE][cfg.PLAYER1][mediaFileIdx]
                             try:
-                                fpsString = observation[MEDIA_INFO]["fps"][observation[FILE][PLAYER1][mediaFileIdx]]
+                                fpsString = observation[cfg.MEDIA_INFO]["fps"][observation[cfg.FILE][cfg.PLAYER1]
+                                                                               [mediaFileIdx]]
                             except Exception:
-                                fpsString = "NA"
+                                fpsString = cfg.NA
                         else:
                             try:
-                                if len(observation[FILE][PLAYER1]) == 1:
-                                    mediaFileString = observation[FILE][PLAYER1][0]
+                                if len(observation[cfg.FILE][cfg.PLAYER1]) == 1:
+                                    mediaFileString = observation[cfg.FILE][cfg.PLAYER1][0]
                                 else:
-                                    mediaFileString = "NA"
+                                    mediaFileString = cfg.NA
                             except Exception:
-                                mediaFileString = "NA"
-                            fpsString = "NA"
+                                mediaFileString = cfg.NA
+                            fpsString = cfg.NA
 
-                    if observation[TYPE] in [LIVE]:
+                    if observation[cfg.TYPE] in [cfg.LIVE]:
                         mediaFileString = "LIVE"
-                        fpsString = "NA"
+                        fpsString = cfg.NA
 
-                    if row["type"] == POINT:
+                    if row["type"] == cfg.POINT:
 
                         row_data = []
                         row_data.extend([
                             obsId, observation["date"].replace("T", " "), obs_description, mediaFileString,
-                            f"{obs_length:.3f}" if obs_length != Decimal("-1") else "NA", fpsString
+                            f"{obs_length:.3f}" if obs_length != Decimal("-1") else cfg.NA, fpsString
                         ])
 
                         # independent variables
-                        if INDEPENDENT_VARIABLES in pj:
-                            for idx_var in utilities.sorted_keys(pj[INDEPENDENT_VARIABLES]):
-                                if pj[INDEPENDENT_VARIABLES][idx_var]["label"] in observation[INDEPENDENT_VARIABLES]:
-                                    row_data.append(
-                                        observation[INDEPENDENT_VARIABLES][pj[INDEPENDENT_VARIABLES][idx_var]["label"]])
+                        if cfg.INDEPENDENT_VARIABLES in pj:
+                            for idx_var in util.sorted_keys(pj[cfg.INDEPENDENT_VARIABLES]):
+                                if pj[cfg.INDEPENDENT_VARIABLES][idx_var]["label"] in observation[
+                                        cfg.INDEPENDENT_VARIABLES]:
+                                    row_data.append(observation[cfg.INDEPENDENT_VARIABLES][pj[cfg.INDEPENDENT_VARIABLES]
+                                                                                           [idx_var]["label"]])
                                 else:
                                     row_data.append("")
 
@@ -692,7 +699,7 @@ def export_aggregated_events(pj: dict, parameters: dict, obsId: str):
                             behavior,
                             behavioral_category[behavior],
                             row["modifiers"],
-                            POINT,
+                            cfg.POINT,
                             f"{row['start']:.3f}",  # start
                             f"{row['stop']:.3f}",  # stop
                             "NA",  # duration
@@ -701,30 +708,29 @@ def export_aggregated_events(pj: dict, parameters: dict, obsId: str):
                         ])
                         data.append(row_data)
 
-                    if row["type"] == STATE:
-                        if idx % 2 == 0:
-                            row_data = []
-                            row_data.extend([
-                                obsId, observation["date"].replace("T", " "), obs_description, mediaFileString,
-                                f"{obs_length:.3f}" if obs_length != Decimal("-1") else "NA", fpsString
-                            ])
+                    if row["type"] == cfg.STATE:
+                        row_data = []
+                        row_data.extend([
+                            obsId, observation["date"].replace("T", " "), obs_description, mediaFileString,
+                            f"{obs_length:.3f}" if obs_length != Decimal("-1") else "NA", fpsString
+                        ])
 
-                            # independent variables
-                            if INDEPENDENT_VARIABLES in pj:
-                                for idx_var in utilities.sorted_keys(pj[INDEPENDENT_VARIABLES]):
-                                    if pj[INDEPENDENT_VARIABLES][idx_var]["label"] in observation[
-                                            INDEPENDENT_VARIABLES]:
-                                        row_data.append(observation[INDEPENDENT_VARIABLES][pj[INDEPENDENT_VARIABLES]
+                        # independent variables
+                        if cfg.INDEPENDENT_VARIABLES in pj:
+                            for idx_var in util.sorted_keys(pj[cfg.INDEPENDENT_VARIABLES]):
+                                if pj[cfg.INDEPENDENT_VARIABLES][idx_var]["label"] in observation[
+                                        cfg.INDEPENDENT_VARIABLES]:
+                                    row_data.append(observation[cfg.INDEPENDENT_VARIABLES][pj[cfg.INDEPENDENT_VARIABLES]
                                                                                            [idx_var]["label"]])
-                                    else:
-                                        row_data.append("")
+                                else:
+                                    row_data.append("")
 
-                            row_data.extend([
-                                subject, behavior, behavioral_category[behavior], row["modifiers"], STATE,
-                                f"{row['start']:.3f}", f"{row['stop']:.3f}", f"{row['stop'] - row['start']:.3f}",
-                                row["comment"], row["comment_stop"]
-                            ])
-                            data.append(row_data)
+                        row_data.extend([
+                            subject, behavior, behavioral_category[behavior], row["modifiers"], cfg.STATE,
+                            f"{row['start']:.3f}", f"{row['stop']:.3f}", f"{row['stop'] - row['start']:.3f}",
+                            row["comment"], row["comment_stop"]
+                        ])
+                        data.append(row_data)
 
     return data
 
@@ -746,47 +752,47 @@ def events_to_behavioral_sequences(pj, obs_id: str, subj: str, parameters: dict,
 
     out = ""
     current_states = []
-    events_with_status = project_functions.events_start_stop(pj[ETHOGRAM], pj[OBSERVATIONS][obs_id][EVENTS])
+    events_with_status = project_functions.events_start_stop(pj[cfg.ETHOGRAM], pj[cfg.OBSERVATIONS][obs_id][cfg.EVENTS])
 
     for event in events_with_status:
         # check if event in selected behaviors
-        if event[EVENT_BEHAVIOR_FIELD_IDX] not in parameters[SELECTED_BEHAVIORS]:
+        if event[cfg.EVENT_BEHAVIOR_FIELD_IDX] not in parameters[cfg.SELECTED_BEHAVIORS]:
             continue
 
-        if event[EVENT_SUBJECT_FIELD_IDX] == subj or (subj == NO_FOCAL_SUBJECT and
-                                                      event[EVENT_SUBJECT_FIELD_IDX] == ""):
+        if event[cfg.EVENT_SUBJECT_FIELD_IDX] == subj or (subj == cfg.NO_FOCAL_SUBJECT and
+                                                          event[cfg.EVENT_SUBJECT_FIELD_IDX] == ""):
 
-            if event[-1] == POINT:
+            if event[-1] == cfg.POINT:
                 if current_states:
-                    out += "+".join(current_states) + "+" + event[EVENT_BEHAVIOR_FIELD_IDX]
+                    out += "+".join(current_states) + "+" + event[cfg.EVENT_BEHAVIOR_FIELD_IDX]
                 else:
-                    out += event[EVENT_BEHAVIOR_FIELD_IDX]
+                    out += event[cfg.EVENT_BEHAVIOR_FIELD_IDX]
 
-                if parameters[INCLUDE_MODIFIERS]:
-                    out += "&" + event[EVENT_MODIFIER_FIELD_IDX].replace("|", "+")
+                if parameters[cfg.INCLUDE_MODIFIERS]:
+                    out += "&" + event[cfg.EVENT_MODIFIER_FIELD_IDX].replace("|", "+")
 
                 out += behav_seq_separator
 
-            if event[-1] == START:
-                if parameters[INCLUDE_MODIFIERS]:
-                    current_states.append((f"{event[EVENT_BEHAVIOR_FIELD_IDX]}"
-                                           f"{'&' if event[EVENT_MODIFIER_FIELD_IDX] else ''}"
-                                           f"{event[EVENT_MODIFIER_FIELD_IDX].replace('|', ';')}"))
+            if event[-1] == cfg.START:
+                if parameters[cfg.INCLUDE_MODIFIERS]:
+                    current_states.append((f"{event[cfg.EVENT_BEHAVIOR_FIELD_IDX]}"
+                                           f"{'&' if event[cfg.EVENT_MODIFIER_FIELD_IDX] else ''}"
+                                           f"{event[cfg.EVENT_MODIFIER_FIELD_IDX].replace('|', ';')}"))
                 else:
-                    current_states.append(event[EVENT_BEHAVIOR_FIELD_IDX])
+                    current_states.append(event[cfg.EVENT_BEHAVIOR_FIELD_IDX])
 
                 out += "+".join(sorted(current_states))
 
                 out += behav_seq_separator
 
-            if event[-1] == STOP:
+            if event[-1] == cfg.STOP:
 
-                if parameters[INCLUDE_MODIFIERS]:
-                    behav_modif = (f"{event[EVENT_BEHAVIOR_FIELD_IDX]}"
-                                   f"{'&' if event[EVENT_MODIFIER_FIELD_IDX] else ''}"
-                                   f"{event[EVENT_MODIFIER_FIELD_IDX].replace('|', ';')}")
+                if parameters[cfg.INCLUDE_MODIFIERS]:
+                    behav_modif = (f"{event[cfg.EVENT_BEHAVIOR_FIELD_IDX]}"
+                                   f"{'&' if event[cfg.EVENT_MODIFIER_FIELD_IDX] else ''}"
+                                   f"{event[cfg.EVENT_MODIFIER_FIELD_IDX].replace('|', ';')}")
                 else:
-                    behav_modif = event[EVENT_BEHAVIOR_FIELD_IDX]
+                    behav_modif = event[cfg.EVENT_BEHAVIOR_FIELD_IDX]
                 if behav_modif in current_states:
                     current_states.remove(behav_modif)
 
@@ -820,49 +826,50 @@ def events_to_behavioral_sequences_all_subj(pj, obs_id: str, subjects_list: list
 
     out = ""
     current_states = {i: [] for i in subjects_list}
-    events_with_status = project_functions.events_start_stop(pj[ETHOGRAM], pj[OBSERVATIONS][obs_id][EVENTS])
+    events_with_status = project_functions.events_start_stop(pj[cfg.ETHOGRAM], pj[cfg.OBSERVATIONS][obs_id][cfg.EVENTS])
 
     for event in events_with_status:
         # check if event in selected behaviors
-        if event[EVENT_BEHAVIOR_FIELD_IDX] not in parameters[SELECTED_BEHAVIORS]:
+        if event[cfg.EVENT_BEHAVIOR_FIELD_IDX] not in parameters[cfg.SELECTED_BEHAVIORS]:
             continue
 
-        if (event[EVENT_SUBJECT_FIELD_IDX] in subjects_list) or (event[EVENT_SUBJECT_FIELD_IDX] == "" and
-                                                                 NO_FOCAL_SUBJECT in subjects_list):
+        if (event[cfg.EVENT_SUBJECT_FIELD_IDX] in subjects_list) or (event[cfg.EVENT_SUBJECT_FIELD_IDX] == "" and
+                                                                     cfg.NO_FOCAL_SUBJECT in subjects_list):
 
-            subject = event[EVENT_SUBJECT_FIELD_IDX] if event[EVENT_SUBJECT_FIELD_IDX] else NO_FOCAL_SUBJECT
+            subject = event[cfg.EVENT_SUBJECT_FIELD_IDX] if event[cfg.EVENT_SUBJECT_FIELD_IDX] else cfg.NO_FOCAL_SUBJECT
 
-            if event[-1] == POINT:
+            if event[-1] == cfg.POINT:
                 if current_states[subject]:
-                    out += f"[{subject}]" + "+".join(current_states[subject]) + "+" + event[EVENT_BEHAVIOR_FIELD_IDX]
+                    out += f"[{subject}]" + "+".join(
+                        current_states[subject]) + "+" + event[cfg.EVENT_BEHAVIOR_FIELD_IDX]
                 else:
-                    out += f"[{subject}]" + event[EVENT_BEHAVIOR_FIELD_IDX]
+                    out += f"[{subject}]" + event[cfg.EVENT_BEHAVIOR_FIELD_IDX]
 
-                if parameters[INCLUDE_MODIFIERS]:
-                    out += "&" + event[EVENT_MODIFIER_FIELD_IDX].replace("|", "+")
+                if parameters[cfg.INCLUDE_MODIFIERS]:
+                    out += "&" + event[cfg.EVENT_MODIFIER_FIELD_IDX].replace("|", "+")
 
                 out += behav_seq_separator
 
-            if event[-1] == START:
-                if parameters[INCLUDE_MODIFIERS]:
-                    current_states[subject].append((f"{event[EVENT_BEHAVIOR_FIELD_IDX]}"
-                                                    f"{'&' if event[EVENT_MODIFIER_FIELD_IDX] else ''}"
-                                                    f"{event[EVENT_MODIFIER_FIELD_IDX].replace('|', ';')}"))
+            if event[-1] == cfg.START:
+                if parameters[cfg.INCLUDE_MODIFIERS]:
+                    current_states[subject].append((f"{event[cfg.EVENT_BEHAVIOR_FIELD_IDX]}"
+                                                    f"{'&' if event[cfg.EVENT_MODIFIER_FIELD_IDX] else ''}"
+                                                    f"{event[cfg.EVENT_MODIFIER_FIELD_IDX].replace('|', ';')}"))
                 else:
-                    current_states[subject].append(event[EVENT_BEHAVIOR_FIELD_IDX])
+                    current_states[subject].append(event[cfg.EVENT_BEHAVIOR_FIELD_IDX])
 
                 out += f"[{subject}]" + "+".join(sorted(current_states[subject]))
 
                 out += behav_seq_separator
 
-            if event[-1] == STOP:
+            if event[-1] == cfg.STOP:
 
-                if parameters[INCLUDE_MODIFIERS]:
-                    behav_modif = (f"{event[EVENT_BEHAVIOR_FIELD_IDX]}"
-                                   f"{'&' if event[EVENT_MODIFIER_FIELD_IDX] else ''}"
-                                   f"{event[EVENT_MODIFIER_FIELD_IDX].replace('|', ';')}")
+                if parameters[cfg.INCLUDE_MODIFIERS]:
+                    behav_modif = (f"{event[cfg.EVENT_BEHAVIOR_FIELD_IDX]}"
+                                   f"{'&' if event[cfg.EVENT_MODIFIER_FIELD_IDX] else ''}"
+                                   f"{event[cfg.EVENT_MODIFIER_FIELD_IDX].replace('|', ';')}")
                 else:
-                    behav_modif = event[EVENT_BEHAVIOR_FIELD_IDX]
+                    behav_modif = event[cfg.EVENT_BEHAVIOR_FIELD_IDX]
                 if behav_modif in current_states[subject]:
                     current_states[subject].remove(behav_modif)
 
@@ -897,26 +904,26 @@ def events_to_timed_behavioral_sequences(pj: dict, obs_id: str, subject: str, pa
 
     out = ""
     current_states = []
-    # events_with_status = project_functions.events_start_stop(pj[ETHOGRAM], pj[OBSERVATIONS][obs_id][EVENTS])
+    # events_with_status = project_functions.events_start_stop(pj[ETHOGRAM], pj[cfg.OBSERVATIONS][obs_id][cfg.EVENTS])
 
-    state_behaviors_codes = utilities.state_behavior_codes(pj[ETHOGRAM])
+    state_behaviors_codes = util.state_behavior_codes(pj[cfg.ETHOGRAM])
     delta = Decimal(str(round(precision, 3)))
     out = ""
     t = Decimal("0.000")
 
     current = []
-    while t < pj[OBSERVATIONS][obs_id][EVENTS][-1][0]:
+    while t < pj[cfg.OBSERVATIONS][obs_id][cfg.EVENTS][-1][0]:
         '''
         if out:
             out += behav_seq_separator
         '''
-        csbs = utilities.get_current_states_modifiers_by_subject(state_behaviors_codes,
-                                                                 pj[OBSERVATIONS][obs_id][EVENTS],
-                                                                 {"": {
-                                                                     "name": subject
-                                                                 }},
-                                                                 t,
-                                                                 include_modifiers=False)[""]
+        csbs = util.get_current_states_modifiers_by_subject(state_behaviors_codes,
+                                                            pj[cfg.OBSERVATIONS][obs_id][cfg.EVENTS],
+                                                            {"": {
+                                                                "name": subject
+                                                            }},
+                                                            t,
+                                                            include_modifiers=False)[""]
         if csbs:
             if current:
                 if csbs == current[-1]:
@@ -941,40 +948,41 @@ def observation_to_behavioral_sequences(pj, selected_observations, parameters, b
                 # observation id
                 out_file.write("\n" + f"# observation id: {obs_id}" + "\n")
                 # observation description
-                descr = pj[OBSERVATIONS][obs_id]["description"]
+                descr = pj[cfg.OBSERVATIONS][obs_id]["description"]
                 if "\r\n" in descr:
                     descr = descr.replace("\r\n", "\n# ")
                 elif "\r" in descr:
                     descr = descr.replace("\r", "\n# ")
                 out_file.write(f"# observation description: {descr}\n\n")
                 # media file name
-                if pj[OBSERVATIONS][obs_id][TYPE] in [MEDIA]:
+                if pj[cfg.OBSERVATIONS][obs_id][cfg.TYPE] in [cfg.MEDIA]:
                     out_file.write(
-                        f"# Media file name: {', '.join([os.path.basename(x) for x in pj[OBSERVATIONS][obs_id][FILE][PLAYER1]])}\n\n"
+                        f"# Media file name: {', '.join([os.path.basename(x) for x in pj[cfg.OBSERVATIONS][obs_id][cfg.FILE][cfg.PLAYER1]])}\n\n"
                     )
-                if pj[OBSERVATIONS][obs_id][TYPE] in [LIVE]:
+                if pj[cfg.OBSERVATIONS][obs_id][cfg.TYPE] in [cfg.LIVE]:
                     out_file.write(f"# Live observation{os.linesep}{os.linesep}")
 
                 # independent variables
-                if INDEPENDENT_VARIABLES in pj[OBSERVATIONS][obs_id]:
+                if cfg.INDEPENDENT_VARIABLES in pj[cfg.OBSERVATIONS][obs_id]:
                     out_file.write("# Independent variables\n")
 
-                    for variable in pj[OBSERVATIONS][obs_id][INDEPENDENT_VARIABLES]:
-                        out_file.write(f"# {variable}: {pj[OBSERVATIONS][obs_id][INDEPENDENT_VARIABLES][variable]}\n")
+                    for variable in pj[cfg.OBSERVATIONS][obs_id][cfg.INDEPENDENT_VARIABLES]:
+                        out_file.write(
+                            f"# {variable}: {pj[cfg.OBSERVATIONS][obs_id][cfg.INDEPENDENT_VARIABLES][variable]}\n")
                 out_file.write("\n")
 
                 # one sequence for all subjects
                 if not separated_subjects:
-                    out = events_to_behavioral_sequences_all_subj(pj, obs_id, parameters[SELECTED_SUBJECTS], parameters,
-                                                                  behaviors_separator)
+                    out = events_to_behavioral_sequences_all_subj(pj, obs_id, parameters[cfg.SELECTED_SUBJECTS],
+                                                                  parameters, behaviors_separator)
                     if out:
                         out_file.write(out + "\n")
 
                 # one sequence by subject
                 if separated_subjects:
                     # selected subjects
-                    for subject in parameters[SELECTED_SUBJECTS]:
-                        out_file.write(f"\n# {subject if subject else NO_FOCAL_SUBJECT}:\n")
+                    for subject in parameters[cfg.SELECTED_SUBJECTS]:
+                        out_file.write(f"\n# {subject if subject else cfg.NO_FOCAL_SUBJECT}:\n")
 
                         if not timed:
                             out = events_to_behavioral_sequences(pj, obs_id, subject, parameters, behaviors_separator)
@@ -988,5 +996,5 @@ def observation_to_behavioral_sequences(pj, selected_observations, parameters, b
             return True, ""
 
     except Exception:
-        error_type, error_file_name, error_lineno = utilities.error_info(sys.exc_info())
+        error_type, error_file_name, error_lineno = util.error_info(sys.exc_info())
         return False, f"{error_type} {error_file_name} {error_lineno}"

@@ -53,7 +53,7 @@ from PyQt5.QtWidgets import (
 from . import duration_widget
 from . import param_panel
 from . import project_functions
-from . import utilities
+from . import utilities as util
 from . import version
 from . import config as cfg
 
@@ -101,16 +101,14 @@ def error_message_box2(error_traceback):
     QMessageBox.critical(
         None,
         cfg.programName,
-        (
-            f"BORIS version: {version.__version__}<br><br>"
-            f"<b>An error has occured</b>:<br>"
-            f"{error_traceback}<br><br>"
-            "to improve the software please report this problem at:<br>"
-            '<a href="https://github.com/olivierfriard/BORIS/issues">'
-            "https://github.com/olivierfriard/BORIS/issues</a><br>"
-            "or by email (See the About page on the BORIS web site.<br><br>"
-            "Thank you for your collaboration!"
-        ),
+        (f"BORIS version: {version.__version__}<br><br>"
+         f"<b>An error has occured</b>:<br>"
+         f"{error_traceback}<br><br>"
+         "to improve the software please report this problem at:<br>"
+         '<a href="https://github.com/olivierfriard/BORIS/issues">'
+         "https://github.com/olivierfriard/BORIS/issues</a><br>"
+         "or by email (See the About page on the BORIS web site.<br><br>"
+         "Thank you for your collaboration!"),
     )
 
 
@@ -154,16 +152,14 @@ def error_message3(exception_type, exception_value, traceback_object):
     # error_message_box2(exception_text.replace("\r\n", "\n").replace("\n", "<br>"))
 
     error_text = exception_text.replace("\r\n", "\n").replace("\n", "<br>")
-    text = (
-        f"BORIS version: {version.__version__}<br><br>"
-        f"<b>An error has occured</b>:<br>"
-        f"{error_text}<br><br>"
-        "to improve the software please report this problem at:<br>"
-        '<a href="https://github.com/olivierfriard/BORIS/issues">'
-        "https://github.com/olivierfriard/BORIS/issues</a><br>"
-        "or by email (See the About page on the BORIS web site.<br><br>"
-        "Thank you for your collaboration!"
-    )
+    text = (f"BORIS version: {version.__version__}<br><br>"
+            f"<b>An error has occured</b>:<br>"
+            f"{error_text}<br><br>"
+            "to improve the software please report this problem at:<br>"
+            '<a href="https://github.com/olivierfriard/BORIS/issues">'
+            "https://github.com/olivierfriard/BORIS/issues</a><br>"
+            "or by email (See the About page on the BORIS web site.<br><br>"
+            "Thank you for your collaboration!")
 
     errorbox = QMessageBox()
     errorbox.setWindowTitle("BORIS error occured")
@@ -182,6 +178,7 @@ def error_message3(exception_type, exception_value, traceback_object):
 
 
 class Info_widget(QWidget):
+
     def __init__(self, parent=None):
         super().__init__(parent)
 
@@ -322,8 +319,7 @@ class Input_dialog(QDialog):
                 self.elements[element[1]].addItems([x[0] for x in element[2]])  # take first element of tuple
                 try:
                     self.elements[element[1]].setCurrentIndex(
-                        [idx for idx, x in enumerate(element[2]) if x[1] == "selected"][0]
-                    )
+                        [idx for idx, x in enumerate(element[2]) if x[1] == "selected"][0])
                 except:
                     self.elements[element[1]].setCurrentIndex(0)
                 hbox.addWidget(self.elements[element[1]])
@@ -1027,22 +1023,10 @@ def choose_obs_subj_behav_category(
     if timeFormat == cfg.HHMMSS:
         paramPanelWindow.start_time.set_format_hhmmss()
         paramPanelWindow.end_time.set_format_hhmmss()
-        """
-        paramPanelWindow.teStartTime.setTime(QTime.fromString("00:00:00.000", "hh:mm:ss.zzz"))
-        paramPanelWindow.teEndTime.setTime(QTime.fromString(utilities.seconds2time(maxTime), "hh:mm:ss.zzz"))
-        paramPanelWindow.dsbStartTime.setVisible(False)
-        paramPanelWindow.dsbEndTime.setVisible(False)
-        """
 
     if timeFormat == cfg.S:
         paramPanelWindow.start_time.set_format_s()
         paramPanelWindow.end_time.set_format_s()
-        """
-        paramPanelWindow.dsbStartTime.setValue(0.0)
-        paramPanelWindow.dsbEndTime.setValue(maxTime)
-        paramPanelWindow.teStartTime.setVisible(False)
-        paramPanelWindow.teEndTime.setVisible(False)
-        """
     paramPanelWindow.start_time.set_time(0)
     paramPanelWindow.end_time.set_time(maxTime)
 
@@ -1067,7 +1051,7 @@ def choose_obs_subj_behav_category(
         paramPanelWindow.ch.setChecked(True)
         paramPanelWindow.lwSubjects.setItemWidget(paramPanelWindow.item, paramPanelWindow.ch)
 
-    all_subjects = [pj[cfg.SUBJECTS][x][cfg.SUBJECT_NAME] for x in utilities.sorted_keys(pj[cfg.SUBJECTS])]
+    all_subjects = [pj[cfg.SUBJECTS][x][cfg.SUBJECT_NAME] for x in util.sorted_keys(pj[cfg.SUBJECTS])]
 
     for subject in all_subjects:
         paramPanelWindow.item = QListWidgetItem(paramPanelWindow.lwSubjects)
@@ -1082,9 +1066,8 @@ def choose_obs_subj_behav_category(
     logging.debug(f"selectedSubjects: {selectedSubjects}")
 
     if selected_observations:
-        observedBehaviors = paramPanelWindow.extract_observed_behaviors(
-            selected_observations, selectedSubjects
-        )  # not sorted
+        observedBehaviors = paramPanelWindow.extract_observed_behaviors(selected_observations,
+                                                                        selectedSubjects)  # not sorted
     else:
         # load all behaviors
         observedBehaviors = [pj[cfg.ETHOGRAM][x][cfg.BEHAVIOR_CODE] for x in pj[cfg.ETHOGRAM]]
@@ -1096,9 +1079,9 @@ def choose_obs_subj_behav_category(
         # check if behavior not included in a category
         try:
             if "" in [
-                pj[cfg.ETHOGRAM][idx][cfg.BEHAVIOR_CATEGORY]
-                for idx in pj[cfg.ETHOGRAM]
-                if cfg.BEHAVIOR_CATEGORY in pj[cfg.ETHOGRAM][idx]
+                    pj[cfg.ETHOGRAM][idx][cfg.BEHAVIOR_CATEGORY]
+                    for idx in pj[cfg.ETHOGRAM]
+                    if cfg.BEHAVIOR_CATEGORY in pj[cfg.ETHOGRAM][idx]
             ]:
                 categories += [""]
         except Exception:
@@ -1125,17 +1108,14 @@ def choose_obs_subj_behav_category(
 
             paramPanelWindow.lwBehaviors.addItem(paramPanelWindow.item)
 
-        for behavior in [pj[cfg.ETHOGRAM][x][cfg.BEHAVIOR_CODE] for x in utilities.sorted_keys(pj[cfg.ETHOGRAM])]:
+        for behavior in [pj[cfg.ETHOGRAM][x][cfg.BEHAVIOR_CODE] for x in util.sorted_keys(pj[cfg.ETHOGRAM])]:
 
-            if (categories == ["###no category###"]) or (
-                behavior
-                in [
+            if (categories == ["###no category###"]) or (behavior in [
                     pj[cfg.ETHOGRAM][x][cfg.BEHAVIOR_CODE]
                     for x in pj[cfg.ETHOGRAM]
-                    if cfg.BEHAVIOR_CATEGORY in pj[cfg.ETHOGRAM][x]
-                    and pj[cfg.ETHOGRAM][x][cfg.BEHAVIOR_CATEGORY] == category
-                ]
-            ):
+                    if cfg.BEHAVIOR_CATEGORY in pj[cfg.ETHOGRAM][x] and
+                    pj[cfg.ETHOGRAM][x][cfg.BEHAVIOR_CATEGORY] == category
+            ]):
 
                 paramPanelWindow.item = QListWidgetItem(behavior)
                 if behavior in observedBehaviors:
@@ -1163,14 +1143,6 @@ def choose_obs_subj_behav_category(
 
     startTime = paramPanelWindow.start_time.get_time()
     endTime = paramPanelWindow.end_time.get_time()
-    """
-    if timeFormat == HHMMSS:
-        startTime = utilities.time2seconds(paramPanelWindow.teStartTime.time().toString(HHMMSSZZZ))
-        endTime = utilities.time2seconds(paramPanelWindow.teEndTime.time().toString(HHMMSSZZZ))
-    if timeFormat == S:
-        startTime = Decimal(paramPanelWindow.dsbStartTime.value())
-        endTime = Decimal(paramPanelWindow.dsbEndTime.value())
-    """
     if startTime > endTime:
         QMessageBox.warning(
             None,

@@ -1,9 +1,7 @@
-#!python3
-
 """
 BORIS
 Behavioral Observation Research Interactive Software
-Copyright 2012-2020 Olivier Friard
+Copyright 2012-2022 Olivier Friard
 
 This file is part of BORIS.
 

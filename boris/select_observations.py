@@ -25,33 +25,11 @@ Copyright 2012-2022 Olivier Friard
 from PyQt5.QtCore import Qt, QSettings
 from PyQt5.QtWidgets import QAbstractItemView
 
-from boris import observations_list
-from boris.config import (
-    INDEPENDENT_VARIABLES,
-    OBSERVATIONS,
-    DESCRIPTION,
-    TEXT,
-    NUMERIC,
-    TYPE,
-    MEDIA,
-    FILE,
-    LIVE,
-    OPEN,
-    VIEW,
-    EDIT,
-    ETHOGRAM,
-    EVENTS,
-    SINGLE,
-    MULTIPLE,
-    SELECT1,
-    NO_FOCAL_SUBJECT,
-    HHMMSS,
-    STATE,
-    BEHAVIOR_CODE,
-)
-from boris import gui_utilities
-from boris import utilities
-from boris import project_functions
+from . import observations_list
+from . import config as cfg
+from . import gui_utilities
+from . import utilities as util
+from . import project_functions
 
 
 def select_observations(pj: dict, mode: str, windows_title: str = "") -> tuple:
@@ -70,37 +48,41 @@ def select_observations(pj: dict, mode: str, windows_title: str = "") -> tuple:
     """
 
     obsListFields = ["id", "date", "description", "subjects", "observation duration", "exhaustivity %", "media"]
-    indepVarHeader, column_type = [], [TEXT, TEXT, TEXT, TEXT, NUMERIC, NUMERIC, TEXT]
+    indepVarHeader, column_type = [], [cfg.TEXT, cfg.TEXT, cfg.TEXT, cfg.TEXT, cfg.NUMERIC, cfg.NUMERIC, cfg.TEXT]
 
-    if INDEPENDENT_VARIABLES in pj:
-        for idx in utilities.sorted_keys(pj[INDEPENDENT_VARIABLES]):
-            indepVarHeader.append(pj[INDEPENDENT_VARIABLES][idx]["label"])
-            column_type.append(pj[INDEPENDENT_VARIABLES][idx]["type"])
+    if cfg.INDEPENDENT_VARIABLES in pj:
+        for idx in util.sorted_keys(pj[cfg.INDEPENDENT_VARIABLES]):
+            indepVarHeader.append(pj[cfg.INDEPENDENT_VARIABLES][idx]["label"])
+            column_type.append(pj[cfg.INDEPENDENT_VARIABLES][idx]["type"])
 
     data = []
     not_paired = []
-    state_events_list = [pj[ETHOGRAM][x][BEHAVIOR_CODE] for x in pj[ETHOGRAM] if STATE in pj[ETHOGRAM][x][TYPE].upper()]
-    for obs in sorted(list(pj[OBSERVATIONS].keys())):
-        date = pj[OBSERVATIONS][obs]["date"].replace("T", " ")
-        descr = utilities.eol2space(pj[OBSERVATIONS][obs][DESCRIPTION])
+    state_events_list = [
+        pj[cfg.ETHOGRAM][x][cfg.BEHAVIOR_CODE]
+        for x in pj[cfg.ETHOGRAM]
+        if cfg.STATE in pj[cfg.ETHOGRAM][x][cfg.TYPE].upper()
+    ]
+    for obs in sorted(list(pj[cfg.OBSERVATIONS].keys())):
+        date = pj[cfg.OBSERVATIONS][obs]["date"].replace("T", " ")
+        descr = util.eol2space(pj[cfg.OBSERVATIONS][obs][cfg.DESCRIPTION])
 
         # subjects
         observedSubjects = [
-            NO_FOCAL_SUBJECT if x == "" else x for x in project_functions.extract_observed_subjects(pj, [obs])
+            cfg.NO_FOCAL_SUBJECT if x == "" else x for x in project_functions.extract_observed_subjects(pj, [obs])
         ]
 
         subjectsList = ", ".join(observedSubjects)
 
         # observed time interval
-        interval = project_functions.observed_interval(pj[OBSERVATIONS][obs])
+        interval = project_functions.observed_interval(pj[cfg.OBSERVATIONS][obs])
         observed_interval_str = str(interval[1] - interval[0])
 
         # media
         mediaList = []
-        if pj[OBSERVATIONS][obs][TYPE] in [MEDIA]:
-            if pj[OBSERVATIONS][obs][FILE]:
-                for player in sorted(pj[OBSERVATIONS][obs][FILE].keys()):
-                    for media in pj[OBSERVATIONS][obs][FILE][player]:
+        if pj[cfg.OBSERVATIONS][obs][cfg.TYPE] in [cfg.MEDIA]:
+            if pj[cfg.OBSERVATIONS][obs][cfg.FILE]:
+                for player in sorted(pj[cfg.OBSERVATIONS][obs][cfg.FILE].keys()):
+                    for media in pj[cfg.OBSERVATIONS][obs][cfg.FILE][player]:
                         mediaList.append(f"#{player}: {media}")
 
             if len(mediaList) > 8:
@@ -108,33 +90,33 @@ def select_observations(pj: dict, mode: str, windows_title: str = "") -> tuple:
             else:
                 media = "\n".join(mediaList)
 
-        elif pj[OBSERVATIONS][obs][TYPE] in [LIVE]:
-            media = LIVE
+        elif pj[cfg.OBSERVATIONS][obs][cfg.TYPE] in [cfg.LIVE]:
+            media = cfg.LIVE
 
         # independent variables
         indepvar = []
-        if INDEPENDENT_VARIABLES in pj[OBSERVATIONS][obs]:
+        if cfg.INDEPENDENT_VARIABLES in pj[cfg.OBSERVATIONS][obs]:
             for var_label in indepVarHeader:
-                if var_label in pj[OBSERVATIONS][obs][INDEPENDENT_VARIABLES]:
-                    indepvar.append(pj[OBSERVATIONS][obs][INDEPENDENT_VARIABLES][var_label])
+                if var_label in pj[cfg.OBSERVATIONS][obs][cfg.INDEPENDENT_VARIABLES]:
+                    indepvar.append(pj[cfg.OBSERVATIONS][obs][cfg.INDEPENDENT_VARIABLES][var_label])
                 else:
                     indepvar.append("")
 
         # check unpaired events
-        ok, _ = project_functions.check_state_events_obs(obs, pj[ETHOGRAM], pj[OBSERVATIONS][obs], HHMMSS)
+        ok, _ = project_functions.check_state_events_obs(obs, pj[cfg.ETHOGRAM], pj[cfg.OBSERVATIONS][obs], cfg.HHMMSS)
         if not ok:
             not_paired.append(obs)
 
         # check exhaustivity of observation
-        exhaustivity = project_functions.check_observation_exhaustivity(
-            pj[OBSERVATIONS][obs][EVENTS], [], state_events_list
-        )
+        exhaustivity = project_functions.check_observation_exhaustivity(pj[cfg.OBSERVATIONS][obs][cfg.EVENTS], [],
+                                                                        state_events_list)
 
         data.append([obs, date, descr, subjectsList, observed_interval_str, str(exhaustivity), media] + indepvar)
 
-    obsList = observations_list.observationsList_widget(
-        data, header=obsListFields + indepVarHeader, column_type=column_type, not_paired=not_paired
-    )
+    obsList = observations_list.observationsList_widget(data,
+                                                        header=obsListFields + indepVarHeader,
+                                                        column_type=column_type,
+                                                        not_paired=not_paired)
     if windows_title:
         obsList.setWindowTitle(windows_title)
 
@@ -146,31 +128,31 @@ def select_observations(pj: dict, mode: str, windows_title: str = "") -> tuple:
     obsList.pbUnSelectAll.setVisible(False)
     obsList.mode = mode
 
-    if mode == OPEN:
+    if mode == cfg.OPEN:
         obsList.view.setSelectionMode(QAbstractItemView.SingleSelection)
         obsList.pbOpen.setVisible(True)
 
-    if mode == VIEW:
+    if mode == cfg.VIEW:
         obsList.view.setSelectionMode(QAbstractItemView.SingleSelection)
         obsList.pbView.setVisible(True)
 
-    if mode == EDIT:
+    if mode == cfg.EDIT:
         obsList.view.setSelectionMode(QAbstractItemView.SingleSelection)
         obsList.pbEdit.setVisible(True)
 
-    if mode == SINGLE:
+    if mode == cfg.SINGLE:
         obsList.view.setSelectionMode(QAbstractItemView.SingleSelection)
         obsList.pbOpen.setVisible(True)
         obsList.pbView.setVisible(True)
         obsList.pbEdit.setVisible(True)
 
-    if mode == MULTIPLE:
+    if mode == cfg.MULTIPLE:
         obsList.view.setSelectionMode(QAbstractItemView.MultiSelection)
         obsList.pbOk.setVisible(True)
         obsList.pbSelectAll.setVisible(True)
         obsList.pbUnSelectAll.setVisible(True)
 
-    if mode == SELECT1:
+    if mode == cfg.SELECT1:
         obsList.view.setSelectionMode(QAbstractItemView.SingleSelection)
         obsList.pbOk.setVisible(True)
 
@@ -199,10 +181,10 @@ def select_observations(pj: dict, mode: str, windows_title: str = "") -> tuple:
     if result == 1:  # select
         resultStr = "ok"
     if result == 2:  # open
-        resultStr = OPEN
+        resultStr = cfg.OPEN
     if result == 3:  # edit
-        resultStr = EDIT
+        resultStr = cfg.EDIT
     if result == 4:  # view
-        resultStr = VIEW
+        resultStr = cfg.VIEW
 
     return resultStr, selected_observations

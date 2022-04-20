@@ -19,19 +19,18 @@ Copyright 2012-2022 Olivier Friard
   MA 02110-1301, USA.
 """
 
-import boris.dialog as dialog
-import logging
+from . import dialog
 import math
 import statistics
-import sys
-import time
 from decimal import Decimal as dec
 
 import tablib
-from boris import portion as I
+from . import portion as I
 
-from boris import db_functions, project_functions, utilities
-from boris.config import *
+from . import db_functions
+from . import project_functions
+from . import utilities as util
+from . import config as cfg
 
 
 def default_value(ethogram, behav, param):
@@ -154,13 +153,13 @@ def synthetic_time_budget_bin(pj: dict, selected_observations: list, parameters_
                 return "NA"
 
     try:
-        selected_subjects = parameters_obs[SELECTED_SUBJECTS]
-        selected_behaviors = parameters_obs[SELECTED_BEHAVIORS]
-        include_modifiers = parameters_obs[INCLUDE_MODIFIERS]
+        selected_subjects = parameters_obs[cfg.SELECTED_SUBJECTS]
+        selected_behaviors = parameters_obs[cfg.SELECTED_BEHAVIORS]
+        include_modifiers = parameters_obs[cfg.INCLUDE_MODIFIERS]
         time_interval = parameters_obs["time"]
-        start_time = parameters_obs[START_TIME]
-        end_time = parameters_obs[END_TIME]
-        time_bin_size = dec(parameters_obs[TIME_BIN_SIZE])
+        start_time = parameters_obs[cfg.START_TIME]
+        end_time = parameters_obs[cfg.END_TIME]
+        time_bin_size = dec(parameters_obs[cfg.TIME_BIN_SIZE])
 
         parameters = [
             ["duration", "Total duration"],
@@ -175,13 +174,15 @@ def synthetic_time_budget_bin(pj: dict, selected_observations: list, parameters_
 
         distinct_behav_modif = []
         for obs_id in selected_observations:
-            for event in pj[OBSERVATIONS][obs_id][EVENTS]:
+            for event in pj[cfg.OBSERVATIONS][obs_id][cfg.EVENTS]:
                 if include_modifiers:
-                    if (event[EVENT_BEHAVIOR_FIELD_IDX], event[EVENT_MODIFIER_FIELD_IDX]) not in distinct_behav_modif:
-                        distinct_behav_modif.append((event[EVENT_BEHAVIOR_FIELD_IDX], event[EVENT_MODIFIER_FIELD_IDX]))
+                    if (event[cfg.EVENT_BEHAVIOR_FIELD_IDX],
+                            event[cfg.EVENT_MODIFIER_FIELD_IDX]) not in distinct_behav_modif:
+                        distinct_behav_modif.append(
+                            (event[cfg.EVENT_BEHAVIOR_FIELD_IDX], event[cfg.EVENT_MODIFIER_FIELD_IDX]))
                 else:
-                    if (event[EVENT_BEHAVIOR_FIELD_IDX], "") not in distinct_behav_modif:
-                        distinct_behav_modif.append((event[EVENT_BEHAVIOR_FIELD_IDX], ""))
+                    if (event[cfg.EVENT_BEHAVIOR_FIELD_IDX], "") not in distinct_behav_modif:
+                        distinct_behav_modif.append((event[cfg.EVENT_BEHAVIOR_FIELD_IDX], ""))
 
         distinct_behav_modif.sort()
         '''
@@ -196,7 +197,7 @@ def synthetic_time_budget_bin(pj: dict, selected_observations: list, parameters_
         print("distinct_behav_modif with not observed behav", distinct_behav_modif)
         '''
 
-        behaviors = init_behav_modif_bin(pj[ETHOGRAM], selected_subjects, distinct_behav_modif, include_modifiers,
+        behaviors = init_behav_modif_bin(pj[cfg.ETHOGRAM], selected_subjects, distinct_behav_modif, include_modifiers,
                                          parameters)
         '''
         print("init behaviors", behaviors)
@@ -229,30 +230,32 @@ def synthetic_time_budget_bin(pj: dict, selected_observations: list, parameters_
         data_report.append(param_header)
 
         state_events_list = [
-            pj[ETHOGRAM][x][BEHAVIOR_CODE] for x in pj[ETHOGRAM] if STATE in pj[ETHOGRAM][x][TYPE].upper()
+            pj[cfg.ETHOGRAM][x][cfg.BEHAVIOR_CODE]
+            for x in pj[cfg.ETHOGRAM]
+            if cfg.STATE in pj[cfg.ETHOGRAM][x][cfg.TYPE].upper()
         ]
         # select time interval
         for obs_id in selected_observations:
 
-            obs_length = project_functions.observation_total_length(pj[OBSERVATIONS][obs_id])
+            obs_length = project_functions.observation_total_length(pj[cfg.OBSERVATIONS][obs_id])
 
             if obs_length == -1:
                 obs_length = 0
-            if time_interval == TIME_FULL_OBS:
+            if time_interval == cfg.TIME_FULL_OBS:
                 min_time = dec(0)
                 max_time = dec(obs_length)
 
-            if time_interval == TIME_EVENTS:
+            if time_interval == cfg.TIME_EVENTS:
                 try:
-                    min_time = dec(pj[OBSERVATIONS][obs_id][EVENTS][0][0])
+                    min_time = dec(pj[cfg.OBSERVATIONS][obs_id][cfg.EVENTS][0][0])
                 except Exception:
                     min_time = dec(0)
                 try:
-                    max_time = dec(pj[OBSERVATIONS][obs_id][EVENTS][-1][0])
+                    max_time = dec(pj[cfg.OBSERVATIONS][obs_id][cfg.EVENTS][-1][0])
                 except Exception:
                     max_time = dec(obs_length)
 
-            if time_interval == TIME_ARBITRARY_INTERVAL:
+            if time_interval == cfg.TIME_ARBITRARY_INTERVAL:
                 min_time = dec(start_time)
                 max_time = dec(end_time)
 
@@ -260,11 +263,11 @@ def synthetic_time_budget_bin(pj: dict, selected_observations: list, parameters_
             events_interval = {}
             mem_events_interval = {}
 
-            for event in pj[OBSERVATIONS][obs_id][EVENTS]:
-                if event[EVENT_SUBJECT_FIELD_IDX] == "":
-                    current_subject = NO_FOCAL_SUBJECT
+            for event in pj[cfg.OBSERVATIONS][obs_id][cfg.EVENTS]:
+                if event[cfg.EVENT_SUBJECT_FIELD_IDX] == "":
+                    current_subject = cfg.NO_FOCAL_SUBJECT
                 else:
-                    current_subject = event[EVENT_SUBJECT_FIELD_IDX]
+                    current_subject = event[cfg.EVENT_SUBJECT_FIELD_IDX]
 
                 if current_subject not in selected_subjects:
                     continue
@@ -273,27 +276,27 @@ def synthetic_time_budget_bin(pj: dict, selected_observations: list, parameters_
                     mem_events_interval[current_subject] = {}
 
                 if include_modifiers:
-                    modif = event[EVENT_MODIFIER_FIELD_IDX]
+                    modif = event[cfg.EVENT_MODIFIER_FIELD_IDX]
                 else:
                     modif = ""
-                if (event[EVENT_BEHAVIOR_FIELD_IDX], modif) not in distinct_behav_modif:
+                if (event[cfg.EVENT_BEHAVIOR_FIELD_IDX], modif) not in distinct_behav_modif:
                     continue
 
-                if (event[EVENT_BEHAVIOR_FIELD_IDX], modif) not in events_interval[current_subject]:
-                    events_interval[current_subject][(event[EVENT_BEHAVIOR_FIELD_IDX], modif)] = I.empty()
-                    mem_events_interval[current_subject][(event[EVENT_BEHAVIOR_FIELD_IDX], modif)] = []
+                if (event[cfg.EVENT_BEHAVIOR_FIELD_IDX], modif) not in events_interval[current_subject]:
+                    events_interval[current_subject][(event[cfg.EVENT_BEHAVIOR_FIELD_IDX], modif)] = I.empty()
+                    mem_events_interval[current_subject][(event[cfg.EVENT_BEHAVIOR_FIELD_IDX], modif)] = []
 
-                if event[EVENT_BEHAVIOR_FIELD_IDX] in state_events_list:
-                    mem_events_interval[current_subject][(event[EVENT_BEHAVIOR_FIELD_IDX],
-                                                          modif)].append(event[EVENT_TIME_FIELD_IDX])
-                    if len(mem_events_interval[current_subject][(event[EVENT_BEHAVIOR_FIELD_IDX], modif)]) == 2:
-                        events_interval[current_subject][(event[EVENT_BEHAVIOR_FIELD_IDX], modif)] |= \
-                                I.closedopen(mem_events_interval[current_subject][(event[EVENT_BEHAVIOR_FIELD_IDX], modif)][0],
-                                            mem_events_interval[current_subject][(event[EVENT_BEHAVIOR_FIELD_IDX], modif)][1])
-                        mem_events_interval[current_subject][(event[EVENT_BEHAVIOR_FIELD_IDX], modif)] = []
+                if event[cfg.EVENT_BEHAVIOR_FIELD_IDX] in state_events_list:
+                    mem_events_interval[current_subject][(event[cfg.EVENT_BEHAVIOR_FIELD_IDX],
+                                                          modif)].append(event[cfg.EVENT_TIME_FIELD_IDX])
+                    if len(mem_events_interval[current_subject][(event[cfg.EVENT_BEHAVIOR_FIELD_IDX], modif)]) == 2:
+                        events_interval[current_subject][(event[cfg.EVENT_BEHAVIOR_FIELD_IDX], modif)] |= \
+                                I.closedopen(mem_events_interval[current_subject][(event[cfg.EVENT_BEHAVIOR_FIELD_IDX], modif)][0],
+                                            mem_events_interval[current_subject][(event[cfg.EVENT_BEHAVIOR_FIELD_IDX], modif)][1])
+                        mem_events_interval[current_subject][(event[cfg.EVENT_BEHAVIOR_FIELD_IDX], modif)] = []
                 else:
-                    events_interval[current_subject][(event[EVENT_BEHAVIOR_FIELD_IDX],
-                                                      modif)] |= I.singleton(event[EVENT_TIME_FIELD_IDX])
+                    events_interval[current_subject][(event[cfg.EVENT_BEHAVIOR_FIELD_IDX],
+                                                      modif)] |= I.singleton(event[cfg.EVENT_TIME_FIELD_IDX])
             '''
             print("\n\n events interval", events_interval)
             '''
@@ -315,9 +318,9 @@ def synthetic_time_budget_bin(pj: dict, selected_observations: list, parameters_
 
                     # check behavior to exclude from total time
                     time_to_subtract = 0
-                    if EXCLUDED_BEHAVIORS in parameters_obs:
+                    if cfg.EXCLUDED_BEHAVIORS in parameters_obs:
                         for behav in events_interval[subject]:
-                            if behav[0] in parameters_obs.get(EXCLUDED_BEHAVIORS, []):
+                            if behav[0] in parameters_obs.get(cfg.EXCLUDED_BEHAVIORS, []):
                                 interval_intersec = events_interval[subject][behav] & I.closed(
                                     time_bin_start, time_bin_end)
                                 time_to_subtract += interval_len(interval_intersec)
@@ -329,20 +332,7 @@ def synthetic_time_budget_bin(pj: dict, selected_observations: list, parameters_
                         dur = interval_len(interval_intersec)
                         nocc = interval_number(interval_intersec)
                         mean = interval_mean(interval_intersec)
-                        '''
-                        print(interval_intersec)
-                        print(subject, behav)
-
-                        print("duration", dur)
-                        print("n. occ", nocc)
-                        print("mean", mean)
-                        print("std dev", interval_std_dev(interval_intersec))
-
-                        print(time_bin_start)
-                        print(time_bin_end)
-                        print(time_to_subtract)
-                        '''
-                        if behav[0] in parameters_obs.get(EXCLUDED_BEHAVIORS, []):
+                        if behav[0] in parameters_obs.get(cfg.EXCLUDED_BEHAVIORS, []):
                             proportion = dur / ((time_bin_end - time_bin_start))
                         else:
                             proportion = dur / ((time_bin_end - time_bin_start) - time_to_subtract)
@@ -397,9 +387,9 @@ def synthetic_time_budget(pj: dict, selected_observations: list, parameters_obs:
         tablib.Dataset: dataset containing synthetic time budget data
     """
     try:
-        selected_subjects = parameters_obs[SELECTED_SUBJECTS]
-        selected_behaviors = parameters_obs[SELECTED_BEHAVIORS]
-        include_modifiers = parameters_obs[INCLUDE_MODIFIERS]
+        selected_subjects = parameters_obs[cfg.SELECTED_SUBJECTS]
+        selected_behaviors = parameters_obs[cfg.SELECTED_BEHAVIORS]
+        include_modifiers = parameters_obs[cfg.INCLUDE_MODIFIERS]
         interval = parameters_obs["time"]
         start_time = parameters_obs["start time"]
         end_time = parameters_obs["end time"]
@@ -437,7 +427,7 @@ def synthetic_time_budget(pj: dict, selected_observations: list, parameters_obs:
             if [x for x in distinct_behav_modif if x[0] == behav] == []:
                 distinct_behav_modif.append([behav, ""])
 
-        behaviors = init_behav_modif(pj[ETHOGRAM], selected_subjects, distinct_behav_modif, include_modifiers,
+        behaviors = init_behav_modif(pj[cfg.ETHOGRAM], selected_subjects, distinct_behav_modif, include_modifiers,
                                      parameters)
 
         param_header = ["Observations id", "Total length (s)"]
@@ -486,25 +476,25 @@ def synthetic_time_budget(pj: dict, selected_observations: list, parameters_obs:
                 cursor.execute("UPDATE aggregated_events SET modifiers = ''")
 
             # time
-            obs_length = project_functions.observation_total_length(pj[OBSERVATIONS][obs_id])
+            obs_length = project_functions.observation_total_length(pj[cfg.OBSERVATIONS][obs_id])
             if obs_length == -1:
                 obs_length = 0
 
-            if interval == TIME_FULL_OBS:
+            if interval == cfg.TIME_FULL_OBS:
                 min_time = float(0)
                 max_time = float(obs_length)
 
-            if interval == TIME_EVENTS:
+            if interval == cfg.TIME_EVENTS:
                 try:
-                    min_time = float(pj[OBSERVATIONS][obs_id][EVENTS][0][0])
+                    min_time = float(pj[cfg.OBSERVATIONS][obs_id][cfg.EVENTS][0][0])
                 except Exception:
                     min_time = float(0)
                 try:
-                    max_time = float(pj[OBSERVATIONS][obs_id][EVENTS][-1][0])
+                    max_time = float(pj[cfg.OBSERVATIONS][obs_id][cfg.EVENTS][-1][0])
                 except Exception:
                     max_time = float(obs_length)
 
-            if interval == TIME_ARBITRARY_INTERVAL:
+            if interval == cfg.TIME_ARBITRARY_INTERVAL:
                 min_time = float(start_time)
                 max_time = float(end_time)
 
@@ -549,8 +539,8 @@ def synthetic_time_budget(pj: dict, selected_observations: list, parameters_obs:
 
                 # check if behaviors are to exclude from total time
                 time_to_subtract = 0
-                if EXCLUDED_BEHAVIORS in parameters_obs:
-                    for excluded_behav in parameters_obs[EXCLUDED_BEHAVIORS]:
+                if cfg.EXCLUDED_BEHAVIORS in parameters_obs:
+                    for excluded_behav in parameters_obs[cfg.EXCLUDED_BEHAVIORS]:
                         cursor.execute(("SELECT SUM(stop-start) "
                                         "FROM aggregated_events "
                                         "WHERE observation = ? AND subject = ? AND behavior = ? "), (
@@ -585,7 +575,7 @@ def synthetic_time_budget(pj: dict, selected_observations: list, parameters_obs:
                         behaviors[subject][behavior_modifiers_str]["duration stdev"] = (0 if row[3] is None else
                                                                                         f"{row[3]:.3f}")
 
-                        if behavior not in parameters_obs[EXCLUDED_BEHAVIORS]:
+                        if behavior not in parameters_obs[cfg.EXCLUDED_BEHAVIORS]:
                             try:
                                 behaviors[subject][behavior_modifiers_str]["proportion of time"] = (
                                     0
@@ -639,21 +629,21 @@ def time_budget_analysis(ethogram: dict,
 
     try:
         categories, out = {}, []
-        for subject in parameters[SELECTED_SUBJECTS]:
+        for subject in parameters[cfg.SELECTED_SUBJECTS]:
             out_cat, categories[subject] = [], {}
 
-            for behavior in parameters[SELECTED_BEHAVIORS]:
+            for behavior in parameters[cfg.SELECTED_BEHAVIORS]:
 
-                if parameters[INCLUDE_MODIFIERS]:
+                if parameters[cfg.INCLUDE_MODIFIERS]:
 
                     cursor.execute("SELECT DISTINCT modifiers FROM events WHERE subject = ? AND code = ?",
                                    (subject, behavior))
                     distinct_modifiers = list(cursor.fetchall())
 
                     if not distinct_modifiers:
-                        if not parameters[EXCLUDE_BEHAVIORS]:
+                        if not parameters[cfg.EXCLUDE_BEHAVIORS]:
 
-                            if STATE in project_functions.event_type(behavior, ethogram):
+                            if cfg.STATE in project_functions.event_type(behavior, ethogram):
 
                                 out.append({
                                     "subject": subject,
@@ -680,7 +670,7 @@ def time_budget_analysis(ethogram: dict,
                                 })
                         continue
 
-                    if POINT in project_functions.event_type(behavior, ethogram):
+                    if cfg.POINT in project_functions.event_type(behavior, ethogram):
 
                         for modifier in distinct_modifiers:
                             cursor.execute(("SELECT occurence, observation FROM events "
@@ -705,22 +695,22 @@ def time_budget_analysis(ethogram: dict,
                                 "modifiers":
                                     modifier[0],
                                 "duration":
-                                    NA,
+                                    cfg.NA,
                                 "duration_mean":
-                                    NA,
+                                    cfg.NA,
                                 "duration_stdev":
-                                    NA,
+                                    cfg.NA,
                                 "number":
                                     len(rows),
                                 "inter_duration_mean":
                                     round(statistics.mean(all_event_interdurations), 3)
-                                    if len(all_event_interdurations) else NA,
+                                    if len(all_event_interdurations) else cfg.NA,
                                 "inter_duration_stdev":
                                     round(statistics.stdev(all_event_interdurations), 3)
-                                    if len(all_event_interdurations) > 1 else NA
+                                    if len(all_event_interdurations) > 1 else cfg.NA
                             })
 
-                    if STATE in project_functions.event_type(behavior, ethogram):
+                    if cfg.STATE in project_functions.event_type(behavior, ethogram):
 
                         for modifier in distinct_modifiers:
                             cursor.execute(("SELECT occurence, observation FROM events "
@@ -735,12 +725,12 @@ def time_budget_analysis(ethogram: dict,
                                     "subject": subject,
                                     "behavior": behavior,
                                     "modifiers": modifier[0],
-                                    "duration": UNPAIRED,
-                                    "duration_mean": UNPAIRED,
-                                    "duration_stdev": UNPAIRED,
-                                    "number": UNPAIRED,
-                                    "inter_duration_mean": UNPAIRED,
-                                    "inter_duration_stdev": UNPAIRED
+                                    "duration": cfg.UNPAIRED,
+                                    "duration_mean": cfg.UNPAIRED,
+                                    "duration_stdev": cfg.UNPAIRED,
+                                    "number": cfg.UNPAIRED,
+                                    "inter_duration_mean": cfg.UNPAIRED,
+                                    "inter_duration_stdev": cfg.UNPAIRED
                                 })
                             else:
                                 all_event_durations, all_event_interdurations = [], []
@@ -784,7 +774,7 @@ def time_budget_analysis(ethogram: dict,
 
                 else:  # no modifiers
 
-                    if POINT in project_functions.event_type(behavior, ethogram):
+                    if cfg.POINT in project_functions.event_type(behavior, ethogram):
 
                         cursor.execute(("SELECT occurence,observation FROM events "
                                         "WHERE subject = ? AND code = ? ORDER BY observation, occurence"),
@@ -802,17 +792,17 @@ def time_budget_analysis(ethogram: dict,
 
                         # include behaviors without events
                         if not len(rows):
-                            if not parameters[EXCLUDE_BEHAVIORS]:
+                            if not parameters[cfg.EXCLUDE_BEHAVIORS]:
                                 out.append({
                                     "subject": subject,
                                     "behavior": behavior,
                                     "modifiers": "",
-                                    "duration": NA,
-                                    "duration_mean": NA,
-                                    "duration_stdev": NA,
+                                    "duration": cfg.NA,
+                                    "duration_mean": cfg.NA,
+                                    "duration_stdev": cfg.NA,
                                     "number": "0",
-                                    "inter_duration_mean": NA,
-                                    "inter_duration_stdev": NA
+                                    "inter_duration_mean": cfg.NA,
+                                    "inter_duration_stdev": cfg.NA
                                 })
                             continue
 
@@ -830,22 +820,22 @@ def time_budget_analysis(ethogram: dict,
                             "modifiers":
                                 "",
                             "duration":
-                                NA,
+                                cfg.NA,
                             "duration_mean":
-                                NA,
+                                cfg.NA,
                             "duration_stdev":
-                                NA,
+                                cfg.NA,
                             "number":
                                 len(rows),
                             "inter_duration_mean":
                                 round(statistics.mean(all_event_interdurations), 3)
-                                if len(all_event_interdurations) else NA,
+                                if len(all_event_interdurations) else cfg.NA,
                             "inter_duration_stdev":
                                 round(statistics.stdev(all_event_interdurations), 3)
-                                if len(all_event_interdurations) > 1 else NA
+                                if len(all_event_interdurations) > 1 else cfg.NA
                         })
 
-                    if STATE in project_functions.event_type(behavior, ethogram):
+                    if cfg.STATE in project_functions.event_type(behavior, ethogram):
 
                         cursor.execute(("SELECT occurence, observation FROM events "
                                         "WHERE subject = ? AND code = ? ORDER BY observation, occurence"),
@@ -853,7 +843,7 @@ def time_budget_analysis(ethogram: dict,
 
                         rows = list(cursor.fetchall())
                         if not len(rows):
-                            if not parameters[EXCLUDE_BEHAVIORS]:  # include behaviors without events
+                            if not parameters[cfg.EXCLUDE_BEHAVIORS]:  # include behaviors without events
                                 out.append({
                                     "subject": subject,
                                     "behavior": behavior,
@@ -872,12 +862,12 @@ def time_budget_analysis(ethogram: dict,
                                 "subject": subject,
                                 "behavior": behavior,
                                 "modifiers": "",
-                                "duration": UNPAIRED,
-                                "duration_mean": UNPAIRED,
-                                "duration_stdev": UNPAIRED,
-                                "number": UNPAIRED,
-                                "inter_duration_mean": UNPAIRED,
-                                "inter_duration_stdev": UNPAIRED
+                                "duration": cfg.UNPAIRED,
+                                "duration_mean": cfg.UNPAIRED,
+                                "duration_stdev": cfg.UNPAIRED,
+                                "number": cfg.UNPAIRED,
+                                "inter_duration_mean": cfg.UNPAIRED,
+                                "inter_duration_stdev": cfg.UNPAIRED
                             })
                         else:
                             all_event_durations, all_event_interdurations = [], []
@@ -904,18 +894,19 @@ def time_budget_analysis(ethogram: dict,
                                 "duration":
                                     round(sum(all_event_durations), 3),
                                 "duration_mean":
-                                    round(statistics.mean(all_event_durations), 3) if len(all_event_durations) else NA,
+                                    round(statistics.mean(all_event_durations), 3)
+                                    if len(all_event_durations) else cfg.NA,
                                 "duration_stdev":
                                     round(statistics.stdev(all_event_durations), 3)
-                                    if len(all_event_durations) > 1 else NA,
+                                    if len(all_event_durations) > 1 else cfg.NA,
                                 "number":
                                     len(all_event_durations),
                                 "inter_duration_mean":
                                     round(statistics.mean(all_event_interdurations), 3)
-                                    if len(all_event_interdurations) else NA,
+                                    if len(all_event_interdurations) else cfg.NA,
                                 "inter_duration_stdev":
                                     round(statistics.stdev(all_event_interdurations), 3)
-                                    if len(all_event_interdurations) > 1 else NA
+                                    if len(all_event_interdurations) > 1 else cfg.NA
                             })
 
             out += out_cat
@@ -944,8 +935,8 @@ def time_budget_analysis(ethogram: dict,
                         categories[subject][category] = {"duration": behav["duration"], "number": behav["number"]}
 
         out_sorted = []
-        for subject in parameters[SELECTED_SUBJECTS]:
-            for behavior in parameters[SELECTED_BEHAVIORS]:
+        for subject in parameters[cfg.SELECTED_SUBJECTS]:
+            for behavior in parameters[cfg.SELECTED_BEHAVIORS]:
                 for row in out:
                     if row["subject"] == subject and row["behavior"] == behavior:
                         out_sorted.append(row)
