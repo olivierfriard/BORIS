@@ -59,7 +59,7 @@ from . import about
 from . import behaviors_coding_map
 from . import dialog
 from . import gui_utilities
-
+from . import events_cursor
 from . import map_creator
 from . import geometric_measurement
 from . import modifiers_coding_map
@@ -79,6 +79,7 @@ from . import select_observations
 from . import subjects_pad
 from . import utilities
 from . import version
+from . import cmd_arguments
 from boris.core_ui import *
 from boris.config import *
 import boris.config as cfg
@@ -96,24 +97,16 @@ from . import select_subj_behav
 __version__ = version.__version__
 __version_date__ = version.__version_date__
 
-if platform.python_version() < "3.6":
-    logging.critical(f"BORIS requires Python 3.6+! You are using Python v. {platform.python_version()}")
+# check minimal version of python
+if tuple(map(int, platform.python_version().split('.'))) < (3, 6):
+    logging.critical(f"BORIS requires Python 3.7+! You are using Python v. {platform.python_version()}")
     sys.exit()
 
 if sys.platform == "darwin":  # for MacOS
     os.environ["LC_ALL"] = "en_US.UTF-8"
 
-# check if argument
-usage = 'usage: %prog [options] [-p PROJECT_PATH] [-o "OBSERVATION ID"]'
-parser = OptionParser(usage=usage)
-
-parser.add_option("-d", "--debug", action="store_true", default=False, dest="debug", help="Use debugging mode")
-parser.add_option("-v", "--version", action="store_true", default=False, dest="version", help="Print version")
-parser.add_option("-n", "--nosplashscreen", action="store_true", default=False, help="No splash screen")
-parser.add_option("-p", "--project", action="store", default="", dest="project", help="Project file")
-parser.add_option("-o", "--observation", action="store", default="", dest="observation", help="Observation id")
-
-(options, args) = parser.parse_args()
+# parse command line arguments
+(options, args) = cmd_arguments.parse_arguments()
 
 # set logging parameters
 if options.debug:
@@ -139,42 +132,10 @@ logging.debug(f"Qt {QT_VERSION_STR} - PyQt{PYQT_VERSION_STR}")
 
 r, memory = utilities.mem_info()
 if not r:
-    logging.debug(
-        (
-            f"Memory (RAM)  Total: {memory.get('total_memory', 'Not available'):.2f} Mb  "
-            f"Free: {memory.get('free_memory', 'Not available'):.2f} Mb"
-        )
-    )
+    logging.debug((f"Memory (RAM)  Total: {memory.get('total_memory', 'Not available'):.2f} Mb  "
+                   f"Free: {memory.get('free_memory', 'Not available'):.2f} Mb"))
 
 video = 0
-
-ROW = -1  # red triangle
-
-
-class StyledItemDelegateTriangle(QStyledItemDelegate):
-    """
-    painter for twEvents with current time highlighting
-    """
-
-    def __init__(self, parent=None):
-        super(StyledItemDelegateTriangle, self).__init__(parent)
-
-    def paint(self, painter, option, index):
-
-        super(StyledItemDelegateTriangle, self).paint(painter, option, index)
-
-        if ROW != -1:
-            if index.row() == ROW:
-                polygonTriangle = QPolygon(3)
-                polygonTriangle.setPoint(0, QtCore.QPoint(option.rect.x() + 15, option.rect.y()))
-                polygonTriangle.setPoint(1, QtCore.QPoint(option.rect.x(), option.rect.y() - 5))
-                polygonTriangle.setPoint(2, QtCore.QPoint(option.rect.x(), option.rect.y() + 5))
-                painter.save()
-                painter.setRenderHint(painter.Antialiasing)
-                painter.setBrush(QBrush(QColor(QtCore.Qt.red)))
-                painter.setPen(QPen(QColor(QtCore.Qt.red)))
-                painter.drawPolygon(polygonTriangle)
-                painter.restore()
 
 
 class MainWindow(QMainWindow, Ui_MainWindow):
@@ -212,6 +173,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     timeFormat = HHMMSS  # 's' or 'hh:mm:ss'
     repositioningTimeOffset = 0
     automaticBackup = 0  # automatic backup interval (0 no backup)
+
+    events_current_row = -1
 
     projectChanged = False
     liveObservationStarted = False
@@ -374,7 +337,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.statusbar.addPermanentWidget(self.lbSpeed)
 
         # set painter for twEvents to highlight current row
-        self.twEvents.setItemDelegate(StyledItemDelegateTriangle(self.twEvents))
+        self.twEvents.setItemDelegate(events_cursor.StyledItemDelegateTriangle(self.events_current_row))
 
         self.twEvents.setColumnCount(len(tw_events_fields))
         self.twEvents.setHorizontalHeaderLabels(tw_events_fields)
@@ -384,8 +347,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         menu_options.update_menu(self)
         connections.connections(self)
         config_file.read(self)
-
-        # 1 / 0
 
     def excepthook(self, exception_type, exception_value, traceback_object):
         """
@@ -444,9 +405,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         ]
         file_formats = ["tsv", "csv", "ods", "xlsx", "xls", "html"]
 
-        file_name, filter_ = QFileDialog().getSaveFileName(
-            self, "Export list of selected observations", "", ";;".join(extended_file_formats)
-        )
+        file_name, filter_ = QFileDialog().getSaveFileName(self, "Export list of selected observations", "",
+                                                           ";;".join(extended_file_formats))
 
         if file_name:
             output_format = file_formats[extended_file_formats.index(filter_)]
@@ -454,12 +414,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 file_name = str(pathlib.Path(file_name)) + "." + output_format
                 # check if file name with extension already exists
                 if pathlib.Path(file_name).is_file():
-                    if (
-                        dialog.MessageDialog(
-                            cfg.programName, f"The file {file_name} already exists.", [cfg.CANCEL, cfg.OVERWRITE]
-                        )
-                        == cfg.CANCEL
-                    ):
+                    if (dialog.MessageDialog(cfg.programName, f"The file {file_name} already exists.",
+                                             [cfg.CANCEL, cfg.OVERWRITE]) == cfg.CANCEL):
                         return
 
             if not project_functions.export_observations_list(self.pj, selected_observations, file_name, output_format):
@@ -501,17 +457,12 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         remove path of media files
         """
 
-        if (
-            dialog.MessageDialog(
+        if (dialog.MessageDialog(
                 cfg.programName,
-                (
-                    "Removing the path of media files from the project file is irreversible.<br>"
-                    "Are you sure to continue?"
-                ),
-                [YES, NO],
-            )
-            == NO
-        ):
+            ("Removing the path of media files from the project file is irreversible.<br>"
+             "Are you sure to continue?"),
+            [YES, NO],
+        ) == NO):
             return
 
         self.pj = project_functions.remove_media_files_path(self.pj)
@@ -533,8 +484,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                         if behav[MODIFIERS][idx]["name"]:
                             modifiers += (
                                 f"<br>Name: {behav[MODIFIERS][idx]['name'] if behav[MODIFIERS][idx]['name'] else '-'}"
-                                f"<br>Type: {MODIFIERS_STR[behav[MODIFIERS][idx]['type']]}<br>"
-                            )
+                                f"<br>Type: {MODIFIERS_STR[behav[MODIFIERS][idx]['type']]}<br>")
 
                         if behav[MODIFIERS][idx]["values"]:
                             modifiers += "Values:<br>"
@@ -548,15 +498,13 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 results.setWindowTitle("View behavior")
                 results.ptText.clear()
                 results.ptText.setReadOnly(True)
-                txt = (
-                    f"Code: <b>{behav['code']}</b><br>"
-                    f"Type: {behav['type']}<br>"
-                    f"Key: <b>{behav['key']}</b><br><br>"
-                    f"Description: {behav['description']}<br><br>"
-                    f"Category: {behav['category'] if behav['category'] else '-'}<br><br>"
-                    f"Exclude: {behav['excluded']}<br><br><br>"
-                    f"Modifiers:<br>{modifiers}"
-                )
+                txt = (f"Code: <b>{behav['code']}</b><br>"
+                       f"Type: {behav['type']}<br>"
+                       f"Key: <b>{behav['key']}</b><br><br>"
+                       f"Description: {behav['description']}<br><br>"
+                       f"Category: {behav['category'] if behav['category'] else '-'}<br><br>"
+                       f"Exclude: {behav['excluded']}<br><br><br>"
+                       f"Modifiers:<br>{modifiers}")
                 results.ptText.appendHtml(txt)
                 results.exec_()
 
@@ -572,19 +520,16 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         def readStdOutput(idx):
 
-            self.processes_widget.label.setText(
-                ("This operation can be long. Be patient...\n\n" "Done: {done} of {tot}").format(
-                    done=self.processes_widget.number_of_files - len(self.processes),
-                    tot=self.processes_widget.number_of_files,
-                )
-            )
+            self.processes_widget.label.setText(("This operation can be long. Be patient...\n\n"
+                                                 "Done: {done} of {tot}").format(
+                                                     done=self.processes_widget.number_of_files - len(self.processes),
+                                                     tot=self.processes_widget.number_of_files,
+                                                 ))
             self.processes_widget.lwi.clear()
-            self.processes_widget.lwi.addItems(
-                [
-                    self.processes[idx - 1][1][2],
-                    self.processes[idx - 1][0].readAllStandardOutput().data().decode("utf-8"),
-                ]
-            )
+            self.processes_widget.lwi.addItems([
+                self.processes[idx - 1][1][2],
+                self.processes[idx - 1][0].readAllStandardOutput().data().decode("utf-8"),
+            ])
 
         def qprocess_finished(idx):
             """
@@ -634,14 +579,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     return
 
                 if len(fileNames) > 1:
-                    if (
-                        dialog.MessageDialog(
+                    if (dialog.MessageDialog(
                             programName,
                             "All the selected video files will be re-encoded / resized with these parameters",
-                            [OK, CANCEL],
-                        )
-                        == CANCEL
-                    ):
+                        [OK, CANCEL],
+                    ) == CANCEL):
                         return
 
                 horiz_resol = ib.elements["Horizontal resolution (in pixel)"].value()
@@ -650,9 +592,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             if action == "rotate":
                 rotation_items = ("Rotate 90 clockwise", "Rotate 90 counter clockwise", "rotate 180")
 
-                rotation, ok = QInputDialog.getItem(
-                    self, "Rotate media file(s)", "Type of rotation", rotation_items, 0, False
-                )
+                rotation, ok = QInputDialog.getItem(self, "Rotate media file(s)", "Type of rotation", rotation_items, 0,
+                                                    False)
 
                 if not ok:
                     return
@@ -669,9 +610,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     files_list.append(fn)
 
             if files_list:
-                response = dialog.MessageDialog(
-                    programName, "Some file(s) already exist.\n\n" + "\n".join(files_list), [OVERWRITE_ALL, CANCEL]
-                )
+                response = dialog.MessageDialog(programName, "Some file(s) already exist.\n\n" + "\n".join(files_list),
+                                                [OVERWRITE_ALL, CANCEL])
                 if response == CANCEL:
                     return
 
@@ -867,15 +807,15 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         paramPanelWindow.setWindowTitle(title)
         paramPanelWindow.lbBehaviors.setText(text)
         for w in [
-            paramPanelWindow.lwSubjects,
-            paramPanelWindow.pbSelectAllSubjects,
-            paramPanelWindow.pbUnselectAllSubjects,
-            paramPanelWindow.pbReverseSubjectsSelection,
-            paramPanelWindow.lbSubjects,
-            paramPanelWindow.cbIncludeModifiers,
-            paramPanelWindow.cbExcludeBehaviors,
-            paramPanelWindow.frm_time,
-            paramPanelWindow.frm_time_bin_size,
+                paramPanelWindow.lwSubjects,
+                paramPanelWindow.pbSelectAllSubjects,
+                paramPanelWindow.pbUnselectAllSubjects,
+                paramPanelWindow.pbReverseSubjectsSelection,
+                paramPanelWindow.lbSubjects,
+                paramPanelWindow.cbIncludeModifiers,
+                paramPanelWindow.cbExcludeBehaviors,
+                paramPanelWindow.frm_time,
+                paramPanelWindow.frm_time_bin_size,
         ]:
             w.setVisible(False)
 
@@ -891,9 +831,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             categories = self.pj[BEHAVIORAL_CATEGORIES][:]
             # check if behavior not included in a category
             if "" in [
-                self.pj[ETHOGRAM][idx][BEHAVIOR_CATEGORY]
-                for idx in self.pj[ETHOGRAM]
-                if BEHAVIOR_CATEGORY in self.pj[ETHOGRAM][idx]
+                    self.pj[ETHOGRAM][idx][BEHAVIOR_CATEGORY]
+                    for idx in self.pj[ETHOGRAM]
+                    if BEHAVIOR_CATEGORY in self.pj[ETHOGRAM][idx]
             ]:
                 categories += [""]
         else:
@@ -923,15 +863,12 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 if project_functions.event_type(behavior, self.pj[ETHOGRAM]) not in behavior_type:
                     continue
 
-                if (categories == ["###no category###"]) or (
-                    behavior
-                    in [
+                if (categories == ["###no category###"]) or (behavior in [
                         self.pj[ETHOGRAM][x][BEHAVIOR_CODE]
                         for x in self.pj[ETHOGRAM]
-                        if BEHAVIOR_CATEGORY in self.pj[ETHOGRAM][x]
-                        and self.pj[ETHOGRAM][x][BEHAVIOR_CATEGORY] == category
-                    ]
-                ):
+                        if BEHAVIOR_CATEGORY in self.pj[ETHOGRAM][x] and
+                        self.pj[ETHOGRAM][x][BEHAVIOR_CATEGORY] == category
+                ]):
 
                     paramPanelWindow.item = QListWidgetItem(behavior)
                     if behavior in filtered_behaviors:
@@ -978,15 +915,15 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         paramPanelWindow.lbBehaviors.setText("Subjects")
 
         for w in [
-            paramPanelWindow.lwSubjects,
-            paramPanelWindow.pbSelectAllSubjects,
-            paramPanelWindow.pbUnselectAllSubjects,
-            paramPanelWindow.pbReverseSubjectsSelection,
-            paramPanelWindow.lbSubjects,
-            paramPanelWindow.cbIncludeModifiers,
-            paramPanelWindow.cbExcludeBehaviors,
-            paramPanelWindow.frm_time,
-            paramPanelWindow.frm_time_bin_size,
+                paramPanelWindow.lwSubjects,
+                paramPanelWindow.pbSelectAllSubjects,
+                paramPanelWindow.pbUnselectAllSubjects,
+                paramPanelWindow.pbReverseSubjectsSelection,
+                paramPanelWindow.lbSubjects,
+                paramPanelWindow.cbIncludeModifiers,
+                paramPanelWindow.cbExcludeBehaviors,
+                paramPanelWindow.frm_time,
+                paramPanelWindow.frm_time_bin_size,
         ]:
             w.setVisible(False)
 
@@ -1029,11 +966,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         logging.debug("function: create wav file from media")
 
         # check temp dir for images from ffmpeg
-        tmp_dir = (
-            self.ffmpeg_cache_dir
-            if self.ffmpeg_cache_dir and os.path.isdir(self.ffmpeg_cache_dir)
-            else tempfile.gettempdir()
-        )
+        tmp_dir = (self.ffmpeg_cache_dir
+                   if self.ffmpeg_cache_dir and os.path.isdir(self.ffmpeg_cache_dir) else tempfile.gettempdir())
 
         w = dialog.Info_widget()
         w.lwi.setVisible(False)
@@ -1050,9 +984,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 QApplication.processEvents()
 
                 if utilities.extract_wav(self.ffmpeg_bin, media_file_path, tmp_dir) == "":
-                    QMessageBox.critical(
-                        self, programName, f"Error during extracting WAV of the media file {media_file_path}"
-                    )
+                    QMessageBox.critical(self, programName,
+                                         f"Error during extracting WAV of the media file {media_file_path}")
                     break
 
                 w.hide()
@@ -1075,9 +1008,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             return
 
         if self.playerType in [LIVE, VIEWER] and plot_type in ["waveform", "spectrogram"]:
-            QMessageBox.warning(
-                self, programName, f"The sound signal visualization is not available in <b>{self.playerType}</b> mode"
-            )
+            QMessageBox.warning(self, programName,
+                                f"The sound signal visualization is not available in <b>{self.playerType}</b> mode")
             return
 
         if plot_type == "spectrogram":
@@ -1093,36 +1025,25 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
                 self.pause_video()
 
-                if (
-                    warning
-                    and dialog.MessageDialog(
+                if (warning and dialog.MessageDialog(
                         programName,
-                        (
-                            f"You choose to visualize the {plot_type} during this observation.<br>"
-                            f"{plot_type} generation can take some time for long media, be patient"
-                        ),
-                        [YES, NO],
-                    )
-                    == NO
-                ):
+                    (f"You choose to visualize the {plot_type} during this observation.<br>"
+                     f"{plot_type} generation can take some time for long media, be patient"),
+                    [YES, NO],
+                ) == NO):
                     if self.playerType == VLC and self.playMode == MPV and not flag_paused:
                         self.play_video()
                     return
 
                 self.generate_wav_file_from_media()
 
-                tmp_dir = (
-                    self.ffmpeg_cache_dir
-                    if self.ffmpeg_cache_dir and os.path.isdir(self.ffmpeg_cache_dir)
-                    else tempfile.gettempdir()
-                )
+                tmp_dir = (self.ffmpeg_cache_dir
+                           if self.ffmpeg_cache_dir and os.path.isdir(self.ffmpeg_cache_dir) else tempfile.gettempdir())
 
                 wav_file_path = (
-                    pathlib.Path(tmp_dir)
-                    / pathlib.Path(
-                        self.dw_player[0].player.playlist[self.dw_player[0].player.playlist_pos]["filename"] + ".wav"
-                    ).name
-                )
+                    pathlib.Path(tmp_dir) /
+                    pathlib.Path(self.dw_player[0].player.playlist[self.dw_player[0].player.playlist_pos]["filename"] +
+                                 ".wav").name)
 
                 self.spectro = plot_spectrogram_rt.Plot_spectrogram_RT()
 
@@ -1176,36 +1097,25 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
                 self.pause_video()
 
-                if (
-                    warning
-                    and dialog.MessageDialog(
+                if (warning and dialog.MessageDialog(
                         programName,
-                        (
-                            "You choose to visualize the waveform during this observation.<br>"
-                            "The waveform generation can take some time for long media, be patient"
-                        ),
-                        [YES, NO],
-                    )
-                    == NO
-                ):
+                    ("You choose to visualize the waveform during this observation.<br>"
+                     "The waveform generation can take some time for long media, be patient"),
+                    [YES, NO],
+                ) == NO):
                     if self.playerType == VLC and self.playMode == MPV and not flag_paused:
                         self.play_video()
                     return
 
                 self.generate_wav_file_from_media()
 
-                tmp_dir = (
-                    self.ffmpeg_cache_dir
-                    if self.ffmpeg_cache_dir and os.path.isdir(self.ffmpeg_cache_dir)
-                    else tempfile.gettempdir()
-                )
+                tmp_dir = (self.ffmpeg_cache_dir
+                           if self.ffmpeg_cache_dir and os.path.isdir(self.ffmpeg_cache_dir) else tempfile.gettempdir())
 
                 wav_file_path = (
-                    pathlib.Path(tmp_dir)
-                    / pathlib.Path(
-                        self.dw_player[0].player.playlist[self.dw_player[0].player.playlist_pos]["filename"] + ".wav"
-                    ).name
-                )
+                    pathlib.Path(tmp_dir) /
+                    pathlib.Path(self.dw_player[0].player.playlist[self.dw_player[0].player.playlist_pos]["filename"] +
+                                 ".wav").name)
 
                 self.waveform = plot_waveform_rt.Plot_waveform_RT()
 
@@ -1262,8 +1172,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
                     self.plot_events.events_list = self.pj[OBSERVATIONS][self.observationId][EVENTS]
                     self.plot_events.events = self.plot_events.aggregate_events(
-                        self.pj[OBSERVATIONS][self.observationId][EVENTS], 0, 60
-                    )
+                        self.pj[OBSERVATIONS][self.observationId][EVENTS], 0, 60)
 
                     # behavior colors
                     self.plot_events.behav_color = {}
@@ -1307,19 +1216,14 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
             current_media_time = self.dw_player[0].player.time_pos
 
-            tmp_dir = (
-                self.ffmpeg_cache_dir
-                if self.ffmpeg_cache_dir and os.path.isdir(self.ffmpeg_cache_dir)
-                else tempfile.gettempdir()
-            )
+            tmp_dir = (self.ffmpeg_cache_dir
+                       if self.ffmpeg_cache_dir and os.path.isdir(self.ffmpeg_cache_dir) else tempfile.gettempdir())
 
             try:
                 wav_file_path = str(
-                    pathlib.Path(tmp_dir)
-                    / pathlib.Path(
-                        self.dw_player[0].player.playlist[self.dw_player[0].player.playlist_pos]["filename"] + ".wav"
-                    ).name
-                )
+                    pathlib.Path(tmp_dir) /
+                    pathlib.Path(self.dw_player[0].player.playlist[self.dw_player[0].player.playlist_pos]["filename"] +
+                                 ".wav").name)
             except TypeError:
                 return
 
@@ -1389,9 +1293,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         """
 
         if not self.project:
-            QMessageBox.warning(
-                self, programName, "No project found", QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton
-            )
+            QMessageBox.warning(self, programName, "No project found", QMessageBox.Ok | QMessageBox.Default,
+                                QMessageBox.NoButton)
             return
 
         if "behaviors_coding_map" not in self.pj:
@@ -1401,10 +1304,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             QMessageBox.critical(
                 self,
                 programName,
-                (
-                    "The current project already contains a behaviors coding map "
-                    f"with the same name (<b>{behav_coding_map['name']}</b>)"
-                ),
+                ("The current project already contains a behaviors coding map "
+                 f"with the same name (<b>{behav_coding_map['name']}</b>)"),
                 QMessageBox.Ok | QMessageBox.Default,
                 QMessageBox.NoButton,
             )
@@ -1424,9 +1325,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         """
 
         if not self.project:
-            QMessageBox.warning(
-                self, programName, "No project found", QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton
-            )
+            QMessageBox.warning(self, programName, "No project found", QMessageBox.Ok | QMessageBox.Default,
+                                QMessageBox.NoButton)
             return
 
         codes_list = []
@@ -1500,9 +1400,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         if self.observationId:
 
             self.hide_data_files()
-            response = dialog.MessageDialog(
-                programName, "The current observation will be closed. Do you want to continue?", [YES, NO]
-            )
+            response = dialog.MessageDialog(programName,
+                                            "The current observation will be closed. Do you want to continue?",
+                                            [YES, NO])
             if response == NO:
                 self.show_data_files()
                 return ""
@@ -1528,12 +1428,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         if self.observationId:
             # hide data plot
             self.hide_data_files()
-            if (
-                dialog.MessageDialog(
-                    programName, "The current observation will be closed. Do you want to continue?", [YES, NO]
-                )
-                == NO
-            ):
+            if (dialog.MessageDialog(programName, "The current observation will be closed. Do you want to continue?",
+                                     [YES, NO]) == NO):
                 # restore plots
                 self.show_data_files()
                 return
@@ -1569,7 +1465,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     QMessageBox.warning(
                         self,
                         programName,
-                        (f"The observation <b>{self.observationId}</b> is running!<br>" "Close it before editing."),
+                        (f"The observation <b>{self.observationId}</b> is running!<br>"
+                         "Close it before editing."),
                     )
 
     def actionCheckUpdate_activated(self, flagMsgOnlyIfNew=False):
@@ -1581,11 +1478,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             versionURL = "http://www.boris.unito.it/static/ver4.dat"
             lastVersion = urllib.request.urlopen(versionURL).read().strip().decode("utf-8")
             if versiontuple(lastVersion) > versiontuple(__version__):
-                msg = (
-                    f"A new version is available: v. <b>{lastVersion}</b><br>"
-                    'Go to <a href="http://www.boris.unito.it">'
-                    "http://www.boris.unito.it</a> to install it."
-                )
+                msg = (f"A new version is available: v. <b>{lastVersion}</b><br>"
+                       'Go to <a href="http://www.boris.unito.it">'
+                       "http://www.boris.unito.it</a> to install it.")
             else:
                 msg = f"The version you are using is the last one: <b>{__version__}</b>"
             newsURL = "http://www.boris.unito.it/static/news.dat"
@@ -1617,9 +1512,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
                 if player == 0 and not self.user_move_slider:
                     try:
-                        self.video_slider.setValue(
-                            self.dw_player[0].player.time_pos / self.dw_player[0].player.duration * (slider_maximum - 1)
-                        )
+                        self.video_slider.setValue(self.dw_player[0].player.time_pos /
+                                                   self.dw_player[0].player.duration * (slider_maximum - 1))
                     except Exception:
                         pass
             else:
@@ -1645,13 +1539,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
                         self.dw_player[player].player.seek(
                             round(
-                                float(new_time)
-                                - sum(
-                                    self.dw_player[player].media_durations[
-                                        0 : self.dw_player[player].player.playlist_pos
-                                    ]
-                                )
-                                / 1000,
+                                float(new_time) -
+                                sum(self.dw_player[player].media_durations[0:self.dw_player[player].player.playlist_pos]
+                                   ) / 1000,
                                 3,
                             ),
                             "absolute+exact",
@@ -1662,9 +1552,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
                 if player == 0 and not self.user_move_slider:
                     try:
-                        self.video_slider.setValue(
-                            self.dw_player[0].player.time_pos / self.dw_player[0].player.duration * (slider_maximum - 1)
-                        )
+                        self.video_slider.setValue(self.dw_player[0].player.time_pos /
+                                                   self.dw_player[0].player.duration * (slider_maximum - 1))
                     except Exception:
                         pass
                         # dialog.error_message2()
@@ -1673,10 +1562,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 QMessageBox.warning(
                     self,
                     programName,
-                    (
-                        "The indicated position is behind the total media duration "
-                        f"({seconds2time(sum(self.dw_player[player].media_durations))})"
-                    ),
+                    ("The indicated position is behind the total media duration "
+                     f"({seconds2time(sum(self.dw_player[player].media_durations))})"),
                 )
 
     def jump_to(self):
@@ -1773,13 +1660,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
             self.save_project_activated()
         else:
-            logging.debug(
-                (
-                    f"project not autosaved: "
-                    f"observation id: {self.observationId} "
-                    f"project file name: {self.projectFileName}"
-                )
-            )
+            logging.debug((f"project not autosaved: "
+                           f"observation id: {self.observationId} "
+                           f"project file name: {self.projectFileName}"))
 
     def update_subject(self, subject):
         """
@@ -1813,11 +1696,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         currentMedia, frameCurrentMedia = "", 0
         frameMs = 1000 / fps
         for idx, media in enumerate(self.pj[OBSERVATIONS][self.observationId][FILE][player]):
-            if requiredFrame * frameMs < sum(self.dw_player[int(player) - 1].media_durations[0 : idx + 1]):
+            if requiredFrame * frameMs < sum(self.dw_player[int(player) - 1].media_durations[0:idx + 1]):
                 currentMedia = media
-                frameCurrentMedia = (
-                    requiredFrame - sum(self.dw_player[int(player) - 1].media_durations[0:idx]) / frameMs
-                )
+                frameCurrentMedia = (requiredFrame -
+                                     sum(self.dw_player[int(player) - 1].media_durations[0:idx]) / frameMs)
                 break
         return currentMedia, round(frameCurrentMedia)
 
@@ -1889,9 +1771,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         logging.debug("function: initialize new observation for MPV")
 
-        ok, msg = project_functions.check_if_media_available(
-            self.pj[OBSERVATIONS][self.observationId], self.projectFileName
-        )
+        ok, msg = project_functions.check_if_media_available(self.pj[OBSERVATIONS][self.observationId],
+                                                             self.projectFileName)
 
         for dw in [self.dwEthogram, self.dwSubjects, self.dwObservations]:
             dw.setVisible(True)
@@ -1900,12 +1781,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             QMessageBox.critical(
                 self,
                 programName,
-                (
-                    f"{msg}<br><br>The observation will be opened in VIEW mode.<br>"
-                    "It will not be possible to log events.<br>"
-                    "Modify the media path to point an existing media file "
-                    "to log events or copy media file in the BORIS project directory."
-                ),
+                (f"{msg}<br><br>The observation will be opened in VIEW mode.<br>"
+                 "It will not be possible to log events.<br>"
+                 "Modify the media path to point an existing media file "
+                 "to log events or copy media file in the BORIS project directory."),
                 QMessageBox.Ok | QMessageBox.Default,
                 QMessageBox.NoButton,
             )
@@ -1940,10 +1819,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         for i in range(N_PLAYER):
             n_player = str(i + 1)
-            if (
-                n_player not in self.pj[OBSERVATIONS][self.observationId][FILE]
-                or not self.pj[OBSERVATIONS][self.observationId][FILE][n_player]
-            ):
+            if (n_player not in self.pj[OBSERVATIONS][self.observationId][FILE] or
+                    not self.pj[OBSERVATIONS][self.observationId][FILE][n_player]):
                 continue
 
             if i == 0:  # first player
@@ -2042,21 +1919,18 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
             # position media
             if OBSERVATION_TIME_INTERVAL in self.pj[OBSERVATIONS][self.observationId]:
-                self.seek_mediaplayer(
-                    int(self.pj[OBSERVATIONS][self.observationId][OBSERVATION_TIME_INTERVAL][0]), player=i
-                )
+                self.seek_mediaplayer(int(self.pj[OBSERVATIONS][self.observationId][OBSERVATION_TIME_INTERVAL][0]),
+                                      player=i)
 
             # restore zoom level
             if ZOOM_LEVEL in self.pj[OBSERVATIONS][self.observationId][MEDIA_INFO]:
                 self.dw_player[i].player.video_zoom = log2(
-                    self.pj[OBSERVATIONS][self.observationId][MEDIA_INFO][ZOOM_LEVEL].get(n_player, 0)
-                )
+                    self.pj[OBSERVATIONS][self.observationId][MEDIA_INFO][ZOOM_LEVEL].get(n_player, 0))
 
             # restore subtitle visibility
             if DISPLAY_MEDIA_SUBTITLES in self.pj[OBSERVATIONS][self.observationId][MEDIA_INFO]:
-                self.dw_player[i].player.sub_visibility = self.pj[OBSERVATIONS][self.observationId][MEDIA_INFO][
-                    DISPLAY_MEDIA_SUBTITLES
-                ].get(n_player, True)
+                self.dw_player[i].player.sub_visibility = self.pj[OBSERVATIONS][
+                    self.observationId][MEDIA_INFO][DISPLAY_MEDIA_SUBTITLES].get(n_player, True)
 
             # restore overlays
             if OVERLAY in self.pj[OBSERVATIONS][self.observationId][MEDIA_INFO]:
@@ -2075,23 +1949,16 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.lbSpeed.setText(f"Player rate: x{self.play_rate:.3f}")
 
         # spectrogram
-        if (
-            VISUALIZE_SPECTROGRAM in self.pj[OBSERVATIONS][self.observationId]
-            and self.pj[OBSERVATIONS][self.observationId][VISUALIZE_SPECTROGRAM]
-        ):
+        if (VISUALIZE_SPECTROGRAM in self.pj[OBSERVATIONS][self.observationId] and
+                self.pj[OBSERVATIONS][self.observationId][VISUALIZE_SPECTROGRAM]):
 
-            tmp_dir = (
-                self.ffmpeg_cache_dir
-                if self.ffmpeg_cache_dir and os.path.isdir(self.ffmpeg_cache_dir)
-                else tempfile.gettempdir()
-            )
+            tmp_dir = (self.ffmpeg_cache_dir
+                       if self.ffmpeg_cache_dir and os.path.isdir(self.ffmpeg_cache_dir) else tempfile.gettempdir())
 
             wav_file_path = (
-                pathlib.Path(tmp_dir)
-                / pathlib.Path(
-                    self.dw_player[0].player.playlist[self.dw_player[0].player.playlist_pos]["filename"] + ".wav"
-                ).name
-            )
+                pathlib.Path(tmp_dir) /
+                pathlib.Path(self.dw_player[0].player.playlist[self.dw_player[0].player.playlist_pos]["filename"] +
+                             ".wav").name)
 
             if not wav_file_path.is_file():
                 self.generate_wav_file_from_media()
@@ -2099,23 +1966,16 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.show_plot_widget("spectrogram", warning=False)
 
         # waveform
-        if (
-            VISUALIZE_WAVEFORM in self.pj[OBSERVATIONS][self.observationId]
-            and self.pj[OBSERVATIONS][self.observationId][VISUALIZE_WAVEFORM]
-        ):
+        if (VISUALIZE_WAVEFORM in self.pj[OBSERVATIONS][self.observationId] and
+                self.pj[OBSERVATIONS][self.observationId][VISUALIZE_WAVEFORM]):
 
-            tmp_dir = (
-                self.ffmpeg_cache_dir
-                if self.ffmpeg_cache_dir and os.path.isdir(self.ffmpeg_cache_dir)
-                else tempfile.gettempdir()
-            )
+            tmp_dir = (self.ffmpeg_cache_dir
+                       if self.ffmpeg_cache_dir and os.path.isdir(self.ffmpeg_cache_dir) else tempfile.gettempdir())
 
             wav_file_path = (
-                pathlib.Path(tmp_dir)
-                / pathlib.Path(
-                    self.dw_player[0].player.playlist[self.dw_player[0].player.playlist_pos]["filename"] + ".wav"
-                ).name
-            )
+                pathlib.Path(tmp_dir) /
+                pathlib.Path(self.dw_player[0].player.playlist[self.dw_player[0].player.playlist_pos]["filename"] +
+                             ".wav").name)
 
             if not wav_file_path.is_file():
                 self.generate_wav_file_from_media()
@@ -2123,10 +1983,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.show_plot_widget("waveform", warning=False)
 
         # external data plot
-        if (
-            PLOT_DATA in self.pj[OBSERVATIONS][self.observationId]
-            and self.pj[OBSERVATIONS][self.observationId][PLOT_DATA]
-        ):
+        if (PLOT_DATA in self.pj[OBSERVATIONS][self.observationId] and
+                self.pj[OBSERVATIONS][self.observationId][PLOT_DATA]):
 
             self.plot_data = {}
             self.ext_data_timer_list = []
@@ -2135,15 +1993,13 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 if count == 0:
 
                     data_file_path = project_functions.media_full_path(
-                        self.pj[OBSERVATIONS][self.observationId][PLOT_DATA][idx]["file_path"], self.projectFileName
-                    )
+                        self.pj[OBSERVATIONS][self.observationId][PLOT_DATA][idx]["file_path"], self.projectFileName)
                     if not data_file_path:
                         QMessageBox.critical(
                             self,
                             programName,
                             "Data file not found:\n{}".format(
-                                self.pj[OBSERVATIONS][self.observationId][PLOT_DATA][idx]["file_path"]
-                            ),
+                                self.pj[OBSERVATIONS][self.observationId][PLOT_DATA][idx]["file_path"]),
                         )
                         return False
 
@@ -2165,10 +2021,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                         QMessageBox.critical(
                             self,
                             programName,
-                            (
-                                f"Impossible to plot data from file {os.path.basename(self.pj[OBSERVATIONS][self.observationId][PLOT_DATA][idx]['file_path'])}:\n"
-                                f"{w1.error_msg}"
-                            ),
+                            (f"Impossible to plot data from file {os.path.basename(self.pj[OBSERVATIONS][self.observationId][PLOT_DATA][idx]['file_path'])}:\n"
+                             f"{w1.error_msg}"),
                         )
                         del w1
                         return False
@@ -2188,15 +2042,13 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 if count == 1:
 
                     data_file_path = project_functions.media_full_path(
-                        self.pj[OBSERVATIONS][self.observationId][PLOT_DATA][idx]["file_path"], self.projectFileName
-                    )
+                        self.pj[OBSERVATIONS][self.observationId][PLOT_DATA][idx]["file_path"], self.projectFileName)
                     if not data_file_path:
                         QMessageBox.critical(
                             self,
                             programName,
                             "Data file not found:\n{}".format(
-                                self.pj[OBSERVATIONS][self.observationId][PLOT_DATA][idx]["file_path"]
-                            ),
+                                self.pj[OBSERVATIONS][self.observationId][PLOT_DATA][idx]["file_path"]),
                         )
                         return False
 
@@ -2220,8 +2072,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                             programName,
                             "Impossible to plot data from file {}:\n{}".format(
                                 os.path.basename(
-                                    self.pj[OBSERVATIONS][self.observationId][PLOT_DATA][idx]["file_path"]
-                                ),
+                                    self.pj[OBSERVATIONS][self.observationId][PLOT_DATA][idx]["file_path"]),
                                 w2.error_msg,
                             ),
                         )
@@ -2284,9 +2135,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         dockwidget was resized. Adpat overlay if any
         """
         try:
-            img = Image.open(
-                self.pj[OBSERVATIONS][self.observationId][MEDIA_INFO][OVERLAY][str(dw_id + 1)]["file name"]
-            )
+            img = Image.open(self.pj[OBSERVATIONS][self.observationId][MEDIA_INFO][OVERLAY][str(dw_id +
+                                                                                                1)]["file name"])
         except:
             return
 
@@ -2320,16 +2170,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         x_offset, y_offset = 0, 0
         if self.pj[OBSERVATIONS][self.observationId][MEDIA_INFO][OVERLAY][str(dw_id + 1)]["overlay position"]:
             try:
-                x_offset = int(
-                    self.pj[OBSERVATIONS][self.observationId][MEDIA_INFO][OVERLAY][str(dw_id + 1)]["overlay position"]
-                    .split(",")[0]
-                    .strip()
-                )
-                y_offset = int(
-                    self.pj[OBSERVATIONS][self.observationId][MEDIA_INFO][OVERLAY][str(dw_id + 1)]["overlay position"]
-                    .split(",")[1]
-                    .strip()
-                )
+                x_offset = int(self.pj[OBSERVATIONS][self.observationId][MEDIA_INFO][OVERLAY][str(dw_id + 1)]
+                               ["overlay position"].split(",")[0].strip())
+                y_offset = int(self.pj[OBSERVATIONS][self.observationId][MEDIA_INFO][OVERLAY][str(dw_id + 1)]
+                               ["overlay position"].split(",")[1].strip())
             except Exception:
                 logging.warning(f"error in overlay position")
 
@@ -2526,12 +2370,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         if mode == NEW and self.observationId:
             # hide data plot
             self.hide_data_files()
-            if (
-                dialog.MessageDialog(
-                    programName, "The current observation will be closed. Do you want to continue?", [YES, NO]
-                )
-                == NO
-            ):
+            if (dialog.MessageDialog(programName, "The current observation will be closed. Do you want to continue?",
+                                     [YES, NO]) == NO):
 
                 # show data plot
                 self.show_data_files()
@@ -2540,9 +2380,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 self.close_observation()
 
         observationWindow = observation.Observation(
-            tmp_dir=self.ffmpeg_cache_dir
-            if (self.ffmpeg_cache_dir and os.path.isdir(self.ffmpeg_cache_dir))
-            else tempfile.gettempdir(),
+            tmp_dir=self.ffmpeg_cache_dir if
+            (self.ffmpeg_cache_dir and os.path.isdir(self.ffmpeg_cache_dir)) else tempfile.gettempdir(),
             project_path=self.projectFileName,
             converters=self.pj[CONVERTERS] if CONVERTERS in self.pj else {},
             time_format=self.timeFormat,
@@ -2580,11 +2419,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 # var value
                 item = QTableWidgetItem()
                 # check if obs has independent variables and var label is a key
-                if (
-                    mode == EDIT
-                    and INDEPENDENT_VARIABLES in self.pj[OBSERVATIONS][obsId]
-                    and indepVarLabel in self.pj[OBSERVATIONS][obsId][INDEPENDENT_VARIABLES]
-                ):
+                if (mode == EDIT and INDEPENDENT_VARIABLES in self.pj[OBSERVATIONS][obsId] and
+                        indepVarLabel in self.pj[OBSERVATIONS][obsId][INDEPENDENT_VARIABLES]):
                     txt = self.pj[OBSERVATIONS][obsId][INDEPENDENT_VARIABLES][indepVarLabel]
 
                 elif mode == NEW:
@@ -2597,11 +2433,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     comboBox.addItems(self.pj[INDEPENDENT_VARIABLES][i]["possible values"].split(","))
                     if txt in self.pj[INDEPENDENT_VARIABLES][i]["possible values"].split(","):
                         comboBox.setCurrentIndex(
-                            self.pj[INDEPENDENT_VARIABLES][i]["possible values"].split(",").index(txt)
-                        )
-                    observationWindow.twIndepVariables.setCellWidget(
-                        observationWindow.twIndepVariables.rowCount() - 1, 2, comboBox
-                    )
+                            self.pj[INDEPENDENT_VARIABLES][i]["possible values"].split(",").index(txt))
+                    observationWindow.twIndepVariables.setCellWidget(observationWindow.twIndepVariables.rowCount() - 1,
+                                                                     2, comboBox)
 
                 elif self.pj[INDEPENDENT_VARIABLES][i]["type"] == TIMESTAMP:
                     cal = QDateTimeEdit()
@@ -2609,14 +2443,12 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     cal.setCalendarPopup(True)
                     if txt:
                         cal.setDateTime(QDateTime.fromString(txt, "yyyy-MM-ddThh:mm:ss"))
-                    observationWindow.twIndepVariables.setCellWidget(
-                        observationWindow.twIndepVariables.rowCount() - 1, 2, cal
-                    )
+                    observationWindow.twIndepVariables.setCellWidget(observationWindow.twIndepVariables.rowCount() - 1,
+                                                                     2, cal)
                 else:
                     item.setText(txt)
-                    observationWindow.twIndepVariables.setItem(
-                        observationWindow.twIndepVariables.rowCount() - 1, 2, item
-                    )
+                    observationWindow.twIndepVariables.setItem(observationWindow.twIndepVariables.rowCount() - 1, 2,
+                                                               item)
 
             observationWindow.twIndepVariables.resizeColumnsToContents()
 
@@ -2640,8 +2472,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 pass
 
             observationWindow.dteDate.setDateTime(
-                QDateTime.fromString(self.pj[OBSERVATIONS][obsId]["date"], "yyyy-MM-ddThh:mm:ss")
-            )
+                QDateTime.fromString(self.pj[OBSERVATIONS][obsId]["date"], "yyyy-MM-ddThh:mm:ss"))
             observationWindow.teDescription.setPlainText(self.pj[OBSERVATIONS][obsId][DESCRIPTION])
 
             try:
@@ -2685,15 +2516,13 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                                 QTableWidgetItem(str(self.pj[OBSERVATIONS][obsId][MEDIA_INFO]["offset"][player])),
                             )
                         except Exception:
-                            observationWindow.twVideo1.setItem(
-                                observationWindow.twVideo1.rowCount() - 1, 1, QTableWidgetItem("0.0")
-                            )
+                            observationWindow.twVideo1.setItem(observationWindow.twVideo1.rowCount() - 1, 1,
+                                                               QTableWidgetItem("0.0"))
 
                         # duration and FPS
                         try:
                             item = QTableWidgetItem(
-                                seconds2time(self.pj[OBSERVATIONS][obsId][MEDIA_INFO][LENGTH][mediaFile])
-                            )
+                                seconds2time(self.pj[OBSERVATIONS][obsId][MEDIA_INFO][LENGTH][mediaFile]))
                             item.setFlags(Qt.ItemIsEnabled)
                             observationWindow.twVideo1.setItem(observationWindow.twVideo1.rowCount() - 1, 3, item)
 
@@ -2705,15 +2534,13 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
                         # has_video has_audio
                         try:
-                            item = QTableWidgetItem(
-                                str(self.pj[OBSERVATIONS][obsId][MEDIA_INFO]["hasVideo"][mediaFile])
-                            )
+                            item = QTableWidgetItem(str(
+                                self.pj[OBSERVATIONS][obsId][MEDIA_INFO]["hasVideo"][mediaFile]))
                             item.setFlags(Qt.ItemIsEnabled)
                             observationWindow.twVideo1.setItem(observationWindow.twVideo1.rowCount() - 1, 5, item)
 
-                            item = QTableWidgetItem(
-                                str(self.pj[OBSERVATIONS][obsId][MEDIA_INFO]["hasAudio"][mediaFile])
-                            )
+                            item = QTableWidgetItem(str(
+                                self.pj[OBSERVATIONS][obsId][MEDIA_INFO]["hasAudio"][mediaFile]))
                             item.setFlags(Qt.ItemIsEnabled)
                             observationWindow.twVideo1.setItem(observationWindow.twVideo1.rowCount() - 1, 6, item)
                         except Exception:
@@ -2728,43 +2555,34 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 observationWindow.sbScanSampling.setValue(self.pj[OBSERVATIONS][obsId].get(SCAN_SAMPLING_TIME, 0))
                 # start from current time
                 observationWindow.cb_start_from_current_time.setChecked(
-                    self.pj[OBSERVATIONS][obsId].get(START_FROM_CURRENT_TIME, False)
-                    or self.pj[OBSERVATIONS][obsId].get(START_FROM_CURRENT_EPOCH_TIME, False)
-                )
+                    self.pj[OBSERVATIONS][obsId].get(START_FROM_CURRENT_TIME, False) or
+                    self.pj[OBSERVATIONS][obsId].get(START_FROM_CURRENT_EPOCH_TIME, False))
                 # day/epoch time
-                observationWindow.rb_day_time.setChecked(
-                    self.pj[OBSERVATIONS][obsId].get(START_FROM_CURRENT_TIME, False)
-                )
-                observationWindow.rb_epoch_time.setChecked(
-                    self.pj[OBSERVATIONS][obsId].get(START_FROM_CURRENT_EPOCH_TIME, False)
-                )
+                observationWindow.rb_day_time.setChecked(self.pj[OBSERVATIONS][obsId].get(
+                    START_FROM_CURRENT_TIME, False))
+                observationWindow.rb_epoch_time.setChecked(self.pj[OBSERVATIONS][obsId].get(
+                    START_FROM_CURRENT_EPOCH_TIME, False))
 
             # spectrogram
             observationWindow.cbVisualizeSpectrogram.setEnabled(True)
-            observationWindow.cbVisualizeSpectrogram.setChecked(
-                self.pj[OBSERVATIONS][obsId].get(VISUALIZE_SPECTROGRAM, False)
-            )
+            observationWindow.cbVisualizeSpectrogram.setChecked(self.pj[OBSERVATIONS][obsId].get(
+                VISUALIZE_SPECTROGRAM, False))
 
             # waveform
             observationWindow.cb_visualize_waveform.setEnabled(True)
-            observationWindow.cb_visualize_waveform.setChecked(
-                self.pj[OBSERVATIONS][obsId].get(VISUALIZE_WAVEFORM, False)
-            )
+            observationWindow.cb_visualize_waveform.setChecked(self.pj[OBSERVATIONS][obsId].get(
+                VISUALIZE_WAVEFORM, False))
 
             # observation time interval
             observationWindow.cb_observation_time_interval.setEnabled(True)
             if self.pj[OBSERVATIONS][obsId].get(OBSERVATION_TIME_INTERVAL, [0, 0]) != [0, 0]:
                 observationWindow.cb_observation_time_interval.setChecked(True)
                 observationWindow.observation_time_interval = self.pj[OBSERVATIONS][obsId].get(
-                    OBSERVATION_TIME_INTERVAL, [0, 0]
-                )
+                    OBSERVATION_TIME_INTERVAL, [0, 0])
                 observationWindow.cb_observation_time_interval.setText(
-                    (
-                        "Limit observation to a time interval: "
-                        f"{self.pj[OBSERVATIONS][obsId][OBSERVATION_TIME_INTERVAL][0]} - "
-                        f"{self.pj[OBSERVATIONS][obsId][OBSERVATION_TIME_INTERVAL][1]}"
-                    )
-                )
+                    ("Limit observation to a time interval: "
+                     f"{self.pj[OBSERVATIONS][obsId][OBSERVATION_TIME_INTERVAL][0]} - "
+                     f"{self.pj[OBSERVATIONS][obsId][OBSERVATION_TIME_INTERVAL][1]}"))
 
             # plot data
             if PLOT_DATA in self.pj[OBSERVATIONS][obsId]:
@@ -2779,21 +2597,15 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                                 combobox.addItems(DATA_PLOT_STYLES)
                                 combobox.setCurrentIndex(
                                     DATA_PLOT_STYLES.index(
-                                        self.pj[OBSERVATIONS][obsId][PLOT_DATA][idx2][DATA_PLOT_FIELDS[idx3]]
-                                    )
-                                )
+                                        self.pj[OBSERVATIONS][obsId][PLOT_DATA][idx2][DATA_PLOT_FIELDS[idx3]]))
 
                                 observationWindow.tw_data_files.setCellWidget(
-                                    observationWindow.tw_data_files.rowCount() - 1, PLOT_DATA_PLOTCOLOR_IDX, combobox
-                                )
+                                    observationWindow.tw_data_files.rowCount() - 1, PLOT_DATA_PLOTCOLOR_IDX, combobox)
                             elif idx3 == PLOT_DATA_SUBSTRACT1STVALUE_IDX:
                                 combobox2 = QComboBox()
                                 combobox2.addItems(["False", "True"])
-                                combobox2.setCurrentIndex(
-                                    ["False", "True"].index(
-                                        self.pj[OBSERVATIONS][obsId][PLOT_DATA][idx2][DATA_PLOT_FIELDS[idx3]]
-                                    )
-                                )
+                                combobox2.setCurrentIndex(["False", "True"].index(
+                                    self.pj[OBSERVATIONS][obsId][PLOT_DATA][idx2][DATA_PLOT_FIELDS[idx3]]))
 
                                 observationWindow.tw_data_files.setCellWidget(
                                     observationWindow.tw_data_files.rowCount() - 1,
@@ -2812,8 +2624,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                                     observationWindow.tw_data_files.rowCount() - 1,
                                     idx3,
                                     QTableWidgetItem(
-                                        str(self.pj[OBSERVATIONS][obsId][PLOT_DATA][idx2][DATA_PLOT_FIELDS[idx3]])
-                                    ),
+                                        str(self.pj[OBSERVATIONS][obsId][PLOT_DATA][idx2][DATA_PLOT_FIELDS[idx3]])),
                                 )
 
                             else:
@@ -2821,8 +2632,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                                     observationWindow.tw_data_files.rowCount() - 1,
                                     idx3,
                                     QTableWidgetItem(
-                                        self.pj[OBSERVATIONS][obsId][PLOT_DATA][idx2][DATA_PLOT_FIELDS[idx3]]
-                                    ),
+                                        self.pj[OBSERVATIONS][obsId][PLOT_DATA][idx2][DATA_PLOT_FIELDS[idx3]]),
                                 )
 
             # disabled due to problem when video goes back
@@ -2862,8 +2672,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.pj[OBSERVATIONS][new_obs_id][DESCRIPTION] = observationWindow.teDescription.toPlainText()
             # observation type: read project type from tab text
             self.pj[OBSERVATIONS][new_obs_id][TYPE] = observationWindow.tabProjectType.tabText(
-                observationWindow.tabProjectType.currentIndex()
-            ).upper()
+                observationWindow.tabProjectType.currentIndex()).upper()
 
             # independent variables for observation
             self.pj[OBSERVATIONS][new_obs_id][INDEPENDENT_VARIABLES] = {}
@@ -2871,32 +2680,29 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
                 # set dictionary as label (col 0) => value (col 2)
                 if observationWindow.twIndepVariables.item(r, 1).text() == SET_OF_VALUES:
-                    self.pj[OBSERVATIONS][new_obs_id][INDEPENDENT_VARIABLES][
-                        observationWindow.twIndepVariables.item(r, 0).text()
-                    ] = observationWindow.twIndepVariables.cellWidget(r, 2).currentText()
+                    self.pj[OBSERVATIONS][new_obs_id][INDEPENDENT_VARIABLES][observationWindow.twIndepVariables.item(
+                        r, 0).text()] = observationWindow.twIndepVariables.cellWidget(r, 2).currentText()
                 elif observationWindow.twIndepVariables.item(r, 1).text() == TIMESTAMP:
-                    self.pj[OBSERVATIONS][new_obs_id][INDEPENDENT_VARIABLES][
-                        observationWindow.twIndepVariables.item(r, 0).text()
-                    ] = (observationWindow.twIndepVariables.cellWidget(r, 2).dateTime().toString(Qt.ISODate))
+                    self.pj[OBSERVATIONS][new_obs_id][INDEPENDENT_VARIABLES][observationWindow.twIndepVariables.item(
+                        r,
+                        0).text()] = (observationWindow.twIndepVariables.cellWidget(r,
+                                                                                    2).dateTime().toString(Qt.ISODate))
                 else:
-                    self.pj[OBSERVATIONS][new_obs_id][INDEPENDENT_VARIABLES][
-                        observationWindow.twIndepVariables.item(r, 0).text()
-                    ] = observationWindow.twIndepVariables.item(r, 2).text()
+                    self.pj[OBSERVATIONS][new_obs_id][INDEPENDENT_VARIABLES][observationWindow.twIndepVariables.item(
+                        r, 0).text()] = observationWindow.twIndepVariables.item(r, 2).text()
 
             # observation time offset
             self.pj[OBSERVATIONS][new_obs_id][TIME_OFFSET] = observationWindow.obs_time_offset.get_time()
 
             if observationWindow.cb_observation_time_interval.isChecked():
                 self.pj[OBSERVATIONS][new_obs_id][
-                    OBSERVATION_TIME_INTERVAL
-                ] = observationWindow.observation_time_interval
+                    OBSERVATION_TIME_INTERVAL] = observationWindow.observation_time_interval
 
             self.display_statusbar_info(new_obs_id)
 
             # visualize spectrogram
             self.pj[OBSERVATIONS][new_obs_id][
-                VISUALIZE_SPECTROGRAM
-            ] = observationWindow.cbVisualizeSpectrogram.isChecked()
+                VISUALIZE_SPECTROGRAM] = observationWindow.cbVisualizeSpectrogram.isChecked()
             # visualize spectrogram
             self.pj[OBSERVATIONS][new_obs_id][VISUALIZE_WAVEFORM] = observationWindow.cb_visualize_waveform.isChecked()
             # time interval for observation
@@ -2909,22 +2715,20 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     self.pj[OBSERVATIONS][new_obs_id][PLOT_DATA][str(row)] = {}
                     for idx2 in DATA_PLOT_FIELDS:
                         if idx2 in [PLOT_DATA_PLOTCOLOR_IDX, PLOT_DATA_SUBSTRACT1STVALUE_IDX]:
-                            self.pj[OBSERVATIONS][new_obs_id][PLOT_DATA][str(row)][
-                                DATA_PLOT_FIELDS[idx2]
-                            ] = observationWindow.tw_data_files.cellWidget(row, idx2).currentText()
+                            self.pj[OBSERVATIONS][new_obs_id][PLOT_DATA][
+                                str(row)][DATA_PLOT_FIELDS[idx2]] = observationWindow.tw_data_files.cellWidget(
+                                    row, idx2).currentText()
 
                         elif idx2 == PLOT_DATA_CONVERTERS_IDX:
                             if observationWindow.tw_data_files.item(row, idx2).text():
                                 self.pj[OBSERVATIONS][new_obs_id][PLOT_DATA][str(row)][DATA_PLOT_FIELDS[idx2]] = eval(
-                                    observationWindow.tw_data_files.item(row, idx2).text()
-                                )
+                                    observationWindow.tw_data_files.item(row, idx2).text())
                             else:
                                 self.pj[OBSERVATIONS][new_obs_id][PLOT_DATA][str(row)][DATA_PLOT_FIELDS[idx2]] = {}
 
                         else:
                             self.pj[OBSERVATIONS][new_obs_id][PLOT_DATA][str(row)][
-                                DATA_PLOT_FIELDS[idx2]
-                            ] = observationWindow.tw_data_files.item(row, idx2).text()
+                                DATA_PLOT_FIELDS[idx2]] = observationWindow.tw_data_files.item(row, idx2).text()
 
             # Close current behaviors between video
             # disabled due to problem when video goes back
@@ -2935,13 +2739,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             if self.pj[OBSERVATIONS][new_obs_id][TYPE] in [LIVE]:
                 self.pj[OBSERVATIONS][new_obs_id][SCAN_SAMPLING_TIME] = observationWindow.sbScanSampling.value()
                 self.pj[OBSERVATIONS][new_obs_id][START_FROM_CURRENT_TIME] = (
-                    observationWindow.cb_start_from_current_time.isChecked()
-                    and observationWindow.rb_day_time.isChecked()
-                )
+                    observationWindow.cb_start_from_current_time.isChecked() and
+                    observationWindow.rb_day_time.isChecked())
                 self.pj[OBSERVATIONS][new_obs_id][START_FROM_CURRENT_EPOCH_TIME] = (
-                    observationWindow.cb_start_from_current_time.isChecked()
-                    and observationWindow.rb_epoch_time.isChecked()
-                )
+                    observationWindow.cb_start_from_current_time.isChecked() and
+                    observationWindow.rb_epoch_time.isChecked())
 
             # media file
             self.pj[OBSERVATIONS][new_obs_id][FILE] = {}
@@ -2968,13 +2770,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     self.pj[OBSERVATIONS][new_obs_id][FILE][str(i + 1)] = []
 
                 for row in range(observationWindow.twVideo1.rowCount()):
-                    self.pj[OBSERVATIONS][new_obs_id][FILE][
-                        observationWindow.twVideo1.cellWidget(row, 0).currentText()
-                    ].append(observationWindow.twVideo1.item(row, 2).text())
+                    self.pj[OBSERVATIONS][new_obs_id][FILE][observationWindow.twVideo1.cellWidget(
+                        row, 0).currentText()].append(observationWindow.twVideo1.item(row, 2).text())
                     # store offset for media player
-                    self.pj[OBSERVATIONS][new_obs_id][MEDIA_INFO]["offset"][
-                        observationWindow.twVideo1.cellWidget(row, 0).currentText()
-                    ] = float(observationWindow.twVideo1.item(row, 1).text())
+                    self.pj[OBSERVATIONS][new_obs_id][MEDIA_INFO]["offset"][observationWindow.twVideo1.cellWidget(
+                        row, 0).currentText()] = float(observationWindow.twVideo1.item(row, 1).text())
 
             if rv == 1:  # save
                 self.observationId = ""
@@ -3134,9 +2934,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             logging.info(f"Check state events")
 
             # check observation events
-            flag_ok, msg = project_functions.check_state_events_obs(
-                self.observationId, self.pj[ETHOGRAM], self.pj[OBSERVATIONS][self.observationId], time_format=HHMMSS
-            )
+            flag_ok, msg = project_functions.check_state_events_obs(self.observationId,
+                                                                    self.pj[ETHOGRAM],
+                                                                    self.pj[OBSERVATIONS][self.observationId],
+                                                                    time_format=HHMMSS)
 
             if not flag_ok:
 
@@ -3172,8 +2973,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                             self.loadEventsInTW(self.observationId)
                             item = self.twEvents.item(
                                 [
-                                    i
-                                    for i, t in enumerate(self.pj[OBSERVATIONS][self.observationId][EVENTS])
+                                    i for i, t in enumerate(self.pj[OBSERVATIONS][self.observationId][EVENTS])
                                     if t[0] == fix_at_time
                                 ][0],
                                 0,
@@ -3194,10 +2994,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
                 if self.playMode == MPV:
                     for i, player in enumerate(self.dw_player):
-                        if (
-                            str(i + 1) in self.pj[OBSERVATIONS][self.observationId][FILE]
-                            and self.pj[OBSERVATIONS][self.observationId][FILE][str(i + 1)]
-                        ):
+                        if (str(i + 1) in self.pj[OBSERVATIONS][self.observationId][FILE] and
+                                self.pj[OBSERVATIONS][self.observationId][FILE][str(i + 1)]):
                             logging.info(f"Stop player {i + 1}")
                             player.player.stop()
 
@@ -3214,10 +3012,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 self.liveObservationStarted = False
                 self.liveStartTime = None
 
-            if (
-                PLOT_DATA in self.pj[OBSERVATIONS][self.observationId]
-                and self.pj[OBSERVATIONS][self.observationId][PLOT_DATA]
-            ):
+            if (PLOT_DATA in self.pj[OBSERVATIONS][self.observationId] and
+                    self.pj[OBSERVATIONS][self.observationId][PLOT_DATA]):
                 for x in self.ext_data_timer_list:
                     x.stop()
                 for pd in self.plot_data:
@@ -3354,9 +3150,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         for events in all_events:
             for event in events:
-                if event[EVENT_SUBJECT_FIELD_IDX] in selectedSubjects or (
-                    not event[EVENT_SUBJECT_FIELD_IDX] and NO_FOCAL_SUBJECT in selectedSubjects
-                ):
+                if event[EVENT_SUBJECT_FIELD_IDX] in selectedSubjects or (not event[EVENT_SUBJECT_FIELD_IDX] and
+                                                                          NO_FOCAL_SUBJECT in selectedSubjects):
                     observed_behaviors.append(event[EVENT_BEHAVIOR_FIELD_IDX])
 
         # remove duplicate
@@ -3389,17 +3184,12 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         # an observation media length is not available
         if selectedObsTotalMediaLength == -1:
             # propose to user to use max event time
-            if (
-                dialog.MessageDialog(
+            if (dialog.MessageDialog(
                     programName,
-                    (
-                        f"A media length is not available for the observation <b>{obs_id}</b>.<br>"
-                        "Use last event time as media length?"
-                    ),
-                    [YES, NO],
-                )
-                == YES
-            ):
+                (f"A media length is not available for the observation <b>{obs_id}</b>.<br>"
+                 "Use last event time as media length?"),
+                [YES, NO],
+            ) == YES):
                 maxTime = 0  # max length for all events all subjects
                 max_length = 0
                 for obs_id in selected_observations:
@@ -3433,9 +3223,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         out = ""
         not_paired_obs_list = []
         for obs_id in selected_observations:
-            r, msg = project_functions.check_state_events_obs(
-                obs_id, self.pj[ETHOGRAM], self.pj[OBSERVATIONS][obs_id], self.timeFormat
-            )
+            r, msg = project_functions.check_state_events_obs(obs_id, self.pj[ETHOGRAM], self.pj[OBSERVATIONS][obs_id],
+                                                              self.timeFormat)
 
             if not r:
                 out += f"Observation: <strong>{obs_id}</strong><br>{msg}<br>"
@@ -3481,9 +3270,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             if not plot_directory:
                 return
 
-            item, ok = QInputDialog.getItem(
-                self, "Select the file format", "Available formats", ["PNG", "SVG", "PDF", "EPS", "PS"], 0, False
-            )
+            item, ok = QInputDialog.getItem(self, "Select the file format", "Available formats",
+                                            ["PNG", "SVG", "PDF", "EPS", "PS"], 0, False)
             if ok and item:
                 file_format = item.lower()
             else:
@@ -3555,9 +3343,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         out = ""
         not_paired_obs_list = []
         for obsId in selected_observations:
-            r, msg = project_functions.check_state_events_obs(
-                obsId, self.pj[ETHOGRAM], self.pj[OBSERVATIONS][obsId], self.timeFormat
-            )
+            r, msg = project_functions.check_state_events_obs(obsId, self.pj[ETHOGRAM], self.pj[OBSERVATIONS][obsId],
+                                                              self.timeFormat)
 
             if not r:
                 out += f"Observation: <strong>{obsId}</strong><br>{msg}<br>"
@@ -3626,17 +3413,19 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             if not plot_directory:
                 return
 
-            item, ok = QInputDialog.getItem(
-                self, "Select the file format", "Available formats", ["PNG", "SVG", "PDF", "EPS", "PS"], 0, False
-            )
+            item, ok = QInputDialog.getItem(self, "Select the file format", "Available formats",
+                                            ["PNG", "SVG", "PDF", "EPS", "PS"], 0, False)
             if ok and item:
                 output_format = item.lower()
             else:
                 return
 
-        r = plot_events.create_behaviors_bar_plot(
-            self.pj, selected_observations, parameters, plot_directory, output_format, plot_colors=self.plot_colors
-        )
+        r = plot_events.create_behaviors_bar_plot(self.pj,
+                                                  selected_observations,
+                                                  parameters,
+                                                  plot_directory,
+                                                  output_format,
+                                                  plot_colors=self.plot_colors)
         if "error" in r:
             if "exception" in r:
                 dialog.error_message2()
@@ -3680,22 +3469,18 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         # check if current observation
         if self.observationId:
-            if (
-                dialog.MessageDialog(
+            if (dialog.MessageDialog(
                     programName,
                     "There is a current observation. What do you want to do?",
-                    ["Close observation", "Continue observation"],
-                )
-                == "Close observation"
-            ):
+                ["Close observation", "Continue observation"],
+            ) == "Close observation"):
                 self.close_observation()
             else:
                 return
 
         if self.projectChanged:
-            response = dialog.MessageDialog(
-                programName, "What to do about the current unsaved project?", [SAVE, DISCARD, CANCEL]
-            )
+            response = dialog.MessageDialog(programName, "What to do about the current unsaved project?",
+                                            [SAVE, DISCARD, CANCEL])
 
             if response == SAVE:
                 if self.save_project_activated() == "not saved":
@@ -3705,9 +3490,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 return
 
         if action.text() == "Open project":
-            fn = QFileDialog().getOpenFileName(
-                self, "Open project", "", ("Project files (*.boris *.boris.gz);;" "All files (*)")
-            )
+            fn = QFileDialog().getOpenFileName(self, "Open project", "", ("Project files (*.boris *.boris.gz);;"
+                                                                          "All files (*)"))
             file_name = fn[0] if type(fn) is tuple else fn
 
         else:  # recent project
@@ -3736,35 +3520,24 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                             if pj[SUBJECTS][idx]["key"].islower():
                                 flag_all_upper = False
 
-                    if (
-                        flag_all_upper
-                        and dialog.MessageDialog(
+                    if (flag_all_upper and dialog.MessageDialog(
                             programName,
-                            (
-                                "It is now possible to use <b>lower keys</b> to code behaviors, subjects and modifiers.<br><br>"
-                                "In this project all the behavior and subject keys are upper case.<br>"
-                                "Do you want to convert them in lower case?"
-                            ),
-                            [YES, NO],
-                        )
-                        == YES
-                    ):
+                        ("It is now possible to use <b>lower keys</b> to code behaviors, subjects and modifiers.<br><br>"
+                         "In this project all the behavior and subject keys are upper case.<br>"
+                         "Do you want to convert them in lower case?"),
+                        [YES, NO],
+                    ) == YES):
                         for idx in pj[ETHOGRAM]:
                             pj[ETHOGRAM][idx]["key"] = pj[ETHOGRAM][idx]["key"].lower()
                             # convert modifier short cuts to lower case
                             for modifier_set in pj[ETHOGRAM][idx]["modifiers"]:
                                 try:
                                     for idx2, value in enumerate(
-                                        pj[ETHOGRAM][idx]["modifiers"][modifier_set]["values"]
-                                    ):
+                                            pj[ETHOGRAM][idx]["modifiers"][modifier_set]["values"]):
                                         if re.findall(r"\((\w+)\)", value):
                                             pj[ETHOGRAM][idx]["modifiers"][modifier_set]["values"][idx2] = (
-                                                value.split("(")[0]
-                                                + "("
-                                                + re.findall(r"\((\w+)\)", value)[0].lower()
-                                                + ")"
-                                                + value.split(")")[-1]
-                                            )
+                                                value.split("(")[0] + "(" + re.findall(r"\((\w+)\)", value)[0].lower() +
+                                                ")" + value.split(")")[-1])
                                 except Exception:
                                     logging.warning("error during converion of modifier short cut to lower case")
 
@@ -3780,22 +3553,18 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         """
         # check if current observation
         if self.observationId:
-            if (
-                dialog.MessageDialog(
+            if (dialog.MessageDialog(
                     programName,
                     "There is a current observation. What do you want to do?",
-                    ["Close observation", "Continue observation"],
-                )
-                == "Close observation"
-            ):
+                ["Close observation", "Continue observation"],
+            ) == "Close observation"):
                 self.close_observation()
             else:
                 return
 
         if self.projectChanged:
-            response = dialog.MessageDialog(
-                programName, "What to do about the current unsaved project?", [SAVE, DISCARD, CANCEL]
-            )
+            response = dialog.MessageDialog(programName, "What to do about the current unsaved project?",
+                                            [SAVE, DISCARD, CANCEL])
 
             if response == SAVE:
                 if self.save_project_activated() == "not saved":
@@ -3804,9 +3573,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             if response == CANCEL:
                 return
 
-        fn = QFileDialog().getOpenFileName(
-            self, "Import project from template", "", "Noldus Observer templates (*.otx *.otb);;All files (*)"
-        )
+        fn = QFileDialog().getOpenFileName(self, "Import project from template", "",
+                                           "Noldus Observer templates (*.otx *.otb);;All files (*)")
         file_name = fn[0] if type(fn) is tuple else fn
 
         if file_name:
@@ -3847,9 +3615,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 return
 
         if self.projectChanged:
-            response = dialog.MessageDialog(
-                programName, "What to do about the current unsaved project?", [SAVE, DISCARD, CANCEL]
-            )
+            response = dialog.MessageDialog(programName, "What to do about the current unsaved project?",
+                                            [SAVE, DISCARD, CANCEL])
             if response == SAVE:
                 if self.save_project_activated() == "not saved":
                     return
@@ -3900,9 +3667,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             if self.observationId:
                 # hide data plot
                 self.hide_data_files()
-                response = dialog.MessageDialog(
-                    programName, "The current observation will be closed. Do you want to continue?", [YES, NO]
-                )
+                response = dialog.MessageDialog(programName,
+                                                "The current observation will be closed. Do you want to continue?",
+                                                [YES, NO])
                 if response == NO:
                     self.show_data_files()
                     return
@@ -3911,9 +3678,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
             if mode == NEW:
                 if self.projectChanged:
-                    response = dialog.MessageDialog(
-                        programName, "What to do with the current unsaved project?", [SAVE, DISCARD, CANCEL]
-                    )
+                    response = dialog.MessageDialog(programName, "What to do with the current unsaved project?",
+                                                    [SAVE, DISCARD, CANCEL])
 
                     if response == SAVE:
                         self.save_project_activated()
@@ -3960,8 +3726,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
                 if newProjectWindow.pj[PROJECT_DATE]:
                     newProjectWindow.dteDate.setDateTime(
-                        QDateTime.fromString(newProjectWindow.pj[PROJECT_DATE], "yyyy-MM-ddThh:mm:ss")
-                    )
+                        QDateTime.fromString(newProjectWindow.pj[PROJECT_DATE], "yyyy-MM-ddThh:mm:ss"))
                 else:
                     newProjectWindow.dteDate.setDateTime(QDateTime.currentDateTime())
 
@@ -3985,9 +3750,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                         newProjectWindow.twObservations.setRowCount(newProjectWindow.twObservations.rowCount() + 1)
 
                         # observation id
-                        newProjectWindow.twObservations.setItem(
-                            newProjectWindow.twObservations.rowCount() - 1, 0, QTableWidgetItem(obs)
-                        )
+                        newProjectWindow.twObservations.setItem(newProjectWindow.twObservations.rowCount() - 1, 0,
+                                                                QTableWidgetItem(obs))
                         # observation date
                         newProjectWindow.twObservations.setItem(
                             newProjectWindow.twObservations.rowCount() - 1,
@@ -4036,9 +3800,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                                 item.setFlags(Qt.ItemIsEnabled)
                                 item.setBackground(QColor(230, 230, 230))
 
-                            newProjectWindow.twBehaviors.setItem(
-                                newProjectWindow.twBehaviors.rowCount() - 1, behavioursFields[field], item
-                            )
+                            newProjectWindow.twBehaviors.setItem(newProjectWindow.twBehaviors.rowCount() - 1,
+                                                                 behavioursFields[field], item)
 
                 # load independent variables
                 if INDEPENDENT_VARIABLES in newProjectWindow.pj:
@@ -4057,13 +3820,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 if BEHAVIORS_CODING_MAP in newProjectWindow.pj:
                     for bcm in newProjectWindow.pj[BEHAVIORS_CODING_MAP]:
                         newProjectWindow.twBehavCodingMap.setRowCount(newProjectWindow.twBehavCodingMap.rowCount() + 1)
-                        newProjectWindow.twBehavCodingMap.setItem(
-                            newProjectWindow.twBehavCodingMap.rowCount() - 1, 0, QTableWidgetItem(bcm["name"])
-                        )
+                        newProjectWindow.twBehavCodingMap.setItem(newProjectWindow.twBehavCodingMap.rowCount() - 1, 0,
+                                                                  QTableWidgetItem(bcm["name"]))
                         codes = ", ".join([bcm["areas"][idx]["code"] for idx in bcm["areas"]])
-                        newProjectWindow.twBehavCodingMap.setItem(
-                            newProjectWindow.twBehavCodingMap.rowCount() - 1, 1, QTableWidgetItem(codes)
-                        )
+                        newProjectWindow.twBehavCodingMap.setItem(newProjectWindow.twBehavCodingMap.rowCount() - 1, 1,
+                                                                  QTableWidgetItem(codes))
 
                 # time converters
                 if CONVERTERS in newProjectWindow.pj:
@@ -4078,19 +3839,14 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             # warning
             if mode == EDIT and self.pj[OBSERVATIONS]:
 
-                if (
-                    dialog.MessageDialog(
+                if (dialog.MessageDialog(
                         programName,
-                        (
-                            "Please note that editing the project may interfere with the coded events in your previous observations.<br>"
-                            "For example modifying a behavior code, renaming a subject or modifying the modifiers sets "
-                            "can unvalidate your previous observations.<br>"
-                            "Remember to make a backup of your project."
-                        ),
-                        [CANCEL, "Edit"],
-                    )
-                    == CANCEL
-                ):
+                    ("Please note that editing the project may interfere with the coded events in your previous observations.<br>"
+                     "For example modifying a behavior code, renaming a subject or modifying the modifiers sets "
+                     "can unvalidate your previous observations.<br>"
+                     "Remember to make a backup of your project."),
+                    [CANCEL, "Edit"],
+                ) == CANCEL):
                     return
 
             if newProjectWindow.exec_():  # button OK returns True
@@ -4198,7 +3954,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self,
             "Save project as",
             os.path.dirname(self.projectFileName),
-            ("Project files (*.boris);;" "Compressed project files (*.boris.gz);;" "All files (*)"),
+            ("Project files (*.boris);;"
+             "Compressed project files (*.boris.gz);;"
+             "All files (*)"),
         )
 
         if not project_new_file_name:
@@ -4211,29 +3969,19 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 project_new_file_name += ".boris"
                 # check if file name with extension already exists
                 if pathlib.Path(project_new_file_name).is_file():
-                    if (
-                        dialog.MessageDialog(
-                            programName, f"The file {project_new_file_name} already exists.", [CANCEL, OVERWRITE]
-                        )
-                        == CANCEL
-                    ):
+                    if (dialog.MessageDialog(programName, f"The file {project_new_file_name} already exists.",
+                                             [CANCEL, OVERWRITE]) == CANCEL):
                         return "Not saved"
             # add .boris.gz if filter is .boris.gz
-            if (
-                filtr == "Compressed project files (*.boris.gz)"
-                and os.path.splitext(project_new_file_name)[1] != ".boris.gz"
-            ):
+            if (filtr == "Compressed project files (*.boris.gz)" and
+                    os.path.splitext(project_new_file_name)[1] != ".boris.gz"):
                 if project_new_file_name.endswith(".boris"):
                     project_new_file_name = os.path.splitext(project_new_file_name)[0]
                 project_new_file_name += ".boris.gz"
                 # check if file name with extension already exists
                 if pathlib.Path(project_new_file_name).is_file():
-                    if (
-                        dialog.MessageDialog(
-                            programName, f"The file {project_new_file_name} already exists.", [CANCEL, OVERWRITE]
-                        )
-                        == CANCEL
-                    ):
+                    if (dialog.MessageDialog(programName, f"The file {project_new_file_name} already exists.",
+                                             [CANCEL, OVERWRITE]) == CANCEL):
                         return "Not saved"
 
             if self.save_project_json(project_new_file_name) == 0:
@@ -4259,7 +4007,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 self,
                 "Save project",
                 txt,
-                ("Project files (*.boris);;" "Compressed project files (*.boris.gz);;" "All files (*)"),
+                ("Project files (*.boris);;"
+                 "Compressed project files (*.boris.gz);;"
+                 "All files (*)"),
             )
 
             if not self.projectFileName:
@@ -4272,32 +4022,22 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 self.projectFileName += ".boris"
                 # check if file name with extension already exists
                 if pathlib.Path(self.projectFileName).is_file():
-                    if (
-                        dialog.MessageDialog(
-                            programName, f"The file {self.projectFileName} already exists.", [CANCEL, OVERWRITE]
-                        )
-                        == CANCEL
-                    ):
+                    if (dialog.MessageDialog(programName, f"The file {self.projectFileName} already exists.",
+                                             [CANCEL, OVERWRITE]) == CANCEL):
                         self.projectFileName = ""
                         return ""
 
             # add .boris.gz if filter is .boris.gz
-            if (
-                filtr == "Compressed project files (*.boris.gz)"
-                and os.path.splitext(self.projectFileName)[1] != ".boris.gz"
-            ):
+            if (filtr == "Compressed project files (*.boris.gz)" and
+                    os.path.splitext(self.projectFileName)[1] != ".boris.gz"):
                 if self.projectFileName.endswith(".boris"):
                     self.projectFileName = os.path.splitext(self.projectFileName)[0]
 
                 self.projectFileName += ".boris.gz"
                 # check if file name with extension already exists
                 if pathlib.Path(self.projectFileName).is_file():
-                    if (
-                        dialog.MessageDialog(
-                            programName, f"The file {self.projectFileName} already exists.", [CANCEL, OVERWRITE]
-                        )
-                        == CANCEL
-                    ):
+                    if (dialog.MessageDialog(programName, f"The file {self.projectFileName} already exists.",
+                                             [CANCEL, OVERWRITE]) == CANCEL):
                         self.projectFileName = ""
                         return ""
 
@@ -4331,7 +4071,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.currentStates = utilities.get_current_states_modifiers_by_subject(
             utilities.state_behavior_codes(self.pj[ETHOGRAM]),
             self.pj[OBSERVATIONS][self.observationId][EVENTS],
-            dict(self.pj[SUBJECTS], **{"": {SUBJECT_NAME: ""}}),
+            dict(self.pj[SUBJECTS], **{"": {
+                SUBJECT_NAME: ""
+            }}),
             current_time,
             include_modifiers=True,
         )
@@ -4417,9 +4159,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         out = ""
         not_paired_obs_list = []
         for obsId in selected_observations:
-            r, msg = project_functions.check_state_events_obs(
-                obsId, self.pj[ETHOGRAM], self.pj[OBSERVATIONS][obsId], self.timeFormat
-            )
+            r, msg = project_functions.check_state_events_obs(obsId, self.pj[ETHOGRAM], self.pj[OBSERVATIONS][obsId],
+                                                              self.timeFormat)
 
             if not r:
                 out += f"Observation: <strong>{obsId}</strong><br>{msg}<br>"
@@ -4608,10 +4349,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 QMessageBox.critical(
                     self,
                     programName,
-                    (
-                        "The current observation is opened in VIEW mode.\n"
-                        "It is not allowed to log events in this mode."
-                    ),
+                    ("The current observation is opened in VIEW mode.\n"
+                     "It is not allowed to log events in this mode."),
                 )
                 return
 
@@ -4648,9 +4387,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             try:
                 behavior_idx = [key for key in self.pj[ETHOGRAM] if self.pj[ETHOGRAM][key][BEHAVIOR_CODE] == code][0]
             except Exception:
-                QMessageBox.critical(
-                    self, programName, f"The code <b>{code}</b> of behavior coding map does not exist in ethogram."
-                )
+                QMessageBox.critical(self, programName,
+                                     f"The code <b>{code}</b> of behavior coding map does not exist in ethogram.")
                 return
 
             event = self.full_event(behavior_idx)
@@ -4692,31 +4430,30 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         paint twEvents with tracking cursor
         scroll to corresponding event
         """
-
-        global ROW
+        '''global ROW'''
 
         if self.pj[OBSERVATIONS][self.observationId][EVENTS]:
             ct = self.getLaps()
             if ct >= self.pj[OBSERVATIONS][self.observationId][EVENTS][-1][0]:
-                ROW = len(self.pj[OBSERVATIONS][self.observationId][EVENTS])
+                self.events_current_row = len(self.pj[OBSERVATIONS][self.observationId][EVENTS])
             else:
                 cr_list = [
-                    idx
-                    for idx, x in enumerate(self.pj[OBSERVATIONS][self.observationId][EVENTS][:-1])
+                    idx for idx, x in enumerate(self.pj[OBSERVATIONS][self.observationId][EVENTS][:-1])
                     if x[0] <= ct and self.pj[OBSERVATIONS][self.observationId][EVENTS][idx + 1][0] > ct
                 ]
 
                 if cr_list:
-                    ROW = cr_list[0]
+                    self.events_current_row = cr_list[0]
                     if not self.trackingCursorAboveEvent:
-                        ROW += 1
+                        self.events_current_row += 1
                 else:
-                    ROW = -1
+                    self.events_current_row = -1
 
-            self.twEvents.setItemDelegate(StyledItemDelegateTriangle(self.twEvents))
+            self.twEvents.setItemDelegate(events_cursor.StyledItemDelegateTriangle(self.events_current_row))
 
-            if self.twEvents.item(ROW, 0):
-                self.twEvents.scrollToItem(self.twEvents.item(ROW, 0), QAbstractItemView.EnsureVisible)
+            if self.twEvents.item(self.events_current_row, 0):
+                self.twEvents.scrollToItem(self.twEvents.item(self.events_current_row, 0),
+                                           QAbstractItemView.EnsureVisible)
 
     def show_current_states_in_subjects_table(self):
         """
@@ -4728,9 +4465,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 if self.twSubjects.item(i, 1).text() == NO_FOCAL_SUBJECT:
                     self.twSubjects.item(i, len(subjectsFields)).setText(",".join(self.currentStates[""]))
                 else:
-                    self.twSubjects.item(i, len(subjectsFields)).setText(
-                        ",".join(self.currentStates[self.subject_name_index[self.twSubjects.item(i, 1).text()]])
-                    )
+                    self.twSubjects.item(i, len(subjectsFields)).setText(",".join(
+                        self.currentStates[self.subject_name_index[self.twSubjects.item(i, 1).text()]]))
             except KeyError:
                 self.twSubjects.item(i, len(subjectsFields)).setText("")
 
@@ -4755,9 +4491,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                         self.dw_player[n_player].stack.setCurrentIndex(1)
                     else:
 
-                        if new_time - Decimal(
-                            self.pj[OBSERVATIONS][self.observationId][MEDIA_INFO]["offset"][str(n_player + 1)]
-                        ) > sum(self.dw_player[n_player].media_durations):
+                        if new_time - Decimal(self.pj[OBSERVATIONS][self.observationId][MEDIA_INFO]["offset"][str(
+                                n_player + 1)]) > sum(self.dw_player[n_player].media_durations):
                             # hide video if required time > video time + offset
                             self.dw_player[n_player].stack.setCurrentIndex(1)
                         else:
@@ -4765,27 +4500,23 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                             self.dw_player[n_player].stack.setCurrentIndex(0)
 
                             self.seek_mediaplayer(
-                                new_time
-                                - Decimal(
-                                    self.pj[OBSERVATIONS][self.observationId][MEDIA_INFO]["offset"][str(n_player + 1)]
-                                ),
+                                new_time - Decimal(
+                                    self.pj[OBSERVATIONS][self.observationId][MEDIA_INFO]["offset"][str(n_player + 1)]),
                                 player=n_player,
                             )
 
                 elif self.pj[OBSERVATIONS][self.observationId][MEDIA_INFO]["offset"][str(n_player + 1)] < 0:
 
                     if new_time - Decimal(
-                        self.pj[OBSERVATIONS][self.observationId][MEDIA_INFO]["offset"][str(n_player + 1)]
-                    ) > sum(self.dw_player[n_player].media_durations):
+                            self.pj[OBSERVATIONS][self.observationId][MEDIA_INFO]["offset"][str(n_player + 1)]) > sum(
+                                self.dw_player[n_player].media_durations):
                         # hide video if required time > video time + offset
                         self.dw_player[n_player].stack.setCurrentIndex(1)
                     else:
                         self.dw_player[n_player].stack.setCurrentIndex(0)
                         self.seek_mediaplayer(
-                            new_time
-                            - Decimal(
-                                self.pj[OBSERVATIONS][self.observationId][MEDIA_INFO]["offset"][str(n_player + 1)]
-                            ),
+                            new_time -
+                            Decimal(self.pj[OBSERVATIONS][self.observationId][MEDIA_INFO]["offset"][str(n_player + 1)]),
                             player=n_player,
                         )
 
@@ -4798,16 +4529,12 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 """media_idx = self.dw_player[n_player].media_list.index_of_item(self.dw_player[n_player].mediaplayer.get_media())"""
                 media_idx = self.dw_player[n_player].player.playlist_pos
 
-                if (
-                    sum(self.dw_player[n_player].media_durations[0:media_idx])
-                    < new_time
-                    < sum(self.dw_player[n_player].media_durations[0 : media_idx + 1])
-                ):
+                if (sum(self.dw_player[n_player].media_durations[0:media_idx]) < new_time < sum(
+                        self.dw_player[n_player].media_durations[0:media_idx + 1])):
                     # in current media
                     logging.debug(f"{n_player + 1} correct media")
-                    self.seek_mediaplayer(
-                        new_time - sum(self.dw_player[n_player].media_durations[0:media_idx], player=n_player)
-                    )
+                    self.seek_mediaplayer(new_time -
+                                          sum(self.dw_player[n_player].media_durations[0:media_idx], player=n_player))
                 else:
 
                     logging.debug(f"{n_player + 1} not correct media")
@@ -4820,9 +4547,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                             self.dw_player[n_player].player.playing_pos = idx
                             if flag_paused:
                                 self.dw_player[n_player].player.pause = True
-                            self.seek_mediaplayer(
-                                new_time - self.dw_player[n_player].media_durations[0:idx], player=n_player
-                            )
+                            self.seek_mediaplayer(new_time - self.dw_player[n_player].media_durations[0:idx],
+                                                  player=n_player)
                             break
                         tot += d
 
@@ -4851,10 +4577,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
             # observation time interval
             if self.pj[OBSERVATIONS][self.observationId].get(OBSERVATION_TIME_INTERVAL, [0, 0])[1]:
-                if (
-                    cumulative_time_pos
-                    >= self.pj[OBSERVATIONS][self.observationId].get(OBSERVATION_TIME_INTERVAL, [0, 0])[1]
-                ):
+                if (cumulative_time_pos >= self.pj[OBSERVATIONS][self.observationId].get(
+                        OBSERVATION_TIME_INTERVAL, [0, 0])[1]):
                     if self.is_playing():
                         self.pause_video()
                         self.beep("beep")
@@ -4875,18 +4599,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     ct = self.getLaps(n_player=n_player)
 
                     # sync players 2..8 if time diff >= 1 s
-                    if (
-                        abs(
-                            ct0
-                            - (
-                                ct
-                                + Decimal(
-                                    self.pj[OBSERVATIONS][self.observationId][MEDIA_INFO]["offset"][str(n_player + 1)]
-                                )
-                            )
-                        )
-                        >= 1
-                    ):
+                    if (abs(ct0 -
+                            (ct + Decimal(self.pj[OBSERVATIONS][self.observationId][MEDIA_INFO]["offset"][str(n_player +
+                                                                                                              1)]))) >=
+                            1):
                         self.sync_time(n_player, ct0)  # self.seek_mediaplayer(ct0, n_player)
 
             currentTimeOffset = Decimal(cumulative_time_pos + self.pj[OBSERVATIONS][self.observationId][TIME_OFFSET])
@@ -4907,7 +4623,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.currentStates = utilities.get_current_states_modifiers_by_subject(
                 StateBehaviorsCodes,
                 self.pj[OBSERVATIONS][self.observationId][EVENTS],
-                dict(self.pj[SUBJECTS], **{"": {"name": ""}}),
+                dict(self.pj[SUBJECTS], **{"": {
+                    "name": ""
+                }}),
                 currentTimeOffset,
                 include_modifiers=True,
             )
@@ -4919,8 +4637,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
             if self.dw_player[0].player.playlist_pos is not None:
                 current_media_name = pathlib.Path(
-                    self.dw_player[0].player.playlist[self.dw_player[0].player.playlist_pos]["filename"]
-                ).name
+                    self.dw_player[0].player.playlist[self.dw_player[0].player.playlist_pos]["filename"]).name
             else:
                 current_media_name = ""
             playlist_length = len(self.dw_player[0].player.playlist)
@@ -4930,16 +4647,12 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
             if self.dw_player[0].player.time_pos is not None:
 
-                msg = (
-                    f"{current_media_name}: <b>{self.convertTime(current_media_time_pos)} / "
-                    f"{self.convertTime(current_media_duration)}</b> frame: {current_media_frame}"
-                )
+                msg = (f"{current_media_name}: <b>{self.convertTime(current_media_time_pos)} / "
+                       f"{self.convertTime(current_media_duration)}</b> frame: {current_media_frame}")
 
                 if self.dw_player[0].player.playlist_count > 1:
-                    msg += (
-                        f"<br>Total: <b>{self.convertTime(cumulative_time_pos)} / "
-                        f"{self.convertTime(all_media_duration)}</b>"
-                    )
+                    msg += (f"<br>Total: <b>{self.convertTime(cumulative_time_pos)} / "
+                            f"{self.convertTime(all_media_duration)}</b>")
 
                 self.lb_player_status.setText("Player paused" if self.dw_player[0].player.pause else "")
 
@@ -4979,13 +4692,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     self.twEthogram.setRowCount(self.twEthogram.rowCount() + 1)
                     for col in sorted(behav_fields_in_mainwindow.keys()):
                         field = behav_fields_in_mainwindow[col]
-                        self.twEthogram.setItem(
-                            self.twEthogram.rowCount() - 1, col, QTableWidgetItem(str(self.pj[ETHOGRAM][idx][field]))
-                        )
+                        self.twEthogram.setItem(self.twEthogram.rowCount() - 1, col,
+                                                QTableWidgetItem(str(self.pj[ETHOGRAM][idx][field])))
         if self.twEthogram.rowCount() < len(self.pj[ETHOGRAM].keys()):
             self.dwEthogram.setWindowTitle(
-                f"Ethogram (filtered {self.twEthogram.rowCount()}/{len(self.pj[ETHOGRAM].keys())})"
-            )
+                f"Ethogram (filtered {self.twEthogram.rowCount()}/{len(self.pj[ETHOGRAM].keys())})")
 
             if self.observationId:
                 self.pj[OBSERVATIONS][self.observationId]["filtered behaviors"] = behaviorsToShow
@@ -5017,9 +4728,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     self.twSubjects.setRowCount(self.twSubjects.rowCount() + 1)
 
                     for idx2, field in enumerate(subjectsFields):
-                        self.twSubjects.setItem(
-                            self.twSubjects.rowCount() - 1, idx2, QTableWidgetItem(self.pj[SUBJECTS][idx][field])
-                        )
+                        self.twSubjects.setItem(self.twSubjects.rowCount() - 1, idx2,
+                                                QTableWidgetItem(self.pj[SUBJECTS][idx][field]))
 
                     # add cell for current state(s) after last subject field
                     self.twSubjects.setItem(self.twSubjects.rowCount() - 1, len(subjectsFields), QTableWidgetItem(""))
@@ -5064,10 +4774,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         check if a same event is already in events list (time, subject, code)
         """
 
-        return (time, subject, code) in [
-            (x[EVENT_TIME_FIELD_IDX], x[EVENT_SUBJECT_FIELD_IDX], x[EVENT_BEHAVIOR_FIELD_IDX])
-            for x in self.pj[OBSERVATIONS][obsId][EVENTS]
-        ]
+        return (time, subject, code) in [(x[EVENT_TIME_FIELD_IDX], x[EVENT_SUBJECT_FIELD_IDX],
+                                          x[EVENT_BEHAVIOR_FIELD_IDX]) for x in self.pj[OBSERVATIONS][obsId][EVENTS]]
 
     def writeEvent(self, event: dict, memTime: Decimal) -> None:
         """
@@ -5096,14 +4804,13 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             # "row" present in case of event editing
 
             if ("row" not in event) and self.checkSameEvent(
-                self.observationId,
-                memTime,
-                event["subject"] if "subject" in event else self.currentSubject,
-                event["code"],
+                    self.observationId,
+                    memTime,
+                    event["subject"] if "subject" in event else self.currentSubject,
+                    event["code"],
             ):
-                _ = dialog.MessageDialog(
-                    programName, "The same event already exists (same time, behavior code and subject).", [OK]
-                )
+                _ = dialog.MessageDialog(programName,
+                                         "The same event already exists (same time, behavior code and subject).", [OK])
                 return
 
             if "from map" not in event:  # modifiers only for behaviors without coding map
@@ -5146,9 +4853,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                         # check if editing (original_modifiers key)
                         currentModifiers = event.get("original_modifiers", "")
 
-                        modifiers_selector = select_modifiers.ModifiersList(
-                            event["code"], eval(str(event["modifiers"])), currentModifiers
-                        )
+                        modifiers_selector = select_modifiers.ModifiersList(event["code"],
+                                                                            eval(str(event["modifiers"])),
+                                                                            currentModifiers)
 
                         r = modifiers_selector.exec_()
                         if r:
@@ -5188,7 +4895,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             current_states = utilities.get_current_states_modifiers_by_subject(
                 StateBehaviorsCodes,
                 self.pj[OBSERVATIONS][self.observationId][EVENTS],
-                dict(self.pj[SUBJECTS], **{"": {"name": ""}}),
+                dict(self.pj[SUBJECTS], **{"": {
+                    "name": ""
+                }}),
                 memTime,
                 include_modifiers=False,
             )
@@ -5226,22 +4935,17 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
                 for cs in csj:
                     # close state if same state without modifier
-                    if (
-                        self.close_the_same_current_event
-                        and (event["code"] == cs)
-                        and modifier_str.replace("None", "").replace("|", "") == ""
-                    ):
+                    if (self.close_the_same_current_event and (event["code"] == cs) and
+                            modifier_str.replace("None", "").replace("|", "") == ""):
                         modifier_str = cm[cs]
                         continue
 
-                    if (event["excluded"] and cs in event["excluded"].split(",")) or (
-                        event["code"] == cs and cm[cs] != modifier_str
-                    ):
+                    if (event["excluded"] and cs in event["excluded"].split(",")) or (event["code"] == cs and
+                                                                                      cm[cs] != modifier_str):
                         # add excluded state event to observations (= STOP them)
                         self.pj[OBSERVATIONS][self.observationId][EVENTS].append(
                             # [memTime - Decimal("0.001"), self.currentSubject, cs, cm[cs], ""]
-                            [memTime, self.currentSubject, cs, cm[cs], ""]
-                        )
+                            [memTime, self.currentSubject, cs, cm[cs], ""])
 
             # remove key code from modifiers
             modifier_str = re.sub(" \(.*\)", "", modifier_str)
@@ -5261,8 +4965,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             else:
                 # add event
                 self.pj[OBSERVATIONS][self.observationId][EVENTS].append(
-                    [memTime, subject, event["code"], modifier_str, comment]
-                )
+                    [memTime, subject, event["code"], modifier_str, comment])
 
             # sort events in pj
             self.pj[OBSERVATIONS][self.observationId][EVENTS].sort()
@@ -5302,9 +5005,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         items.sort()
 
-        dbc = dialog.DuplicateBehaviorCode(
-            f"The <b>{obs_key}</b> key codes more behaviors.<br>Choose the correct one:", items
-        )
+        dbc = dialog.DuplicateBehaviorCode(f"The <b>{obs_key}</b> key codes more behaviors.<br>Choose the correct one:",
+                                           items)
         if dbc.exec_():
             code = dbc.getCode()
             if code:
@@ -5345,12 +5047,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             if self.playerType == VLC:
                 # cumulative time
                 mem_laps = sum(
-                    self.dw_player[n_player].media_durations[0 : self.dw_player[n_player].player.playlist_pos]
-                ) + (
-                    0
-                    if self.dw_player[n_player].player.time_pos is None
-                    else self.dw_player[n_player].player.time_pos * 1000
-                )
+                    self.dw_player[n_player].media_durations[0:self.dw_player[n_player].player.playlist_pos]) + (
+                        0 if self.dw_player[n_player].player.time_pos is None else
+                        self.dw_player[n_player].player.time_pos * 1000)
 
                 return Decimal(str(round(mem_laps / 1000, 3)))
 
@@ -5378,8 +5077,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                         self.pause_video()
 
             self.codingMapWindow = modifiers_coding_map.ModifiersCodingMapWindowClass(
-                self.pj[CODING_MAP][self.pj[ETHOGRAM][behavior_idx]["coding map"]]
-            )
+                self.pj[CODING_MAP][self.pj[ETHOGRAM][behavior_idx]["coding map"]])
 
             self.codingMapWindow.resize(CODING_MAP_RESIZE_W, CODING_MAP_RESIZE_H)
             if self.codingMapWindowGeometry:
@@ -5452,7 +5150,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             QMessageBox.critical(
                 self,
                 programName,
-                ("The current observation is opened in VIEW mode.\n" "It is not allowed to log events in this mode."),
+                ("The current observation is opened in VIEW mode.\n"
+                 "It is not allowed to log events in this mode."),
             )
             return
 
@@ -5573,11 +5272,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         if memLaps is None:
             return
 
-        if (
-            ((ek in range(33, 256)) and (ek not in [Qt.Key_Plus, Qt.Key_Minus]))
-            or (ek in function_keys)
-            or (ek == Qt.Key_Enter and event.text())
-        ):  # click from coding pad or subjects pad
+        if (((ek in range(33, 256)) and (ek not in [Qt.Key_Plus, Qt.Key_Minus])) or (ek in function_keys) or
+            (ek == Qt.Key_Enter and event.text())):  # click from coding pad or subjects pad
 
             ethogram_idx, subj_idx, count = -1, -1, 0
 
@@ -5626,9 +5322,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                         flagPlayerPlaying = True
                         self.pause_video()
 
-                r = dialog.MessageDialog(
-                    programName, "This key defines a behavior and a subject. Choose one", ["&Behavior", "&Subject"]
-                )
+                r = dialog.MessageDialog(programName, "This key defines a behavior and a subject. Choose one",
+                                         ["&Behavior", "&Subject"])
                 if r == "&Subject":
                     count = 0
                 if r == "&Behavior":
@@ -5662,10 +5357,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
                     response = dialog.MessageDialog(
                         programName,
-                        (
-                            "The focal subject is not defined. Do you want to continue?\n"
-                            "Use Preferences menu option to modify this behaviour."
-                        ),
+                        ("The focal subject is not defined. Do you want to continue?\n"
+                         "Use Preferences menu option to modify this behaviour."),
                         [YES, NO],
                     )
 
@@ -5776,8 +5469,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             """
 
             if (not self.find_dialog.cbFindInSelectedEvents.isChecked()) or (
-                self.find_dialog.cbFindInSelectedEvents.isChecked() and event_idx in self.find_dialog.rowsToFind
-            ):
+                    self.find_dialog.cbFindInSelectedEvents.isChecked() and event_idx in self.find_dialog.rowsToFind):
 
                 for idx in fields_list:
                     """
@@ -5785,14 +5477,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                        or (not self.find_dialog.cb_case_sensitive.isChecked() and
                            self.find_dialog.findText.text().upper() in event[idx].upper()):
                     """
-                    if (
-                        self.find_dialog.cb_case_sensitive.isChecked()
-                        and self.find_dialog.findText.text() in self.twEvents.item(event_idx, idx).text()
-                    ) or (
-                        not self.find_dialog.cb_case_sensitive.isChecked()
-                        and self.find_dialog.findText.text().upper()
-                        in self.twEvents.item(event_idx, idx).text().upper()
-                    ):
+                    if (self.find_dialog.cb_case_sensitive.isChecked() and
+                            self.find_dialog.findText.text() in self.twEvents.item(
+                                event_idx, idx).text()) or (not self.find_dialog.cb_case_sensitive.isChecked() and
+                                                            self.find_dialog.findText.text().upper()
+                                                            in self.twEvents.item(event_idx, idx).text().upper()):
 
                         self.find_dialog.currentIdx = event_idx
                         self.twEvents.scrollToItem(self.twEvents.item(event_idx, 0))
@@ -5800,14 +5489,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                         return
 
         if msg != "FIND_FROM_BEGINING":
-            if (
-                dialog.MessageDialog(
+            if (dialog.MessageDialog(
                     programName,
                     f"<b>{self.find_dialog.findText.text()}</b> not found. Search from beginning?",
-                    [YES, NO],
-                )
-                == YES
-            ):
+                [YES, NO],
+            ) == YES):
                 self.find_dialog.currentIdx = -1
                 self.click_signal_find_in_events("FIND_FROM_BEGINING")
             else:
@@ -5824,12 +5510,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         explore_dialog = dialog.explore_project_dialog()
         if explore_dialog.exec_():
             results = []
-            nb_fields = (
-                (explore_dialog.find_subject.text() != "")
-                + (explore_dialog.find_behavior.text() != "")
-                + (explore_dialog.find_modifier.text() != "")
-                + (explore_dialog.find_comment.text() != "")
-            )
+            nb_fields = ((explore_dialog.find_subject.text() != "") + (explore_dialog.find_behavior.text() != "") +
+                         (explore_dialog.find_modifier.text() != "") + (explore_dialog.find_comment.text() != ""))
 
             for obs_id in sorted(self.pj[OBSERVATIONS]):
                 for event_idx, event in enumerate(self.pj[OBSERVATIONS][obs_id][EVENTS]):
@@ -5908,45 +5590,36 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
             # apply modif only to filtered subjects
             if self.filtered_subjects:
-                if (
-                    self.pj[OBSERVATIONS][self.observationId][EVENTS][event_idx][EVENT_SUBJECT_FIELD_IDX]
-                    not in self.filtered_subjects
-                ):
+                if (self.pj[OBSERVATIONS][self.observationId][EVENTS][event_idx][EVENT_SUBJECT_FIELD_IDX]
+                        not in self.filtered_subjects):
                     continue
             # apply modif only to filtered behaviors
             if self.filtered_behaviors:
-                if (
-                    self.pj[OBSERVATIONS][self.observationId][EVENTS][event_idx][EVENT_BEHAVIOR_FIELD_IDX]
-                    not in self.filtered_behaviors
-                ):
+                if (self.pj[OBSERVATIONS][self.observationId][EVENTS][event_idx][EVENT_BEHAVIOR_FIELD_IDX]
+                        not in self.filtered_behaviors):
                     continue
 
             if event_idx < self.find_replace_dialog.currentIdx:
                 continue
 
             if (not self.find_replace_dialog.cbFindInSelectedEvents.isChecked()) or (
-                self.find_replace_dialog.cbFindInSelectedEvents.isChecked()
-                and event_idx in self.find_replace_dialog.rowsToFind
-            ):
+                    self.find_replace_dialog.cbFindInSelectedEvents.isChecked() and
+                    event_idx in self.find_replace_dialog.rowsToFind):
                 for idx1 in fields_list:
                     if idx1 <= self.find_replace_dialog.currentIdx_idx:
                         continue
 
-                    if (
-                        self.find_replace_dialog.cb_case_sensitive.isChecked()
-                        and self.find_replace_dialog.findText.text() in event[idx1]
-                    ) or (
-                        not self.find_replace_dialog.cb_case_sensitive.isChecked()
-                        and self.find_replace_dialog.findText.text().upper() in event[idx1].upper()
-                    ):
+                    if (self.find_replace_dialog.cb_case_sensitive.isChecked() and
+                            self.find_replace_dialog.findText.text() in event[idx1]) or (
+                                not self.find_replace_dialog.cb_case_sensitive.isChecked() and
+                                self.find_replace_dialog.findText.text().upper() in event[idx1].upper()):
 
                         number_replacement += 1
                         self.find_replace_dialog.currentIdx = event_idx
                         self.find_replace_dialog.currentIdx_idx = idx1
                         if self.find_replace_dialog.cb_case_sensitive.isChecked():
-                            event[idx1] = event[idx1].replace(
-                                self.find_replace_dialog.findText.text(), self.find_replace_dialog.replaceText.text()
-                            )
+                            event[idx1] = event[idx1].replace(self.find_replace_dialog.findText.text(),
+                                                              self.find_replace_dialog.replaceText.text())
                         if not self.find_replace_dialog.cb_case_sensitive.isChecked():
                             event[idx1] = insensitive_re.sub(self.find_replace_dialog.replaceText.text(), event[idx1])
 
@@ -5962,14 +5635,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 self.find_replace_dialog.currentIdx_idx = -1
 
         if msg == "FIND_REPLACE":
-            if (
-                dialog.MessageDialog(
+            if (dialog.MessageDialog(
                     programName,
                     f"{self.find_replace_dialog.findText.text()} not found.\nRestart find/replace from the beginning?",
-                    [YES, NO],
-                )
-                == YES
-            ):
+                [YES, NO],
+            ) == YES):
                 self.find_replace_dialog.currentIdx = -1
             else:
                 self.find_replace_dialog.close()
@@ -6001,12 +5671,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         # check if re-encoding
         if self.processes:
-            if (
-                dialog.MessageDialog(
-                    programName, "BORIS is doing some job. What do you want to do?", ["Wait", "Quit BORIS"]
-                )
-                == "Wait"
-            ):
+            if (dialog.MessageDialog(programName, "BORIS is doing some job. What do you want to do?",
+                                     ["Wait", "Quit BORIS"]) == "Wait"):
                 event.ignore()
                 return
             for ps in self.processes:
@@ -6019,9 +5685,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.close_observation()
 
         if self.projectChanged:
-            response = dialog.MessageDialog(
-                programName, "What to do about the current unsaved project?", [SAVE, DISCARD, CANCEL]
-            )
+            response = dialog.MessageDialog(programName, "What to do about the current unsaved project?",
+                                            [SAVE, DISCARD, CANCEL])
 
             if response == SAVE:
                 if self.save_project_activated() == "not saved":
@@ -6052,10 +5717,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
             # check if player 1 is ended
             for i, dw in enumerate(self.dw_player):
-                if (
-                    str(i + 1) in self.pj[OBSERVATIONS][self.observationId][FILE]
-                    and self.pj[OBSERVATIONS][self.observationId][FILE][str(i + 1)]
-                ):
+                if (str(i + 1) in self.pj[OBSERVATIONS][self.observationId][FILE] and
+                        self.pj[OBSERVATIONS][self.observationId][FILE][str(i + 1)]):
                     dw.player.pause = False
 
             self.lb_player_status.clear()
@@ -6085,10 +5748,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         if self.playerType == VLC:
 
             for i, player in enumerate(self.dw_player):
-                if (
-                    str(i + 1) in self.pj[OBSERVATIONS][self.observationId][FILE]
-                    and self.pj[OBSERVATIONS][self.observationId][FILE][str(i + 1)]
-                ):
+                if (str(i + 1) in self.pj[OBSERVATIONS][self.observationId][FILE] and
+                        self.pj[OBSERVATIONS][self.observationId][FILE][str(i + 1)]):
 
                     if not player.player.pause:
 
@@ -6126,17 +5787,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         """
         if self.playerType == VLC:
 
-            decrement = (
-                self.fast * self.play_rate
-                if self.config_param.get(ADAPT_FAST_JUMP, ADAPT_FAST_JUMP_DEFAULT)
-                else self.fast
-            )
+            decrement = (self.fast * self.play_rate
+                         if self.config_param.get(ADAPT_FAST_JUMP, ADAPT_FAST_JUMP_DEFAULT) else self.fast)
 
-            new_time = (
-                sum(self.dw_player[0].media_durations[0 : self.dw_player[0].player.playlist_pos]) / 1000
-                + self.dw_player[0].player.playback_time
-                - decrement
-            )
+            new_time = (sum(self.dw_player[0].media_durations[0:self.dw_player[0].player.playlist_pos]) / 1000 +
+                        self.dw_player[0].player.playback_time - decrement)
 
             if new_time < decrement:
                 new_time = 0
@@ -6160,17 +5815,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         if self.playerType == VLC:
 
-            increment = (
-                self.fast * self.play_rate
-                if self.config_param.get(ADAPT_FAST_JUMP, ADAPT_FAST_JUMP_DEFAULT)
-                else self.fast
-            )
+            increment = (self.fast * self.play_rate
+                         if self.config_param.get(ADAPT_FAST_JUMP, ADAPT_FAST_JUMP_DEFAULT) else self.fast)
 
-            new_time = (
-                sum(self.dw_player[0].media_durations[0 : self.dw_player[0].player.playlist_pos]) / 1000
-                + self.dw_player[0].player.playback_time
-                + increment
-            )
+            new_time = (sum(self.dw_player[0].media_durations[0:self.dw_player[0].player.playlist_pos]) / 1000 +
+                        self.dw_player[0].player.playback_time + increment)
 
             self.seek_mediaplayer(new_time)
 
