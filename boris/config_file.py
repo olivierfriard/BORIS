@@ -101,15 +101,15 @@ def read(self):
 
         logging.debug(f"Autosave: {self.automaticBackup}")
 
-        self.behaviouralStringsSeparator = "|"
+        self.behav_seq_separator = "|"
         try:
-            self.behaviouralStringsSeparator = settings.value("behavioural_strings_separator")
-            if not self.behaviouralStringsSeparator:
-                self.behaviouralStringsSeparator = "|"
+            self.behav_seq_separator = settings.value("behavioural_strings_separator")
+            if not self.behav_seq_separator:
+                self.behav_seq_separator = "|"
         except Exception:
-            self.behaviouralStringsSeparator = "|"
+            self.behav_seq_separator = "|"
 
-        logging.debug(f"behavioural_strings_separator: {self.behaviouralStringsSeparator}")
+        logging.debug(f"behavioural_strings_separator: {self.behav_seq_separator}")
 
         self.close_the_same_current_event = False
         try:
@@ -331,7 +331,7 @@ def save(self, lastCheckForNewVersion=0):
     settings.setValue("Time/play_rate_step", self.play_rate_step)
     """settings.setValue("Save_media_file_path", self.saveMediaFilePath)"""
     settings.setValue("Automatic_backup", self.automaticBackup)
-    settings.setValue("behavioural_strings_separator", self.behaviouralStringsSeparator)
+    settings.setValue("behavioural_strings_separator", self.behav_seq_separator)
     settings.setValue("close_the_same_current_event", self.close_the_same_current_event)
     settings.setValue("confirm_sound", self.confirmSound)
     settings.setValue("beep_every", self.beep_every)

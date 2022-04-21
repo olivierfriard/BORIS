@@ -85,14 +85,15 @@ def observations_list(self):
     """
 
     if self.playerType == cfg.VIEWER:
-        self.close_observation()
+        close_observation(self)
 
     result, selected_obs = self.selectObservations(cfg.SINGLE)
 
     if not selected_obs:
         return
+
     if result in [cfg.OPEN, cfg.VIEW, cfg.EDIT] and self.observationId:
-        self.close_observation()
+        close_observation(self)
     if result == cfg.OPEN:
         load_observation(self, selected_obs[0], "start")
     if result == cfg.VIEW:
@@ -128,7 +129,7 @@ def open_observation(self, mode: str) -> str:
             self.show_data_files()
             return ""
         else:
-            self.close_observation()
+            close_observation(self)
 
     if mode == "start":
         _, selectedObs = self.selectObservations(cfg.OPEN)
@@ -205,7 +206,7 @@ def edit_observation(self):
             self.show_data_files()
             return
         else:
-            self.close_observation()
+            close_observation(self)
 
     _, selected_observations = self.selectObservations(cfg.EDIT)
 
@@ -287,7 +288,7 @@ def new_observation(self, mode=cfg.NEW, obsId=""):
             self.show_data_files()
             return
         else:
-            self.close_observation()
+            close_observation(self)
 
     observationWindow = observation.Observation(
         tmp_dir=self.ffmpeg_cache_dir
@@ -763,3 +764,151 @@ def new_observation(self, mode=cfg.NEW, obsId=""):
                 self.initialize_new_observation_mpv()
 
             menu_options.update_menu(self)
+
+
+def close_observation(self):
+    """
+    close current observation
+    """
+
+    logging.info(f"Close observation {self.playerType}")
+
+    logging.info(f"Check state events")
+    # check observation events
+    flag_ok, msg = project_functions.check_state_events_obs(
+        self.observationId,
+        self.pj[cfg.ETHOGRAM],
+        self.pj[cfg.OBSERVATIONS][self.observationId],
+        time_format=cfg.HHMMSS,
+    )
+
+    if not flag_ok:
+
+        out = f"The current observation has state event(s) that are not PAIRED:<br><br>{msg}"
+        results = dialog.Results_dialog()
+        results.setWindowTitle(f"{cfg.programName} - Check selected observations")
+        results.ptText.setReadOnly(True)
+        results.ptText.appendHtml(out)
+        results.pbSave.setVisible(False)
+        results.pbCancel.setText("Close observation")
+        results.pbCancel.setVisible(True)
+        results.pbOK.setText("Fix unpaired state events")
+
+        if results.exec_():  # fix events
+
+            w = dialog.Ask_time(self.timeFormat)
+            w.setWindowTitle("Fix UNPAIRED state events")
+            w.label.setText("Fix UNPAIRED events at time")
+
+            if w.exec_():
+                fix_at_time = w.time_widget.get_time()
+                events_to_add = project_functions.fix_unpaired_state_events(
+                    self.observationId,
+                    self.pj[cfg.ETHOGRAM],
+                    self.pj[cfg.OBSERVATIONS][self.observationId],
+                    fix_at_time - Decimal("0.001"),
+                )
+                if events_to_add:
+                    self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS].extend(events_to_add)
+                    self.projectChanged = True
+                    self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS].sort()
+
+                    self.loadEventsInTW(self.observationId)
+                    item = self.twEvents.item(
+                        [
+                            i
+                            for i, t in enumerate(self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS])
+                            if t[0] == fix_at_time
+                        ][0],
+                        0,
+                    )
+                    self.twEvents.scrollToItem(item)
+                    return
+            else:
+                return
+
+    logging.info(f"Check state events done")
+
+    self.saved_state = self.saveState()
+
+    if self.playerType == cfg.VLC:
+
+        logging.info(f"Stop plot timer")
+        self.plot_timer.stop()
+
+        if self.playMode == cfg.MPV:
+            for i, player in enumerate(self.dw_player):
+                if (
+                    str(i + 1) in self.pj[cfg.OBSERVATIONS][self.observationId][cfg.FILE]
+                    and self.pj[cfg.OBSERVATIONS][self.observationId][cfg.FILE][str(i + 1)]
+                ):
+                    logging.info(f"Stop player #{i + 1}")
+                    player.player.stop()
+
+        self.verticalLayout_3.removeWidget(self.video_slider)
+
+        if self.video_slider is not None:
+            self.video_slider.setVisible(False)
+            self.video_slider.deleteLater()
+            self.video_slider = None
+
+    if self.playerType == cfg.LIVE:
+        self.liveTimer.stop()
+        self.w_live.setVisible(False)
+        self.liveObservationStarted = False
+        self.liveStartTime = None
+
+    if (
+        cfg.PLOT_DATA in self.pj[cfg.OBSERVATIONS][self.observationId]
+        and self.pj[cfg.OBSERVATIONS][self.observationId][cfg.PLOT_DATA]
+    ):
+        for x in self.ext_data_timer_list:
+            x.stop()
+        for pd in self.plot_data:
+            self.plot_data[pd].close_plot()
+
+    logging.info(f"close tool window")
+
+    self.close_tool_windows()
+
+    self.observationId = ""
+
+    if self.playerType == cfg.VLC:
+
+        for dw in self.dw_player:
+
+            logging.info(f"remove dock widget")
+            self.removeDockWidget(dw)
+            # dw.player.quit()
+            dw.deleteLater()
+
+        self.dw_player = []
+        self.playMode = cfg.VLC
+
+    # return
+
+    self.statusbar.showMessage("", 0)
+
+    self.dwObservations.setVisible(False)
+
+    self.w_obs_info.setVisible(False)
+
+    self.twEvents.setRowCount(0)
+
+    self.lb_current_media_time.clear()
+    self.lb_player_status.clear()
+
+    self.currentSubject = ""
+    self.lbFocalSubject.setText(cfg.NO_FOCAL_SUBJECT)
+
+    # clear current state(s) column in subjects table
+    for i in range(self.twSubjects.rowCount()):
+        self.twSubjects.item(i, len(cfg.subjectsFields)).setText("")
+
+    for w in [self.lbTimeOffset, self.lbSpeed, self.lb_obs_time_interval]:
+        w.clear()
+    self.play_rate, self.playerType = 1, ""
+
+    menu_options.update_menu(self)
+
+    logging.info(f"Observation {self.playerType} closed")

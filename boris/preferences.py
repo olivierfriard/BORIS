@@ -38,7 +38,6 @@ from PyQt5.QtWidgets import QDialog, QFileDialog
 
 
 class Preferences(QDialog, Ui_prefDialog):
-
     def __init__(self, parent=None):
 
         super().__init__()
@@ -60,12 +59,14 @@ class Preferences(QDialog, Ui_prefDialog):
         """
         allow user to delete the config file (.boris)
         """
-        if (dialog.MessageDialog(
+        if (
+            dialog.MessageDialog(
                 "BORIS",
-            ("Refresh will re-initialize "
-             "all your preferences and close BORIS"),
-            [cfg.CANCEL, "Refresh preferences"],
-        ) == "Refresh preferences"):
+                ("Refresh will re-initialize " "all your preferences and close BORIS"),
+                [cfg.CANCEL, "Refresh preferences"],
+            )
+            == "Refresh preferences"
+        ):
             self.flag_refresh = True
             self.accept()
 
@@ -73,10 +74,9 @@ class Preferences(QDialog, Ui_prefDialog):
         """
         allow user select a cache dir for ffmpeg images
         """
-        FFmpegCacheDir = QFileDialog().getExistingDirectory(self,
-                                                            "Select a directory",
-                                                            os.path.expanduser("~"),
-                                                            options=QFileDialog().ShowDirsOnly)
+        FFmpegCacheDir = QFileDialog().getExistingDirectory(
+            self, "Select a directory", os.path.expanduser("~"), options=QFileDialog().ShowDirsOnly
+        )
         if FFmpegCacheDir:
             self.leFFmpegCacheDir.setText(FFmpegCacheDir)
 
@@ -118,7 +118,7 @@ def preferences(self):
     # automatic backup
     preferencesWindow.sbAutomaticBackup.setValue(self.automaticBackup)
     # separator for behavioural strings
-    preferencesWindow.leSeparator.setText(self.behaviouralStringsSeparator)
+    preferencesWindow.leSeparator.setText(self.behav_seq_separator)
     # close same event indep of modifiers
     preferencesWindow.cbCloseSameEvent.setChecked(self.close_the_same_current_event)
     # confirm sound
@@ -137,7 +137,8 @@ def preferences(self):
     preferencesWindow.cb_pause_before_addevent.setChecked(self.pause_before_addevent)
 
     preferencesWindow.cb_compact_time_budget.setChecked(
-        self.config_param.get(cfg.TIME_BUDGET_FORMAT, cfg.DEFAULT_TIME_BUDGET_FORMAT) == cfg.COMPACT_TIME_BUDGET_FORMAT)
+        self.config_param.get(cfg.TIME_BUDGET_FORMAT, cfg.DEFAULT_TIME_BUDGET_FORMAT) == cfg.COMPACT_TIME_BUDGET_FORMAT
+    )
 
     # FFmpeg for frame by frame mode
     preferencesWindow.lbFFmpegPath.setText(f"FFmpeg path: {self.ffmpeg_bin}")
@@ -149,17 +150,21 @@ def preferences(self):
     preferencesWindow.cbSpectrogramColorMap.addItems(cfg.SPECTROGRAM_COLOR_MAPS)
     try:
         preferencesWindow.cbSpectrogramColorMap.setCurrentIndex(
-            cfg.SPECTROGRAM_COLOR_MAPS.index(self.spectrogram_color_map))
+            cfg.SPECTROGRAM_COLOR_MAPS.index(self.spectrogram_color_map)
+        )
     except Exception:
         preferencesWindow.cbSpectrogramColorMap.setCurrentIndex(
-            cfg.SPECTROGRAM_COLOR_MAPS.index(cfg.SPECTROGRAM_DEFAULT_COLOR_MAP))
+            cfg.SPECTROGRAM_COLOR_MAPS.index(cfg.SPECTROGRAM_DEFAULT_COLOR_MAP)
+        )
 
     try:
         preferencesWindow.cbSpectrogramColorMap.setCurrentIndex(
-            cfg.SPECTROGRAM_COLOR_MAPS.index(self.spectrogram_color_map))
+            cfg.SPECTROGRAM_COLOR_MAPS.index(self.spectrogram_color_map)
+        )
     except Exception:
         preferencesWindow.cbSpectrogramColorMap.setCurrentIndex(
-            cfg.SPECTROGRAM_COLOR_MAPS.index(cfg.SPECTROGRAM_DEFAULT_COLOR_MAP))
+            cfg.SPECTROGRAM_COLOR_MAPS.index(cfg.SPECTROGRAM_DEFAULT_COLOR_MAP)
+        )
 
     try:
         preferencesWindow.sb_time_interval.setValue(self.spectrogram_time_interval)
@@ -215,7 +220,7 @@ def preferences(self):
         else:
             self.automaticBackupTimer.stop()
 
-        self.behaviouralStringsSeparator = preferencesWindow.leSeparator.text()
+        self.behav_seq_separator = preferencesWindow.leSeparator.text()
 
         self.close_the_same_current_event = preferencesWindow.cbCloseSameEvent.isChecked()
 

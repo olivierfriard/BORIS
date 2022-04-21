@@ -31,7 +31,7 @@ from . import config as cfg
 from . import dialog, export_observation, select_subj_behav
 
 
-def behavioral_strings_analysis(strings, behaviouralStringsSeparator):
+def behavioral_strings_analysis(strings, behav_seq_separator):
     """
     Analyze behavioral strings
     """
@@ -39,8 +39,8 @@ def behavioral_strings_analysis(strings, behaviouralStringsSeparator):
     rows = strings[:]
     sequences = []
     for row in rows:
-        if behaviouralStringsSeparator:
-            r = row.strip().split(behaviouralStringsSeparator)
+        if behav_seq_separator:
+            r = row.strip().split(behav_seq_separator)
         else:
             r = list(row.strip())
 
@@ -58,7 +58,7 @@ def behavioral_strings_analysis(strings, behaviouralStringsSeparator):
     return sequences, unique_behaviors
 
 
-def observed_transitions_matrix(sequences, behaviours, mode="frequency"):
+def observed_transitions_matrix(sequences, behaviours, mode="frequency") -> str:
     """
     create the normalized matrix of observed transitions
     mode:
@@ -214,11 +214,11 @@ def transitions_matrix(self, mode):
         for obsId in selectedObservations:
             strings_list.append(
                 export_observation.events_to_behavioral_sequences(
-                    self.pj, obsId, subject, plot_parameters, self.behaviouralStringsSeparator
+                    self.pj, obsId, subject, plot_parameters, self.behav_seq_separator
                 )
             )
 
-        sequences, observed_behaviors = behavioral_strings_analysis(strings_list, self.behaviouralStringsSeparator)
+        sequences, observed_behaviors = behavioral_strings_analysis(strings_list, self.behav_seq_separator)
 
         observed_matrix = observed_transitions_matrix(
             sequences, sorted(list(set(observed_behaviors + plot_parameters[cfg.SELECTED_BEHAVIORS]))), mode=mode
