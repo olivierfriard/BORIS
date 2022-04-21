@@ -96,9 +96,12 @@ from boris import player_dock_widget
 __version__ = version.__version__
 __version_date__ = version.__version_date__
 
-if platform.python_version() < "3.6":
-    logging.critical(f"BORIS requires Python 3.6+! You are using Python v. {platform.python_version()}")
+
+# check minimal version of python
+if versiontuple(platform.python_version()) < versiontuple("3.6"):
+    logging.critical(f"BORIS requires Python 3.7+! You are using Python v. {platform.python_version()}")
     sys.exit()
+
 
 if sys.platform == "darwin":  # for MacOS
     os.environ["LC_ALL"] = "en_US.UTF-8"
