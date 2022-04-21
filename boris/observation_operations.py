@@ -59,22 +59,24 @@ def export_observations_list_clicked(self):
         self, "Export list of selected observations", "", ";;".join(extended_file_formats)
     )
 
-    if file_name:
-        output_format = file_formats[extended_file_formats.index(filter_)]
-        if pl.Path(file_name).suffix != "." + output_format:
-            file_name = str(pl.Path(file_name)) + "." + output_format
-            # check if file name with extension already exists
-            if pl.Path(file_name).is_file():
-                if (
-                    dialog.MessageDialog(
-                        cfg.programName, f"The file {file_name} already exists.", [cfg.CANCEL, cfg.OVERWRITE]
-                    )
-                    == cfg.CANCEL
-                ):
-                    return
+    if not file_name:
+        return
 
-        if not project_functions.export_observations_list(self.pj, selected_observations, file_name, output_format):
-            QMessageBox.warning(self, cfg.programName, "File not created due to an error")
+    output_format = file_formats[extended_file_formats.index(filter_)]
+    if pl.Path(file_name).suffix != "." + output_format:
+        file_name = str(pl.Path(file_name)) + "." + output_format
+        # check if file name with extension already exists
+        if pl.Path(file_name).is_file():
+            if (
+                dialog.MessageDialog(
+                    cfg.programName, f"The file {file_name} already exists.", [cfg.CANCEL, cfg.OVERWRITE]
+                )
+                == cfg.CANCEL
+            ):
+                return
+
+    if not project_functions.export_observations_list(self.pj, selected_observations, file_name, output_format):
+        QMessageBox.warning(self, cfg.programName, "File not created due to an error")
 
 
 def observations_list(self):
@@ -87,25 +89,26 @@ def observations_list(self):
 
     result, selected_obs = self.selectObservations(cfg.SINGLE)
 
-    if selected_obs:
-        if result in [cfg.OPEN, cfg.VIEW, cfg.EDIT] and self.observationId:
-            self.close_observation()
-        if result == cfg.OPEN:
-            load_observation(self, selected_obs[0], "start")
-        if result == cfg.VIEW:
-            load_observation(self, selected_obs[0], cfg.VIEW)
-        if result == cfg.EDIT:
-            if self.observationId != selected_obs[0]:
-                new_observation(self, mode=cfg.EDIT, obsId=selected_obs[0])  # observation id to edit
-            else:
-                QMessageBox.warning(
-                    self,
-                    cfg.programName,
-                    (f"The observation <b>{self.observationId}</b> is running!<br>" "Close it before editing."),
-                )
+    if not selected_obs:
+        return
+    if result in [cfg.OPEN, cfg.VIEW, cfg.EDIT] and self.observationId:
+        self.close_observation()
+    if result == cfg.OPEN:
+        load_observation(self, selected_obs[0], "start")
+    if result == cfg.VIEW:
+        load_observation(self, selected_obs[0], cfg.VIEW)
+    if result == cfg.EDIT:
+        if self.observationId != selected_obs[0]:
+            new_observation(self, mode=cfg.EDIT, obsId=selected_obs[0])  # observation id to edit
+        else:
+            QMessageBox.warning(
+                self,
+                cfg.programName,
+                (f"The observation <b>{self.observationId}</b> is running!<br>" "Close it before editing."),
+            )
 
 
-def open_observation(self, mode):
+def open_observation(self, mode: str) -> str:
     """
     start or view an observation
 
@@ -148,41 +151,39 @@ def load_observation(self, obsId: str, mode: str = "start") -> str:
                     "view"  to view observation
     """
 
-    if obsId in self.pj[cfg.OBSERVATIONS]:
-
-        self.observationId = obsId
-        self.loadEventsInTW(self.observationId)
-
-        if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE] == cfg.LIVE:
-            if mode == "start":
-                self.playerType = cfg.LIVE
-                self.initialize_new_live_observation()
-            if mode == "view":
-                self.playerType = cfg.VIEWER
-                self.playMode = ""
-                self.dwObservations.setVisible(True)
-
-        if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE] in [cfg.MEDIA]:
-
-            if mode == "start":
-                if not self.initialize_new_observation_mpv():
-                    self.observationId = ""
-                    self.twEvents.setRowCount(0)
-                    menu_options.update_menu(self)
-                    return "Error: loading observation problem"
-
-            if mode == "view":
-                self.playerType = cfg.VIEWER
-                self.playMode = ""
-                self.dwObservations.setVisible(True)
-
-        menu_options.update_menu(self)
-        # title of dock widget  “  ”
-        self.dwObservations.setWindowTitle(f"Events for “{self.observationId}” observation")
-        return ""
-
-    else:
+    if obsId not in self.pj[cfg.OBSERVATIONS]:
         return "Error: Observation not found"
+
+    self.observationId = obsId
+    self.loadEventsInTW(self.observationId)
+
+    if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE] == cfg.LIVE:
+        if mode == "start":
+            self.playerType = cfg.LIVE
+            self.initialize_new_live_observation()
+        if mode == "view":
+            self.playerType = cfg.VIEWER
+            self.playMode = ""
+            self.dwObservations.setVisible(True)
+
+    if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE] in [cfg.MEDIA]:
+
+        if mode == "start":
+            if not self.initialize_new_observation_mpv():
+                self.observationId = ""
+                self.twEvents.setRowCount(0)
+                menu_options.update_menu(self)
+                return "Error: loading observation problem"
+
+        if mode == "view":
+            self.playerType = cfg.VIEWER
+            self.playMode = ""
+            self.dwObservations.setVisible(True)
+
+    menu_options.update_menu(self)
+    # title of dock widget  “  ”
+    self.dwObservations.setWindowTitle(f"Events for “{self.observationId}” observation")
+    return ""
 
 
 def edit_observation(self):

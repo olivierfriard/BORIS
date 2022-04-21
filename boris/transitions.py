@@ -111,7 +111,7 @@ def observed_transitions_matrix(sequences, behaviours, mode="frequency"):
     return out
 
 
-def create_transitions_gv_from_matrix(matrix, cutoff_all=0, cutoff_behavior=0, edge_label="percent_node"):
+def create_transitions_gv_from_matrix(matrix, cutoff_all=0, cutoff_behavior=0, edge_label="percent_node") -> tuple:
     """
     create code for GraphViz
     matrix: matrix of frequency
@@ -140,12 +140,15 @@ def create_transitions_gv_from_matrix(matrix, cutoff_all=0, cutoff_behavior=0, e
     for behaviour1 in behaviours:
         for behaviour2 in behaviours:
 
+            if behaviour1 not in transitions or behaviour2 not in transitions:
+                return True, "Error: the file does not seem a transition matrix"
             if transitions[behaviour1][behaviour2]:
 
                 if edge_label == "percent_node":
                     if transitions[behaviour1][behaviour2] > cutoff_all:
                         out += '"{behaviour1}" -> "{behaviour2}" [label="{label:0.3f}"];\n'.format(
-                            behaviour1=behaviour1, behaviour2=behaviour2, label=transitions[behaviour1][behaviour2])
+                            behaviour1=behaviour1, behaviour2=behaviour2, label=transitions[behaviour1][behaviour2]
+                        )
 
                 if edge_label == "fraction_node":
                     transition_sum = sum(transitions[behaviour1].values())
@@ -157,7 +160,7 @@ def create_transitions_gv_from_matrix(matrix, cutoff_all=0, cutoff_behavior=0, e
                         )
 
     out += "\n}"
-    return out
+    return False, out
 
 
 def transitions_matrix(self, mode):
@@ -173,11 +176,9 @@ def transitions_matrix(self, mode):
     if not selectedObservations:
         return
 
-    plot_parameters = select_subj_behav.choose_obs_subj_behav_category(self,
-                                                                       selectedObservations,
-                                                                       maxTime=0,
-                                                                       flagShowIncludeModifiers=True,
-                                                                       flagShowExcludeBehaviorsWoEvents=False)
+    plot_parameters = select_subj_behav.choose_obs_subj_behav_category(
+        self, selectedObservations, maxTime=0, flagShowIncludeModifiers=True, flagShowExcludeBehaviorsWoEvents=False
+    )
 
     if not plot_parameters["selected subjects"] or not plot_parameters["selected behaviors"]:
         return
@@ -212,13 +213,16 @@ def transitions_matrix(self, mode):
         strings_list = []
         for obsId in selectedObservations:
             strings_list.append(
-                export_observation.events_to_behavioral_sequences(self.pj, obsId, subject, plot_parameters,
-                                                                  self.behaviouralStringsSeparator))
+                export_observation.events_to_behavioral_sequences(
+                    self.pj, obsId, subject, plot_parameters, self.behaviouralStringsSeparator
+                )
+            )
 
         sequences, observed_behaviors = behavioral_strings_analysis(strings_list, self.behaviouralStringsSeparator)
 
         observed_matrix = observed_transitions_matrix(
-            sequences, sorted(list(set(observed_behaviors + plot_parameters[cfg.SELECTED_BEHAVIORS]))), mode=mode)
+            sequences, sorted(list(set(observed_behaviors + plot_parameters[cfg.SELECTED_BEHAVIORS]))), mode=mode
+        )
 
         if not observed_matrix:
             QMessageBox.warning(self, cfg.programName, f"No transitions found for <b>{subject}</b>")
@@ -269,27 +273,30 @@ def transitions_dot_script():
     fileNames = fn[0] if type(fn) is tuple else fn
 
     out = ""
-    try:
-        for fileName in fileNames:
-            with open(fileName, "r") as infile:
-                gv = create_transitions_gv_from_matrix(infile.read(),
-                                                       cutoff_all=0,
-                                                       cutoff_behavior=0,
-                                                       edge_label="percent_node")
-                with open(fileName + ".gv", "w") as f:
-                    f.write(gv)
 
-                out += f"<b>{fileName}.gv</b> created<br>"
+    for fileName in fileNames:
+        with open(fileName, "r") as infile:
+            result, gv = create_transitions_gv_from_matrix(
+                infile.read(), cutoff_all=0, cutoff_behavior=0, edge_label="percent_node"
+            )
+            if result:
+                QMessageBox.critical(
+                    None,
+                    cfg.programName,
+                    gv,
+                )
+                return
 
-    except Exception:
-        dialog.error_message2()
+            with open(fileName + ".gv", "w") as f:
+                f.write(gv)
+
+            out += f"<b>{fileName}.gv</b> created<br>"
 
     if out:
         QMessageBox.information(
             None,
             cfg.programName,
-            (f"{out}<br><br>The DOT scripts can be used with Graphviz or WebGraphviz "
-             "to generate diagram"),
+            (f"{out}<br><br>The DOT scripts can be used with Graphviz or WebGraphviz " "to generate diagram"),
         )
 
 
@@ -304,10 +311,12 @@ def transitions_flow_diagram():
         QMessageBox.critical(
             None,
             cfg.programName,
-            ("The GraphViz package is not installed.<br>"
-             "The <b>dot</b> program was not found in the path.<br><br>"
-             'Go to <a href="http://www.graphviz.org">'
-             "http://www.graphviz.org</a> for information"),
+            (
+                "The GraphViz package is not installed.<br>"
+                "The <b>dot</b> program was not found in the path.<br><br>"
+                'Go to <a href="http://www.graphviz.org">'
+                "http://www.graphviz.org</a> for information"
+            ),
         )
         return
 
@@ -320,25 +329,31 @@ def transitions_flow_diagram():
     fileNames = fn[0] if type(fn) is tuple else fn
 
     out = ""
-    try:
-        for fileName in fileNames:
-            with open(fileName, "r") as infile:
-                gv = create_transitions_gv_from_matrix(infile.read(),
-                                                       cutoff_all=0,
-                                                       cutoff_behavior=0,
-                                                       edge_label="percent_node")
+    for fileName in fileNames:
+        with open(fileName, "r") as infile:
+            result, gv = create_transitions_gv_from_matrix(
+                infile.read(), cutoff_all=0, cutoff_behavior=0, edge_label="percent_node"
+            )
+            if result:
+                QMessageBox.critical(
+                    None,
+                    cfg.programName,
+                    gv,
+                )
+                return
 
-                with open(tempfile.gettempdir() + os.sep + os.path.basename(fileName) + ".tmp.gv", "w") as f:
-                    f.write(gv)
-                result = subprocess.getoutput(
-                    (f'dot -Tpng -o "{fileName}.png" '
-                     f'"{tempfile.gettempdir() + os.sep + os.path.basename(fileName)}.tmp.gv"'))
-                if not result:
-                    out += f"<b>{fileName}.png</b> created<br>"
-                else:
-                    out += f"Problem with <b>{fileName}</b><br>"
-    except Exception:
-        dialog.error_message2()
+            with open(tempfile.gettempdir() + os.sep + os.path.basename(fileName) + ".tmp.gv", "w") as f:
+                f.write(gv)
+            result = subprocess.getoutput(
+                (
+                    f'dot -Tpng -o "{fileName}.png" '
+                    f'"{tempfile.gettempdir() + os.sep + os.path.basename(fileName)}.tmp.gv"'
+                )
+            )
+            if not result:
+                out += f"<b>{fileName}.png</b> created<br>"
+            else:
+                out += f"Problem with <b>{fileName}</b><br>"
 
     if out:
         QMessageBox.information(None, cfg.programName, out)
