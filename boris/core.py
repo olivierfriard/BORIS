@@ -4065,7 +4065,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
             # set video scroll bar
             if scroll_slider and not self.user_move_slider:
-                self.video_slider.setValue(current_media_time_pos / current_media_duration * (cfg.SLIDER_MAXIMUM - 1))
+                self.video_slider.setValue(
+                    round(current_media_time_pos / current_media_duration * (cfg.SLIDER_MAXIMUM - 1))
+                )
 
     def load_behaviors_in_twEthogram(self, behaviorsToShow):
         """

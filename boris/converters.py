@@ -21,6 +21,7 @@ This file is part of BORIS.
 
 """
 
+import sys
 import json
 import urllib.error
 import urllib.parse
@@ -398,45 +399,3 @@ class Converters(QDialog, Ui_converters):
                 self.reject()
         else:
             self.reject()
-
-
-if __name__ == "__main__":
-
-    CONVERTERS = {
-        "BORIS converters": {
-            "convert_time_ecg": {
-                "name": "convert_time_ecg",
-                "description": "convert '%d/%m/%Y %H:%M:%S.%f' in seconds from epoch",
-                "code": """
-    import datetime
-    epoch = datetime.datetime.utcfromtimestamp(0)
-    datetime_format = "%d/%m/%Y %H:%M:%S.%f"
-
-    OUTPUT = (datetime.datetime.strptime(INPUT, datetime_format) - epoch).total_seconds()
-    """,
-            },
-            "hhmmss_2_seconds": {
-                "name": "hhmmss_2_seconds",
-                "description": "convert HH:MM:SS in seconds",
-                "code": """
-    h, m, s = INPUT.split(':')
-    OUTPUT = int(h) * 3600 + int(m) * 60 + int(s)
-
-    """,
-            },
-        }
-    }
-
-    import sys
-
-    app = QApplication(sys.argv)
-
-    class_ = Converters(CONVERTERS["BORIS converters"])
-    class_.show()
-
-    r = class_.exec_()
-    print(r)
-    if r:
-        print(class_.converters)
-
-    sys.exit()

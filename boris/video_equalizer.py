@@ -155,12 +155,3 @@ def video_equalizer_show(self):
     self.video_equalizer_wgt.sendKeyPressSignal.connect(self.signal_from_widget)
 
     self.video_equalizer_wgt.show()
-
-
-if __name__ == "__main__":
-    import sys
-
-    app = QApplication(sys.argv)
-    w = Video_equalizer()
-    w.show()
-    sys.exit(app.exec_())
