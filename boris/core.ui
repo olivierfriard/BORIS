@@ -152,7 +152,7 @@
      <x>0</x>
      <y>0</y>
      <width>1441</width>
-     <height>22</height>
+     <height>29</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuHelp">
@@ -236,6 +236,8 @@
     <addaction name="actionEdit_observation"/>
     <addaction name="separator"/>
     <addaction name="actionClose_observation"/>
+    <addaction name="separator"/>
+    <addaction name="actionRemove_observations"/>
     <addaction name="separator"/>
     <addaction name="actionLoad_observations_file"/>
     <addaction name="actionExport_observations_list"/>
@@ -1440,6 +1442,11 @@
   <action name="actionVideo_equalizer">
    <property name="text">
     <string>Video equalizer</string>
+   </property>
+  </action>
+  <action name="actionRemove_observations">
+   <property name="text">
+    <string>Remove observations</string>
    </property>
   </action>
  </widget>

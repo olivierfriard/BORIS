@@ -19,7 +19,7 @@
      <item>
       <widget class="QTabWidget" name="tabProject">
        <property name="currentIndex">
-        <number>6</number>
+        <number>0</number>
        </property>
        <widget class="QWidget" name="tabInformation">
         <attribute name="title">
@@ -46,7 +46,7 @@
          <item row="3" column="0">
           <widget class="QLabel" name="label_7">
            <property name="text">
-            <string>Date</string>
+            <string>Project date and time</string>
            </property>
           </widget>
          </item>
@@ -63,7 +63,7 @@
          <item row="5" column="0" colspan="2">
           <widget class="QLabel" name="label_6">
            <property name="text">
-            <string>Description</string>
+            <string>Project description</string>
            </property>
            <property name="alignment">
             <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>
@@ -76,7 +76,7 @@
          <item row="7" column="0" colspan="2">
           <widget class="QLabel" name="lbTimeFormat">
            <property name="text">
-            <string>Time format</string>
+            <string>Project time format</string>
            </property>
           </widget>
          </item>
@@ -99,7 +99,7 @@
          </item>
         </layout>
        </widget>
-       <widget class="QWidget" name="tabConfiguration">
+       <widget class="QWidget" name="tabEthogram">
         <attribute name="title">
          <string>Ethogram</string>
         </attribute>
@@ -730,69 +730,6 @@ from a BORIS project</string>
               </spacer>
              </item>
             </layout>
-           </item>
-          </layout>
-         </item>
-        </layout>
-       </widget>
-       <widget class="QWidget" name="tabObservations">
-        <attribute name="title">
-         <string>Observations</string>
-        </attribute>
-        <layout class="QVBoxLayout" name="verticalLayout_3">
-         <item>
-          <layout class="QVBoxLayout" name="verticalLayout">
-           <item>
-            <widget class="QTableWidget" name="twObservations">
-             <property name="autoScroll">
-              <bool>false</bool>
-             </property>
-             <property name="editTriggers">
-              <set>QAbstractItemView::NoEditTriggers</set>
-             </property>
-             <property name="dragDropOverwriteMode">
-              <bool>false</bool>
-             </property>
-             <property name="selectionMode">
-              <enum>QAbstractItemView::MultiSelection</enum>
-             </property>
-             <property name="selectionBehavior">
-              <enum>QAbstractItemView::SelectRows</enum>
-             </property>
-             <property name="textElideMode">
-              <enum>Qt::ElideRight</enum>
-             </property>
-             <property name="wordWrap">
-              <bool>true</bool>
-             </property>
-             <column>
-              <property name="text">
-               <string>id</string>
-              </property>
-             </column>
-             <column>
-              <property name="text">
-               <string>Date</string>
-              </property>
-             </column>
-             <column>
-              <property name="text">
-               <string>Description</string>
-              </property>
-             </column>
-             <column>
-              <property name="text">
-               <string>Media</string>
-              </property>
-             </column>
-            </widget>
-           </item>
-           <item>
-            <widget class="QPushButton" name="pbRemoveObservation">
-             <property name="text">
-              <string>Remove selected observations</string>
-             </property>
-            </widget>
            </item>
           </layout>
          </item>

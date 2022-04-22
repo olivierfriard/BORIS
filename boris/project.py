@@ -269,9 +269,6 @@ class projectDialog(QDialog, Ui_dlgProject):
 
         self.pbImportVarFromProject.clicked.connect(self.pbImportVarFromProject_clicked)
 
-        # observations tab
-        self.pbRemoveObservation.clicked.connect(self.pbRemoveObservation_clicked)
-
         self.pbOK.clicked.connect(self.pbOK_clicked)
         self.pbCancel.clicked.connect(self.pbCancel_clicked)
 
@@ -1456,28 +1453,6 @@ class projectDialog(QDialog, Ui_dlgProject):
         self.cbType.setCurrentIndex(cfg.NUMERIC_idx)
 
         self.cbType.setCurrentIndex(cfg.AVAILABLE_INDEP_VAR_TYPES.index(self.twVariables.item(row, 2).text()))
-
-    def pbRemoveObservation_clicked(self):
-        """
-        remove all selected observations
-        """
-
-        if not self.twObservations.selectedIndexes():
-            QMessageBox.warning(self, cfg.programName, "No selected observation")
-        else:
-            response = dialog.MessageDialog(
-                cfg.programName, "Are you sure to remove all the selected observation?", [cfg.YES, cfg.CANCEL]
-            )
-            if response == cfg.YES:
-                rows_to_delete = []
-                for index in self.twObservations.selectedIndexes():
-                    rows_to_delete.append(index.row())
-                    obs_id = self.twObservations.item(index.row(), 0).text()
-                    if obs_id in self.pj[cfg.OBSERVATIONS]:
-                        del self.pj[cfg.OBSERVATIONS][obs_id]
-
-                for row in sorted(set(rows_to_delete), reverse=True):
-                    self.twObservations.removeRow(row)
 
     def pbCancel_clicked(self):
         if self.flag_modified:

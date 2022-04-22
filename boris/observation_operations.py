@@ -214,6 +214,32 @@ def edit_observation(self):
         new_observation(self, mode=cfg.EDIT, obsId=selected_observations[0])
 
 
+def remove_observations(self):
+    """
+    remove observations from project file
+    """
+    _, selected_observations = self.selectObservations(mode=cfg.MULTIPLE, windows_title="Remove observations")
+    if not select_observations:
+        return
+    if len(selected_observations) > 1:
+        msg = "all the selected observations"
+    else:
+        msg = "the selected observation"
+    response = dialog.MessageDialog(
+        cfg.programName,
+        (
+            "<b>The removal of observations is irreversible</b>."
+            f"<br>Are you sure to remove {msg}?<br><br>"
+            f"{'<br>'.join(selected_observations)}"
+        ),
+        [cfg.YES, cfg.CANCEL],
+    )
+    if response == cfg.YES:
+        for obs_id in selected_observations:
+            del self.pj[cfg.OBSERVATIONS][obs_id]
+            self.projectChanged = True
+
+
 def observation_length(pj: dict, selected_observations: list) -> tuple:
     """
     max length of selected observations
@@ -427,10 +453,6 @@ def new_observation(self, mode=cfg.NEW, obsId=""):
                     combobox.setCurrentIndex(int(player) - 1)
                     observationWindow.twVideo1.setCellWidget(observationWindow.twVideo1.rowCount() - 1, 0, combobox)
 
-                    item = QTableWidgetItem(mediaFile)
-                    item.setFlags(Qt.ItemIsEnabled)
-                    observationWindow.twVideo1.setItem(observationWindow.twVideo1.rowCount() - 1, 2, item)
-
                     # set offset
                     try:
                         observationWindow.twVideo1.setItem(
@@ -443,18 +465,22 @@ def new_observation(self, mode=cfg.NEW, obsId=""):
                             observationWindow.twVideo1.rowCount() - 1, 1, QTableWidgetItem("0.0")
                         )
 
+                    item = QTableWidgetItem(mediaFile)
+                    item.setFlags(Qt.ItemIsEnabled | Qt.ItemIsSelectable)
+                    observationWindow.twVideo1.setItem(observationWindow.twVideo1.rowCount() - 1, 2, item)
+
                     # duration and FPS
                     try:
                         item = QTableWidgetItem(
                             util.seconds2time(self.pj[cfg.OBSERVATIONS][obsId][cfg.MEDIA_INFO][cfg.LENGTH][mediaFile])
                         )
-                        item.setFlags(Qt.ItemIsEnabled)
+                        item.setFlags(Qt.ItemIsEnabled | Qt.ItemIsSelectable)
                         observationWindow.twVideo1.setItem(observationWindow.twVideo1.rowCount() - 1, 3, item)
 
                         item = QTableWidgetItem(
                             f"{self.pj[cfg.OBSERVATIONS][obsId][cfg.MEDIA_INFO][cfg.FPS][mediaFile]:.2f}"
                         )
-                        item.setFlags(Qt.ItemIsEnabled)
+                        item.setFlags(Qt.ItemIsEnabled | Qt.ItemIsSelectable)
                         observationWindow.twVideo1.setItem(observationWindow.twVideo1.rowCount() - 1, 4, item)
                     except Exception:
                         pass
@@ -464,13 +490,13 @@ def new_observation(self, mode=cfg.NEW, obsId=""):
                         item = QTableWidgetItem(
                             str(self.pj[cfg.OBSERVATIONS][obsId][cfg.MEDIA_INFO]["hasVideo"][mediaFile])
                         )
-                        item.setFlags(Qt.ItemIsEnabled)
+                        item.setFlags(Qt.ItemIsEnabled | Qt.ItemIsSelectable)
                         observationWindow.twVideo1.setItem(observationWindow.twVideo1.rowCount() - 1, 5, item)
 
                         item = QTableWidgetItem(
                             str(self.pj[cfg.OBSERVATIONS][obsId][cfg.MEDIA_INFO]["hasAudio"][mediaFile])
                         )
-                        item.setFlags(Qt.ItemIsEnabled)
+                        item.setFlags(Qt.ItemIsEnabled | Qt.ItemIsSelectable)
                         observationWindow.twVideo1.setItem(observationWindow.twVideo1.rowCount() - 1, 6, item)
                     except Exception:
                         pass

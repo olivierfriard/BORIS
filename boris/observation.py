@@ -41,6 +41,7 @@ from PyQt5.QtWidgets import (
     QTableWidgetItem,
     QApplication,
     QMenu,
+    QAbstractItemView,
 )
 
 from . import config as cfg
@@ -117,29 +118,22 @@ class Observation(QDialog, Ui_Form):
         self.obs_time_offset = duration_widget.Duration_widget(0)
         self.horizontalLayout_6.insertWidget(1, self.obs_time_offset)
 
-        # self.pbAddVideo.clicked.connect(lambda: self.add_media(flag_path=True))
-        # self.pb_add_media_without_path.clicked.connect(lambda: self.add_media(flag_path=False))
-
         menu_items = [
             "media abs path|with absolute path",
             "media rel path|with relative path",
-            "media w/o path|without path",
             {
                 "from directory": [
                     "dir abs path|with absolute path ",
                     "dir rel path|wih relative path ",
-                    "dir w/o path|without path ",
                 ]
             },
         ]
         menu = QMenu()
         menu.triggered.connect(lambda x: self.add_media(mode=x.statusTip()))
-        self.add_menu(menu_items, menu)
+        self.add_button_menu(menu_items, menu)
         self.pbAddVideo.setMenu(menu)
 
         self.pbRemoveVideo.clicked.connect(self.remove_media)
-        """self.pbAddMediaFromDir.clicked.connect(lambda: self.add_media_from_dir(flag_path=True))"""
-        """self.pb_add_all_media_from_dir_without_path.clicked.connect(lambda: self.add_media_from_dir(flag_path=False))"""
 
         self.pb_add_data_file.clicked.connect(lambda: self.add_data_file(flag_path=True))
         self.pb_add_data_file_wo_path.clicked.connect(lambda: self.add_data_file(flag_path=False))
@@ -171,7 +165,7 @@ class Observation(QDialog, Ui_Form):
 
         self.tabWidget.setCurrentIndex(0)
 
-    def add_menu(self, data, menu_obj):
+    def add_button_menu(self, data, menu_obj):
         """
         add menu option from dictionary
         """
@@ -179,10 +173,10 @@ class Observation(QDialog, Ui_Form):
             for k, v in data.items():
                 sub_menu = QMenu(k, menu_obj)
                 menu_obj.addMenu(sub_menu)
-                self.add_menu(v, sub_menu)
+                self.add_button_menu(v, sub_menu)
         elif isinstance(data, list):
             for element in data:
-                self.add_menu(element, menu_obj)
+                self.add_button_menu(element, menu_obj)
         else:
             action = menu_obj.addAction(data.split("|")[1])
             # tips are used to discriminate the menu option
@@ -767,7 +761,7 @@ class Observation(QDialog, Ui_Form):
 
         Args:
             file_path (str): media file path to be checked
-            flag_path (bool): True include full path of media else only basename
+            mode (str): mode for adding media file
 
         Returns:
              bool: False if file is media else True
@@ -779,11 +773,6 @@ class Observation(QDialog, Ui_Form):
             return False, media_info["error"]
         else:
             if media_info["duration"] > 0:
-                print(file_path, media_info)
-
-                if "w/o" in mode:
-                    # remove path from media file
-                    file_path = str(Path(file_path).name)
 
                 if " rel " in mode:
                     # convert to relative path (relative to BORIS project file)
@@ -809,10 +798,8 @@ class Observation(QDialog, Ui_Form):
         if mode.split("|")[0] not in (
             "media abs path",
             "media rel path",
-            "media w/o path",
             "dir abs path",
             "dir rel path",
-            "dir w/o path",
         ):
             QMessageBox.critical(
                 self,
@@ -899,7 +886,7 @@ class Observation(QDialog, Ui_Form):
         self.twVideo1.setRowCount(self.twVideo1.rowCount() + 1)
 
         for col_idx, s in enumerate(
-            [
+            (
                 None,
                 0,
                 file_name,
@@ -907,7 +894,7 @@ class Observation(QDialog, Ui_Form):
                 f"{self.mediaFPS[file_name]:.2f}",
                 self.mediaHasVideo[file_name],
                 self.mediaHasAudio[file_name],
-            ]
+            )
         ):
             if col_idx == 0:  # player combobox
                 combobox = QComboBox()
@@ -916,7 +903,7 @@ class Observation(QDialog, Ui_Form):
             else:
                 item = QTableWidgetItem(f"{s}")
                 if col_idx != 1:  # only offset is editable by user
-                    item.setFlags(Qt.ItemIsEnabled)
+                    item.setFlags(Qt.ItemIsEnabled | Qt.ItemIsSelectable)
 
                 self.twVideo1.setItem(self.twVideo1.rowCount() - 1, col_idx, item)
 

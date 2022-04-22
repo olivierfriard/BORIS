@@ -2222,10 +2222,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         logging.debug("end load events from obs")
 
-    def selectObservations(self, mode, windows_title=""):
+    def selectObservations(self, mode: str, windows_title: str = ""):
         """
         show observations list window
-        mode: accepted values: OPEN, cfg.EDIT, SINGLE, MULTIPLE, SELECT1
+        mode: accepted values: cfg.OPEN, cfg.EDIT, cfg.SINGLE, cfg.MULTIPLE, cfg.SELECT1
         """
         result_str, selected_obs = select_observations.select_observations(self.pj, mode, windows_title=windows_title)
 
@@ -3043,10 +3043,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
                 newProjectWindow.twSubjects.resizeColumnsToContents()
 
-            # load observation in project window
-            newProjectWindow.twObservations.setRowCount(0)
-
+            """
             if newProjectWindow.pj[cfg.OBSERVATIONS]:
+
 
                 for obs in sorted(newProjectWindow.pj[cfg.OBSERVATIONS].keys()):
 
@@ -3087,8 +3086,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
                 newProjectWindow.twObservations.resizeColumnsToContents()
                 newProjectWindow.twObservations.resizeRowsToContents()
+            """
 
-            # configuration of behaviours
+            # ethogram
             if newProjectWindow.pj[cfg.ETHOGRAM]:
                 for i in util.sorted_keys(newProjectWindow.pj[cfg.ETHOGRAM]):
                     newProjectWindow.twBehaviors.setRowCount(newProjectWindow.twBehaviors.rowCount() + 1)

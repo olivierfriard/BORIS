@@ -86,6 +86,7 @@ def update_menu(self):
         self.menuCreate_subtitles_2,
         self.actionExtract_events_from_media_files,
         self.actionExtract_frames_from_media_files,
+        self.actionRemove_observations,
     ]:
         w.setEnabled(self.pj[cfg.OBSERVATIONS] != {})
 

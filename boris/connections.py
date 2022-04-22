@@ -82,6 +82,8 @@ def connections(self):
 
     self.actionClose_observation.triggered.connect(lambda: observation_operations.close_observation(self))
 
+    self.actionRemove_observations.triggered.connect(lambda: observation_operations.remove_observations(self))
+
     self.actionAdd_event.triggered.connect(lambda: event_operations.add_event(self))
     self.actionEdit_event.triggered.connect(lambda: event_operations.edit_event(self))
     self.actionFilter_events.triggered.connect(lambda: event_operations.filter_events(self))
