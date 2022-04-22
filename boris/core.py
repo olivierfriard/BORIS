@@ -3456,9 +3456,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 if player == 0:
                     try:
                         self.video_slider.setValue(
-                            self.dw_player[0].mediaplayer.get_time()
-                            / self.dw_player[0].mediaplayer.get_length()
-                            * (slider_maximum - 1)
+                            round(
+                                self.dw_player[0].mediaplayer.get_time()
+                                / self.dw_player[0].mediaplayer.get_length()
+                                * (slider_maximum - 1)
+                            )
                         )
                     except Exception:
                         pass
@@ -3527,9 +3529,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 if player == 0:
                     try:
                         self.video_slider.setValue(
-                            self.dw_player[0].mediaplayer.get_time()
-                            / self.dw_player[0].mediaplayer.get_length()
-                            * (slider_maximum - 1)
+                            round(
+                                self.dw_player[0].mediaplayer.get_time()
+                                / self.dw_player[0].mediaplayer.get_length()
+                                * (slider_maximum - 1)
+                            )
                         )
                     except Exception:
                         pass
@@ -4437,7 +4441,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     self.beep("beep")
 
         # video slider
-        self.video_slider.setValue(currentTime / self.dw_player[0].mediaplayer.get_length() * (slider_maximum - 1))
+        self.video_slider.setValue(
+            round(currentTime / self.dw_player[0].mediaplayer.get_length() * (slider_maximum - 1))
+        )
 
         # extract State events
         StateBehaviorsCodes = utilities.state_behavior_codes(self.pj[ETHOGRAM])
@@ -4894,9 +4900,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.dw_player[i].mediaListPlayer.set_media_list(self.dw_player[i].media_list)
 
             if sys.platform.startswith("linux"):  # for Linux using the X Server
-                self.dw_player[i].mediaplayer.set_xwindow(self.dw_player[i].videoframe.winId())
+                print(f"{type(self.dw_player[i].videoframe.winId())=}")
+                self.dw_player[i].mediaplayer.set_xwindow(int(self.dw_player[i].videoframe.winId()))
             elif sys.platform == "win32":  # for Windows
-                self.dw_player[i].mediaplayer.set_hwnd(self.dw_player[i].videoframe.winId())
+                self.dw_player[i].mediaplayer.set_hwnd(int(self.dw_player[i].videoframe.winId()))
             elif sys.platform == "darwin":  # for MacOS
                 self.dw_player[i].mediaplayer.set_nsobject(int(self.dw_player[i].videoframe.winId()))
 
@@ -10913,7 +10920,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
                     # set video scroll bar
                     if scroll_slider:
-                        self.video_slider.setValue(mediaTime / mediaplayer_length * (slider_maximum - 1))
+                        self.video_slider.setValue(round(mediaTime / mediaplayer_length * (slider_maximum - 1)))
 
             else:
                 self.statusbar.showMessage("Media length not available now", 0)
