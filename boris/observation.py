@@ -111,6 +111,7 @@ class Observation(QDialog, Ui_Form):
         self.time_format = time_format
         self.observation_time_interval = [0, 0]
         self.mem_dir = ""
+        self.test = None
 
         self.setupUi(self)
 
@@ -135,8 +136,20 @@ class Observation(QDialog, Ui_Form):
 
         self.pbRemoveVideo.clicked.connect(self.remove_media)
 
-        self.pb_add_data_file.clicked.connect(lambda: self.add_data_file(flag_path=True))
-        self.pb_add_data_file_wo_path.clicked.connect(lambda: self.add_data_file(flag_path=False))
+        # add data file
+        data_menu_items = [
+            "data abs path|with absolute path",
+            "data rel path|with relative path",
+        ]
+
+        menu_data = QMenu()
+        menu_data.triggered.connect(lambda x: self.add_data_file(mode=x.statusTip()))
+        self.add_button_menu(data_menu_items, menu_data)
+        self.pb_add_data_file.setMenu(menu_data)
+
+        # self.pb_add_data_file.clicked.connect(lambda: self.add_data_file(flag_path=True))
+        # self.pb_add_data_file_wo_path.clicked.connect(lambda: self.add_data_file(flag_path=False))
+
         self.pb_remove_data_file.clicked.connect(self.remove_data_file)
         self.pb_view_data_head.clicked.connect(self.view_data_file_head)
         self.pb_plot_data.clicked.connect(self.plot_data_file)
@@ -259,81 +272,83 @@ class Observation(QDialog, Ui_Form):
         check if data can be plotted
         """
 
-        if self.pb_plot_data.text() == "Show plot":
-
-            if self.tw_data_files.selectedIndexes() or self.tw_data_files.rowCount() == 1:
-
-                if self.tw_data_files.rowCount() == 1:
-                    row_idx = 0
-                else:
-                    row_idx = self.tw_data_files.selectedIndexes()[0].row()
-
-                filename = self.tw_data_files.item(row_idx, cfg.PLOT_DATA_FILEPATH_IDX).text()
-                columns_to_plot = self.tw_data_files.item(row_idx, cfg.PLOT_DATA_COLUMNS_IDX).text()
-                plot_title = self.tw_data_files.item(row_idx, cfg.PLOT_DATA_PLOTTITLE_IDX).text()
-
-                # load converters in dictionary
-                if self.tw_data_files.item(row_idx, cfg.PLOT_DATA_CONVERTERS_IDX).text():
-                    column_converter = eval(self.tw_data_files.item(row_idx, cfg.PLOT_DATA_CONVERTERS_IDX).text())
-                else:
-                    column_converter = {}
-
-                variable_name = self.tw_data_files.item(row_idx, cfg.PLOT_DATA_VARIABLENAME_IDX).text()
-                time_interval = int(self.tw_data_files.item(row_idx, cfg.PLOT_DATA_TIMEINTERVAL_IDX).text())
-                time_offset = int(self.tw_data_files.item(row_idx, cfg.PLOT_DATA_TIMEOFFSET_IDX).text())
-
-                substract_first_value = self.tw_data_files.cellWidget(
-                    row_idx, cfg.PLOT_DATA_SUBSTRACT1STVALUE_IDX
-                ).currentText()
-
-                plot_color = self.tw_data_files.cellWidget(row_idx, cfg.PLOT_DATA_PLOTCOLOR_IDX).currentText()
-
-                data_file_path = project_functions.media_full_path(filename, self.project_path)
-
-                if not data_file_path:
-                    QMessageBox.critical(
-                        self,
-                        cfg.programName,
-                        (
-                            f"Data file not found:\n{filename}\n"
-                            "If the file path is not stored the data file "
-                            "must be in the same directory than your project"
-                        ),
-                    )
-                    return
-
-                self.test = plot_data_module.Plot_data(
-                    data_file_path,
-                    time_interval,  # time interval
-                    time_offset,  # time offset
-                    plot_color,  # plot style
-                    plot_title,  # plot title
-                    variable_name,
-                    columns_to_plot,
-                    substract_first_value,
-                    self.converters,
-                    column_converter,
-                    log_level=logging.getLogger().getEffectiveLevel(),
-                )
-
-                if self.test.error_msg:
-                    QMessageBox.critical(self, cfg.programName, f"Impossible to plot data:\n{self.test.error_msg}")
-                    del self.test
-                    return
-
-                self.test.setWindowFlags(Qt.WindowStaysOnTopHint)
-                self.test.show()
-                self.test.update_plot(0)
-                self.pb_plot_data.setText("Close plot")
-
-            else:
-                QMessageBox.warning(self, cfg.programName, "Select a data file")
-
-        else:  # close plot
+        if self.pb_plot_data.text() != "Show plot":
             self.test.close_plot()
+            # update button text
             self.pb_plot_data.setText("Show plot")
+            return
 
-    def add_data_file(self, flag_path=True):
+        if self.tw_data_files.selectedIndexes() or self.tw_data_files.rowCount() == 1:
+
+            if self.tw_data_files.rowCount() == 1:
+                row_idx = 0
+            else:
+                row_idx = self.tw_data_files.selectedIndexes()[0].row()
+
+            filename = self.tw_data_files.item(row_idx, cfg.PLOT_DATA_FILEPATH_IDX).text()
+            columns_to_plot = self.tw_data_files.item(row_idx, cfg.PLOT_DATA_COLUMNS_IDX).text()
+            plot_title = self.tw_data_files.item(row_idx, cfg.PLOT_DATA_PLOTTITLE_IDX).text()
+
+            # load converters in dictionary
+            if self.tw_data_files.item(row_idx, cfg.PLOT_DATA_CONVERTERS_IDX).text():
+                column_converter = eval(self.tw_data_files.item(row_idx, cfg.PLOT_DATA_CONVERTERS_IDX).text())
+            else:
+                column_converter = {}
+
+            variable_name = self.tw_data_files.item(row_idx, cfg.PLOT_DATA_VARIABLENAME_IDX).text()
+            time_interval = int(self.tw_data_files.item(row_idx, cfg.PLOT_DATA_TIMEINTERVAL_IDX).text())
+            time_offset = int(self.tw_data_files.item(row_idx, cfg.PLOT_DATA_TIMEOFFSET_IDX).text())
+
+            substract_first_value = self.tw_data_files.cellWidget(
+                row_idx, cfg.PLOT_DATA_SUBSTRACT1STVALUE_IDX
+            ).currentText()
+
+            plot_color = self.tw_data_files.cellWidget(row_idx, cfg.PLOT_DATA_PLOTCOLOR_IDX).currentText()
+
+            data_file_path = project_functions.media_full_path(filename, self.project_path)
+
+            if not data_file_path:
+                QMessageBox.critical(
+                    self,
+                    cfg.programName,
+                    (
+                        f"Data file not found:\n{filename}\n"
+                        "If the file path is not stored the data file "
+                        "must be in the same directory than your project"
+                    ),
+                )
+                return
+
+            self.test = plot_data_module.Plot_data(
+                data_file_path,
+                time_interval,  # time interval
+                time_offset,  # time offset
+                plot_color,  # plot style
+                plot_title,  # plot title
+                variable_name,
+                columns_to_plot,
+                substract_first_value,
+                self.converters,
+                column_converter,
+                log_level=logging.getLogger().getEffectiveLevel(),
+            )
+
+            if self.test.error_msg:
+                QMessageBox.critical(self, cfg.programName, f"Impossible to plot data:\n{self.test.error_msg}")
+                del self.test
+                return
+
+            self.test.setWindowFlags(Qt.Window | Qt.WindowStaysOnTopHint)
+            self.test.show()
+            self.test.update_plot(0)
+            #self.test.exec_()
+            # update button text
+            self.pb_plot_data.setText("Close plot")
+
+        else:
+            QMessageBox.warning(self, cfg.programName, "Select a data file")
+
+    def add_data_file(self, mode=True):
         """
         user select a data file to be plotted synchronously with media file
 
@@ -341,12 +356,25 @@ class Observation(QDialog, Ui_Form):
             flag_path (bool): True to store path of data file else False
         """
 
-        # check if project saved
-        if (not flag_path) and (not self.project_file_name):
+        if mode.split("|")[0] not in (
+            "data abs path",
+            "data rel path",
+        ):
             QMessageBox.critical(
                 self,
                 cfg.programName,
-                ("It is not possible to add data file without full path " "if the project is not saved"),
+                (f"Wrong mode to add a data file {mode}"),
+            )
+            return
+
+        # check if project saved
+        if (" w/o" in mode or " rel " in mode) and (not self.project_file_name):
+            QMessageBox.critical(
+                self,
+                cfg.programName,
+                (
+                    "It is not possible to add a data file without path or with a relative path if the project is not already saved"
+                ),
             )
             return
 
@@ -363,7 +391,7 @@ class Observation(QDialog, Ui_Form):
             return
 
         fd = QFileDialog()
-        fd.setDirectory(os.path.expanduser("~") if flag_path else str(Path(self.project_path).parent))
+        fd.setDirectory(os.path.expanduser("~") if (" abs " in mode) else str(Path(self.project_path).parent))
 
         fn = fd.getOpenFileName(self, "Add data file", "", "All files (*)")
         file_name = fn[0] if type(fn) is tuple else fn
@@ -429,8 +457,20 @@ class Observation(QDialog, Ui_Form):
 
             self.tw_data_files.setRowCount(self.tw_data_files.rowCount() + 1)
 
-            if not flag_path:
-                file_name = str(Path(file_name).name)
+            if " rel " in mode:
+
+                try:
+                    file_path = str(Path(file_name).relative_to(Path(self.project_path).parent))
+                except ValueError:
+                    QMessageBox.critical(
+                        self,
+                        cfg.programName,
+                        f"The directory <b>{Path(file_name).parent}</b> is not contained in <b>{Path(self.project_path).parent}</b>.",
+                    )
+                    return
+
+            else:  # save absolute path
+                file_path = file_name
 
             for col_idx, value in zip(
                 [
@@ -442,7 +482,7 @@ class Observation(QDialog, Ui_Form):
                     cfg.PLOT_DATA_TIMEINTERVAL_IDX,
                     cfg.PLOT_DATA_TIMEOFFSET_IDX,
                 ],
-                [file_name, columns_to_plot, "", "", "", "60", "0"],
+                [file_path, columns_to_plot, "", "", "", "60", "0"],
             ):
                 item = QTableWidgetItem(value)
                 if col_idx == cfg.PLOT_DATA_CONVERTERS_IDX:
@@ -466,46 +506,41 @@ class Observation(QDialog, Ui_Form):
         """
         view first parts of data file
         """
-        if self.tw_data_files.selectedIndexes() or self.tw_data_files.rowCount() == 1:
-            if self.tw_data_files.rowCount() == 1:
-                data_file_path = project_functions.media_full_path(
-                    self.tw_data_files.item(0, 0).text(), self.project_path
-                )
-            else:
-                data_file_path = project_functions.media_full_path(
-                    self.tw_data_files.item(self.tw_data_files.selectedIndexes()[0].row(), 0).text(), self.project_path
-                )
 
-            file_parameters = util.check_txt_file(data_file_path)
-            if "error" in file_parameters:
-                QMessageBox.critical(
-                    self, cfg.programName, f"Error on file {data_file_path}: {file_parameters['error']}"
-                )
-                return
-            header = util.return_file_header(data_file_path)
+        if not self.tw_data_files.selectedIndexes() and self.tw_data_files.rowCount() != 1:
+            QMessageBox.warning(self, cfg.programName, "Select a data file")
 
-            if header:
+        if self.tw_data_files.rowCount() == 1:
+            data_file_path = project_functions.media_full_path(self.tw_data_files.item(0, 0).text(), self.project_path)
+        else:
+            data_file_path = project_functions.media_full_path(
+                self.tw_data_files.item(self.tw_data_files.selectedIndexes()[0].row(), 0).text(), self.project_path
+            )
 
-                w = dialog.View_data_head()
-                w.setWindowTitle(f"Data file: {Path(data_file_path).name}")
-                w.setWindowFlags(Qt.WindowStaysOnTopHint)
-                w.label.setVisible(False)
-                w.le.setVisible(False)
+        file_parameters = util.check_txt_file(data_file_path)
+        if "error" in file_parameters:
+            QMessageBox.critical(self, cfg.programName, f"Error on file {data_file_path}: {file_parameters['error']}")
+            return
+        header = util.return_file_header(data_file_path)
 
-                w.tw.setColumnCount(file_parameters["fields number"])
-                w.tw.setRowCount(len(header))
+        if header:
 
-                for row in range(len(header)):
-                    for col, v in enumerate(header[row].split(file_parameters["separator"])):
-                        w.tw.setItem(row, col, QTableWidgetItem(v))
+            w = dialog.View_data_head()
+            w.setWindowTitle(f"Data file: {Path(data_file_path).name}")
+            w.label.setVisible(False)
+            w.le.setVisible(False)
 
-                w.exec_()
+            w.tw.setColumnCount(file_parameters["fields number"])
+            w.tw.setRowCount(len(header))
 
-            else:
-                QMessageBox.critical(self, cfg.programName, f"Error on file {data_file_path}")
+            for row in range(len(header)):
+                for col, v in enumerate(header[row].split(file_parameters["separator"])):
+                    w.tw.setItem(row, col, QTableWidgetItem(v))
+
+            w.exec_()
 
         else:
-            QMessageBox.warning(self, cfg.programName, "Select a data file")
+            QMessageBox.critical(self, cfg.programName, f"Error on file {data_file_path}")
 
     def extract_wav(self):
         """
@@ -580,7 +615,19 @@ class Observation(QDialog, Ui_Form):
                 self.cb_visualize_waveform.setChecked(False)
             """
 
+    def closeEvent(self, event):
+        """
+        close observation windows
+        """
+        if self.test is not None:
+            self.test.close_plot()
+
     def pbCancel_clicked(self):
+        """
+        observation creation cancelled
+        """
+        if self.test is not None:
+            self.test.close_plot()
         self.reject()
 
     def check_parameters(self):
@@ -743,6 +790,8 @@ class Observation(QDialog, Ui_Form):
         """
 
         if self.check_parameters():
+            if self.test is not None:
+                self.test.close_plot()
             self.done(2)
 
     def pbSave_clicked(self):
@@ -751,6 +800,8 @@ class Observation(QDialog, Ui_Form):
         """
         if self.check_parameters():
             self.state = "accepted"
+            if self.test is not None:
+                self.test.close_plot()
             self.accept()
         else:
             self.state = "refused"

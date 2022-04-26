@@ -27,8 +27,7 @@ import time
 from decimal import Decimal
 
 import numpy as np
-from matplotlib.backends.backend_qt5agg import \
-    FigureCanvasQTAgg as FigureCanvas
+from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.figure import Figure
 from PyQt5.QtCore import *
 from PyQt5.QtGui import *
@@ -38,7 +37,6 @@ from . import utilities as util
 
 
 class MyMplCanvas(FigureCanvas):
-
     def __init__(self, parent=None):
         self.fig = Figure()
         self.axes = self.fig.add_subplot(1, 1, 1)
@@ -54,18 +52,20 @@ class Plot_data(QWidget):
     # send keypress event to mainwindow
     sendEvent = pyqtSignal(QEvent)
 
-    def __init__(self,
-                 file_name,
-                 interval,
-                 time_offset,
-                 plot_style,
-                 plot_title,
-                 y_label,
-                 columns_to_plot,
-                 substract_first_value,
-                 converters,
-                 column_converter,
-                 log_level=""):
+    def __init__(
+        self,
+        file_name,
+        interval,
+        time_offset,
+        plot_style,
+        plot_title,
+        y_label,
+        columns_to_plot,
+        substract_first_value,
+        converters,
+        column_converter,
+        log_level="",
+    ):
 
         super().__init__()
 
@@ -192,7 +192,7 @@ class Plot_data(QWidget):
 
         # subsampling
         if min_time_step < 0.04:
-            data = data[0::int(round(0.04 / min_time_step, 2))]
+            data = data[0 :: int(round(0.04 / min_time_step, 2))]
             min_time_step = 0.04
 
         logging.debug("new data after subsampling: {}".format(data[:50]))
@@ -229,7 +229,7 @@ class Plot_data(QWidget):
         self.plotter.moveToThread(self.thread)
         self.thread.start()
 
-        if min_time_step < .2:
+        if min_time_step < 0.2:
             self.time_out = 200
         else:
             self.time_out = min_time_step * 1000
@@ -238,7 +238,7 @@ class Plot_data(QWidget):
         """
         send event (if keypress) to main window
         """
-        if (event.type() == QEvent.KeyPress):
+        if event.type() == QEvent.KeyPress:
             self.sendEvent.emit(event)
             return True
         else:
@@ -296,7 +296,7 @@ class Plot_data(QWidget):
             self.myplot.axes.set_ylim((min_value, max_value))
 
             self.myplot.axes.plot(x, y, self.plot_style)
-            self.myplot.axes.axvline(x=position_data, color="red", linestyle='-')
+            self.myplot.axes.axvline(x=position_data, color="red", linestyle="-")
 
             self.myplot.draw()
         except:
@@ -307,12 +307,12 @@ class Plot_data(QWidget):
 class Plotter(QObject):
     return_fig = pyqtSignal(
         np.ndarray,  # x array
-        np.ndarray,  #y array
+        np.ndarray,  # y array
         float,  # position_data
-        float,  #position start
-        float,  #min value
-        float,  #max value
-        float  # position end
+        float,  # position start
+        float,  # min value
+        float,  # max value
+        float,  # position end
     )
 
     @pyqtSlot(float)
@@ -376,8 +376,10 @@ class Plotter(QObject):
             logging.debug("self.interval/self.min_time_step/2: {}".format(self.interval / self.min_time_step / 2))
 
             dim_footer = int(
-                round((current_time - self.max_time_value) / self.min_time_step +
-                      self.interval / self.min_time_step / 2))
+                round(
+                    (current_time - self.max_time_value) / self.min_time_step + self.interval / self.min_time_step / 2
+                )
+            )
 
             footer = np.array([np.nan] * dim_footer).T
             logging.debug("len footer: {}".format(len(footer)))
@@ -398,7 +400,7 @@ class Plotter(QObject):
                     st = 0
                     flag_i = True
 
-                d = np.append(self.data[st:len(self.data)][:, 1], footer, axis=0)
+                d = np.append(self.data[st : len(self.data)][:, 1], footer, axis=0)
 
                 if flag_i:
                     d = np.append(i, d, axis=0)
@@ -439,15 +441,15 @@ class Plotter(QObject):
         self.return_fig.emit(
             x,
             y,
-            current_discrete_time,  #position_data
-            current_discrete_time - self.interval // 2,  #position_start
+            current_discrete_time,  # position_data
+            current_discrete_time - self.interval // 2,  # position_start
             self.min_value,
             self.max_value,
-            current_discrete_time + self.interval // 2  #position_end,
+            current_discrete_time + self.interval // 2,  # position_end,
         )
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     """
     arguments:
     1 file_name
@@ -457,8 +459,8 @@ if __name__ == '__main__':
     5 column_converter
 
     examples:
-    python3.6 plot_data_module.py data_file.csv 4,6 True 60 "{4:'hhmmss_2_seconds'}"
-    python3.6 plot_data_module.py data_file.csv 1,2 True 60 "{1:'convert_time_ecg'}"
+    python3 plot_data_module.py data_file.csv 4,6 True 60 "{4:'hhmmss_2_seconds'}"
+    python3 plot_data_module.py data_file.csv 1,2 True 60 "{1:'convert_time_ecg'}"
 
     """
 
@@ -475,29 +477,36 @@ if __name__ == '__main__':
 
     converters = {
         "convert_time_ecg": {
-            "name":
-                "convert_time_ecg",
-            "description":
-                "convert '%d/%m/%Y %H:%M:%S.%f' in seconds from epoch",
-            "code":
-                "\nimport datetime\nepoch = datetime.datetime.utcfromtimestamp(0)\ndatetime_format = \"%d/%m/%Y %H:%M:%S.%f\"\n\nOUTPUT = (datetime.datetime.strptime(INPUT, datetime_format) - epoch).total_seconds()\n"
+            "name": "convert_time_ecg",
+            "description": "convert '%d/%m/%Y %H:%M:%S.%f' in seconds from epoch",
+            "code": '\nimport datetime\nepoch = datetime.datetime.utcfromtimestamp(0)\ndatetime_format = "%d/%m/%Y %H:%M:%S.%f"\n\nOUTPUT = (datetime.datetime.strptime(INPUT, datetime_format) - epoch).total_seconds()\n',
         },
         "hhmmss_2_seconds": {
             "name": "hhmmss_2_seconds",
             "description": "convert HH:MM:SS in seconds",
-            "code": "\nh, m, s = INPUT.split(':')\nOUTPUT = int(h) * 3600 + int(m) * 60 + int(s)\n\n"
+            "code": "\nh, m, s = INPUT.split(':')\nOUTPUT = int(h) * 3600 + int(m) * 60 + int(s)\n\n",
         },
         "invert_value": {
             "name": "invert value",
             "description": "invert the value",
-            "code": "\nOUTPUT = -float(INPUT)\n\n"
-        }
+            "code": "\nOUTPUT = -float(INPUT)\n\n",
+        },
     }
 
     app = QApplication(sys.argv)
 
-    win = Plot_data(file_name, interval, time_offset, color, plot_title, y_label, columns_to_plot,
-                    substract_first_value, converters, column_converter)
+    win = Plot_data(
+        file_name,
+        interval,
+        time_offset,
+        color,
+        plot_title,
+        y_label,
+        columns_to_plot,
+        substract_first_value,
+        converters,
+        column_converter,
+    )
 
     if win.error_msg:
         sys.exit()
@@ -508,7 +517,6 @@ if __name__ == '__main__':
 
     # def timer_plot_data_out():
     #    win.update_plot(time.time() - timer_started_at)
-
 
     def get_time():
         return time.time() - timer_started_at
