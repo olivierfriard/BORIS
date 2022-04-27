@@ -47,6 +47,7 @@ class MyMplCanvas(FigureCanvas):
 
 
 class Plot_data(QWidget):
+    # class Plot_data(QDialog):
     send_fig = pyqtSignal(float)
 
     # send keypress event to mainwindow
@@ -112,7 +113,7 @@ class Plot_data(QWidget):
         try:
             self.time_offset = Decimal(time_offset)
         except Exception:
-            self.error_msg = "The offset value {} is not a decimal value".format(time_offset)
+            self.error_msg = f"The offset value {time_offset} is not a decimal value"
             return
 
         self.y_label = y_label
@@ -195,7 +196,7 @@ class Plot_data(QWidget):
             data = data[0 :: int(round(0.04 / min_time_step, 2))]
             min_time_step = 0.04
 
-        logging.debug("new data after subsampling: {}".format(data[:50]))
+        logging.debug(f"new data after subsampling: {data[:50]}")
 
         min_value, max_value = min(data[:, 1]), max(data[:, 1])
 
@@ -321,6 +322,7 @@ class Plotter(QObject):
         logging.debug("current_time: {}".format(current_time))
 
         current_discrete_time = round(round(current_time / self.min_time_step) * self.min_time_step, 2)
+
         logging.debug("current_discrete_time: {}".format(current_discrete_time))
         logging.debug("self.interval: {}".format(self.interval))
 

@@ -338,10 +338,9 @@ class Observation(QDialog, Ui_Form):
                 del self.test
                 return
 
-            self.test.setWindowFlags(Qt.Window | Qt.WindowStaysOnTopHint)
+            # self.test.setWindowFlags(self.test.windowFlags() | Qt.WindowStaysOnTopHint)
             self.test.show()
             self.test.update_plot(0)
-            #self.test.exec_()
             # update button text
             self.pb_plot_data.setText("Close plot")
 
@@ -413,47 +412,46 @@ class Observation(QDialog, Ui_Form):
 
             header = util.return_file_header(file_name, row_number=10)
 
-            if header:
-                w = dialog.View_data_head()
-                w.setWindowTitle(f"Data file: {Path(file_name).name}")
-                # w.setWindowFlags(Qt.WindowStaysOnTopHint)
+            if not header:
+                return  # problem with header
 
-                w.tw.setColumnCount(r["fields number"])
-                w.tw.setRowCount(len(header))
+            w = dialog.View_data_head()
+            w.setWindowTitle(f"Data file: {Path(file_name).name}")
+            """w.setWindowFlags(Qt.WindowStaysOnTopHint)"""
 
-                for row in range(len(header)):
-                    for col, v in enumerate(header[row].split(r["separator"])):
-                        item = QTableWidgetItem(v)
-                        item.setFlags(Qt.ItemIsEnabled)
-                        w.tw.setItem(row, col, item)
+            w.tw.setColumnCount(r["fields number"])
+            w.tw.setRowCount(len(header))
 
-                while True:
-                    flag_ok = True
-                    if w.exec_():
-                        columns_to_plot = w.le.text().replace(" ", "")
-                        for col in columns_to_plot.split(","):
-                            try:
-                                col_idx = int(col)
-                            except ValueError:
-                                QMessageBox.critical(
-                                    self, cfg.programName, f"<b>{col}</b> does not seem to be a column index"
-                                )
-                                flag_ok = False
-                                break
-                            if col_idx <= 0 or col_idx > r["fields number"]:
-                                QMessageBox.critical(self, cfg.programName, f"<b>{col}</b> is not a valid column index")
-                                flag_ok = False
-                                break
-                        if flag_ok:
+            for row in range(len(header)):
+                for col, v in enumerate(header[row].split(r["separator"])):
+                    item = QTableWidgetItem(v)
+                    item.setFlags(Qt.ItemIsEnabled)
+                    w.tw.setItem(row, col, item)
+
+            while True:
+                flag_ok = True
+                if w.exec_():
+                    columns_to_plot = w.le.text().replace(" ", "")
+                    for col in columns_to_plot.split(","):
+                        try:
+                            col_idx = int(col)
+                        except ValueError:
+                            QMessageBox.critical(
+                                self, cfg.programName, f"<b>{col}</b> does not seem to be a column index"
+                            )
+                            flag_ok = False
                             break
-                    else:
-                        return
-
+                        if col_idx <= 0 or col_idx > r["fields number"]:
+                            QMessageBox.critical(self, cfg.programName, f"<b>{col}</b> is not a valid column index")
+                            flag_ok = False
+                            break
+                    if flag_ok:
+                        break
                 else:
                     return
 
             else:
-                return  # problem with header
+                return
 
             self.tw_data_files.setRowCount(self.tw_data_files.rowCount() + 1)
 
@@ -512,10 +510,12 @@ class Observation(QDialog, Ui_Form):
 
         if self.tw_data_files.rowCount() == 1:
             data_file_path = project_functions.media_full_path(self.tw_data_files.item(0, 0).text(), self.project_path)
+            columns_to_plot = self.tw_data_files.item(0, 1).text()
         else:
             data_file_path = project_functions.media_full_path(
                 self.tw_data_files.item(self.tw_data_files.selectedIndexes()[0].row(), 0).text(), self.project_path
             )
+            columns_to_plot = self.tw_data_files.item(self.tw_data_files.selectedIndexes()[0].row(), 1).text()
 
         file_parameters = util.check_txt_file(data_file_path)
         if "error" in file_parameters:
@@ -527,8 +527,10 @@ class Observation(QDialog, Ui_Form):
 
             w = dialog.View_data_head()
             w.setWindowTitle(f"Data file: {Path(data_file_path).name}")
-            w.label.setVisible(False)
-            w.le.setVisible(False)
+            w.label.setText("Index of columns to plot")
+            w.le.setEnabled(False)
+            w.le.setText(columns_to_plot)
+            w.pbCancel.setVisible(False)
 
             w.tw.setColumnCount(file_parameters["fields number"])
             w.tw.setRowCount(len(header))
