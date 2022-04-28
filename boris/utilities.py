@@ -30,7 +30,6 @@ import re
 import socket
 import subprocess
 import sys
-import traceback
 import urllib.parse
 import wave
 from decimal import *
@@ -38,24 +37,9 @@ from shutil import copyfile
 
 import numpy as np
 
-# from PyQt5.QtCore import *
 from PyQt5.QtGui import qRgb
 
-# from PyQt5.QtWidgets import *
-
 from . import config as cfg
-
-
-def error_info2() -> str:
-    """
-    return details about error
-    usage: error_info(sys.exc_info())
-
-    Returns:
-        str: formatted error traceback
-    """
-
-    return traceback.format_exc().replace("Traceback (most recent call last):", "").replace("\n", " ")
 
 
 def error_info(exc_info: tuple) -> tuple:

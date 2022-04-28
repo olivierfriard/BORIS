@@ -22,11 +22,15 @@ This file is part of BORIS.
 
 import logging
 import sys
+import pathlib as pl
 import traceback
+import platform
+import datetime as dt
 
-from PyQt5.QtCore import Qt, pyqtSignal
+from PyQt5.QtCore import Qt, pyqtSignal, QT_VERSION_STR, PYQT_VERSION_STR
 from PyQt5.QtGui import QFont
 from PyQt5.QtWidgets import (
+    QApplication,
     QAbstractItemView,
     QCheckBox,
     QComboBox,
@@ -90,7 +94,7 @@ def error_message_box(task, error_type, error_file_name, error_lineno):
 '''
 
 
-def error_message_box2(error_traceback):
+def error_message_box(error_traceback):
     # do NOT use this function directly, use error_message function
     """
     show a critical dialog
@@ -112,27 +116,7 @@ def error_message_box2(error_traceback):
     )
 
 
-'''
-def error_message(task: str) -> None:
-    """
-    Show details about the error in a message box
-    write entry to log as CRITICAL
-
-    usage:
-    dialog.error_message(sys._getframe().f_code.co_name)
-    """
-
-    exc_type, exc_obj, exc_tb = sys.exc_info()
-    error_file_name = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
-    error_type = f"{exc_type}: {exc_obj}"
-    error_lineno = exc_tb.tb_lineno
-
-    logging.critical(f"Error during {task}: {error_type} in {error_file_name} at line #{error_lineno}")
-    error_message_box(task, error_type, error_file_name, error_lineno)
-'''
-
-
-def error_message2() -> None:
+def error_message() -> None:
     """
     Show details about the error in a message box
     write entry to log as CRITICAL
@@ -141,25 +125,46 @@ def error_message2() -> None:
     error_traceback = traceback.format_exc().replace("Traceback (most recent call last):", "").replace("\n", " ")
 
     logging.critical(error_traceback)
-    error_message_box2(error_traceback)
+    error_message_box(error_traceback)
 
 
-def error_message3(exception_type, exception_value, traceback_object):
+def global_error_message(exception_type, exception_value, traceback_object):
+    """
+    global error management
+    save error using loggin.critical and append error message to ~/boris_error.log
+    """
 
-    exception_text = "".join(traceback.format_exception(exception_type, exception_value, traceback_object))
-    logging.critical(exception_text)
+    error_text: str = (
+        f"BORIS version: {version.__version__}\n"
+        f"OS: {platform.uname().system} {platform.uname().release} {platform.uname().version}\n"
+        f"CPU: {platform.uname().machine} {platform.uname().processor}\n"
+        f"Python {platform.python_version()} ({'64-bit' if sys.maxsize > 2**32 else '32-bit'})\n"
+        f"Qt {QT_VERSION_STR} - PyQt {PYQT_VERSION_STR}\n"
+        f"{dt.datetime.now():%Y-%m-%d %H:%M}\n\n"
+    )
+    error_text += "".join(traceback.format_exception(exception_type, exception_value, traceback_object))
 
-    # error_message_box2(exception_text.replace("\r\n", "\n").replace("\n", "<br>"))
+    logging.critical(error_text)
 
-    error_text = exception_text.replace("\r\n", "\n").replace("\n", "<br>")
-    text = (
-        f"BORIS version: {version.__version__}<br><br>"
-        f"<b>An error has occured</b>:<br>"
-        f"{error_text}<br><br>"
+    # append to boris_error.log file
+    with open(pl.Path("~").expanduser() / "boris_error.log", "a") as f_out:
+        f_out.write(error_text + "\n")
+        f_out.write("-" * 80 + "\n")
+
+    # copy to clipboard
+    cb = QApplication.clipboard()
+    cb.clear(mode=cb.Clipboard)
+    cb.setText(error_text, mode=cb.Clipboard)
+
+    error_text: str = error_text.replace("\r\n", "\n").replace("\n", "<br>")
+
+    text: str = (
+        f"<b>An error has occured</b>:<br><br>"
+        f"{error_text}<br>"
         "to improve the software please report this problem at:<br>"
         '<a href="https://github.com/olivierfriard/BORIS/issues">'
         "https://github.com/olivierfriard/BORIS/issues</a><br>"
-        "or by email (See the About page on the BORIS web site.<br><br>"
+        "Please no screenshot, the error message was copied to the clipboard.<br><br>"
         "Thank you for your collaboration!"
     )
 
@@ -169,7 +174,7 @@ def error_message3(exception_type, exception_value, traceback_object):
     errorbox.setTextFormat(Qt.RichText)
     errorbox.setStandardButtons(QMessageBox.Abort)
 
-    continueButton = errorbox.addButton("Ignore and try to continue", QMessageBox.RejectRole)
+    _ = errorbox.addButton("Ignore and try to continue", QMessageBox.RejectRole)
 
     ret = errorbox.exec_()
 

@@ -24,7 +24,7 @@ import logging
 
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QColor, QFont
-from PyQt5.QtWidgets import (QApplication, QFileDialog, QListWidgetItem, QMessageBox, QTableWidgetItem)
+from PyQt5.QtWidgets import QApplication, QFileDialog, QListWidgetItem, QMessageBox, QTableWidgetItem
 
 from . import config as cfg
 from . import dialog, param_panel, project_functions
@@ -51,89 +51,96 @@ def import_from_text_file(self):
 
     if self.twBehaviors.rowCount():
         response = dialog.MessageDialog(
-            cfg.programName, "There are behaviors already configured. Do you want to append behaviors or replace them?",
-            ['Append', 'Replace', cfg.CANCEL])
+            cfg.programName,
+            "There are behaviors already configured. Do you want to append behaviors or replace them?",
+            ["Append", "Replace", cfg.CANCEL],
+        )
         if response == cfg.CANCEL:
             return
 
-    fn = QFileDialog().getOpenFileName(self, "Import behaviors from text file", "",
-                                       "Text files (*.txt *.tsv *.csv);;All files (*)")
+    fn = QFileDialog().getOpenFileName(
+        self, "Import behaviors from text file", "", "Text files (*.txt *.tsv *.csv);;All files (*)"
+    )
     fileName = fn[0] if type(fn) is tuple else fn
 
-    if fileName:
+    if not fileName:
+        return
 
-        if self.twBehaviors.rowCount() and response == cfg.REPLACE:
-            self.twBehaviors.setRowCount(0)
+    if self.twBehaviors.rowCount() and response == cfg.REPLACE:
+        self.twBehaviors.setRowCount(0)
+
+    with open(fileName, mode="rb") as f:
+        rows_b = f.read().splitlines()
+
+    rows = []
+    idx = 1
+    for row in rows_b:
         try:
-            with open(fileName, mode="rb") as f:
-                rows_b = f.read().splitlines()
-
-            rows = []
-            idx = 1
-            for row in rows_b:
-                try:
-                    rows.append(row.decode("utf-8"))
-                except Exception:
-                    QMessageBox.critical(None, cfg.programName, (f"Error while reading file\nThe line # {idx}\n"
-                                                                 f"{row}\ncontains characters that are not readable."),
-                                         QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
-                    return
-                idx += 1
-
-            fieldSeparator, fieldsNumber = check_text_file_type(rows)
-
-            logging.debug(f"fields separator: {fieldSeparator}  fields number: {fieldsNumber}")
-
-            if fieldSeparator is None:
-                QMessageBox.critical(
-                    self, cfg.programName,
-                    "Separator character not found! Use plain text file and TAB or comma as value separator")
-            else:
-
-                for row in rows:
-
-                    type_, key, code, description = "", "", "", ""
-
-                    if fieldsNumber == 3:  # fields: type, key, code
-                        type_, key, code = row.split(fieldSeparator)
-                        description = ""
-                    if fieldsNumber == 4:  # fields:  type, key, code, description
-                        type_, key, code, description = row.split(fieldSeparator)
-
-                    if fieldsNumber > 4:
-                        type_, key, code, description = row.split(fieldSeparator)[:4]
-
-                    behavior = {
-                        "key": key,
-                        "code": code,
-                        "description": description,
-                        "modifiers": "",
-                        "excluded": "",
-                        "coding map": "",
-                        "category": ""
-                    }
-
-                    self.twBehaviors.setRowCount(self.twBehaviors.rowCount() + 1)
-
-                    for field_type in cfg.behavioursFields:
-                        if field_type == cfg.TYPE:
-                            item = QTableWidgetItem(cfg.DEFAULT_BEHAVIOR_TYPE)
-                            # add type combobox
-                            if cfg.POINT in type_.upper():
-                                item = QTableWidgetItem(cfg.POINT_EVENT)
-                            if cfg.STATE in type_.upper():
-                                item = QTableWidgetItem(cfg.STATE_EVENT)
-                        else:
-                            item = QTableWidgetItem(behavior[field_type])
-
-                        if field_type not in cfg.ETHOGRAM_EDITABLE_FIELDS:
-                            item.setFlags(Qt.ItemIsEnabled)
-                            item.setBackground(QColor(230, 230, 230))
-
-                        self.twBehaviors.setItem(self.twBehaviors.rowCount() - 1, cfg.behavioursFields[field_type],
-                                                 item)
+            rows.append(row.decode("utf-8"))
         except Exception:
-            dialog.error_message2()
+            QMessageBox.critical(
+                None,
+                cfg.programName,
+                (f"Error while reading file\nThe line # {idx}\n" f"{row}\ncontains characters that are not readable."),
+                QMessageBox.Ok | QMessageBox.Default,
+                QMessageBox.NoButton,
+            )
+            return
+        idx += 1
+
+    fieldSeparator, fieldsNumber = check_text_file_type(rows)
+
+    logging.debug(f"fields separator: {fieldSeparator}  fields number: {fieldsNumber}")
+
+    if fieldSeparator is None:
+        QMessageBox.critical(
+            self,
+            cfg.programName,
+            "Separator character not found! Use plain text file and TAB or comma as value separator",
+        )
+    else:
+
+        for row in rows:
+
+            type_, key, code, description = "", "", "", ""
+
+            if fieldsNumber == 3:  # fields: type, key, code
+                type_, key, code = row.split(fieldSeparator)
+                description = ""
+            if fieldsNumber == 4:  # fields:  type, key, code, description
+                type_, key, code, description = row.split(fieldSeparator)
+
+            if fieldsNumber > 4:
+                type_, key, code, description = row.split(fieldSeparator)[:4]
+
+            behavior = {
+                "key": key,
+                "code": code,
+                "description": description,
+                "modifiers": "",
+                "excluded": "",
+                "coding map": "",
+                "category": "",
+            }
+
+            self.twBehaviors.setRowCount(self.twBehaviors.rowCount() + 1)
+
+            for field_type in cfg.behavioursFields:
+                if field_type == cfg.TYPE:
+                    item = QTableWidgetItem(cfg.DEFAULT_BEHAVIOR_TYPE)
+                    # add type combobox
+                    if cfg.POINT in type_.upper():
+                        item = QTableWidgetItem(cfg.POINT_EVENT)
+                    if cfg.STATE in type_.upper():
+                        item = QTableWidgetItem(cfg.STATE_EVENT)
+                else:
+                    item = QTableWidgetItem(behavior[field_type])
+
+                if field_type not in cfg.ETHOGRAM_EDITABLE_FIELDS:
+                    item.setFlags(Qt.ItemIsEnabled)
+                    item.setBackground(QColor(230, 230, 230))
+
+                self.twBehaviors.setItem(self.twBehaviors.rowCount() - 1, cfg.behavioursFields[field_type], item)
 
 
 def import_behaviors_from_clipboard(self):
@@ -141,189 +148,213 @@ def import_behaviors_from_clipboard(self):
     import ethogram from clipboard
     """
 
-    try:
-        cb = QApplication.clipboard()
-        cb_text = cb.text()
-        if not cb_text:
-            QMessageBox.warning(None, cfg.programName, "The clipboard is empty", QMessageBox.Ok | QMessageBox.Default,
-                                QMessageBox.NoButton)
+    cb = QApplication.clipboard()
+    cb_text = cb.text()
+    if not cb_text:
+        QMessageBox.warning(
+            None,
+            cfg.programName,
+            "The clipboard is empty",
+            QMessageBox.Ok | QMessageBox.Default,
+            QMessageBox.NoButton,
+        )
+        return
+
+    if self.twBehaviors.rowCount():
+        response = dialog.MessageDialog(
+            cfg.programName,
+            "Some behaviors are already configured. Do you want to append behaviors or replace them?",
+            [cfg.APPEND, cfg.REPLACE, cfg.CANCEL],
+        )
+        if response == cfg.CANCEL:
             return
 
-        if self.twBehaviors.rowCount():
-            response = dialog.MessageDialog(
-                cfg.programName,
-                "Some behaviors are already configured. Do you want to append behaviors or replace them?",
-                [cfg.APPEND, cfg.REPLACE, cfg.CANCEL])
-            if response == cfg.CANCEL:
-                return
+        if response == cfg.REPLACE:
+            self.twBehaviors.setRowCount(0)
 
-            if response == cfg.REPLACE:
-                self.twBehaviors.setRowCount(0)
+    cb_text_splitted = cb_text.split("\n")
+    while "" in cb_text_splitted:
+        cb_text_splitted.remove("")
 
-        cb_text_splitted = cb_text.split("\n")
-        while "" in cb_text_splitted:
-            cb_text_splitted.remove("")
+    if len(set([len(x.split("\t")) for x in cb_text_splitted])) != 1:
+        QMessageBox.warning(
+            None,
+            cfg.programName,
+            (
+                "The clipboard content does not have a constant number of fields.<br>"
+                "From your spreadsheet: CTRL + A (select all cells), CTRL + C (copy to clipboard)"
+            ),
+            QMessageBox.Ok | QMessageBox.Default,
+            QMessageBox.NoButton,
+        )
+        return
 
-        if len(set([len(x.split("\t")) for x in cb_text_splitted])) != 1:
-            QMessageBox.warning(None, cfg.programName,
-                                ("The clipboard content does not have a constant number of fields.<br>"
-                                 "From your spreadsheet: CTRL + A (select all cells), CTRL + C (copy to clipboard)"),
-                                QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
-            return
+    for row in cb_text_splitted:
+        if set(row.split("\t")) != set([""]):
+            behavior = {"type": cfg.DEFAULT_BEHAVIOR_TYPE}
+            for idx, field in enumerate(row.split("\t")):
+                if idx == 0:
+                    behavior["type"] = (
+                        cfg.STATE_EVENT
+                        if cfg.STATE in field.upper()
+                        else (cfg.POINT_EVENT if cfg.POINT in field.upper() else "")
+                    )
+                if idx == 1:
+                    behavior["key"] = field.strip() if len(field.strip()) == 1 else ""
+                if idx == 2:
+                    behavior["code"] = field.strip()
+                if idx == 3:
+                    behavior["description"] = field.strip()
+                if idx == 4:
+                    behavior["category"] = field.strip()
 
-        for row in cb_text_splitted:
-            if set(row.split("\t")) != set([""]):
-                behavior = {"type": cfg.DEFAULT_BEHAVIOR_TYPE}
-                for idx, field in enumerate(row.split("\t")):
-                    if idx == 0:
-                        behavior["type"] = cfg.STATE_EVENT if cfg.STATE in field.upper() else (
-                            cfg.POINT_EVENT if cfg.POINT in field.upper() else "")
-                    if idx == 1:
-                        behavior["key"] = field.strip() if len(field.strip()) == 1 else ""
-                    if idx == 2:
-                        behavior["code"] = field.strip()
-                    if idx == 3:
-                        behavior["description"] = field.strip()
-                    if idx == 4:
-                        behavior["category"] = field.strip()
+            self.twBehaviors.setRowCount(self.twBehaviors.rowCount() + 1)
 
-                self.twBehaviors.setRowCount(self.twBehaviors.rowCount() + 1)
+            for field_type in cfg.behavioursFields:
+                if field_type == cfg.TYPE:
+                    item = QTableWidgetItem(behavior.get("type", cfg.DEFAULT_BEHAVIOR_TYPE))
+                else:
+                    item = QTableWidgetItem(behavior.get(field_type, ""))
 
-                for field_type in cfg.behavioursFields:
-                    if field_type == cfg.TYPE:
-                        item = QTableWidgetItem(behavior.get("type", cfg.DEFAULT_BEHAVIOR_TYPE))
-                    else:
-                        item = QTableWidgetItem(behavior.get(field_type, ""))
+                if (
+                    field_type not in cfg.ETHOGRAM_EDITABLE_FIELDS
+                ):  # [TYPE, "excluded", "coding map", "modifiers", "category"]:
+                    item.setFlags(Qt.ItemIsEnabled)
+                    item.setBackground(QColor(230, 230, 230))
 
-                    if field_type not in cfg.ETHOGRAM_EDITABLE_FIELDS:  # [TYPE, "excluded", "coding map", "modifiers", "category"]:
-                        item.setFlags(Qt.ItemIsEnabled)
-                        item.setBackground(QColor(230, 230, 230))
-
-                    self.twBehaviors.setItem(self.twBehaviors.rowCount() - 1, cfg.behavioursFields[field_type], item)
-    except Exception:
-        dialog.error_message2()
+                self.twBehaviors.setItem(self.twBehaviors.rowCount() - 1, cfg.behavioursFields[field_type], item)
 
 
 def import_from_JWatcher(self):
     """
     import behaviors configuration from JWatcher (GDF file)
     """
-    try:
-        if self.twBehaviors.rowCount():
-            response = dialog.MessageDialog(
-                cfg.programName,
-                "There are behaviors already configured. Do you want to append behaviors or replace them?",
-                [cfg.APPEND, cfg.REPLACE, cfg.CANCEL])
-            if response == cfg.CANCEL:
-                return
 
-        fn = QFileDialog().getOpenFileName(self, "Import behaviors from JWatcher", "",
-                                           "Global Definition File (*.gdf);;All files (*)")
-        fileName = fn[0] if type(fn) is tuple else fn
+    if self.twBehaviors.rowCount():
+        response = dialog.MessageDialog(
+            cfg.programName,
+            "There are behaviors already configured. Do you want to append behaviors or replace them?",
+            [cfg.APPEND, cfg.REPLACE, cfg.CANCEL],
+        )
+        if response == cfg.CANCEL:
+            return
 
-        if fileName:
-            if self.twBehaviors.rowCount() and response == cfg.REPLACE:
-                self.twBehaviors.setRowCount(0)
+    fn = QFileDialog().getOpenFileName(
+        self, "Import behaviors from JWatcher", "", "Global Definition File (*.gdf);;All files (*)"
+    )
+    fileName = fn[0] if type(fn) is tuple else fn
 
-            with open(fileName, "r") as f:
-                rows = f.readlines()
+    if fileName:
+        if self.twBehaviors.rowCount() and response == cfg.REPLACE:
+            self.twBehaviors.setRowCount(0)
 
-            for idx, row in enumerate(rows):
-                if row and row[0] == "#":
-                    continue
+        with open(fileName, "r") as f:
+            rows = f.readlines()
 
-                if "Behavior.name." in row and "=" in row:
-                    key, code = row.split('=')
-                    key = key.replace("Behavior.name.", "")
-                    # read description
-                    if idx < len(rows) and "Behavior.description." in rows[idx + 1]:
-                        description = rows[idx + 1].split("=")[-1]
+        for idx, row in enumerate(rows):
+            if row and row[0] == "#":
+                continue
 
-                    behavior = {
-                        "key": key,
-                        "code": code,
-                        "description": description,
-                        "modifiers": "",
-                        "excluded": "",
-                        "coding map": "",
-                        "category": ""
-                    }
+            if "Behavior.name." in row and "=" in row:
+                key, code = row.split("=")
+                key = key.replace("Behavior.name.", "")
+                # read description
+                if idx < len(rows) and "Behavior.description." in rows[idx + 1]:
+                    description = rows[idx + 1].split("=")[-1]
 
-                    self.twBehaviors.setRowCount(self.twBehaviors.rowCount() + 1)
+                behavior = {
+                    "key": key,
+                    "code": code,
+                    "description": description,
+                    "modifiers": "",
+                    "excluded": "",
+                    "coding map": "",
+                    "category": "",
+                }
 
-                    for field_type in cfg.behavioursFields:
-                        if field_type == cfg.TYPE:
-                            item = QTableWidgetItem(cfg.DEFAULT_BEHAVIOR_TYPE)
-                        else:
-                            item = QTableWidgetItem(behavior[field_type])
+                self.twBehaviors.setRowCount(self.twBehaviors.rowCount() + 1)
 
-                        if field_type in [cfg.TYPE, "excluded", "category", "coding map", "modifiers"]:
-                            item.setFlags(Qt.ItemIsEnabled)
-                            item.setBackground(QColor(230, 230, 230))
+                for field_type in cfg.behavioursFields:
+                    if field_type == cfg.TYPE:
+                        item = QTableWidgetItem(cfg.DEFAULT_BEHAVIOR_TYPE)
+                    else:
+                        item = QTableWidgetItem(behavior[field_type])
 
-                        self.twBehaviors.setItem(self.twBehaviors.rowCount() - 1, cfg.behavioursFields[field_type],
-                                                 item)
-    except Exception:
-        dialog.error_message2()
+                    if field_type in [cfg.TYPE, "excluded", "category", "coding map", "modifiers"]:
+                        item.setFlags(Qt.ItemIsEnabled)
+                        item.setBackground(QColor(230, 230, 230))
+
+                    self.twBehaviors.setItem(self.twBehaviors.rowCount() - 1, cfg.behavioursFields[field_type], item)
 
 
 def import_subjects_from_clipboard(self):
     """
     import subjects from clipboard
     """
-    try:
-        cb = QApplication.clipboard()
-        cb_text = cb.text()
-        if not cb_text:
-            QMessageBox.warning(None, cfg.programName, "The clipboard is empty", QMessageBox.Ok | QMessageBox.Default,
-                                QMessageBox.NoButton)
+    cb = QApplication.clipboard()
+    cb_text = cb.text()
+    if not cb_text:
+        QMessageBox.warning(
+            None,
+            cfg.programName,
+            "The clipboard is empty",
+            QMessageBox.Ok | QMessageBox.Default,
+            QMessageBox.NoButton,
+        )
+        return
+
+    if self.twSubjects.rowCount():
+        response = dialog.MessageDialog(
+            cfg.programName,
+            "Some subjects are already configured. Do you want to append subjects or replace them?",
+            [cfg.APPEND, cfg.REPLACE, cfg.CANCEL],
+        )
+        if response == cfg.CANCEL:
             return
 
-        if self.twSubjects.rowCount():
-            response = dialog.MessageDialog(
-                cfg.programName,
-                "Some subjects are already configured. Do you want to append subjects or replace them?",
-                [cfg.APPEND, cfg.REPLACE, cfg.CANCEL])
-            if response == cfg.CANCEL:
-                return
+        if response == cfg.REPLACE:
+            self.twSubjects.setRowCount(0)
 
-            if response == cfg.REPLACE:
-                self.twSubjects.setRowCount(0)
+    cb_text_splitted = cb_text.split("\n")
 
-        cb_text_splitted = cb_text.split("\n")
+    if len(set([len(x.split("\t")) for x in cb_text_splitted])) != 1:
+        QMessageBox.warning(
+            None,
+            cfg.programName,
+            (
+                "The clipboard content does not have a constant number of fields.<br>"
+                "From your spreadsheet: CTRL + A (select all cells), CTRL + C (copy to clipboard)"
+            ),
+            QMessageBox.Ok | QMessageBox.Default,
+            QMessageBox.NoButton,
+        )
+        return
 
-        if len(set([len(x.split("\t")) for x in cb_text_splitted])) != 1:
-            QMessageBox.warning(None, cfg.programName,
-                                ("The clipboard content does not have a constant number of fields.<br>"
-                                 "From your spreadsheet: CTRL + A (select all cells), CTRL + C (copy to clipboard)"),
-                                QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
-            return
+    for row in cb_text_splitted:
+        if set(row.split("\t")) != set([""]):
+            subject = {}
+            for idx, field in enumerate(row.split("\t")):
+                if idx == 0:
+                    subject["key"] = field.strip() if len(field.strip()) == 1 else ""
+                if idx == 1:
+                    subject[cfg.SUBJECT_NAME] = field.strip()
+                if idx == 2:
+                    subject["description"] = field.strip()
 
-        for row in cb_text_splitted:
-            if set(row.split("\t")) != set([""]):
-                subject = {}
-                for idx, field in enumerate(row.split("\t")):
-                    if idx == 0:
-                        subject["key"] = field.strip() if len(field.strip()) == 1 else ""
-                    if idx == 1:
-                        subject[cfg.SUBJECT_NAME] = field.strip()
-                    if idx == 2:
-                        subject["description"] = field.strip()
+            self.twSubjects.setRowCount(self.twSubjects.rowCount() + 1)
 
-                self.twSubjects.setRowCount(self.twSubjects.rowCount() + 1)
-
-                for idx, field_name in enumerate(cfg.subjectsFields):
-                    item = QTableWidgetItem(subject.get(field_name, ""))
-                    self.twSubjects.setItem(self.twSubjects.rowCount() - 1, idx, item)
-    except Exception:
-        dialog.error_message2()
+            for idx, field_name in enumerate(cfg.subjectsFields):
+                item = QTableWidgetItem(subject.get(field_name, ""))
+                self.twSubjects.setItem(self.twSubjects.rowCount() - 1, idx, item)
 
 
-def select_behaviors(title="Record value from external data file",
-                     text="Behaviors",
-                     behavioral_categories=[],
-                     ethogram={},
-                     behavior_type=[cfg.STATE_EVENT, cfg.POINT_EVENT]):
+def select_behaviors(
+    title="Record value from external data file",
+    text="Behaviors",
+    behavioral_categories=[],
+    ethogram={},
+    behavior_type=[cfg.STATE_EVENT, cfg.POINT_EVENT],
+) -> list:
     """
     allow user to select behaviors to import
 
@@ -335,154 +366,156 @@ def select_behaviors(title="Record value from external data file",
 
     """
 
-    try:
-        paramPanelWindow = param_panel.Param_panel()
-        paramPanelWindow.resize(800, 600)
-        paramPanelWindow.setWindowTitle(title)
-        paramPanelWindow.lbBehaviors.setText(text)
-        for w in [
-                paramPanelWindow.lwSubjects, paramPanelWindow.pbSelectAllSubjects,
-                paramPanelWindow.pbUnselectAllSubjects, paramPanelWindow.pbReverseSubjectsSelection,
-                paramPanelWindow.lbSubjects, paramPanelWindow.cbIncludeModifiers, paramPanelWindow.cbExcludeBehaviors,
-                paramPanelWindow.frm_time
-        ]:
-            w.setVisible(False)
+    paramPanelWindow = param_panel.Param_panel()
+    paramPanelWindow.resize(800, 600)
+    paramPanelWindow.setWindowTitle(title)
+    paramPanelWindow.lbBehaviors.setText(text)
+    for w in [
+        paramPanelWindow.lwSubjects,
+        paramPanelWindow.pbSelectAllSubjects,
+        paramPanelWindow.pbUnselectAllSubjects,
+        paramPanelWindow.pbReverseSubjectsSelection,
+        paramPanelWindow.lbSubjects,
+        paramPanelWindow.cbIncludeModifiers,
+        paramPanelWindow.cbExcludeBehaviors,
+        paramPanelWindow.frm_time,
+    ]:
+        w.setVisible(False)
 
-        if behavioral_categories:
-            categories = behavioral_categories
-            # check if behavior not included in a category
-            if "" in [
-                    ethogram[idx][cfg.BEHAVIOR_CATEGORY] for idx in ethogram if cfg.BEHAVIOR_CATEGORY in ethogram[idx]
-            ]:
-                categories += [""]
-        else:
-            categories = ["###no category###"]
+    if behavioral_categories:
+        categories = behavioral_categories
+        # check if behavior not included in a category
+        if "" in [ethogram[idx][cfg.BEHAVIOR_CATEGORY] for idx in ethogram if cfg.BEHAVIOR_CATEGORY in ethogram[idx]]:
+            categories += [""]
+    else:
+        categories = ["###no category###"]
 
-        for category in categories:
+    for category in categories:
 
-            if category != "###no category###":
+        if category != "###no category###":
 
-                if category == "":
-                    paramPanelWindow.item = QListWidgetItem("No category")
-                    paramPanelWindow.item.setData(34, "No category")
-                else:
-                    paramPanelWindow.item = QListWidgetItem(category)
-                    paramPanelWindow.item.setData(34, category)
+            if category == "":
+                paramPanelWindow.item = QListWidgetItem("No category")
+                paramPanelWindow.item.setData(34, "No category")
+            else:
+                paramPanelWindow.item = QListWidgetItem(category)
+                paramPanelWindow.item.setData(34, category)
 
-                font = QFont()
-                font.setBold(True)
-                paramPanelWindow.item.setFont(font)
-                paramPanelWindow.item.setData(33, "category")
-                paramPanelWindow.item.setData(35, False)
+            font = QFont()
+            font.setBold(True)
+            paramPanelWindow.item.setFont(font)
+            paramPanelWindow.item.setData(33, "category")
+            paramPanelWindow.item.setData(35, False)
+
+            paramPanelWindow.lwBehaviors.addItem(paramPanelWindow.item)
+
+        # check if behavior type must be shown
+        for behavior in [ethogram[x][cfg.BEHAVIOR_CODE] for x in util.sorted_keys(ethogram)]:
+
+            if (categories == ["###no category###"]) or (
+                behavior
+                in [
+                    ethogram[x][cfg.BEHAVIOR_CODE]
+                    for x in ethogram
+                    if cfg.BEHAVIOR_CATEGORY in ethogram[x] and ethogram[x][cfg.BEHAVIOR_CATEGORY] == category
+                ]
+            ):
+
+                paramPanelWindow.item = QListWidgetItem(behavior)
+                paramPanelWindow.item.setCheckState(Qt.Unchecked)
+
+                if category != "###no category###":
+                    paramPanelWindow.item.setData(33, "behavior")
+                    if category == "":
+                        paramPanelWindow.item.setData(34, "No category")
+                    else:
+                        paramPanelWindow.item.setData(34, category)
 
                 paramPanelWindow.lwBehaviors.addItem(paramPanelWindow.item)
 
-            # check if behavior type must be shown
-            for behavior in [ethogram[x][cfg.BEHAVIOR_CODE] for x in util.sorted_keys(ethogram)]:
+    if paramPanelWindow.exec_():
+        return paramPanelWindow.selectedBehaviors
 
-                if ((categories == ["###no category###"]) or (behavior in [
-                        ethogram[x][cfg.BEHAVIOR_CODE]
-                        for x in ethogram
-                        if cfg.BEHAVIOR_CATEGORY in ethogram[x] and ethogram[x][cfg.BEHAVIOR_CATEGORY] == category
-                ])):
-
-                    paramPanelWindow.item = QListWidgetItem(behavior)
-                    paramPanelWindow.item.setCheckState(Qt.Unchecked)
-
-                    if category != "###no category###":
-                        paramPanelWindow.item.setData(33, "behavior")
-                        if category == "":
-                            paramPanelWindow.item.setData(34, "No category")
-                        else:
-                            paramPanelWindow.item.setData(34, category)
-
-                    paramPanelWindow.lwBehaviors.addItem(paramPanelWindow.item)
-
-        if paramPanelWindow.exec_():
-            return paramPanelWindow.selectedBehaviors
-
-        return []
-    except Exception:
-        dialog.error_message2()
+    return []
 
 
 def import_behaviors_from_project(self):
-    try:
 
-        fn = QFileDialog().getOpenFileName(self, "Import behaviors from project file", "",
-                                           ("Project files (*.boris *.boris.gz);;"
-                                            "All files (*)"))
-        file_name = fn[0] if type(fn) is tuple else fn
+    fn = QFileDialog().getOpenFileName(
+        self, "Import behaviors from project file", "", ("Project files (*.boris *.boris.gz);;" "All files (*)")
+    )
+    file_name = fn[0] if type(fn) is tuple else fn
 
-        if file_name:
-            _, _, project, _ = project_functions.open_project_json(file_name)
+    if not file_name:
+        return
+    _, _, project, _ = project_functions.open_project_json(file_name)
 
-            # import behavioral_categories
-            if cfg.BEHAVIORAL_CATEGORIES in project:
-                self.pj[cfg.BEHAVIORAL_CATEGORIES] = list(project[cfg.BEHAVIORAL_CATEGORIES])
+    # import behavioral_categories
+    if cfg.BEHAVIORAL_CATEGORIES in project:
+        self.pj[cfg.BEHAVIORAL_CATEGORIES] = list(project[cfg.BEHAVIORAL_CATEGORIES])
 
-            # configuration of behaviours
-            if cfg.ETHOGRAM in project and project[cfg.ETHOGRAM]:
-                if self.twBehaviors.rowCount():
-                    response = dialog.MessageDialog(cfg.programName,
-                                                    ("Some behaviors are already configured. "
-                                                     "Do you want to append behaviors or replace them?"),
-                                                    [cfg.APPEND, cfg.REPLACE, cfg.CANCEL])
-                    if response == cfg.REPLACE:
-                        self.twBehaviors.setRowCount(0)
-                    if response == cfg.CANCEL:
-                        return
+    # configuration of behaviours
+    if not (cfg.ETHOGRAM in project and project[cfg.ETHOGRAM]):
+        QMessageBox.warning(self, cfg.programName, "No behaviors configuration found in project")
+        return
 
-                behaviors_to_import = select_behaviors(title="Select the behaviors to import",
-                                                       text="Behaviors",
-                                                       behavioral_categories=list(project[cfg.BEHAVIORAL_CATEGORIES]),
-                                                       ethogram=dict(project[cfg.ETHOGRAM]),
-                                                       behavior_type=[cfg.STATE_EVENT, cfg.POINT_EVENT])
+    if self.twBehaviors.rowCount():
+        response = dialog.MessageDialog(
+            cfg.programName,
+            ("Some behaviors are already configured. " "Do you want to append behaviors or replace them?"),
+            [cfg.APPEND, cfg.REPLACE, cfg.CANCEL],
+        )
+        if response == cfg.REPLACE:
+            self.twBehaviors.setRowCount(0)
+        if response == cfg.CANCEL:
+            return
 
-                for i in util.sorted_keys(project[cfg.ETHOGRAM]):
+    behaviors_to_import = select_behaviors(
+        title="Select the behaviors to import",
+        text="Behaviors",
+        behavioral_categories=list(project[cfg.BEHAVIORAL_CATEGORIES]),
+        ethogram=dict(project[cfg.ETHOGRAM]),
+        behavior_type=[cfg.STATE_EVENT, cfg.POINT_EVENT],
+    )
 
-                    if project[cfg.ETHOGRAM][i][cfg.BEHAVIOR_CODE] not in behaviors_to_import:
-                        continue
+    for i in util.sorted_keys(project[cfg.ETHOGRAM]):
 
-                    self.twBehaviors.setRowCount(self.twBehaviors.rowCount() + 1)
+        if project[cfg.ETHOGRAM][i][cfg.BEHAVIOR_CODE] not in behaviors_to_import:
+            continue
 
-                    for field in project[cfg.ETHOGRAM][i]:
+        self.twBehaviors.setRowCount(self.twBehaviors.rowCount() + 1)
 
-                        item = QTableWidgetItem()
+        for field in project[cfg.ETHOGRAM][i]:
 
-                        if field == cfg.TYPE:
-                            item.setText(project[cfg.ETHOGRAM][i][field])
-                            item.setFlags(Qt.ItemIsEnabled)
-                            item.setBackground(QColor(230, 230, 230))
+            item = QTableWidgetItem()
 
-                        else:
-                            if field == "modifiers" and isinstance(project[cfg.ETHOGRAM][i][field], str):
-                                modif_set_dict = {}
-                                if project[cfg.ETHOGRAM][i][field]:
-                                    modif_set_list = project[cfg.ETHOGRAM][i][field].split("|")
-                                    for modif_set in modif_set_list:
-                                        modif_set_dict[str(len(modif_set_dict))] = {
-                                            "name": "",
-                                            "type": cfg.SINGLE_SELECTION,
-                                            "values": modif_set.split(",")
-                                        }
-                                project[cfg.ETHOGRAM][i][field] = dict(modif_set_dict)
-
-                            item.setText(str(project[cfg.ETHOGRAM][i][field]))
-
-                            if field not in cfg.ETHOGRAM_EDITABLE_FIELDS:
-                                item.setFlags(Qt.ItemIsEnabled)
-                                item.setBackground(QColor(230, 230, 230))
-
-                        self.twBehaviors.setItem(self.twBehaviors.rowCount() - 1, cfg.behavioursFields[field], item)
-
-                self.twBehaviors.resizeColumnsToContents()
+            if field == cfg.TYPE:
+                item.setText(project[cfg.ETHOGRAM][i][field])
+                item.setFlags(Qt.ItemIsEnabled)
+                item.setBackground(QColor(230, 230, 230))
 
             else:
-                QMessageBox.warning(self, cfg.programName, "No behaviors configuration found in project")
+                if field == "modifiers" and isinstance(project[cfg.ETHOGRAM][i][field], str):
+                    modif_set_dict = {}
+                    if project[cfg.ETHOGRAM][i][field]:
+                        modif_set_list = project[cfg.ETHOGRAM][i][field].split("|")
+                        for modif_set in modif_set_list:
+                            modif_set_dict[str(len(modif_set_dict))] = {
+                                "name": "",
+                                "type": cfg.SINGLE_SELECTION,
+                                "values": modif_set.split(","),
+                            }
+                    project[cfg.ETHOGRAM][i][field] = dict(modif_set_dict)
 
-    except Exception:
-        dialog.error_message2()
+                item.setText(str(project[cfg.ETHOGRAM][i][field]))
+
+                if field not in cfg.ETHOGRAM_EDITABLE_FIELDS:
+                    item.setFlags(Qt.ItemIsEnabled)
+                    item.setBackground(QColor(230, 230, 230))
+
+            self.twBehaviors.setItem(self.twBehaviors.rowCount() - 1, cfg.behavioursFields[field], item)
+
+    self.twBehaviors.resizeColumnsToContents()
 
 
 def import_subjects_from_project(self):
@@ -490,52 +523,55 @@ def import_subjects_from_project(self):
     import subjects from another project
     """
 
-    try:
-        fn = QFileDialog().getOpenFileName(self, "Import subjects from project file", "",
-                                           ("Project files (*.boris *.boris.gz);;"
-                                            "All files (*)"))
-        file_name = fn[0] if type(fn) is tuple else fn
+    fn = QFileDialog().getOpenFileName(
+        self, "Import subjects from project file", "", ("Project files (*.boris *.boris.gz);;" "All files (*)")
+    )
+    file_name = fn[0] if type(fn) is tuple else fn
 
-        if file_name:
-            _, _, project, _ = project_functions.open_project_json(file_name)
+    if not file_name:
+        return
 
-            if "error" in project:
-                logging.debug(project["error"])
-                QMessageBox.critical(self, cfg.programName, project["error"])
-                return
+    _, _, project, _ = project_functions.open_project_json(file_name)
 
-            # configuration of behaviours
-            if cfg.SUBJECTS in project and project[cfg.SUBJECTS]:
+    if "error" in project:
+        logging.debug(project["error"])
+        QMessageBox.critical(self, cfg.programName, project["error"])
+        return
 
-                if self.twSubjects.rowCount():
-                    response = dialog.MessageDialog(cfg.programName,
-                                                    ("There are subjects already configured. "
-                                                     "Do you want to append subjects or replace them?"),
-                                                    [cfg.APPEND, cfg.REPLACE, cfg.CANCEL])
+    # configuration of behaviours
+    if not (cfg.SUBJECTS in project and project[cfg.SUBJECTS]):
+        QMessageBox.warning(self, cfg.programName, "No subjects configuration found in project")
+        return
 
-                    if response == cfg.REPLACE:
-                        self.twSubjects.setRowCount(0)
+    if self.twSubjects.rowCount():
+        response = dialog.MessageDialog(
+            cfg.programName,
+            ("There are subjects already configured. " "Do you want to append subjects or replace them?"),
+            [cfg.APPEND, cfg.REPLACE, cfg.CANCEL],
+        )
 
-                    if response == cfg.CANCEL:
-                        return
+        if response == cfg.REPLACE:
+            self.twSubjects.setRowCount(0)
 
-                for idx in util.sorted_keys(project[cfg.SUBJECTS]):
+        if response == cfg.CANCEL:
+            return
 
-                    self.twSubjects.setRowCount(self.twSubjects.rowCount() + 1)
+    for idx in util.sorted_keys(project[cfg.SUBJECTS]):
 
-                    for idx2, sbjField in enumerate(cfg.subjectsFields):
+        self.twSubjects.setRowCount(self.twSubjects.rowCount() + 1)
 
-                        if sbjField in project[cfg.SUBJECTS][idx]:
-                            self.twSubjects.setItem(self.twSubjects.rowCount() - 1, idx2,
-                                                    QTableWidgetItem(project[cfg.SUBJECTS][idx][sbjField]))
-                        else:
-                            self.twSubjects.setItem(self.twSubjects.rowCount() - 1, idx2, QTableWidgetItem(""))
+        for idx2, sbjField in enumerate(cfg.subjectsFields):
 
-                self.twSubjects.resizeColumnsToContents()
+            if sbjField in project[cfg.SUBJECTS][idx]:
+                self.twSubjects.setItem(
+                    self.twSubjects.rowCount() - 1,
+                    idx2,
+                    QTableWidgetItem(project[cfg.SUBJECTS][idx][sbjField]),
+                )
             else:
-                QMessageBox.warning(self, cfg.programName, "No subjects configuration found in project")
-    except Exception:
-        dialog.error_message2()
+                self.twSubjects.setItem(self.twSubjects.rowCount() - 1, idx2, QTableWidgetItem(""))
+
+    self.twSubjects.resizeColumnsToContents()
 
 
 def import_indep_variables_from_project(self):
@@ -543,56 +579,55 @@ def import_indep_variables_from_project(self):
     import independent variables from another project
     """
 
-    try:
-        fn = QFileDialog().getOpenFileName(self, "Import independent variables from project file", "",
-                                           ("Project files (*.boris *.boris.gz);;"
-                                            "All files (*)"))
+    fn = QFileDialog().getOpenFileName(
+        self,
+        "Import independent variables from project file",
+        "",
+        ("Project files (*.boris *.boris.gz);;" "All files (*)"),
+    )
 
-        file_name = fn[0] if type(fn) is tuple else fn
+    file_name = fn[0] if type(fn) is tuple else fn
 
-        if file_name:
+    if not file_name:
+        return
 
-            _, _, project, _ = project_functions.open_project_json(file_name)
+    _, _, project, _ = project_functions.open_project_json(file_name)
 
-            if "error" in project:
-                logging.debug(project["error"])
-                QMessageBox.critical(self, cfg.programName, project["error"])
-                return
+    if "error" in project:
+        logging.debug(project["error"])
+        QMessageBox.critical(self, cfg.programName, project["error"])
+        return
 
-            # independent variables
-            if cfg.INDEPENDENT_VARIABLES in project and project[cfg.INDEPENDENT_VARIABLES]:
+    # independent variables
+    if not (cfg.INDEPENDENT_VARIABLES in project and project[cfg.INDEPENDENT_VARIABLES]):
+        QMessageBox.warning(self, cfg.programName, "No independent variables found in project")
+        return
 
-                # check if variables are already present
-                existing_var = []
+    # check if variables are already present
+    existing_var = []
 
-                for r in range(self.twVariables.rowCount()):
-                    existing_var.append(self.twVariables.item(r, 0).text().strip().upper())
+    for r in range(self.twVariables.rowCount()):
+        existing_var.append(self.twVariables.item(r, 0).text().strip().upper())
 
-                for i in util.sorted_keys(project[cfg.INDEPENDENT_VARIABLES]):
+    for i in util.sorted_keys(project[cfg.INDEPENDENT_VARIABLES]):
 
-                    self.twVariables.setRowCount(self.twVariables.rowCount() + 1)
-                    flag_renamed = False
-                    for idx, field in enumerate(cfg.tw_indVarFields):
-                        item = QTableWidgetItem()
-                        if field in project[cfg.INDEPENDENT_VARIABLES][i]:
-                            if field == "label":
-                                txt = project[cfg.INDEPENDENT_VARIABLES][i]["label"].strip()
-                                while txt.upper() in existing_var:
-                                    txt += "_2"
-                                    flag_renamed = True
-                            else:
-                                txt = project[cfg.INDEPENDENT_VARIABLES][i][field].strip()
-                            item.setText(txt)
-                        else:
-                            item.setText("")
-                        self.twVariables.setItem(self.twVariables.rowCount() - 1, idx, item)
-
-                self.twVariables.resizeColumnsToContents()
-                if flag_renamed:
-                    QMessageBox.information(self, cfg.programName, "Some variables already present were renamed")
-
+        self.twVariables.setRowCount(self.twVariables.rowCount() + 1)
+        flag_renamed = False
+        for idx, field in enumerate(cfg.tw_indVarFields):
+            item = QTableWidgetItem()
+            if field in project[cfg.INDEPENDENT_VARIABLES][i]:
+                if field == "label":
+                    txt = project[cfg.INDEPENDENT_VARIABLES][i]["label"].strip()
+                    while txt.upper() in existing_var:
+                        txt += "_2"
+                        flag_renamed = True
+                else:
+                    txt = project[cfg.INDEPENDENT_VARIABLES][i][field].strip()
+                item.setText(txt)
             else:
-                QMessageBox.warning(self, cfg.programName, "No independent variables found in project")
+                item.setText("")
+            self.twVariables.setItem(self.twVariables.rowCount() - 1, idx, item)
 
-    except Exception:
-        dialog.error_message2()
+    self.twVariables.resizeColumnsToContents()
+    if flag_renamed:
+        QMessageBox.information(self, cfg.programName, "Some variables already present were renamed")

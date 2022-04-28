@@ -118,21 +118,27 @@ if options.debug:
         datefmt="%H:%M:%S",
         level=logging.DEBUG,
     )
+else:
+    logging.basicConfig(
+        format="%(asctime)s,%(msecs)d  %(message)s",
+        datefmt="%H:%M:%S",
+        level=logging.INFO,
+    )
 
 if options.version:
     print(f"version {__version__} release date: {__version_date__}")
     sys.exit(0)
 
-logging.debug("BORIS started")
-logging.debug(f"BORIS version {__version__} release date: {__version_date__}")
-logging.debug(f"Operating system: {platform.uname().system} {platform.uname().release} {platform.uname().version}")
-logging.debug(f"CPU: {platform.uname().machine} {platform.uname().processor}")
-logging.debug(f"Python {platform.python_version()} ({'64-bit' if sys.maxsize > 2**32 else '32-bit'})")
-logging.debug(f"Qt {QT_VERSION_STR} - PyQt {PYQT_VERSION_STR}")
+logging.info("BORIS started")
+logging.info(f"BORIS version {__version__} release date: {__version_date__}")
+logging.info(f"Operating system: {platform.uname().system} {platform.uname().release} {platform.uname().version}")
+logging.info(f"CPU: {platform.uname().machine} {platform.uname().processor}")
+logging.info(f"Python {platform.python_version()} ({'64-bit' if sys.maxsize > 2**32 else '32-bit'})")
+logging.info(f"Qt {QT_VERSION_STR} - PyQt {PYQT_VERSION_STR}")
 
 (r, memory) = util.mem_info()
 if not r:
-    logging.debug(
+    logging.info(
         (
             f"Memory (RAM)  Total: {memory.get('total_memory', 'Not available'):.2f} Mb  "
             f"Free: {memory.get('free_memory', 'Not available'):.2f} Mb"
@@ -141,10 +147,13 @@ if not r:
 
 
 class MainWindow(QMainWindow, Ui_MainWindow):
+    """
+    Main BORIS window
+    """
 
     pj = dict(cfg.EMPTY_PROJECT)
-    project = False
-    geometric_measurements_mode = False
+    project: bool = False  # project is loaded?
+    geometric_measurements_mode = False  # geometric measurement modae active?
 
     time_observer_signal = pyqtSignal(float)
 
@@ -326,9 +335,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
     def excepthook(self, exception_type, exception_value, traceback_object):
         """
-        error management
+        global error management
         """
-        dialog.error_message3(exception_type, exception_value, traceback_object)
+        dialog.global_error_message(exception_type, exception_value, traceback_object)
 
     def block_dockwidgets(self):
         """
@@ -416,44 +425,45 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
     def view_behavior(self):
         """
-        show details of selected behavior
+        show details about the selected behavior
         """
-        if self.project:
-            if self.twEthogram.selectedIndexes():
-                ethogramRow = self.twEthogram.selectedIndexes()[0].row()
-                behav = dict(self.pj[cfg.ETHOGRAM][str(self.twEthogram.selectedIndexes()[0].row())])
-                if behav[cfg.MODIFIERS]:
-                    modifiers = ""
-                    for idx in util.sorted_keys(behav[cfg.MODIFIERS]):
-                        if behav[cfg.MODIFIERS][idx]["name"]:
-                            modifiers += (
-                                f"<br>Name: {behav[cfg.MODIFIERS][idx]['name'] if behav[cfg.MODIFIERS][idx]['name'] else '-'}"
-                                f"<br>Type: {cfg.MODIFIERS_STR[behav[cfg.MODIFIERS][idx]['type']]}<br>"
-                            )
+        if not self.project:
+            return
 
-                        if behav[cfg.MODIFIERS][idx]["values"]:
-                            modifiers += "Values:<br>"
-                            for m in behav[cfg.MODIFIERS][idx]["values"]:
-                                modifiers += f"{m}, "
-                            modifiers = modifiers.strip(" ,") + "<br>"
-                else:
-                    modifiers = "-"
+        if self.twEthogram.selectedIndexes():
+            behav = dict(self.pj[cfg.ETHOGRAM][str(self.twEthogram.selectedIndexes()[0].row())])
+            if behav[cfg.MODIFIERS]:
+                modifiers = ""
+                for idx in util.sorted_keys(behav[cfg.MODIFIERS]):
+                    if behav[cfg.MODIFIERS][idx]["name"]:
+                        modifiers += (
+                            f"<br>Name: {behav[cfg.MODIFIERS][idx]['name'] if behav[cfg.MODIFIERS][idx]['name'] else '-'}"
+                            f"<br>Type: {cfg.MODIFIERS_STR[behav[cfg.MODIFIERS][idx]['type']]}<br>"
+                        )
 
-                results = dialog.Results_dialog()
-                results.setWindowTitle("View behavior")
-                results.ptText.clear()
-                results.ptText.setReadOnly(True)
-                txt = (
-                    f"Code: <b>{behav['code']}</b><br>"
-                    f"Type: {behav['type']}<br>"
-                    f"Key: <b>{behav['key']}</b><br><br>"
-                    f"Description: {behav['description']}<br><br>"
-                    f"Category: {behav['category'] if behav['category'] else '-'}<br><br>"
-                    f"Exclude: {behav['excluded']}<br><br><br>"
-                    f"Modifiers:<br>{modifiers}"
-                )
-                results.ptText.appendHtml(txt)
-                results.exec_()
+                    if behav[cfg.MODIFIERS][idx]["values"]:
+                        modifiers += "Values:<br>"
+                        for m in behav[cfg.MODIFIERS][idx]["values"]:
+                            modifiers += f"{m}, "
+                        modifiers = modifiers.strip(" ,") + "<br>"
+            else:
+                modifiers = "-"
+
+            results = dialog.Results_dialog()
+            results.setWindowTitle("View behavior")
+            results.ptText.clear()
+            results.ptText.setReadOnly(True)
+            txt = (
+                f"Code: <b>{behav['code']}</b><br>"
+                f"Type: {behav['type']}<br>"
+                f"Key: <b>{behav['key']}</b><br><br>"
+                f"Description: {behav['description']}<br><br>"
+                f"Category: {behav['category'] if behav['category'] else '-'}<br><br>"
+                f"Exclude: {behav['excluded']}<br><br><br>"
+                f"Modifiers:<br>{modifiers}"
+            )
+            results.ptText.appendHtml(txt)
+            results.exec_()
 
     def ffmpeg_process(self, action: str):
         """
@@ -1430,7 +1440,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                         )
                     except Exception:
                         pass
-                        # dialog.error_message2()
 
             else:
                 QMessageBox.warning(
@@ -2703,10 +2712,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.pj, selected_observations, parameters, plot_directory, output_format, plot_colors=self.plot_colors
         )
         if "error" in r:
-            if "exception" in r:
-                dialog.error_message2()
-            else:
-                QMessageBox.warning(self, cfg.programName, r.get("message", "Error on time budget bar plot"))
+            QMessageBox.warning(self, cfg.programName, r.get("message", "Error on time budget bar plot"))
 
     def load_project(self, project_path, project_changed, pj):
         """
@@ -3251,7 +3257,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             return 1
 
         except Exception:
-            dialog.error_message2()
+            dialog.error_message()
 
             self.save_project_json_started = False
             return 2
@@ -4139,31 +4145,27 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         does not return value
         """
 
-        try:
-            state_events_list = util.state_behavior_codes(self.pj[cfg.ETHOGRAM])
-            mem_behav = {}
+        state_events_list = util.state_behavior_codes(self.pj[cfg.ETHOGRAM])
+        mem_behav = {}
 
-            for row in range(self.twEvents.rowCount()):
+        for row in range(self.twEvents.rowCount()):
 
-                subject = self.twEvents.item(row, cfg.tw_obs_fields["subject"]).text()
-                code = self.twEvents.item(row, cfg.tw_obs_fields["code"]).text()
-                modifier = self.twEvents.item(row, cfg.tw_obs_fields["modifier"]).text()
+            subject = self.twEvents.item(row, cfg.tw_obs_fields["subject"]).text()
+            code = self.twEvents.item(row, cfg.tw_obs_fields["code"]).text()
+            modifier = self.twEvents.item(row, cfg.tw_obs_fields["modifier"]).text()
 
-                # check if code is state
-                if code in state_events_list:
+            # check if code is state
+            if code in state_events_list:
 
-                    if f"{subject}|{code}|{modifier}" in mem_behav and mem_behav[f"{subject}|{code}|{modifier}"]:
-                        self.twEvents.item(row, cfg.tw_obs_fields[cfg.TYPE]).setText(cfg.STOP)
-                    else:
-                        self.twEvents.item(row, cfg.tw_obs_fields[cfg.TYPE]).setText(cfg.START)
+                if f"{subject}|{code}|{modifier}" in mem_behav and mem_behav[f"{subject}|{code}|{modifier}"]:
+                    self.twEvents.item(row, cfg.tw_obs_fields[cfg.TYPE]).setText(cfg.STOP)
+                else:
+                    self.twEvents.item(row, cfg.tw_obs_fields[cfg.TYPE]).setText(cfg.START)
 
-                    if f"{subject}|{code}|{modifier}" in mem_behav:
-                        mem_behav[f"{subject}|{code}|{modifier}"] = not mem_behav[f"{subject}|{code}|{modifier}"]
-                    else:
-                        mem_behav[f"{subject}|{code}|{modifier}"] = 1
-
-        except Exception:
-            dialog.error_message2()
+                if f"{subject}|{code}|{modifier}" in mem_behav:
+                    mem_behav[f"{subject}|{code}|{modifier}"] = not mem_behav[f"{subject}|{code}|{modifier}"]
+                else:
+                    mem_behav[f"{subject}|{code}|{modifier}"] = 1
 
     def checkSameEvent(self, obsId: str, time: Decimal, subject: str, code: str):
         """

@@ -24,11 +24,6 @@ import re
 import statistics
 import sys
 
-from . import observation_operations
-
-from . import select_subj_behav
-
-from . import portion as Interval
 import tablib
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QIcon
@@ -49,13 +44,11 @@ from PyQt5.QtWidgets import (
     QVBoxLayout,
 )
 
-from . import db_functions
-from . import dialog
-from . import project_functions
-from . import select_observations
-from . import utilities as util
 from . import config as cfg
-from . import select_subj_behav
+from . import db_functions, dialog, observation_operations
+from . import portion as Interval
+from . import project_functions, select_observations, select_subj_behav
+from . import utilities as util
 
 
 def icc(i: list):
@@ -229,7 +222,7 @@ class Advanced_event_filtering_dialog(QDialog):
             except KeyError:
                 self.out.append([obs_id, "subject / behavior not found", "NA", "NA", "NA"])
             except Exception:
-                # out += f"Error in {self.logic.text()}" + "\n"
+
                 error_type, _, _ = util.error_info(sys.exc_info())
                 self.out.append([obs_id, f"Error in {self.logic.text()}: {error_type} ", "NA", "NA", "NA"])
                 flag_error = True
@@ -256,13 +249,15 @@ class Advanced_event_filtering_dialog(QDialog):
             self.out = []
             for obs_id in summary:
 
-                self.out.append([
-                    obs_id,
-                    str(len(summary[obs_id])),
-                    str(round(sum(summary[obs_id]), 3)),
-                    str(round(statistics.mean(summary[obs_id]), 3)),
-                    str(round(statistics.stdev(summary[obs_id]), 3)) if len(summary[obs_id]) > 1 else "NA",
-                ])
+                self.out.append(
+                    [
+                        obs_id,
+                        str(len(summary[obs_id])),
+                        str(round(sum(summary[obs_id]), 3)),
+                        str(round(statistics.mean(summary[obs_id]), 3)),
+                        str(round(statistics.stdev(summary[obs_id]), 3)) if len(summary[obs_id]) > 1 else "NA",
+                    ]
+                )
 
             self.lb_results.setText(f"Results ({len(summary)} observation{'s'*(len(summary) > 1)})")
             self.tw.setRowCount(len(summary))
@@ -301,8 +296,12 @@ class Advanced_event_filtering_dialog(QDialog):
             file_name = str(pathlib.Path(file_name)) + "." + output_format
             # check if file with new extension already exists
             if pathlib.Path(file_name).is_file():
-                if (dialog.MessageDialog(cfg.programName, f"The file {file_name} already exists.",
-                                         [cfg.CANCEL, cfg.OVERWRITE]) == cfg.CANCEL):
+                if (
+                    dialog.MessageDialog(
+                        cfg.programName, f"The file {file_name} already exists.", [cfg.CANCEL, cfg.OVERWRITE]
+                    )
+                    == cfg.CANCEL
+                ):
                     return
 
         if self.rb_details.isChecked():
@@ -333,7 +332,8 @@ def event_filtering(self):
     """
 
     result, selected_observations = select_observations.select_observations(
-        self.pj, cfg.MULTIPLE, "Select observations for advanced event filtering")
+        self.pj, cfg.MULTIPLE, "Select observations for advanced event filtering"
+    )
     if not selected_observations:
         return
 
@@ -341,8 +341,9 @@ def event_filtering(self):
     out = ""
     not_paired_obs_list = []
     for obs_id in selected_observations:
-        r, msg = project_functions.check_state_events_obs(obs_id, self.pj[cfg.ETHOGRAM],
-                                                          self.pj[cfg.OBSERVATIONS][obs_id])
+        r, msg = project_functions.check_state_events_obs(
+            obs_id, self.pj[cfg.ETHOGRAM], self.pj[cfg.OBSERVATIONS][obs_id]
+        )
 
         if not r:
             out += f"Observation: <strong>{obs_id}</strong><br>{msg}<br>"
@@ -381,9 +382,9 @@ def event_filtering(self):
         QMessageBox.warning(None, cfg.programName, "Select subject(s) and behavior(s) to analyze")
         return
 
-    _, _, db_connector = db_functions.load_aggregated_events_in_db(self.pj, parameters[cfg.SELECTED_SUBJECTS],
-                                                                   selected_observations,
-                                                                   parameters[cfg.SELECTED_BEHAVIORS])
+    _, _, db_connector = db_functions.load_aggregated_events_in_db(
+        self.pj, parameters[cfg.SELECTED_SUBJECTS], selected_observations, parameters[cfg.SELECTED_BEHAVIORS]
+    )
 
     cursor = db_connector.cursor()
 
