@@ -21,10 +21,12 @@ This file is part of BORIS.
 """
 
 import logging
-import re
 import sys
+import platform
+import traceback
+import datetime as dt
+import pathlib as pl
 
-import tablib
 from PyQt5.QtCore import *
 from PyQt5.QtGui import *
 from PyQt5.QtWidgets import *
@@ -35,6 +37,56 @@ from boris import project_functions
 from boris import utilities
 from boris import version
 from boris.config import *
+
+
+def global_error_message(exception_type, exception_value, traceback_object):
+    """
+    global error management
+    save error using loggin.critical and append error message to ~/boris_error.log
+    """
+
+    error_text: str = (f"BORIS version: {version.__version__}\n"
+                       f"OS: {platform.uname().system} {platform.uname().release} {platform.uname().version}\n"
+                       f"CPU: {platform.uname().machine} {platform.uname().processor}\n"
+                       f"Python {platform.python_version()} ({'64-bit' if sys.maxsize > 2**32 else '32-bit'})\n"
+                       f"Qt {QT_VERSION_STR} - PyQt {PYQT_VERSION_STR}\n"
+                       f"{dt.datetime.now():%Y-%m-%d %H:%M}\n\n")
+    error_text += "".join(traceback.format_exception(exception_type, exception_value, traceback_object))
+
+    logging.critical(error_text)
+
+    # append to boris_error.log file
+    with open(pl.Path("~").expanduser() / "boris_error.log", "a") as f_out:
+        f_out.write(error_text + "\n")
+        f_out.write("-" * 80 + "\n")
+
+    # copy to clipboard
+    cb = QApplication.clipboard()
+    cb.clear(mode=cb.Clipboard)
+    cb.setText(error_text, mode=cb.Clipboard)
+
+    error_text: str = error_text.replace("\r\n", "\n").replace("\n", "<br>")
+
+    text: str = (f"<b>An error has occured</b>:<br><br>"
+                 f"{error_text}<br>"
+                 "to improve the software please report this problem at:<br>"
+                 '<a href="https://github.com/olivierfriard/BORIS/issues">'
+                 "https://github.com/olivierfriard/BORIS/issues</a><br>"
+                 "Please no screenshot, the error message was copied to the clipboard.<br><br>"
+                 "Thank you for your collaboration!")
+
+    errorbox = QMessageBox()
+    errorbox.setWindowTitle("BORIS error occured")
+    errorbox.setText(text)
+    errorbox.setTextFormat(Qt.RichText)
+    errorbox.setStandardButtons(QMessageBox.Abort)
+
+    _ = errorbox.addButton("Ignore and try to continue", QMessageBox.RejectRole)
+
+    ret = errorbox.exec_()
+
+    if ret == QMessageBox.Abort:
+        sys.exit(1)
 
 
 def MessageDialog(title, text, buttons):
