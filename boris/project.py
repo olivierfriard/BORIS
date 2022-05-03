@@ -50,11 +50,14 @@ from PyQt5.QtWidgets import (
     QTableWidgetItem,
     QHeaderView,
     QCheckBox,
+    QMenu,
 )
 
 from . import add_modifier
 from . import config as cfg
 from . import dialog, exclusion_matrix, export_observation, project_import
+from . import converters
+
 from .project_ui import Ui_dlgProject
 
 
@@ -209,25 +212,33 @@ class projectDialog(QDialog, Ui_dlgProject):
         self.lbSubjectsState.setText("")
 
         # ethogram tab
-        self.pbAddBehavior.clicked.connect(self.pbAddBehavior_clicked)
-        self.pbCloneBehavior.clicked.connect(self.pb_clone_behavior_clicked)
+        behavior_button_items = [
+            "new|Add new behavior",
+            "clone|Clone behavior",
+            "remove|Remove behavior",
+            "remove all|Remove all behaviors",
+            "lower|Convert keys to lower case",
+        ]
+        menu = QMenu()
+        menu.triggered.connect(lambda x: self.behavior(action=x.statusTip()))
+        self.add_button_menu(behavior_button_items, menu)
+        self.pb_behavior.setMenu(menu)
 
-        self.pbRemoveBehavior.clicked.connect(self.pbRemoveBehavior_clicked)
-        self.pbRemoveAllBehaviors.clicked.connect(self.pbRemoveAllBehaviors_clicked)
+        import_button_items = [
+            "boris|from a BORIS project",
+            "jwatcher|from a JWatcher project",
+            "text|from a text file",
+            "clipboard|from the clipboard",
+            "repository|from the BORIS repository",
+        ]
+        menu = QMenu()
+        menu.triggered.connect(lambda x: self.import_ethogram(action=x.statusTip()))
+        self.add_button_menu(import_button_items, menu)
+        self.pb_import.setMenu(menu)
 
         self.pbBehaviorsCategories.clicked.connect(self.pbBehaviorsCategories_clicked)
 
-        self.pb_convert_behav_keys_to_lower.clicked.connect(self.convert_behaviors_keys_to_lower_case)
-
         self.pbExclusionMatrix.clicked.connect(self.pbExclusionMatrix_clicked)
-
-        self.pbImportBehaviorsFromProject.clicked.connect(self.pbImportBehaviorsFromProject_clicked)
-
-        self.pbImportFromJWatcher.clicked.connect(lambda: project_import.import_from_JWatcher(self))
-        self.pbImportFromTextFile.clicked.connect(lambda: project_import.import_from_text_file(self))
-        self.pb_import_behaviors_from_clipboard.clicked.connect(
-            lambda: project_import.import_behaviors_from_clipboard(self)
-        )
 
         self.pbExportEthogram.clicked.connect(self.export_ethogram)
 
@@ -278,16 +289,16 @@ class projectDialog(QDialog, Ui_dlgProject):
         self.pbRemoveBehaviorsCodingMap.clicked.connect(self.remove_behaviors_coding_map)
 
         # converters tab
-        self.pb_add_converter.clicked.connect(self.add_converter)
-        self.pb_modify_converter.clicked.connect(self.modify_converter)
-        self.pb_save_converter.clicked.connect(self.save_converter)
-        self.pb_cancel_converter.clicked.connect(self.cancel_converter)
-        self.pb_delete_converter.clicked.connect(self.delete_converter)
+        self.pb_add_converter.clicked.connect(lambda: converters.add_converter(self))
+        self.pb_modify_converter.clicked.connect(lambda: converters.modify_converter(self))
+        self.pb_save_converter.clicked.connect(lambda: converters.save_converter(self))
+        self.pb_cancel_converter.clicked.connect(lambda: converters.cancel_converter(self))
+        self.pb_delete_converter.clicked.connect(lambda: converters.delete_converter(self))
 
-        self.pb_load_from_file.clicked.connect(lambda: self.load_converters_from_file_repo("file"))
-        self.pb_load_from_repo.clicked.connect(lambda: self.load_converters_from_file_repo("repo"))
+        self.pb_load_from_file.clicked.connect(lambda: converters.load_converters_from_file_repo(self, mode="file"))
+        self.pb_load_from_repo.clicked.connect(lambda: converters.load_converters_from_file_repo(self, mode="repo"))
 
-        self.pb_code_help.clicked.connect(self.pb_code_help_clicked)
+        self.pb_code_help.clicked.connect(lambda: converters.pb_code_help_clicked(self))
 
         self.row_in_modification = -1
         self.flag_modified = False
@@ -316,16 +327,70 @@ class projectDialog(QDialog, Ui_dlgProject):
         self.twSubjects.horizontalHeader().sortIndicatorChanged.connect(self.sort_twSubjects)
         self.twVariables.horizontalHeader().sortIndicatorChanged.connect(self.sort_twVariables)
 
+    def add_button_menu(self, data, menu_obj):
+        """
+        add menu option from dictionary
+        """
+        if isinstance(data, dict):
+            for k, v in data.items():
+                sub_menu = QMenu(k, menu_obj)
+                menu_obj.addMenu(sub_menu)
+                self.add_button_menu(v, sub_menu)
+        elif isinstance(data, list):
+            for element in data:
+                self.add_button_menu(element, menu_obj)
+        else:
+            action = menu_obj.addAction(data.split("|")[1])
+            # tips are used to discriminate the menu option
+            action.setStatusTip(data.split("|")[0])
+            action.setIconVisibleInMenu(False)
+
+    def behavior(self, action):
+        """
+        behavior menu
+        """
+        if action == "new":
+            self.add_behavior()
+        if action == "clone":
+            self.clone_behavior()
+        if action == "remove":
+            self.remove_behavior()
+        if action == "remove all":
+            self.remove_all_behaviors()
+        if action == "lower":
+            self.convert_behaviors_keys_to_lower_case()
+
+    def import_ethogram(self, action):
+        """
+        import behaviors
+        """
+        if action == "boris":
+            project_import.import_behaviors_from_project(self)
+        if action == "jwatcher":
+            project_import.import_from_JWatcher(self)
+        if action == "text":
+            project_import.import_from_text_file(self)
+        if action == "clipboard":
+            project_import.import_behaviors_from_clipboard(self)
+        if action == "repository":
+            project_import.import_behaviors_from_repository(self)
+
     def sort_twBehaviors(self, index, order):
-        """order ethogram table"""
+        """
+        order ethogram table
+        """
         self.twBehaviors.sortItems(index, order)
 
     def sort_twSubjects(self, index, order):
-        """order subjects table"""
+        """
+        order subjects table
+        """
         self.twSubjects.sortItems(index, order)
 
     def sort_twVariables(self, index, order):
-        """order variables table"""
+        """
+        order variables table
+        """
         self.twVariables.sortItems(index, order)
 
     def convert_behaviors_keys_to_lower_case(self):
@@ -928,13 +993,6 @@ class projectDialog(QDialog, Ui_dlgProject):
 
         project_import.import_subjects_from_project(self)
 
-    def pbImportBehaviorsFromProject_clicked(self):
-        """
-        import behaviors from another BORIS project
-        """
-
-        project_import.import_behaviors_from_project(self)
-
     def pbExclusionMatrix_clicked(self):
         """
         activate exclusion matrix window
@@ -1081,9 +1139,16 @@ class projectDialog(QDialog, Ui_dlgProject):
                             item.setBackground(QColor(230, 230, 230))
                             self.twBehaviors.setItem(r, cfg.behavioursFields["excluded"], item)
 
-    def pbRemoveAllBehaviors_clicked(self):
+    def remove_all_behaviors(self):
 
         if not self.twBehaviors.rowCount():
+            QMessageBox.critical(
+                None,
+                cfg.programName,
+                "The ethogram is empty",
+                QMessageBox.Ok | QMessageBox.Default,
+                QMessageBox.NoButton,
+            )
             return
 
         if dialog.MessageDialog(cfg.programName, "Remove all behaviors?", [cfg.YES, cfg.CANCEL]) != cfg.YES:
@@ -1150,10 +1215,20 @@ class projectDialog(QDialog, Ui_dlgProject):
                     if self.twBehaviors.item(r, cfg.PROJECT_BEHAVIORS_CODE_FIELD_IDX).text():
                         codes.append(self.twBehaviors.item(r, cfg.PROJECT_BEHAVIORS_CODE_FIELD_IDX).text())
 
-    def pb_clone_behavior_clicked(self):
+    def clone_behavior(self):
         """
         clone the selected configuration
         """
+
+        if not self.twBehaviors.rowCount():
+            QMessageBox.critical(
+                None,
+                cfg.programName,
+                "The ethogram is empty",
+                QMessageBox.Ok | QMessageBox.Default,
+                QMessageBox.NoButton,
+            )
+            return
 
         if not self.twBehaviors.selectedIndexes():
             QMessageBox.about(self, cfg.programName, "First select a behavior")
@@ -1169,10 +1244,20 @@ class projectDialog(QDialog, Ui_dlgProject):
                     item.setBackground(QColor(230, 230, 230))
         self.twBehaviors.scrollToBottom()
 
-    def pbRemoveBehavior_clicked(self):
+    def remove_behavior(self):
         """
         remove behavior
         """
+
+        if not self.twBehaviors.rowCount():
+            QMessageBox.critical(
+                None,
+                cfg.programName,
+                "The ethogram is empty",
+                QMessageBox.Ok | QMessageBox.Default,
+                QMessageBox.NoButton,
+            )
+            return
 
         if not self.twBehaviors.selectedIndexes():
             QMessageBox.warning(self, cfg.programName, "Select a behaviour to be removed")
@@ -1198,7 +1283,7 @@ class projectDialog(QDialog, Ui_dlgProject):
                 self.twBehaviors.removeRow(self.twBehaviors.selectedIndexes()[0].row())
                 self.twBehaviors_cellChanged(0, 0)
 
-    def pbAddBehavior_clicked(self):
+    def add_behavior(self):
         """
         add new behavior to ethogram
         """
@@ -1761,342 +1846,3 @@ class projectDialog(QDialog, Ui_dlgProject):
         self.pj[cfg.CONVERTERS] = dict(converters)
 
         self.accept()
-
-    def pb_code_help_clicked(self):
-        """
-        help for writing converters
-        """
-        msg = QMessageBox()
-        msg.setIcon(QMessageBox.Information)
-        msg.setWindowTitle("Help for writing converters")
-
-        msg.setText(
-            (
-                "A converter is a function that will convert a time value from external data into seconds.<br>"
-                "A time value like 00:23:59 must be converted into seconds before to be plotted synchronously with your media.<br>"
-                "For this you can use BORIS native converters or write your own converter.<br>"
-                'A converter must be written using the <a href="www.python.org">Python3</a> language.<br>'
-            )
-        )
-
-        # msg.setInformativeText("This is additional information")
-
-        msg.setStandardButtons(QMessageBox.Ok)
-        msg.exec_()
-
-    def add_converter(self):
-        """Add a new converter"""
-
-        for w in [
-            self.le_converter_name,
-            self.le_converter_description,
-            self.pteCode,
-            self.pb_save_converter,
-            self.pb_cancel_converter,
-        ]:
-            w.setEnabled(True)
-        # disable buttons
-        for w in [
-            self.pb_add_converter,
-            self.pb_modify_converter,
-            self.pb_delete_converter,
-            self.pb_load_from_file,
-            self.pb_load_from_repo,
-            self.tw_converters,
-        ]:
-            w.setEnabled(False)
-
-    def modify_converter(self):
-        """
-        Modifiy the selected converter
-        """
-
-        if not self.tw_converters.selectedIndexes():
-            QMessageBox.warning(self, cfg.programName, "Select a converter in the table")
-            return
-
-        for w in [
-            self.le_converter_name,
-            self.le_converter_description,
-            self.pteCode,
-            self.pb_save_converter,
-            self.pb_cancel_converter,
-        ]:
-            w.setEnabled(True)
-
-        # disable buttons
-        for w in [
-            self.pb_add_converter,
-            self.pb_modify_converter,
-            self.pb_delete_converter,
-            self.pb_load_from_file,
-            self.pb_load_from_repo,
-            self.tw_converters,
-        ]:
-            w.setEnabled(False)
-
-        self.le_converter_name.setText(self.tw_converters.item(self.tw_converters.selectedIndexes()[0].row(), 0).text())
-        self.le_converter_description.setText(
-            self.tw_converters.item(self.tw_converters.selectedIndexes()[0].row(), 1).text()
-        )
-        self.pteCode.setPlainText(
-            self.tw_converters.item(self.tw_converters.selectedIndexes()[0].row(), 2).text().replace("@", "\n")
-        )
-
-        self.row_in_modification = self.tw_converters.selectedIndexes()[0].row()
-
-    def code_2_func(self, name, code):
-        """
-        convert code to function
-
-        Args:
-            name (str): function name
-            code (str): Python code
-
-        Returns:
-            str: string containing Python function
-        """
-
-        function = f"def {name}(INPUT):\n"
-        function += """    INPUT = INPUT.decode("utf-8") if isinstance(INPUT, bytes) else INPUT\n"""
-        function += "\n".join(["    " + row for row in code.split("\n")])
-        function += "\n    return OUTPUT"
-
-        return function
-
-    def save_converter(self):
-        """Save converter"""
-
-        # check if name
-        self.le_converter_name.setText(self.le_converter_name.text().strip())
-        if not self.le_converter_name.text():
-            QMessageBox.critical(self, "BORIS", "The converter must have a name")
-            return
-
-        if not self.le_converter_name.text().replace("_", "a").isalnum():
-            QMessageBox.critical(
-                self, "BORIS", "Forbidden characters are used in converter name.<br>Use a..z, A..Z, 0..9 _"
-            )
-            return
-
-        # test code with exec
-        code = self.pteCode.toPlainText()
-        if not code:
-            QMessageBox.critical(self, "BORIS", "The converter must have Python code")
-            return
-
-        function = self.code_2_func(self.le_converter_name.text(), code)
-
-        try:
-            exec(function)
-        except Exception:
-            QMessageBox.critical(self, "BORIS", f"The code produces an error:<br><b>{sys.exc_info()[1]}</b>")
-            return
-
-        if self.row_in_modification == -1:
-            self.tw_converters.setRowCount(self.tw_converters.rowCount() + 1)
-            row = self.tw_converters.rowCount() - 1
-        else:
-            row = self.row_in_modification
-
-        self.tw_converters.setItem(row, 0, QTableWidgetItem(self.le_converter_name.text()))
-        self.tw_converters.setItem(row, 1, QTableWidgetItem(self.le_converter_description.text()))
-        self.tw_converters.setItem(row, 2, QTableWidgetItem(self.pteCode.toPlainText().replace("\n", "@")))
-
-        self.row_in_modification = -1
-
-        for w in [self.le_converter_name, self.le_converter_description, self.pteCode]:
-            w.setEnabled(False)
-            w.clear()
-        self.pb_save_converter.setEnabled(False)
-        self.pb_cancel_converter.setEnabled(False)
-        self.tw_converters.setEnabled(True)
-
-        self.flag_modified = True
-
-        # enable buttons
-        for w in [
-            self.pb_add_converter,
-            self.pb_modify_converter,
-            self.pb_delete_converter,
-            self.pb_load_from_file,
-            self.pb_load_from_repo,
-            self.tw_converters,
-        ]:
-            w.setEnabled(True)
-
-    def cancel_converter(self):
-        """Cancel converter"""
-
-        for w in [self.le_converter_name, self.le_converter_description, self.pteCode]:
-            w.setEnabled(False)
-            w.clear()
-        self.pb_save_converter.setEnabled(False)
-        self.pb_cancel_converter.setEnabled(False)
-
-        # enable buttons
-        for w in [
-            self.pb_add_converter,
-            self.pb_modify_converter,
-            self.pb_delete_converter,
-            self.pb_load_from_file,
-            self.pb_load_from_repo,
-            self.tw_converters,
-        ]:
-            w.setEnabled(True)
-
-    def delete_converter(self):
-        """Delete selected converter"""
-
-        if self.tw_converters.selectedIndexes():
-            if dialog.MessageDialog("BORIS", "Confirm converter deletion", [cfg.CANCEL, cfg.OK]) == cfg.OK:
-                self.tw_converters.removeRow(self.tw_converters.selectedIndexes()[0].row())
-        else:
-            QMessageBox.warning(self, cfg.programName, "Select a converter in the table")
-
-    def load_converters_in_table(self):
-        """
-        load converters in table
-        """
-        self.tw_converters.setRowCount(0)
-
-        for converter in sorted(self.converters.keys()):
-            self.tw_converters.setRowCount(self.tw_converters.rowCount() + 1)
-            self.tw_converters.setItem(self.tw_converters.rowCount() - 1, 0, QTableWidgetItem(converter))  # id / name
-            self.tw_converters.setItem(
-                self.tw_converters.rowCount() - 1, 1, QTableWidgetItem(self.converters[converter]["description"])
-            )
-            self.tw_converters.setItem(
-                self.tw_converters.rowCount() - 1,
-                2,
-                QTableWidgetItem(self.converters[converter]["code"].replace("\n", "@")),
-            )
-
-        [self.tw_converters.resizeColumnToContents(idx) for idx in [0, 1]]
-
-    def load_converters_from_file_repo(self, mode):
-        """
-        Load converters from file (JSON) or BORIS remote repository
-
-        Args:
-            mode (str): string "repo" or "file"
-        """
-
-        converters_from_file = {}
-        if mode == "file":
-            fn = QFileDialog(self).getOpenFileName(self, "Load converters from file", "", "All files (*)")
-            file_name = fn[0] if type(fn) is tuple else fn
-
-            if file_name:
-                with open(file_name, "r") as f_in:
-                    try:
-                        converters_from_file = json.loads(f_in.read())["BORIS converters"]
-                    except Exception:
-                        QMessageBox.critical(self, cfg.programName, "This file does not contain converters...")
-                        return
-
-        if mode == "repo":
-
-            converters_repo_URL = "http://www.boris.unito.it/archive/converters.json"
-            try:
-                converters_from_repo = urllib.request.urlopen(converters_repo_URL).read().strip().decode("utf-8")
-            except Exception:
-                QMessageBox.critical(
-                    self, cfg.programName, "An error occured during retrieving converters from BORIS remote repository"
-                )
-                return
-
-            try:
-                converters_from_file = eval(converters_from_repo)["BORIS converters"]
-            except Exception:
-                QMessageBox.critical(
-                    self, cfg.programName, "An error occured during retrieving converters from BORIS remote repository"
-                )
-                return
-
-        if converters_from_file:
-
-            diag_choose_conv = dialog.ChooseObservationsToImport(
-                "Choose the converters to load:", sorted(list(converters_from_file.keys()))
-            )
-
-            if diag_choose_conv.exec_():
-
-                selected_converters = diag_choose_conv.get_selected_observations()
-                if selected_converters:
-
-                    # extract converter names from table
-                    converter_names = []
-                    for row in range(self.tw_converters.rowCount()):
-                        converter_names.append(self.tw_converters.item(row, 0).text())
-
-                    for converter in selected_converters:
-                        converter_name = converter
-
-                        if converter in converter_names:
-                            while True:
-                                text, ok = QInputDialog.getText(
-                                    self,
-                                    "Converter conflict",
-                                    "The converter already exists<br>Rename it:",
-                                    QLineEdit.Normal,
-                                    converter,
-                                )
-                                if not ok:
-                                    break
-                                if text in converter_names:
-                                    QMessageBox.critical(
-                                        self, cfg.programName, "This name already exists in converters"
-                                    )
-
-                                if not text.replace("_", "a").isalnum():
-                                    QMessageBox.critical(
-                                        self,
-                                        cfg.programName,
-                                        "This name contains forbidden character(s).<br>Use a..z, A..Z, 0..9 _",
-                                    )
-
-                                if (
-                                    text != converter
-                                    and text not in converter_names
-                                    and text.replace("_", "a").isalnum()
-                                ):
-                                    break
-
-                            if ok:
-                                converter_name = text
-                            else:
-                                continue
-                        # test if code does not produce error
-                        function = self.code_2_func(converter_name, converters_from_file[converter]["code"])
-
-                        try:
-                            exec(function)
-                        except Exception:
-                            QMessageBox.critical(
-                                self,
-                                "BORIS",
-                                (
-                                    f"The code of {converter_name} converter produces an error: "
-                                    f"<br><b>{sys.exc_info()[1]}</b>"
-                                ),
-                            )
-
-                        self.tw_converters.setRowCount(self.tw_converters.rowCount() + 1)
-                        self.tw_converters.setItem(
-                            self.tw_converters.rowCount() - 1, 0, QTableWidgetItem(converter_name)
-                        )
-                        self.tw_converters.setItem(
-                            self.tw_converters.rowCount() - 1,
-                            1,
-                            QTableWidgetItem(converters_from_file[converter]["description"]),
-                        )
-                        self.tw_converters.setItem(
-                            self.tw_converters.rowCount() - 1,
-                            2,
-                            QTableWidgetItem(converters_from_file[converter]["code"].replace("\n", "@")),
-                        )
-
-                        self.flag_modified = True
-
-                [self.tw_converters.resizeColumnToContents(idx) for idx in [0, 1]]

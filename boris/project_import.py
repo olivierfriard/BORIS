@@ -21,6 +21,8 @@ This file is part of BORIS.
 """
 
 import logging
+import urllib
+import json
 
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QColor, QFont
@@ -439,20 +441,9 @@ def select_behaviors(
     return []
 
 
-def import_behaviors_from_project(self):
-
-    fn = QFileDialog().getOpenFileName(
-        self, "Import behaviors from project file", "", ("Project files (*.boris *.boris.gz);;" "All files (*)")
-    )
-    file_name = fn[0] if type(fn) is tuple else fn
-
-    if not file_name:
-        return
-    _, _, project, _ = project_functions.open_project_json(file_name)
-
+def import_ethogram_from_dict(self, project: dict):
     # import behavioral_categories
-    if cfg.BEHAVIORAL_CATEGORIES in project:
-        self.pj[cfg.BEHAVIORAL_CATEGORIES] = list(project[cfg.BEHAVIORAL_CATEGORIES])
+    self.pj[cfg.BEHAVIORAL_CATEGORIES] = list(project.get(cfg.BEHAVIORAL_CATEGORIES, []))
 
     # configuration of behaviours
     if not (cfg.ETHOGRAM in project and project[cfg.ETHOGRAM]):
@@ -473,7 +464,7 @@ def import_behaviors_from_project(self):
     behaviors_to_import = select_behaviors(
         title="Select the behaviors to import",
         text="Behaviors",
-        behavioral_categories=list(project[cfg.BEHAVIORAL_CATEGORIES]),
+        behavioral_categories=list(project.get(cfg.BEHAVIORAL_CATEGORIES, [])),
         ethogram=dict(project[cfg.ETHOGRAM]),
         behavior_type=[cfg.STATE_EVENT, cfg.POINT_EVENT],
     )
@@ -516,6 +507,20 @@ def import_behaviors_from_project(self):
             self.twBehaviors.setItem(self.twBehaviors.rowCount() - 1, cfg.behavioursFields[field], item)
 
     self.twBehaviors.resizeColumnsToContents()
+
+
+def import_behaviors_from_project(self):
+
+    fn = QFileDialog().getOpenFileName(
+        self, "Import behaviors from project file", "", ("Project files (*.boris *.boris.gz);;" "All files (*)")
+    )
+    file_name = fn[0] if type(fn) is tuple else fn
+
+    if not file_name:
+        return
+    _, _, project, _ = project_functions.open_project_json(file_name)
+
+    import_ethogram_from_dict(self, project)
 
 
 def import_subjects_from_project(self):
@@ -631,3 +636,65 @@ def import_indep_variables_from_project(self):
     self.twVariables.resizeColumnsToContents()
     if flag_renamed:
         QMessageBox.information(self, cfg.programName, "Some variables already present were renamed")
+
+
+def import_behaviors_from_repository(self):
+    """
+    import
+    """
+    ethogram_repository_URL = "http://www.boris.unito.it/static/ethograms/ethogram_list.json"
+    try:
+        ethogram_list = urllib.request.urlopen(ethogram_repository_URL).read().strip().decode("utf-8")
+    except Exception:
+
+        QMessageBox.critical(
+            self, cfg.programName, "An error occured during retrieving ethograms from BORIS repository"
+        )
+        return
+
+    try:
+        ethogram_list_list = json.loads(ethogram_list)
+    except Exception:
+        QMessageBox.critical(
+            self, cfg.programName, "An error occured during retrieving ethograms from BORIS repository"
+        )
+        return
+
+    choice_dialog = dialog.ChooseObservationsToImport(
+        "Choose the ethogram to import:", sorted([f"{x['species']} by {x['author']}" for x in ethogram_list_list])
+    )
+    while True:
+        if not choice_dialog.exec_():
+            return
+
+        if len(choice_dialog.get_selected_observations()) == 0:
+            QMessageBox.critical(self, cfg.programName, "Choose one ethogram")
+            continue
+
+        if len(choice_dialog.get_selected_observations()) > 1:
+            QMessageBox.critical(self, cfg.programName, "Choose only one ethogram")
+            continue
+
+        break
+
+    for x in ethogram_list_list:
+        if f"{x['species']} by {x['author']}" == choice_dialog.get_selected_observations()[0]:
+            file_name = x["file name"]
+            break
+
+    try:
+        boris_project_str = (
+            urllib.request.urlopen(f"http://www.boris.unito.it/static/ethograms/{file_name}")
+            .read()
+            .strip()
+            .decode("utf-8")
+        )
+    except Exception:
+
+        QMessageBox.critical(
+            self, cfg.programName, f"An error occured during retrieving {file_name} from BORIS repository"
+        )
+        return
+    boris_project = json.loads(boris_project_str)
+
+    import_ethogram_from_dict(self, boris_project)

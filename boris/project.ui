@@ -19,7 +19,7 @@
      <item>
       <widget class="QTabWidget" name="tabProject">
        <property name="currentIndex">
-        <number>0</number>
+        <number>1</number>
        </property>
        <widget class="QWidget" name="tabInformation">
         <attribute name="title">
@@ -182,30 +182,16 @@
              <item>
               <layout class="QVBoxLayout" name="verticalLayout_11">
                <item>
-                <widget class="QPushButton" name="pbAddBehavior">
+                <widget class="QPushButton" name="pb_behavior">
                  <property name="text">
-                  <string>Add behavior</string>
+                  <string>Behavior</string>
                  </property>
                 </widget>
                </item>
                <item>
-                <widget class="QPushButton" name="pbCloneBehavior">
+                <widget class="QPushButton" name="pb_import">
                  <property name="text">
-                  <string>Clone behavior</string>
-                 </property>
-                </widget>
-               </item>
-               <item>
-                <widget class="QPushButton" name="pbRemoveBehavior">
-                 <property name="text">
-                  <string>Remove behavior</string>
-                 </property>
-                </widget>
-               </item>
-               <item>
-                <widget class="QPushButton" name="pbRemoveAllBehaviors">
-                 <property name="text">
-                  <string>Remove all behaviors</string>
+                  <string>Import ethogram</string>
                  </property>
                 </widget>
                </item>
@@ -213,13 +199,6 @@
                 <widget class="QPushButton" name="pbBehaviorsCategories">
                  <property name="text">
                   <string>Behavioral categories</string>
-                 </property>
-                </widget>
-               </item>
-               <item>
-                <widget class="QPushButton" name="pb_convert_behav_keys_to_lower">
-                 <property name="text">
-                  <string>Convert keys to lower case</string>
                  </property>
                 </widget>
                </item>
@@ -240,38 +219,6 @@
                 <widget class="QPushButton" name="pbExclusionMatrix">
                  <property name="text">
                   <string>Exclusion matrix</string>
-                 </property>
-                </widget>
-               </item>
-               <item>
-                <widget class="QPushButton" name="pbImportBehaviorsFromProject">
-                 <property name="text">
-                  <string>Import behaviors
-from a BORIS project</string>
-                 </property>
-                </widget>
-               </item>
-               <item>
-                <widget class="QPushButton" name="pbImportFromJWatcher">
-                 <property name="enabled">
-                  <bool>true</bool>
-                 </property>
-                 <property name="text">
-                  <string>Import from JWatcher</string>
-                 </property>
-                </widget>
-               </item>
-               <item>
-                <widget class="QPushButton" name="pbImportFromTextFile">
-                 <property name="text">
-                  <string>Import from text file</string>
-                 </property>
-                </widget>
-               </item>
-               <item>
-                <widget class="QPushButton" name="pb_import_behaviors_from_clipboard">
-                 <property name="text">
-                  <string>Import from clipboard</string>
                  </property>
                 </widget>
                </item>
