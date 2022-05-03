@@ -3055,51 +3055,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
                 newProjectWindow.twSubjects.resizeColumnsToContents()
 
-            """
-            if newProjectWindow.pj[cfg.OBSERVATIONS]:
-
-
-                for obs in sorted(newProjectWindow.pj[cfg.OBSERVATIONS].keys()):
-
-                    newProjectWindow.twObservations.setRowCount(newProjectWindow.twObservations.rowCount() + 1)
-
-                    # observation id
-                    newProjectWindow.twObservations.setItem(
-                        newProjectWindow.twObservations.rowCount() - 1, 0, QTableWidgetItem(obs)
-                    )
-                    # observation date
-                    newProjectWindow.twObservations.setItem(
-                        newProjectWindow.twObservations.rowCount() - 1,
-                        1,
-                        QTableWidgetItem(newProjectWindow.pj[cfg.OBSERVATIONS][obs]["date"].replace("T", " ")),
-                    )
-                    # observation description
-                    newProjectWindow.twObservations.setItem(
-                        newProjectWindow.twObservations.rowCount() - 1,
-                        2,
-                        QTableWidgetItem(util.eol2space(newProjectWindow.pj[cfg.OBSERVATIONS][obs][cfg.DESCRIPTION])),
-                    )
-
-                    mediaList = []
-                    if newProjectWindow.pj[cfg.OBSERVATIONS][obs][cfg.TYPE] in [cfg.MEDIA]:
-                        for idx in newProjectWindow.pj[cfg.OBSERVATIONS][obs][cfg.FILE]:
-                            for media in newProjectWindow.pj[cfg.OBSERVATIONS][obs][cfg.FILE][idx]:
-                                mediaList.append(f"#{idx}: {media}")
-
-                    elif newProjectWindow.pj[cfg.OBSERVATIONS][obs][cfg.TYPE] in [cfg.LIVE]:
-                        mediaList = [cfg.LIVE]
-
-                    media_separator = " " if len(mediaList) > 8 else "\n"
-                    newProjectWindow.twObservations.setItem(
-                        newProjectWindow.twObservations.rowCount() - 1,
-                        3,
-                        QTableWidgetItem(media_separator.join(mediaList)),
-                    )
-
-                newProjectWindow.twObservations.resizeColumnsToContents()
-                newProjectWindow.twObservations.resizeRowsToContents()
-            """
-
             # ethogram
             if newProjectWindow.pj[cfg.ETHOGRAM]:
                 for i in util.sorted_keys(newProjectWindow.pj[cfg.ETHOGRAM]):

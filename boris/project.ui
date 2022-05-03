@@ -19,7 +19,7 @@
      <item>
       <widget class="QTabWidget" name="tabProject">
        <property name="currentIndex">
-        <number>1</number>
+        <number>0</number>
        </property>
        <widget class="QWidget" name="tabInformation">
         <attribute name="title">
@@ -293,30 +293,9 @@
              <item>
               <layout class="QVBoxLayout" name="verticalLayout_15">
                <item>
-                <widget class="QPushButton" name="pbAddSubject">
+                <widget class="QPushButton" name="pb_subjects">
                  <property name="text">
-                  <string>Add subject</string>
-                 </property>
-                </widget>
-               </item>
-               <item>
-                <widget class="QPushButton" name="pbRemoveSubject">
-                 <property name="text">
-                  <string>Remove subject</string>
-                 </property>
-                </widget>
-               </item>
-               <item>
-                <widget class="QPushButton" name="pb_remove_all_subjects">
-                 <property name="text">
-                  <string>Remove all subjects</string>
-                 </property>
-                </widget>
-               </item>
-               <item>
-                <widget class="QPushButton" name="pb_convert_subjects_key_to_lower">
-                 <property name="text">
-                  <string>Convert keys to lower case</string>
+                  <string>Subjects</string>
                  </property>
                 </widget>
                </item>

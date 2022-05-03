@@ -49,7 +49,10 @@ def check_text_file_type(rows):
     return None, None
 
 
-def import_from_text_file(self):
+def import_behaviors_from_text_file(self):
+    """
+    Import behaviors from text file
+    """
 
     if self.twBehaviors.rowCount():
         response = dialog.MessageDialog(
@@ -227,7 +230,7 @@ def import_behaviors_from_clipboard(self):
                 self.twBehaviors.setItem(self.twBehaviors.rowCount() - 1, cfg.behavioursFields[field_type], item)
 
 
-def import_from_JWatcher(self):
+def import_behaviors_from_JWatcher(self):
     """
     import behaviors configuration from JWatcher (GDF file)
     """
@@ -351,10 +354,10 @@ def import_subjects_from_clipboard(self):
 
 
 def select_behaviors(
-    title="Record value from external data file",
-    text="Behaviors",
-    behavioral_categories=[],
-    ethogram={},
+    title: str = "Record value from external data file",
+    text: str = "Behaviors",
+    behavioral_categories: list = [],
+    ethogram: dict = {},
     behavior_type=[cfg.STATE_EVENT, cfg.POINT_EVENT],
 ) -> list:
     """
@@ -381,6 +384,7 @@ def select_behaviors(
         paramPanelWindow.cbIncludeModifiers,
         paramPanelWindow.cbExcludeBehaviors,
         paramPanelWindow.frm_time,
+        paramPanelWindow.frm_time_bin_size,
     ]:
         w.setVisible(False)
 
@@ -442,6 +446,9 @@ def select_behaviors(
 
 
 def import_ethogram_from_dict(self, project: dict):
+    """
+    Import behaviors from a BORIS project dictionary
+    """
     # import behavioral_categories
     self.pj[cfg.BEHAVIORAL_CATEGORIES] = list(project.get(cfg.BEHAVIORAL_CATEGORIES, []))
 
@@ -640,7 +647,7 @@ def import_indep_variables_from_project(self):
 
 def import_behaviors_from_repository(self):
     """
-    import
+    import behaviors from the BORIS ethogram repository
     """
     ethogram_repository_URL = "http://www.boris.unito.it/static/ethograms/ethogram_list.json"
     try:
@@ -648,7 +655,7 @@ def import_behaviors_from_repository(self):
     except Exception:
 
         QMessageBox.critical(
-            self, cfg.programName, "An error occured during retrieving ethograms from BORIS repository"
+            self, cfg.programName, "An error occured during retrieving the ethogram list from BORIS repository"
         )
         return
 
@@ -656,7 +663,7 @@ def import_behaviors_from_repository(self):
         ethogram_list_list = json.loads(ethogram_list)
     except Exception:
         QMessageBox.critical(
-            self, cfg.programName, "An error occured during retrieving ethograms from BORIS repository"
+            self, cfg.programName, "An error occured during loading ethogram list from BORIS repository"
         )
         return
 

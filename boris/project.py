@@ -79,19 +79,16 @@ class BehavioralCategories(QDialog):
 
         self.lw = QListWidget()
 
-        if cfg.BEHAVIORAL_CATEGORIES in pj:
-            for category in pj[cfg.BEHAVIORAL_CATEGORIES]:
-                self.lw.addItem(QListWidgetItem(category))
+        # add categories
+        for category in sorted(pj.get(cfg.BEHAVIORAL_CATEGORIES, [])):
+            self.lw.addItem(QListWidgetItem(category))
 
         self.vbox.addWidget(self.lw)
 
         self.hbox0 = QHBoxLayout(self)
-        self.pbAddCategory = QPushButton("Add category")
-        self.pbAddCategory.clicked.connect(self.pbAddCategory_clicked)
-        self.pbRemoveCategory = QPushButton("Remove category")
-        self.pbRemoveCategory.clicked.connect(self.pbRemoveCategory_clicked)
-        self.pb_rename_category = QPushButton("Rename category")
-        self.pb_rename_category.clicked.connect(self.pb_rename_category_clicked)
+        self.pbAddCategory = QPushButton("Add category", clicked=self.add_behavioral_category)
+        self.pbRemoveCategory = QPushButton("Remove category", clicked=self.remove_behavioral_category)
+        self.pb_rename_category = QPushButton("Rename category", clicked=self.pb_rename_category_clicked)
 
         spacerItem = QSpacerItem(40, 20, QSizePolicy.Expanding, QSizePolicy.Minimum)
         self.hbox0.addItem(spacerItem)
@@ -101,10 +98,9 @@ class BehavioralCategories(QDialog):
         self.vbox.addLayout(self.hbox0)
 
         hbox1 = QHBoxLayout(self)
-        self.pbOK = QPushButton("OK")
-        self.pbOK.clicked.connect(self.accept)
-        self.pbCancel = QPushButton("Cancel")
-        self.pbCancel.clicked.connect(self.reject)
+        self.pbOK = QPushButton("OK", clicked=self.accept)
+        self.pbCancel = QPushButton("Cancel", clicked=self.accept)
+
         spacerItem = QSpacerItem(40, 20, QSizePolicy.Expanding, QSizePolicy.Minimum)
         hbox1.addItem(spacerItem)
         hbox1.addWidget(self.pbCancel)
@@ -113,7 +109,7 @@ class BehavioralCategories(QDialog):
 
         self.setLayout(self.vbox)
 
-    def pbAddCategory_clicked(self):
+    def add_behavioral_category(self):
         """
         add a behavioral category
         """
@@ -121,7 +117,7 @@ class BehavioralCategories(QDialog):
         if ok:
             self.lw.addItem(QListWidgetItem(category))
 
-    def pbRemoveCategory_clicked(self):
+    def remove_behavioral_category(self):
         """
         remove the selected behavioral category
         """
@@ -250,15 +246,22 @@ class projectDialog(QDialog, Ui_dlgProject):
             self.twBehaviors.horizontalHeaderItem(i).setTextAlignment(Qt.AlignLeft)
 
         # subjects
-        self.pbAddSubject.clicked.connect(self.pbAddSubject_clicked)
-        self.pbRemoveSubject.clicked.connect(self.pbRemoveSubject_clicked)
-        self.pb_remove_all_subjects.clicked.connect(self.remove_all_subjects)
+        subjects_button_items = [
+            "new|Add a new subject",
+            # "clone|Clone subject",
+            "remove|Remove subject",
+            "remove all|Remove all subjects",
+            "lower|Convert keys to lower case",
+        ]
+
+        menu = QMenu()
+        menu.triggered.connect(lambda x: self.subjects(action=x.statusTip()))
+        self.add_button_menu(subjects_button_items, menu)
+        self.pb_subjects.setMenu(menu)
 
         self.twSubjects.cellChanged[int, int].connect(self.twSubjects_cellChanged)
 
-        self.pb_convert_subjects_key_to_lower.clicked.connect(self.convert_subjects_keys_to_lower_case)
-
-        self.pbImportSubjectsFromProject.clicked.connect(self.pbImportSubjectsFromProject_clicked)
+        self.pbImportSubjectsFromProject.clicked.connect(lambda: project_import.import_subjects_from_project(self))
         self.pb_import_subjects_from_clipboard.clicked.connect(
             lambda: project_import.import_subjects_from_clipboard(self)
         )
@@ -345,7 +348,7 @@ class projectDialog(QDialog, Ui_dlgProject):
             action.setStatusTip(data.split("|")[0])
             action.setIconVisibleInMenu(False)
 
-    def behavior(self, action):
+    def behavior(self, action: str):
         """
         behavior menu
         """
@@ -360,20 +363,35 @@ class projectDialog(QDialog, Ui_dlgProject):
         if action == "lower":
             self.convert_behaviors_keys_to_lower_case()
 
-    def import_ethogram(self, action):
+    def import_ethogram(self, action: str):
         """
         import behaviors
         """
         if action == "boris":
             project_import.import_behaviors_from_project(self)
         if action == "jwatcher":
-            project_import.import_from_JWatcher(self)
+            project_import.import_behaviors_from_JWatcher(self)
         if action == "text":
-            project_import.import_from_text_file(self)
+            project_import.import_behaviors_from_text_file(self)
         if action == "clipboard":
             project_import.import_behaviors_from_clipboard(self)
         if action == "repository":
             project_import.import_behaviors_from_repository(self)
+
+    def subjects(self, action: str):
+        """
+        subjects menu
+        """
+        if action == "new":
+            self.add_subject()
+        # if action == "clone":
+        #    self.clone_behavior()
+        if action == "remove":
+            self.remove_subject()
+        if action == "remove all":
+            self.remove_all_subjects()
+        if action == "lower":
+            self.convert_subjects_keys_to_lower_case()
 
     def sort_twBehaviors(self, index, order):
         """
@@ -681,6 +699,9 @@ class projectDialog(QDialog, Ui_dlgProject):
             for index in range(bc.lw.count()):
                 self.pj[cfg.BEHAVIORAL_CATEGORIES].append(bc.lw.item(index).text().strip())
 
+            # sort
+            self.pj[cfg.BEHAVIORAL_CATEGORIES] = sorted(self.pj[cfg.BEHAVIORAL_CATEGORIES])
+
             # check if behavior belong to removed category
             if bc.removed:
                 for row in range(self.twBehaviors.rowCount()):
@@ -985,13 +1006,6 @@ class projectDialog(QDialog, Ui_dlgProject):
         """
 
         project_import.import_indep_variables_from_project(self)
-
-    def pbImportSubjectsFromProject_clicked(self):
-        """
-        import subjects from another project
-        """
-
-        project_import.import_subjects_from_project(self)
 
     def exclusion_matrix(self):
         """
@@ -1349,7 +1363,7 @@ class projectDialog(QDialog, Ui_dlgProject):
         else:
             self.twBehaviors.item(row, cfg.behavioursFields["coding map"]).setText("")
 
-    def pbAddSubject_clicked(self):
+    def add_subject(self):
         """
         add a subject
         """
@@ -1360,7 +1374,7 @@ class projectDialog(QDialog, Ui_dlgProject):
             self.twSubjects.setItem(self.twSubjects.rowCount() - 1, col, item)
         self.twSubjects.scrollToBottom()
 
-    def pbRemoveSubject_clicked(self):
+    def remove_subject(self):
         """
         remove selected subject from subjects list
         control before if subject used in observations
@@ -1846,3 +1860,23 @@ class projectDialog(QDialog, Ui_dlgProject):
         self.pj[cfg.CONVERTERS] = dict(converters)
 
         self.accept()
+
+    def load_converters_in_table(self):
+        """
+        load converters in table
+        """
+        self.tw_converters.setRowCount(0)
+
+        for converter in sorted(self.converters.keys()):
+            self.tw_converters.setRowCount(self.tw_converters.rowCount() + 1)
+            self.tw_converters.setItem(self.tw_converters.rowCount() - 1, 0, QTableWidgetItem(converter))  # id / name
+            self.tw_converters.setItem(
+                self.tw_converters.rowCount() - 1, 1, QTableWidgetItem(self.converters[converter]["description"])
+            )
+            self.tw_converters.setItem(
+                self.tw_converters.rowCount() - 1,
+                2,
+                QTableWidgetItem(self.converters[converter]["code"].replace("\n", "@")),
+            )
+
+        [self.tw_converters.resizeColumnToContents(idx) for idx in [0, 1]]
