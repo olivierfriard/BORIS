@@ -216,7 +216,7 @@
                 </spacer>
                </item>
                <item>
-                <widget class="QPushButton" name="pbExclusionMatrix">
+                <widget class="QPushButton" name="pb_exclusion_matrix">
                  <property name="text">
                   <string>Exclusion matrix</string>
                  </property>
@@ -225,7 +225,7 @@
                <item>
                 <widget class="QPushButton" name="pbExportEthogram">
                  <property name="text">
-                  <string>Export Ethogram</string>
+                  <string>Export ethogram</string>
                  </property>
                 </widget>
                </item>

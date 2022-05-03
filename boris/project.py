@@ -238,7 +238,7 @@ class projectDialog(QDialog, Ui_dlgProject):
 
         self.pbBehaviorsCategories.clicked.connect(self.pbBehaviorsCategories_clicked)
 
-        self.pbExclusionMatrix.clicked.connect(self.pbExclusionMatrix_clicked)
+        self.pb_exclusion_matrix.clicked.connect(self.exclusion_matrix)
 
         self.pbExportEthogram.clicked.connect(self.export_ethogram)
 
@@ -993,7 +993,7 @@ class projectDialog(QDialog, Ui_dlgProject):
 
         project_import.import_subjects_from_project(self)
 
-    def pbExclusionMatrix_clicked(self):
+    def exclusion_matrix(self):
         """
         activate exclusion matrix window
         """
