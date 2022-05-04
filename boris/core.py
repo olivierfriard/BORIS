@@ -3678,16 +3678,16 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         """
         open user guide URL if it exists otherwise open user guide URL
         """
-        userGuideFile = os.path.dirname(os.path.realpath(__file__)) + "/boris_user_guide.pdf"
-        if os.path.isfile(userGuideFile):
+        user_guide_file = os.path.dirname(os.path.realpath(__file__)) + "/boris_user_guide.pdf"
+        if os.path.isfile(user_guide_file):
             if sys.platform.startswith("linux"):
-                subprocess.call(["xdg-open", userGuideFile])
+                subprocess.call(["xdg-open", user_guide_file])
             else:
-                os.startfile(userGuideFile)
+                os.startfile(user_guide_file)
         else:
             QDesktopServices.openUrl(QUrl("http://boris.readthedocs.org"))
 
-    def click_signal_from_behaviors_coding_map(self, bcm_name, behavior_codes_list):
+    def click_signal_from_behaviors_coding_map(self, bcm_name, behavior_codes_list: list):
         """
         handle click signal from BehaviorsCodingMapWindowClass widget
         """
