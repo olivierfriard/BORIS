@@ -62,6 +62,10 @@ from .project_ui import Ui_dlgProject
 
 
 class BehavioralCategories(QDialog):
+    """
+    Class for managing the behavioral categories
+    """
+
     def __init__(self, pj):
         super().__init__()
 
@@ -85,7 +89,7 @@ class BehavioralCategories(QDialog):
 
         self.vbox.addWidget(self.lw)
 
-        self.hbox0 = QHBoxLayout(self)
+        self.hbox0 = QHBoxLayout()
         self.pbAddCategory = QPushButton("Add category", clicked=self.add_behavioral_category)
         self.pbRemoveCategory = QPushButton("Remove category", clicked=self.remove_behavioral_category)
         self.pb_rename_category = QPushButton("Rename category", clicked=self.pb_rename_category_clicked)
@@ -97,7 +101,7 @@ class BehavioralCategories(QDialog):
         self.hbox0.addWidget(self.pbAddCategory)
         self.vbox.addLayout(self.hbox0)
 
-        hbox1 = QHBoxLayout(self)
+        hbox1 = QHBoxLayout()
         self.pbOK = QPushButton("OK", clicked=self.accept)
         self.pbCancel = QPushButton("Cancel", clicked=self.accept)
 
