@@ -4633,7 +4633,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.dw_player[i].mediaListPlayer.set_media_list(self.dw_player[i].media_list)
 
             if sys.platform.startswith("linux"):  # for Linux using the X Server
-                print(f"{type(self.dw_player[i].videoframe.winId())=}")
                 self.dw_player[i].mediaplayer.set_xwindow(int(self.dw_player[i].videoframe.winId()))
             elif sys.platform == "win32":  # for Windows
                 self.dw_player[i].mediaplayer.set_hwnd(int(self.dw_player[i].videoframe.winId()))
@@ -9730,7 +9729,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             else:
                 os.startfile(userGuideFile)
         else:
-            QDesktopServices.openUrl(QUrl("http://boris.readthedocs.org"))
+            QDesktopServices.openUrl(QUrl("https://boris.readthedocs.io/en/v7/"))
 
     def click_signal_from_behaviors_coding_map(self, bcm_name, behavior_codes_list):
         """
