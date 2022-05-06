@@ -43,7 +43,9 @@ class Widget_hhmmss(QWidget):
         self.minutes.setMinimum(-1)
         self.minutes.setMaximum(60)
         self.minutes.setPrefix("0")
-        self.minutes.valueChanged.connect(lambda value, x=self.minutes: self.value_changed(value, x, 0, 59))
+        self.minutes.valueChanged.connect(
+            lambda value, x=self.minutes: self.value_changed(value, x, 0, 59)
+        )
         lay.addWidget(self.minutes)
         lay.addWidget(QLabel(":"))
 
@@ -51,7 +53,9 @@ class Widget_hhmmss(QWidget):
         self.seconds.setMinimum(-1)
         self.seconds.setMaximum(60)
         self.seconds.setPrefix("0")
-        self.seconds.valueChanged.connect(lambda value, x=self.seconds: self.value_changed(value, x, 0, 59))
+        self.seconds.valueChanged.connect(
+            lambda value, x=self.seconds: self.value_changed(value, x, 0, 59)
+        )
         lay.addWidget(self.seconds)
         lay.addWidget(QLabel(":"))
 
@@ -59,7 +63,9 @@ class Widget_hhmmss(QWidget):
         self.milliseconds.setMinimum(-1)
         self.milliseconds.setMaximum(1000)
         self.milliseconds.setPrefix("00")
-        self.milliseconds.valueChanged.connect(lambda value, x=self.milliseconds: self.value_changed(value, x, 0, 999))
+        self.milliseconds.valueChanged.connect(
+            lambda value, x=self.milliseconds: self.value_changed(value, x, 0, 999)
+        )
         lay.addWidget(self.milliseconds)
 
         spacerItem = QSpacerItem(40, 20, QSizePolicy.Expanding, QSizePolicy.Minimum)
@@ -73,17 +79,17 @@ class Widget_hhmmss(QWidget):
         self.sign.setText("+" if self.sign.text() == "-" else "-")
         self.update_time_value()
 
-
     def update_time_value(self):
-        new_time = (self.hours.value() * 3600
-                             + self.minutes.value() * 60
-                             + self.seconds.value()
-                             + self.milliseconds.value() / 1000)
+        new_time = (
+            self.hours.value() * 3600
+            + self.minutes.value() * 60
+            + self.seconds.value()
+            + self.milliseconds.value() / 1000
+        )
         if self.sign.text() == "-":
-            new_time = - new_time
+            new_time = -new_time
 
         self.time_changed_signal.emit(new_time)
-
 
     def value_changed(self, new_value, widget, val_min, val_max):
         """
@@ -140,13 +146,12 @@ class Widget_seconds(QWidget):
 
 
 class Duration_widget(QWidget):
-
     def __init__(self, time_value=0, parent=None):
 
         # QWidget.__init__(self, parent=parent)
         super().__init__()
 
-        self.time_value = dc.Decimal(time_value).quantize(dc.Decimal('.001'))
+        self.time_value = dc.Decimal(time_value).quantize(dc.Decimal(".001"))
 
         lay = QHBoxLayout(self)
         lay.setSpacing(0)
@@ -177,13 +182,11 @@ class Duration_widget(QWidget):
 
         self.set_time(self.time_value)
 
-
     def time_changed(self, x):
         """
         widget time has changed
         """
         self.time_value = x
-
 
     def set_time(self, new_time):
 
@@ -194,15 +197,14 @@ class Duration_widget(QWidget):
         s = int((abs(new_time) - h * 3600 - m * 60))
         ms = round((abs(new_time) - h * 3600 - m * 60 - s) * 1000, 3)
 
-        self.w1.hours.setValue(h)
-        self.w1.minutes.setValue(m)
-        self.w1.seconds.setValue(s)
-        self.w1.milliseconds.setValue(ms)
+        self.w1.hours.setValue(int(h))
+        self.w1.minutes.setValue(int(m))
+        self.w1.seconds.setValue(int(s))
+        self.w1.milliseconds.setValue(int(ms))
 
         self.w2.seconds2.setValue(new_time)
 
         self.time_value = new_time
-
 
     def set_format_s(self):
         """
@@ -212,7 +214,6 @@ class Duration_widget(QWidget):
         self.format_s.setChecked(True)
         self.w2.seconds2.setValue(self.time_value)
         self.Stack.setCurrentIndex(1)
-
 
     def set_format_hhmmss(self):
         """
@@ -238,11 +239,12 @@ class Duration_widget(QWidget):
         """
         return dc.Decimal(self.time_value).quantize(dc.Decimal(".001"))
 
-'''
+
+"""
 if __name__ == '__main__':
     import sys
     app = QApplication(sys.argv)
     w = Duration_widget()
     w.show()
     sys.exit(app.exec_())
-'''
+"""
