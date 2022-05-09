@@ -37,7 +37,7 @@ def snapshot(self):
 
     if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE] in [cfg.MEDIA]:
 
-        if self.playerType == cfg.VLC:
+        if self.playerType == cfg.MEDIA:
 
             for i, player in enumerate(self.dw_player):
                 if (str(i + 1) in self.pj[cfg.OBSERVATIONS][self.observationId][cfg.FILE] and
@@ -119,7 +119,7 @@ def video_normalspeed_activated(self):
     set playing speed at normal speed (1x)
     """
 
-    if self.playerType == cfg.VLC and self.playMode == cfg.MPV:
+    if self.playerType == cfg.MEDIA:
         self.play_rate = 1
         for i, player in enumerate(self.dw_player):
             if (str(i + 1) in self.pj[cfg.OBSERVATIONS][self.observationId][cfg.FILE] and
@@ -136,7 +136,7 @@ def video_faster_activated(self):
     increase playing speed by play_rate_step value
     """
 
-    if self.playerType == cfg.VLC and self.playMode == cfg.MPV:
+    if self.playerType == cfg.MEDIA:
 
         if self.play_rate + self.play_rate_step <= 60:
             self.play_rate += self.play_rate_step
@@ -154,7 +154,7 @@ def video_slower_activated(self):
     decrease playing speed by play_rate_step value
     """
 
-    if self.playerType == cfg.VLC and self.playMode == cfg.MPV:
+    if self.playerType == cfg.MEDIA:
 
         if self.play_rate - self.play_rate_step >= 0.1:
             self.play_rate -= self.play_rate_step

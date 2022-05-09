@@ -164,7 +164,6 @@ def load_observation(self, obsId: str, mode: str = "start") -> str:
             self.initialize_new_live_observation()
         if mode == "view":
             self.playerType = cfg.VIEWER
-            self.playMode = ""
             self.dwObservations.setVisible(True)
 
     if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE] in [cfg.MEDIA]:
@@ -178,7 +177,6 @@ def load_observation(self, obsId: str, mode: str = "start") -> str:
 
         if mode == "view":
             self.playerType = cfg.VIEWER
-            self.playMode = ""
             self.dwObservations.setVisible(True)
 
     menu_options.update_menu(self)
@@ -782,7 +780,7 @@ def new_observation(self, mode=cfg.NEW, obsId=""):
                 self.initialize_new_live_observation()
 
             elif self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE] in [cfg.MEDIA]:
-                self.playerType = cfg.VLC
+                self.playerType = cfg.MEDIA
                 # load events in table widget
                 if mode == cfg.EDIT:
                     self.loadEventsInTW(self.observationId)
@@ -857,19 +855,18 @@ def close_observation(self):
 
     self.saved_state = self.saveState()
 
-    if self.playerType == cfg.VLC:
+    if self.playerType == cfg.MEDIA:
 
         logging.info(f"Stop plot timer")
         self.plot_timer.stop()
 
-        if self.playMode == cfg.MPV:
-            for i, player in enumerate(self.dw_player):
-                if (
-                    str(i + 1) in self.pj[cfg.OBSERVATIONS][self.observationId][cfg.FILE]
-                    and self.pj[cfg.OBSERVATIONS][self.observationId][cfg.FILE][str(i + 1)]
-                ):
-                    logging.info(f"Stop player #{i + 1}")
-                    player.player.stop()
+        for i, player in enumerate(self.dw_player):
+            if (
+                str(i + 1) in self.pj[cfg.OBSERVATIONS][self.observationId][cfg.FILE]
+                and self.pj[cfg.OBSERVATIONS][self.observationId][cfg.FILE][str(i + 1)]
+            ):
+                logging.info(f"Stop player #{i + 1}")
+                player.player.stop()
 
         self.verticalLayout_3.removeWidget(self.video_slider)
 
@@ -898,24 +895,26 @@ def close_observation(self):
     self.close_tool_windows()
 
     self.observationId = ""
-
-    if self.playerType == cfg.VLC:
+    '''
+    if self.playerType == cfg.MEDIA:
 
         for dw in self.dw_player:
 
             logging.info(f"remove dock widget")
             self.removeDockWidget(dw)
-            # dw.player.quit()
+            """ dw.player.quit() """
             dw.deleteLater()
 
-        self.dw_player = []
-        self.playMode = cfg.VLC
-
-    # return
+    '''
+    self.dw_player = []
 
     self.statusbar.showMessage("", 0)
 
     self.dwObservations.setVisible(False)
+
+    self.dwEthogram.setVisible(False)
+
+    self.dwSubjects.setVisible(False)
 
     self.w_obs_info.setVisible(False)
 

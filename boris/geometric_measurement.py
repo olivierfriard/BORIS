@@ -177,25 +177,22 @@ def show_widget(self):
             dw.stack.setCurrentIndex(0)
             dw.setWindowTitle(f"Player #{n_player + 1}")
         self.measurement_w.close()
+
         menu_options.update_menu(self)
 
-    """ to be deleted 2021-09-03
-    def clear_measurements():
-        pass
-    """
+        self.actionPlay.setEnabled(True)
 
     self.geometric_measurements_mode = True
     self.pause_video()
 
     menu_options.update_menu(self)
 
+    self.actionPlay.setEnabled(False)
+
     self.measurement_w = wgMeasurement()
     self.measurement_w.draw_mem = {}
     self.measurement_w.setWindowFlags(Qt.WindowStaysOnTopHint)
     self.measurement_w.closeSignal.connect(close_measurement_widget)
-    """ to be deleted 2021-09-03
-    self.measurement_w.clearSignal.connect(clear_measurements)
-    """
     self.measurement_w.show()
 
     for _, dw in enumerate(self.dw_player):

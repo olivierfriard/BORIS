@@ -45,11 +45,10 @@ def add_event(self):
     if self.pause_before_addevent:
         # pause media
         if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE] in [cfg.MEDIA]:
-            if self.playerType == cfg.VLC:
-                if self.playMode == cfg.MPV:
-                    memState = self.is_playing()
-                    if memState:
-                        self.pause_video()
+            if self.playerType == cfg.MEDIA:
+                memState = self.is_playing()
+                if memState:
+                    self.pause_video()
 
     laps = self.getLaps()
 
@@ -107,13 +106,9 @@ def add_event(self):
     if self.pause_before_addevent:
         # restart media
         if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE] in [cfg.MEDIA]:
-            if self.playerType == cfg.VLC:
-                if self.playMode == cfg.FFMPEG:
-                    if memState:
-                        self.play_video()
-                elif self.playMode == cfg.MPV:
-                    if memState:
-                        self.play_video()
+            if self.playerType == cfg.MEDIA:
+                if memState:
+                    self.play_video()
 
 
 def find_events(self):

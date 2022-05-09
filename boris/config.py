@@ -249,9 +249,9 @@ SUBJECT_NAME_FIELD_IDX = 1
 MEDIA_TAB_IDX = 0
 LIVE_TAB_IDX = 1
 
-LIVE = "LIVE"
-MEDIA = "MEDIA"
-VIEWER = "VIEWER"
+
+
+
 
 HHMMSS = "hh:mm:ss"
 HHMMSSZZZ = "hh:mm:ss.zzz"
@@ -305,7 +305,13 @@ OBSERVATIONS = "observations"
 
 CLOSE_BEHAVIORS_BETWEEN_VIDEOS = "close_behaviors_between_videos"
 
+# playerType
 VLC = "vlc"
+LIVE = "LIVE"
+VIEWER = "VIEWER"
+MEDIA = "MEDIA"
+
+
 FFMPEG = "ffmpeg"
 MPV = "MPV"
 

@@ -224,7 +224,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     # dictionary for FPS storing
     fps = 0
 
-    playerType: str = ""  # cfg.VLC, LIVE, cfg.VIEWER
+    playerType: str = ""  # cfg.MEDIA, cfg.LIVE, cfg.VIEWER
     playMode = cfg.MPV  # player mode can be cfg.MPV
 
     # spectrogram
@@ -1000,7 +1000,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
                 # remember if player paused
                 if warning:
-                    if self.playerType == cfg.VLC and self.playMode == cfg.MPV:
+                    if self.playerType == cfg.MEDIA and self.playMode == cfg.MPV:
                         flag_paused = self.is_playing()
 
                 self.pause_video()
@@ -1017,7 +1017,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     )
                     == cfg.NO
                 ):
-                    if self.playerType == cfg.VLC and self.playMode == cfg.MPV and not flag_paused:
+                    if self.playerType == cfg.MEDIA and self.playMode == cfg.MPV and not flag_paused:
                         self.play_video()
                     return
 
@@ -1072,7 +1072,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 self.plot_timer_out()
 
                 if warning:
-                    if self.playerType == cfg.VLC and self.playMode == cfg.MPV and not flag_paused:
+                    if self.playerType == cfg.MEDIA and self.playMode == cfg.MPV and not flag_paused:
                         self.play_video()
 
         if plot_type == "waveform":
@@ -1083,7 +1083,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
                 # remember if player paused
                 if warning:
-                    if self.playerType == cfg.VLC and self.playMode == cfg.MPV:
+                    if self.playerType == cfg.MEDIA and self.playMode == cfg.MPV:
                         flag_paused = self.is_playing()
 
                 self.pause_video()
@@ -1100,7 +1100,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     )
                     == cfg.NO
                 ):
-                    if self.playerType == cfg.VLC and self.playMode == cfg.MPV and not flag_paused:
+                    if self.playerType == cfg.MEDIA and self.playMode == cfg.MPV and not flag_paused:
                         self.play_video()
                     return
 
@@ -1147,7 +1147,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 self.plot_timer.start()
 
                 if warning:
-                    if self.playerType == cfg.VLC and self.playMode == cfg.MPV and not flag_paused:
+                    if self.playerType == cfg.MEDIA and self.playMode == cfg.MPV and not flag_paused:
                         self.play_video()
 
         if plot_type == "plot_events":
@@ -1209,7 +1209,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 self.plot_events.events_list = self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS]
                 self.plot_events.plot_events(float(self.getLaps()))
 
-        if self.playerType == cfg.VLC:
+        if self.playerType == cfg.MEDIA:
 
             current_media_time = self.dw_player[0].player.time_pos
 
@@ -1471,9 +1471,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             if new_time < 0:
                 return
 
-            if self.playerType == cfg.VLC:
+            if self.playerType == cfg.MEDIA:
 
-                if self.playMode == cfg.MPV:  # play mode cfg.VLC
+                if self.playMode == cfg.MPV:
 
                     self.seek_mediaplayer(new_time)
 
@@ -1486,7 +1486,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         if len(self.pj[cfg.OBSERVATIONS][self.observationId][cfg.FILE][cfg.PLAYER1]) == 1:
             return
 
-        if self.playerType == cfg.VLC:
+        if self.playerType == cfg.MEDIA:
 
             if self.playMode == cfg.MPV:
                 # check if media not first media
@@ -1508,7 +1508,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         if len(self.pj[cfg.OBSERVATIONS][self.observationId][cfg.FILE][cfg.PLAYER1]) == 1:
             return
 
-        if self.playerType == cfg.VLC:
+        if self.playerType == cfg.MEDIA:
 
             # check if media not last media
             if self.dw_player[0].player.playlist_pos < self.dw_player[0].player.playlist_count - 1:
@@ -1691,7 +1691,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.playMode = ""
             return True
 
-        self.playerType, self.playMode = cfg.VLC, cfg.MPV
+        self.playerType, self.playMode = cfg.MEDIA, cfg.MPV
         self.fps = 0
 
         self.w_obs_info.setVisible(True)
@@ -1745,11 +1745,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.dw_player[i].setVisible(True)
 
             # for receiving mouse event from frame viewer
-            """
-            self.dw_player[i].frame_viewer.mouse_pressed_signal.connect(
-                lambda: geometric_measurement.image_clicked(self, n_player, event)
-            )
-            """
             self.dw_player[i].frame_viewer.mouse_pressed_signal.connect(self.frame_image_clicked)
 
             # for receiving key event from dock widget
@@ -3721,7 +3716,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         logging.debug(f"video_slider moved: {self.video_slider.value() / (cfg.SLIDER_MAXIMUM - 1)}")
 
         if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE] in [cfg.MEDIA]:
-            if self.playerType == cfg.VLC:
+            if self.playerType == cfg.MEDIA:
 
                 self.user_move_slider = True
                 sliderPos = self.video_slider.value() / (cfg.SLIDER_MAXIMUM - 1)
@@ -4202,7 +4197,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
                     # pause media
                     if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE] in [cfg.MEDIA]:
-                        if self.playerType == cfg.VLC:
+                        if self.playerType == cfg.MEDIA:
                             if self.dw_player[0].player.pause:
                                 memState = "paused"
                             elif self.dw_player[0].player.time_pos is not None:
@@ -4225,7 +4220,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
                     # restart media
                     if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE] in [cfg.MEDIA]:
-                        if self.playerType == cfg.VLC:
+                        if self.playerType == cfg.MEDIA:
                             if memState == "playing":
                                 self.play_video()
                     if not r:  # cancel button pressed
@@ -4412,7 +4407,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             if self.playerType == cfg.VIEWER:
                 return Decimal("0.0")
 
-            if self.playerType == cfg.VLC:
+            if self.playerType == cfg.MEDIA:
                 # cumulative time
                 mem_laps = sum(
                     self.dw_player[n_player].media_durations[0 : self.dw_player[n_player].player.playlist_pos]
@@ -4442,7 +4437,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
             # pause if media and media playing
             if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE] in [cfg.MEDIA]:
-                if self.playerType == cfg.VLC:
+                if self.playerType == cfg.MEDIA:
                     memState = self.dw_player[0].mediaListPlayer.get_state()
                     if memState == self.vlc_playing:
                         self.pause_video()
@@ -4464,7 +4459,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
             # restart media
             if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE] in [cfg.MEDIA]:
-                if self.playerType == cfg.VLC:
+                if self.playerType == cfg.MEDIA:
                     if memState == self.vlc_playing:
                         self.play_video()
 
@@ -4482,13 +4477,13 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
     def is_playing(self):
         """
-        check if first media player is playing for cfg.VLC or FFMPEG modes
+        check if first media player is playing for cfg.MEDIA
 
         Returns:
             bool: True if playing else False
         """
 
-        if self.playerType == cfg.VLC:
+        if self.playerType == cfg.MEDIA:
 
             if self.dw_player[0].player.pause:
                 return False
@@ -4496,8 +4491,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 return True
             else:
                 return False
-
-            return not self.dw_player[0].player.pause
 
         else:
             return False
@@ -4571,7 +4564,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             return
 
         # frame-by-frame mode
-        # if self.playMode == FFMPEG:
         if ek == 47 or ek == Qt.Key_Left:  # / one frame back
             self.previous_frame()
             return
@@ -4580,7 +4572,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.next_frame()
             return
 
-        if self.playerType == cfg.VLC:
+        if self.playerType == cfg.MEDIA:
             #  jump backward
             if ek == Qt.Key_Down:
 
@@ -4691,7 +4683,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
             # select between code and subject
             if subj_idx != -1 and count:
-                if self.playerType == cfg.VLC:
+                if self.playerType == cfg.MEDIA:
                     if self.is_playing():
                         flagPlayerPlaying = True
                         self.pause_video()
@@ -4707,7 +4699,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             # check if key codes more events
             if subj_idx == -1 and count > 1:
                 if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE] in [cfg.MEDIA]:
-                    if self.playerType == cfg.VLC:
+                    if self.playerType == cfg.MEDIA:
                         if self.is_playing():
                             flagPlayerPlaying = True
                             self.pause_video()
@@ -4718,14 +4710,14 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 if ethogram_idx:
                     count = 1
 
-            if self.playerType == cfg.VLC and flagPlayerPlaying:
+            if self.playerType == cfg.MEDIA and flagPlayerPlaying:
                 self.play_video()
 
             if count == 1:
                 # check if focal subject is defined
                 if not self.currentSubject and self.alertNoFocalSubject:
                     if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE] in [cfg.MEDIA]:
-                        if self.playerType == cfg.VLC:
+                        if self.playerType == cfg.MEDIA:
                             if self.dw_player[0].mediaListPlayer.get_state() == self.vlc_playing:
                                 flagPlayerPlaying = True
                                 self.pause_video()
@@ -5118,7 +5110,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         check if first player ended
         """
 
-        if self.playerType == cfg.VLC:
+        if self.geometric_measurements_mode:
+            return
+
+        if self.playerType == cfg.MEDIA:
 
             # check if player 1 is ended
             for i, dw in enumerate(self.dw_player):
@@ -5150,7 +5145,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         does not pause media if already paused (to prevent media played again)
         """
 
-        if self.playerType == cfg.VLC:
+        if self.playerType == cfg.MEDIA:
 
             for i, player in enumerate(self.dw_player):
                 if (
@@ -5192,7 +5187,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         """
         rewind from current position
         """
-        if self.playerType == cfg.VLC:
+        if self.playerType == cfg.MEDIA:
 
             decrement = (
                 self.fast * self.play_rate
@@ -5226,7 +5221,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         """
         logging.debug("function: jumpForward_activated")
 
-        if self.playerType == cfg.VLC:
+        if self.playerType == cfg.MEDIA:
 
             increment = (
                 self.fast * self.play_rate
@@ -5259,7 +5254,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         """
         logging.debug("Reset activated")
 
-        if self.playerType == cfg.VLC:
+        if self.playerType == cfg.MEDIA:
 
             self.pause_video()
 

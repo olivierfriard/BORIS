@@ -143,18 +143,18 @@ def update_menu(self):
         self.actionVideo_equalizer,
     ):
 
-        action.setEnabled(self.playerType == cfg.VLC)
+        action.setEnabled(self.playerType == cfg.MEDIA)
 
     # Tools
-    self.actionShow_spectrogram.setEnabled(self.playerType == cfg.VLC)
-    self.actionShow_the_sound_waveform.setEnabled(self.playerType == cfg.VLC)
+    self.actionShow_spectrogram.setEnabled(self.playerType == cfg.MEDIA)
+    self.actionShow_the_sound_waveform.setEnabled(self.playerType == cfg.MEDIA)
     self.actionPlot_events_in_real_time.setEnabled(flagObs)
 
-    self.actionShow_data_files.setEnabled(self.playerType == cfg.VLC)
-    self.menuImage_overlay_on_video_2.setEnabled(self.playerType == cfg.VLC)
+    self.actionShow_data_files.setEnabled(self.playerType == cfg.MEDIA)
+    self.menuImage_overlay_on_video_2.setEnabled(self.playerType == cfg.MEDIA)
 
-    self.actionAdd_image_overlay_on_video.setEnabled(self.playerType == cfg.VLC)
-    self.actionRemove_image_overlay.setEnabled(self.playerType == cfg.VLC)
+    self.actionAdd_image_overlay_on_video.setEnabled(self.playerType == cfg.MEDIA)
+    self.actionRemove_image_overlay.setEnabled(self.playerType == cfg.MEDIA)
 
     # geometric measurements
     self.action_geometric_measurements.setEnabled(flagObs and self.geometric_measurements_mode == False)
@@ -179,6 +179,6 @@ def update_menu(self):
 
     # statusbar labels
     for w in [self.lbTimeOffset, self.lbSpeed, self.lb_obs_time_interval]:
-        w.setVisible(self.playerType == cfg.VLC)
+        w.setVisible(self.playerType == cfg.MEDIA)
 
     logging.debug("function: menu_options finished")

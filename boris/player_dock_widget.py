@@ -22,10 +22,26 @@ This file is part of BORIS.
 
 # add misc directory to search path for mpv-1.dll
 import os
+import sys
+import logging
+import pathlib as pl
+import datetime as dt
 
 os.environ["PATH"] = os.path.dirname(__file__) + os.sep + "misc" + os.pathsep + os.environ["PATH"]
 
-from . import mpv
+try:
+    from . import mpv
+except OSError:
+    msg = "LIBMPV library not found!\n"
+    logging.critical(msg)
+    # append to boris_error.log file
+    with open(pl.Path("~").expanduser() / "boris_error.log", "a") as f_out:
+        f_out.write(f"{dt.datetime.now():%Y-%m-%d %H:%M}\n")
+        f_out.write(msg)
+        f_out.write("-" * 80 + "\n")
+    sys.exit()
+
+
 from PyQt5.QtWidgets import (QLabel, QDockWidget, QWidget, QHBoxLayout, QSlider, QSizePolicy, QStackedWidget)
 from PyQt5.QtCore import (pyqtSignal, QEvent, Qt)
 

@@ -34,7 +34,7 @@ def get_info(self):
     show info about media file (current media file if observation opened)
     """
 
-    if self.observationId and self.playerType == cfg.VLC:
+    if self.observationId and self.playerType == cfg.MEDIA:
 
         tot_output = ""
 
