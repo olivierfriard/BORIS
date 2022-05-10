@@ -32,7 +32,7 @@ from . import db_functions, dialog, project_functions, select_subj_behav
 from . import utilities as util
 
 
-def subj_behav_modif(cursor, obsid, subject, time, interval, include_modifiers: bool):
+def subj_behav_modif(cursor, obsid: str, subject: str, time: Decimal, interval, include_modifiers: bool) -> list:
     """
     current behaviors for observation obsId at time
 
@@ -50,12 +50,14 @@ def subj_behav_modif(cursor, obsid, subject, time, interval, include_modifiers: 
     s = []
     # state behaviors
     rows = cursor.execute(
-        ("SELECT behavior, modifiers FROM aggregated_events "
-         "WHERE "
-         "observation = ? "
-         "AND subject = ? "
-         "AND type = 'STATE' "
-         "AND (? BETWEEN start AND STOP) "),
+        (
+            "SELECT behavior, modifiers FROM aggregated_events "
+            "WHERE "
+            "observation = ? "
+            "AND subject = ? "
+            "AND type = 'STATE' "
+            "AND (? BETWEEN start AND STOP) "
+        ),
         (
             obsid,
             subject,
@@ -71,12 +73,14 @@ def subj_behav_modif(cursor, obsid, subject, time, interval, include_modifiers: 
 
     # point behaviors
     rows = cursor.execute(
-        ("SELECT behavior, modifiers FROM aggregated_events "
-         "WHERE "
-         "observation = ? "
-         "AND subject = ? "
-         "AND type = 'POINT' "
-         "AND abs(start - ?) <= ? "),
+        (
+            "SELECT behavior, modifiers FROM aggregated_events "
+            "WHERE "
+            "observation = ? "
+            "AND subject = ? "
+            "AND type = 'POINT' "
+            "AND abs(start - ?) <= ? "
+        ),
         (
             obsid,
             subject,
@@ -118,29 +122,37 @@ def cohen_kappa(cursor, obsid1: str, obsid2: str, interval: Decimal, selected_su
             return -100, f"The observation {obs_id} has no recorded events"
 
     first_event = cursor.execute(
-        ("SELECT min(start) FROM aggregated_events "
-         f"WHERE observation in (?, ?) AND subject in ({','.join('?'*len(selected_subjects))}) "),
+        (
+            "SELECT min(start) FROM aggregated_events "
+            f"WHERE observation in (?, ?) AND subject in ({','.join('?'*len(selected_subjects))}) "
+        ),
         (obsid1, obsid2) + tuple(selected_subjects),
     ).fetchone()[0]
 
     logging.debug(f"first_event: {first_event}")
 
     last_event = cursor.execute(
-        ("SELECT max(stop) FROM aggregated_events "
-         f"WHERE observation in (?, ?) AND subject in ({','.join('?'*len(selected_subjects))}) "),
+        (
+            "SELECT max(stop) FROM aggregated_events "
+            f"WHERE observation in (?, ?) AND subject in ({','.join('?'*len(selected_subjects))}) "
+        ),
         (obsid1, obsid2) + tuple(selected_subjects),
     ).fetchone()[0]
 
     logging.debug(f"last_event: {last_event}")
 
     nb_events1 = cursor.execute(
-        ("SELECT COUNT(*) FROM aggregated_events "
-         f"WHERE observation = ? AND subject in ({','.join('?'*len(selected_subjects))}) "),
+        (
+            "SELECT COUNT(*) FROM aggregated_events "
+            f"WHERE observation = ? AND subject in ({','.join('?'*len(selected_subjects))}) "
+        ),
         (obsid1,) + tuple(selected_subjects),
     ).fetchone()[0]
     nb_events2 = cursor.execute(
-        ("SELECT COUNT(*) FROM aggregated_events "
-         f"WHERE observation = ? AND subject in ({','.join('?'*len(selected_subjects))}) "),
+        (
+            "SELECT COUNT(*) FROM aggregated_events "
+            f"WHERE observation = ? AND subject in ({','.join('?'*len(selected_subjects))}) "
+        ),
         (obsid2,) + tuple(selected_subjects),
     ).fetchone()[0]
 
@@ -196,11 +208,13 @@ def cohen_kappa(cursor, obsid1: str, obsid2: str, interval: Decimal, selected_su
 
     logging.debug(f"contingency_table:\n {contingency_table}")
 
-    template = ("Observation: {obsid1}\n"
-                "number of events: {nb_events1}\n\n"
-                "Observation: {obsid2}\n"
-                "number of events: {nb_events2:.0f}\n\n"
-                "K = {K:.3f}")
+    template = (
+        "Observation: {obsid1}\n"
+        "number of events: {nb_events1}\n\n"
+        "Observation: {obsid2}\n"
+        "number of events: {nb_events2:.0f}\n\n"
+        "K = {K:.3f}"
+    )
 
     # out += "Observation length: <b>{:.3f} s</b><br>".format(self.observationTotalMediaLength(obsid1))
     # out += "Number of intervals: <b>{:.0f}</b><br><br>".format(self.observationTotalMediaLength(obsid1) / interval)
@@ -256,8 +270,9 @@ def irr_cohen_kappa(self):
     out = ""
     not_paired_obs_list = []
     for obsId in selected_observations:
-        r, msg = project_functions.check_state_events_obs(obsId, self.pj[cfg.ETHOGRAM],
-                                                          self.pj[cfg.OBSERVATIONS][obsId], self.timeFormat)
+        r, msg = project_functions.check_state_events_obs(
+            obsId, self.pj[cfg.ETHOGRAM], self.pj[cfg.OBSERVATIONS][obsId], self.timeFormat
+        )
 
         if not r:
             out += f"Observation: <strong>{obsId}</strong><br>{msg}<br>"
@@ -280,30 +295,31 @@ def irr_cohen_kappa(self):
     if not selected_observations:
         return
 
-    plot_parameters = select_subj_behav.choose_obs_subj_behav_category(self,
-                                                                       selected_observations,
-                                                                       maxTime=0,
-                                                                       flagShowIncludeModifiers=True,
-                                                                       flagShowExcludeBehaviorsWoEvents=False)
+    plot_parameters = select_subj_behav.choose_obs_subj_behav_category(
+        self, selected_observations, maxTime=0, flagShowIncludeModifiers=True, flagShowExcludeBehaviorsWoEvents=False
+    )
 
     if not plot_parameters[cfg.SELECTED_SUBJECTS] or not plot_parameters[cfg.SELECTED_BEHAVIORS]:
         return
 
     # ask for time slice
-    i, ok = QInputDialog.getDouble(self, "IRR - Cohen's Kappa (time-unit)", "Time unit (in seconds):", 1.0, 0.001,
-                                   86400, 3)
+    i, ok = QInputDialog.getDouble(
+        self, "IRR - Cohen's Kappa (time-unit)", "Time unit (in seconds):", 1.0, 0.001, 86400, 3
+    )
     if not ok:
         return
     interval = util.float2decimal(i)
 
-    ok, msg, db_connector = db_functions.load_aggregated_events_in_db(self.pj, plot_parameters[cfg.SELECTED_SUBJECTS],
-                                                                      selected_observations,
-                                                                      plot_parameters[cfg.SELECTED_BEHAVIORS])
+    ok, msg, db_connector = db_functions.load_aggregated_events_in_db(
+        self.pj, plot_parameters[cfg.SELECTED_SUBJECTS], selected_observations, plot_parameters[cfg.SELECTED_BEHAVIORS]
+    )
 
     cursor = db_connector.cursor()
-    out = ("Index of Inter-rater Reliability - Cohen's Kappa\n\n"
-           f"Interval time: {interval:.3f} s\n"
-           f"Selected subjects: {', '.join(plot_parameters[cfg.SELECTED_SUBJECTS])}\n\n")
+    out = (
+        "Index of Inter-rater Reliability - Cohen's Kappa\n\n"
+        f"Interval time: {interval:.3f} s\n"
+        f"Selected subjects: {', '.join(plot_parameters[cfg.SELECTED_SUBJECTS])}\n\n"
+    )
 
     mem_done = []
     irr_results = np.ones((len(selected_observations), len(selected_observations)))
@@ -341,8 +357,9 @@ def irr_cohen_kappa(self):
     self.results.show()
 
 
-def needleman_wunsch_identity(cursor, obsid1: str, obsid2: str, interval, selected_subjects: list,
-                              include_modifiers: bool):
+def needleman_wunsch_identity(
+    cursor, obsid1: str, obsid2: str, interval, selected_subjects: list, include_modifiers: bool
+):
     """
     Needleman - Wunsch identity between 2 observations
 
@@ -462,8 +479,10 @@ def needleman_wunsch_identity(cursor, obsid1: str, obsid2: str, interval, select
         return finalize(align1, align2)
 
     first_event = cursor.execute(
-        ("SELECT min(start) FROM aggregated_events "
-         f"WHERE observation in (?, ?) AND subject in ({','.join('?'*len(selected_subjects))}) "),
+        (
+            "SELECT min(start) FROM aggregated_events "
+            f"WHERE observation in (?, ?) AND subject in ({','.join('?'*len(selected_subjects))}) "
+        ),
         (obsid1, obsid2) + tuple(selected_subjects),
     ).fetchone()[0]
 
@@ -474,22 +493,28 @@ def needleman_wunsch_identity(cursor, obsid1: str, obsid2: str, interval, select
     logging.debug(f"first_event: {first_event}")
 
     last_event = cursor.execute(
-        ("SELECT max(start) FROM aggregated_events "
-         f"WHERE observation in (?, ?) AND subject in ({','.join('?'*len(selected_subjects))}) "),
+        (
+            "SELECT max(start) FROM aggregated_events "
+            f"WHERE observation in (?, ?) AND subject in ({','.join('?'*len(selected_subjects))}) "
+        ),
         (obsid1, obsid2) + tuple(selected_subjects),
     ).fetchone()[0]
 
     logging.debug(f"last_event: {last_event}")
 
     nb_events1 = cursor.execute(
-        ("SELECT COUNT(*) FROM aggregated_events "
-         f"WHERE observation = ? AND subject in ({','.join('?'*len(selected_subjects))}) "),
+        (
+            "SELECT COUNT(*) FROM aggregated_events "
+            f"WHERE observation = ? AND subject in ({','.join('?'*len(selected_subjects))}) "
+        ),
         (obsid1,) + tuple(selected_subjects),
     ).fetchone()[0]
 
     nb_events2 = cursor.execute(
-        ("SELECT COUNT(*) FROM aggregated_events "
-         f"WHERE observation = ? AND subject in ({','.join('?'*len(selected_subjects))}) "),
+        (
+            "SELECT COUNT(*) FROM aggregated_events "
+            f"WHERE observation = ? AND subject in ({','.join('?'*len(selected_subjects))}) "
+        ),
         (obsid2,) + tuple(selected_subjects),
     ).fetchone()[0]
 
@@ -517,11 +542,13 @@ def needleman_wunsch_identity(cursor, obsid1: str, obsid2: str, interval, select
 
     r = needle(list(seq1.values()), list(seq2.values()))
 
-    out = (f"Observation: {obsid1}\n"
-           f"number of events: {nb_events1}\n\n"
-           f"Observation: {obsid2}\n"
-           f"number of events: {nb_events2:.0f}\n\n"
-           f"identity = {r['identity']:.3f} %")
+    out = (
+        f"Observation: {obsid1}\n"
+        f"number of events: {nb_events1}\n\n"
+        f"Observation: {obsid2}\n"
+        f"number of events: {nb_events2:.0f}\n\n"
+        f"identity = {r['identity']:.3f} %"
+    )
 
     logging.debug(f"identity: {r['identity']}")
 
@@ -538,16 +565,18 @@ def needleman_wunch(self):
     if not selected_observations:
         return
     if len(selected_observations) < 2:
-        QMessageBox.information(self, cfg.programName,
-                                "You have to select at least 2 observations for Needleman-Wunsch similarity")
+        QMessageBox.information(
+            self, cfg.programName, "You have to select at least 2 observations for Needleman-Wunsch similarity"
+        )
         return
 
     # check if state events are paired
     out = ""
     not_paired_obs_list = []
     for obsId in selected_observations:
-        r, msg = project_functions.check_state_events_obs(obsId, self.pj[cfg.ETHOGRAM],
-                                                          self.pj[cfg.OBSERVATIONS][obsId], self.timeFormat)
+        r, msg = project_functions.check_state_events_obs(
+            obsId, self.pj[cfg.ETHOGRAM], self.pj[cfg.OBSERVATIONS][obsId], self.timeFormat
+        )
 
         if not r:
             out += f"Observation: <strong>{obsId}</strong><br>{msg}<br>"
@@ -570,11 +599,9 @@ def needleman_wunch(self):
     if not selected_observations:
         return
 
-    plot_parameters = select_subj_behav.choose_obs_subj_behav_category(self,
-                                                                       selected_observations,
-                                                                       maxTime=0,
-                                                                       flagShowIncludeModifiers=True,
-                                                                       flagShowExcludeBehaviorsWoEvents=False)
+    plot_parameters = select_subj_behav.choose_obs_subj_behav_category(
+        self, selected_observations, maxTime=0, flagShowIncludeModifiers=True, flagShowExcludeBehaviorsWoEvents=False
+    )
 
     if not plot_parameters[cfg.SELECTED_SUBJECTS] or not plot_parameters[cfg.SELECTED_BEHAVIORS]:
         return
@@ -586,14 +613,16 @@ def needleman_wunch(self):
         return
     interval = util.float2decimal(i)
 
-    ok, msg, db_connector = db_functions.load_aggregated_events_in_db(self.pj, plot_parameters[cfg.SELECTED_SUBJECTS],
-                                                                      selected_observations,
-                                                                      plot_parameters[cfg.SELECTED_BEHAVIORS])
+    ok, msg, db_connector = db_functions.load_aggregated_events_in_db(
+        self.pj, plot_parameters[cfg.SELECTED_SUBJECTS], selected_observations, plot_parameters[cfg.SELECTED_BEHAVIORS]
+    )
 
     cursor = db_connector.cursor()
-    out = ("Needleman-Wunsch similarity\n\n"
-           f"Time unit: {interval:.3f} s\n"
-           f"Selected subjects: {', '.join(plot_parameters[cfg.SELECTED_SUBJECTS])}\n\n")
+    out = (
+        "Needleman-Wunsch similarity\n\n"
+        f"Time unit: {interval:.3f} s\n"
+        f"Selected subjects: {', '.join(plot_parameters[cfg.SELECTED_SUBJECTS])}\n\n"
+    )
     mem_done = []
     nws_results = np.ones((len(selected_observations), len(selected_observations)))
 
