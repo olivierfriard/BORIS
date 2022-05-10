@@ -143,7 +143,7 @@ def open_observation(self, mode: str) -> str:
 
         self.hide_data_files()
         response = dialog.MessageDialog(
-            cfg.programName, "The current observation will be closed. Do you want to continue?", [cfg.YES, cfg.NO]
+            cfg.programName, "The current observation will be closed. Do you want to continue?", (cfg.YES, cfg.NO)
         )
         if response == cfg.NO:
             self.show_data_files()
@@ -218,7 +218,7 @@ def edit_observation(self):
         self.hide_data_files()
         if (
             dialog.MessageDialog(
-                cfg.programName, "The current observation will be closed. Do you want to continue?", [cfg.YES, cfg.NO]
+                cfg.programName, "The current observation will be closed. Do you want to continue?", (cfg.YES, cfg.NO)
             )
             == cfg.NO
         ):
@@ -252,7 +252,7 @@ def remove_observations(self):
             f"<br>Are you sure to remove {msg}?<br><br>"
             f"{'<br>'.join(selected_observations)}"
         ),
-        [cfg.YES, cfg.CANCEL],
+        (cfg.YES, cfg.CANCEL),
     )
     if response == cfg.YES:
         for obs_id in selected_observations:
@@ -292,7 +292,7 @@ def observation_length(pj: dict, selected_observations: list) -> tuple:
                     f"A media length is not available for the observation <b>{obs_id}</b>.<br>"
                     "Use last event time as media length?"
                 ),
-                [cfg.YES, cfg.NO],
+                (cfg.YES, cfg.NO),
             )
             == cfg.YES
         ):
@@ -325,7 +325,7 @@ def new_observation(self, mode=cfg.NEW, obsId=""):
         self.hide_data_files()
         if (
             dialog.MessageDialog(
-                cfg.programName, "The current observation will be closed. Do you want to continue?", [cfg.YES, cfg.NO]
+                cfg.programName, "The current observation will be closed. Do you want to continue?", (cfg.YES, cfg.NO)
             )
             == cfg.NO
         ):
