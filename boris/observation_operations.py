@@ -99,14 +99,14 @@ def observations_list(self):
 
         self.hide_data_files()
         response = dialog.MessageDialog(
-            cfg.programName, "The current observation will be closed. Do you want to continue?", [cfg.YES, cfg.NO]
+            cfg.programName, "The current observation will be closed. Do you want to continue?", (cfg.YES, cfg.NO)
         )
         if response == cfg.NO:
             self.show_data_files()
             return ""
         else:
             close_observation(self)
-        dialog.MessageDialog(cfg.programName, "proceed?", [cfg.YES, cfg.NO])
+        dialog.MessageDialog(cfg.programName, "proceed?", (cfg.YES, cfg.NO))
     # QApplication.processEvents()
 
     if result == cfg.OPEN:
