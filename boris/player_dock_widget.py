@@ -42,8 +42,8 @@ except OSError:
     sys.exit()
 
 
-from PyQt5.QtWidgets import (QLabel, QDockWidget, QWidget, QHBoxLayout, QSlider, QSizePolicy, QStackedWidget)
-from PyQt5.QtCore import (pyqtSignal, QEvent, Qt)
+from PyQt5.QtWidgets import QLabel, QDockWidget, QWidget, QHBoxLayout, QSlider, QSizePolicy, QStackedWidget
+from PyQt5.QtCore import pyqtSignal, QEvent, Qt
 
 import logging
 
@@ -53,6 +53,7 @@ class Clickable_label(QLabel):
     QLabel class for visualiziong frames for geometric measurments
     Label emits a signal when clicked
     """
+
     mouse_pressed_signal = pyqtSignal(int, QEvent)
 
     def __init__(self, id_, parent=None):
@@ -69,7 +70,7 @@ class Clickable_label(QLabel):
         self.mouse_pressed_signal.emit(self.id_, event)
 
 
-class DW2(QDockWidget):
+class DW_player(QDockWidget):
 
     key_pressed_signal = pyqtSignal(QEvent)
     volume_slider_moved_signal = pyqtSignal(int, int)
@@ -90,9 +91,10 @@ class DW2(QDockWidget):
 
         self.player = mpv.MPV(
             wid=str(int(self.videoframe.winId())),
-            #vo='x11', # You may not need this
+            # vo='x11', # You may not need this
             log_handler=None,
-            loglevel="debug")
+            loglevel="debug",
+        )
 
         self.player.screenshot_format = "png"
         self.hlayout.addWidget(self.videoframe)

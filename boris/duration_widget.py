@@ -73,17 +73,17 @@ class Widget_hhmmss(QWidget):
         self.sign.setText("+" if self.sign.text() == "-" else "-")
         self.update_time_value()
 
-
     def update_time_value(self):
-        new_time = (self.hours.value() * 3600
-                             + self.minutes.value() * 60
-                             + self.seconds.value()
-                             + self.milliseconds.value() / 1000)
+        new_time = (
+            self.hours.value() * 3600
+            + self.minutes.value() * 60
+            + self.seconds.value()
+            + self.milliseconds.value() / 1000
+        )
         if self.sign.text() == "-":
-            new_time = - new_time
+            new_time = -new_time
 
         self.time_changed_signal.emit(new_time)
-
 
     def value_changed(self, new_value, widget, val_min, val_max):
         """
@@ -140,13 +140,12 @@ class Widget_seconds(QWidget):
 
 
 class Duration_widget(QWidget):
-
     def __init__(self, time_value=0, parent=None):
 
         # QWidget.__init__(self, parent=parent)
         super().__init__()
 
-        self.time_value = dc.Decimal(time_value).quantize(dc.Decimal('.001'))
+        self.time_value = dc.Decimal(time_value).quantize(dc.Decimal(".001"))
 
         lay = QHBoxLayout(self)
         lay.setSpacing(0)
@@ -177,22 +176,20 @@ class Duration_widget(QWidget):
 
         self.set_time(self.time_value)
 
-
     def time_changed(self, x):
         """
         widget time has changed
         """
         self.time_value = x
 
-
     def set_time(self, new_time):
 
         self.w1.sign.setText("-" if new_time < 0 else "+")
 
-        h = abs(new_time) // 3600
-        m = (abs(new_time) - h * 3600) // 60
+        h = int(abs(new_time) // 3600)
+        m = int((abs(new_time) - h * 3600) // 60)
         s = int((abs(new_time) - h * 3600 - m * 60))
-        ms = round((abs(new_time) - h * 3600 - m * 60 - s) * 1000, 3)
+        ms = round((abs(new_time) - h * 3600 - m * 60 - s) * 1000)
 
         self.w1.hours.setValue(h)
         self.w1.minutes.setValue(m)
@@ -203,7 +200,6 @@ class Duration_widget(QWidget):
 
         self.time_value = new_time
 
-
     def set_format_s(self):
         """
         switch to seconds widget
@@ -212,7 +208,6 @@ class Duration_widget(QWidget):
         self.format_s.setChecked(True)
         self.w2.seconds2.setValue(self.time_value)
         self.Stack.setCurrentIndex(1)
-
 
     def set_format_hhmmss(self):
         """
@@ -238,11 +233,12 @@ class Duration_widget(QWidget):
         """
         return dc.Decimal(self.time_value).quantize(dc.Decimal(".001"))
 
-'''
+
+"""
 if __name__ == '__main__':
     import sys
     app = QApplication(sys.argv)
     w = Duration_widget()
     w.show()
     sys.exit(app.exec_())
-'''
+"""

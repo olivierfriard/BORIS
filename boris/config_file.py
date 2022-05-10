@@ -1,3 +1,26 @@
+"""
+BORIS
+Behavioral Observation Research Interactive Software
+Copyright 2012-2022 Olivier Friard
+
+This file is part of BORIS.
+
+  BORIS is free software; you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation; either version 3 of the License, or
+  any later version.
+
+  BORIS is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+
+  You should have received a copy of the GNU General Public License
+  along with this program; if not see <http://www.gnu.org/licenses/>.
+
+"""
+
+
 import pathlib as pl
 import logging
 import time
@@ -51,9 +74,6 @@ def read(self):
             self.saved_state = None
 
         logging.debug(f"saved state: {self.saved_state}")
-
-        for dw in [self.dwEthogram, self.dwSubjects, self.dwObservations]:
-            dw.setVisible(False)
 
         self.timeFormat = cfg.HHMMSS
         try:

@@ -1725,7 +1725,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 continue
 
             if i == 0:  # first player
-                p = player_dock_widget.DW2(i)
+                p = player_dock_widget.DW_player(i)
                 self.dw_player.append(p)
 
                 @p.player.property_observer("time-pos")
@@ -1734,7 +1734,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                         self.time_observer_signal.emit(value)
 
             else:
-                self.dw_player.append(player_dock_widget.DW2(i))
+                self.dw_player.append(player_dock_widget.DW_player(i))
             self.dw_player[-1].setFloating(False)
             self.dw_player[-1].setVisible(False)
             self.dw_player[-1].setFeatures(QDockWidget.DockWidgetFloatable | QDockWidget.DockWidgetMovable)

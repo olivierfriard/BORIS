@@ -19,6 +19,7 @@ Copyright 2012-2022 Olivier Friard
   MA 02110-1301, USA.
 """
 
+import sip
 import logging
 import time
 import tempfile
@@ -895,26 +896,29 @@ def close_observation(self):
     self.close_tool_windows()
 
     self.observationId = ""
-    '''
+
     if self.playerType == cfg.MEDIA:
+        """
+        for idx, _ in enumerate(self.dw_player):
+            #del self.dw_player[idx].stack
+            self.removeDockWidget(self.dw_player[idx])
+            sip.delete(self.dw_player[idx])
+            self.dw_player[idx] = None
+        """
 
         for dw in self.dw_player:
-
+            print(dw)
             logging.info(f"remove dock widget")
-            self.removeDockWidget(dw)
-            """ dw.player.quit() """
-            dw.deleteLater()
 
-    '''
-    self.dw_player = []
+            # self.removeDockWidget(dw)
+            # sip.delete(dw)
+            # dw = None
+
+    # self.dw_player = []
 
     self.statusbar.showMessage("", 0)
 
     self.dwObservations.setVisible(False)
-
-    self.dwEthogram.setVisible(False)
-
-    self.dwSubjects.setVisible(False)
 
     self.w_obs_info.setVisible(False)
 
