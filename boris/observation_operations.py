@@ -111,9 +111,6 @@ def observations_list(self):
 
         QtTest.QTest.qWait(1000)
 
-        # dialog.MessageDialog(cfg.programName, "proceed?", (cfg.YES, cfg.NO))
-    # QApplication.processEvents()
-
     if result == cfg.OPEN:
         # select_observations.select_observations(self.pj, cfg.OPEN)
         load_observation(self, selected_obs[0], cfg.START)
