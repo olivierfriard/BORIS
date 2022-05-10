@@ -238,27 +238,6 @@ def delete_converter(self):
         QMessageBox.warning(self, cfg.programName, "Select a converter in the table")
 
 
-def load_converters_in_table(self):
-    """
-    load converters in table
-    """
-    self.tw_converters.setRowCount(0)
-
-    for converter in sorted(self.converters.keys()):
-        self.tw_converters.setRowCount(self.tw_converters.rowCount() + 1)
-        self.tw_converters.setItem(self.tw_converters.rowCount() - 1, 0, QTableWidgetItem(converter))  # id / name
-        self.tw_converters.setItem(
-            self.tw_converters.rowCount() - 1, 1, QTableWidgetItem(self.converters[converter]["description"])
-        )
-        self.tw_converters.setItem(
-            self.tw_converters.rowCount() - 1,
-            2,
-            QTableWidgetItem(self.converters[converter]["code"].replace("\n", "@")),
-        )
-
-    [self.tw_converters.resizeColumnToContents(idx) for idx in [0, 1]]
-
-
 def load_converters_from_file_repo(self, mode: str):
     """
     Load converters from file (JSON) or BORIS remote repository
