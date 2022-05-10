@@ -28,6 +28,8 @@ import pathlib as pl
 from PyQt5.QtWidgets import QMessageBox, QFileDialog, QDateTimeEdit, QComboBox, QTableWidgetItem, QApplication
 from PyQt5.QtCore import Qt, QDateTime
 
+from PyQt5 import QtTest
+
 from . import menu_options
 from . import config as cfg
 from . import dialog
@@ -106,7 +108,10 @@ def observations_list(self):
             return ""
         else:
             close_observation(self)
-        dialog.MessageDialog(cfg.programName, "proceed?", (cfg.YES, cfg.NO))
+
+        QtTest.QTest.qWait(1000)
+
+        # dialog.MessageDialog(cfg.programName, "proceed?", (cfg.YES, cfg.NO))
     # QApplication.processEvents()
 
     if result == cfg.OPEN:
