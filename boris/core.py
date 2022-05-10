@@ -4442,6 +4442,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE] in [cfg.MEDIA]:
                 if self.playerType == cfg.MEDIA:
                     memState = self.dw_player[0].mediaListPlayer.get_state()
+                    # FIXME
                     if memState == self.vlc_playing:
                         self.pause_video()
 
@@ -4463,6 +4464,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             # restart media
             if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE] in [cfg.MEDIA]:
                 if self.playerType == cfg.MEDIA:
+                    # FIXME
                     if memState == self.vlc_playing:
                         self.play_video()
 
