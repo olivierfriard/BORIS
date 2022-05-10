@@ -152,7 +152,7 @@
      <x>0</x>
      <y>0</y>
      <width>1441</width>
-     <height>29</height>
+     <height>22</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuHelp">
@@ -295,6 +295,7 @@
     <addaction name="menuInter_rater_reliability"/>
     <addaction name="menuSimilarities"/>
     <addaction name="action_advanced_event_filtering"/>
+    <addaction name="action_latency"/>
    </widget>
    <widget class="QMenu" name="menuPlayback">
     <property name="title">
@@ -1447,6 +1448,11 @@
   <action name="actionRemove_observations">
    <property name="text">
     <string>Remove observations</string>
+   </property>
+  </action>
+  <action name="action_latency">
+   <property name="text">
+    <string>Latency</string>
    </property>
   </action>
  </widget>

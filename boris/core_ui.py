@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'boris/core.ui'
+# Form implementation generated from reading ui file 'core.ui'
 #
 # Created by: PyQt5 UI code generator 5.15.2
 #
@@ -84,7 +84,7 @@ class Ui_MainWindow(object):
         self.horizontalLayout_2.addLayout(self.horizontalLayout)
         MainWindow.setCentralWidget(self.centralwidget)
         self.menubar = QtWidgets.QMenuBar(MainWindow)
-        self.menubar.setGeometry(QtCore.QRect(0, 0, 1441, 29))
+        self.menubar.setGeometry(QtCore.QRect(0, 0, 1441, 22))
         self.menubar.setObjectName("menubar")
         self.menuHelp = QtWidgets.QMenu(self.menubar)
         self.menuHelp.setObjectName("menuHelp")
@@ -534,6 +534,8 @@ class Ui_MainWindow(object):
         self.actionVideo_equalizer.setObjectName("actionVideo_equalizer")
         self.actionRemove_observations = QtWidgets.QAction(MainWindow)
         self.actionRemove_observations.setObjectName("actionRemove_observations")
+        self.action_latency = QtWidgets.QAction(MainWindow)
+        self.action_latency.setObjectName("action_latency")
         self.menuHelp.addAction(self.actionUser_guide)
         self.menuHelp.addAction(self.actionCheckUpdate)
         self.menuHelp.addSeparator()
@@ -615,6 +617,7 @@ class Ui_MainWindow(object):
         self.menuAnalyze.addAction(self.menuInter_rater_reliability.menuAction())
         self.menuAnalyze.addAction(self.menuSimilarities.menuAction())
         self.menuAnalyze.addAction(self.action_advanced_event_filtering)
+        self.menuAnalyze.addAction(self.action_latency)
         self.menuImage_overlay_on_video_2.addAction(self.actionAdd_image_overlay_on_video)
         self.menuImage_overlay_on_video_2.addAction(self.actionRemove_image_overlay)
         self.menuPlayback.addAction(self.actionPlay)
@@ -893,3 +896,4 @@ class Ui_MainWindow(object):
         self.actionPlot_events_in_real_time.setText(_translate("MainWindow", "Plot events in real time"))
         self.actionVideo_equalizer.setText(_translate("MainWindow", "Video equalizer"))
         self.actionRemove_observations.setText(_translate("MainWindow", "Remove observations"))
+        self.action_latency.setText(_translate("MainWindow", "Latency"))

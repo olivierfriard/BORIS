@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """
 BORIS
 Behavioral Observation Research Interactive Software
@@ -32,7 +31,6 @@ from . import utilities as util
 
 
 class ModifiersList(QDialog):
-
     def __init__(self, code, modifiers_dict, currentModifier):
 
         super().__init__()
@@ -53,7 +51,9 @@ class ModifiersList(QDialog):
         for idx in util.sorted_keys(modifiers_dict):
 
             if self.modifiers_dict[idx]["type"] not in [
-                    cfg.SINGLE_SELECTION, cfg.MULTI_SELECTION, cfg.NUMERIC_MODIFIER
+                cfg.SINGLE_SELECTION,
+                cfg.MULTI_SELECTION,
+                cfg.NUMERIC_MODIFIER,
             ]:
                 continue
 
@@ -83,8 +83,9 @@ class ModifiersList(QDialog):
 
                         # previously selected
                         try:
-                            if currentModifierList != [""] and re.sub(
-                                    " \(.\)", "", modifier) in currentModifierList[int(idx)].split(","):
+                            if currentModifierList != [""] and re.sub(" \(.\)", "", modifier) in currentModifierList[
+                                int(idx)
+                            ].split(","):
                                 item.setCheckState(Qt.Checked)
                         except Exception:  # for old projects due to a fixed bug
                             pass
@@ -93,8 +94,10 @@ class ModifiersList(QDialog):
 
                     if self.modifiers_dict[idx]["type"] == cfg.SINGLE_SELECTION:
                         try:
-                            if currentModifierList != [""] and re.sub(" \(.\)", "",
-                                                                      modifier) == currentModifierList[int(idx)]:
+                            if (
+                                currentModifierList != [""]
+                                and re.sub(" \(.\)", "", modifier) == currentModifierList[int(idx)]
+                            ):
                                 item.setSelected(True)
                         except Exception:  # for old projects due to a fixed bug
                             pass
@@ -139,7 +142,7 @@ class ModifiersList(QDialog):
         """
         send event (if keypress) to main window
         """
-        if (event.type() == QEvent.KeyPress):
+        if event.type() == QEvent.KeyPress:
             ek, ek_text = event.key(), event.text()
 
             # reject and close dialog if escape pressed
@@ -164,7 +167,8 @@ class ModifiersList(QDialog):
                             # modifiers have no associated code: the modifier starting with hit key will be selected
                             if ek not in [Qt.Key_Down, Qt.Key_Up]:
 
-                                if ek == Qt.Key_Space and f"({cfg.MULTI_SELECTION})" in widget.objectName(
+                                if (
+                                    ek == Qt.Key_Space and f"({cfg.MULTI_SELECTION})" in widget.objectName()
                                 ):  # checking using SPACE bar
                                     if widget.item(widget.currentRow()).checkState() == Qt.Checked:
                                         widget.item(widget.currentRow()).setCheckState(Qt.Unchecked)
@@ -237,7 +241,8 @@ class ModifiersList(QDialog):
                 for j in range(self.modifiers_dict[idx]["widget"].count()):
                     if self.modifiers_dict[idx]["widget"].item(j).checkState() == Qt.Checked:
                         self.modifiers_dict[idx]["selected"].append(
-                            re.sub(" \(.*\)", "", self.modifiers_dict[idx]["widget"].item(j).text()))
+                            re.sub(" \(.*\)", "", self.modifiers_dict[idx]["widget"].item(j).text())
+                        )
 
                 if not self.modifiers_dict[idx]["selected"]:
                     self.modifiers_dict[idx]["selected"].append("None")
@@ -247,9 +252,10 @@ class ModifiersList(QDialog):
                     self.modifiers_dict[idx]["selected"].append(re.sub(" \(.*\)", "", item.text()))
 
             if self.modifiers_dict[idx]["type"] == cfg.NUMERIC_MODIFIER:
-                self.modifiers_dict[idx]["selected"] = self.modifiers_dict[idx]["widget"].text(
-                ) if self.modifiers_dict[idx]["widget"].text() else "None"
-        '''
+                self.modifiers_dict[idx]["selected"] = (
+                    self.modifiers_dict[idx]["widget"].text() if self.modifiers_dict[idx]["widget"].text() else "None"
+                )
+        """
         for widget in self.children():
             if widget.objectName() == "lw_modifiers_classic":
                 for item in widget.selectedItems():
@@ -258,7 +264,7 @@ class ModifiersList(QDialog):
                 for idx in range(widget.count()):
                     if widget.item(idx).checkState() == Qt.Checked:
                         modifiers.append(widget.item(idx).text())
-        '''
+        """
 
         return self.modifiers_dict
 
@@ -271,8 +277,10 @@ class ModifiersList(QDialog):
                         val = float(self.modifiers_dict[idx]["widget"].text())
                     except Exception:
                         QMessageBox.warning(
-                            self, cfg.programName,
-                            "<b>{}</b> is not a numeric value".format(self.modifiers_dict[idx]["widget"].text()))
+                            self,
+                            cfg.programName,
+                            "<b>{}</b> is not a numeric value".format(self.modifiers_dict[idx]["widget"].text()),
+                        )
                         return
 
         self.accept()

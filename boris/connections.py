@@ -44,6 +44,7 @@ from . import event_operations
 from . import image_overlay
 from . import video_operations
 from . import observation_operations
+from . import latency
 
 
 def connections(self):
@@ -202,6 +203,8 @@ def connections(self):
     self.action_behavior_binary_table.triggered.connect(lambda: behavior_binary_table.behavior_binary_table(self))
 
     self.action_advanced_event_filtering.triggered.connect(self.advanced_event_filtering)
+
+    self.action_latency.triggered.connect(lambda: latency.get_latency(self))
 
     # menu Help
     self.actionUser_guide.triggered.connect(self.actionUser_guide_triggered)

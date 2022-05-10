@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """
 BORIS
 Behavioral Observation Research Interactive Software
@@ -32,7 +31,6 @@ from .param_panel_ui import Ui_Dialog
 
 
 class Param_panel(QDialog, Ui_Dialog):
-
     def __init__(self, parent=None):
 
         super().__init__()
@@ -141,8 +139,9 @@ class Param_panel(QDialog, Ui_Dialog):
 
         for events in all_events:
             for event in events:
-                if (event[cfg.EVENT_SUBJECT_FIELD_IDX] in selected_subjects or
-                    (not event[cfg.EVENT_SUBJECT_FIELD_IDX] and cfg.NO_FOCAL_SUBJECT in selected_subjects)):
+                if event[cfg.EVENT_SUBJECT_FIELD_IDX] in selected_subjects or (
+                    not event[cfg.EVENT_SUBJECT_FIELD_IDX] and cfg.NO_FOCAL_SUBJECT in selected_subjects
+                ):
                     observed_behaviors.append(event[cfg.EVENT_BEHAVIOR_FIELD_IDX])
 
         # remove duplicate
