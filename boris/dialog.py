@@ -60,7 +60,7 @@ from . import utilities as util
 from . import version
 
 
-def MessageDialog(title: str, text: str, buttons: list) -> str:
+def MessageDialog(title: str, text: str, buttons: tuple) -> str:
 
     message = QMessageBox()
     message.setWindowTitle(title)
