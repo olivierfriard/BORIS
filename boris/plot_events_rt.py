@@ -27,12 +27,14 @@ import matplotlib
 
 matplotlib.use("Qt5Agg")
 import numpy as np
-from PyQt5.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, QPushButton, QLabel)
+from PyQt5.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QPushButton, QLabel
 from PyQt5.QtCore import pyqtSignal, QEvent
 from PyQt5 import Qt
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 
 from matplotlib.figure import Figure
+
+from . import config as cfg
 
 
 class Plot_events_RT(QWidget):
@@ -50,7 +52,7 @@ class Plot_events_RT(QWidget):
         self.events_mem = {"init": 0}
 
         self.cursor_color = "red"  # default cursor color
-        self.observation_type = "VLC"
+        self.observation_type = cfg.MEDIA
         self.groupby = "behaviors"  # group results by "behaviors" or "modifiers"
 
         self.figure = Figure()
@@ -64,9 +66,11 @@ class Plot_events_RT(QWidget):
         hlayout1 = QHBoxLayout()
         hlayout1.addWidget(QLabel("Time interval"))
         hlayout1.addWidget(
-            QPushButton("+", self, clicked=lambda: self.time_interval_changed(1), focusPolicy=Qt.Qt.NoFocus))
+            QPushButton("+", self, clicked=lambda: self.time_interval_changed(1), focusPolicy=Qt.Qt.NoFocus)
+        )
         hlayout1.addWidget(
-            QPushButton("-", self, clicked=lambda: self.time_interval_changed(-1), focusPolicy=Qt.Qt.NoFocus))
+            QPushButton("-", self, clicked=lambda: self.time_interval_changed(-1), focusPolicy=Qt.Qt.NoFocus)
+        )
         self.pb_mode = QPushButton("Include modifiers", self, clicked=self.change_mode, focusPolicy=Qt.Qt.NoFocus)
         hlayout1.addWidget(self.pb_mode)
         layout.addLayout(hlayout1)
@@ -79,7 +83,7 @@ class Plot_events_RT(QWidget):
         """
         send event (if keypress) to main window
         """
-        if (event.type() == QEvent.KeyPress):
+        if event.type() == QEvent.KeyPress:
             self.sendEvent.emit(event)
             return True
         else:
@@ -112,7 +116,7 @@ class Plot_events_RT(QWidget):
 
         if action == -1 and self.interval <= 5:
             return
-        self.interval += (5 * action)
+        self.interval += 5 * action
         self.plot_events(current_time=self.time_mem, force_plot=True)
 
     def aggregate_events(self, events: list, start: float, end: float) -> dict:
@@ -137,13 +141,6 @@ class Plot_events_RT(QWidget):
             else:  # with modifiers
                 return f"{subject}þ{code}þ{modifier}"
 
-        '''
-        print(self.observation_type)
-        print(f"{start} - {end}")
-        print(events)
-        print()
-        '''
-
         try:
             mem_behav = {}
             intervals_behav = {}
@@ -163,9 +160,11 @@ class Plot_events_RT(QWidget):
                         # stop interval
 
                         # check if event is in interval start-end
-                        if (start <= mem_behav[key] <= end) \
-                            or (start <= time_ <= end) \
-                            or (mem_behav[key] <= start and time_ > end):
+                        if any(
+                            start <= mem_behav[key] <= end,
+                            start <= time_ <= end,
+                            mem_behav[key] <= start and time_ > end,
+                        ):
                             intervals_behav[key].append((float(mem_behav[key]), float(time_)))
                         mem_behav[key] = None
                     else:
@@ -176,38 +175,23 @@ class Plot_events_RT(QWidget):
 
                     if start <= time_ <= end:
                         intervals_behav[key].append(
-                            (float(time_), float(time_) + self.point_event_plot_duration * 50))  # point event -> 1 s
-            '''
-            print('pre', intervals_behav)
-            '''
+                            (float(time_), float(time_) + self.point_event_plot_duration * 50)
+                        )  # point event -> 1 s
 
             # check if intervals are closed
             for k in mem_behav:
                 if mem_behav[k] is not None:  # interval open
-                    '''
-                    print(f"{k} is open at: {mem_behav[k]}")
-                    '''
-                    if self.observation_type == "LIVE":
-                        intervals_behav[k].append((float(mem_behav[k]), float(
-                            (end + start) / 2)))  # close interval with current time
-                        '''
-                        print(f"closed with {float((end + start) / 2)}")
-                        '''
+                    if self.observation_type == cfg.LIVE:
+                        intervals_behav[k].append(
+                            (float(mem_behav[k]), float((end + start) / 2))
+                        )  # close interval with current time
 
-                    elif self.observation_type == "vlc":
+                    elif self.observation_type == cfg.MEDIA:
 
                         intervals_behav[k].append((float(mem_behav[k]), float(end)))  # close interval with end value
-                        '''
-                        print(f"closed with {float((end))}")
-                        '''
-            '''
-            print('post', intervals_behav)
-            print('----------------------')
-            '''
             return intervals_behav
 
         except Exception:
-            raise
             return {"error": ""}
 
     def plot_events(self, current_time: float, force_plot: bool = False):
@@ -219,8 +203,9 @@ class Plot_events_RT(QWidget):
             force_plot (bool): force plot even if media paused
         """
 
-        self.events = self.aggregate_events(self.events_list, current_time - self.interval / 2,
-                                            current_time + self.interval / 2)
+        self.events = self.aggregate_events(
+            self.events_list, current_time - self.interval / 2, current_time + self.interval / 2
+        )
 
         if not force_plot and current_time == self.time_mem:
             return
@@ -240,14 +225,14 @@ class Plot_events_RT(QWidget):
             self.behaviors, self.durations, self.lefts, self.colors = [], [], [], []
             for k in self.events:
                 if self.groupby == "behaviors":
-                    subject_name, bevavior_code = k.split('þ')
+                    subject_name, bevavior_code = k.split("þ")
                     if subject_name == "":
                         subject_name = "No focal"
                     behav_col = self.behav_color[bevavior_code]
                     self.behaviors.extend([f"{subject_name} - {bevavior_code}"] * len(self.events[k]))
                     self.colors.extend([behav_col] * len(self.events[k]))
                 else:  # with modifiers
-                    subject_name, bevavior_code, modifier = k.split('þ')
+                    subject_name, bevavior_code, modifier = k.split("þ")
                     behav_col = self.behav_color[bevavior_code]
                     self.behaviors.extend([f"{subject_name} - {bevavior_code} ({modifier})"] * len(self.events[k]))
                     self.colors.extend([behav_col] * len(self.events[k]))

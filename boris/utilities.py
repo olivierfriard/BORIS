@@ -253,12 +253,57 @@ def point_behavior_codes(ethogram: dict) -> list:
     return [ethogram[x][cfg.BEHAVIOR_CODE] for x in ethogram if cfg.POINT in ethogram[x][cfg.TYPE].upper()]
 
 
+def group_events(pj: dict, obs_id: str) -> dict:
+    """
+    group events by subject, behavior, modifier
+    """
+    try:
+        state_events_list = state_behavior_codes(pj[cfg.ETHOGRAM])
+        point_events_list = point_behavior_codes(pj[cfg.ETHOGRAM])
+        mem_behav = {}
+        intervals_behav = {}
+
+        for event in pj[cfg.OBSERVATIONS][obs_id][cfg.EVENTS]:
+
+            time_ = event[cfg.EVENT_TIME_FIELD_IDX]
+            subject = event[cfg.EVENT_SUBJECT_FIELD_IDX]
+            code = event[cfg.EVENT_BEHAVIOR_FIELD_IDX]
+            modifier = event[cfg.EVENT_MODIFIER_FIELD_IDX]
+
+            # check if code is state
+            if code in state_events_list:
+
+                if (subject, code, modifier) in mem_behav and mem_behav[(subject, code, modifier)]:
+
+                    if (subject, code, modifier) not in intervals_behav:
+                        intervals_behav[(subject, code, modifier)] = []
+                    intervals_behav[(subject, code, modifier)].append((mem_behav[(subject, code, modifier)], time_))
+
+                    mem_behav[(subject, code, modifier)] = 0
+                else:
+                    mem_behav[(subject, code, modifier)] = time_
+
+            # check if code is state
+            if code in point_events_list:
+                if (subject, code, modifier) not in intervals_behav:
+                    intervals_behav[(subject, code, modifier)] = []
+                intervals_behav[(subject, code, modifier)].append((time_, time_))
+
+        return intervals_behav
+
+    except Exception:
+        return {"error": ""}
+
+
 def aggregate_events(pj: dict, obs_id: str) -> dict:
     """
     aggregate state events
     take consideration of subject and modifiers
 
     return dict
+
+    example:
+    {'subject|behavior|modifier': [(start: Decimal, end: Decimal), (start: Decimal, end: Decimal), ...], ...}
     """
 
     try:
