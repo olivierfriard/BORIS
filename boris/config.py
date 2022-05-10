@@ -250,9 +250,6 @@ MEDIA_TAB_IDX = 0
 LIVE_TAB_IDX = 1
 
 
-
-
-
 HHMMSS = "hh:mm:ss"
 HHMMSSZZZ = "hh:mm:ss.zzz"
 S = "s"
@@ -267,6 +264,7 @@ LIST = "list"
 EDIT = "edit"
 OPEN = "open"
 VIEW = "view"
+START = "start"
 SELECT = "select"
 SINGLE = "single"
 MULTIPLE = "multiple"

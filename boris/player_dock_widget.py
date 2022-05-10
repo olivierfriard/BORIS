@@ -125,6 +125,7 @@ class DW_player(QDockWidget):
         self.stack.addWidget(self.stack2)
 
         self.setWidget(self.stack)
+
         self.stack.setCurrentIndex(0)
 
     def volume_slider_moved(self):

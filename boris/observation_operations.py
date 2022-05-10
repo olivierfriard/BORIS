@@ -25,7 +25,7 @@ import time
 import tempfile
 from decimal import Decimal
 import pathlib as pl
-from PyQt5.QtWidgets import QMessageBox, QFileDialog, QDateTimeEdit, QComboBox, QTableWidgetItem
+from PyQt5.QtWidgets import QMessageBox, QFileDialog, QDateTimeEdit, QComboBox, QTableWidgetItem, QApplication
 from PyQt5.QtCore import Qt, QDateTime
 
 from . import menu_options
@@ -85,6 +85,8 @@ def observations_list(self):
     show list of all observations of current project
     """
 
+    print(self.playerType)
+
     if self.playerType == cfg.VIEWER:
         close_observation(self)
 
@@ -93,12 +95,27 @@ def observations_list(self):
     if not selected_obs:
         return
 
-    if result in [cfg.OPEN, cfg.VIEW, cfg.EDIT] and self.observationId:
-        close_observation(self)
+    if self.observationId:
+
+        self.hide_data_files()
+        response = dialog.MessageDialog(
+            cfg.programName, "The current observation will be closed. Do you want to continue?", [cfg.YES, cfg.NO]
+        )
+        if response == cfg.NO:
+            self.show_data_files()
+            return ""
+        else:
+            close_observation(self)
+        dialog.MessageDialog(cfg.programName, "proceed?", [cfg.YES, cfg.NO])
+    # QApplication.processEvents()
+
     if result == cfg.OPEN:
-        load_observation(self, selected_obs[0], "start")
+        # select_observations.select_observations(self.pj, cfg.OPEN)
+        load_observation(self, selected_obs[0], cfg.START)
+
     if result == cfg.VIEW:
         load_observation(self, selected_obs[0], cfg.VIEW)
+
     if result == cfg.EDIT:
         if self.observationId != selected_obs[0]:
             new_observation(self, mode=cfg.EDIT, obsId=selected_obs[0])  # observation id to edit
@@ -132,7 +149,7 @@ def open_observation(self, mode: str) -> str:
         else:
             close_observation(self)
 
-    if mode == "start":
+    if mode == cfg.START:
         _, selectedObs = self.selectObservations(cfg.OPEN)
     if mode == cfg.VIEW:
         _, selectedObs = self.selectObservations(cfg.VIEW)
@@ -143,7 +160,7 @@ def open_observation(self, mode: str) -> str:
         return ""
 
 
-def load_observation(self, obsId: str, mode: str = "start") -> str:
+def load_observation(self, obsId: str, mode: str = cfg.START) -> str:
     """
     load observation obsId
 
@@ -152,6 +169,7 @@ def load_observation(self, obsId: str, mode: str = "start") -> str:
         mode (str): "start" to start observation
                     "view"  to view observation
     """
+    print("load_observation")
 
     if obsId not in self.pj[cfg.OBSERVATIONS]:
         return "Error: Observation not found"
@@ -160,23 +178,24 @@ def load_observation(self, obsId: str, mode: str = "start") -> str:
     self.loadEventsInTW(self.observationId)
 
     if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE] == cfg.LIVE:
-        if mode == "start":
+        if mode == cfg.START:
             self.playerType = cfg.LIVE
             self.initialize_new_live_observation()
-        if mode == "view":
+        if mode == cfg.VIEW:
             self.playerType = cfg.VIEWER
             self.dwObservations.setVisible(True)
 
     if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE] in [cfg.MEDIA]:
 
-        if mode == "start":
+        if mode == cfg.START:
+            print("start")
             if not self.initialize_new_observation_mpv():
                 self.observationId = ""
                 self.twEvents.setRowCount(0)
                 menu_options.update_menu(self)
                 return "Error: loading observation problem"
 
-        if mode == "view":
+        if mode == cfg.VIEW:
             self.playerType = cfg.VIEWER
             self.dwObservations.setVisible(True)
 
@@ -907,10 +926,10 @@ def close_observation(self):
         """
 
         for dw in self.dw_player:
-            print(dw)
+
             logging.info(f"remove dock widget")
 
-            # self.removeDockWidget(dw)
+            self.removeDockWidget(dw)
             # sip.delete(dw)
             # dw = None
 

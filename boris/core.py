@@ -1671,9 +1671,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.pj[cfg.OBSERVATIONS][self.observationId], self.projectFileName
         )
 
-        for dw in [self.dwEthogram, self.dwSubjects, self.dwObservations]:
-            dw.setVisible(True)
-
         if not ok:
             QMessageBox.critical(
                 self,
@@ -1711,13 +1708,14 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         # add all media files to media lists
         self.setDockOptions(QMainWindow.AnimatedDocks | QMainWindow.AllowNestedDocks)
+        print("empty self.dw_player")
         self.dw_player = []
         # create dock widgets for players
 
-        self.time_observer_signal.connect(self.timer_out2)
-
+        print("create dockwidget")
         for i in range(cfg.N_PLAYER):
             n_player = str(i + 1)
+            print(n_player)
             if (
                 n_player not in self.pj[cfg.OBSERVATIONS][self.observationId][cfg.FILE]
                 or not self.pj[cfg.OBSERVATIONS][self.observationId][cfg.FILE][n_player]
@@ -1725,7 +1723,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 continue
 
             if i == 0:  # first player
-                p = player_dock_widget.DW_player(i)
+                p = player_dock_widget.DW_player(i, self)
                 self.dw_player.append(p)
 
                 @p.player.property_observer("time-pos")
@@ -1734,7 +1732,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                         self.time_observer_signal.emit(value)
 
             else:
-                self.dw_player.append(player_dock_widget.DW_player(i))
+                self.dw_player.append(player_dock_widget.DW_player(i, self))
             self.dw_player[-1].setFloating(False)
             self.dw_player[-1].setVisible(False)
             self.dw_player[-1].setFeatures(QDockWidget.DockWidgetFloatable | QDockWidget.DockWidgetMovable)
@@ -1845,6 +1843,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     self.resize_dw(i)
 
         menu_options.update_menu(self)
+
+        self.time_observer_signal.connect(self.timer_out2)
 
         self.actionPlay.setIcon(QIcon(":/play"))
 
@@ -2038,6 +2038,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 logging.critical("state not restored: Type error")
                 self.saved_state = self.saveState()
                 self.restoreState(self.saved_state)
+
+        for dw in [self.dwEthogram, self.dwSubjects, self.dwObservations]:
+            dw.setVisible(True)
 
         for player in self.dw_player:
             player.setVisible(True)

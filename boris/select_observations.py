@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """
 BORIS
 Behavioral Observation Research Interactive Software
@@ -106,15 +105,15 @@ def select_observations(pj: dict, mode: str, windows_title: str = "") -> tuple:
             not_paired.append(obs)
 
         # check exhaustivity of observation
-        exhaustivity = project_functions.check_observation_exhaustivity(pj[cfg.OBSERVATIONS][obs][cfg.EVENTS], [],
-                                                                        state_events_list)
+        exhaustivity = project_functions.check_observation_exhaustivity(
+            pj[cfg.OBSERVATIONS][obs][cfg.EVENTS], [], state_events_list
+        )
 
         data.append([obs, date, descr, subjectsList, observed_interval_str, str(exhaustivity), media] + indepvar)
 
-    obsList = observations_list.observationsList_widget(data,
-                                                        header=obsListFields + indepVarHeader,
-                                                        column_type=column_type,
-                                                        not_paired=not_paired)
+    obsList = observations_list.observationsList_widget(
+        data, header=obsListFields + indepVarHeader, column_type=column_type, not_paired=not_paired
+    )
     if windows_title:
         obsList.setWindowTitle(windows_title)
 
