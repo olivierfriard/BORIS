@@ -253,10 +253,21 @@ def point_behavior_codes(ethogram: dict) -> list:
     return [ethogram[x][cfg.BEHAVIOR_CODE] for x in ethogram if cfg.POINT in ethogram[x][cfg.TYPE].upper()]
 
 
-def group_events(pj: dict, obs_id: str) -> dict:
+def group_events(pj: dict, obs_id: str, include_modifiers: bool = False) -> dict:
     """
-    group events by subject, behavior, modifier
+    group events by subject, behavior, modifier (if required)
+
+    result is a dict like:
+
+    {(subject, behavior, ""): list of tuple (start: Decimal, end: Decimal)}
+
+    or with modifiers:
+
+    {(subject, behavior, modifier): list of tuple (start: Decimal, end: Decimal)}
+
+    in case of point events start=end
     """
+
     try:
         state_events_list = state_behavior_codes(pj[cfg.ETHOGRAM])
         point_events_list = point_behavior_codes(pj[cfg.ETHOGRAM])
@@ -268,7 +279,7 @@ def group_events(pj: dict, obs_id: str) -> dict:
             time_ = event[cfg.EVENT_TIME_FIELD_IDX]
             subject = event[cfg.EVENT_SUBJECT_FIELD_IDX]
             code = event[cfg.EVENT_BEHAVIOR_FIELD_IDX]
-            modifier = event[cfg.EVENT_MODIFIER_FIELD_IDX]
+            modifier = event[cfg.EVENT_MODIFIER_FIELD_IDX] if include_modifiers else ""
 
             # check if code is state
             if code in state_events_list:

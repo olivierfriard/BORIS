@@ -41,6 +41,7 @@ def choose_obs_subj_behav_category(
     by_category=False,
     show_time=False,
     show_time_bin_size=False,
+    window_title="Select subjects and behaviors",
 ):
     """
     show window for:
@@ -65,7 +66,7 @@ def choose_obs_subj_behav_category(
 
     paramPanelWindow = param_panel.Param_panel()
     # paramPanelWindow.resize(600, 500)
-    paramPanelWindow.setWindowTitle("Select subjects and behaviors")
+    paramPanelWindow.setWindowTitle(window_title)
     paramPanelWindow.selectedObservations = selected_observations
     paramPanelWindow.pj = self.pj
     paramPanelWindow.extract_observed_behaviors = self.extract_observed_behaviors
@@ -135,9 +136,9 @@ def choose_obs_subj_behav_category(
         # check if behavior not included in a category
         try:
             if "" in [
-                    self.pj[cfg.ETHOGRAM][idx][cfg.BEHAVIOR_CATEGORY]
-                    for idx in self.pj[cfg.ETHOGRAM]
-                    if cfg.BEHAVIOR_CATEGORY in self.pj[cfg.ETHOGRAM][idx]
+                self.pj[cfg.ETHOGRAM][idx][cfg.BEHAVIOR_CATEGORY]
+                for idx in self.pj[cfg.ETHOGRAM]
+                if cfg.BEHAVIOR_CATEGORY in self.pj[cfg.ETHOGRAM][idx]
             ]:
                 categories += [""]
         except Exception:
@@ -166,12 +167,15 @@ def choose_obs_subj_behav_category(
 
         for behavior in [self.pj[cfg.ETHOGRAM][x][cfg.BEHAVIOR_CODE] for x in util.sorted_keys(self.pj[cfg.ETHOGRAM])]:
 
-            if (categories == ["###no category###"]) or (behavior in [
+            if (categories == ["###no category###"]) or (
+                behavior
+                in [
                     self.pj[cfg.ETHOGRAM][x][cfg.BEHAVIOR_CODE]
                     for x in self.pj[cfg.ETHOGRAM]
-                    if cfg.BEHAVIOR_CATEGORY in self.pj[cfg.ETHOGRAM][x] and
-                    self.pj[cfg.ETHOGRAM][x][cfg.BEHAVIOR_CATEGORY] == category
-            ]):
+                    if cfg.BEHAVIOR_CATEGORY in self.pj[cfg.ETHOGRAM][x]
+                    and self.pj[cfg.ETHOGRAM][x][cfg.BEHAVIOR_CATEGORY] == category
+                ]
+            ):
 
                 paramPanelWindow.item = QListWidgetItem(behavior)
                 if behavior in observedBehaviors:
