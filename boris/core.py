@@ -446,6 +446,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         # 2020-03-18
         from boris import vlc
 
+        self.vlc_py_version = f"{vlc.__version__} ({vlc.build_date})"
+
         if vlc.dll is None:
             msg = "This program requires the VLC media player.\nGo to http://www.videolan.org/vlc"
             QMessageBox.critical(
@@ -3633,7 +3635,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
             if new_time < self.dw_player[player].mediaplayer.get_length():
                 self.dw_player[player].stack.setCurrentIndex(0)
-                self.dw_player[player].mediaplayer.set_time(new_time)
+                new_time_int = int(new_time)
+
+                self.dw_player[player].mediaplayer.set_time(new_time_int)
 
                 if sys.platform != "darwin":  # for MacOS
                     if flag_paused:
@@ -3651,7 +3655,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                         logging.debug(f"time sleep")
 
                         time.sleep(0.2)
-                        self.dw_player[player].mediaplayer.set_time(new_time)
+                        self.dw_player[player].mediaplayer.set_time(new_time_int)
 
                         self.dw_player[player].mediaListPlayer.pause()
 
@@ -3666,7 +3670,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
                         logging.debug(f"set new time")
 
-                        self.dw_player[player].mediaplayer.set_time(new_time)
+                        self.dw_player[player].mediaplayer.set_time(new_time_int)
 
                 if player == 0:
                     try:
@@ -3711,6 +3715,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                                 break
                         time.sleep(0.2)
                         self.dw_player[player].mediaplayer.set_time(
+                            int(
                             new_time
                             - sum(
                                 self.dw_player[player].media_durations[
@@ -3718,6 +3723,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                                         self.dw_player[player].mediaplayer.get_media()
                                     )
                                 ]
+                            )
                             )
                         )
 
@@ -3732,6 +3738,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                                     ]:
                                         break
                                 self.dw_player[player].mediaplayer.set_time(
+                                    int(
                                     new_time
                                     - sum(
                                         self.dw_player[player].media_durations[
@@ -3739,6 +3746,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                                                 self.dw_player[player].mediaplayer.get_media()
                                             )
                                         ]
+                                    )
                                     )
                                 )
 
@@ -10900,6 +10908,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         # if plugin_path:
         programs_versions.append(f"VLC plugin path: {plugin_path}")
 
+        # vlc.py version
+        programs_versions.append(f"vlc.py v. {self.vlc_py_version}")
+
         # ffmpeg
         if self.ffmpeg_bin == "ffmpeg" and sys.platform.startswith("linux"):
             ffmpeg_true_path = subprocess.getoutput("which ffmpeg")
@@ -11211,7 +11222,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     logging.debug(f"{n_player + 1} correct media")
 
                     self.dw_player[n_player].mediaplayer.set_time(
-                        new_time - sum(self.dw_player[n_player].media_durations[0:media_idx])
+                        int(new_time - sum(self.dw_player[n_player].media_durations[0:media_idx]))
                     )
                 else:
 
@@ -11235,13 +11246,14 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                                 self.dw_player[n_player].mediaListPlayer.pause()
 
                             self.dw_player[n_player].mediaplayer.set_time(
-                                new_time
+                                int(new_time
                                 - sum(
                                     self.dw_player[n_player].media_durations[
                                         0 : self.dw_player[n_player].media_list.index_of_item(
                                             self.dw_player[n_player].mediaplayer.get_media()
                                         )
                                     ]
+                                )
                                 )
                             )
                             break
@@ -11262,7 +11274,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                         self.vlc_ended,
                     ]:
                         break
-                self.dw_player[n_player].mediaplayer.set_time(self.dw_player[n_player].media_durations[-1])
+                self.dw_player[n_player].mediaplayer.set_time(int(self.dw_player[n_player].media_durations[-1]))
 
     def timer_out(self, scroll_slider=True):
         """
@@ -13911,22 +13923,6 @@ def main():
         while time.time() - start < 1:
             time.sleep(0.001)
 
-    # from boris import vlc
-    # check VLC
-    """
-    if vlc.dll is None:
-        msg = "This program requires the VLC media player.\nGo to http://www.videolan.org/vlc"
-        QMessageBox.critical(None, programName, msg, QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
-        logging.critical(msg)
-        sys.exit(1)
-
-    if vlc.libvlc_get_version().decode("utf-8") < VLC_MIN_VERSION:
-        msg = (f"The VLC media player seems very old ({vlc.libvlc_get_version()}). "
-               "Go to http://www.videolan.org/vlc to update it")
-        QMessageBox.critical(None, programName, msg, QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
-        logging.critical(msg)
-        sys.exit(2)
-    """
     # check FFmpeg
     ret, msg = check_ffmpeg_path()
     if not ret:
