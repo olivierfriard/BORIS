@@ -3,7 +3,6 @@ BORIS
 Behavioral Observation Research Interactive Software
 Copyright 2012-2022 Olivier Friard
 
-
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
   the Free Software Foundation; either version 2 of the License, or
@@ -21,6 +20,10 @@ Copyright 2012-2022 Olivier Friard
 
 """
 
+"""
+Module for analyzing the latency of behaviors after another behavior(s) (marker)
+
+"""
 
 from . import config as cfg
 from . import utilities as util
@@ -32,7 +35,6 @@ def get_latency(self):
     """
     get latency (time after marker/stimulus)
     """
-    print("latency")
 
     SUBJECT, BEHAVIOR, MODIFIERS = 0, 1, 2
 
