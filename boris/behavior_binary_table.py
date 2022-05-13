@@ -216,7 +216,7 @@ def behavior_binary_table(self):
     if not selected_observations:
         return
 
-    max_obs_length, _ = project_functions.observation_length(self.pj, selected_observations)
+    max_obs_length, _ = observation_operations.observation_length(self.pj, selected_observations)
     if max_obs_length == -1:  # media length not available, user choose to not use events
         return
 

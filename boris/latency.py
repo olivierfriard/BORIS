@@ -29,6 +29,9 @@ from . import config as cfg
 from . import utilities as util
 from . import select_subj_behav
 from . import dialog
+from . import select_observations
+
+from PyQt5.QtWidgets import QMessageBox
 
 
 def get_latency(self):
@@ -36,9 +39,25 @@ def get_latency(self):
     get latency (time after marker/stimulus)
     """
 
+    QMessageBox.warning(
+        None,
+        cfg.programName,
+        (
+            f"This function is experimental. Please test it and report any bug at <br>"
+            '<a href="https://github.com/olivierfriard/BORIS/issues">'
+            "https://github.com/olivierfriard/BORIS/issues</a><br>"
+            "or by email (See the About page on the BORIS web site.<br><br>"
+            "Thank you for your collaboration!"
+        ),
+        QMessageBox.Ok | QMessageBox.Default,
+        QMessageBox.NoButton,
+    )
+
     SUBJECT, BEHAVIOR, MODIFIERS = 0, 1, 2
 
-    _, selected_observations = self.selectObservations(cfg.MULTIPLE)
+    _, selected_observations = select_observations.select_observations(
+        self.pj, cfg.SINGLE, windows_title="Select one observation for latency analysis"
+    )
     if not selected_observations:
         return
 

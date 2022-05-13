@@ -38,7 +38,10 @@ def synthetic_time_budget(self):
     Synthetic time budget
     """
 
-    result, selected_observations = self.selectObservations(cfg.MULTIPLE)
+    _, selected_observations = select_observations.select_observations(
+        self.pj, mode=cfg.MULTIPLE, windows_title="Select observations for synthetic time budget"
+    )
+
     if not selected_observations:
         return
 
@@ -57,8 +60,9 @@ def synthetic_time_budget(self):
     # check if state events are paired
     not_paired_obs_list = []
     for obs_id in selected_observations:
-        r, msg = project_functions.check_state_events_obs(obs_id, self.pj[cfg.ETHOGRAM],
-                                                          self.pj[cfg.OBSERVATIONS][obs_id], self.timeFormat)
+        r, msg = project_functions.check_state_events_obs(
+            obs_id, self.pj[cfg.ETHOGRAM], self.pj[cfg.OBSERVATIONS][obs_id], self.timeFormat
+        )
         if not r:
             out += f"Observation: <strong>{obs_id}</strong><br>{msg}<br>"
             not_paired_obs_list.append(obs_id)
@@ -96,11 +100,14 @@ def synthetic_time_budget(self):
     # an observation media length is not available
     if selectedObsTotalMediaLength == -1:
         # propose to user to use max event time
-        if (dialog.MessageDialog(
+        if (
+            dialog.MessageDialog(
                 cfg.programName,
                 "A media length is not available.<br>Use last event time as media length?",
-            [cfg.YES, cfg.NO],
-        ) == cfg.YES):
+                [cfg.YES, cfg.NO],
+            )
+            == cfg.YES
+        ):
             maxTime = 0  # max length for all events all subjects
             for obsId in selected_observations:
                 if self.pj[cfg.OBSERVATIONS][obsId][cfg.EVENTS]:
@@ -126,8 +133,7 @@ def synthetic_time_budget(self):
     # ask for excluding behaviors durations from total time
     cancel_pressed, synth_tb_param[cfg.EXCLUDED_BEHAVIORS] = self.filter_behaviors(
         title="Select behaviors to exclude",
-        text=("The duration of the selected behaviors will "
-              "be subtracted from the total time"),
+        text=("The duration of the selected behaviors will " "be subtracted from the total time"),
         table="",
         behavior_type=[cfg.STATE_EVENT],
     )
@@ -145,8 +151,9 @@ def synthetic_time_budget(self):
     ]
     file_formats = ["tsv", "csv", "ods", "xlsx", "xls", "html"]
 
-    file_name, filter_ = QFileDialog().getSaveFileName(self, "Synthetic time budget", "",
-                                                       ";;".join(extended_file_formats))
+    file_name, filter_ = QFileDialog().getSaveFileName(
+        self, "Synthetic time budget", "", ";;".join(extended_file_formats)
+    )
     if not file_name:
         return
 
@@ -154,8 +161,12 @@ def synthetic_time_budget(self):
     if pl.Path(file_name).suffix != "." + output_format:
         file_name = str(pl.Path(file_name)) + "." + output_format
         if pl.Path(file_name).is_file():
-            if (dialog.MessageDialog(cfg.programName, f"The file {file_name} already exists.",
-                                     [cfg.CANCEL, cfg.OVERWRITE]) == cfg.CANCEL):
+            if (
+                dialog.MessageDialog(
+                    cfg.programName, f"The file {file_name} already exists.", [cfg.CANCEL, cfg.OVERWRITE]
+                )
+                == cfg.CANCEL
+            ):
                 return
 
     ok, msg, data_report = time_budget_functions.synthetic_time_budget(self.pj, selected_observations, synth_tb_param)
@@ -184,16 +195,20 @@ def synthetic_binned_time_budget(self):
     QMessageBox.warning(
         None,
         cfg.programName,
-        (f"This function is experimental. Please test it and report any bug at <br>"
-         '<a href="https://github.com/olivierfriard/BORIS/issues">'
-         "https://github.com/olivierfriard/BORIS/issues</a><br>"
-         "or by email (See the About page on the BORIS web site.<br><br>"
-         "Thank you for your collaboration!"),
+        (
+            f"This function is experimental. Please test it and report any bug at <br>"
+            '<a href="https://github.com/olivierfriard/BORIS/issues">'
+            "https://github.com/olivierfriard/BORIS/issues</a><br>"
+            "or by email (See the About page on the BORIS web site.<br><br>"
+            "Thank you for your collaboration!"
+        ),
         QMessageBox.Ok | QMessageBox.Default,
         QMessageBox.NoButton,
     )
 
-    _, selected_observations = select_observations.select_observations(self.pj, mode=cfg.MULTIPLE, windows_title="")
+    _, selected_observations = select_observations.select_observations(
+        self.pj, mode=cfg.MULTIPLE, windows_title="Select observations for synthetic binned time budget"
+    )
 
     if not selected_observations:
         return
@@ -213,8 +228,9 @@ def synthetic_binned_time_budget(self):
     # check if state events are paired
     not_paired_obs_list = []
     for obs_id in selected_observations:
-        r, msg = project_functions.check_state_events_obs(obs_id, self.pj[cfg.ETHOGRAM],
-                                                          self.pj[cfg.OBSERVATIONS][obs_id], self.timeFormat)
+        r, msg = project_functions.check_state_events_obs(
+            obs_id, self.pj[cfg.ETHOGRAM], self.pj[cfg.OBSERVATIONS][obs_id], self.timeFormat
+        )
         if not r:
             out += f"Observation: <strong>{obs_id}</strong><br>{msg}<br>"
             not_paired_obs_list.append(obs_id)
@@ -252,11 +268,14 @@ def synthetic_binned_time_budget(self):
     # an observation media length is not available
     if selectedObsTotalMediaLength == -1:
         # propose to user to use max event time
-        if (dialog.MessageDialog(
+        if (
+            dialog.MessageDialog(
                 cfg.programName,
                 "A media length is not available.<br>Use last event time as media length?",
-            [cfg.YES, cfg.NO],
-        ) == cfg.YES):
+                [cfg.YES, cfg.NO],
+            )
+            == cfg.YES
+        ):
             maxTime = 0  # max length for all events all subjects
             for obsId in selected_observations:
                 if self.pj[cfg.OBSERVATIONS][obsId][cfg.EVENTS]:
@@ -283,8 +302,7 @@ def synthetic_binned_time_budget(self):
     # ask for excluding behaviors durations from total time
     cancel_pressed, synth_tb_param[cfg.EXCLUDED_BEHAVIORS] = self.filter_behaviors(
         title="Select behaviors to exclude",
-        text=("The duration of the selected behaviors will "
-              "be subtracted from the total time"),
+        text=("The duration of the selected behaviors will " "be subtracted from the total time"),
         table="",
         behavior_type=[cfg.STATE_EVENT],
     )
@@ -301,8 +319,9 @@ def synthetic_binned_time_budget(self):
     ]
     file_formats = ["tsv", "csv", "ods", "xlsx", "xls", "html"]
 
-    file_name, filter_ = QFileDialog().getSaveFileName(self, "Synthetic time budget", "",
-                                                       ";;".join(extended_file_formats))
+    file_name, filter_ = QFileDialog().getSaveFileName(
+        self, "Synthetic time budget", "", ";;".join(extended_file_formats)
+    )
     if not file_name:
         return
 
@@ -310,8 +329,12 @@ def synthetic_binned_time_budget(self):
     if pl.Path(file_name).suffix != "." + output_format:
         file_name = str(pl.Path(file_name)) + "." + output_format
         if pl.Path(file_name).is_file():
-            if (dialog.MessageDialog(cfg.programName, f"The file {file_name} already exists.",
-                                     [cfg.CANCEL, cfg.OVERWRITE]) == cfg.CANCEL):
+            if (
+                dialog.MessageDialog(
+                    cfg.programName, f"The file {file_name} already exists.", [cfg.CANCEL, cfg.OVERWRITE]
+                )
+                == cfg.CANCEL
+            ):
                 return
 
     ok, data_report = time_budget_functions.synthetic_time_budget_bin(self.pj, selected_observations, synth_tb_param)

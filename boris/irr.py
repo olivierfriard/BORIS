@@ -30,6 +30,7 @@ from PyQt5.QtWidgets import QInputDialog, QMessageBox
 from . import config as cfg
 from . import db_functions, dialog, project_functions, select_subj_behav
 from . import utilities as util
+from . import select_observations
 
 
 def subj_behav_modif(cursor, obsid: str, subject: str, time: Decimal, interval, include_modifiers: bool) -> list:
@@ -259,7 +260,10 @@ def irr_cohen_kappa(self):
     """
 
     # ask user observations to analyze
-    result, selected_observations = self.selectObservations(cfg.MULTIPLE)
+    _, selected_observations = select_observations.select_observations(
+        self.pj, mode=cfg.MULTIPLE, windows_title="Select observations for IRR Cohen Kappa"
+    )
+
     if not selected_observations:
         return
     if len(selected_observations) < 2:
@@ -561,7 +565,10 @@ def needleman_wunch(self):
     """
 
     # ask user observations to analyze
-    result, selected_observations = self.selectObservations(cfg.MULTIPLE)
+    _, selected_observations = select_observations.select_observations(
+        self.pj, mode=cfg.MULTIPLE, windows_title="Select observations for Needleman-Wunch identity"
+    )
+
     if not selected_observations:
         return
     if len(selected_observations) < 2:

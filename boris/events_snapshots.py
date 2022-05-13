@@ -34,6 +34,7 @@ from . import dialog
 from . import project_functions
 from . import db_functions
 from . import select_subj_behav
+from . import select_observations
 
 from PyQt5.QtWidgets import QInputDialog, QMessageBox, QFileDialog
 
@@ -44,7 +45,9 @@ def events_snapshots(self):
     if observations are from media file and media files have video
     """
 
-    result, selected_observations = self.selectObservations(cfg.MULTIPLE)
+    _, selected_observations = select_observations.select_observations(
+        self.pj, cfg.MULTIPLE, windows_title="Select observations for snapshots"
+    )
     if not selected_observations:
         return
 
@@ -347,7 +350,9 @@ def extract_events(self):
     in case of point event, from -n to +n seconds are extracted (n is asked to user)
     """
 
-    _, selected_observations = self.selectObservations(cfg.MULTIPLE)
+    _, selected_observations = select_observations.select_observations(
+        self.pj, cfg.MULTIPLE, windows_title="Select observations for extracting events"
+    )
     if not selected_observations:
         return
 

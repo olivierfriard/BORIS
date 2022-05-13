@@ -106,7 +106,10 @@ def export_tabular_events(self, mode: str = "tabular"):
     """
 
     # ask user observations to analyze
-    result, selectedObservations = self.selectObservations(cfg.MULTIPLE)
+    _, selectedObservations = select_observations.select_observations(
+        self.pj, cfg.MULTIPLE, windows_title="Select observations for exporting events"
+    )
+
     if not selectedObservations:
         return
 
@@ -656,9 +659,7 @@ def export_state_events_as_textgrid(self):
 
         subjectIdx = 0
         for subject in plot_parameters[cfg.SELECTED_SUBJECTS]:
-            if subject not in [
-                x[cfg.EVENT_SUBJECT_FIELD_IDX] for x in self.pj[cfg.OBSERVATIONS][obsId][cfg.EVENTS]
-            ]:
+            if subject not in [x[cfg.EVENT_SUBJECT_FIELD_IDX] for x in self.pj[cfg.OBSERVATIONS][obsId][cfg.EVENTS]]:
                 continue
 
             subjectIdx += 1
@@ -729,9 +730,7 @@ def export_state_events_as_textgrid(self):
             # check if last event ends at the end of media file
             if rows[-1]["occurence"] < project_functions.observation_total_length(self.pj[cfg.OBSERVATIONS][obsId]):
                 count += 1
-                out += template.format(
-                    count=count, name="null", xmin=rows[-1]["occurence"], xmax=totalMediaDuration
-                )
+                out += template.format(count=count, name="null", xmin=rows[-1]["occurence"], xmax=totalMediaDuration)
 
             # add info
             out = out.format(
@@ -774,4 +773,3 @@ def export_state_events_as_textgrid(self):
 
         except Exception:
             QMessageBox.critical(self, cfg.programName, "The file can not be saved")
-

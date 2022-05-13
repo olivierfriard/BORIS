@@ -44,12 +44,12 @@ def select_observations(pj: dict, mode: str, windows_title: str = "") -> tuple:
         list: list of selected observations
     """
 
-    obsListFields = ["id", "date", "description", "subjects", "observation duration", "exhaustivity %", "media"]
-    indepVarHeader, column_type = [], [cfg.TEXT, cfg.TEXT, cfg.TEXT, cfg.TEXT, cfg.NUMERIC, cfg.NUMERIC, cfg.TEXT]
+    fields_list = ["id", "date", "description", "subjects", "observation duration", "exhaustivity %", "media"]
+    indep_var_header, column_type = [], [cfg.TEXT, cfg.TEXT, cfg.TEXT, cfg.TEXT, cfg.NUMERIC, cfg.NUMERIC, cfg.TEXT]
 
     if cfg.INDEPENDENT_VARIABLES in pj:
         for idx in util.sorted_keys(pj[cfg.INDEPENDENT_VARIABLES]):
-            indepVarHeader.append(pj[cfg.INDEPENDENT_VARIABLES][idx]["label"])
+            indep_var_header.append(pj[cfg.INDEPENDENT_VARIABLES][idx]["label"])
             column_type.append(pj[cfg.INDEPENDENT_VARIABLES][idx]["type"])
 
     data = []
@@ -64,11 +64,11 @@ def select_observations(pj: dict, mode: str, windows_title: str = "") -> tuple:
         descr = util.eol2space(pj[cfg.OBSERVATIONS][obs][cfg.DESCRIPTION])
 
         # subjects
-        observedSubjects = [
+        observed_subjects = [
             cfg.NO_FOCAL_SUBJECT if x == "" else x for x in project_functions.extract_observed_subjects(pj, [obs])
         ]
 
-        subjectsList = ", ".join(observedSubjects)
+        subjectsList = ", ".join(observed_subjects)
 
         # observed time interval
         interval = project_functions.observed_interval(pj[cfg.OBSERVATIONS][obs])
@@ -93,7 +93,7 @@ def select_observations(pj: dict, mode: str, windows_title: str = "") -> tuple:
         # independent variables
         indepvar = []
         if cfg.INDEPENDENT_VARIABLES in pj[cfg.OBSERVATIONS][obs]:
-            for var_label in indepVarHeader:
+            for var_label in indep_var_header:
                 if var_label in pj[cfg.OBSERVATIONS][obs][cfg.INDEPENDENT_VARIABLES]:
                     indepvar.append(pj[cfg.OBSERVATIONS][obs][cfg.INDEPENDENT_VARIABLES][var_label])
                 else:
@@ -112,7 +112,7 @@ def select_observations(pj: dict, mode: str, windows_title: str = "") -> tuple:
         data.append([obs, date, descr, subjectsList, observed_interval_str, str(exhaustivity), media] + indepvar)
 
     obsList = observations_list.observationsList_widget(
-        data, header=obsListFields + indepVarHeader, column_type=column_type, not_paired=not_paired
+        data, header=fields_list + indep_var_header, column_type=column_type, not_paired=not_paired
     )
     if windows_title:
         obsList.setWindowTitle(windows_title)

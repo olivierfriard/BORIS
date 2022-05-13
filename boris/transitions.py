@@ -29,6 +29,7 @@ from PyQt5.QtWidgets import QFileDialog, QMessageBox
 
 from . import config as cfg
 from . import dialog, export_observation, select_subj_behav
+from . import select_observations
 
 
 def behavioral_strings_analysis(strings, behav_seq_separator):
@@ -172,7 +173,10 @@ def transitions_matrix(self, mode):
     * frequencies_after_behaviors
     """
     # ask user observations to analyze
-    result, selectedObservations = self.selectObservations(cfg.MULTIPLE)
+    _, selectedObservations = select_observations.select_observations(
+        self.pj, cfg.MULTIPLE, windows_title="Select observations for transitions matrix"
+    )
+
     if not selectedObservations:
         return
 

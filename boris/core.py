@@ -2235,15 +2235,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         logging.debug("end load events from obs")
 
-    def selectObservations(self, mode: str, windows_title: str = ""):
-        """
-        show observations list window
-        mode: accepted values: cfg.OPEN, cfg.EDIT, cfg.SINGLE, cfg.MULTIPLE, cfg.SELECT1
-        """
-        result_str, selected_obs = select_observations.select_observations(self.pj, mode, windows_title=windows_title)
-
-        return result_str, selected_obs
-
     def initialize_new_live_observation(self):
         """
         initialize a new live observation
@@ -2529,7 +2520,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         plot events in time diagram
         """
         if mode == "list":
-            _, selected_observations = self.selectObservations(cfg.MULTIPLE)
+            _, selected_observations = select_observations.select_observations(
+                self.pj, cfg.MULTIPLE, windows_title="Select observations for plotting events"
+            )
 
             if not selected_observations:
                 return
@@ -2625,7 +2618,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         bar plot of behaviors durations
         """
 
-        result, selected_observations = self.selectObservations(cfg.MULTIPLE)
+        _, selected_observations = select_observations.select_observations(
+            self.pj, cfg.MULTIPLE, windows_title="Select one observation for behaviors bar plot"
+        )
+
         if not selected_observations:
             return
 
@@ -3453,7 +3449,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         create subtitles for selected observations, subjects and behaviors
         """
 
-        result, selected_observations = self.selectObservations(cfg.MULTIPLE)
+        _, selected_observations = select_observations.select_observations(
+            self.pj, cfg.MULTIPLE, windows_title="Select observations for creating subtitles"
+        )
+
         if not selected_observations:
             return
 

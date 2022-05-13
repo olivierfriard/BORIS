@@ -87,12 +87,10 @@ def observations_list(self):
     show list of all observations of current project
     """
 
-    print(self.playerType)
-
     if self.playerType == cfg.VIEWER:
         close_observation(self)
 
-    result, selected_obs = self.selectObservations(cfg.SINGLE)
+    result, selected_obs = select_observations.select_observations(self.pj, cfg.SINGLE)
 
     if not selected_obs:
         return
@@ -150,14 +148,14 @@ def open_observation(self, mode: str) -> str:
             return ""
         else:
             close_observation(self)
-
+    selected_observations = []
     if mode == cfg.START:
-        _, selectedObs = self.selectObservations(cfg.OPEN)
+        _, selected_observations = select_observations.select_observations(self.pj, cfg.OPEN)
     if mode == cfg.VIEW:
-        _, selectedObs = self.selectObservations(cfg.VIEW)
+        _, selected_observations = select_observations.select_observations(self.pj, cfg.VIEW)
 
-    if selectedObs:
-        return load_observation(self, selectedObs[0], mode)
+    if selected_observations:
+        return load_observation(self, selected_observations[0], mode)
     else:
         return ""
 
@@ -171,7 +169,6 @@ def load_observation(self, obsId: str, mode: str = cfg.START) -> str:
         mode (str): "start" to start observation
                     "view"  to view observation
     """
-    print("load_observation")
 
     if obsId not in self.pj[cfg.OBSERVATIONS]:
         return "Error: Observation not found"
@@ -190,7 +187,7 @@ def load_observation(self, obsId: str, mode: str = cfg.START) -> str:
     if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE] in [cfg.MEDIA]:
 
         if mode == cfg.START:
-            print("start")
+
             if not self.initialize_new_observation_mpv():
                 self.observationId = ""
                 self.twEvents.setRowCount(0)
@@ -228,7 +225,9 @@ def edit_observation(self):
         else:
             close_observation(self)
 
-    _, selected_observations = self.selectObservations(cfg.EDIT)
+    _, selected_observations = select_observations.select_observations(
+        self.pj, cfg.EDIT, windows_title="Edit observation"
+    )
 
     if selected_observations:
         new_observation(self, mode=cfg.EDIT, obsId=selected_observations[0])
@@ -238,9 +237,13 @@ def remove_observations(self):
     """
     remove observations from project file
     """
-    _, selected_observations = self.selectObservations(mode=cfg.MULTIPLE, windows_title="Remove observations")
+
+    _, selected_observations = select_observations.select_observations(
+        self.pj, cfg.MULTIPLE, windows_title="Remove observations"
+    )
     if not select_observations:
         return
+
     if len(selected_observations) > 1:
         msg = "all the selected observations"
     else:
@@ -248,7 +251,7 @@ def remove_observations(self):
     response = dialog.MessageDialog(
         cfg.programName,
         (
-            "<b>The removal of observations is irreversible</b>."
+            "<b>The removal of observations is irreversible (better make a backup of your project before?)</b>."
             f"<br>Are you sure to remove {msg}?<br><br>"
             f"{'<br>'.join(selected_observations)}"
         ),
