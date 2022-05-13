@@ -88,7 +88,7 @@ def create_behavior_binary_table(
             try:
                 end_time = dc(pj[cfg.OBSERVATIONS][obs_id][cfg.EVENTS][-1][0])
             except Exception:
-                max_obs_length, _ = project_functions.observation_length(pj, [obs_id])
+                max_obs_length, _ = observation_operations.observation_length(pj, [obs_id])
                 end_time = dc(max_obs_length)
 
         if obs_id not in results_df:
