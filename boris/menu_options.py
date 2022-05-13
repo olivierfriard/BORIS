@@ -169,6 +169,7 @@ def update_menu(self):
         self.actionTime_budget_report,
         self.action_behavior_binary_table,
         self.action_advanced_event_filtering,
+        self.action_latency,
         self.menuPlot_events,
         self.menuInter_rater_reliability,
         self.menuSimilarities,

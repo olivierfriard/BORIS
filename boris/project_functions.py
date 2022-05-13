@@ -694,7 +694,7 @@ def observed_interval(observation: dict):
         return (dec("0.0"), dec("0.0"))
 
 
-def observation_total_length(observation: dict):
+def observation_total_length(observation: dict) -> dec:
     """
     Total length of media file(s) for observation
     tested
@@ -759,10 +759,10 @@ def observation_total_length(observation: dict):
     return dec("0.0")
 
 
-def events_start_stop(ethogram, events):
+def events_start_stop(ethogram: dict, events: list) -> list:
     """
     returns events with status (START/STOP or POINT)
-    take consideration of subject
+    Take consideration of subject
 
     Args:
         events (list): list of events
@@ -775,12 +775,17 @@ def events_start_stop(ethogram, events):
 
     events_flagged = []
     for event in events:
+        """
         time, subject, code, modifier = (
             event[cfg.EVENT_TIME_FIELD_IDX],
             event[cfg.EVENT_SUBJECT_FIELD_IDX],
             event[cfg.EVENT_BEHAVIOR_FIELD_IDX],
             event[cfg.EVENT_MODIFIER_FIELD_IDX],
         )
+        """
+
+        time, subject, code, modifier = event[: cfg.EVENT_MODIFIER_FIELD_IDX + 1]
+
         # check if code is state
         if code in state_events_list:
             # how many code before with same subject?
@@ -803,7 +808,7 @@ def events_start_stop(ethogram, events):
         else:
             flag = cfg.POINT
 
-        events_flagged.append(event + [flag])
+        events_flagged.append(tuple(event) + (flag,))
 
     return events_flagged
 

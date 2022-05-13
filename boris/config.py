@@ -231,18 +231,12 @@ for idx, field in enumerate(pj_events_fields):
     pj_obs_fields[field] = idx
 
 EVENT_TIME_FIELD_IDX = 0
-
-SUBJECT_EVENT_FIELD = 1  # to be removed after check
 EVENT_SUBJECT_FIELD_IDX = 1
-
-BEHAVIOR_EVENT_FIELD = 2  # to be removed after check
 EVENT_BEHAVIOR_FIELD_IDX = 2
-
 EVENT_MODIFIER_FIELD_IDX = 3
-
 EVENT_COMMENT_FIELD_IDX = 4
+EVENT_STATUS_FIELD_IDX = 5
 
-SUBJECT_NAME_FIELD_IDX = 1
 
 # indexes of project window
 MEDIA_TAB_IDX = 0

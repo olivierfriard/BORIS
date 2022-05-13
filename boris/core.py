@@ -702,7 +702,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         if hasattr(self, "subjects_pad"):
             self.subjects_pad.filtered_subjects = [
-                self.twSubjects.item(i, cfg.SUBJECT_NAME_FIELD_IDX).text() for i in range(self.twSubjects.rowCount())
+                self.twSubjects.item(i, cfg.EVENT_SUBJECT_FIELD_IDX).text() for i in range(self.twSubjects.rowCount())
             ]
             if not self.subjects_pad.filtered_subjects:
                 QMessageBox.warning(self, cfg.programName, "No subjects to show")
@@ -717,7 +717,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             )
         else:
             filtered_subjects = [
-                self.twSubjects.item(i, cfg.SUBJECT_NAME_FIELD_IDX).text() for i in range(self.twSubjects.rowCount())
+                self.twSubjects.item(i, cfg.EVENT_SUBJECT_FIELD_IDX).text() for i in range(self.twSubjects.rowCount())
             ]
             if not filtered_subjects:
                 QMessageBox.warning(self, cfg.programName, "No subjects to show")
@@ -903,7 +903,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         # subjects filtered
         filtered_subjects = [
-            self.twSubjects.item(i, cfg.SUBJECT_NAME_FIELD_IDX).text() for i in range(self.twSubjects.rowCount())
+            self.twSubjects.item(i, cfg.EVENT_SUBJECT_FIELD_IDX).text() for i in range(self.twSubjects.rowCount())
         ]
 
         for subject in [self.pj[cfg.SUBJECTS][x][cfg.SUBJECT_NAME] for x in util.sorted_keys(self.pj[cfg.SUBJECTS])]:
@@ -926,7 +926,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             # update subjects pad
             if hasattr(self, "subjects_pad"):
                 self.subjects_pad.filtered_subjects = [
-                    self.twSubjects.item(i, cfg.SUBJECT_NAME_FIELD_IDX).text()
+                    self.twSubjects.item(i, cfg.EVENT_SUBJECT_FIELD_IDX).text()
                     for i in range(self.twSubjects.rowCount())
                 ]
                 self.subjects_pad.compose()
@@ -1708,14 +1708,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         # add all media files to media lists
         self.setDockOptions(QMainWindow.AnimatedDocks | QMainWindow.AllowNestedDocks)
-        print("empty self.dw_player")
         self.dw_player = []
         # create dock widgets for players
 
-        print("create dockwidget")
         for i in range(cfg.N_PLAYER):
             n_player = str(i + 1)
-            print(n_player)
             if (
                 n_player not in self.pj[cfg.OBSERVATIONS][self.observationId][cfg.FILE]
                 or not self.pj[cfg.OBSERVATIONS][self.observationId][cfg.FILE][n_player]
@@ -4096,7 +4093,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
     def update_events_start_stop(self):
         """
-        update status start/stop of events in Events table
+        update status start/stop of state events in Events table
         take consideration of subject and modifiers
         twEvents must be ordered by time asc
 

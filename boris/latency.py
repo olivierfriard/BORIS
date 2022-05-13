@@ -30,6 +30,7 @@ from . import utilities as util
 from . import select_subj_behav
 from . import dialog
 from . import select_observations
+from . import project_functions
 
 from PyQt5.QtWidgets import QMessageBox
 
@@ -39,6 +40,7 @@ def get_latency(self):
     get latency (time after marker/stimulus)
     """
 
+    """
     QMessageBox.warning(
         None,
         cfg.programName,
@@ -52,12 +54,16 @@ def get_latency(self):
         QMessageBox.Ok | QMessageBox.Default,
         QMessageBox.NoButton,
     )
+    """
 
     SUBJECT, BEHAVIOR, MODIFIERS = 0, 1, 2
 
+    """
     _, selected_observations = select_observations.select_observations(
-        self.pj, cfg.SINGLE, windows_title="Select one observation for latency analysis"
+        self.pj, cfg.SELECT1, windows_title="Select one observation for latency analysis"
     )
+    """
+    selected_observations = ["video1"]
     if not selected_observations:
         return
 
@@ -80,97 +86,110 @@ def get_latency(self):
     )
     if not parameters[cfg.SELECTED_SUBJECTS] or not parameters[cfg.SELECTED_BEHAVIORS]:
         return
-    behaviors = parameters[cfg.SELECTED_BEHAVIORS]
+    latency_behaviors = parameters[cfg.SELECTED_BEHAVIORS]
     latency_subjects = parameters[cfg.SELECTED_SUBJECTS]
     include_latency_modifiers = parameters[cfg.INCLUDE_MODIFIERS]
 
-    print(f"{behaviors=} {latency_subjects=} {include_latency_modifiers=}")
+    print(f"{latency_behaviors=} {latency_subjects=} {include_latency_modifiers=}")
 
     results = {}
     for obs_id in selected_observations:
         print(f"{obs_id=}")
 
-        grouped_events = util.group_events(self.pj, obs_id, include_modifiers=True)
-        print(f"{grouped_events=}")
-        print()
+        events_with_status = project_functions.events_start_stop(
+            self.pj[cfg.ETHOGRAM], self.pj[cfg.OBSERVATIONS][obs_id][cfg.EVENTS]
+        )
 
-        for marker_behavior in marker_behaviors:
+        for idx, event in enumerate(events_with_status):
+            if all(
+                (
+                    event[cfg.EVENT_STATUS_FIELD_IDX] in (cfg.START, cfg.POINT),
+                    event[cfg.EVENT_BEHAVIOR_FIELD_IDX] in marker_behaviors,
+                    any(
+                        (
+                            event[cfg.EVENT_SUBJECT_FIELD_IDX] in marker_subjects,
+                            all((event[cfg.EVENT_SUBJECT_FIELD_IDX] == "", cfg.NO_FOCAL_SUBJECT in marker_subjects)),
+                        )
+                    ),
+                )
+            ):
 
-            print(f"{marker_behavior=}")
+                if include_marker_modifiers:
+                    marker = event[cfg.EVENT_TIME_FIELD_IDX : cfg.EVENT_MODIFIER_FIELD_IDX + 1]
+                else:
+                    marker = event[cfg.EVENT_TIME_FIELD_IDX : cfg.EVENT_BEHAVIOR_FIELD_IDX + 1]
+                if marker not in results:
+                    results[marker] = {}
 
-            marker_idx = 0
-
-            for sbm_marker in grouped_events:
-
-                if all(
-                    (
-                        sbm_marker[BEHAVIOR] == marker_behavior,
-                        any(
-                            (
-                                sbm_marker[SUBJECT] in marker_subjects,
-                                all((sbm_marker[SUBJECT] == "", cfg.NO_FOCAL_SUBJECT in marker_subjects)),
-                            )
-                        ),
-                    )
-                ):
-
-                    for idx1, event1 in enumerate(grouped_events[sbm_marker]):
-
-                        marker_idx += 1
-                        print(f"{marker_idx=}")
-
-                        if not include_marker_modifiers:
-                            marker_key = sbm_marker[:2]  # remove modifier
-                        else:
-                            marker_key = sbm_marker
-
-                        # add time
-                        marker_key = (grouped_events[sbm_marker][idx1][0],) + marker_key + (marker_idx,)
-                        if marker_key not in results:
-                            results[marker_key] = {}
-
-                        if idx1 < len(grouped_events[sbm_marker]) - 1:
-                            limit = grouped_events[sbm_marker][idx1 + 1][0]
-                        else:
-                            limit = self.pj[cfg.OBSERVATIONS][obs_id][cfg.EVENTS][-1][cfg.EVENT_TIME_FIELD_IDX] + 1
-
-                        for sbm_latency in grouped_events:
-                            if all(
+                for event2 in events_with_status[idx + 1 :]:
+                    if all(
+                        (
+                            event2[cfg.EVENT_STATUS_FIELD_IDX] in (cfg.START, cfg.POINT),
+                            event2[cfg.EVENT_BEHAVIOR_FIELD_IDX] in latency_behaviors,
+                            any(
                                 (
-                                    sbm_latency[BEHAVIOR] in behaviors,
-                                    any(
+                                    event2[cfg.EVENT_SUBJECT_FIELD_IDX] in latency_subjects,
+                                    all(
                                         (
-                                            sbm_latency[SUBJECT] in latency_subjects,
-                                            all((sbm_latency[SUBJECT] == "", cfg.NO_FOCAL_SUBJECT in latency_subjects)),
+                                            event2[cfg.EVENT_SUBJECT_FIELD_IDX] == "",
+                                            cfg.NO_FOCAL_SUBJECT in latency_subjects,
                                         )
                                     ),
                                 )
-                            ):
-                                for event in grouped_events[sbm_latency]:
-                                    if event[0] >= event1[0] and event[0] < limit:
+                            ),
+                        )
+                    ):
 
-                                        if not include_latency_modifiers:
-                                            latency_key = sbm_latency[:2]  # remove modifier
-                                        else:
-                                            latency_key = sbm_latency
+                        print(event, event2)
+                        if include_latency_modifiers:
+                            latency = event2[cfg.EVENT_SUBJECT_FIELD_IDX : cfg.EVENT_MODIFIER_FIELD_IDX + 1]
+                        else:
+                            latency = event2[cfg.EVENT_SUBJECT_FIELD_IDX : cfg.EVENT_BEHAVIOR_FIELD_IDX + 1]
 
-                                        # print(latency_key, " after ", marker_key, ":", event[0] - event1[0])
+                        print(f"{marker=}")
+                        print(f"{latency=}")
+                        if not latency in results[marker]:
+                            results[marker][latency] = []
+                        results[marker][latency].append(
+                            event2[cfg.EVENT_TIME_FIELD_IDX] - event[cfg.EVENT_TIME_FIELD_IDX]
+                        )
 
-                                        if latency_key not in results[marker_key]:
-                                            results[marker_key][latency_key] = []
-                                        results[marker_key][latency_key].append(event[0] - event1[0])
+                    # check if new marker
+                    if all(
+                        (
+                            event2[cfg.EVENT_STATUS_FIELD_IDX] in (cfg.START, cfg.POINT),
+                            event2[cfg.EVENT_BEHAVIOR_FIELD_IDX] in marker_behaviors,
+                            any(
+                                (
+                                    event2[cfg.EVENT_SUBJECT_FIELD_IDX] in marker_subjects,
+                                    all(
+                                        (
+                                            event2[cfg.EVENT_SUBJECT_FIELD_IDX] == "",
+                                            cfg.NO_FOCAL_SUBJECT in marker_subjects,
+                                        )
+                                    ),
+                                )
+                            ),
+                        )
+                    ):
+                        break
 
-    print(f"{results=}")
+        break
+
+    print()
+    import pprint
+
+    pprint.pprint(results)
 
     out = ""
 
     for marker in sorted(results.keys()):
 
-        subject = cfg.NO_FOCAL_SUBJECT if marker[1] == "" else marker[1]
+        subject = cfg.NO_FOCAL_SUBJECT if marker[cfg.EVENT_SUBJECT_FIELD_IDX] == "" else marker[1]
         if include_marker_modifiers:
-            out += f"Marker: <b>{marker[2]}</b> at {marker[0]} s (subject: {subject} - modifiers: {marker[-1]})<br><br>"
+            out += f"Marker: <b>{marker[cfg.EVENT_BEHAVIOR_FIELD_IDX]}</b> at {marker[cfg.EVENT_TIME_FIELD_IDX]} s (subject: {subject} - modifiers: {marker[cfg.EVENT_MODIFIER_FIELD_IDX]})<br><br>"
         else:
-            out += f"Marker: <b>{marker[2]}</b> at {marker[0]} s (subject: {subject})<br><br>"
+            out += f"Marker: <b>{marker[cfg.EVENT_BEHAVIOR_FIELD_IDX]}</b> at {marker[cfg.EVENT_TIME_FIELD_IDX]} s (subject: {subject})<br><br>"
         for behav in results[marker]:
             subject = cfg.NO_FOCAL_SUBJECT if behav[SUBJECT] == "" else behav[SUBJECT]
             if include_latency_modifiers:

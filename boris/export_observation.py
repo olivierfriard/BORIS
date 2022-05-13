@@ -57,8 +57,8 @@ def export_events_jwatcher(
         # select events for current subject
         events = []
         for event in observation[cfg.EVENTS]:
-            if event[cfg.SUBJECT_EVENT_FIELD] == subject or (
-                subject == "No focal subject" and event[cfg.SUBJECT_EVENT_FIELD] == ""
+            if event[cfg.EVENT_SUBJECT_FIELD_IDX] == subject or (
+                subject == "No focal subject" and event[cfg.EVENT_SUBJECT_FIELD_IDX] == ""
             ):
                 events.append(event)
 
@@ -385,9 +385,9 @@ def export_events(parameters, obsId, observation, ethogram, file_name, output_fo
 
     for event in eventsWithStatus:
         if (
-            (event[cfg.SUBJECT_EVENT_FIELD] in parameters["selected subjects"])
-            or (event[cfg.SUBJECT_EVENT_FIELD] == "" and cfg.NO_FOCAL_SUBJECT in parameters["selected subjects"])
-        ) and (event[cfg.BEHAVIOR_EVENT_FIELD] in parameters["selected behaviors"]):
+            (event[cfg.EVENT_SUBJECT_FIELD_IDX] in parameters[cfg.SELECTED_SUBJECTS])
+            or (event[cfg.EVENT_SUBJECT_FIELD_IDX] == "" and cfg.NO_FOCAL_SUBJECT in parameters[cfg.SELECTED_SUBJECTS])
+        ) and (event[cfg.EVENT_BEHAVIOR_FIELD_IDX] in parameters[cfg.SELECTED_BEHAVIORS]):
 
             fields = []
             fields.append(util.intfloatstr(str(event[cfg.EVENT_TIME_FIELD_IDX])))
@@ -813,7 +813,7 @@ def events_to_behavioral_sequences(pj, obs_id: str, subj: str, parameters: dict,
             subj == cfg.NO_FOCAL_SUBJECT and event[cfg.EVENT_SUBJECT_FIELD_IDX] == ""
         ):
 
-            if event[-1] == cfg.POINT:
+            if event[cfg.EVENT_STATUS_FIELD_IDX] == cfg.POINT:
                 if current_states:
                     out += "+".join(current_states) + "+" + event[cfg.EVENT_BEHAVIOR_FIELD_IDX]
                 else:
@@ -824,7 +824,7 @@ def events_to_behavioral_sequences(pj, obs_id: str, subj: str, parameters: dict,
 
                 out += behav_seq_separator
 
-            if event[-1] == cfg.START:
+            if event[cfg.EVENT_STATUS_FIELD_IDX] == cfg.START:
                 if parameters[cfg.INCLUDE_MODIFIERS]:
                     current_states.append(
                         (
@@ -840,7 +840,7 @@ def events_to_behavioral_sequences(pj, obs_id: str, subj: str, parameters: dict,
 
                 out += behav_seq_separator
 
-            if event[-1] == cfg.STOP:
+            if event[cfg.EVENT_STATUS_FIELD_IDX] == cfg.STOP:
 
                 if parameters[cfg.INCLUDE_MODIFIERS]:
                     behav_modif = (
