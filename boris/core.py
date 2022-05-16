@@ -3688,7 +3688,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.undo_queue.append(self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS][:])
         if len(self.undo_queue) > cfg.MAX_UNDO_QUEUE:
             self.undo_queue.popleft()
-        print(f"{len(self.undo_queue)=}")
 
         # add time offset if not from editing
         if "row" not in event:
