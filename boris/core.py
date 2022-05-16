@@ -1162,7 +1162,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 self.plot_events.setWindowFlags(self.plot_events.windowFlags() & ~Qt.WindowMinimizeButtonHint)
 
                 self.plot_events.groupby = "behaviors"
-                self.plot_events.interval = 60  # self.spectrogram_time_interval
+                self.plot_events.interval = 60  # time interval
                 self.plot_events.cursor_color = "red"
                 self.plot_events.observation_type = self.playerType
 
@@ -1190,7 +1190,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
     def plot_timer_out(self):
         """
-        timer for plot visualization: spectrogram, waveform, plot events
+        timer for plotting visualizations: spectrogram, waveform, plot events
         """
         """
         if (VISUALIZE_SPECTROGRAM not in self.pj[cfg.OBSERVATIONS][self.observationId] or
@@ -1660,394 +1660,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     def frame_image_clicked(self, n_player, event):
         geometric_measurement.image_clicked(self, n_player, event)
 
-    def initialize_new_observation_mpv(self):
-        """
-        initialize new observation for cfg.MPV
-        """
-
-        logging.debug("function: initialize new observation for cfg.MPV")
-
-        ok, msg = project_functions.check_if_media_available(
-            self.pj[cfg.OBSERVATIONS][self.observationId], self.projectFileName
-        )
-
-        if not ok:
-            QMessageBox.critical(
-                self,
-                cfg.programName,
-                (
-                    f"{msg}<br><br>The observation will be opened in VIEW mode.<br>"
-                    "It will not be possible to log events.<br>"
-                    "Modify the media path to point an existing media file "
-                    "to log events or copy media file in the BORIS project directory."
-                ),
-                QMessageBox.Ok | QMessageBox.Default,
-                QMessageBox.NoButton,
-            )
-            self.playerType = cfg.VIEWER
-            self.playMode = ""
-            return True
-
-        self.playerType, self.playMode = cfg.MEDIA, cfg.MPV
-        self.fps = 0
-
-        self.w_obs_info.setVisible(True)
-        self.w_live.setVisible(False)
-
-        font = QFont()
-        font.setPointSize(15)
-        self.lb_current_media_time.setFont(font)
-
-        # initialize video slider
-        self.video_slider = QSlider(Qt.Horizontal, self)
-        self.video_slider.setFocusPolicy(Qt.NoFocus)
-        self.video_slider.setMaximum(cfg.SLIDER_MAXIMUM)
-        self.video_slider.sliderMoved.connect(self.video_slider_sliderMoved)
-        self.video_slider.sliderReleased.connect(self.video_slider_sliderReleased)
-        self.verticalLayout_3.addWidget(self.video_slider)
-
-        # add all media files to media lists
-        self.setDockOptions(QMainWindow.AnimatedDocks | QMainWindow.AllowNestedDocks)
-        self.dw_player = []
-        # create dock widgets for players
-
-        for i in range(cfg.N_PLAYER):
-            n_player = str(i + 1)
-            if (
-                n_player not in self.pj[cfg.OBSERVATIONS][self.observationId][cfg.FILE]
-                or not self.pj[cfg.OBSERVATIONS][self.observationId][cfg.FILE][n_player]
-            ):
-                continue
-
-            if i == 0:  # first player
-                p = player_dock_widget.DW_player(i, self)
-                self.dw_player.append(p)
-
-                @p.player.property_observer("time-pos")
-                def time_observer(_name, value):
-                    if value is not None:
-                        self.time_observer_signal.emit(value)
-
-            else:
-                self.dw_player.append(player_dock_widget.DW_player(i, self))
-            self.dw_player[-1].setFloating(False)
-            self.dw_player[-1].setVisible(False)
-            self.dw_player[-1].setFeatures(QDockWidget.DockWidgetFloatable | QDockWidget.DockWidgetMovable)
-
-            # place 4 players at the top of the main window and 4 at the bottom
-            self.addDockWidget(Qt.TopDockWidgetArea if i < 4 else Qt.BottomDockWidgetArea, self.dw_player[-1])
-
-            self.dw_player[i].setVisible(True)
-
-            # for receiving mouse event from frame viewer
-            self.dw_player[i].frame_viewer.mouse_pressed_signal.connect(self.frame_image_clicked)
-
-            # for receiving key event from dock widget
-            self.dw_player[i].key_pressed_signal.connect(self.signal_from_widget)
-            # for receiving event from volume slider
-            self.dw_player[i].volume_slider_moved_signal.connect(self.set_volume)
-            # for receiving resize event from dock widget
-            self.dw_player[i].resize_signal.connect(self.resize_dw)
-            """
-            # for receiving event resize and clicked (Zoom - crop)
-            self.dw_player[i].view_signal.connect(self.signal_from_dw)
-            """
-
-            # add durations list
-            self.dw_player[i].media_durations = []
-            # add fps list
-            self.dw_player[i].fps = {}
-
-            for mediaFile in self.pj[cfg.OBSERVATIONS][self.observationId][cfg.FILE][n_player]:
-
-                logging.debug(f"media file: {mediaFile}")
-
-                media_full_path = project_functions.media_full_path(mediaFile, self.projectFileName)
-
-                logging.debug(f"media_full_path: {media_full_path}")
-
-                # media duration
-                try:
-                    mediaLength = (
-                        self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO][cfg.LENGTH][mediaFile] * 1000
-                    )
-                    mediaFPS = self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO][cfg.FPS][mediaFile]
-                except Exception:
-
-                    logging.debug("media_info key not found")
-
-                    r = util.accurate_media_analysis(self.ffmpeg_bin, media_full_path)
-                    if "error" not in r:
-                        if cfg.MEDIA_INFO not in self.pj[cfg.OBSERVATIONS][self.observationId]:
-                            self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO] = {
-                                cfg.LENGTH: {},
-                                cfg.FPS: {},
-                            }
-                            if cfg.LENGTH not in self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO]:
-                                self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO][cfg.LENGTH] = {}
-                            if cfg.FPS not in self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO]:
-                                self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO][cfg.FPS] = {}
-
-                        self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO][cfg.LENGTH][mediaFile] = r[
-                            "duration"
-                        ]
-                        self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO][cfg.FPS][mediaFile] = r["fps"]
-
-                        mediaLength = r["duration"] * 1000
-                        mediaFPS = r["fps"]
-
-                        self.projectChanged = True
-
-                self.dw_player[i].media_durations.append(int(mediaLength))
-                self.dw_player[i].fps[mediaFile] = mediaFPS
-
-                self.dw_player[i].player.playlist_append(media_full_path)
-                # self.dw_player[i].player.loadfile(media_full_path)
-                # self.dw_player[i].player.pause = True
-
-            self.dw_player[i].player.hwdec = "auto-safe"
-            self.dw_player[i].player.playlist_pos = 0
-            self.dw_player[i].player.wait_until_playing()
-            self.dw_player[i].player.pause = True
-            self.dw_player[i].player.wait_until_paused()
-            self.dw_player[i].player.seek(0, "absolute")
-            # do not close when playing finished
-            self.dw_player[i].player.keep_open = True
-            self.dw_player[i].player.keep_open_pause = False
-
-            # position media
-            if cfg.OBSERVATION_TIME_INTERVAL in self.pj[cfg.OBSERVATIONS][self.observationId]:
-                self.seek_mediaplayer(
-                    int(self.pj[cfg.OBSERVATIONS][self.observationId][cfg.OBSERVATION_TIME_INTERVAL][0]), player=i
-                )
-
-            # restore zoom level
-            if cfg.ZOOM_LEVEL in self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO]:
-                self.dw_player[i].player.video_zoom = log2(
-                    self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO][cfg.ZOOM_LEVEL].get(n_player, 0)
-                )
-
-            # restore subtitle visibility
-            if cfg.DISPLAY_MEDIA_SUBTITLES in self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO]:
-                self.dw_player[i].player.sub_visibility = self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO][
-                    cfg.DISPLAY_MEDIA_SUBTITLES
-                ].get(n_player, True)
-
-            # restore overlays
-            if cfg.OVERLAY in self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO]:
-                if n_player in self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO][cfg.OVERLAY]:
-                    self.overlays[i] = self.dw_player[i].player.create_image_overlay()
-                    self.resize_dw(i)
-
-        menu_options.update_menu(self)
-
-        self.time_observer_signal.connect(self.timer_out2)
-
-        self.actionPlay.setIcon(QIcon(":/play"))
-
-        self.display_statusbar_info(self.observationId)
-
-        self.memMedia, self.currentSubject = "", ""
-
-        self.lbSpeed.setText(f"Player rate: x{self.play_rate:.3f}")
-
-        # spectrogram
-        if (
-            cfg.VISUALIZE_SPECTROGRAM in self.pj[cfg.OBSERVATIONS][self.observationId]
-            and self.pj[cfg.OBSERVATIONS][self.observationId][cfg.VISUALIZE_SPECTROGRAM]
-        ):
-
-            tmp_dir = (
-                self.ffmpeg_cache_dir
-                if self.ffmpeg_cache_dir and os.path.isdir(self.ffmpeg_cache_dir)
-                else tempfile.gettempdir()
-            )
-
-            wav_file_path = (
-                pathlib.Path(tmp_dir)
-                / pathlib.Path(
-                    self.dw_player[0].player.playlist[self.dw_player[0].player.playlist_pos]["filename"] + ".wav"
-                ).name
-            )
-
-            if not wav_file_path.is_file():
-                self.generate_wav_file_from_media()
-
-            self.show_plot_widget("spectrogram", warning=False)
-
-        # waveform
-        if (
-            cfg.VISUALIZE_WAVEFORM in self.pj[cfg.OBSERVATIONS][self.observationId]
-            and self.pj[cfg.OBSERVATIONS][self.observationId][cfg.VISUALIZE_WAVEFORM]
-        ):
-
-            tmp_dir = (
-                self.ffmpeg_cache_dir
-                if self.ffmpeg_cache_dir and os.path.isdir(self.ffmpeg_cache_dir)
-                else tempfile.gettempdir()
-            )
-
-            wav_file_path = (
-                pathlib.Path(tmp_dir)
-                / pathlib.Path(
-                    self.dw_player[0].player.playlist[self.dw_player[0].player.playlist_pos]["filename"] + ".wav"
-                ).name
-            )
-
-            if not wav_file_path.is_file():
-                self.generate_wav_file_from_media()
-
-            self.show_plot_widget("waveform", warning=False)
-
-        # external data plot
-        if (
-            cfg.PLOT_DATA in self.pj[cfg.OBSERVATIONS][self.observationId]
-            and self.pj[cfg.OBSERVATIONS][self.observationId][cfg.PLOT_DATA]
-        ):
-
-            self.plot_data = {}
-            self.ext_data_timer_list = []
-            count = 0
-            for idx in self.pj[cfg.OBSERVATIONS][self.observationId][cfg.PLOT_DATA]:
-                if count == 0:
-
-                    data_file_path = project_functions.media_full_path(
-                        self.pj[cfg.OBSERVATIONS][self.observationId][cfg.PLOT_DATA][idx]["file_path"],
-                        self.projectFileName,
-                    )
-                    if not data_file_path:
-                        QMessageBox.critical(
-                            self,
-                            cfg.programName,
-                            "Data file not found:\n{}".format(
-                                self.pj[cfg.OBSERVATIONS][self.observationId][cfg.PLOT_DATA][idx]["file_path"]
-                            ),
-                        )
-                        return False
-
-                    w1 = plot_data_module.Plot_data(
-                        data_file_path,
-                        int(self.pj[cfg.OBSERVATIONS][self.observationId][cfg.PLOT_DATA][idx]["time_interval"]),
-                        str(self.pj[cfg.OBSERVATIONS][self.observationId][cfg.PLOT_DATA][idx]["time_offset"]),
-                        self.pj[cfg.OBSERVATIONS][self.observationId][cfg.PLOT_DATA][idx]["color"],
-                        self.pj[cfg.OBSERVATIONS][self.observationId][cfg.PLOT_DATA][idx]["title"],
-                        self.pj[cfg.OBSERVATIONS][self.observationId][cfg.PLOT_DATA][idx]["variable_name"],
-                        self.pj[cfg.OBSERVATIONS][self.observationId][cfg.PLOT_DATA][idx]["columns"],
-                        self.pj[cfg.OBSERVATIONS][self.observationId][cfg.PLOT_DATA][idx]["substract_first_value"],
-                        self.pj[cfg.CONVERTERS] if cfg.CONVERTERS in self.pj else {},
-                        self.pj[cfg.OBSERVATIONS][self.observationId][cfg.PLOT_DATA][idx]["converters"],
-                        log_level=logging.getLogger().getEffectiveLevel(),
-                    )
-
-                    if w1.error_msg:
-                        QMessageBox.critical(
-                            self,
-                            cfg.programName,
-                            (
-                                f"Impossible to plot data from file {os.path.basename(self.pj[cfg.OBSERVATIONS][self.observationId][cfg.PLOT_DATA][idx]['file_path'])}:\n"
-                                f"{w1.error_msg}"
-                            ),
-                        )
-                        del w1
-                        return False
-
-                    w1.setWindowFlags(Qt.WindowStaysOnTopHint)
-                    w1.sendEvent.connect(self.signal_from_widget)  # keypress event
-
-                    w1.show()
-
-                    self.ext_data_timer_list.append(QTimer())
-                    self.ext_data_timer_list[-1].setInterval(w1.time_out)
-                    self.ext_data_timer_list[-1].timeout.connect(lambda: self.timer_plot_data_out(w1))
-                    self.timer_plot_data_out(w1)
-
-                    self.plot_data[count] = w1
-
-                if count == 1:
-
-                    data_file_path = project_functions.media_full_path(
-                        self.pj[cfg.OBSERVATIONS][self.observationId][cfg.PLOT_DATA][idx]["file_path"],
-                        self.projectFileName,
-                    )
-                    if not data_file_path:
-                        QMessageBox.critical(
-                            self,
-                            cfg.programName,
-                            "Data file not found:\n{}".format(
-                                self.pj[cfg.OBSERVATIONS][self.observationId][cfg.PLOT_DATA][idx]["file_path"]
-                            ),
-                        )
-                        return False
-
-                    w2 = plot_data_module.Plot_data(
-                        data_file_path,
-                        int(self.pj[cfg.OBSERVATIONS][self.observationId][cfg.PLOT_DATA][idx]["time_interval"]),
-                        str(self.pj[cfg.OBSERVATIONS][self.observationId][cfg.PLOT_DATA][idx]["time_offset"]),
-                        self.pj[cfg.OBSERVATIONS][self.observationId][cfg.PLOT_DATA][idx]["color"],
-                        self.pj[cfg.OBSERVATIONS][self.observationId][cfg.PLOT_DATA][idx]["title"],
-                        self.pj[cfg.OBSERVATIONS][self.observationId][cfg.PLOT_DATA][idx]["variable_name"],
-                        self.pj[cfg.OBSERVATIONS][self.observationId][cfg.PLOT_DATA][idx]["columns"],
-                        self.pj[cfg.OBSERVATIONS][self.observationId][cfg.PLOT_DATA][idx]["substract_first_value"],
-                        self.pj[cfg.CONVERTERS] if cfg.CONVERTERS in self.pj else {},
-                        self.pj[cfg.OBSERVATIONS][self.observationId][cfg.PLOT_DATA][idx]["converters"],
-                        log_level=logging.getLogger().getEffectiveLevel(),
-                    )
-
-                    if w2.error_msg:
-                        QMessageBox.critical(
-                            self,
-                            cfg.programName,
-                            "Impossible to plot data from file {}:\n{}".format(
-                                os.path.basename(
-                                    self.pj[cfg.OBSERVATIONS][self.observationId][cfg.PLOT_DATA][idx]["file_path"]
-                                ),
-                                w2.error_msg,
-                            ),
-                        )
-                        del w2
-                        return False
-
-                    w2.setWindowFlags(Qt.WindowStaysOnTopHint)
-                    w2.sendEvent.connect(self.signal_from_widget)
-
-                    w2.show()
-                    self.ext_data_timer_list.append(QTimer())
-                    self.ext_data_timer_list[-1].setInterval(w2.time_out)
-                    self.ext_data_timer_list[-1].timeout.connect(lambda: self.timer_plot_data_out(w2))
-                    self.timer_plot_data_out(w2)
-
-                    self.plot_data[count] = w2
-
-                count += 1
-
-        # check if "filtered behaviors"
-        if cfg.FILTERED_BEHAVIORS in self.pj[cfg.OBSERVATIONS][self.observationId]:
-            self.load_behaviors_in_twEthogram(self.pj[cfg.OBSERVATIONS][self.observationId][cfg.FILTERED_BEHAVIORS])
-
-        # restore windows state: dockwidget positions ...
-        if self.saved_state is None:
-            self.saved_state = self.saveState()
-            self.restoreState(self.saved_state)
-        else:
-            try:
-                self.restoreState(self.saved_state)
-            except TypeError:
-                logging.critical("state not restored: Type error")
-                self.saved_state = self.saveState()
-                self.restoreState(self.saved_state)
-
-        for dw in [self.dwEthogram, self.dwSubjects, self.dwObservations]:
-            dw.setVisible(True)
-
-        for player in self.dw_player:
-            player.setVisible(True)
-
-        # inital synchro
-        for n_player in range(1, len(self.dw_player)):
-            self.sync_time(n_player, 0)
-
-        return True
-
     def timer_plot_data_out(self, w):
         """
         update plot in w (Plot_data class)
@@ -2219,7 +1831,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
                     field = event[cfg.pj_obs_fields[field_type]]
                     if field_type == "time":
-                        field = str(self.convertTime(field))
+                        field = str(util.convertTime(self.timeFormat, field))
 
                     self.twEvents.setItem(row, cfg.tw_obs_fields[field_type], QTableWidgetItem(field))
 
@@ -2265,7 +1877,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         else:
             current_time = 0
 
-        self.lb_current_media_time.setText(self.convertTime(current_time))
+        self.lb_current_media_time.setText(util.convertTime(self.timeFormat, current_time))
 
         # display observation time interval (if any)
         self.lb_obs_time_interval.setVisible(True)
@@ -2725,7 +2337,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         """
         self.pj = dict(pj)
         memProjectChanged = project_changed
-        self.initialize_new_project()
+        self.clear_interface()
         self.projectChanged = True
         self.projectChanged = memProjectChanged
         self.load_behaviors_in_twEthogram([self.pj[cfg.ETHOGRAM][x][cfg.BEHAVIOR_CODE] for x in self.pj[cfg.ETHOGRAM]])
@@ -2887,7 +2499,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     del pj["msg"]
                 self.load_project("", True, pj)
 
-    def initialize_new_project(self, flag_new=True):
+    def clear_interface(self, flag_new: bool = True):
         """
         initialize interface and variables for a new or edited project
         """
@@ -2934,26 +2546,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         config_file.read(self)
         menu_options.update_menu(self)
 
-        self.initialize_new_project(flag_new=False)
+        self.clear_interface(flag_new=False)
 
         self.w_obs_info.setVisible(False)
-
-    def convertTime(self, sec) -> str:
-        """
-        convert time in base of current format
-
-        Args:
-            sec: time in seconds
-
-        Returns:
-            string: time in base of current format (self.timeFormat S or cfg.HHMMSS)
-        """
-
-        if self.timeFormat == cfg.S:
-            return f"{sec:.3f}"
-
-        if self.timeFormat == cfg.HHMMSS:
-            return util.seconds2time(sec)
 
     def edit_project(self, mode: str):
         """
@@ -3153,7 +2748,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     [self.pj[cfg.SUBJECTS][x][cfg.SUBJECT_NAME] for x in self.pj[cfg.SUBJECTS]]
                 )
 
-            self.initialize_new_project()
+            self.clear_interface()
 
             menu_options.update_menu(self)
 
@@ -3356,7 +2951,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         else:
             current_time = self.getLaps()
 
-        self.lb_current_media_time.setText(self.convertTime(current_time))
+        self.lb_current_media_time.setText(util.convertTime(self.timeFormat, current_time))
 
         # extract State events
         self.currentStates = {}
@@ -3712,15 +3307,18 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         adjust media position
         """
 
+        if self.playerType != cfg.MEDIA:
+            return
+
         logging.debug(f"video_slider moved: {self.video_slider.value() / (cfg.SLIDER_MAXIMUM - 1)}")
 
         if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE] in [cfg.MEDIA]:
-            if self.playerType == cfg.MEDIA:
+            self.user_move_slider = True
+            sliderPos = self.video_slider.value() / (cfg.SLIDER_MAXIMUM - 1)
+            videoPosition = sliderPos * self.dw_player[0].player.duration
+            self.dw_player[0].player.command("seek", str(videoPosition), "absolute")
 
-                self.user_move_slider = True
-                sliderPos = self.video_slider.value() / (cfg.SLIDER_MAXIMUM - 1)
-                videoPosition = sliderPos * self.dw_player[0].player.duration
-                self.dw_player[0].player.command("seek", str(videoPosition), "absolute")
+            self.plot_timer_out()
 
     def video_slider_sliderReleased(self):
         """
@@ -3736,7 +3334,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         paint twEvents with tracking cursor
         scroll to corresponding event
         """
-        """global ROW"""
 
         if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS]:
             ct = self.getLaps()
@@ -3996,14 +3593,14 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         if self.dw_player[0].player.time_pos is not None:
 
             msg = (
-                f"{current_media_name}: <b>{self.convertTime(current_media_time_pos)} / "
-                f"{self.convertTime(current_media_duration)}</b> frame: {current_media_frame}"
+                f"{current_media_name}: <b>{util.convertTime(self.timeFormat, current_media_time_pos)} / "
+                f"{util.convertTime(self.timeFormat, current_media_duration)}</b> frame: {current_media_frame}"
             )
 
             if self.dw_player[0].player.playlist_count > 1:
                 msg += (
-                    f"<br>Total: <b>{self.convertTime(cumulative_time_pos)} / "
-                    f"{self.convertTime(all_media_duration)}</b>"
+                    f"<br>Total: <b>{util.convertTime(self.timeFormat,cumulative_time_pos)} / "
+                    f"{util.convertTime(self.timeFormat, all_media_duration)}</b>"
                 )
 
             self.lb_player_status.setText("Player paused" if self.dw_player[0].player.pause else "")

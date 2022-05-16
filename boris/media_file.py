@@ -39,8 +39,10 @@ def get_info(self):
         tot_output = ""
 
         for i, dw in enumerate(self.dw_player):
-            if not (str(i + 1) in self.pj[cfg.OBSERVATIONS][self.observationId][cfg.FILE] and
-                    self.pj[cfg.OBSERVATIONS][self.observationId][cfg.FILE][str(i + 1)]):
+            if not (
+                str(i + 1) in self.pj[cfg.OBSERVATIONS][self.observationId][cfg.FILE]
+                and self.pj[cfg.OBSERVATIONS][self.observationId][cfg.FILE][str(i + 1)]
+            ):
                 continue
 
             logging.info(f"Video format: {dw.player.video_format}")
@@ -79,26 +81,28 @@ def get_info(self):
             # FFmpeg analysis
             ffmpeg_output = "<br><b>FFmpeg analysis</b><br>"
 
-            for filePath in self.pj[cfg.OBSERVATIONS][self.observationId][cfg.FILE][str(i + 1)]:
-                media_full_path = project_functions.media_full_path(filePath, self.projectFileName)
+            for file_path in self.pj[cfg.OBSERVATIONS][self.observationId][cfg.FILE][str(i + 1)]:
+                media_full_path = project_functions.media_full_path(file_path, self.projectFileName)
                 r = util.accurate_media_analysis(self.ffmpeg_bin, media_full_path)
                 nframes = r["frames_number"]
                 if "error" in r:
-                    ffmpeg_output += "File path: {filePath}<br><br>{error}<br><br>".format(filePath=media_full_path,
-                                                                                           error=r["error"])
+                    ffmpeg_output += "File path: {filePath}<br><br>{error}<br><br>".format(
+                        filePath=media_full_path, error=r["error"]
+                    )
                 else:
-                    ffmpeg_output += ("File path: {}<br>Duration: {}<br>Bitrate: {}k<br>"
-                                      "FPS: {}<br>Has video: {}<br>Has audio: {}<br><br>").format(
-                                          media_full_path,
-                                          self.convertTime(r["duration"]),
-                                          r["bitrate"],
-                                          r["fps"],
-                                          r["has_video"],
-                                          r["has_audio"],
-                                      )
+                    ffmpeg_output += (
+                        "File path: {}<br>Duration: {}<br>Bitrate: {}k<br>"
+                        "FPS: {}<br>Has video: {}<br>Has audio: {}<br><br>"
+                    ).format(
+                        media_full_path,
+                        util.convertTime(self.timeFormat, r["duration"]),
+                        r["bitrate"],
+                        r["fps"],
+                        r["has_video"],
+                        r["has_audio"],
+                    )
 
-                ffmpeg_output += "Total duration: {} (hh:mm:ss.sss)".format(
-                    self.convertTime(sum(self.dw_player[i].media_durations) / 1000))
+                ffmpeg_output += f"Total duration: {self.convertTime(self.timeFormat, sum(self.dw_player[i].media_durations) / 1000)} (hh:mm:ss.sss)"
 
             tot_output += mpv_output + ffmpeg_output + "<br><hr>"
 
@@ -111,26 +115,28 @@ def get_info(self):
     else:  # no open observation
 
         fn = QFileDialog().getOpenFileName(self, "Select a media file", "", "Media files (*)")
-        filePath = fn[0] if type(fn) is tuple else fn
+        file_path = fn[0] if type(fn) is tuple else fn
 
-        if filePath:
+        if file_path:
             self.results = dialog.ResultsWidget()
             self.results.setWindowTitle(cfg.programName + " - Media file information")
             self.results.ptText.setReadOnly(True)
             self.results.ptText.appendHtml("<br><b>FFmpeg analysis</b><hr>")
-            r = util.accurate_media_analysis(self.ffmpeg_bin, filePath)
+            r = util.accurate_media_analysis(self.ffmpeg_bin, file_path)
             if "error" in r:
-                self.results.ptText.appendHtml("File path: {filePath}<br><br>{error}<br><br>".format(filePath=filePath,
-                                                                                                     error=r["error"]))
+                self.results.ptText.appendHtml(
+                    "File path: {filePath}<br><br>{error}<br><br>".format(filePath=file_path, error=r["error"])
+                )
             else:
-                self.results.ptText.appendHtml(("File path: {}<br>Duration: {}<br>Bitrate: {}k<br>"
-                                                "FPS: {}<br>Has video: {}<br>Has audio: {}<br><br>").format(
-                                                    filePath,
-                                                    self.convertTime(r["duration"]),
-                                                    r["bitrate"],
-                                                    r["fps"],
-                                                    r["has_video"],
-                                                    r["has_audio"],
-                                                ))
+                self.results.ptText.appendHtml(
+                    (
+                        f"File path: {file_path}<br>"
+                        f"Duration: {self.convertTime(self.timeFormat, r['duration'])}<br>"
+                        f"Bitrate: {r['bitrate']}k<br>"
+                        f"FPS: {r['fps']}<br>"
+                        f"Has video: {r['has_video']}<br>"
+                        f"Has audio: {r['has_audio']}<br><br>"
+                    )
+                )
 
             self.results.show()

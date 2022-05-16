@@ -102,6 +102,24 @@ def bytes_to_str(b: bytes) -> str:
         return b
 
 
+def convertTime(time_format: str, sec: float) -> str:
+    """
+    convert time in base of current format (S or HHMMSS)
+
+    Args:
+        sec: time in seconds
+
+    Returns:
+        string: time in base of current format (self.timeFormat S or cfg.HHMMSS)
+    """
+
+    if time_format == cfg.S:
+        return f"{sec:.3f}"
+
+    if time_format == cfg.HHMMSS:
+        return seconds2time(sec)
+
+
 def convert_time_to_decimal(pj: dict) -> dict:
     """
     convert time of project from float to decimal

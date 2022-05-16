@@ -40,7 +40,6 @@ def get_latency(self):
     get latency (time after marker/stimulus)
     """
 
-    """
     QMessageBox.warning(
         None,
         cfg.programName,
@@ -54,16 +53,13 @@ def get_latency(self):
         QMessageBox.Ok | QMessageBox.Default,
         QMessageBox.NoButton,
     )
-    """
 
     SUBJECT, BEHAVIOR, MODIFIERS = 0, 1, 2
 
-    """
     _, selected_observations = select_observations.select_observations(
         self.pj, cfg.SELECT1, windows_title="Select one observation for latency analysis"
     )
-    """
-    selected_observations = ["video1"]
+
     if not selected_observations:
         return
 
@@ -214,6 +210,7 @@ def get_latency(self):
     self.results.show()
 
 
+'''
 def get_latency_old(self):
     """
     get latency (time after marker/stimulus)
@@ -373,3 +370,6 @@ def get_latency_old(self):
     self.results.ptText.setReadOnly(True)
     self.results.ptText.appendHtml(out)
     self.results.show()
+
+
+'''
