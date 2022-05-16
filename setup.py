@@ -27,7 +27,7 @@ setup(
 
     install_requires=[
           "pillow>=9.0.1",
-          "numpy==1.19.3",
+          "numpy>=1.21",
           "matplotlib==3.3.3",
           "tablib[html, ods, xls, xlsx]",
           "pyqt5==5.15.4",
