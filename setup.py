@@ -26,6 +26,7 @@ setup(
     packages=['boris'],  #same as name
 
     install_requires=[
+          "pillow>=9.0.1",
           "numpy==1.19.3",
           "matplotlib==3.3.3",
           "tablib[html, ods, xls, xlsx]",
