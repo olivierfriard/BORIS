@@ -4437,9 +4437,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             # pause if media and media playing
             if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE] in [cfg.MEDIA]:
                 if self.playerType == cfg.MEDIA:
-                    memState = self.dw_player[0].mediaListPlayer.get_state()
-                    # FIXME
-                    if memState == self.vlc_playing:
+
+                    if self.is_playing():
+                        flag_player_playing = True
                         self.pause_video()
 
             self.codingMapWindow = modifiers_coding_map.ModifiersCodingMapWindowClass(
@@ -4460,13 +4460,12 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             # restart media
             if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE] in [cfg.MEDIA]:
                 if self.playerType == cfg.MEDIA:
-                    # FIXME
-                    if memState == self.vlc_playing:
+                    if flag_player_playing:
                         self.play_video()
 
         return event
 
-    def beep(self, sound_type: str):
+    def beep(self, sound_type: str) -> None:
         """
         emit beep on various platform
 
@@ -4476,7 +4475,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         QSound.play(f":/{sound_type}")
 
-    def is_playing(self):
+    def is_playing(self) -> bool:
         """
         check if first media player is playing for cfg.MEDIA
 
@@ -4496,7 +4495,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         else:
             return False
 
-    def keyPressEvent(self, event):
+    def keyPressEvent(self, event) -> None:
 
         logging.debug(f"text #{event.text()}#  event key: {event.key()} ")
         """
@@ -4719,7 +4718,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 if not self.currentSubject and self.alertNoFocalSubject:
                     if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE] in [cfg.MEDIA]:
                         if self.playerType == cfg.MEDIA:
-                            if self.dw_player[0].mediaListPlayer.get_state() == self.vlc_playing:
+                            if self.is_playing():
                                 flagPlayerPlaying = True
                                 self.pause_video()
 
@@ -4811,7 +4810,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         if self.find_dialog.cbBehavior.isChecked():
             fields_list.append(cfg.EVENT_BEHAVIOR_FIELD_IDX)
         if self.find_dialog.cbModifier.isChecked():
-            """fields_list.append(EVENT_MODIFIER_FIELD_IDX )"""
+            # fields_list.append(cfg.EVENT_MODIFIER_FIELD_IDX )
             fields_list.append(4)
 
         if self.find_dialog.cbComment.isChecked():

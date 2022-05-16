@@ -135,64 +135,63 @@ class Plot_events_RT(QWidget):
         AltGr + p -> þ
         """
 
-        def group(subject, code, modifier):
+        def group(subject: str, code: str, modifier: str) -> str:
             if self.groupby == "behaviors":
                 return f"{subject}þ{code}"
             else:  # with modifiers
                 return f"{subject}þ{code}þ{modifier}"
 
-        try:
-            mem_behav = {}
-            intervals_behav = {}
+        mem_behav = {}
+        intervals_behav = {}
 
-            for event in events:
-                intervals_behav[group(event[1], event[2], event[3])] = [(0, 0)]
+        for event in events:
+            intervals_behav[group(event[1], event[2], event[3])] = [(0, 0)]
 
-            for event in events:
+        for event in events:
 
-                time_, subject, code, modifier = event[:4]
-                key = group(subject, code, modifier)
+            time_, subject, code, modifier = event[:4]
+            key = group(subject, code, modifier)
 
-                # check if code is state
-                if code in self.state_events_list:
+            # check if code is state
+            if code in self.state_events_list:
 
-                    if key in mem_behav and mem_behav[key] is not None:
-                        # stop interval
+                if key in mem_behav and mem_behav[key] is not None:
+                    # stop interval
 
-                        # check if event is in interval start-end
-                        if any(
+                    # check if event is in interval start-end
+                    if any(
+                        (
                             start <= mem_behav[key] <= end,
                             start <= time_ <= end,
                             mem_behav[key] <= start and time_ > end,
-                        ):
-                            intervals_behav[key].append((float(mem_behav[key]), float(time_)))
-                        mem_behav[key] = None
-                    else:
-                        # start interval
-                        mem_behav[key] = time_
+                        )
+                    ):
+                        intervals_behav[key].append((float(mem_behav[key]), float(time_)))
+                    mem_behav[key] = None
+                else:
+                    # start interval
+                    mem_behav[key] = time_
 
-                else:  # point event
+            else:  # point event
 
-                    if start <= time_ <= end:
-                        intervals_behav[key].append(
-                            (float(time_), float(time_) + self.point_event_plot_duration * 50)
-                        )  # point event -> 1 s
+                if start <= time_ <= end:
+                    intervals_behav[key].append(
+                        (float(time_), float(time_) + self.point_event_plot_duration * 50)
+                    )  # point event -> 1 s
 
-            # check if intervals are closed
-            for k in mem_behav:
-                if mem_behav[k] is not None:  # interval open
-                    if self.observation_type == cfg.LIVE:
-                        intervals_behav[k].append(
-                            (float(mem_behav[k]), float((end + start) / 2))
-                        )  # close interval with current time
+        # check if intervals are closed
+        for k in mem_behav:
+            if mem_behav[k] is not None:  # interval open
+                if self.observation_type == cfg.LIVE:
+                    intervals_behav[k].append(
+                        (float(mem_behav[k]), float((end + start) / 2))
+                    )  # close interval with current time
 
-                    elif self.observation_type == cfg.MEDIA:
+                elif self.observation_type == cfg.MEDIA:
 
-                        intervals_behav[k].append((float(mem_behav[k]), float(end)))  # close interval with end value
-            return intervals_behav
+                    intervals_behav[k].append((float(mem_behav[k]), float(end)))  # close interval with end value
 
-        except Exception:
-            return {"error": ""}
+        return intervals_behav
 
     def plot_events(self, current_time: float, force_plot: bool = False):
         """
