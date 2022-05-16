@@ -132,14 +132,13 @@ class Plot_events_RT(QWidget):
         Returns:
             dict
 
-        AltGr + p -> þ
         """
 
-        def group(subject: str, code: str, modifier: str) -> str:
+        def group(subject: str, code: str, modifier: str) -> tuple:
             if self.groupby == "behaviors":
-                return f"{subject}þ{code}"
+                return (subject, code)
             else:  # with modifiers
-                return f"{subject}þ{code}þ{modifier}"
+                return (subject, code, modifier)
 
         mem_behav = {}
         intervals_behav = {}
@@ -224,14 +223,14 @@ class Plot_events_RT(QWidget):
             self.behaviors, self.durations, self.lefts, self.colors = [], [], [], []
             for k in self.events:
                 if self.groupby == "behaviors":
-                    subject_name, bevavior_code = k.split("þ")
+                    subject_name, bevavior_code = k
                     if subject_name == "":
                         subject_name = "No focal"
                     behav_col = self.behav_color[bevavior_code]
                     self.behaviors.extend([f"{subject_name} - {bevavior_code}"] * len(self.events[k]))
                     self.colors.extend([behav_col] * len(self.events[k]))
                 else:  # with modifiers
-                    subject_name, bevavior_code, modifier = k.split("þ")
+                    subject_name, bevavior_code, modifier = k
                     behav_col = self.behav_color[bevavior_code]
                     self.behaviors.extend([f"{subject_name} - {bevavior_code} ({modifier})"] * len(self.events[k]))
                     self.colors.extend([behav_col] * len(self.events[k]))

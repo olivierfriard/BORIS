@@ -131,18 +131,21 @@ def convert_time_to_decimal(pj: dict) -> dict:
         dict: BORIS project
     """
 
-    for obsId in pj[cfg.OBSERVATIONS]:
-        if "time offset" in pj[cfg.OBSERVATIONS][obsId]:
-            pj[cfg.OBSERVATIONS][obsId]["time offset"] = Decimal(str(pj[cfg.OBSERVATIONS][obsId]["time offset"]))
-        for idx, event in enumerate(pj[cfg.OBSERVATIONS][obsId][cfg.EVENTS]):
-            pj[cfg.OBSERVATIONS][obsId][cfg.EVENTS][idx][cfg.pj_obs_fields["time"]] = Decimal(
-                pj[cfg.OBSERVATIONS][obsId][cfg.EVENTS][idx][cfg.pj_obs_fields["time"]]
+    for obs_id in pj[cfg.OBSERVATIONS]:
+        if "time offset" in pj[cfg.OBSERVATIONS][obs_id]:
+            pj[cfg.OBSERVATIONS][obs_id]["time offset"] = Decimal(str(pj[cfg.OBSERVATIONS][obs_id]["time offset"]))
+        for idx, _ in enumerate(pj[cfg.OBSERVATIONS][obs_id][cfg.EVENTS]):
+            pj[cfg.OBSERVATIONS][obs_id][cfg.EVENTS][idx][cfg.pj_obs_fields["time"]] = Decimal(
+                pj[cfg.OBSERVATIONS][obs_id][cfg.EVENTS][idx][cfg.pj_obs_fields["time"]]
             ).quantize(Decimal(".001"))
 
     return pj
 
 
 def file_content_md5(file_name: str) -> str:
+    """
+    returns the MD5 sum of file content
+    """
     hash_md5 = hashlib.md5()
     try:
         with open(file_name, "rb") as f:
@@ -317,50 +320,6 @@ def group_events(pj: dict, obs_id: str, include_modifiers: bool = False) -> dict
                 if (subject, code, modifier) not in intervals_behav:
                     intervals_behav[(subject, code, modifier)] = []
                 intervals_behav[(subject, code, modifier)].append((time_, time_))
-
-        return intervals_behav
-
-    except Exception:
-        return {"error": ""}
-
-
-def aggregate_events(pj: dict, obs_id: str) -> dict:
-    """
-    aggregate state events
-    take consideration of subject and modifiers
-
-    return dict
-
-    example:
-    {'subject|behavior|modifier': [(start: Decimal, end: Decimal), (start: Decimal, end: Decimal), ...], ...}
-    """
-
-    try:
-        state_events_list = state_behavior_codes(pj[cfg.ETHOGRAM])
-        mem_behav = {}
-        intervals_behav = {}
-
-        for event in pj[cfg.OBSERVATIONS][obs_id][cfg.EVENTS]:
-
-            time_ = event[cfg.EVENT_TIME_FIELD_IDX]
-            subject = event[cfg.EVENT_SUBJECT_FIELD_IDX]
-            code = event[cfg.EVENT_BEHAVIOR_FIELD_IDX]
-            modifier = event[cfg.EVENT_MODIFIER_FIELD_IDX]
-
-            # check if code is state
-            if code in state_events_list:
-
-                if f"{subject}|{code}|{modifier}" in mem_behav and mem_behav[f"{subject}|{code}|{modifier}"]:
-
-                    if f"{subject}|{code}|{modifier}" not in intervals_behav:
-                        intervals_behav[f"{subject}|{code}|{modifier}"] = []
-                    intervals_behav[f"{subject}|{code}|{modifier}"].append(
-                        (mem_behav[f"{subject}|{code}|{modifier}"], time_)
-                    )
-
-                    mem_behav[f"{subject}|{code}|{modifier}"] = 0
-                else:
-                    mem_behav[f"{subject}|{code}|{modifier}"] = time_
 
         return intervals_behav
 
