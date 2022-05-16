@@ -192,7 +192,7 @@ def load_observation(self, obsId: str, mode: str = cfg.START) -> str:
     if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE] == cfg.LIVE:
         if mode == cfg.START:
             self.playerType = cfg.LIVE
-            self.initialize_new_live_observation()
+            initialize_new_live_observation(self)
         if mode == cfg.VIEW:
             self.playerType = cfg.VIEWER
             self.dwObservations.setVisible(True)
@@ -810,12 +810,12 @@ def new_observation(self, mode=cfg.NEW, obsId=""):
             self.observationId = new_obs_id
 
             # title of dock widget
-            self.dwObservations.setWindowTitle(f'Events for "{self.observationId}" observation')
+            self.dwObservations.setWindowTitle(f"Events for “{self.observationId}“ observation")
 
             if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE] in [cfg.LIVE]:
 
                 self.playerType = cfg.LIVE
-                self.initialize_new_live_observation()
+                initialize_new_live_observation(self)
 
             elif self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE] in [cfg.MEDIA]:
                 self.playerType = cfg.MEDIA
@@ -1165,7 +1165,7 @@ def initialize_new_observation_media(self):
 
     self.display_statusbar_info(self.observationId)
 
-    self.memMedia, self.currentSubject = "", ""
+    self.currentSubject = ""
 
     self.lbSpeed.setText(f"Player rate: x{self.play_rate:.3f}")
 
@@ -1365,3 +1365,65 @@ def initialize_new_observation_media(self):
         self.sync_time(n_player, 0)
 
     return True
+
+
+def initialize_new_live_observation(self):
+    """
+    initialize a new live observation
+    """
+    logging.debug(f"function: initialize new live obs: {self.observationId}")
+
+    self.playerType, self.playMode = cfg.LIVE, cfg.LIVE
+
+    self.w_live.setVisible(True)
+
+    self.pb_live_obs.setMinimumHeight(60)
+
+    font = QFont()
+    font.setPointSize(48)
+    self.lb_current_media_time.setFont(font)
+
+    self.dwObservations.setVisible(True)
+
+    self.w_obs_info.setVisible(True)
+
+    menu_options.update_menu(self)
+
+    self.liveObservationStarted = False
+    self.pb_live_obs.setText("Start live observation")
+
+    if self.pj[cfg.OBSERVATIONS][self.observationId].get(cfg.START_FROM_CURRENT_TIME, False):
+        current_time = util.seconds_of_day(datetime.datetime.now())
+    elif self.pj[cfg.OBSERVATIONS][self.observationId].get(cfg.START_FROM_CURRENT_EPOCH_TIME, False):
+        current_time = time.mktime(datetime.datetime.now().timetuple())
+    else:
+        current_time = 0
+
+    self.lb_current_media_time.setText(util.convertTime(self.timeFormat, current_time))
+
+    # display observation time interval (if any)
+    self.lb_obs_time_interval.setVisible(True)
+    self.display_statusbar_info(self.observationId)
+    """
+    if self.timeFormat == cfg.HHMMSS:
+
+        if self.pj[cfg.OBSERVATIONS][self.observationId].get(START_FROM_CURRENT_TIME, False):
+            self.lb_current_media_time.setText(datetime.datetime.now().isoformat(" ").split(" ")[1][:12])
+        else:
+            self.lb_current_media_time.setText("00:00:00.000")
+
+    if self.timeFormat == S:
+        self.lb_current_media_time.setText("0.000")
+    """
+
+    self.lbCurrentStates.setText("")
+
+    self.liveStartTime = None
+    self.liveTimer.stop()
+
+    # restore windows state: dockwidget positions ...
+    if self.saved_state is None:
+        self.saved_state = self.saveState()
+        self.restoreState(self.saved_state)
+    else:
+        self.restoreState(self.saved_state)

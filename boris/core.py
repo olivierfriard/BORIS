@@ -38,16 +38,15 @@ import urllib.parse
 import urllib.request
 from decimal import *
 import gzip
+from collections import deque
 
 import matplotlib
 
 matplotlib.use("Qt5Agg")
-# import matplotlib.pyplot as plt
 from PyQt5.QtCore import (
     Qt,
     pyqtSignal,
     QEvent,
-    QTimer,
     QProcess,
     QDateTime,
     QTime,
@@ -71,7 +70,6 @@ from . import modifiers_coding_map
 from . import advanced_event_filtering
 from . import otx_parser
 from . import param_panel
-from . import plot_data_module
 from . import plot_events
 from . import plot_spectrogram_rt
 from . import plot_waveform_rt
@@ -89,7 +87,6 @@ from . import config as cfg
 
 from .project import *
 from . import utilities as util
-from . import player_dock_widget
 
 from . import menu_options as menu_options
 from . import connections as connections
@@ -166,6 +163,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     processes = []  # list of QProcess processes
     overlays = {}  # dict for storing video overlays
 
+    undo_queue = deque()
+
     saved_state = None
     user_move_slider = False
     observationId = ""  # current observation id
@@ -230,16 +229,15 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     # spectrogram
     chunk_length = 60  # spectrogram chunk length in seconds
 
-    memMedia = ""
-    close_the_same_current_event = False
-    tcp_port = 0
-    bcm_dict = {}  # handle behavior coding map
-    recent_projects = []
+    close_the_same_current_event: bool = False
+    tcp_port: int = 0
+    bcm_dict: dict = {}  # handle behavior coding map
+    recent_projects: list = []
 
-    filtered_subjects = []
-    filtered_behaviors = []
+    filtered_subjects: list = []
+    filtered_behaviors: list = []
 
-    dw_player = []
+    dw_player: list = []
 
     save_project_json_started = False
 
@@ -1843,68 +1841,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.update_events_start_stop()
 
         logging.debug("end load events from obs")
-
-    def initialize_new_live_observation(self):
-        """
-        initialize a new live observation
-        """
-        logging.debug(f"function: initialize new live obs: {self.observationId}")
-
-        self.playerType, self.playMode = cfg.LIVE, cfg.LIVE
-
-        self.w_live.setVisible(True)
-
-        self.pb_live_obs.setMinimumHeight(60)
-
-        # font = QFont("Monospace")
-        font = QFont()
-        font.setPointSize(48)
-        self.lb_current_media_time.setFont(font)
-
-        self.dwObservations.setVisible(True)
-
-        self.w_obs_info.setVisible(True)
-
-        menu_options.update_menu(self)
-
-        self.liveObservationStarted = False
-        self.pb_live_obs.setText("Start live observation")
-
-        if self.pj[cfg.OBSERVATIONS][self.observationId].get(cfg.START_FROM_CURRENT_TIME, False):
-            current_time = util.seconds_of_day(datetime.datetime.now())
-        elif self.pj[cfg.OBSERVATIONS][self.observationId].get(cfg.START_FROM_CURRENT_EPOCH_TIME, False):
-            current_time = time.mktime(datetime.datetime.now().timetuple())
-        else:
-            current_time = 0
-
-        self.lb_current_media_time.setText(util.convertTime(self.timeFormat, current_time))
-
-        # display observation time interval (if any)
-        self.lb_obs_time_interval.setVisible(True)
-        self.display_statusbar_info(self.observationId)
-        """
-        if self.timeFormat == cfg.HHMMSS:
-
-            if self.pj[cfg.OBSERVATIONS][self.observationId].get(START_FROM_CURRENT_TIME, False):
-                self.lb_current_media_time.setText(datetime.datetime.now().isoformat(" ").split(" ")[1][:12])
-            else:
-                self.lb_current_media_time.setText("00:00:00.000")
-
-        if self.timeFormat == S:
-            self.lb_current_media_time.setText("0.000")
-        """
-
-        self.lbCurrentStates.setText("")
-
-        self.liveStartTime = None
-        self.liveTimer.stop()
-
-        # restore windows state: dockwidget positions ...
-        if self.saved_state is None:
-            self.saved_state = self.saveState()
-            self.restoreState(self.saved_state)
-        else:
-            self.restoreState(self.saved_state)
 
     def close_tool_windows(self):
         """
@@ -3729,7 +3665,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             for x in self.pj[cfg.OBSERVATIONS][obsId][cfg.EVENTS]
         ]
 
-    def writeEvent(self, event: dict, memTime: Decimal) -> None:
+    def writeEvent(self, event: dict, mem_time: Decimal) -> None:
         """
         add event from pressed key to observation
         offset is added to event time
@@ -3743,21 +3679,29 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         """
 
-        logging.debug(f"write event - event: {event}  memtime: {memTime}")
+        logging.debug(f"write event - event: {event}  memtime: {mem_time}")
 
         if event is None:
             return
 
+        # undo
+        self.undo_queue.append(self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS][:])
+        if len(self.undo_queue) > cfg.MAX_UNDO_QUEUE:
+            self.undo_queue.popleft()
+        print(f"{len(self.undo_queue)=}")
+
         # add time offset if not from editing
         if "row" not in event:
-            memTime += Decimal(self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TIME_OFFSET]).quantize(Decimal(".001"))
+            mem_time += Decimal(self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TIME_OFFSET]).quantize(
+                Decimal(".001")
+            )
 
         # check if a same event is already in events list (time, subject, code)
         # "row" present in case of event editing
 
         if ("row" not in event) and self.checkSameEvent(
             self.observationId,
-            memTime,
+            mem_time,
             event["subject"] if "subject" in event else self.currentSubject,
             event["code"],
         ):
@@ -3849,7 +3793,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             StateBehaviorsCodes,
             self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS],
             dict(self.pj[cfg.SUBJECTS], **{"": {"name": ""}}),
-            memTime,
+            mem_time,
             include_modifiers=False,
         )
 
@@ -3878,7 +3822,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             cm = {}  # modifiers for current behaviors
             for cs in csj:
                 for ev in self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS]:
-                    if ev[cfg.EVENT_TIME_FIELD_IDX] > memTime:
+                    if ev[cfg.EVENT_TIME_FIELD_IDX] > mem_time:
                         break
 
                     if ev[cfg.EVENT_SUBJECT_FIELD_IDX] == self.currentSubject:
@@ -3902,8 +3846,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 ):
                     # add excluded state event to observations (= STOP them)
                     self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS].append(
-                        # [memTime - Decimal("0.001"), self.currentSubject, cs, cm[cs], ""]
-                        [memTime, self.currentSubject, cs, cm[cs], ""]
+                        [mem_time, self.currentSubject, cs, cm[cs], ""]
                     )
 
         # remove key code from modifiers
@@ -3915,7 +3858,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         if "row" in event:
             # modifying event
             self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS][event["row"]] = [
-                memTime,
+                mem_time,
                 subject,
                 event["code"],
                 modifier_str,
@@ -3924,7 +3867,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         else:
             # add event
             self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS].append(
-                [memTime, subject, event["code"], modifier_str, comment]
+                [mem_time, subject, event["code"], modifier_str, comment]
             )
 
         # sort events in pj
@@ -3934,7 +3877,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.loadEventsInTW(self.observationId)
 
         position_in_events = [
-            i for i, t in enumerate(self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS]) if t[0] == memTime
+            i for i, t in enumerate(self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS]) if t[0] == mem_time
         ][0]
 
         if position_in_events == len(self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS]) - 1:
@@ -4093,18 +4036,30 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             return False
 
     def keyPressEvent(self, event) -> None:
-
-        logging.debug(f"text #{event.text()}#  event key: {event.key()} ")
         """
-        if (event.modifiers() & Qt.ShiftModifier):   # SHIFT
-
-        QApplication.keyboardModifiers()
-
         http://qt-project.org/doc/qt-5.0/qtcore/qt.html#Key-enum
         https://github.com/pyqt/python-qt5/blob/master/PyQt5/qml/builtins.qmltypes
 
         ESC: 16777216
         """
+
+        # get modifiers
+        modifiers = QApplication.keyboardModifiers()
+        modifier = ""
+
+        if modifiers & Qt.ShiftModifier:
+            modifier += "Shift"
+
+        if modifiers & Qt.ControlModifier:
+            modifier += "Ctrl"
+
+        if modifiers & (Qt.AltModifier):
+            modifier += "Alt"
+
+        if modifiers & (Qt.MetaModifier):
+            modifier += "Meta"
+
+        logging.debug(f"text #{event.text()}#  event key: {event.key()} Modifier: {modifier}")
 
         if self.playerType == cfg.VIEWER:
             if event.key() in [Qt.Key_Shift, Qt.Key_Control, Qt.Key_Alt, Qt.Key_CapsLock, Qt.Key_AltGr]:
@@ -4129,22 +4084,19 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         if ek in [Qt.Key_Tab, Qt.Key_Shift, Qt.Key_Control, Qt.Key_Meta, Qt.Key_Alt, Qt.Key_AltGr]:
             return
-        """
-        if ek == Qt.Key_Escape:
-            self.switch_playing_mode()
-            return
-        """
 
         # speed down
         if ek == Qt.Key_End:
             if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE] in [cfg.MEDIA]:
                 self.video_slower_activated()
             return
+
         # speed up
         if ek == Qt.Key_Home:
             if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE] in [cfg.MEDIA]:
                 self.video_faster_activated()
             return
+
         # speed normal
         if ek == Qt.Key_Backspace:
             if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE] in [cfg.MEDIA]:
@@ -4230,6 +4182,32 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             memLaps = self.getLaps()
 
         if memLaps is None:
+            return
+
+        # undo
+        if ek == 90 and modifier == "Ctrl":
+            if len(self.undo_queue) == 0:
+                self.statusbar.showMessage(f"The Undo buffer is empty", 5000)
+                return
+            events = self.undo_queue.pop()
+            self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS] = events[:]
+
+            # reload all events in tw
+            self.loadEventsInTW(self.observationId)
+
+            """
+            position_in_events = [
+                i for i, t in enumerate(self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS]) if t[0] >= memLaps
+            ][-1]
+
+            if position_in_events == len(self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS]) - 1:
+                self.twEvents.scrollToBottom()
+            else:
+                self.twEvents.scrollToItem(self.twEvents.item(position_in_events, 0), QAbstractItemView.EnsureVisible)
+            """
+            self.projectChanged = True
+
+            self.statusbar.showMessage(f"Last event removed", 5000)
             return
 
         if (
