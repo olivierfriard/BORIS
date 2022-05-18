@@ -21,9 +21,7 @@ This file is part of BORIS.
 """
 
 import datetime as dt
-import logging
-import pathlib
-import sys
+import pathlib as pl
 
 import matplotlib
 
@@ -332,10 +330,8 @@ def create_behaviors_bar_plot(
 
         if plot_directory:
             # output_file_name = f"{pathlib.Path(plot_directory) / utilities.safeFileName(obs_id)}.{output_format}"
-            fig.savefig(f"{pathlib.Path(plot_directory) / util.safeFileName(obs_id)}.duration.{output_format}")
-            fig2.savefig(
-                f"{pathlib.Path(plot_directory) / util.safeFileName(obs_id)}.number_of_occurences.{output_format}"
-            )
+            fig.savefig(f"{pl.Path(plot_directory) / util.safeFileName(obs_id)}.duration.{output_format}")
+            fig2.savefig(f"{pl.Path(plot_directory) / util.safeFileName(obs_id)}.number_of_occurences.{output_format}")
             plt.close()
         else:
             fig.show()
@@ -365,13 +361,14 @@ def create_events_plot(
 
     if not ok:
         return False, msg, None
+
     cursor = db_connector.cursor()
 
     # if modifiers not to be included set modifiers to ""
     if not include_modifiers:
         cursor.execute("UPDATE aggregated_events SET modifiers = ''")
 
-    cursor.execute("SELECT distinct behavior, modifiers FROM aggregated_events")
+    cursor.execute("SELECT DISTINCT behavior, modifiers FROM aggregated_events")
     distinct_behav_modif = [[rows["behavior"], rows["modifiers"]] for rows in cursor.fetchall()]
 
     # add selected behaviors that are not observed
@@ -407,7 +404,7 @@ def create_events_plot(
             cursor.execute("UPDATE aggregated_events SET modifiers = ''")
         cursor = db_connector.cursor()
 
-        cursor.execute("SELECT distinct behavior, modifiers FROM aggregated_events")
+        cursor.execute("SELECT DISTINCT behavior, modifiers FROM aggregated_events")
         distinct_behav_modif = [[rows["behavior"], rows["modifiers"]] for rows in cursor.fetchall()]
 
         # add selected behaviors that are not observed
@@ -425,16 +422,16 @@ def create_events_plot(
             interval = cfg.TIME_EVENTS
 
         if interval == cfg.TIME_FULL_OBS:
-            min_time = float(0)
+            min_time = 0.0
             max_time = float(obs_length)
 
         if interval == cfg.TIME_EVENTS:
             try:
-                min_time = float(pj[cfg.OBSERVATIONS][obs_id][cfg.EVENTS][0][0])
+                min_time = float(pj[cfg.OBSERVATIONS][obs_id][cfg.EVENTS][0][0])  # first event
             except Exception:
-                min_time = float(0)
+                min_time = 0.0
             try:
-                max_time = float(pj[cfg.OBSERVATIONS][obs_id][cfg.EVENTS][-1][0])
+                max_time = float(pj[cfg.OBSERVATIONS][obs_id][cfg.EVENTS][-1][0])  # last event
             except Exception:
                 max_time = float(obs_length)
 
@@ -442,35 +439,41 @@ def create_events_plot(
             min_time = float(start_time)
             max_time = float(end_time)
 
+        # adjust start if start < init
         cursor.execute(
-            "UPDATE aggregated_events SET start = ? WHERE observation = ? AND start < ? AND stop BETWEEN ? AND ?",
+            "UPDATE aggregated_events SET start = ? WHERE  start < ? AND stop BETWEEN ? AND ?",
             (
                 min_time,
-                obs_id,
                 min_time,
                 min_time,
                 max_time,
             ),
         )
+        # adjust stop if stop > end
         cursor.execute(
-            "UPDATE aggregated_events SET stop = ? WHERE observation = ? AND stop > ? AND start BETWEEN ? AND ?",
+            "UPDATE aggregated_events SET stop = ? WHERE stop > ? AND start BETWEEN ? AND ?",
             (
                 max_time,
-                obs_id,
                 max_time,
                 min_time,
                 max_time,
             ),
         )
+        # adjust start and stop if start < init and stop > end
         cursor.execute(
-            "UPDATE aggregated_events SET start = ?, stop = ? WHERE observation = ? AND start < ? AND stop > ?",
+            "UPDATE aggregated_events SET start = ?, stop = ? WHERE start < ? AND stop > ?",
             (
                 min_time,
                 max_time,
-                obs_id,
                 min_time,
                 max_time,
             ),
+        )
+
+        # delete events outside time interval
+        cursor.execute(
+            "DELETE FROM aggregated_events WHERE (start < ? AND stop < ?) OR (start > ? AND stop > ?)",
+            (min_time, min_time, max_time, max_time),
         )
 
         ylabels = [" ".join(x) for x in distinct_behav_modif]
@@ -478,7 +481,7 @@ def create_events_plot(
 
             if parameters["exclude behaviors"]:
                 cursor.execute(
-                    "SELECT distinct behavior, modifiers FROM aggregated_events WHERE subject = ?", (subject,)
+                    "SELECT DISTINCT behavior, modifiers FROM aggregated_events WHERE subject = ?", (subject,)
                 )
                 distinct_behav_modif = [[rows["behavior"], rows["modifiers"]] for rows in cursor.fetchall()]
 
@@ -507,10 +510,9 @@ def create_events_plot(
                 cursor.execute(
                     (
                         "SELECT start, stop FROM aggregated_events "
-                        "WHERE observation = ? AND subject = ? AND behavior = ? AND modifiers = ?"
+                        "WHERE  subject = ? AND behavior = ? AND modifiers = ?"
                     ),
                     (
-                        obs_id,
                         subject,
                         behavior,
                         modifiers,
@@ -569,9 +571,15 @@ def create_events_plot(
 
             axs[ax_idx].set_ylabel("Behaviors" + " (modifiers)" * include_modifiers, fontdict={"fontsize": 10})
 
+            """
             axs[ax_idx].set_xlim(
                 left=matplotlib.dates.date2num(init + dt.timedelta(seconds=min_time)),
                 right=matplotlib.dates.date2num(init + dt.timedelta(seconds=max_time + 1)),
+            )
+            """
+            axs[ax_idx].set_xlim(
+                left=matplotlib.dates.date2num(init + dt.timedelta(seconds=min_time)),
+                right=matplotlib.dates.date2num(init + dt.timedelta(seconds=max_time)),
             )
 
             axs[ax_idx].grid(color="g", linestyle=":")
@@ -584,6 +592,6 @@ def create_events_plot(
         plt.tight_layout()
 
         if len(selected_observations) > 1:
-            plt.savefig(f"{pathlib.Path(plot_directory) / util.safeFileName(obs_id)}.{file_format}")
+            plt.savefig(f"{pl.Path(plot_directory) / util.safeFileName(obs_id)}.{file_format}")
         else:
             plt.show()

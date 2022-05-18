@@ -1673,8 +1673,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
     def resize_dw(self, dw_id):
         """
-        dockwidget was resized. Adpat overlay if any
+        dockwidget was resized. Adapt overlay if any
         """
+
         try:
             img = Image.open(
                 self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO][cfg.OVERLAY][str(dw_id + 1)]["file name"]
