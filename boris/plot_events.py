@@ -36,8 +36,17 @@ import matplotlib.pyplot as plt
 import matplotlib.transforms as mtransforms
 import numpy as np
 from matplotlib import colors as mcolors
-from matplotlib.dates import (HOURLY, MICROSECONDLY, MINUTELY, MONTHLY, SECONDLY, WEEKLY, DateFormatter, RRuleLocator,
-                              rrulewrapper)
+from matplotlib.dates import (
+    HOURLY,
+    MICROSECONDLY,
+    MINUTELY,
+    MONTHLY,
+    SECONDLY,
+    WEEKLY,
+    DateFormatter,
+    RRuleLocator,
+    rrulewrapper,
+)
 
 from boris import db_functions
 from boris import project_functions
@@ -52,15 +61,18 @@ def default_value(ethogram, behavior, parameter):
     return value for duration in case of point event
     """
     default_value_ = 0
-    if (project_functions.event_type(behavior, ethogram) == "POINT EVENT" and parameter in ["duration"]):
+    if project_functions.event_type(behavior, ethogram) == "POINT EVENT" and parameter in ["duration"]:
         default_value_ = "NA"
     return default_value_
 
 
-def init_behav_modif(ethogram: dict, selected_subjects: list, distinct_behav_modif, include_modifiers, parameters):
+def init_behav_modif(
+    ethogram: dict, selected_subjects: list, distinct_behav_modif, include_modifiers, parameters
+) -> dict:
     """
     initialize dictionary with subject, behaviors and modifiers
     """
+
     behaviors = {}
     for subj in selected_subjects:
         behaviors[subj] = {}
@@ -78,10 +90,11 @@ def init_behav_modif(ethogram: dict, selected_subjects: list, distinct_behav_mod
     return behaviors
 
 
-def init_behav(ethogram: dict, selected_subjects: list, distinct_behaviors, parameters):
+def init_behav(ethogram: dict, selected_subjects: list, distinct_behaviors, parameters) -> dict:
     """
     initialize dictionary with subject, behaviors and modifiers
     """
+
     behaviors = {}
     for subj in selected_subjects:
         behaviors[subj] = {}
@@ -93,12 +106,14 @@ def init_behav(ethogram: dict, selected_subjects: list, distinct_behaviors, para
     return behaviors
 
 
-def create_behaviors_bar_plot(pj: dict,
-                              selected_observations: list,
-                              param: dict,
-                              plot_directory: str,
-                              output_format: str,
-                              plot_colors: list = BEHAVIORS_PLOT_COLORS):
+def create_behaviors_bar_plot(
+    pj: dict,
+    selected_observations: list,
+    param: dict,
+    plot_directory: str,
+    output_format: str,
+    plot_colors: list = BEHAVIORS_PLOT_COLORS,
+) -> dict:
     """
     time budget bar plot
 
@@ -120,8 +135,9 @@ def create_behaviors_bar_plot(pj: dict,
 
     parameters = ["duration", "number of occurences"]
 
-    ok, msg, db_connector = db_functions.load_aggregated_events_in_db(pj, selected_subjects, selected_observations,
-                                                                      selected_behaviors)
+    ok, msg, db_connector = db_functions.load_aggregated_events_in_db(
+        pj, selected_subjects, selected_observations, selected_behaviors
+    )
 
     if not ok:
         return {"error": True, "message": msg}
@@ -138,12 +154,12 @@ def create_behaviors_bar_plot(pj: dict,
             distinct_behav = [rows["behavior"] for rows in cursor.fetchall()]
 
             # add selected behaviors that are not observed
-            '''
+            """
             if not param[EXCLUDE_BEHAVIORS]:
                 for behavior in selected_behaviors:
                     if [x for x in distinct_behav if x == behavior] == []:
                         distinct_behav.append(behavior)
-            '''
+            """
 
             # distinct subjects
             cursor.execute("SELECT distinct subject FROM aggregated_events WHERE observation = ?", (obs_id,))
@@ -195,53 +211,70 @@ def create_behaviors_bar_plot(pj: dict,
                 max_time = float(end_time)
 
             cursor.execute(
-                "UPDATE aggregated_events SET start = ? WHERE observation = ? AND start < ? AND stop BETWEEN ? AND ?", (
+                "UPDATE aggregated_events SET start = ? WHERE observation = ? AND start < ? AND stop BETWEEN ? AND ?",
+                (
                     min_time,
                     obs_id,
                     min_time,
                     min_time,
                     max_time,
-                ))
+                ),
+            )
             cursor.execute(
-                "UPDATE aggregated_events SET stop = ? WHERE observation = ? AND stop > ? AND start BETWEEN ? AND ?", (
+                "UPDATE aggregated_events SET stop = ? WHERE observation = ? AND stop > ? AND start BETWEEN ? AND ?",
+                (
                     max_time,
                     obs_id,
                     max_time,
                     min_time,
                     max_time,
-                ))
+                ),
+            )
             cursor.execute(
-                "UPDATE aggregated_events SET start = ?, stop = ? WHERE observation = ? AND start < ? AND stop > ?", (
+                "UPDATE aggregated_events SET start = ?, stop = ? WHERE observation = ? AND start < ? AND stop > ?",
+                (
                     min_time,
                     max_time,
                     obs_id,
                     min_time,
                     max_time,
-                ))
+                ),
+            )
 
             for ax_idx, subject in enumerate(sorted(distinct_subjects)):
 
                 for behavior in distinct_behav:
 
                     # number of occurences
-                    cursor.execute(("SELECT COUNT(*) AS count FROM aggregated_events "
-                                    "WHERE observation = ? AND subject = ? AND behavior = ?"), (
-                                        obs_id,
-                                        subject,
-                                        behavior,
-                                    ))
+                    cursor.execute(
+                        (
+                            "SELECT COUNT(*) AS count FROM aggregated_events "
+                            "WHERE observation = ? AND subject = ? AND behavior = ?"
+                        ),
+                        (
+                            obs_id,
+                            subject,
+                            behavior,
+                        ),
+                    )
                     for row in cursor.fetchall():
-                        behaviors[subject][behavior][
-                            "number of occurences"] = 0 if row["count"] is None else row["count"]
+                        behaviors[subject][behavior]["number of occurences"] = (
+                            0 if row["count"] is None else row["count"]
+                        )
 
                     # total duration
                     if STATE in project_functions.event_type(behavior, pj[ETHOGRAM]):
-                        cursor.execute(("SELECT SUM(stop - start) AS duration FROM aggregated_events "
-                                        "WHERE observation = ? AND subject = ? AND behavior = ?"), (
-                                            obs_id,
-                                            subject,
-                                            behavior,
-                                        ))
+                        cursor.execute(
+                            (
+                                "SELECT SUM(stop - start) AS duration FROM aggregated_events "
+                                "WHERE observation = ? AND subject = ? AND behavior = ?"
+                            ),
+                            (
+                                obs_id,
+                                subject,
+                                behavior,
+                            ),
+                        )
                         for row in cursor.fetchall():
                             behaviors[subject][behavior]["duration"] = 0 if row["duration"] is None else row["duration"]
 
@@ -267,19 +300,21 @@ def create_behaviors_bar_plot(pj: dict,
                         except Exception:
                             colors_duration.append("darkgray")
 
-                #width = 0.35       # the width of the bars: can also be len(x) sequence
+                # width = 0.35       # the width of the bars: can also be len(x) sequence
 
                 axs2[ax_idx].bar(
                     np.arange(len(n_occurences)),
                     n_occurences,
-                    #width,
-                    color=colors)
+                    # width,
+                    color=colors,
+                )
 
                 axs[ax_idx].bar(
                     np.arange(len(durations)),
                     durations,
-                    #width,
-                    color=colors_duration)
+                    # width,
+                    color=colors_duration,
+                )
 
                 if ax_idx == 0:
                     axs[ax_idx].set_ylabel("Duration (s)")
@@ -287,7 +322,7 @@ def create_behaviors_bar_plot(pj: dict,
                 axs[ax_idx].set_title(f"{subject}")
 
                 axs[ax_idx].set_xticks(np.arange(len(durations)))
-                axs[ax_idx].set_xticklabels(x_labels_duration, rotation='vertical', fontsize=8)
+                axs[ax_idx].set_xticklabels(x_labels_duration, rotation="vertical", fontsize=8)
 
                 if ax_idx == 0:
                     axs2[ax_idx].set_ylabel("Number of occurences")
@@ -295,7 +330,7 @@ def create_behaviors_bar_plot(pj: dict,
                 axs2[ax_idx].set_title(f"{subject}")
 
                 axs2[ax_idx].set_xticks(np.arange(len(n_occurences)))
-                axs2[ax_idx].set_xticklabels(x_labels, rotation='vertical', fontsize=8)
+                axs2[ax_idx].set_xticklabels(x_labels, rotation="vertical", fontsize=8)
 
             fig.align_labels()
             fig.tight_layout(rect=[0, 0.03, 1, 0.95])
@@ -322,12 +357,9 @@ def create_behaviors_bar_plot(pj: dict,
         return {"error": True, "exception": sys.exc_info()}
 
 
-def create_events_plot(pj,
-                       selected_observations,
-                       parameters,
-                       plot_colors=BEHAVIORS_PLOT_COLORS,
-                       plot_directory="",
-                       file_format="png"):
+def create_events_plot(
+    pj, selected_observations, parameters, plot_colors=BEHAVIORS_PLOT_COLORS, plot_directory="", file_format="png"
+):
     """
     create a time diagram plot (sort of gantt chart)
     with matplotlib barh function (https://matplotlib.org/3.1.0/api/_as_gen/matplotlib.pyplot.barh.html)
@@ -340,18 +372,20 @@ def create_events_plot(pj,
     start_time = parameters[START_TIME]
     end_time = parameters[END_TIME]
 
-    ok, msg, db_connector = db_functions.load_aggregated_events_in_db(pj, selected_subjects, selected_observations,
-                                                                      selected_behaviors)
+    ok, msg, db_connector = db_functions.load_aggregated_events_in_db(
+        pj, selected_subjects, selected_observations, selected_behaviors
+    )
 
     if not ok:
         return False, msg, None
+
     cursor = db_connector.cursor()
 
     # if modifiers not to be included set modifiers to ""
     if not include_modifiers:
         cursor.execute("UPDATE aggregated_events SET modifiers = ''")
 
-    cursor.execute("SELECT distinct behavior, modifiers FROM aggregated_events")
+    cursor.execute("SELECT DISTINCT behavior, modifiers FROM aggregated_events")
     distinct_behav_modif = [[rows["behavior"], rows["modifiers"]] for rows in cursor.fetchall()]
 
     # add selected behaviors that are not observed
@@ -377,8 +411,9 @@ def create_events_plot(pj,
             axs = np.ndarray(shape=(1), dtype=type(ax))
             axs[0] = ax
 
-        ok, msg, db_connector = db_functions.load_aggregated_events_in_db(pj, selected_subjects, [obs_id],
-                                                                          selected_behaviors)
+        ok, msg, db_connector = db_functions.load_aggregated_events_in_db(
+            pj, selected_subjects, [obs_id], selected_behaviors
+        )
 
         cursor = db_connector.cursor()
         # if modifiers not to be included set modifiers to ""
@@ -386,7 +421,7 @@ def create_events_plot(pj,
             cursor.execute("UPDATE aggregated_events SET modifiers = ''")
         cursor = db_connector.cursor()
 
-        cursor.execute("SELECT distinct behavior, modifiers FROM aggregated_events")
+        cursor.execute("SELECT DISTINCT behavior, modifiers FROM aggregated_events")
         distinct_behav_modif = [[rows["behavior"], rows["modifiers"]] for rows in cursor.fetchall()]
 
         # add selected behaviors that are not observed
@@ -421,37 +456,53 @@ def create_events_plot(pj,
             min_time = float(start_time)
             max_time = float(end_time)
 
+        # adjust start if start < init
         cursor.execute(
-            "UPDATE aggregated_events SET start = ? WHERE observation = ? AND start < ? AND stop BETWEEN ? AND ?", (
+            "UPDATE aggregated_events SET start = ? WHERE observation = ? AND start < ? AND stop BETWEEN ? AND ?",
+            (
                 min_time,
                 obs_id,
                 min_time,
                 min_time,
                 max_time,
-            ))
+            ),
+        )
+        # adjust stop if stop > end
         cursor.execute(
-            "UPDATE aggregated_events SET stop = ? WHERE observation = ? AND stop > ? AND start BETWEEN ? AND ?", (
+            "UPDATE aggregated_events SET stop = ? WHERE observation = ? AND stop > ? AND start BETWEEN ? AND ?",
+            (
                 max_time,
                 obs_id,
                 max_time,
                 min_time,
                 max_time,
-            ))
+            ),
+        )
+        # adjust start and stop if start < init and stop > end
         cursor.execute(
-            "UPDATE aggregated_events SET start = ?, stop = ? WHERE observation = ? AND start < ? AND stop > ?", (
+            "UPDATE aggregated_events SET start = ?, stop = ? WHERE observation = ? AND start < ? AND stop > ?",
+            (
                 min_time,
                 max_time,
                 obs_id,
                 min_time,
                 max_time,
-            ))
+            ),
+        )
+
+        # delete events outside time interval
+        cursor.execute(
+            "DELETE FROM aggregated_events WHERE (start < ? AND stop < ?) OR (start > ? AND stop > ?)",
+            (min_time, min_time, max_time, max_time),
+        )
 
         ylabels = [" ".join(x) for x in distinct_behav_modif]
         for ax_idx, subject in enumerate(selected_subjects):
 
             if parameters["exclude behaviors"]:
-                cursor.execute("SELECT distinct behavior, modifiers FROM aggregated_events WHERE subject = ?",
-                               (subject,))
+                cursor.execute(
+                    "SELECT distinct behavior, modifiers FROM aggregated_events WHERE subject = ?", (subject,)
+                )
                 distinct_behav_modif = [[rows["behavior"], rows["modifiers"]] for rows in cursor.fetchall()]
 
                 # add selected behaviors that are not observed
@@ -476,20 +527,26 @@ def create_events_plot(pj,
                 bars[behavior_modifiers_str] = []
 
                 # total duration
-                cursor.execute(("SELECT start, stop FROM aggregated_events "
-                                "WHERE observation = ? AND subject = ? AND behavior = ? AND modifiers = ?"), (
-                                    obs_id,
-                                    subject,
-                                    behavior,
-                                    modifiers,
-                                ))
+                cursor.execute(
+                    (
+                        "SELECT start, stop FROM aggregated_events "
+                        "WHERE observation = ? AND subject = ? AND behavior = ? AND modifiers = ?"
+                    ),
+                    (
+                        obs_id,
+                        subject,
+                        behavior,
+                        modifiers,
+                    ),
+                )
                 for row in cursor.fetchall():
                     bars[behavior_modifiers_str].append((row["start"], row["stop"]))
 
                     start_date = matplotlib.dates.date2num(init + dt.timedelta(seconds=row["start"]))
-                    end_date = matplotlib.dates.date2num(init +
-                                                         dt.timedelta(seconds=row["stop"] + POINT_EVENT_PLOT_DURATION *
-                                                                      (row["stop"] == row["start"])))
+                    end_date = matplotlib.dates.date2num(
+                        init
+                        + dt.timedelta(seconds=row["stop"] + POINT_EVENT_PLOT_DURATION * (row["stop"] == row["start"]))
+                    )
                     try:
                         bar_color = utilities.behavior_color(plot_colors, all_behaviors.index(behavior))
                     except Exception:
@@ -501,36 +558,48 @@ def create_events_plot(pj,
                         bar_color = {"darksage": "#598556", "lightsage": "#bcecac", "sage": "#87ae73"}[bar_color]
 
                     try:
-                        axs[ax_idx].barh((i * par1) + par1,
-                                         end_date - start_date,
-                                         left=start_date,
-                                         height=bar_height,
-                                         align="center",
-                                         edgecolor=bar_color,
-                                         color=bar_color,
-                                         alpha=1)
+                        axs[ax_idx].barh(
+                            (i * par1) + par1,
+                            end_date - start_date,
+                            left=start_date,
+                            height=bar_height,
+                            align="center",
+                            edgecolor=bar_color,
+                            color=bar_color,
+                            alpha=1,
+                        )
                     except Exception:
-                        axs[ax_idx].barh((i * par1) + par1,
-                                         end_date - start_date,
-                                         left=start_date,
-                                         height=bar_height,
-                                         align="center",
-                                         edgecolor="darkgray",
-                                         color="darkgray",
-                                         alpha=1)
+                        axs[ax_idx].barh(
+                            (i * par1) + par1,
+                            end_date - start_date,
+                            left=start_date,
+                            height=bar_height,
+                            align="center",
+                            edgecolor="darkgray",
+                            color="darkgray",
+                            alpha=1,
+                        )
 
                 i += 1
 
             axs[ax_idx].set_ylim(bottom=0, top=(max_len * par1) + par1)
             pos = np.arange(par1, max_len * par1 + par1 + 1, par1)
-            axs[ax_idx].set_yticks(pos[:len(ylabels)])
+            axs[ax_idx].set_yticks(pos[: len(ylabels)])
 
             axs[ax_idx].set_yticklabels(ylabels, fontdict={"fontsize": 10})
 
             axs[ax_idx].set_ylabel("Behaviors" + " (modifiers)" * include_modifiers, fontdict={"fontsize": 10})
 
-            axs[ax_idx].set_xlim(left=matplotlib.dates.date2num(init + dt.timedelta(seconds=min_time)),
-                                 right=matplotlib.dates.date2num(init + dt.timedelta(seconds=max_time + 1)))
+            """
+            axs[ax_idx].set_xlim(
+                left=matplotlib.dates.date2num(init + dt.timedelta(seconds=min_time)),
+                right=matplotlib.dates.date2num(init + dt.timedelta(seconds=max_time + 1)),
+            )
+            """
+            axs[ax_idx].set_xlim(
+                left=matplotlib.dates.date2num(init + dt.timedelta(seconds=min_time)),
+                right=matplotlib.dates.date2num(init + dt.timedelta(seconds=max_time)),
+            )
 
             axs[ax_idx].grid(color="g", linestyle=":")
             axs[ax_idx].xaxis_date()
