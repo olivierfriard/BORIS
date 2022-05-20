@@ -20,16 +20,42 @@ This file is part of BORIS.
 
 """
 
-from PyQt5.QtGui import *
-from PyQt5.QtCore import *
-from PyQt5.QtWidgets import *
-
-import decimal
-from decimal import getcontext
-import json
 import binascii
-import os
+import decimal
 import io
+import json
+import os
+from decimal import getcontext
+
+from PyQt5.QtCore import QLineF, QPoint, Qt, pyqtSignal, QByteArray, QBuffer, QIODevice
+from PyQt5.QtGui import QBrush, QColor, QIcon, QMouseEvent, QPen, QPixmap, QPolygonF
+from PyQt5.QtWidgets import (
+    QApplication,
+    QColorDialog,
+    QFileDialog,
+    QFrame,
+    QGraphicsLineItem,
+    QGraphicsScene,
+    QGraphicsView,
+    QHBoxLayout,
+    QInputDialog,
+    QLabel,
+    QLineEdit,
+    QListWidget,
+    QMainWindow,
+    QMessageBox,
+    QPushButton,
+    QSizePolicy,
+    QSlider,
+    QSpacerItem,
+    QSplitter,
+    QVBoxLayout,
+    QWidget,
+    QAction,
+    QGraphicsPolygonItem,
+    QGraphicsEllipseItem,
+    QGraphicsPixmapItem,
+)
 
 from . import config as cfg
 from . import dialog
@@ -70,22 +96,48 @@ def intersection(A, B, C, D):
             xm = xc
             ym = slope * xm + intersept
         else:
-            xm = ((xd * xa * yc - xd * xb * yc - xd * xa * yb - xc * xa * yd + xc * xa * yb + xd * ya * xb +
-                   xc * xb * yd - xc * ya * xb) /
-                  (-yb * xd + yb * xc + ya * xd - ya * xc + xb * yd - xb * yc - xa * yd + xa * yc)).quantize(
-                      Dec('.001'), rounding=decimal.ROUND_DOWN)
-            ym = ((yb * xc * yd - yb * yc * xd - ya * xc * yd + ya * yc * xd - xa * yb * yd + xa * yb * yc +
-                   ya * xb * yd - ya * xb * yc) /
-                  (-yb * xd + yb * xc + ya * xd - ya * xc + xb * yd - xb * yc - xa * yd + xa * yc)).quantize(
-                      Dec('.001'), rounding=decimal.ROUND_DOWN)
+            xm = (
+                (
+                    xd * xa * yc
+                    - xd * xb * yc
+                    - xd * xa * yb
+                    - xc * xa * yd
+                    + xc * xa * yb
+                    + xd * ya * xb
+                    + xc * xb * yd
+                    - xc * ya * xb
+                )
+                / (-yb * xd + yb * xc + ya * xd - ya * xc + xb * yd - xb * yc - xa * yd + xa * yc)
+            ).quantize(Dec(".001"), rounding=decimal.ROUND_DOWN)
+            ym = (
+                (
+                    yb * xc * yd
+                    - yb * yc * xd
+                    - ya * xc * yd
+                    + ya * yc * xd
+                    - xa * yb * yd
+                    + xa * yb * yc
+                    + ya * xb * yd
+                    - ya * xb * yc
+                )
+                / (-yb * xd + yb * xc + ya * xd - ya * xc + xb * yd - xb * yc - xa * yd + xa * yc)
+            ).quantize(Dec(".001"), rounding=decimal.ROUND_DOWN)
 
         xmin1, xmax1 = min(xa, xb), max(xa, xb)
         xmin2, xmax2 = min(xc, xd), max(xc, xd)
         ymin1, ymax1 = min(ya, yb), max(ya, yb)
         ymin2, ymax2 = min(yc, yd), max(yc, yd)
 
-        return (xm >= xmin1 and xm <= xmax1 and xm >= xmin2 and xm <= xmax2 and ym >= ymin1 and ym <= ymax1 and
-                ym >= ymin2 and ym <= ymax2)
+        return (
+            xm >= xmin1
+            and xm <= xmax1
+            and xm >= xmin2
+            and xm <= xmax2
+            and ym >= ymin1
+            and ym <= ymax1
+            and ym >= ymin2
+            and ym <= ymax2
+        )
 
     except Exception:  # for cases xa=xb=xc=xd
         return True
@@ -99,6 +151,7 @@ class BehaviorsMapCreatorWindow(QMainWindow):
         """
         class for handling mousepress event in QGraphicsView
         """
+
         mousePress = pyqtSignal(QMouseEvent)
 
         def mousePressEvent(self, event):
@@ -114,7 +167,7 @@ class BehaviorsMapCreatorWindow(QMainWindow):
             self.scene().update()
 
     bitmapFileName, mapName, fileName = "", "", ""
-    flagNewArea, flagMapChanged = False, False
+    flagNewArea, flag_map_changed = False, False
     polygonsList2 = []
     areaColor = QColor("lime")
 
@@ -180,11 +233,11 @@ class BehaviorsMapCreatorWindow(QMainWindow):
         fileMenu.addAction(self.exitAction)
 
         splitter1 = QSplitter(Qt.Vertical)
-        '''
+        """
         splitter1.addWidget(splitter1)
         splitter1.addWidget(bottom)
-        '''
-        '''vlayout_list = QVBoxLayout()'''
+        """
+        """vlayout_list = QVBoxLayout()"""
 
         self.view = self.View(self)
         self.view.mousePress.connect(self.viewMousePressEvent)
@@ -274,13 +327,13 @@ class BehaviorsMapCreatorWindow(QMainWindow):
         frame.setLayout(vlayout_frame)
 
         vlayout = QVBoxLayout()
-        '''
+        """
         vlayout.addWidget(self.view)
         vlayout.addWidget(QLabel("Defined area"))
         vlayout.addWidget(self.area_list)
-        '''
+        """
         vlayout.addWidget(splitter1)
-        '''vlayout.addLayout(vlayout_view_list)'''
+        """vlayout.addLayout(vlayout_view_list)"""
 
         vlayout.addWidget(frame)
         vlayout.addWidget(self.btLoad)
@@ -296,8 +349,21 @@ class BehaviorsMapCreatorWindow(QMainWindow):
         add coding map to project
         """
 
-        mapDict = self.make_coding_map_dict()
-        self.signal_add_to_project.emit(mapDict)
+        map_dict = self.make_coding_map_dict()
+        if map_dict["areas"] == {}:
+
+            QMessageBox.critical(
+                self,
+                cfg.programName,
+                (
+                    "The behaviors coding map does not contain any behavior area.<br>"
+                    "Add some behavior areas before adding the coding map to the project"
+                ),
+            )
+
+            return
+
+        self.signal_add_to_project.emit(map_dict)
 
     def area_list_item_click(self, item):
         """
@@ -342,8 +408,9 @@ class BehaviorsMapCreatorWindow(QMainWindow):
         else:
             code_index = 0
 
-        item, ok = QInputDialog.getItem(self, "Select a behavior", "Available behaviors", self.codes_list, code_index,
-                                        False)
+        item, ok = QInputDialog.getItem(
+            self, "Select a behavior", "Available behaviors", self.codes_list, code_index, False
+        )
         self.leAreaCode.setText(item)
 
         if self.selectedPolygon:
@@ -402,20 +469,23 @@ class BehaviorsMapCreatorWindow(QMainWindow):
 
     def closeEvent(self, event):
 
-        if self.flagMapChanged:
+        if self.flag_map_changed:
 
-            response = dialog.MessageDialog("BORIS - Modifiers map creator",
-                                            "What to do about the current unsaved modifiers coding map?",
-                                            ["Save", "Discard", "Cancel"])
+            response = dialog.MessageDialog(
+                "BORIS - Behaviors map creator",
+                "What to do about the current unsaved behaviors coding map?",
+                [cfg.SAVE, cfg.DISCARD, cfg.CANCEL],
+            )
 
-            if response == "Save":
+            if response == cfg.SAVE:
                 if not self.saveMap_clicked():
                     event.ignore()
 
-            if response == "Cancel":
+            if response == cfg.CANCEL:
                 event.ignore()
                 return
 
+        self.flag_map_changed = False
         event.accept()
 
     def viewMousePressEvent(self, event):
@@ -423,13 +493,29 @@ class BehaviorsMapCreatorWindow(QMainWindow):
         check if area selected with mouse
         """
 
+        def add_polygon():
+            # create polygon
+            newPolygon = QPolygonF()
+            for p in self.view.points:
+                newPolygon.append(QPoint(p[0], p[1]))
+
+            # draw polygon a red polygon
+            self.closedPolygon = QGraphicsPolygonItem(newPolygon)
+            self.closedPolygon.setPen(QPen(designColor, penWidth, penStyle, Qt.RoundCap, Qt.RoundJoin))
+            self.closedPolygon.setBrush(self.areaColor)
+            self.view.scene().addItem(self.closedPolygon)
+
         if not self.bitmapFileName:
             return
 
         test = self.view.mapToScene(event.pos()).toPoint()  # coordinates of clicked point
 
-        if test.x() < 0 or test.y() < 0 or test.x() > self.pixmap.size().width() or test.y() > self.pixmap.size(
-        ).height():
+        if (
+            test.x() < 0
+            or test.y() < 0
+            or test.x() > self.pixmap.size().width()
+            or test.y() > self.pixmap.size().height()
+        ):
             return
 
         if not self.flagNewArea:  # test clicked point for areas
@@ -448,8 +534,9 @@ class BehaviorsMapCreatorWindow(QMainWindow):
 
                     self.selectedPolygonMemBrush = self.selectedPolygon.brush()
 
-                    self.selectedPolygon.setPen(QPen(QColor(255, 0, 0, 255), 2, Qt.SolidLine, Qt.RoundCap,
-                                                     Qt.RoundJoin))
+                    self.selectedPolygon.setPen(
+                        QPen(QColor(255, 0, 0, 255), 2, Qt.SolidLine, Qt.RoundCap, Qt.RoundJoin)
+                    )
 
                     self.lb.setVisible(True)
                     self.leAreaCode.setText(areaCode)
@@ -461,7 +548,8 @@ class BehaviorsMapCreatorWindow(QMainWindow):
 
                     self.areaColor = self.selectedPolygon.brush().color()
                     self.btColor.setStyleSheet(
-                        f"QWidget {{background-color:{self.selectedPolygon.brush().color().name()}}}")
+                        f"QWidget {{background-color:{self.selectedPolygon.brush().color().name()}}}"
+                    )
                     self.btColor.setVisible(True)
 
                     self.slAlpha.setValue(int(self.selectedPolygon.brush().color().alpha() / 255 * 100))
@@ -504,10 +592,14 @@ class BehaviorsMapCreatorWindow(QMainWindow):
                 # test is polygon is crossed
                 if len(self.view.points) >= 3:
 
-                    for idx, point in enumerate(self.view.points[:-2]):
+                    for idx, _ in enumerate(self.view.points[:-2]):
 
-                        if intersection(self.view.points[idx], self.view.points[idx + 1], self.view.points[-1],
-                                        (int(end.x()), int(end.y()))):
+                        if intersection(
+                            self.view.points[idx],
+                            self.view.points[idx + 1],
+                            self.view.points[-1],
+                            (int(end.x()), int(end.y())),
+                        ):
                             QMessageBox.critical(self, "", "The polygon edges can not be intersected")
                             return
 
@@ -515,7 +607,8 @@ class BehaviorsMapCreatorWindow(QMainWindow):
                 if abs(end.x() - self.view.points[0][0]) < 10 and abs(end.y() - self.view.points[0][1]) < 10:
 
                     line = QGraphicsLineItem(
-                        QLineF(self.view._start, QPoint(self.view.points[0][0], self.view.points[0][1])))
+                        QLineF(self.view._start, QPoint(self.view.points[0][0], self.view.points[0][1]))
+                    )
                     line.setPen(QPen(designColor, penWidth, Qt.SolidLine, Qt.RoundCap, Qt.RoundJoin))
 
                     self.view.scene().addItem(line)
@@ -524,27 +617,13 @@ class BehaviorsMapCreatorWindow(QMainWindow):
                     self.statusBar().showMessage("Area completed")
 
                     # create polygon
-                    newPolygon = QPolygonF()
-                    for p in self.view.points:
-                        newPolygon.append(QPoint(p[0], p[1]))
-
-                    # draw polygon a red polygon
-
-                    self.closedPolygon = QGraphicsPolygonItem(newPolygon)
-
-                    self.closedPolygon.setPen(QPen(designColor, penWidth, penStyle, Qt.RoundCap, Qt.RoundJoin))
-                    self.closedPolygon.setBrush(self.areaColor)
-
-                    self.view.scene().addItem(self.closedPolygon)
-
+                    add_polygon()
                     return
 
                 self.view.points.append((int(end.x()), int(end.y())))
 
                 line = QGraphicsLineItem(QLineF(self.view._start, end))
-
                 line.setPen(QPen(designColor, 2, Qt.SolidLine, Qt.RoundCap, Qt.RoundJoin))
-
                 self.view.scene().addItem(line)
                 self.view.elList.append(line)
 
@@ -567,19 +646,55 @@ class BehaviorsMapCreatorWindow(QMainWindow):
 
                 self.view.points.append((self.view._start.x(), self.view._start.y()))
 
+        # automatically close the polygon
+        if event.buttons() == Qt.MiddleButton and not self.closedPolygon:
+
+            # add first point as last point of polygon
+
+            # test is polygon is crossed
+            if len(self.view.points) >= 3:
+
+                for idx, _ in enumerate(self.view.points[:-2]):
+
+                    if intersection(
+                        self.view.points[idx],
+                        self.view.points[idx + 1],
+                        self.view.points[-1],
+                        self.view.points[0],
+                    ):
+                        QMessageBox.critical(self, "", "The polygon edges can not be intersected")
+                        return
+
+            line = QGraphicsLineItem(
+                QLineF(self.view.points[-1][0], self.view.points[-1][1], self.view.points[0][0], self.view.points[0][1])
+            )
+            line.setPen(QPen(designColor, 2, Qt.SolidLine, Qt.RoundCap, Qt.RoundJoin))
+            self.view.scene().addItem(line)
+            self.view.elList.append(line)
+
+            self.view.points.append(self.view.points[0])
+            add_polygon()
+            self.statusBar().showMessage("Area completed")
+
     def mapName_clicked(self):
         """
         Edit map name
         """
 
         while True:
-            map_name, ok = QInputDialog.getText(self, "Behaviors coding map name", "Enter a name for the coding map",
-                                                QLineEdit.Normal, self.mapName)
+            map_name, ok = QInputDialog.getText(
+                self, "Behaviors coding map name", "Enter a name for the coding map", QLineEdit.Normal, self.mapName
+            )
             if map_name.upper() in self.bcm_list:
                 QMessageBox.critical(
-                    self, "", ("The name for the new coding map already exists.<br>"
-                               f"{', '.join(self.bcm_list)} are already defined.<br>"
-                               "To reuse the same name the existing coding map must be deleted (File > Edit project)"))
+                    self,
+                    "",
+                    (
+                        "The name for the new coding map already exists.<br>"
+                        f"{', '.join(self.bcm_list)} are already defined.<br>"
+                        "To reuse the same name the existing coding map must be deleted (File > Edit project)"
+                    ),
+                )
             if ok and map_name and map_name.upper() not in self.bcm_list:
                 self.mapName = map_name
                 self.setWindowTitle(f"{cfg.programName} - Behaviors coding map creator - {self.mapName}")
@@ -592,11 +707,13 @@ class BehaviorsMapCreatorWindow(QMainWindow):
         create a new map
         """
 
-        if self.flagMapChanged:
+        if self.flag_map_changed:
 
-            response = dialog.MessageDialog(cfg.programName + " - Behaviors coding map creator",
-                                            "What to do about the current unsaved coding map?",
-                                            [cfg.SAVE, cfg.DISCARD, cfg.CANCEL])
+            response = dialog.MessageDialog(
+                cfg.programName + " - Behaviors coding map creator",
+                "What to do about the current unsaved coding map?",
+                [cfg.SAVE, cfg.DISCARD, cfg.CANCEL],
+            )
 
             if response == cfg.SAVE:
                 if not self.saveMap_clicked():
@@ -608,23 +725,29 @@ class BehaviorsMapCreatorWindow(QMainWindow):
         self.cancelMap()
 
         while True:
-            map_name, ok = QInputDialog.getText(self, "Behaviors coding map name",
-                                                "Enter a name for the new coding map")
+            map_name, ok = QInputDialog.getText(
+                self, "Behaviors coding map name", "Enter a name for the new coding map"
+            )
             if map_name.upper() in self.bcm_list:
                 QMessageBox.critical(
-                    self, "", ("The name for the new coding map already exists.<br>"
-                               f"{', '.join(self.bcm_list)} are already defined.<br>"
-                               "To reuse the same name the existing coding map must be deleted (File > Edit project)"))
+                    self,
+                    "",
+                    (
+                        "The name for the new coding map already exists.<br>"
+                        f"{', '.join(self.bcm_list)} are already defined.<br>"
+                        "To reuse the same name the existing coding map must be deleted (File > Edit project)"
+                    ),
+                )
             if ok and map_name and map_name.upper() not in self.bcm_list:
                 self.mapName = map_name
                 break
             if not ok:
                 return
-        '''
+        """
         if not self.mapName:
             QMessageBox.critical(self, "", "You must define a name for the new coding map")
             return
-        '''
+        """
 
         self.setWindowTitle(f"{cfg.programName} - Behaviors coding map creator tool - {self.mapName}")
 
@@ -638,16 +761,19 @@ class BehaviorsMapCreatorWindow(QMainWindow):
         load bitmap from data
         show it in view scene
         """
-        if self.flagMapChanged:
-            response = dialog.MessageDialog(cfg.programName + " - Behaviors coding map creator",
-                                            "What to do about the current unsaved coding map?",
-                                            ['Save', 'Discard', 'Cancel'])
+        if self.flag_map_changed:
+            response = dialog.MessageDialog(
+                cfg.programName + " - Behaviors coding map creator",
+                "What to do about the current unsaved coding map?",
+                ["Save", "Discard", "Cancel"],
+            )
 
             if (response == "Save" and not self.saveMap_clicked()) or (response == "Cancel"):
                 return
 
-        fn = QFileDialog(self).getOpenFileName(self, "Open a behaviors coding map", "",
-                                               "Behaviors coding map (*.behav_coding_map);;All files (*)")
+        fn = QFileDialog(self).getOpenFileName(
+            self, "Open a behaviors coding map", "", "Behaviors coding map (*.behav_coding_map);;All files (*)"
+        )
         fileName = fn[0] if type(fn) is tuple else fn
 
         if fileName:
@@ -658,8 +784,10 @@ class BehaviorsMapCreatorWindow(QMainWindow):
                 QMessageBox.critical(self, cfg.programName, f"The file {fileName} is not a behaviors coding map.")
                 return
 
-            if "coding_map_type" not in self.codingMap or self.codingMap[
-                    "coding_map_type"] != "BORIS behaviors coding map":
+            if (
+                "coding_map_type" not in self.codingMap
+                or self.codingMap["coding_map_type"] != "BORIS behaviors coding map"
+            ):
                 QMessageBox.critical(self, cfg.programName, f"The file {fileName} is not a BORIS behaviors coding map.")
 
             self.cancelMap()
@@ -692,7 +820,7 @@ class BehaviorsMapCreatorWindow(QMainWindow):
                     newPolygon.append(QPoint(p[0], p[1]))
 
                 # draw polygon
-                '''polygon = QGraphicsPolygonItem(None, None) if QT_VERSION_STR[0] == "4" else QGraphicsPolygonItem()'''
+                """polygon = QGraphicsPolygonItem(None, None) if QT_VERSION_STR[0] == "4" else QGraphicsPolygonItem()"""
                 polygon = QGraphicsPolygonItem()
                 polygon.setPolygon(newPolygon)
                 clr = QColor()
@@ -717,22 +845,26 @@ class BehaviorsMapCreatorWindow(QMainWindow):
         else:
             self.statusBar().showMessage("No file", 5000)
 
-    def make_coding_map_dict(self):
-        mapDict = {"coding_map_type": "BORIS behaviors coding map", "name": self.mapName, "areas": {}}
+    def make_coding_map_dict(self) -> dict:
+        """
+        create the coding map dictionary
+        the image is encoded in bse64 format
+        """
+        map_dict = {"coding_map_type": "BORIS behaviors coding map", "name": self.mapName, "areas": {}}
 
         for ac, pg in self.polygonsList2:
-            if not mapDict["areas"]:
+            if not map_dict["areas"]:
                 idx = 0
             else:
-                idx = max(mapDict["areas"].keys()) + 1
+                idx = max(map_dict["areas"].keys()) + 1
 
             points = []
             for p in range(pg.polygon().count()):
                 points.append([int(pg.polygon().value(p).x()), int(pg.polygon().value(p).y())])
 
-            mapDict["areas"][idx] = {"code": ac, "geometry": points, "color": pg.brush().color().rgba()}
+            map_dict["areas"][idx] = {"code": ac, "geometry": points, "color": pg.brush().color().rgba()}
 
-        mapDict["areas"] = json.loads(json.dumps(mapDict["areas"]))
+        map_dict["areas"] = json.loads(json.dumps(map_dict["areas"]))
 
         # Save QPixmap to QByteArray via QBuffer.
         byte_array = QByteArray()
@@ -743,9 +875,9 @@ class BehaviorsMapCreatorWindow(QMainWindow):
         string_io.seek(0)
 
         # add codified bitmap
-        mapDict["bitmap"] = binascii.b2a_base64(string_io.read()).decode("utf-8")
+        map_dict["bitmap"] = binascii.b2a_base64(string_io.read()).decode("utf-8")
 
-        return mapDict
+        return map_dict
 
     def saveMap(self):
         """
@@ -758,7 +890,7 @@ class BehaviorsMapCreatorWindow(QMainWindow):
             with open(self.fileName, "w") as outfile:
                 outfile.write(json.dumps(mapDict))
 
-            self.flagMapChanged = False
+            self.flag_map_changed = False
 
             return True
         else:
@@ -779,8 +911,12 @@ class BehaviorsMapCreatorWindow(QMainWindow):
     def saveMap_clicked(self):
 
         if not self.fileName:
-            fn = QFileDialog().getSaveFileName(self, "Save modifiers map", self.mapName + ".behav_coding_map",
-                                               "Behaviors coding map (*.behav_coding_map);;All files (*)")
+            fn = QFileDialog().getSaveFileName(
+                self,
+                "Save modifiers map",
+                self.mapName + ".behav_coding_map",
+                "Behaviors coding map (*.behav_coding_map);;All files (*)",
+            )
             self.fileName = fn[0] if type(fn) is tuple else fn
 
             if self.fileName and os.path.splitext(self.fileName)[1] != ".behav_coding_map":
@@ -792,7 +928,6 @@ class BehaviorsMapCreatorWindow(QMainWindow):
         return False
 
     def newArea(self):
-
         if not self.bitmapFileName:
             QMessageBox.critical(self, cfg.programName, "A bitmap must be loaded before to define areas")
             return
@@ -814,14 +949,21 @@ class BehaviorsMapCreatorWindow(QMainWindow):
         self.slAlpha.setVisible(True)
         self.btDeleteArea.setVisible(False)
 
-        self.statusBar().showMessage(("Click on bitmap to set the vertices of the area with the mouse "
-                                      "(right click will cancel the last point)"))
+        self.statusBar().showMessage(
+            (
+                "Click on bitmap to set the vertices of the area with the mouse "
+                "(right click will cancel the last point)"
+            )
+        )
 
     def saveArea(self):
 
         if not self.closedPolygon:
-            QMessageBox.critical(self, cfg.programName, ("You must close your area before saving it.\n"
-                                                         "The last vertex must correspond to the first one."))
+            QMessageBox.critical(
+                self,
+                cfg.programName,
+                ("You must close your area before saving it.\n" "The last vertex must correspond to the first one."),
+            )
 
         if len(self.view.points) < 3:
             QMessageBox.critical(self, cfg.programName, "You must define a closed area")
@@ -846,8 +988,15 @@ class BehaviorsMapCreatorWindow(QMainWindow):
         self.view.points, self.view.elList = [], []
 
         for widget in [
-                self.btSaveArea, self.btCancelAreaCreation, self.lb, self.leAreaCode, self.btEditAreaCode, self.btColor,
-                self.slAlpha, self.btDeleteArea, self.btNewArea
+            self.btSaveArea,
+            self.btCancelAreaCreation,
+            self.lb,
+            self.leAreaCode,
+            self.btEditAreaCode,
+            self.btColor,
+            self.slAlpha,
+            self.btDeleteArea,
+            self.btNewArea,
         ]:
             widget.setVisible(False)
 
@@ -855,7 +1004,7 @@ class BehaviorsMapCreatorWindow(QMainWindow):
 
         self.leAreaCode.setText("")
 
-        self.flagMapChanged = True
+        self.flag_map_changed = True
         self.statusBar().showMessage("New area saved", 5000)
 
         self.update_area_list()
@@ -911,7 +1060,7 @@ class BehaviorsMapCreatorWindow(QMainWindow):
             if to_delete != -1:
                 del self.polygonsList2[to_delete]
 
-            self.flagMapChanged = True
+            self.flag_map_changed = True
 
         self.view.elList = []
 
@@ -950,7 +1099,7 @@ class BehaviorsMapCreatorWindow(QMainWindow):
         self.mapNameAction.setEnabled(False)
         self.statusBar().showMessage("")
 
-        self.flagMapChanged = False
+        self.flag_map_changed = False
 
     def loadBitmap(self):
         """
@@ -967,13 +1116,19 @@ class BehaviorsMapCreatorWindow(QMainWindow):
             self.pixmap.load(self.bitmapFileName)
 
             # scale image
-            if self.pixmap.size().width() > cfg.CODING_MAP_RESIZE_W or self.pixmap.size().height(
-            ) > cfg.CODING_MAP_RESIZE_H:
+            if (
+                self.pixmap.size().width() > cfg.CODING_MAP_RESIZE_W
+                or self.pixmap.size().height() > cfg.CODING_MAP_RESIZE_H
+            ):
                 self.pixmap = self.pixmap.scaled(cfg.CODING_MAP_RESIZE_W, cfg.CODING_MAP_RESIZE_H, Qt.KeepAspectRatio)
                 QMessageBox.information(
-                    self, cfg.programName,
-                    (f"The bitmap was resized to {self.pixmap.size().width()}x{self.pixmap.size().height()} pixels\n"
-                     "The original file was not modified"))
+                    self,
+                    cfg.programName,
+                    (
+                        f"The bitmap was resized to {self.pixmap.size().width()}x{self.pixmap.size().height()} pixels\n"
+                        "The original file was not modified"
+                    ),
+                )
 
             self.view.setSceneRect(0, 0, self.pixmap.size().width(), self.pixmap.size().height())
             pixitem = QGraphicsPixmapItem(self.pixmap)
@@ -990,12 +1145,35 @@ class BehaviorsMapCreatorWindow(QMainWindow):
 
             self.statusBar().showMessage("""Click "New behavior area" to create a new behavior area""")
 
-            self.flagMapChanged = True
+            self.flag_map_changed = True
 
 
-if __name__ == '__main__':
+def behaviors_coding_map_creator(self):
+    """
+    show behaviors coding map creator window
+    """
+
+    if not self.project:
+        QMessageBox.warning(
+            self, cfg.programName, "No project found", QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton
+        )
+        return
+
+    codes_list = [self.pj[cfg.ETHOGRAM][key][cfg.BEHAVIOR_CODE] for key in self.pj[cfg.ETHOGRAM]]
+
+    self.mapCreatorWindow = BehaviorsMapCreatorWindow(codes_list)
+    # behaviors coding map list
+    self.mapCreatorWindow.bcm_list = [x["name"].upper() for x in self.pj.get(cfg.BEHAVIORS_CODING_MAP, [])]
+    self.mapCreatorWindow.signal_add_to_project.connect(self.behaviors_coding_map_creator_signal_addtoproject)
+    self.mapCreatorWindow.move(self.pos())
+    self.mapCreatorWindow.resize(cfg.CODING_MAP_RESIZE_W, cfg.CODING_MAP_RESIZE_H)
+    self.mapCreatorWindow.show()
+
+
+if __name__ == "__main__":
 
     import sys
+
     app = QApplication(sys.argv)
     window = BehaviorsMapCreatorWindow(["North zone", "East zone", "South zone", "West zone"])
     window.resize(cfg.CODING_MAP_RESIZE_W, cfg.CODING_MAP_RESIZE_H)

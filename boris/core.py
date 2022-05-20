@@ -1298,12 +1298,32 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             )
             return
 
-        if "behaviors_coding_map" not in self.pj:
-            self.pj["behaviors_coding_map"] = []
+        if cfg.BEHAVIORS_CODING_MAP not in self.pj:
+            self.pj[cfg.BEHAVIORS_CODING_MAP] = []
 
-        if [bcm for bcm in self.pj["behaviors_coding_map"] if bcm["name"] == behav_coding_map["name"]]:
+        if [bcm for bcm in self.pj[cfg.BEHAVIORS_CODING_MAP] if bcm["name"] == behav_coding_map["name"]]:
+
+            response = dialog.MessageDialog(
+                "BORIS - Behaviors map creator",
+                (
+                    "The current project already contains a behaviors coding map "
+                    f"with the same name (<b>{behav_coding_map['name']}</b>).<br>"
+                    "What do you want to do?"
+                ),
+                ["Replace the coding map", cfg.CANCEL],
+            )
+            if response == cfg.CANCEL:
+                return
+
+            for idx, bcm in enumerate(self.pj[cfg.BEHAVIORS_CODING_MAP]):
+                if bcm["name"] == behav_coding_map["name"]:
+                    break
+            self.pj[cfg.BEHAVIORS_CODING_MAP][idx] = dict(behav_coding_map)
+            return
+
+            """
             QMessageBox.critical(
-                self,
+                None,
                 cfg.programName,
                 (
                     "The current project already contains a behaviors coding map "
@@ -1312,38 +1332,17 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 QMessageBox.Ok | QMessageBox.Default,
                 QMessageBox.NoButton,
             )
-            return
 
-        self.pj["behaviors_coding_map"].append(behav_coding_map)
+            return
+            """
+
+        self.pj[cfg.BEHAVIORS_CODING_MAP].append(behav_coding_map)
         QMessageBox.information(
             self,
             cfg.programName,
             f"The behaviors coding map <b>{behav_coding_map['name']}</b> was added to current project",
         )
         self.projectChanged = True
-
-    def behaviors_coding_map_creator(self):
-        """
-        show behaviors coding map creator window
-        """
-
-        if not self.project:
-            QMessageBox.warning(
-                self, cfg.programName, "No project found", QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton
-            )
-            return
-
-        codes_list = []
-        for key in self.pj[cfg.ETHOGRAM]:
-            codes_list.append(self.pj[cfg.ETHOGRAM][key][cfg.BEHAVIOR_CODE])
-
-        self.mapCreatorWindow = behav_coding_map_creator.BehaviorsMapCreatorWindow(codes_list)
-        # behaviors coding map list
-        self.mapCreatorWindow.bcm_list = [x["name"].upper() for x in self.pj.get(cfg.BEHAVIORS_CODING_MAP, [])]
-        self.mapCreatorWindow.signal_add_to_project.connect(self.behaviors_coding_map_creator_signal_addtoproject)
-        self.mapCreatorWindow.move(self.pos())
-        self.mapCreatorWindow.resize(cfg.CODING_MAP_RESIZE_W, cfg.CODING_MAP_RESIZE_H)
-        self.mapCreatorWindow.show()
 
     def actionCheckUpdate_activated(self, flagMsgOnlyIfNew=False):
         """

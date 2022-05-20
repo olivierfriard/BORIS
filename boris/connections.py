@@ -19,32 +19,27 @@ Copyright 2012-2022 Olivier Friard
   MA 02110-1301, USA.
 """
 
+from PyQt5.QtCore import Qt, QTimer
 from PyQt5.QtWidgets import QAction
-from PyQt5.QtCore import QTimer, Qt
 
+from . import about, behav_coding_map_creator, behavior_binary_table, behaviors_coding_map, coding_pad
 from . import config as cfg
-from . import video_equalizer
-from . import behavior_binary_table
-from . import transitions
-from . import import_observations
-from . import irr
-from . import project_server
-from . import events_snapshots
+from . import (
+    event_operations,
+    events_snapshots,
+    export_events,
+    geometric_measurement,
+    image_overlay,
+    import_observations,
+    irr,
+    latency,
+    media_file,
+    observation_operations,
+    preferences,
+    project_server,
+)
 from . import state_events as state_events
-from . import preferences
-from . import geometric_measurement
-from . import synthetic_time_budget
-from . import export_events
-from . import coding_pad
-from . import time_budget_widget
-from . import about
-from . import behaviors_coding_map
-from . import media_file
-from . import event_operations
-from . import image_overlay
-from . import video_operations
-from . import observation_operations
-from . import latency
+from . import synthetic_time_budget, time_budget_widget, transitions, video_equalizer, video_operations
 
 
 def connections(self):
@@ -161,7 +156,9 @@ def connections(self):
     self.action_block_dockwidgets.triggered.connect(self.block_dockwidgets)
 
     self.action_create_modifiers_coding_map.triggered.connect(self.modifiers_coding_map_creator)
-    self.action_create_behaviors_coding_map.triggered.connect(self.behaviors_coding_map_creator)
+    self.action_create_behaviors_coding_map.triggered.connect(
+        lambda: behav_coding_map_creator.behaviors_coding_map_creator(self)
+    )
 
     self.actionShow_spectrogram.triggered.connect(lambda: self.show_plot_widget("spectrogram", warning=True))
     self.actionShow_the_sound_waveform.triggered.connect(lambda: self.show_plot_widget("waveform", warning=True))
