@@ -259,10 +259,11 @@ LIST = "list"
 EDIT = "edit"
 OPEN = "open"
 VIEW = "view"
-START = "start"
+OBS_START = "start"
 SELECT = "select"
 SINGLE = "single"
 MULTIPLE = "multiple"
+
 
 SELECT1 = "select1"
 

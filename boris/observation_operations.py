@@ -162,7 +162,7 @@ def open_observation(self, mode: str) -> str:
         else:
             close_observation(self)
     selected_observations = []
-    if mode == cfg.START:
+    if mode == cfg.OBS_START:
         _, selected_observations = select_observations.select_observations(self.pj, cfg.OPEN)
     if mode == cfg.VIEW:
         _, selected_observations = select_observations.select_observations(self.pj, cfg.VIEW)
@@ -173,7 +173,7 @@ def open_observation(self, mode: str) -> str:
         return ""
 
 
-def load_observation(self, obsId: str, mode: str = cfg.START) -> str:
+def load_observation(self, obsId: str, mode: str = cfg.OBS_START) -> str:
     """
     load observation obsId
 
@@ -190,7 +190,7 @@ def load_observation(self, obsId: str, mode: str = cfg.START) -> str:
     self.loadEventsInTW(self.observationId)
 
     if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE] == cfg.LIVE:
-        if mode == cfg.START:
+        if mode == cfg.OBS_START:
             self.playerType = cfg.LIVE
             initialize_new_live_observation(self)
         if mode == cfg.VIEW:
@@ -199,7 +199,7 @@ def load_observation(self, obsId: str, mode: str = cfg.START) -> str:
 
     if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE] in [cfg.MEDIA]:
 
-        if mode == cfg.START:
+        if mode == cfg.OBS_START:
 
             if not initialize_new_observation_media(self):
                 self.observationId = ""

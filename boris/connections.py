@@ -76,7 +76,9 @@ def connections(self):
         lambda: observation_operations.new_observation(self, mode=cfg.NEW, obsId="")
     )
 
-    self.actionOpen_observation.triggered.connect(lambda: observation_operations.open_observation(self, mode="start"))
+    self.actionOpen_observation.triggered.connect(
+        lambda: observation_operations.open_observation(self, mode=cfg.OBS_START)
+    )
     self.actionView_observation.triggered.connect(lambda: observation_operations.open_observation(self, mode=cfg.VIEW))
     self.actionEdit_observation_2.triggered.connect(lambda: observation_operations.edit_observation(self))
     self.actionObservationsList.triggered.connect(lambda: observation_operations.observations_list(self))
