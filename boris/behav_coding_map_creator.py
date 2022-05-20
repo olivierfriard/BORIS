@@ -652,6 +652,7 @@ class BehaviorsMapCreatorWindow(QMainWindow):
             # add first point as last point of polygon
 
             # test is polygon is crossed
+            """
             if len(self.view.points) >= 3:
 
                 for idx, _ in enumerate(self.view.points[:-2]):
@@ -664,6 +665,7 @@ class BehaviorsMapCreatorWindow(QMainWindow):
                     ):
                         QMessageBox.critical(self, "", "The polygon edges can not be intersected")
                         return
+            """
 
             line = QGraphicsLineItem(
                 QLineF(self.view.points[-1][0], self.view.points[-1][1], self.view.points[0][0], self.view.points[0][1])
