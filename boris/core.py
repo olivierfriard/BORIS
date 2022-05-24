@@ -978,11 +978,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             warning (bool): Display message if True
         """
 
-        if plot_type not in ["waveform", "spectrogram", "plot_events"]:
+        if plot_type not in [cfg.WAVEFORM_PLOT, cfg.SPECTROGRAM_PLOT, "plot_events"]:
             logging.critical("error on plot type")
             return
 
-        if self.playerType in [cfg.LIVE, cfg.VIEWER] and plot_type in ["waveform", "spectrogram"]:
+        if self.playerType in [cfg.LIVE, cfg.VIEWER] and plot_type in [cfg.WAVEFORM_PLOT, cfg.SPECTROGRAM_PLOT]:
             QMessageBox.warning(
                 self,
                 cfg.programName,
@@ -990,7 +990,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             )
             return
 
-        if plot_type == "spectrogram":
+        if plot_type == cfg.SPECTROGRAM_PLOT:
             if hasattr(self, "spectro"):
                 self.spectro.show()
             else:
@@ -1073,7 +1073,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     if self.playerType == cfg.MEDIA and self.playMode == cfg.MPV and not flag_paused:
                         self.play_video()
 
-        if plot_type == "waveform":
+        if plot_type == cfg.WAVEFORM_PLOT:
             if hasattr(self, "waveform"):
                 self.waveform.show()
             else:
@@ -1148,7 +1148,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     if self.playerType == cfg.MEDIA and self.playMode == cfg.MPV and not flag_paused:
                         self.play_video()
 
-        if plot_type == "plot_events":
+        if plot_type == cfg.EVENTS_PLOT:
             if hasattr(self, "plot_events"):
                 self.plot_events.show()
             else:

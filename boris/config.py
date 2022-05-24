@@ -304,6 +304,7 @@ VLC = "vlc"
 LIVE = "LIVE"
 VIEWER = "VIEWER"
 MEDIA = "MEDIA"
+IMAGES = "IMAGES"
 
 
 FFMPEG = "ffmpeg"
@@ -334,6 +335,12 @@ ALL_PLAYERS = [str(x + 1) for x in range(N_PLAYER)]
 
 VISUALIZE_SPECTROGRAM = "visualize_spectrogram"
 VISUALIZE_WAVEFORM = "visualize_waveform"
+
+# plot type
+WAVEFORM_PLOT = "waveform"
+SPECTROGRAM_PLOT = "spectrogram"
+EVENTS_PLOT = "plot_events"
+
 
 POINT_EVENT_ST_DURATION = 0.5
 
