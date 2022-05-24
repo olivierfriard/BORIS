@@ -42,6 +42,7 @@ from PyQt5.QtWidgets import (
     QApplication,
     QMenu,
     QAbstractItemView,
+    QListWidgetItem,
 )
 
 from . import config as cfg
@@ -119,6 +120,11 @@ class Observation(QDialog, Ui_Form):
         self.obs_time_offset = duration_widget.Duration_widget(0)
         self.horizontalLayout_6.insertWidget(1, self.obs_time_offset)
 
+        # observation type
+        self.rb_media_files.toggled.connect(self.obs_type_changed)
+        self.rb_live.toggled.connect(self.obs_type_changed)
+        self.rb_images.toggled.connect(self.obs_type_changed)
+
         menu_items = [
             "media abs path|with absolute path",
             "media rel path|with relative path",
@@ -176,7 +182,46 @@ class Observation(QDialog, Ui_Form):
 
         self.cb_start_from_current_time.stateChanged.connect(self.cb_start_from_current_time_changed)
 
+        # images
+        self.pb_add_directory.clicked.connect(self.add_images_directory)
+        self.pb_remove_directory.clicked.connect(self.remove_images_directory)
+
         self.tabWidget.setCurrentIndex(0)
+
+    def obs_type_changed(self):
+        """
+        change stacked widget page in base at the observation type
+
+        """
+        if self.rb_media_files.isChecked():
+            self.sw_observation_type.setCurrentIndex(1)
+        if self.rb_live.isChecked():
+            self.sw_observation_type.setCurrentIndex(2)
+        if self.rb_images.isChecked():
+            self.sw_observation_type.setCurrentIndex(3)
+
+    def add_images_directory(self):
+        """
+        add path to images directory
+        """
+        dir_path = QFileDialog.getExistingDirectory(None, "Select directory", os.getenv("HOME"))
+        result = util.dir_images_number(dir_path)
+        if not result.get("number of images", 0):
+            response = dialog.MessageDialog(
+                cfg.programName,
+                "The directory does not contain images (*.jpg, *.jpeg, *.png)",
+                ["Cancel", "Add directory"],
+            )
+            if response == "Cancel":
+                return
+
+        self.lw_images_directory.addItem(QListWidgetItem(dir_path))
+
+    def remove_images_directory(self):
+        """
+        remove dir path from the list
+        """
+        self.lw_images_directory.takeItem(self.lw_images_directory.currentRow())
 
     def add_button_menu(self, data, menu_obj):
         """
@@ -663,7 +708,7 @@ class Observation(QDialog, Ui_Form):
             self.qm.exec_()
             return False
 
-        if self.tabProjectType.currentIndex() == 0:  # observation based on media file
+        if self.rb_media_files.isChecked():  # observation based on media file(s)
             # check player number
             players_list = []
             players = {}  # for storing duration
@@ -744,6 +789,11 @@ class Observation(QDialog, Ui_Form):
                         ),
                     )
                     return False
+
+        if self.rb_images.isChecked():
+            if not self.lw_images_directory.count():
+                QMessageBox.critical(self, cfg.programName, "You have to select at least one images directory")
+                return False
 
         # check if indep variables are correct type
         for row in range(self.twIndepVariables.rowCount()):

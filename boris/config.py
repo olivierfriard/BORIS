@@ -112,6 +112,7 @@ NO_FOCAL_SUBJECT = "No focal subject"
 TYPE = "type"
 FILE = "file"
 DESCRIPTION = "description"
+DIRECTORIES_LIST = "directories_list"
 
 PLOT_DATA = "plot_data"
 

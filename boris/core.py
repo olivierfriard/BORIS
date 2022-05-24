@@ -974,12 +974,12 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         if plot does not exist it is created
 
         Args:
-            plot_type (str): type of plot ("spectrogram", "waveform", "plot_events")
+            plot_type (str): type of plot (cfg.SPECTROGRAM_PLOT, cfg.WAVEFORM_PLOT, cfg.EVENTS_PLOT)
             warning (bool): Display message if True
         """
 
-        if plot_type not in [cfg.WAVEFORM_PLOT, cfg.SPECTROGRAM_PLOT, "plot_events"]:
-            logging.critical("error on plot type")
+        if plot_type not in [cfg.WAVEFORM_PLOT, cfg.SPECTROGRAM_PLOT, cfg.EVENTS_PLOT]:
+            logging.critical(f"Error on plot type: {plot_type}")
             return
 
         if self.playerType in [cfg.LIVE, cfg.VIEWER] and plot_type in [cfg.WAVEFORM_PLOT, cfg.SPECTROGRAM_PLOT]:
@@ -995,6 +995,19 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 self.spectro.show()
             else:
                 logging.debug("create spectrogram plot")
+
+                # check if first media in player #1 has audio
+                for media in self.pj[cfg.OBSERVATIONS][self.observationId][cfg.FILE][cfg.PLAYER1]:
+                    media_file_path = project_functions.media_full_path(media, self.projectFileName)
+
+                    if not project_functions.has_audio(self.pj[cfg.OBSERVATIONS][self.observationId], media_file_path):
+                        QMessageBox.critical(
+                            self,
+                            cfg.programName,
+                            f"The media file {media_file_path} does not have an audio track",
+                        )
+                        return
+                    break
 
                 # remember if player paused
                 if warning:
@@ -1077,7 +1090,20 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             if hasattr(self, "waveform"):
                 self.waveform.show()
             else:
-                logging.debug("create waveform plot")
+                logging.debug("Create waveform plot")
+
+                # check if first media in player #1 has audio
+                for media in self.pj[cfg.OBSERVATIONS][self.observationId][cfg.FILE][cfg.PLAYER1]:
+                    media_file_path = project_functions.media_full_path(media, self.projectFileName)
+
+                    if not project_functions.has_audio(self.pj[cfg.OBSERVATIONS][self.observationId], media_file_path):
+                        QMessageBox.critical(
+                            self,
+                            cfg.programName,
+                            f"The media file {media_file_path} does not have an audio track",
+                        )
+                        return
+                    break
 
                 # remember if player paused
                 if warning:

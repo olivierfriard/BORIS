@@ -25,7 +25,7 @@ import hashlib
 import logging
 import math
 import os
-import pathlib
+import pathlib as pl
 import re
 import socket
 import subprocess
@@ -538,7 +538,7 @@ def extract_wav(ffmpeg_bin: str, media_file_path: str, tmp_dir: str) -> str:
         str: wav file path or "" if error
     """
 
-    wav_file_path = pathlib.Path(tmp_dir) / pathlib.Path(media_file_path + ".wav").name
+    wav_file_path = pl.Path(tmp_dir) / pl.Path(media_file_path + ".wav").name
 
     # check if media file is a wav file
     try:
@@ -577,7 +577,7 @@ def decimal_default(obj):
     raise TypeError
 
 
-def complete(l: list, max_: int):
+def complete(l: list, max_: int) -> list:
     """
     complete list with empty string ("") until len = max
 
@@ -895,12 +895,12 @@ def check_ffmpeg_path():
 
     if sys.platform.startswith("linux") or sys.platform.startswith("darwin"):
 
-        ffmpeg_path = pathlib.Path("")
+        ffmpeg_path = pl.Path("")
         # search embedded ffmpeg
         if sys.argv[0].endswith("start_boris.py"):
-            ffmpeg_path = pathlib.Path(sys.argv[0]).resolve().parent / "boris" / "misc" / "ffmpeg"
+            ffmpeg_path = pl.Path(sys.argv[0]).resolve().parent / "boris" / "misc" / "ffmpeg"
         if sys.argv[0].endswith("__main__.py"):
-            ffmpeg_path = pathlib.Path(sys.argv[0]).resolve().parent / "misc" / "ffmpeg"
+            ffmpeg_path = pl.Path(sys.argv[0]).resolve().parent / "misc" / "ffmpeg"
 
         if not ffmpeg_path.is_file():
             # search global ffmpeg
@@ -915,12 +915,12 @@ def check_ffmpeg_path():
 
     if sys.platform.startswith("win"):
 
-        ffmpeg_path = pathlib.Path("")
+        ffmpeg_path = pl.Path("")
         # search embedded ffmpeg
         if sys.argv[0].endswith("start_boris.py"):
-            ffmpeg_path = pathlib.Path(sys.argv[0]).resolve().parent / "boris" / "misc" / "ffmpeg.exe"
+            ffmpeg_path = pl.Path(sys.argv[0]).resolve().parent / "boris" / "misc" / "ffmpeg.exe"
         if sys.argv[0].endswith("__main__.py"):
-            ffmpeg_path = pathlib.Path(sys.argv[0]).resolve().parent / "misc" / "ffmpeg.exe"
+            ffmpeg_path = pl.Path(sys.argv[0]).resolve().parent / "misc" / "ffmpeg.exe"
 
         if not ffmpeg_path.is_file():
             # search global ffmpeg
@@ -1076,3 +1076,18 @@ def all_behaviors(ethogram: dict) -> list:
     """
 
     return [ethogram[x][cfg.BEHAVIOR_CODE] for x in sorted_keys(ethogram)]
+
+
+def dir_images_number(dir_path_str: str) -> dict:
+    """
+    check if dir contains images (*.jpg, *.jpeg, *.png)
+    """
+
+    dir_path = pl.Path(dir_path_str)
+    if not dir_path.is_dir():
+        return {"error": f"The directory {dir_path_str} does not exists"}
+    img_count = 0
+    for pattern in ("*.jpg", "*.png", "*.jpeg"):
+        img_count += len(list(dir_path.glob(pattern)))
+
+    return {"number of images": img_count}

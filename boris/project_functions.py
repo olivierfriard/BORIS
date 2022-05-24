@@ -637,7 +637,7 @@ def remove_media_files_path(pj):
                     if p != media_file:
                         pj[cfg.OBSERVATIONS][obs_id][cfg.FILE][n_player][idx] = p
                         if cfg.MEDIA_INFO in pj[cfg.OBSERVATIONS][obs_id]:
-                            for info in [cfg.LENGTH, "hasAudio", "hasVideo", "fps"]:
+                            for info in [cfg.LENGTH, cfg.HAS_AUDIO, cfg.HAS_VIDEO, cfg.FPS]:
                                 if (
                                     info in pj[cfg.OBSERVATIONS][obs_id][cfg.MEDIA_INFO]
                                     and media_file in pj[cfg.OBSERVATIONS][obs_id][cfg.MEDIA_INFO][info]
@@ -972,7 +972,12 @@ def open_project_json(projectFileName: str) -> tuple:
     # if one file is present in player #1 -> set "media_info" key with value of media_file_info
     for obs in pj[cfg.OBSERVATIONS]:
         if pj[cfg.OBSERVATIONS][obs][cfg.TYPE] in [cfg.MEDIA] and cfg.MEDIA_INFO not in pj[cfg.OBSERVATIONS][obs]:
-            pj[cfg.OBSERVATIONS][obs][cfg.MEDIA_INFO] = {cfg.LENGTH: {}, "fps": {}, "hasVideo": {}, "hasAudio": {}}
+            pj[cfg.OBSERVATIONS][obs][cfg.MEDIA_INFO] = {
+                cfg.LENGTH: {},
+                cfg.FPS: {},
+                cfg.HAS_VIDEO: {},
+                cfg.HAS_AUDIO: {},
+            }
             for player in [cfg.PLAYER1, cfg.PLAYER2]:
                 # fix bug Anne Maijer 2017-07-17
                 if pj[cfg.OBSERVATIONS][obs][cfg.FILE] == []:
@@ -991,21 +996,21 @@ def open_project_json(projectFileName: str) -> tuple:
                     if "duration" in r and r["duration"]:
                         pj[cfg.OBSERVATIONS][obs][cfg.MEDIA_INFO][cfg.LENGTH][media_file_path] = float(r["duration"])
                         pj[cfg.OBSERVATIONS][obs][cfg.MEDIA_INFO][cfg.FPS][media_file_path] = float(r["fps"])
-                        pj[cfg.OBSERVATIONS][obs][cfg.MEDIA_INFO]["hasVideo"][media_file_path] = r["has_video"]
-                        pj[cfg.OBSERVATIONS][obs][cfg.MEDIA_INFO]["hasAudio"][media_file_path] = r["has_audio"]
+                        pj[cfg.OBSERVATIONS][obs][cfg.MEDIA_INFO][cfg.HAS_VIDEO][media_file_path] = r["has_video"]
+                        pj[cfg.OBSERVATIONS][obs][cfg.MEDIA_INFO][cfg.HAS_AUDIO][media_file_path] = r["has_audio"]
                         project_updated, projectChanged = True, True
                     else:  # file path not found
                         if (
-                            "media_file_info" in pj[cfg.OBSERVATIONS][obs]
-                            and len(pj[cfg.OBSERVATIONS][obs]["media_file_info"]) == 1
+                            cfg.MEDIA_FILE_INFO in pj[cfg.OBSERVATIONS][obs]
+                            and len(pj[cfg.OBSERVATIONS][obs][cfg.MEDIA_FILE_INFO]) == 1
                             and len(pj[cfg.OBSERVATIONS][obs][cfg.FILE][cfg.PLAYER1]) == 1
                             and len(pj[cfg.OBSERVATIONS][obs][cfg.FILE][cfg.PLAYER2]) == 0
                         ):
-                            media_md5_key = list(pj[cfg.OBSERVATIONS][obs]["media_file_info"].keys())[0]
+                            media_md5_key = list(pj[cfg.OBSERVATIONS][obs][cfg.MEDIA_FILE_INFO].keys())[0]
                             # duration
                             pj[cfg.OBSERVATIONS][obs][cfg.MEDIA_INFO] = {
                                 cfg.LENGTH: {
-                                    media_file_path: pj[cfg.OBSERVATIONS][obs]["media_file_info"][media_md5_key][
+                                    media_file_path: pj[cfg.OBSERVATIONS][obs][cfg.MEDIA_FILE_INFO][media_md5_key][
                                         "video_length"
                                     ]
                                     / 1000
@@ -1014,13 +1019,13 @@ def open_project_json(projectFileName: str) -> tuple:
                             projectChanged = True
 
                             # FPS
-                            if "nframe" in pj[cfg.OBSERVATIONS][obs]["media_file_info"][media_md5_key]:
+                            if "nframe" in pj[cfg.OBSERVATIONS][obs][cfg.MEDIA_FILE_INFO][media_md5_key]:
                                 pj[cfg.OBSERVATIONS][obs][cfg.MEDIA_INFO][cfg.FPS] = {
-                                    media_file_path: pj[cfg.OBSERVATIONS][obs]["media_file_info"][media_md5_key][
+                                    media_file_path: pj[cfg.OBSERVATIONS][obs][cfg.MEDIA_FILE_INFO][media_md5_key][
                                         "nframe"
                                     ]
                                     / (
-                                        pj[cfg.OBSERVATIONS][obs]["media_file_info"][media_md5_key]["video_length"]
+                                        pj[cfg.OBSERVATIONS][obs][cfg.MEDIA_FILE_INFO][media_md5_key]["video_length"]
                                         / 1000
                                     )
                                 }
@@ -1144,3 +1149,14 @@ def fix_unpaired_state_events(obsId, ethogram, observation, fix_at_time):
                     )
 
     return closing_events_to_add
+
+
+def has_audio(observation: dict, media_file_path: str) -> bool:
+    """
+    check if media file has audio
+    """
+    if cfg.HAS_AUDIO in observation[cfg.MEDIA_INFO]:
+        if media_file_path in observation[cfg.MEDIA_INFO][cfg.HAS_AUDIO]:
+            if observation[cfg.MEDIA_INFO][cfg.HAS_AUDIO][media_file_path]:
+                return True
+    return False

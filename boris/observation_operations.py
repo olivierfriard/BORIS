@@ -362,6 +362,7 @@ def new_observation(self, mode=cfg.NEW, obsId=""):
     )
 
     observationWindow.pj = dict(self.pj)
+    observationWindow.sw_observation_type.setCurrentIndex(0)  # no observation type
     observationWindow.mode = mode
     observationWindow.mem_obs_id = obsId
     observationWindow.chunk_length = self.chunk_length
@@ -458,17 +459,17 @@ def new_observation(self, mode=cfg.NEW, obsId=""):
         observationWindow.teDescription.setPlainText(self.pj[cfg.OBSERVATIONS][obsId][cfg.DESCRIPTION])
 
         try:
-            observationWindow.mediaDurations = self.pj[cfg.OBSERVATIONS][obsId][cfg.MEDIA_INFO]["length"]
-            observationWindow.mediaFPS = self.pj[cfg.OBSERVATIONS][obsId][cfg.MEDIA_INFO]["fps"]
+            observationWindow.mediaDurations = self.pj[cfg.OBSERVATIONS][obsId][cfg.MEDIA_INFO][cfg.LENGTH]
+            observationWindow.mediaFPS = self.pj[cfg.OBSERVATIONS][obsId][cfg.MEDIA_INFO][cfg.FPS]
         except Exception:
             observationWindow.mediaDurations = {}
             observationWindow.mediaFPS = {}
 
         try:
-            if "hasVideo" in self.pj[cfg.OBSERVATIONS][obsId][cfg.MEDIA_INFO]:
-                observationWindow.mediaHasVideo = self.pj[cfg.OBSERVATIONS][obsId][cfg.MEDIA_INFO]["hasVideo"]
-            if "hasAudio" in self.pj[cfg.OBSERVATIONS][obsId][cfg.MEDIA_INFO]:
-                observationWindow.mediaHasAudio = self.pj[cfg.OBSERVATIONS][obsId][cfg.MEDIA_INFO]["hasAudio"]
+            if cfg.HAS_VIDEO in self.pj[cfg.OBSERVATIONS][obsId][cfg.MEDIA_INFO]:
+                observationWindow.mediaHasVideo = self.pj[cfg.OBSERVATIONS][obsId][cfg.MEDIA_INFO][cfg.HAS_VIDEO]
+            if cfg.HAS_AUDIO in self.pj[cfg.OBSERVATIONS][obsId][cfg.MEDIA_INFO]:
+                observationWindow.mediaHasAudio = self.pj[cfg.OBSERVATIONS][obsId][cfg.MEDIA_INFO][cfg.HAS_AUDIO]
         except Exception:
             logging.info("No Video/Audio information")
 
@@ -524,24 +525,27 @@ def new_observation(self, mode=cfg.NEW, obsId=""):
                     # has_video has_audio
                     try:
                         item = QTableWidgetItem(
-                            str(self.pj[cfg.OBSERVATIONS][obsId][cfg.MEDIA_INFO]["hasVideo"][mediaFile])
+                            str(self.pj[cfg.OBSERVATIONS][obsId][cfg.MEDIA_INFO][cfg.HAS_VIDEO][mediaFile])
                         )
                         item.setFlags(Qt.ItemIsEnabled | Qt.ItemIsSelectable)
                         observationWindow.twVideo1.setItem(observationWindow.twVideo1.rowCount() - 1, 5, item)
 
                         item = QTableWidgetItem(
-                            str(self.pj[cfg.OBSERVATIONS][obsId][cfg.MEDIA_INFO]["hasAudio"][mediaFile])
+                            str(self.pj[cfg.OBSERVATIONS][obsId][cfg.MEDIA_INFO][cfg.HAS_AUDIO][mediaFile])
                         )
                         item.setFlags(Qt.ItemIsEnabled | Qt.ItemIsSelectable)
                         observationWindow.twVideo1.setItem(observationWindow.twVideo1.rowCount() - 1, 6, item)
                     except Exception:
                         pass
 
-        if self.pj[cfg.OBSERVATIONS][obsId]["type"] in [cfg.MEDIA]:
-            observationWindow.tabProjectType.setCurrentIndex(cfg.MEDIA_TAB_IDX)
+        if self.pj[cfg.OBSERVATIONS][obsId]["type"] == cfg.MEDIA:
+            observationWindow.rb_media_files.setChecked(True)
+
+        if self.pj[cfg.OBSERVATIONS][obsId]["type"] == cfg.IMAGES:
+            observationWindow.rb_images.setChecked(True)
 
         if self.pj[cfg.OBSERVATIONS][obsId]["type"] in [cfg.LIVE]:
-            observationWindow.tabProjectType.setCurrentIndex(cfg.LIVE_TAB_IDX)
+            observationWindow.rb_live.setChecked(True)
             # sampling time
             observationWindow.sbScanSampling.setValue(self.pj[cfg.OBSERVATIONS][obsId].get(cfg.SCAN_SAMPLING_TIME, 0))
             # start from current time
@@ -682,10 +686,14 @@ def new_observation(self, mode=cfg.NEW, obsId=""):
         # observation date
         self.pj[cfg.OBSERVATIONS][new_obs_id]["date"] = observationWindow.dteDate.dateTime().toString(Qt.ISODate)
         self.pj[cfg.OBSERVATIONS][new_obs_id][cfg.DESCRIPTION] = observationWindow.teDescription.toPlainText()
-        # observation type: read project type from tab text
-        self.pj[cfg.OBSERVATIONS][new_obs_id][cfg.TYPE] = observationWindow.tabProjectType.tabText(
-            observationWindow.tabProjectType.currentIndex()
-        ).upper()
+
+        # observation type: read project type from radio buttons
+        if observationWindow.rb_media_files.isChecked():
+            self.pj[cfg.OBSERVATIONS][new_obs_id][cfg.TYPE] = cfg.MEDIA
+        if observationWindow.rb_live.isChecked():
+            self.pj[cfg.OBSERVATIONS][new_obs_id][cfg.TYPE] = cfg.LIVE
+        if observationWindow.rb_images.isChecked():
+            self.pj[cfg.OBSERVATIONS][new_obs_id][cfg.TYPE] = cfg.IMAGES
 
         # independent variables for observation
         self.pj[cfg.OBSERVATIONS][new_obs_id][cfg.INDEPENDENT_VARIABLES] = {}
@@ -760,7 +768,7 @@ def new_observation(self, mode=cfg.NEW, obsId=""):
         # observationWindow.cbCloseCurrentBehaviorsBetweenVideo.isChecked()
         self.pj[cfg.OBSERVATIONS][new_obs_id][cfg.CLOSE_BEHAVIORS_BETWEEN_VIDEOS] = False
 
-        if self.pj[cfg.OBSERVATIONS][new_obs_id][cfg.TYPE] in [cfg.LIVE]:
+        if self.pj[cfg.OBSERVATIONS][new_obs_id][cfg.TYPE] == cfg.LIVE:
             self.pj[cfg.OBSERVATIONS][new_obs_id][cfg.SCAN_SAMPLING_TIME] = observationWindow.sbScanSampling.value()
             self.pj[cfg.OBSERVATIONS][new_obs_id][cfg.START_FROM_CURRENT_TIME] = (
                 observationWindow.cb_start_from_current_time.isChecked() and observationWindow.rb_day_time.isChecked()
@@ -769,11 +777,18 @@ def new_observation(self, mode=cfg.NEW, obsId=""):
                 observationWindow.cb_start_from_current_time.isChecked() and observationWindow.rb_epoch_time.isChecked()
             )
 
+        # images dir
+        if self.pj[cfg.OBSERVATIONS][new_obs_id][cfg.TYPE] == cfg.IMAGES:
+            self.pj[cfg.OBSERVATIONS][new_obs_id][cfg.DIRECTORIES_LIST] = [
+                observationWindow.lw_images_directory.item(i).text()
+                for i in range(observationWindow.lw_images_directory.count())
+            ]
+
         # media file
         self.pj[cfg.OBSERVATIONS][new_obs_id][cfg.FILE] = {}
 
         # media
-        if self.pj[cfg.OBSERVATIONS][new_obs_id][cfg.TYPE] in [cfg.MEDIA]:
+        if self.pj[cfg.OBSERVATIONS][new_obs_id][cfg.TYPE] == cfg.MEDIA:
 
             self.pj[cfg.OBSERVATIONS][new_obs_id][cfg.MEDIA_INFO] = {
                 cfg.LENGTH: observationWindow.mediaDurations,
@@ -781,8 +796,8 @@ def new_observation(self, mode=cfg.NEW, obsId=""):
             }
 
             try:
-                self.pj[cfg.OBSERVATIONS][new_obs_id][cfg.MEDIA_INFO]["hasVideo"] = observationWindow.mediaHasVideo
-                self.pj[cfg.OBSERVATIONS][new_obs_id][cfg.MEDIA_INFO]["hasAudio"] = observationWindow.mediaHasAudio
+                self.pj[cfg.OBSERVATIONS][new_obs_id][cfg.MEDIA_INFO][cfg.HAS_VIDEO] = observationWindow.mediaHasVideo
+                self.pj[cfg.OBSERVATIONS][new_obs_id][cfg.MEDIA_INFO][cfg.HAS_AUDIO] = observationWindow.mediaHasAudio
             except Exception:
                 logging.info("error with media_info information")
 
@@ -812,18 +827,21 @@ def new_observation(self, mode=cfg.NEW, obsId=""):
             # title of dock widget
             self.dwObservations.setWindowTitle(f"Events for “{self.observationId}“ observation")
 
-            if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE] in [cfg.LIVE]:
+            if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE] == cfg.LIVE:
 
                 self.playerType = cfg.LIVE
                 initialize_new_live_observation(self)
 
-            elif self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE] in [cfg.MEDIA]:
+            if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE] == cfg.MEDIA:
                 self.playerType = cfg.MEDIA
                 # load events in table widget
                 if mode == cfg.EDIT:
                     self.loadEventsInTW(self.observationId)
 
                 initialize_new_observation_media(self)
+
+            if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE] == cfg.IMAGES:
+                QMessageBox.critical(self, cfg.programName, "Observation from images directory is not yet implemented")
 
             menu_options.update_menu(self)
 
