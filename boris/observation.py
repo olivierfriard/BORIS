@@ -704,7 +704,15 @@ class Observation(QDialog, Ui_Form):
         if not self.leObservationId.text():
             self.qm = QMessageBox()
             self.qm.setIcon(QMessageBox.Critical)
-            self.qm.setText("The <b>observation id</b> is mandatory and must be unique!")
+            self.qm.setText("The <b>observation id</b> is mandatory and must be unique.")
+            self.qm.exec_()
+            return False
+
+        # check if observation_type
+        if not any((self.rb_media_files.isChecked(), self.rb_live.isChecked(), self.rb_images.isChecked())):
+            self.qm = QMessageBox()
+            self.qm.setIcon(QMessageBox.Critical)
+            self.qm.setText("Choose an observation type.")
             self.qm.exec_()
             return False
 
@@ -815,7 +823,7 @@ class Observation(QDialog, Ui_Form):
                     self,
                     cfg.programName,
                     (
-                        f"The observation id <b>{self.leObservationId.text(),}</b> is already used!<br>"
+                        f"The observation id <b>{self.leObservationId.text()}</b> is already used!<br>"
                         f"{self.pj[cfg.OBSERVATIONS][self.leObservationId.text()]['description']}<br>"
                         f"{self.pj[cfg.OBSERVATIONS][self.leObservationId.text()]['date']}"
                     ),

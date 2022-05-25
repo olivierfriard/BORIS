@@ -32,6 +32,8 @@ MAX_UNDO_QUEUE = 25
 
 NA = "NA"
 
+CTRL_KEY = "Ctrl"
+
 SPECTRO_TIMER = 500
 
 function_keys = {
@@ -79,6 +81,14 @@ TIME_BIN_SIZE = "time bin size"
 
 CODING_MAP_RESIZE_W = 640
 CODING_MAP_RESIZE_H = 640
+
+# playerType
+VLC = "vlc"
+LIVE = "LIVE"
+VIEWER = "VIEWER"
+MEDIA = "MEDIA"
+IMAGES = "IMAGES"
+
 
 POINT_EVENT_PLOT_DURATION = 0.010
 POINT_EVENT_PLOT_COLOR = "black"
@@ -213,10 +223,25 @@ BEHAVIOR_TYPES = [
 DEFAULT_BEHAVIOR_TYPE = "Point event"
 
 # fields for events table
-tw_events_fields = ["time", "subject", "code", "type", "modifier", "comment"]
+TW_EVENTS_FIELDS = {
+    MEDIA: ("time", "subject", "code", "type", "modifier", "comment"),
+    LIVE: ("time", "subject", "code", "type", "modifier", "comment"),
+    IMAGES: ("image index", "subject", "code", "type", "modifier", "comment", "image path"),
+}
+
+MEDIA_TW_EVENTS_FIELDS = ("time", "subject", "code", "type", "modifier", "comment")
+LIVE_TW_EVENTS_FIELDS = ("time", "subject", "code", "type", "modifier", "comment")
+IMAGES_TW_EVENTS_FIELDS = ("image index", "subject", "code", "type", "modifier", "comment", "image path")
 
 # fields for project events list
 pj_events_fields = ["time", "subject", "code", "modifier", "comment"]
+
+
+PJ_EVENTS_FIELDS = {
+    MEDIA: ("time", "subject", "code", "modifier", "comment"),
+    LIVE: ("time", "subject", "code", "modifier", "comment"),
+    IMAGES: ("image index", "subject", "code", "modifier", "comment", "image path"),
+}
 
 tw_indVarFields = ["label", "description", "type", "default value", "possible values"]
 
@@ -225,13 +250,21 @@ BEHAV_CODING_MAP_FIELDS = ["name", "Behavior codes"]
 EXCEL_FORBIDDEN_CHARACTERS = r"\/*[]:?"
 
 # create dictionaries
-tw_obs_fields, pj_obs_fields = {}, {}
-
-for idx, field in enumerate(tw_events_fields):
-    tw_obs_fields[field] = idx
+TW_OBS_FIELD, pj_obs_fields = {}, {}
+for observation_type in (MEDIA, LIVE, IMAGES):
+    TW_OBS_FIELD[observation_type] = {}
+    for idx, field in enumerate(TW_EVENTS_FIELDS[observation_type]):
+        TW_OBS_FIELD[observation_type][field] = idx
 
 for idx, field in enumerate(pj_events_fields):
     pj_obs_fields[field] = idx
+
+
+PJ_OBS_FIELDS = {}
+for observation_type in (MEDIA, LIVE, IMAGES):
+    PJ_OBS_FIELDS[observation_type] = {}
+    for idx, field in enumerate(PJ_EVENTS_FIELDS[observation_type]):
+        PJ_OBS_FIELDS[observation_type][field] = idx
 
 EVENT_TIME_FIELD_IDX = 0
 EVENT_SUBJECT_FIELD_IDX = 1
@@ -300,16 +333,8 @@ OBSERVATIONS = "observations"
 
 CLOSE_BEHAVIORS_BETWEEN_VIDEOS = "close_behaviors_between_videos"
 
-# playerType
-VLC = "vlc"
-LIVE = "LIVE"
-VIEWER = "VIEWER"
-MEDIA = "MEDIA"
-IMAGES = "IMAGES"
-
-
-FFMPEG = "ffmpeg"
-MPV = "MPV"
+VIDEO_VIEWER = 0
+PICTURE_VIEWER = 1
 
 SAVE_FRAMES = "save_frames"
 MEMORY_FOR_FRAMES = "memory_for_frames"

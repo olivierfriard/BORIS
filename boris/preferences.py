@@ -239,7 +239,7 @@ def preferences(self):
         self.pause_before_addevent = preferencesWindow.cb_pause_before_addevent.isChecked()
 
         if self.observationId:
-            self.loadEventsInTW(self.observationId)
+            self.load_tw_events(self.observationId)
             self.display_statusbar_info(self.observationId)
 
         # result

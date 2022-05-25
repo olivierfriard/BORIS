@@ -30,9 +30,11 @@ def update_menu(self):
     """
     logging.debug("function: menu_options")
 
-    flag = self.project
+    project_opened = self.project
+    observation_is_active = self.observationId != ""
+    project_contains_obs = self.pj[cfg.OBSERVATIONS] != {}
 
-    if not self.project:
+    if not project_opened:
         pn = ""
     else:
         if self.pj["project_name"]:
@@ -44,9 +46,7 @@ def update_menu(self):
                 pn = "Unnamed project"
 
     self.setWindowTitle(
-        "{}{}{}".format(
-            self.observationId + " - " * (self.observationId != ""), pn + (" - " * (pn != "")), cfg.programName
-        )
+        f"{self.observationId + ' - ' * observation_is_active}{pn + (' - ' * (pn != ''))}{cfg.programName}"
     )
 
     # enabled if project loaded
@@ -66,8 +66,15 @@ def update_menu(self):
         self.actionLoad_observations_file,
         self.actionExportEvents_2,
         self.actionExport_aggregated_events,
+        self.menuas_behavioural_sequences,
+        self.actionExport_events_as_Praat_TextGrid,
+        self.actionJWatcher,
+        self.actionCheckStateEvents,
+        self.actionCheckStateEventsSingleObs,
+        self.actionClose_unpaired_events,
+        self.actionRunEventOutside,
     ):
-        action.setEnabled(flag)
+        action.setEnabled(project_opened)
 
     # observations
 
@@ -88,10 +95,9 @@ def update_menu(self):
         self.actionExtract_frames_from_media_files,
         self.actionRemove_observations,
     ]:
-        w.setEnabled(self.pj[cfg.OBSERVATIONS] != {})
+        w.setEnabled(project_contains_obs)
 
     # enabled if current observation
-    flagObs = self.observationId != ""
     for action in (
         self.actionAdd_event,
         self.actionClose_observation,
@@ -110,17 +116,7 @@ def update_menu(self):
         self.actionFind_in_current_obs,
         self.actionEdit_selected_events,
     ):
-        action.setEnabled(self.observationId != "")
-
-    # self.actionExportEventString.setEnabled(flag)
-    self.menuas_behavioural_sequences.setEnabled(flag)
-    self.actionExport_events_as_Praat_TextGrid.setEnabled(flag)
-    self.actionJWatcher.setEnabled(flag)
-
-    self.actionCheckStateEvents.setEnabled(flag)
-    self.actionCheckStateEventsSingleObs.setEnabled(flag)
-    self.actionClose_unpaired_events.setEnabled(flag)
-    self.actionRunEventOutside.setEnabled(flag)
+        action.setEnabled(observation_is_active)
 
     # enabled if media observation
     for action in (
@@ -141,26 +137,35 @@ def update_menu(self):
         self.actionFrame_backward,
         self.actionFrame_forward,
         self.actionVideo_equalizer,
+        self.actionShow_spectrogram,
+        self.actionShow_the_sound_waveform,
+        self.actionPlot_events_in_real_time,
+        self.actionShow_data_files,
+        self.menuImage_overlay_on_video_2,
+        self.actionAdd_image_overlay_on_video,
+        self.actionRemove_image_overlay,
     ):
 
         action.setEnabled(self.playerType == cfg.MEDIA)
 
-    # Tools
-    self.actionShow_spectrogram.setEnabled(self.playerType == cfg.MEDIA)
-    self.actionShow_the_sound_waveform.setEnabled(self.playerType == cfg.MEDIA)
-    self.actionPlot_events_in_real_time.setEnabled(flagObs)
-
-    self.actionShow_data_files.setEnabled(self.playerType == cfg.MEDIA)
-    self.menuImage_overlay_on_video_2.setEnabled(self.playerType == cfg.MEDIA)
-
-    self.actionAdd_image_overlay_on_video.setEnabled(self.playerType == cfg.MEDIA)
-    self.actionRemove_image_overlay.setEnabled(self.playerType == cfg.MEDIA)
-
     # geometric measurements
-    self.action_geometric_measurements.setEnabled(flagObs and self.geometric_measurements_mode == False)
-    self.actionCoding_pad.setEnabled(flagObs)
-    self.actionSubjects_pad.setEnabled(flagObs)
-    self.actionBehaviors_coding_map.setEnabled(flagObs)
+    self.action_geometric_measurements.setEnabled(observation_is_active and self.geometric_measurements_mode == False)
+    self.actionCoding_pad.setEnabled(observation_is_active)
+    self.actionSubjects_pad.setEnabled(observation_is_active)
+    self.actionBehaviors_coding_map.setEnabled(observation_is_active)
+
+    for action in (
+        self.actionJumpForward,
+        self.actionJumpBackward,
+        self.actionJumpTo,
+        self.actionReset,
+        self.actionPrevious,
+        self.actionNext,
+        self.actionSnapshot,
+        self.actionFrame_backward,
+        self.actionFrame_forward,
+    ):
+        action.setEnabled(self.playerType in [cfg.MEDIA, cfg.IMAGES])
 
     # Analysis
     for w in [
@@ -176,7 +181,7 @@ def update_menu(self):
         self.menuCreate_transitions_matrix,
         self.actionSynthetic_binned_time_budget,
     ]:
-        w.setEnabled(self.pj[cfg.OBSERVATIONS] != {})
+        w.setEnabled(project_contains_obs)
 
     # statusbar labels
     for w in [self.lbTimeOffset, self.lbSpeed, self.lb_obs_time_interval]:

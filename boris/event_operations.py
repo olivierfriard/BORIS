@@ -146,7 +146,7 @@ def filter_events(self):
 
     logging.debug(f"self.filtered_behaviors: {self.filtered_behaviors}")
 
-    self.loadEventsInTW(self.observationId)
+    self.load_tw_events(self.observationId)
     self.dwObservations.setWindowTitle(f"Events for “{self.observationId}” observation (filtered)")
 
 
@@ -156,7 +156,7 @@ def show_all_events(self):
     """
     self.filtered_subjects = []
     self.filtered_behaviors = []
-    self.loadEventsInTW(self.observationId)
+    self.load_tw_events(self.observationId)
     self.dwObservations.setWindowTitle(f"Events for “{self.observationId}” observation")
 
 
@@ -205,7 +205,7 @@ def delete_all_events(self):
         ]
 
         self.projectChanged = True
-        self.loadEventsInTW(self.observationId)
+        self.load_tw_events(self.observationId)
 
 
 def delete_selected_events(self):
@@ -250,7 +250,7 @@ def delete_selected_events(self):
             ]
 
             self.projectChanged = True
-            self.loadEventsInTW(self.observationId)
+            self.load_tw_events(self.observationId)
 
         except Exception:
             logging.critical("Critical error during event deletion")
@@ -377,7 +377,7 @@ def edit_selected_events(self):
 
                     self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS][idx] = event
                     self.projectChanged = True
-            self.loadEventsInTW(self.observationId)
+            self.load_tw_events(self.observationId)
 
 
 def edit_event(self):
@@ -395,13 +395,20 @@ def edit_event(self):
 
     twEvents_row = self.twEvents.selectedItems()[0].row()
 
-    tsb_to_edit = [
-        util.time2seconds(self.twEvents.item(twEvents_row, cfg.EVENT_TIME_FIELD_IDX).text())
-        if self.timeFormat == cfg.HHMMSS
-        else Decimal(self.twEvents.item(twEvents_row, cfg.EVENT_TIME_FIELD_IDX).text()),
-        self.twEvents.item(twEvents_row, cfg.EVENT_SUBJECT_FIELD_IDX).text(),
-        self.twEvents.item(twEvents_row, cfg.EVENT_BEHAVIOR_FIELD_IDX).text(),
-    ]
+    if self.playerType in [cfg.MEDIA, cfg.LIVE, cfg.VIEWER]:
+        tsb_to_edit = [
+            util.time2seconds(self.twEvents.item(twEvents_row, cfg.EVENT_TIME_FIELD_IDX).text())
+            if self.timeFormat == cfg.HHMMSS
+            else Decimal(self.twEvents.item(twEvents_row, cfg.EVENT_TIME_FIELD_IDX).text()),
+            self.twEvents.item(twEvents_row, cfg.EVENT_SUBJECT_FIELD_IDX).text(),
+            self.twEvents.item(twEvents_row, cfg.EVENT_BEHAVIOR_FIELD_IDX).text(),
+        ]
+    if self.playerType in [cfg.IMAGES]:
+        tsb_to_edit = [
+            Decimal(self.twEvents.item(twEvents_row, cfg.EVENT_TIME_FIELD_IDX).text()),
+            self.twEvents.item(twEvents_row, cfg.EVENT_SUBJECT_FIELD_IDX).text(),
+            self.twEvents.item(twEvents_row, cfg.EVENT_BEHAVIOR_FIELD_IDX).text(),
+        ]
 
     row = [
         idx
@@ -554,7 +561,7 @@ def edit_time_selected_events(self):
         self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS] = sorted(
             self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS]
         )
-        self.loadEventsInTW(self.observationId)
+        self.load_tw_events(self.observationId)
 
 
 def copy_selected_events(self):
@@ -628,4 +635,4 @@ def paste_clipboard_to_events(self):
     self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS] = sorted(
         self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS]
     )
-    self.loadEventsInTW(self.observationId)
+    self.load_tw_events(self.observationId)

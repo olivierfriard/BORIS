@@ -68,8 +68,9 @@ def check_state_events(self, mode: str = "all") -> None:
             return
 
         for obsId in sorted(selectedObservations):
-            r, msg = project_functions.check_state_events_obs(obsId, self.pj[cfg.ETHOGRAM],
-                                                              self.pj[cfg.OBSERVATIONS][obsId], self.timeFormat)
+            r, msg = project_functions.check_state_events_obs(
+                obsId, self.pj[cfg.ETHOGRAM], self.pj[cfg.OBSERVATIONS][obsId], self.timeFormat
+            )
 
             tot_out += f"<strong>{obsId}</strong><br>{msg}<br>"
 
@@ -88,8 +89,9 @@ def fix_unpaired_events(self):
 
     if self.observationId:
 
-        r, msg = project_functions.check_state_events_obs(self.observationId, self.pj[cfg.ETHOGRAM],
-                                                          self.pj[cfg.OBSERVATIONS][self.observationId])
+        r, msg = project_functions.check_state_events_obs(
+            self.observationId, self.pj[cfg.ETHOGRAM], self.pj[cfg.OBSERVATIONS][self.observationId]
+        )
         if "not PAIRED" not in msg:
             QMessageBox.information(
                 None,
@@ -118,10 +120,11 @@ def fix_unpaired_events(self):
                 self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS].extend(events_to_add)
                 self.projectChanged = True
                 self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS].sort()
-                self.loadEventsInTW(self.observationId)
+                self.load_tw_events(self.observationId)
                 item = self.twEvents.item(
                     [
-                        i for i, t in enumerate(self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS])
+                        i
+                        for i, t in enumerate(self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS])
                         if t[0] == fix_at_time
                     ][0],
                     0,
@@ -138,20 +141,22 @@ def fix_unpaired_events(self):
         out = ""
         not_paired_obs_list = []
         for obs_id in selected_observations:
-            r, msg = project_functions.check_state_events_obs(obs_id, self.pj[cfg.ETHOGRAM],
-                                                              self.pj[cfg.OBSERVATIONS][obs_id])
+            r, msg = project_functions.check_state_events_obs(
+                obs_id, self.pj[cfg.ETHOGRAM], self.pj[cfg.OBSERVATIONS][obs_id]
+            )
             if "NOT PAIRED" in msg.upper():
                 fix_at_time = max(x[0] for x in self.pj[cfg.OBSERVATIONS][obs_id][cfg.EVENTS])
-                events_to_add = project_functions.fix_unpaired_state_events(obs_id, self.pj[cfg.ETHOGRAM],
-                                                                            self.pj[cfg.OBSERVATIONS][obs_id],
-                                                                            fix_at_time)
+                events_to_add = project_functions.fix_unpaired_state_events(
+                    obs_id, self.pj[cfg.ETHOGRAM], self.pj[cfg.OBSERVATIONS][obs_id], fix_at_time
+                )
                 if events_to_add:
                     events_backup = self.pj[cfg.OBSERVATIONS][obs_id][cfg.EVENTS][:]
                     self.pj[cfg.OBSERVATIONS][obs_id][cfg.EVENTS].extend(events_to_add)
 
                     # check if modified obs if fixed
-                    r, msg = project_functions.check_state_events_obs(obs_id, self.pj[cfg.ETHOGRAM],
-                                                                      self.pj[cfg.OBSERVATIONS][obs_id])
+                    r, msg = project_functions.check_state_events_obs(
+                        obs_id, self.pj[cfg.ETHOGRAM], self.pj[cfg.OBSERVATIONS][obs_id]
+                    )
                     if "NOT PAIRED" in msg.upper():
                         out += f"The observation <b>{obs_id}</b> can not be automatically fixed.<br><br>"
                         self.pj[cfg.OBSERVATIONS][obs_id][cfg.EVENTS] = events_backup

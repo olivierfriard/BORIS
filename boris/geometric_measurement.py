@@ -174,7 +174,7 @@ def show_widget(self):
         self.geometric_measurements_mode = False
         for n_player, dw in enumerate(self.dw_player):
             dw.frame_viewer.clear()
-            dw.stack.setCurrentIndex(0)
+            dw.stack.setCurrentIndex(cfg.VIDEO_VIEWER)
             dw.setWindowTitle(f"Player #{n_player + 1}")
         self.measurement_w.close()
 
@@ -197,7 +197,7 @@ def show_widget(self):
 
     for _, dw in enumerate(self.dw_player):
         dw.setWindowTitle("Geometric measurements")
-        dw.stack.setCurrentIndex(1)
+        dw.stack.setCurrentIndex(cfg.PICTURE_VIEWER)
         self.extract_frame(dw)
 
 

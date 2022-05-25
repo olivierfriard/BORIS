@@ -26,6 +26,7 @@ import time
 import tempfile
 from decimal import Decimal
 import pathlib as pl
+import datetime
 from PyQt5.QtWidgets import (
     QMessageBox,
     QFileDialog,
@@ -37,7 +38,7 @@ from PyQt5.QtWidgets import (
     QDockWidget,
 )
 from PyQt5.QtCore import Qt, QDateTime, QTimer
-from PyQt5.QtGui import QFont, QIcon
+from PyQt5.QtGui import QFont, QIcon, QPixmap
 
 from PyQt5 import QtTest
 
@@ -173,9 +174,9 @@ def open_observation(self, mode: str) -> str:
         return ""
 
 
-def load_observation(self, obsId: str, mode: str = cfg.OBS_START) -> str:
+def load_observation(self, obs_id: str, mode: str = cfg.OBS_START) -> str:
     """
-    load observation obsId
+    load observation obs_id
 
     Args:
         obsId (str): observation id
@@ -183,24 +184,32 @@ def load_observation(self, obsId: str, mode: str = cfg.OBS_START) -> str:
                     "view"  to view observation
     """
 
-    if obsId not in self.pj[cfg.OBSERVATIONS]:
+    if obs_id not in self.pj[cfg.OBSERVATIONS]:
         return "Error: Observation not found"
 
-    self.observationId = obsId
-    self.loadEventsInTW(self.observationId)
+    self.observationId = obs_id
+
+    if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE] == cfg.IMAGES:
+        if mode == cfg.OBS_START:
+            self.playerType = cfg.IMAGES
+            inizialize_new_images_observation(self)
+
+        if mode == cfg.VIEW:
+            self.playerType = cfg.VIEWER
+            self.dwObservations.setVisible(True)
 
     if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE] == cfg.LIVE:
         if mode == cfg.OBS_START:
             self.playerType = cfg.LIVE
             initialize_new_live_observation(self)
+
         if mode == cfg.VIEW:
             self.playerType = cfg.VIEWER
             self.dwObservations.setVisible(True)
 
-    if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE] in [cfg.MEDIA]:
+    if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE] == cfg.MEDIA:
 
         if mode == cfg.OBS_START:
-
             if not initialize_new_observation_media(self):
                 self.observationId = ""
                 self.twEvents.setRowCount(0)
@@ -210,6 +219,8 @@ def load_observation(self, obsId: str, mode: str = cfg.OBS_START) -> str:
         if mode == cfg.VIEW:
             self.playerType = cfg.VIEWER
             self.dwObservations.setVisible(True)
+
+    self.load_tw_events(self.observationId)
 
     menu_options.update_menu(self)
     # title of dock widget  “  ”
@@ -836,12 +847,13 @@ def new_observation(self, mode=cfg.NEW, obsId=""):
                 self.playerType = cfg.MEDIA
                 # load events in table widget
                 if mode == cfg.EDIT:
-                    self.loadEventsInTW(self.observationId)
+                    self.load_tw_events(self.observationId)
 
                 initialize_new_observation_media(self)
 
             if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE] == cfg.IMAGES:
-                QMessageBox.critical(self, cfg.programName, "Observation from images directory is not yet implemented")
+                # QMessageBox.critical(self, cfg.programName, "Observation from images directory is not yet implemented")
+                inizialize_new_images_observation(self)
 
             menu_options.update_menu(self)
 
@@ -893,7 +905,7 @@ def close_observation(self):
                     self.projectChanged = True
                     self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS].sort()
 
-                    self.loadEventsInTW(self.observationId)
+                    self.load_tw_events(self.observationId)
                     item = self.twEvents.item(
                         [
                             i
@@ -952,7 +964,7 @@ def close_observation(self):
 
     self.observationId = ""
 
-    if self.playerType == cfg.MEDIA:
+    if self.playerType in (cfg.MEDIA, cfg.IMAGES):
         """
         for idx, _ in enumerate(self.dw_player):
             #del self.dw_player[idx].stack
@@ -1000,7 +1012,7 @@ def close_observation(self):
 
 def initialize_new_observation_media(self):
     """
-    initialize new observation for media file(s)
+    initialize new observation from media file(s)
     """
 
     logging.debug("function: initialize new observation for media file(s)")
@@ -1023,10 +1035,9 @@ def initialize_new_observation_media(self):
             QMessageBox.NoButton,
         )
         self.playerType = cfg.VIEWER
-        self.playMode = ""
         return True
 
-    self.playerType, self.playMode = cfg.MEDIA, cfg.MPV
+    self.playerType = cfg.MEDIA
     self.fps = 0
 
     self.w_obs_info.setVisible(True)
@@ -1068,6 +1079,7 @@ def initialize_new_observation_media(self):
 
         else:
             self.dw_player.append(player_dock_widget.DW_player(i, self))
+
         self.dw_player[-1].setFloating(False)
         self.dw_player[-1].setVisible(False)
         self.dw_player[-1].setFeatures(QDockWidget.DockWidgetFloatable | QDockWidget.DockWidgetMovable)
@@ -1082,8 +1094,10 @@ def initialize_new_observation_media(self):
 
         # for receiving key event from dock widget
         self.dw_player[i].key_pressed_signal.connect(self.signal_from_widget)
+
         # for receiving event from volume slider
         self.dw_player[i].volume_slider_moved_signal.connect(self.set_volume)
+
         # for receiving resize event from dock widget
         self.dw_player[i].resize_signal.connect(self.resize_dw)
         """
@@ -1372,6 +1386,9 @@ def initialize_new_observation_media(self):
             self.saved_state = self.saveState()
             self.restoreState(self.saved_state)
 
+    self.twEvents.setColumnCount(len(cfg.MEDIA_TW_EVENTS_FIELDS))
+    self.twEvents.setHorizontalHeaderLabels(cfg.MEDIA_TW_EVENTS_FIELDS)
+
     for dw in [self.dwEthogram, self.dwSubjects, self.dwObservations]:
         dw.setVisible(True)
 
@@ -1391,7 +1408,7 @@ def initialize_new_live_observation(self):
     """
     logging.debug(f"function: initialize new live obs: {self.observationId}")
 
-    self.playerType, self.playMode = cfg.LIVE, cfg.LIVE
+    self.playerType = cfg.LIVE
 
     self.w_live.setVisible(True)
 
@@ -1439,9 +1456,123 @@ def initialize_new_live_observation(self):
     self.liveStartTime = None
     self.liveTimer.stop()
 
+    self.twEvents.setColumnCount(len(cfg.LIVE_TW_EVENTS_FIELDS))
+    self.twEvents.setHorizontalHeaderLabels(cfg.LIVE_TW_EVENTS_FIELDS)
+
     # restore windows state: dockwidget positions ...
     if self.saved_state is None:
         self.saved_state = self.saveState()
         self.restoreState(self.saved_state)
     else:
         self.restoreState(self.saved_state)
+
+
+def inizialize_new_images_observation(self):
+    """
+    initialize a new observation from directories of images
+    """
+    # check if directories are available
+    ok, msg = project_functions.check_directories_availability(
+        self.pj[cfg.OBSERVATIONS][self.observationId], self.projectFileName
+    )
+
+    if not ok:
+        QMessageBox.critical(
+            self,
+            cfg.programName,
+            (
+                f"{msg}<br><br>The observation will be opened in VIEW mode.<br>"
+                "It will not be possible to log events.<br>"
+                "Modify the directoriy path(s) to point existing directory "
+            ),
+            QMessageBox.Ok | QMessageBox.Default,
+            QMessageBox.NoButton,
+        )
+        self.playerType = cfg.VIEWER
+        return True
+
+    # count number of images in all directories
+    tot_images_number = 0
+    for dir_path in self.pj[cfg.OBSERVATIONS][self.observationId].get(cfg.DIRECTORIES_LIST, []):
+        result = util.dir_images_number(dir_path)
+        tot_images_number += result.get("number of images", 0)
+
+    if not tot_images_number:
+        QMessageBox.critical(
+            self,
+            cfg.programName,
+            (
+                f"No images were found in directory(ies).<br><br>The observation will be opened in VIEW mode.<br>"
+                "It will not be possible to log events.<br>"
+                "Modify the directoriy path(s) to point existing directory "
+            ),
+            QMessageBox.Ok | QMessageBox.Default,
+            QMessageBox.NoButton,
+        )
+        self.playerType = cfg.VIEWER
+        return True
+
+    self.playerType = cfg.IMAGES
+    # load image paths
+    self.images_list = []
+    for pattern in ("*.jpg", "*.png", "*.jpeg"):
+        img_list = sorted([str(x) for x in pl.Path(dir_path).glob(pattern)])
+        self.images_list.extend(img_list)
+
+    self.image_idx = 0
+
+    self.w_live.setVisible(False)
+
+    self.setDockOptions(QMainWindow.AnimatedDocks | QMainWindow.AllowNestedDocks)
+    self.dw_player = []
+    n_player = 1
+    i = 0
+    self.dw_player.append(player_dock_widget.DW_player(i, self))
+    self.addDockWidget(Qt.TopDockWidgetArea, self.dw_player[i])
+    self.dw_player[i].setFeatures(QDockWidget.DockWidgetFloatable | QDockWidget.DockWidgetMovable)
+
+    self.dw_player[i].setVisible(True)
+
+    # for receiving mouse event from frame viewer
+    self.dw_player[i].frame_viewer.mouse_pressed_signal.connect(self.frame_image_clicked)
+
+    # for receiving key event from dock widget
+    self.dw_player[i].key_pressed_signal.connect(self.signal_from_widget)
+
+    # for receiving resize event from dock widget
+    self.dw_player[i].resize_signal.connect(self.resize_dw)
+
+    self.dw_player[i].stack.setCurrentIndex(cfg.PICTURE_VIEWER)
+    pixmap = QPixmap(self.images_list[self.image_idx])
+
+    self.dw_player[i].frame_viewer.setPixmap(
+        pixmap.scaled(self.dw_player[i].frame_viewer.size(), Qt.KeepAspectRatio, Qt.SmoothTransformation)
+    )
+
+    menu_options.update_menu(self)
+
+    self.display_statusbar_info(self.observationId)
+
+    self.currentSubject = ""
+
+    # check if "filtered behaviors"
+    if cfg.FILTERED_BEHAVIORS in self.pj[cfg.OBSERVATIONS][self.observationId]:
+        self.load_behaviors_in_twEthogram(self.pj[cfg.OBSERVATIONS][self.observationId][cfg.FILTERED_BEHAVIORS])
+
+    # restore windows state: dockwidget positions ...
+    if self.saved_state is None:
+        self.saved_state = self.saveState()
+        self.restoreState(self.saved_state)
+    else:
+        try:
+            self.restoreState(self.saved_state)
+        except TypeError:
+            logging.critical("state not restored: Type error")
+            self.saved_state = self.saveState()
+            self.restoreState(self.saved_state)
+
+    self.twEvents.setColumnCount(len(cfg.IMAGES_TW_EVENTS_FIELDS))
+    self.twEvents.setHorizontalHeaderLabels(cfg.IMAGES_TW_EVENTS_FIELDS)
+
+    for dw in [self.dwEthogram, self.dwSubjects, self.dwObservations]:
+        dw.setVisible(True)

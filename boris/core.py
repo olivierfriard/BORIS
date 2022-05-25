@@ -224,7 +224,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     fps = 0
 
     playerType: str = ""  # cfg.MEDIA, cfg.LIVE, cfg.VIEWER
-    playMode = cfg.MPV  # player mode can be cfg.MPV
 
     # spectrogram
     chunk_length = 60  # spectrogram chunk length in seconds
@@ -319,7 +318,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.lbTimeOffset.setMinimumWidth(160)
         self.statusbar.addPermanentWidget(self.lbTimeOffset)
 
-        # speed
+        # SPEED
         self.lbSpeed = QLabel()
         self.lbSpeed.setFrameStyle(QFrame.StyledPanel)
         self.lbSpeed.setMinimumWidth(40)
@@ -328,8 +327,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         # set painter for twEvents to highlight current row
         self.twEvents.setItemDelegate(events_cursor.StyledItemDelegateTriangle(self.events_current_row))
 
-        self.twEvents.setColumnCount(len(cfg.tw_events_fields))
-        self.twEvents.setHorizontalHeaderLabels(cfg.tw_events_fields)
+        self.twEvents.setColumnCount(len(cfg.TW_EVENTS_FIELDS))
+        self.twEvents.setHorizontalHeaderLabels(cfg.TW_EVENTS_FIELDS)
 
         self.config_param = cfg.INIT_PARAM
 
@@ -1011,7 +1010,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
                 # remember if player paused
                 if warning:
-                    if self.playerType == cfg.MEDIA and self.playMode == cfg.MPV:
+                    if self.playerType == cfg.MEDIA:
                         flag_paused = self.is_playing()
 
                 self.pause_video()
@@ -1028,7 +1027,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     )
                     == cfg.NO
                 ):
-                    if self.playerType == cfg.MEDIA and self.playMode == cfg.MPV and not flag_paused:
+                    if self.playerType == cfg.MEDIA and not flag_paused:
                         self.play_video()
                     return
 
@@ -1083,7 +1082,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 self.plot_timer_out()
 
                 if warning:
-                    if self.playerType == cfg.MEDIA and self.playMode == cfg.MPV and not flag_paused:
+                    if self.playerType == cfg.MEDIA and not flag_paused:
                         self.play_video()
 
         if plot_type == cfg.WAVEFORM_PLOT:
@@ -1107,7 +1106,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
                 # remember if player paused
                 if warning:
-                    if self.playerType == cfg.MEDIA and self.playMode == cfg.MPV:
+                    if self.playerType == cfg.MEDIA:
                         flag_paused = self.is_playing()
 
                 self.pause_video()
@@ -1124,7 +1123,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     )
                     == cfg.NO
                 ):
-                    if self.playerType == cfg.MEDIA and self.playMode == cfg.MPV and not flag_paused:
+                    if self.playerType == cfg.MEDIA and not flag_paused:
                         self.play_video()
                     return
 
@@ -1171,7 +1170,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 self.plot_timer.start()
 
                 if warning:
-                    if self.playerType == cfg.MEDIA and self.playMode == cfg.MPV and not flag_paused:
+                    if self.playerType == cfg.MEDIA and not flag_paused:
                         self.play_video()
 
         if plot_type == cfg.EVENTS_PLOT:
@@ -1495,30 +1494,26 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 return
 
             if self.playerType == cfg.MEDIA:
-
-                if self.playMode == cfg.MPV:
-
-                    self.seek_mediaplayer(new_time)
-
-                    self.update_visualizations()
+                self.seek_mediaplayer(new_time)
+                self.update_visualizations()
 
     def previous_media_file(self):
         """
         go to previous media file (if any)
         """
-        if len(self.pj[cfg.OBSERVATIONS][self.observationId][cfg.FILE][cfg.PLAYER1]) == 1:
-            return
 
         if self.playerType == cfg.MEDIA:
 
-            if self.playMode == cfg.MPV:
-                # check if media not first media
-                if self.dw_player[0].player.playlist_pos > 0:
-                    flagPaused = self.is_playing()
-                    self.dw_player[0].player.playlist_prev()
+            if len(self.pj[cfg.OBSERVATIONS][self.observationId][cfg.FILE][cfg.PLAYER1]) == 1:
+                return
 
-                elif self.dw_player[0].player.playlist_count == 1:
-                    self.statusbar.showMessage("There is only one media file", 5000)
+            # check if media not first media
+            if self.dw_player[0].player.playlist_pos > 0:
+                flagPaused = self.is_playing()
+                self.dw_player[0].player.playlist_prev()
+
+            elif self.dw_player[0].player.playlist_count == 1:
+                self.statusbar.showMessage("There is only one media file", 5000)
 
             if hasattr(self, "spectro"):
                 self.spectro.memChunk = -1
@@ -1527,11 +1522,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         """
         go to next media file (if any) in first player
         """
-
-        if len(self.pj[cfg.OBSERVATIONS][self.observationId][cfg.FILE][cfg.PLAYER1]) == 1:
-            return
-
         if self.playerType == cfg.MEDIA:
+
+            if len(self.pj[cfg.OBSERVATIONS][self.observationId][cfg.FILE][cfg.PLAYER1]) == 1:
+                return
 
             # check if media not last media
             if self.dw_player[0].player.playlist_pos < self.dw_player[0].player.playlist_count - 1:
@@ -1676,8 +1670,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         """
         extract frame from video and visualize it in frame_viewer
         """
-        qim = ImageQt(dw.player.screenshot_raw())
-        pixmap = QPixmap.fromImage(qim)
+        if self.playerType == cfg.MEDIA:
+            pixmap = QPixmap.fromImage(ImageQt(dw.player.screenshot_raw()))
+        if self.playerType == cfg.IMAGES:
+            pixmap = QPixmap(self.images_list[self.image_idx])
+
         dw.frame_viewer.setPixmap(pixmap.scaled(dw.frame_viewer.size(), Qt.KeepAspectRatio, Qt.SmoothTransformation))
 
     def frame_image_clicked(self, n_player, event):
@@ -1700,71 +1697,76 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         """
         dockwidget was resized. Adapt overlay if any
         """
+        if self.geometric_measurements_mode:
+            pass
 
-        try:
-            img = Image.open(
-                self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO][cfg.OVERLAY][str(dw_id + 1)]["file name"]
-            )
-        except:
-            return
-
-        w = self.dw_player[dw_id].player.width
-        h = self.dw_player[dw_id].player.height
-
-        fw = self.dw_player[dw_id].videoframe.size().width()
-        fh = self.dw_player[dw_id].videoframe.size().height()
-
-        if fw / fh <= w / h:
-            w_r = fw
-            h_r = w_r / (w / h)
-            x1 = 0
-            y1 = int((fh - h_r) / 2)
-            x2 = int(w_r)
-            y2 = int(y1 + h_r)
-
-        if fw / fh > w / h:
-            h_r = fh
-            w_r = h_r * (w / h)
-            x1 = int((fw - w_r) / 2)
-            y1 = 0
-            x2 = int(x1 + w_r)
-            y2 = int(h_r)
-
-        img_resized = img.resize((x2 - x1, y2 - y1))
-        # disabled due to a problem setting trasnparency to 0% with an image with transparent background
-        # and img_resized.putalpha(int((100 - self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO][cfg.OVERLAY][str(dw_id + 1)]["transparency"]) * 2.55))  # 0 means 100% transparency
-
-        # check position
-        x_offset, y_offset = 0, 0
-        if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO][cfg.OVERLAY][str(dw_id + 1)][
-            "overlay position"
-        ]:
+        if self.playerType == cfg.MEDIA and not self.geometric_measurements_mode:
             try:
-                x_offset = int(
+                img = Image.open(
                     self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO][cfg.OVERLAY][str(dw_id + 1)][
-                        "overlay position"
+                        "file name"
                     ]
-                    .split(",")[0]
-                    .strip()
-                )
-                y_offset = int(
-                    self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO][cfg.OVERLAY][str(dw_id + 1)][
-                        "overlay position"
-                    ]
-                    .split(",")[1]
-                    .strip()
                 )
             except Exception:
-                logging.warning(f"error in overlay position")
+                return
 
-        try:
-            self.overlays[dw_id].remove()
-        except:
-            logging.debug("error removing overlay")
-        try:
-            self.overlays[dw_id].update(img_resized, pos=(x1 + x_offset, y1 + y_offset))
-        except:
-            logging.debug("error updating overlay")
+            w = self.dw_player[dw_id].player.width
+            h = self.dw_player[dw_id].player.height
+
+            fw = self.dw_player[dw_id].videoframe.size().width()
+            fh = self.dw_player[dw_id].videoframe.size().height()
+
+            if fw / fh <= w / h:
+                w_r = fw
+                h_r = w_r / (w / h)
+                x1 = 0
+                y1 = int((fh - h_r) / 2)
+                x2 = int(w_r)
+                y2 = int(y1 + h_r)
+
+            if fw / fh > w / h:
+                h_r = fh
+                w_r = h_r * (w / h)
+                x1 = int((fw - w_r) / 2)
+                y1 = 0
+                x2 = int(x1 + w_r)
+                y2 = int(h_r)
+
+            img_resized = img.resize((x2 - x1, y2 - y1))
+            # disabled due to a problem setting trasnparency to 0% with an image with transparent background
+            # and img_resized.putalpha(int((100 - self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO][cfg.OVERLAY][str(dw_id + 1)]["transparency"]) * 2.55))  # 0 means 100% transparency
+
+            # check position
+            x_offset, y_offset = 0, 0
+            if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO][cfg.OVERLAY][str(dw_id + 1)][
+                "overlay position"
+            ]:
+                try:
+                    x_offset = int(
+                        self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO][cfg.OVERLAY][str(dw_id + 1)][
+                            "overlay position"
+                        ]
+                        .split(",")[0]
+                        .strip()
+                    )
+                    y_offset = int(
+                        self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO][cfg.OVERLAY][str(dw_id + 1)][
+                            "overlay position"
+                        ]
+                        .split(",")[1]
+                        .strip()
+                    )
+                except Exception:
+                    logging.warning(f"error in overlay position")
+
+            try:
+                self.overlays[dw_id].remove()
+            except Exception:
+                logging.debug("error removing overlay")
+            try:
+                self.overlays[dw_id].update(img_resized, pos=(x1 + x_offset, y1 + y_offset))
+            except Exception:
+                logging.debug("error updating overlay")
 
     def signal_from_dw(self, id_, msg, button):
         """
@@ -1820,7 +1822,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         return QMainWindow.eventFilter(self, source, event)
     '''
 
-    def loadEventsInTW(self, obs_id):
+    def load_tw_events(self, obs_id):
         """
         load events in table widget and update START/STOP
 
@@ -1849,18 +1851,20 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             if self.filtered_behaviors or self.filtered_subjects:
                 self.twEvents.insertRow(self.twEvents.rowCount())
 
-            for field_type in cfg.tw_events_fields:
+            for field_type in cfg.TW_EVENTS_FIELDS[self.playerType]:
 
-                if field_type in cfg.pj_events_fields:
+                if field_type in cfg.PJ_EVENTS_FIELDS[self.playerType]:
 
-                    field = event[cfg.pj_obs_fields[field_type]]
+                    field = event[cfg.PJ_OBS_FIELDS[self.playerType][field_type]]
                     if field_type == "time":
                         field = str(util.convertTime(self.timeFormat, field))
+                    if field_type == "image index":
+                        field = str(round(field))
 
-                    self.twEvents.setItem(row, cfg.tw_obs_fields[field_type], QTableWidgetItem(field))
+                    self.twEvents.setItem(row, cfg.TW_OBS_FIELD[self.playerType][field_type], QTableWidgetItem(field))
 
                 else:
-                    self.twEvents.setItem(row, cfg.tw_obs_fields[field_type], QTableWidgetItem(""))
+                    self.twEvents.setItem(row, cfg.TW_OBS_FIELD[self.playerType][field_type], QTableWidgetItem(""))
 
             row += 1
 
@@ -3064,37 +3068,47 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         """
         show next frame
         """
-        for n_player, dw in enumerate(self.dw_player):
-            dw.player.frame_step()
-            self.plot_timer_out()
-            for idx in self.plot_data:
-                self.timer_plot_data_out(self.plot_data[idx])
+        if self.playerType == cfg.IMAGES:
+            self.image_idx += 1
+            self.extract_frame(self.dw_player[0])
+
+        if self.playerType == cfg.MEDIA:
+            for dw in self.dw_player:
+                dw.player.frame_step()
+                self.plot_timer_out()
+                for idx in self.plot_data:
+                    self.timer_plot_data_out(self.plot_data[idx])
+
+                if self.geometric_measurements_mode:
+                    self.extract_frame(dw)
 
             if self.geometric_measurements_mode:
-                self.extract_frame(dw)
+                self.redraw_measurements()
 
-        if self.geometric_measurements_mode:
-            self.redraw_measurements()
-
-        self.actionPlay.setIcon(QIcon(":/play"))
+            self.actionPlay.setIcon(QIcon(":/play"))
 
     def previous_frame(self):
         """
         show previous frame
         """
-        for n_player, dw in enumerate(self.dw_player):
-            dw.player.frame_back_step()
-            self.plot_timer_out()
-            for idx in self.plot_data:
-                self.timer_plot_data_out(self.plot_data[idx])
+        if self.playerType == cfg.IMAGES:
+            self.image_idx -= 1
+            self.extract_frame(self.dw_player[0])
+
+        if self.playerType == cfg.MEDIA:
+            for dw in self.dw_player:
+                dw.player.frame_back_step()
+                self.plot_timer_out()
+                for idx in self.plot_data:
+                    self.timer_plot_data_out(self.plot_data[idx])
+
+                if self.geometric_measurements_mode:
+                    self.extract_frame(dw)
 
             if self.geometric_measurements_mode:
-                self.extract_frame(dw)
+                self.redraw_measurements()
 
-        if self.geometric_measurements_mode:
-            self.redraw_measurements()
-
-        self.actionPlay.setIcon(QIcon(":/play"))
+            self.actionPlay.setIcon(QIcon(":/play"))
 
     def run_event_outside(self):
         """
@@ -3664,17 +3678,17 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         for row in range(self.twEvents.rowCount()):
 
-            subject = self.twEvents.item(row, cfg.tw_obs_fields["subject"]).text()
-            code = self.twEvents.item(row, cfg.tw_obs_fields["code"]).text()
-            modifier = self.twEvents.item(row, cfg.tw_obs_fields["modifier"]).text()
+            subject = self.twEvents.item(row, cfg.TW_OBS_FIELD[self.playerType][cfg.SUBJECT]).text()
+            code = self.twEvents.item(row, cfg.TW_OBS_FIELD[self.playerType][cfg.BEHAVIOR_CODE]).text()
+            modifier = self.twEvents.item(row, cfg.TW_OBS_FIELD[self.playerType]["modifier"]).text()
 
             # check if code is state
             if code in state_events_list:
 
                 if f"{subject}|{code}|{modifier}" in mem_behav and mem_behav[f"{subject}|{code}|{modifier}"]:
-                    self.twEvents.item(row, cfg.tw_obs_fields[cfg.TYPE]).setText(cfg.STOP)
+                    self.twEvents.item(row, cfg.TW_OBS_FIELD[self.playerType][cfg.TYPE]).setText(cfg.STOP)
                 else:
-                    self.twEvents.item(row, cfg.tw_obs_fields[cfg.TYPE]).setText(cfg.START)
+                    self.twEvents.item(row, cfg.TW_OBS_FIELD[self.playerType][cfg.TYPE]).setText(cfg.START)
 
                 if f"{subject}|{code}|{modifier}" in mem_behav:
                     mem_behav[f"{subject}|{code}|{modifier}"] = not mem_behav[f"{subject}|{code}|{modifier}"]
@@ -3710,21 +3724,27 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         if event is None:
             return
 
-        # undo
+        # fill the undo list
         self.undo_queue.append(self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS][:])
         if len(self.undo_queue) > cfg.MAX_UNDO_QUEUE:
             self.undo_queue.popleft()
 
+        editing_event = "row" in event
+
         # add time offset if not from editing
-        if "row" not in event:
-            mem_time += Decimal(self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TIME_OFFSET]).quantize(
-                Decimal(".001")
-            )
+        if not editing_event:
+            if self.playerType == cfg.IMAGES:
+                mem_time = Decimal(round(mem_time + 1))
+
+            if self.playerType in (cfg.MEDIA, cfg.LIVE):
+                mem_time += Decimal(self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TIME_OFFSET]).quantize(
+                    Decimal(".001")
+                )
 
         # check if a same event is already in events list (time, subject, code)
         # "row" present in case of event editing
 
-        if ("row" not in event) and self.checkSameEvent(
+        if (not editing_event) and self.checkSameEvent(
             self.observationId,
             mem_time,
             event["subject"] if "subject" in event else self.currentSubject,
@@ -3812,7 +3832,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         StateBehaviorsCodes = util.state_behavior_codes(self.pj[cfg.ETHOGRAM])
 
         # index of current subject
-        subject_idx = self.subject_name_index[self.currentSubject] if self.currentSubject else ""
+        # subject_idx = self.subject_name_index[self.currentSubject] if self.currentSubject else ""
 
         current_states = util.get_current_states_modifiers_by_subject(
             StateBehaviorsCodes,
@@ -3825,7 +3845,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         logging.debug(f"self.currentSubject {self.currentSubject}")
         logging.debug(f"current_states {current_states}")
 
-        if "row" not in event:  # no editing
+        if not editing_event:
             if self.currentSubject:
                 csj = []
                 for idx in current_states:
@@ -3860,14 +3880,14 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 # close state if same state without modifier
                 if (
                     self.close_the_same_current_event
-                    and (event["code"] == cs)
+                    and (event[cfg.BEHAVIOR_CODE] == cs)
                     and modifier_str.replace("None", "").replace("|", "") == ""
                 ):
                     modifier_str = cm[cs]
                     continue
 
                 if (event["excluded"] and cs in event["excluded"].split(",")) or (
-                    event["code"] == cs and cm[cs] != modifier_str
+                    event[cfg.BEHAVIOR_CODE] == cs and cm[cs] != modifier_str
                 ):
                     # add excluded state event to observations (= STOP them)
                     self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS].append(
@@ -3875,31 +3895,49 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     )
 
         # remove key code from modifiers
+        subject = event.get(cfg.SUBJECT, self.currentSubject)
         modifier_str = re.sub(" \(.*\)", "", modifier_str)
         comment = event.get("comment", "")
-        subject = event.get("subject", self.currentSubject)
+        if self.playerType == cfg.IMAGES:
+            image_path = event.get("image path", "")
 
         # add event to pj
-        if "row" in event:
+        if editing_event:
             # modifying event
-            self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS][event["row"]] = [
-                mem_time,
-                subject,
-                event["code"],
-                modifier_str,
-                comment,
-            ]
+            if self.playerType in (cfg.MEDIA, cfg.LIVE):
+                self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS][event["row"]] = [
+                    mem_time,
+                    subject,
+                    event[cfg.BEHAVIOR_CODE],
+                    modifier_str,
+                    comment,
+                ]
+            elif self.playerType == cfg.IMAGES:
+                self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS][event["row"]] = [
+                    mem_time,
+                    subject,
+                    event[cfg.BEHAVIOR_CODE],
+                    modifier_str,
+                    comment,
+                    image_path,
+                ]
+
         else:
             # add event
-            self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS].append(
-                [mem_time, subject, event["code"], modifier_str, comment]
-            )
+            if self.playerType in (cfg.MEDIA, cfg.LIVE):
+                self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS].append(
+                    [mem_time, subject, event[cfg.BEHAVIOR_CODE], modifier_str, comment]
+                )
+            elif self.playerType == cfg.IMAGES:
+                self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS].append(
+                    [mem_time, subject, event[cfg.BEHAVIOR_CODE], modifier_str, comment, image_path]
+                )
 
         # sort events in pj
         self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS].sort()
 
         # reload all events in tw
-        self.loadEventsInTW(self.observationId)
+        self.load_tw_events(self.observationId)
 
         position_in_events = [
             i for i, t in enumerate(self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS]) if t[0] == mem_time
@@ -4189,6 +4227,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 obs_key = cfg.function_keys[ek]
 
         # get time
+        memLaps = None
         if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE] == cfg.LIVE:
             if self.pj[cfg.OBSERVATIONS][self.observationId].get(cfg.SCAN_SAMPLING_TIME, 0):
                 if self.timeFormat == cfg.HHMMSS:
@@ -4203,14 +4242,17 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 else:
                     memLaps = self.getLaps()
 
-        else:
+        if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE] == cfg.MEDIA:
             memLaps = self.getLaps()
+
+        if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE] == cfg.IMAGES:
+            memLaps = self.image_idx
 
         if memLaps is None:
             return
 
         # undo
-        if ek == 90 and modifier == "Ctrl":
+        if ek == 90 and modifier == cfg.CTRL_KEY:
             if len(self.undo_queue) == 0:
                 self.statusbar.showMessage(f"The Undo buffer is empty", 5000)
                 return
@@ -4218,7 +4260,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS] = events[:]
 
             # reload all events in tw
-            self.loadEventsInTW(self.observationId)
+            self.load_tw_events(self.observationId)
 
             """
             position_in_events = [
@@ -4339,6 +4381,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
                 event = self.full_event(ethogram_idx)
 
+                if self.playerType == cfg.IMAGES:
+                    event["image path"] = self.images_list[self.image_idx]
+
                 self.writeEvent(event, memLaps)
 
             elif count == 0:
@@ -4379,7 +4424,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             else:
                 newTime = 0
 
-            if self.playMode == cfg.MPV:
+            if self.playerType == cfg.MEDIA:
                 self.seek_mediaplayer(newTime)
                 self.update_visualizations()
 
@@ -4613,7 +4658,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                             event[idx1] = insensitive_re.sub(self.find_replace_dialog.replaceText.text(), event[idx1])
 
                         self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS][event_idx] = event
-                        self.loadEventsInTW(self.observationId)
+                        self.load_tw_events(self.observationId)
                         self.twEvents.scrollToItem(self.twEvents.item(event_idx, 0))
                         self.twEvents.selectRow(event_idx)
                         self.projectChanged = True

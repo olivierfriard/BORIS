@@ -1080,7 +1080,7 @@ def all_behaviors(ethogram: dict) -> list:
 
 def dir_images_number(dir_path_str: str) -> dict:
     """
-    check if dir contains images (*.jpg, *.jpeg, *.png)
+    return number of images in dir_path (*.jpg, *.jpeg, *.png)
     """
 
     dir_path = pl.Path(dir_path_str)

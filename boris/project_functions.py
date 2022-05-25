@@ -28,6 +28,8 @@ import sys
 from decimal import Decimal as dec
 from shutil import copyfile
 
+from typing import List, Tuple
+
 import tablib
 
 from . import config as cfg
@@ -169,7 +171,7 @@ def check_coded_behaviors(pj: dict) -> set:
     return set(sorted(behaviors_not_defined))
 
 
-def check_if_media_available(observation: dict, project_file_name: str) -> bool:
+def check_if_media_available(observation: dict, project_file_name: str):
     """
     check if media files available
 
@@ -181,17 +183,39 @@ def check_if_media_available(observation: dict, project_file_name: str) -> bool:
                else False
         str: error message
     """
-    if observation[cfg.TYPE] in [cfg.LIVE]:
-        return True, ""
+    if observation[cfg.TYPE] == cfg.LIVE:
+        return (True, "")
 
     for nplayer in cfg.ALL_PLAYERS:
-        if nplayer in observation[cfg.FILE]:
+        if nplayer in observation.get(cfg.FILE, {}):
             if not isinstance(observation[cfg.FILE][nplayer], list):
-                return False, "error"
+                return (False, "error")
             for media_file in observation[cfg.FILE][nplayer]:
                 if not media_full_path(media_file, project_file_name):
-                    return False, f"Media file <b>{media_file}</b> not found"
-    return True, ""
+                    return (False, f"Media file <b>{media_file}</b> not found")
+    return (True, "")
+
+
+def check_directories_availability(observation: dict, project_file_name: str):
+    """
+    check if directories are available
+
+    Args:
+        observation (dict): observation to be checked
+
+    Returns:
+        bool: True if all directories were found or for live observation
+               else False
+        str: error message
+    """
+    if observation[cfg.TYPE] == cfg.LIVE:
+        return (True, "")
+
+    for dir_path in observation.get(cfg.DIRECTORIES_LIST, []):
+        if not media_full_path(dir_path, project_file_name):
+            return (False, f"Directory <b>{dir_path}</b> not found")
+
+    return (True, "")
 
 
 def check_state_events_obs(obsId: str, ethogram: dict, observation: dict, time_format: str = cfg.HHMMSS) -> tuple:
