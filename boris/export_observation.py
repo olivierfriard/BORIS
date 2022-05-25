@@ -301,13 +301,13 @@ def export_events(parameters, obsId, observation, ethogram, file_name, output_fo
     total_length = f"{project_functions.observation_total_length(observation):.3f}"
 
     eventsWithStatus = project_functions.events_start_stop(ethogram, observation[cfg.EVENTS])
+    print(eventsWithStatus)
 
     # check max number of modifiers
     max_modifiers = 0
     for event in eventsWithStatus:
-        for c in cfg.pj_events_fields:
-            if c == "modifier" and event[cfg.pj_obs_fields[c]]:
-                max_modifiers = max(max_modifiers, len(event[cfg.pj_obs_fields[c]].split("|")))
+        if event[cfg.EVENT_MODIFIER_FIELD_IDX]:
+            max_modifiers = max(max_modifiers, len(event[cfg.EVENT_MODIFIER_FIELD_IDX].split("|")))
 
     # media file number
     mediaNb = 0

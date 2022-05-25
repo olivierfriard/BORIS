@@ -1842,10 +1842,16 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         for event in self.pj[cfg.OBSERVATIONS][obs_id][cfg.EVENTS]:
 
-            if self.filtered_behaviors and event[cfg.pj_obs_fields[cfg.BEHAVIOR_CODE]] not in self.filtered_behaviors:
+            if (
+                self.filtered_behaviors
+                and event[cfg.PJ_OBS_FIELDS[self.playerType][cfg.BEHAVIOR_CODE]] not in self.filtered_behaviors
+            ):
                 continue
 
-            if self.filtered_subjects and event[cfg.pj_obs_fields[cfg.SUBJECT]] not in self.filtered_subjects:
+            if (
+                self.filtered_subjects
+                and event[cfg.PJ_OBS_FIELDS[self.playerType][cfg.SUBJECT]] not in self.filtered_subjects
+            ):
                 continue
 
             if self.filtered_behaviors or self.filtered_subjects:

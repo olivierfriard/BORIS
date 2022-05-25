@@ -151,6 +151,7 @@ DATA_PLOT_STYLES = ["b-", "r-", "g-", "bo", "ro", "go"]
 
 BEHAVIOR_CODE = "code"
 SUBJECT = "subject"
+MODIFIER = "modifier"
 BEHAVIOR_KEY = "key"
 BEHAVIOR_CATEGORY = "category"
 
@@ -250,14 +251,11 @@ BEHAV_CODING_MAP_FIELDS = ["name", "Behavior codes"]
 EXCEL_FORBIDDEN_CHARACTERS = r"\/*[]:?"
 
 # create dictionaries
-TW_OBS_FIELD, pj_obs_fields = {}, {}
+TW_OBS_FIELD = {}, {}
 for observation_type in (MEDIA, LIVE, IMAGES):
     TW_OBS_FIELD[observation_type] = {}
     for idx, field in enumerate(TW_EVENTS_FIELDS[observation_type]):
         TW_OBS_FIELD[observation_type][field] = idx
-
-for idx, field in enumerate(pj_events_fields):
-    pj_obs_fields[field] = idx
 
 
 PJ_OBS_FIELDS = {}

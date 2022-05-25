@@ -500,7 +500,7 @@ def edit_event(self):
                 event["comment"] = editWindow.leComment.toPlainText()
                 event["row"] = row
                 event["original_modifiers"] = self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS][row][
-                    cfg.pj_obs_fields["modifier"]
+                    cfg.PJ_OBS_FIELDS[self.playerType]["modifier"]
                 ]
 
                 self.writeEvent(event, newTime)
