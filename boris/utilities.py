@@ -131,8 +131,8 @@ def convert_time_to_decimal(pj: dict) -> dict:
         dict: BORIS project
     """
     for obs_id in pj[cfg.OBSERVATIONS]:
-        if "time offset" in pj[cfg.OBSERVATIONS][obs_id]:
-            pj[cfg.OBSERVATIONS][obs_id]["time offset"] = Decimal(str(pj[cfg.OBSERVATIONS][obs_id]["time offset"]))
+        if cfg.TIME_OFFSET in pj[cfg.OBSERVATIONS][obs_id]:
+            pj[cfg.OBSERVATIONS][obs_id][cfg.TIME_OFFSET] = Decimal(str(pj[cfg.OBSERVATIONS][obs_id][cfg.TIME_OFFSET]))
         for idx, _ in enumerate(pj[cfg.OBSERVATIONS][obs_id][cfg.EVENTS]):
             pj[cfg.OBSERVATIONS][obs_id][cfg.EVENTS][idx][cfg.EVENT_TIME_FIELD_IDX] = Decimal(
                 pj[cfg.OBSERVATIONS][obs_id][cfg.EVENTS][idx][cfg.EVENT_TIME_FIELD_IDX]
