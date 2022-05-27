@@ -1587,9 +1587,9 @@ class projectDialog(QDialog, Ui_dlgProject):
 
         # time format
         if self.rbSeconds.isChecked():
-            self.pj["time_format"] = cfg.S
+            self.pj[cfg.TIME_FORMAT] = cfg.S
         if self.rbHMS.isChecked():
-            self.pj["time_format"] = cfg.HHMMSS
+            self.pj[cfg.TIME_FORMAT] = cfg.HHMMSS
 
         # store subjects
         self.subjects_conf = {}

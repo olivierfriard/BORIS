@@ -26,6 +26,7 @@ and independent variables to BORIS format
 import re
 import zipfile
 from xml.dom import minidom
+from . import config as cfg
 
 
 def otx_to_boris(file_path: str) -> dict:
@@ -68,49 +69,51 @@ def otx_to_boris(file_path: str) -> dict:
     flag_long_key = False
 
     # metadata
-    itemlist = xmldoc.getElementsByTagName('MET_METADATA')
+    itemlist = xmldoc.getElementsByTagName("MET_METADATA")
     for item in itemlist:
         metadata = minidom.parseString(item.toxml())
         try:
-            project_name = re.sub('<[^>]*>', '', metadata.getElementsByTagName('MET_PROJECT_NAME')[0].toxml())
+            project_name = re.sub("<[^>]*>", "", metadata.getElementsByTagName("MET_PROJECT_NAME")[0].toxml())
         except Exception:
             project_name = ""
         try:
-            project_description = re.sub('<[^>]*>', '',
-                                         metadata.getElementsByTagName('MET_PROJECT_DESCRIPTION')[0].toxml())
+            project_description = re.sub(
+                "<[^>]*>", "", metadata.getElementsByTagName("MET_PROJECT_DESCRIPTION")[0].toxml()
+            )
         except Exception:
             project_description = ""
 
         try:
-            project_creation_date = re.sub('<[^>]*>', '',
-                                           metadata.getElementsByTagName('MET_CREATION_DATETIME')[0].toxml())
+            project_creation_date = re.sub(
+                "<[^>]*>", "", metadata.getElementsByTagName("MET_CREATION_DATETIME")[0].toxml()
+            )
         except Exception:
             project_creation_date = ""
 
     modifiers = {}
     modifiers_set = {}
 
-    itemlist = xmldoc.getElementsByTagName('CDS_MODIFIER')
+    itemlist = xmldoc.getElementsByTagName("CDS_MODIFIER")
 
     for item in itemlist:
         modif = minidom.parseString(item.toxml())
 
-        modif_code = re.sub('<[^>]*>', '', modif.getElementsByTagName('CDS_ELE_NAME')[0].toxml())
+        modif_code = re.sub("<[^>]*>", "", modif.getElementsByTagName("CDS_ELE_NAME")[0].toxml())
 
-        modif_id = re.sub('<[^>]*>', '', modif.getElementsByTagName('CDS_ELE_ID')[0].toxml())
+        modif_id = re.sub("<[^>]*>", "", modif.getElementsByTagName("CDS_ELE_ID")[0].toxml())
 
         try:
-            modif_parent_id = re.sub('<[^>]*>', '', modif.getElementsByTagName('CDS_ELE_PARENT_ID')[0].toxml())
+            modif_parent_id = re.sub("<[^>]*>", "", modif.getElementsByTagName("CDS_ELE_PARENT_ID")[0].toxml())
 
         except:
             modif_parent_id = ""
 
         try:
-            description = re.sub('<[^>]*>', '', modif.getElementsByTagName('CDS_ELE_DESCRIPTION')[0].toxml())
+            description = re.sub("<[^>]*>", "", modif.getElementsByTagName("CDS_ELE_DESCRIPTION")[0].toxml())
         except:
             description = ""
         try:
-            key = re.sub('<[^>]*>', '', modif.getElementsByTagName('CDS_ELE_START_KEYCODE')[0].toxml())
+            key = re.sub("<[^>]*>", "", modif.getElementsByTagName("CDS_ELE_START_KEYCODE")[0].toxml())
         except:
             key = ""
 
@@ -123,10 +126,10 @@ def otx_to_boris(file_path: str) -> dict:
             modifiers[modif_id] = {"set_name": modif_code, "key": key, "description": description, "values": []}
 
     connections = {}
-    itemlist = xmldoc.getElementsByTagName('CDS_CONNECTION')
+    itemlist = xmldoc.getElementsByTagName("CDS_CONNECTION")
 
     for item in itemlist:
-        connections[item.attributes['CDS_ELEMENT_ID'].value] = item.attributes['CDS_MODIFIER_ID'].value
+        connections[item.attributes["CDS_ELEMENT_ID"].value] = item.attributes["CDS_MODIFIER_ID"].value
 
     # behaviors
     behaviors = {}
@@ -134,31 +137,31 @@ def otx_to_boris(file_path: str) -> dict:
     behav_category = []
     mutually_exclusive_list = []
 
-    itemlist = xmldoc.getElementsByTagName('CDS_BEHAVIOR')
+    itemlist = xmldoc.getElementsByTagName("CDS_BEHAVIOR")
 
     for item in itemlist:
         behav = minidom.parseString(item.toxml())
 
-        behav_code = re.sub('<[^>]*>', '', behav.getElementsByTagName('CDS_ELE_NAME')[0].toxml())
+        behav_code = re.sub("<[^>]*>", "", behav.getElementsByTagName("CDS_ELE_NAME")[0].toxml())
 
-        behav_id = re.sub('<[^>]*>', '', behav.getElementsByTagName('CDS_ELE_ID')[0].toxml())
+        behav_id = re.sub("<[^>]*>", "", behav.getElementsByTagName("CDS_ELE_ID")[0].toxml())
 
         try:
-            description = re.sub('<[^>]*>', '', behav.getElementsByTagName('CDS_ELE_DESCRIPTION')[0].toxml())
+            description = re.sub("<[^>]*>", "", behav.getElementsByTagName("CDS_ELE_DESCRIPTION")[0].toxml())
         except:
             description = ""
         try:
-            key = re.sub('<[^>]*>', '', behav.getElementsByTagName('CDS_ELE_START_KEYCODE')[0].toxml())
+            key = re.sub("<[^>]*>", "", behav.getElementsByTagName("CDS_ELE_START_KEYCODE")[0].toxml())
         except:
             key = ""
 
         try:
-            parent_name = re.sub('<[^>]*>', '', behav.getElementsByTagName('CDS_ELE_PARENT_NAME')[0].toxml())
+            parent_name = re.sub("<[^>]*>", "", behav.getElementsByTagName("CDS_ELE_PARENT_NAME")[0].toxml())
         except:
             parent_name = ""
 
         try:
-            mutually_exclusive = re.sub('<[^>]*>', '', behav.getElementsByTagName('CDS_ELE_MUT_EXCLUSIVE')[0].toxml())
+            mutually_exclusive = re.sub("<[^>]*>", "", behav.getElementsByTagName("CDS_ELE_MUT_EXCLUSIVE")[0].toxml())
         except:
             mutually_exclusive = ""
 
@@ -182,7 +185,7 @@ def otx_to_boris(file_path: str) -> dict:
                 "key": key,
                 "description": description,
                 "modifiers": modifiers_,
-                "category": parent_name
+                "category": parent_name,
             }
             behaviors_list.append(behav_code)
         else:
@@ -197,7 +200,7 @@ def otx_to_boris(file_path: str) -> dict:
             "description": behaviors[k]["key"],
             "category": behaviors[k]["category"],
             "excluded": "",
-            "coding map": ""
+            "coding map": "",
         }
 
         if behaviors[k]["code"] in mutually_exclusive_list:
@@ -207,11 +210,7 @@ def otx_to_boris(file_path: str) -> dict:
             for modif_key in modifiers:
                 if modifiers[modif_key]["set_name"] == behaviors[k]["modifiers"]:
                     behaviors_boris[k]["modifiers"] = {
-                        "0": {
-                            "name": behaviors[k]["modifiers"],
-                            "type": 0,
-                            "values": modifiers[modif_key]["values"]
-                        }
+                        "0": {"name": behaviors[k]["modifiers"], "type": 0, "values": modifiers[modif_key]["values"]}
                     }
         else:
             behaviors_boris[k]["modifiers"] = {}
@@ -221,9 +220,9 @@ def otx_to_boris(file_path: str) -> dict:
     itemlist = xmldoc.getElementsByTagName("CDS_SUBJECT")
     for item in itemlist:
         subject = minidom.parseString(item.toxml())
-        subject_name = re.sub('<[^>]*>', '', subject.getElementsByTagName("CDS_ELE_NAME")[0].toxml())
+        subject_name = re.sub("<[^>]*>", "", subject.getElementsByTagName("CDS_ELE_NAME")[0].toxml())
         try:
-            key = re.sub('<[^>]*>', '', subject.getElementsByTagName("CDS_ELE_START_KEYCODE")[0].toxml())
+            key = re.sub("<[^>]*>", "", subject.getElementsByTagName("CDS_ELE_START_KEYCODE")[0].toxml())
         except:
             key = ""
         try:
@@ -245,24 +244,24 @@ def otx_to_boris(file_path: str) -> dict:
 
         variable = minidom.parseString(item.toxml())
 
-        variable_label = re.sub('<[^>]*>', '', variable.getElementsByTagName('VL_LABEL')[0].toxml())
+        variable_label = re.sub("<[^>]*>", "", variable.getElementsByTagName("VL_LABEL")[0].toxml())
 
-        variable_id = re.sub('<[^>]*>', '', variable.getElementsByTagName('VL_ID')[0].toxml())
+        variable_id = re.sub("<[^>]*>", "", variable.getElementsByTagName("VL_ID")[0].toxml())
 
-        variable_type = re.sub('<[^>]*>', '', variable.getElementsByTagName('VL_TYPE')[0].toxml())
+        variable_type = re.sub("<[^>]*>", "", variable.getElementsByTagName("VL_TYPE")[0].toxml())
         if variable_type == "Double":
             variable_type = "numeric"
 
         try:
-            variable_description = re.sub('<[^>]*>', '', modif.getElementsByTagName('VL_DESCRIPTION')[0].toxml())
+            variable_description = re.sub("<[^>]*>", "", modif.getElementsByTagName("VL_DESCRIPTION")[0].toxml())
         except:
             variable_description = ""
 
         try:
-            values = variable.getElementsByTagName('VL_VALUE')
+            values = variable.getElementsByTagName("VL_VALUE")
             values_list = []
             for value in values:
-                values_list.append(re.sub('<[^>]*>', '', value.toxml()))
+                values_list.append(re.sub("<[^>]*>", "", value.toxml()))
             values_str = ",".join(values_list)
 
         except:
@@ -271,7 +270,7 @@ def otx_to_boris(file_path: str) -> dict:
         variables[variable_id] = {
             "label": variable_label,
             "type": variable_type.lower(),
-            "description": variable_description
+            "description": variable_description,
         }
         if values_str:
             variables[variable_id]["predefined_values"] = values_str
@@ -287,22 +286,16 @@ def otx_to_boris(file_path: str) -> dict:
             "possible values": variables[k]["predefined_values"] if "predefined_values" in variables[k] else "",
         }
 
-    # TODO: add EMPTY_PROJECT
-    project = {
-        "time_format": "hh:mm:ss",
-        "project_name": project_name,
-        "project_date": project_creation_date.replace(" ", "T"),
-        "behaviors_conf": behaviors_boris,
-        "project_format_version": "7.0",
-        "project_description": project_description,
-        "behavioral_categories": behav_category,
-        "subjects_conf": subjects,
-        "coding_map": {},
-        "behaviors_coding_map": {},
-        "observations": {},
-        "independent_variables": variables_boris,
-        "converters": {}
-    }
+    # create empty project from template
+    project = dict(cfg.EMPTY_PROJECT)
+
+    project[cfg.PROJECT_NAME] = project_name
+    project[cfg.PROJECT_DATE] = project_creation_date.replace(" ", "T")
+    project[cfg.ETHOGRAM] = behaviors_boris
+    project[cfg.PROJECT_DESCRIPTION] = project_description
+    project[cfg.BEHAVIORAL_CATEGORIES] = behav_category
+    project[cfg.SUBJECTS] = subjects
+    project[cfg.INDEPENDENT_VARIABLES] = variables_boris
 
     if flag_long_key:
         project["msg"] = "The keys longer than one char were deleted"

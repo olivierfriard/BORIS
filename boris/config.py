@@ -254,7 +254,7 @@ BEHAV_CODING_MAP_FIELDS = ["name", "Behavior codes"]
 EXCEL_FORBIDDEN_CHARACTERS = r"\/*[]:?"
 
 # create dictionaries
-TW_OBS_FIELD = {}, {}
+TW_OBS_FIELD = {}
 for observation_type in (MEDIA, LIVE, IMAGES):
     TW_OBS_FIELD[observation_type] = {}
     for idx, field in enumerate(TW_EVENTS_FIELDS[observation_type]):
@@ -589,10 +589,10 @@ BEHAVIORS_PLOT_COLORS = [
 ]
 
 EMPTY_PROJECT = {
-    "time_format": HHMMSS,
-    "project_date": "",
-    "project_name": "",
-    "project_description": "",
+    TIME_FORMAT: HHMMSS,
+    PROJECT_DATE: "",
+    PROJECT_NAME: "",
+    PROJECT_DESCRIPTION: "",
     "project_format_version": project_format_version,
     SUBJECTS: {},
     ETHOGRAM: {},
