@@ -38,7 +38,7 @@ Bug reports and feature requests
 To search for bugs, report them or request a feature, please use the github tracker:
 https://github.com/olivierfriard/BORIS/issues
 
-Please see http://www.boris.unito.it/pages/report_a_bug.html before .
+Please see `How to report a bug <http://www.boris.unito.it/pages/report_a_bug.html>`_ before.
 
 
 
@@ -67,7 +67,7 @@ following BibTex entry
 Licence
 ---------------------------------------------------------------------------------------------------------
 
-Distributed with a `GPL v.3 license <LICENSE.TXT>`_::
+Distributed with a `GPL v.3 license <LICENSE.TXT>`_
 
 Copyright 2012-2022 Olivier Friard
 
