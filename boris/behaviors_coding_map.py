@@ -86,7 +86,7 @@ class BehaviorsCodingMapWindowClass(QWidget):
         self.codingMap = behaviors_coding_map
         self.idx = idx
 
-        self.setWindowTitle("Behaviors coding map: {}".format(self.codingMap["name"]))
+        self.setWindowTitle(f"Behaviors coding map: {self.codingMap['name']}")
         Vlayout = QVBoxLayout()
 
         self.view = self.View(self)

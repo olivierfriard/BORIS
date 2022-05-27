@@ -83,15 +83,15 @@ CODING_MAP_RESIZE_W = 640
 CODING_MAP_RESIZE_H = 640
 
 # playerType
-VLC = "vlc"
 LIVE = "LIVE"
-VIEWER = "VIEWER"
 MEDIA = "MEDIA"
 IMAGES = "IMAGES"
 
-VIEWER_MEDIA_LIVE = "VIEWER_MEDIA_LIVE"
+VIEWER_MEDIA = "VIEWER_MEDIA"
+VIEWER_LIVE = "VIEWER_LIVE"
 VIEWER_IMAGES = "VIEWER_IMAGES"
 
+VIEWERS = (VIEWER_MEDIA, VIEWER_LIVE, VIEWER_IMAGES)
 
 POINT_EVENT_PLOT_DURATION = 0.010
 POINT_EVENT_PLOT_COLOR = "black"
@@ -230,12 +230,15 @@ DEFAULT_BEHAVIOR_TYPE = "Point event"
 TW_EVENTS_FIELDS = {
     MEDIA: ("time", "subject", "code", "type", "modifier", "comment"),
     LIVE: ("time", "subject", "code", "type", "modifier", "comment"),
-    IMAGES: ("image index", "subject", "code", "type", "modifier", "comment", "image path"),
+    VIEWER_MEDIA: ("time", "subject", "code", "type", "modifier", "comment"),
+    VIEWER_LIVE: ("time", "subject", "code", "type", "modifier", "comment"),
+    IMAGES: ("time", "subject", "code", "type", "modifier", "comment", "image index", "image path"),
+    VIEWER_IMAGES: ("time", "subject", "code", "type", "modifier", "comment", "image index", "image path"),
 }
 
 MEDIA_TW_EVENTS_FIELDS = ("time", "subject", "code", "type", "modifier", "comment")
 LIVE_TW_EVENTS_FIELDS = ("time", "subject", "code", "type", "modifier", "comment")
-IMAGES_TW_EVENTS_FIELDS = ("image index", "subject", "code", "type", "modifier", "comment", "image path")
+IMAGES_TW_EVENTS_FIELDS = ("time", "subject", "code", "type", "modifier", "comment", "image index", "image path")
 
 # fields for project events list
 pj_events_fields = ["time", "subject", "code", "modifier", "comment"]
@@ -244,7 +247,7 @@ pj_events_fields = ["time", "subject", "code", "modifier", "comment"]
 PJ_EVENTS_FIELDS = {
     MEDIA: ("time", "subject", "code", "modifier", "comment"),
     LIVE: ("time", "subject", "code", "modifier", "comment"),
-    IMAGES: ("image index", "subject", "code", "modifier", "comment", "image path"),
+    IMAGES: ("time", "subject", "code", "modifier", "comment", "image index", "image path"),
 }
 
 tw_indVarFields = ["label", "description", "type", "default value", "possible values"]
@@ -255,7 +258,7 @@ EXCEL_FORBIDDEN_CHARACTERS = r"\/*[]:?"
 
 # create dictionaries
 TW_OBS_FIELD = {}
-for observation_type in (MEDIA, LIVE, IMAGES):
+for observation_type in (MEDIA, LIVE, IMAGES, VIEWER_MEDIA, VIEWER_LIVE, VIEWER_IMAGES):
     TW_OBS_FIELD[observation_type] = {}
     for idx, field in enumerate(TW_EVENTS_FIELDS[observation_type]):
         TW_OBS_FIELD[observation_type][field] = idx
@@ -273,6 +276,8 @@ EVENT_BEHAVIOR_FIELD_IDX = 2
 EVENT_MODIFIER_FIELD_IDX = 3
 EVENT_COMMENT_FIELD_IDX = 4
 EVENT_STATUS_FIELD_IDX = 5
+EVENT_IMAGEIDX_FIELD_IDX = 6
+EVENT_IMAGEPATH_FIELD_IDX = 7
 
 
 # indexes of project window

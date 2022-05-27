@@ -104,7 +104,7 @@ def bytes_to_str(b: bytes) -> str:
 
 def convertTime(time_format: str, sec: float) -> str:
     """
-    convert time in base of current format (S or HHMMSS)
+    convert time in base at the current format (S or HHMMSS)
 
     Args:
         sec: time in seconds
@@ -112,6 +112,9 @@ def convertTime(time_format: str, sec: float) -> str:
     Returns:
         string: time in base of current format (self.timeFormat S or cfg.HHMMSS)
     """
+
+    if sec.is_nan():
+        return "NA"
 
     if time_format == cfg.S:
         return f"{sec:.3f}"
@@ -784,7 +787,7 @@ def time2seconds(time_: str) -> Decimal:
         return Decimal("0.000")
 
 
-def seconds2time(sec):
+def seconds2time(sec: Decimal) -> str:
     """
     convert seconds to hh:mm:ss.sss format
 
@@ -794,9 +797,12 @@ def seconds2time(sec):
         str: time in format hh:mm:ss
     """
 
+    if sec.is_nan():
+        return "NA"
+
     if sec > 1_600_000_000:  # epoch time
         t = datetime.datetime.fromtimestamp(sec)
-        return f"{t:%Y-%m-%d %H:%M:%S}.{t.microsecond/1000:03.0f}"
+        return f"{t:%Y-%m-%d %H:%M:%S}.{t.microsecond / 1000:03.0f}"
 
     neg_sign = "-" * (sec < 0)
     abs_sec = abs(sec)

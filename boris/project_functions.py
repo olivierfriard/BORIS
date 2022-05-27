@@ -699,7 +699,7 @@ def media_full_path(media_file: str, project_file_name: str) -> str:
             return ""
 
 
-def observed_interval(observation: dict):
+def observed_interval(observation: dict) -> tuple:
     """
     Observed interval for observation
 
@@ -707,15 +707,25 @@ def observed_interval(observation: dict):
         observation (dict): observation dictionary
 
     Returns:
-        List of 2 Decimals: time of first observed event, time of last observed event
+        Tuple of 2 Decimals: time of first observed event, time of last observed event
     """
-    if observation[cfg.EVENTS]:
-        return (
-            min(observation[cfg.EVENTS])[cfg.EVENT_TIME_FIELD_IDX],
-            max(observation[cfg.EVENTS])[cfg.EVENT_TIME_FIELD_IDX],
-        )
-    else:
+    if not observation[cfg.EVENTS]:
         return (dec("0.0"), dec("0.0"))
+    if observation[cfg.TYPE] in (cfg.MEDIA, cfg.LIVE):
+        return (
+            min(observation[cfg.EVENTS])[cfg.PJ_OBS_FIELDS[observation[cfg.TYPE]]["time"]],
+            max(observation[cfg.EVENTS])[cfg.PJ_OBS_FIELDS[observation[cfg.TYPE]]["time"]],
+        )
+    if observation[cfg.TYPE] == cfg.IMAGES:
+        events = [x[cfg.PJ_OBS_FIELDS[observation[cfg.TYPE]]["image index"]] for x in observation[cfg.EVENTS]]
+
+        return (dec(min(events)), dec(max(events)))
+        """
+        return (
+            min(observation[cfg.EVENTS])[cfg.PJ_OBS_FIELDS[observation[cfg.TYPE]]["image index"]],
+            max(observation[cfg.EVENTS])[cfg.PJ_OBS_FIELDS[observation[cfg.TYPE]]["image index"]],
+        )
+        """
 
 
 def observation_total_length(observation: dict) -> dec:

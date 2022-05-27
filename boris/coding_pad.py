@@ -233,7 +233,7 @@ def show_coding_pad(self):
     """
     show coding pad window
     """
-    if self.playerType == cfg.VIEWER:
+    if self.playerType in cfg.VIEWERS:
         QMessageBox.warning(self, cfg.programName, "The coding pad is not available in <b>VIEW</b> mode")
         return
 

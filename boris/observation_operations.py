@@ -100,8 +100,9 @@ def observations_list(self):
     """
     show list of all observations of current project
     """
+    logging.debug(f"observations list")
 
-    if self.playerType == cfg.VIEWER:
+    if self.playerType in cfg.VIEWERS:
         close_observation(self)
 
     result, selected_obs = select_observations.select_observations(self.pj, cfg.SINGLE)
@@ -140,6 +141,8 @@ def observations_list(self):
                 (f"The observation <b>{self.observationId}</b> is running!<br>" "Close it before editing."),
             )
 
+    logging.debug(f"end observations list")
+
 
 def open_observation(self, mode: str) -> str:
     """
@@ -149,6 +152,8 @@ def open_observation(self, mode: str) -> str:
         mode (str): "start" to start observation
                     "view" to view observation
     """
+
+    logging.debug(f"open observation")
 
     # check if current observation must be closed to open a new one
     if self.observationId:
@@ -184,8 +189,13 @@ def load_observation(self, obs_id: str, mode: str = cfg.OBS_START) -> str:
                     "view"  to view observation
     """
 
+    logging.debug(f"load observation")
+
     if obs_id not in self.pj[cfg.OBSERVATIONS]:
         return "Error: Observation not found"
+
+    if self.pj[cfg.OBSERVATIONS][obs_id][cfg.TYPE] not in [cfg.IMAGES, cfg.LIVE, cfg.MEDIA]:
+        return f"Error: Observation type {self.pj[cfg.OBSERVATIONS][obs_id][cfg.TYPE]} not found"
 
     self.observationId = obs_id
 
@@ -195,7 +205,7 @@ def load_observation(self, obs_id: str, mode: str = cfg.OBS_START) -> str:
             inizialize_new_images_observation(self)
 
         if mode == cfg.VIEW:
-            self.playerType = cfg.VIEWER
+            self.playerType = cfg.VIEWER_IMAGES
             self.dwObservations.setVisible(True)
 
     if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE] == cfg.LIVE:
@@ -204,7 +214,7 @@ def load_observation(self, obs_id: str, mode: str = cfg.OBS_START) -> str:
             initialize_new_live_observation(self)
 
         if mode == cfg.VIEW:
-            self.playerType = cfg.VIEWER
+            self.playerType = cfg.VIEWER_LIVE
             self.dwObservations.setVisible(True)
 
     if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE] == cfg.MEDIA:
@@ -217,14 +227,18 @@ def load_observation(self, obs_id: str, mode: str = cfg.OBS_START) -> str:
                 return "Error: loading observation problem"
 
         if mode == cfg.VIEW:
-            self.playerType = cfg.VIEWER
+            self.playerType = cfg.VIEWER_MEDIA
             self.dwObservations.setVisible(True)
 
+    # print(self.pj[cfg.OBSERVATIONS][self.observationId])
+    print(f"{self.playerType=}")
     self.load_tw_events(self.observationId)
 
     menu_options.update_menu(self)
     # title of dock widget  “  ”
     self.dwObservations.setWindowTitle(f"Events for “{self.observationId}” observation")
+
+    logging.debug(f"end load observation")
     return ""
 
 
@@ -1034,14 +1048,14 @@ def initialize_new_observation_media(self):
             QMessageBox.Ok | QMessageBox.Default,
             QMessageBox.NoButton,
         )
-        self.playerType = cfg.VIEWER
+        self.playerType = cfg.VIEWER_MEDIA
         return True
 
     self.playerType = cfg.MEDIA
     self.fps = 0
 
-    self.w_obs_info.setVisible(True)
     self.w_live.setVisible(False)
+    self.w_obs_info.setVisible(True)
 
     font = QFont()
     font.setPointSize(15)
@@ -1410,16 +1424,16 @@ def initialize_new_live_observation(self):
 
     self.playerType = cfg.LIVE
 
-    self.w_live.setVisible(True)
-
     self.pb_live_obs.setMinimumHeight(60)
 
     font = QFont()
     font.setPointSize(48)
     self.lb_current_media_time.setFont(font)
 
-    self.dwObservations.setVisible(True)
+    for dw in [self.dwEthogram, self.dwSubjects, self.dwObservations]:
+        dw.setVisible(True)
 
+    self.w_live.setVisible(True)  # button start
     self.w_obs_info.setVisible(True)
 
     menu_options.update_menu(self)
@@ -1488,7 +1502,7 @@ def inizialize_new_images_observation(self):
             QMessageBox.Ok | QMessageBox.Default,
             QMessageBox.NoButton,
         )
-        self.playerType = cfg.VIEWER
+        self.playerType = cfg.VIEWER_IMAGES
         return True
 
     # count number of images in all directories
@@ -1509,7 +1523,7 @@ def inizialize_new_images_observation(self):
             QMessageBox.Ok | QMessageBox.Default,
             QMessageBox.NoButton,
         )
-        self.playerType = cfg.VIEWER
+        self.playerType = cfg.VIEWER_IMAGES
         return True
 
     self.playerType = cfg.IMAGES
@@ -1521,7 +1535,7 @@ def inizialize_new_images_observation(self):
 
     self.image_idx = 0
 
-    self.w_live.setVisible(False)
+    # self.w_live.setVisible(True)
 
     self.setDockOptions(QMainWindow.AnimatedDocks | QMainWindow.AllowNestedDocks)
     self.dw_player = []
@@ -1576,3 +1590,6 @@ def inizialize_new_images_observation(self):
 
     for dw in [self.dwEthogram, self.dwSubjects, self.dwObservations]:
         dw.setVisible(True)
+
+    self.w_live.setVisible(False)  # button start
+    self.w_obs_info.setVisible(True)

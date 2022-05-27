@@ -395,7 +395,7 @@ def edit_event(self):
 
     twEvents_row = self.twEvents.selectedItems()[0].row()
 
-    if self.playerType in [cfg.MEDIA, cfg.LIVE, cfg.VIEWER]:
+    if self.playerType in [cfg.MEDIA, cfg.LIVE, cfg.VIEWER_MEDIA, cfg.VIEWER_LIVE]:
         tsb_to_edit = [
             util.time2seconds(self.twEvents.item(twEvents_row, cfg.EVENT_TIME_FIELD_IDX).text())
             if self.timeFormat == cfg.HHMMSS
@@ -403,7 +403,7 @@ def edit_event(self):
             self.twEvents.item(twEvents_row, cfg.EVENT_SUBJECT_FIELD_IDX).text(),
             self.twEvents.item(twEvents_row, cfg.EVENT_BEHAVIOR_FIELD_IDX).text(),
         ]
-    if self.playerType in [cfg.IMAGES]:
+    if self.playerType in [cfg.IMAGES, cfg.VIEWER_IMAGES]:
         tsb_to_edit = [
             Decimal(self.twEvents.item(twEvents_row, cfg.EVENT_TIME_FIELD_IDX).text()),
             self.twEvents.item(twEvents_row, cfg.EVENT_SUBJECT_FIELD_IDX).text(),
