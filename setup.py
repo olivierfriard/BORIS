@@ -30,8 +30,8 @@ setup(
         "pillow>=9.0.1",
         "numpy>=1.21",
         "matplotlib==3.3.3",
-        "tablib[html, ods, xls, xlsx]==3.2.1",
-        "pyqt5==5.15.4",
+        "tablib[html, ods, xls, xlsx]>=3",
+        "pyqt5>=5.15",
     ],
     package_data={
         "boris": [
