@@ -27,7 +27,7 @@ setup(
         "Operating System :: OS Independent",
     ],
     packages=["boris"],  # same as name
-    install_requires=["numpy==1.22.3", "matplotlib==3.3.3", "tablib[html, ods, xls, xlsx]", "pyqt5"],
+    install_requires=["numpy", "matplotlib==3.3.3", "tablib[html, ods, xls, xlsx]", "pyqt5"],
     package_data={
         "boris": ["boris.qrc", "boris.ui", "portion/*.py"],
         "": ["README.TXT", "LICENSE.TXT"],
