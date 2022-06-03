@@ -110,7 +110,6 @@ def fix_unpaired_events(self):
             fix_at_time = w.time_widget.get_time()
 
             events_to_add = project_functions.fix_unpaired_state_events(
-                self.observationId,
                 self.pj[cfg.ETHOGRAM],
                 self.pj[cfg.OBSERVATIONS][self.observationId],
                 fix_at_time - Decimal("0.001"),
@@ -147,7 +146,7 @@ def fix_unpaired_events(self):
             if "NOT PAIRED" in msg.upper():
                 fix_at_time = max(x[0] for x in self.pj[cfg.OBSERVATIONS][obs_id][cfg.EVENTS])
                 events_to_add = project_functions.fix_unpaired_state_events(
-                    obs_id, self.pj[cfg.ETHOGRAM], self.pj[cfg.OBSERVATIONS][obs_id], fix_at_time
+                    self.pj[cfg.ETHOGRAM], self.pj[cfg.OBSERVATIONS][obs_id], fix_at_time
                 )
                 if events_to_add:
                     events_backup = self.pj[cfg.OBSERVATIONS][obs_id][cfg.EVENTS][:]

@@ -914,31 +914,33 @@ def open_project_json(projectFileName: str) -> tuple:
         projectChanged = True
 
     # add subject description
-    if "project_format_version" in pj:
+    if cfg.PROJECT_VERSION in pj:
         for idx in [x for x in pj[cfg.SUBJECTS]]:
             if "description" not in pj[cfg.SUBJECTS][idx]:
                 pj[cfg.SUBJECTS][idx]["description"] = ""
                 projectChanged = True
 
     # check if project file version is newer than current BORIS project file version
-    if "project_format_version" in pj and dec(pj["project_format_version"]) > dec(cfg.project_format_version):
+    if cfg.PROJECT_VERSION in pj and util.versiontuple(pj[cfg.PROJECT_VERSION]) > util.versiontuple(
+        cfg.project_format_version
+    ):
         return (
             projectFileName,
             projectChanged,
             {
                 "error": (
                     "This project file was created with a more recent version of BORIS.<br>"
-                    f"You must update BORIS to <b>v. >= {pj['project_format_version']}</b> to open this project"
+                    f"You must update BORIS to <b>v. >= {pj[cfg.PROJECT_VERSION]}</b> to open this project"
                 )
             },
             msg,
         )
 
     # check if old version  v. 0 *.obs
-    if "project_format_version" not in pj:
+    if cfg.PROJECT_VERSION not in pj:
 
         # convert VIDEO, AUDIO -> MEDIA
-        pj["project_format_version"] = cfg.project_format_version
+        pj[cfg.PROJECT_VERSION] = cfg.project_format_version
         projectChanged = True
 
         for obs in [x for x in pj[cfg.OBSERVATIONS]]:
@@ -974,7 +976,7 @@ def open_project_json(projectFileName: str) -> tuple:
 
     # check if project format version < 4 (modifiers were str)
     project_lowerthan4 = False
-    if "project_format_version" in pj and util.versiontuple(pj["project_format_version"]) < util.versiontuple("4.0"):
+    if cfg.PROJECT_VERSION in pj and util.versiontuple(pj[cfg.PROJECT_VERSION]) < util.versiontuple("4.0"):
         for idx in pj[cfg.ETHOGRAM]:
             if pj[cfg.ETHOGRAM][idx]["modifiers"]:
                 if isinstance(pj[cfg.ETHOGRAM][idx]["modifiers"], str):
@@ -993,9 +995,9 @@ def open_project_json(projectFileName: str) -> tuple:
 
         if not project_lowerthan4:
             msg = "The project version was updated from {} to {}".format(
-                pj["project_format_version"], cfg.project_format_version
+                pj[cfg.PROJECT_VERSION], cfg.project_format_version
             )
-            pj["project_format_version"] = cfg.project_format_version
+            pj[cfg.PROJECT_VERSION] = cfg.project_format_version
             projectChanged = True
 
     # add category key if not found
@@ -1103,7 +1105,7 @@ def open_project_json(projectFileName: str) -> tuple:
         except Exception:
             pass
 
-        pj["project_format_version"] = cfg.project_format_version
+        pj[cfg.PROJECT_VERSION] = cfg.project_format_version
 
     return projectFileName, projectChanged, pj, msg
 
@@ -1126,7 +1128,7 @@ def event_type(code: str, ethogram: dict) -> str:
     return None
 
 
-def fix_unpaired_state_events(obsId, ethogram, observation, fix_at_time):
+def fix_unpaired_state_events(ethogram: dict, observation: dict, fix_at_time: dec) -> list:
     """
     fix unpaired state events in observation
 
@@ -1157,7 +1159,6 @@ def fix_unpaired_state_events(obsId, ethogram, observation, fix_at_time):
         for behavior in sorted(set(behaviors)):
             if (behavior in ethogram_behaviors) and (cfg.STATE in event_type(behavior, ethogram).upper()):
 
-                flagStateEvent = True
                 lst, memTime = [], {}
                 for event in [
                     event

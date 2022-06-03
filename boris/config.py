@@ -24,6 +24,10 @@ programName: str = "BORIS"
 
 project_format_version = "7.0"
 
+# minimal project version for handling observations from images
+IMAGES_OBS_PROJECT_MIN_VERSION = (8, 6)
+
+
 CHECK_NEW_VERSION_DELAY = 15 * 24 * 60 * 60
 
 N_PLAYER = 8
@@ -54,6 +58,7 @@ function_keys = {
 PROJECT_NAME = "project_name"
 PROJECT_DATE = "project_date"
 PROJECT_DESCRIPTION = "project_description"
+PROJECT_VERSION = "project_format_version"
 
 TIME_FORMAT = "time_format"
 
@@ -246,8 +251,11 @@ pj_events_fields = ["time", "subject", "code", "modifier", "comment"]
 
 PJ_EVENTS_FIELDS = {
     MEDIA: ("time", "subject", "code", "modifier", "comment"),
+    VIEWER_MEDIA: ("time", "subject", "code", "modifier", "comment"),
     LIVE: ("time", "subject", "code", "modifier", "comment"),
+    VIEWER_LIVE: ("time", "subject", "code", "modifier", "comment"),
     IMAGES: ("time", "subject", "code", "modifier", "comment", "image index", "image path"),
+    VIEWER_IMAGES: ("time", "subject", "code", "modifier", "comment", "image index", "image path"),
 }
 
 tw_indVarFields = ["label", "description", "type", "default value", "possible values"]
@@ -258,14 +266,14 @@ EXCEL_FORBIDDEN_CHARACTERS = r"\/*[]:?"
 
 # create dictionaries
 TW_OBS_FIELD = {}
-for observation_type in (MEDIA, LIVE, IMAGES, VIEWER_MEDIA, VIEWER_LIVE, VIEWER_IMAGES):
+for observation_type in TW_EVENTS_FIELDS:
     TW_OBS_FIELD[observation_type] = {}
     for idx, field in enumerate(TW_EVENTS_FIELDS[observation_type]):
         TW_OBS_FIELD[observation_type][field] = idx
 
 
 PJ_OBS_FIELDS = {}
-for observation_type in (MEDIA, LIVE, IMAGES):
+for observation_type in TW_EVENTS_FIELDS:
     PJ_OBS_FIELDS[observation_type] = {}
     for idx, field in enumerate(PJ_EVENTS_FIELDS[observation_type]):
         PJ_OBS_FIELDS[observation_type][field] = idx
@@ -598,7 +606,7 @@ EMPTY_PROJECT = {
     PROJECT_DATE: "",
     PROJECT_NAME: "",
     PROJECT_DESCRIPTION: "",
-    "project_format_version": project_format_version,
+    PROJECT_VERSION: project_format_version,
     SUBJECTS: {},
     ETHOGRAM: {},
     OBSERVATIONS: {},

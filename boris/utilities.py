@@ -113,14 +113,14 @@ def convertTime(time_format: str, sec: float) -> str:
         string: time in base of current format (self.timeFormat S or cfg.HHMMSS)
     """
 
-    if sec.is_nan():
-        return "NA"
-
     if time_format == cfg.S:
         return f"{sec:.3f}"
 
     if time_format == cfg.HHMMSS:
         return seconds2time(sec)
+
+    if isinstance(sec, Decimal.decimal) and sec.is_nan():
+        return "NA"
 
 
 def convert_time_to_decimal(pj: dict) -> dict:

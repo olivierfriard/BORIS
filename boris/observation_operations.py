@@ -100,6 +100,7 @@ def observations_list(self):
     """
     show list of all observations of current project
     """
+
     logging.debug(f"observations list")
 
     if self.playerType in cfg.VIEWERS:
@@ -126,7 +127,7 @@ def observations_list(self):
 
     if result == cfg.OPEN:
         # select_observations.select_observations(self.pj, cfg.OPEN)
-        load_observation(self, selected_obs[0], cfg.START)
+        load_observation(self, selected_obs[0], cfg.OBS_START)
 
     if result == cfg.VIEW:
         load_observation(self, selected_obs[0], cfg.VIEW)
@@ -200,20 +201,23 @@ def load_observation(self, obs_id: str, mode: str = cfg.OBS_START) -> str:
     self.observationId = obs_id
 
     if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE] == cfg.IMAGES:
+
         if mode == cfg.OBS_START:
             self.playerType = cfg.IMAGES
-            inizialize_new_images_observation(self)
+            initialize_new_images_observation(self)
 
         if mode == cfg.VIEW:
             self.playerType = cfg.VIEWER_IMAGES
             self.dwObservations.setVisible(True)
 
     if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE] == cfg.LIVE:
+
         if mode == cfg.OBS_START:
             self.playerType = cfg.LIVE
             initialize_new_live_observation(self)
 
         if mode == cfg.VIEW:
+
             self.playerType = cfg.VIEWER_LIVE
             self.dwObservations.setVisible(True)
 
@@ -230,8 +234,6 @@ def load_observation(self, obs_id: str, mode: str = cfg.OBS_START) -> str:
             self.playerType = cfg.VIEWER_MEDIA
             self.dwObservations.setVisible(True)
 
-    # print(self.pj[cfg.OBSERVATIONS][self.observationId])
-    print(f"{self.playerType=}")
     self.load_tw_events(self.observationId)
 
     menu_options.update_menu(self)
@@ -909,7 +911,6 @@ def close_observation(self):
             if w.exec_():
                 fix_at_time = w.time_widget.get_time()
                 events_to_add = project_functions.fix_unpaired_state_events(
-                    self.observationId,
                     self.pj[cfg.ETHOGRAM],
                     self.pj[cfg.OBSERVATIONS][self.observationId],
                     fix_at_time - Decimal("0.001"),
@@ -1030,6 +1031,9 @@ def initialize_new_observation_media(self):
     """
 
     logging.debug("function: initialize new observation for media file(s)")
+
+    for dw in [self.dwEthogram, self.dwSubjects, self.dwObservations]:
+        dw.setVisible(True)
 
     ok, msg = project_functions.check_if_media_available(
         self.pj[cfg.OBSERVATIONS][self.observationId], self.projectFileName
@@ -1400,12 +1404,6 @@ def initialize_new_observation_media(self):
             self.saved_state = self.saveState()
             self.restoreState(self.saved_state)
 
-    self.twEvents.setColumnCount(len(cfg.MEDIA_TW_EVENTS_FIELDS))
-    self.twEvents.setHorizontalHeaderLabels(cfg.MEDIA_TW_EVENTS_FIELDS)
-
-    for dw in [self.dwEthogram, self.dwSubjects, self.dwObservations]:
-        dw.setVisible(True)
-
     for player in self.dw_player:
         player.setVisible(True)
 
@@ -1481,10 +1479,15 @@ def initialize_new_live_observation(self):
         self.restoreState(self.saved_state)
 
 
-def inizialize_new_images_observation(self):
+def initialize_new_images_observation(self):
     """
     initialize a new observation from directories of images
     """
+
+    for dw in [self.dwEthogram, self.dwSubjects, self.dwObservations]:
+        dw.setVisible(True)
+    self.w_live.setVisible(False)  # button start
+
     # check if directories are available
     ok, msg = project_functions.check_directories_availability(
         self.pj[cfg.OBSERVATIONS][self.observationId], self.projectFileName
@@ -1503,7 +1506,7 @@ def inizialize_new_images_observation(self):
             QMessageBox.NoButton,
         )
         self.playerType = cfg.VIEWER_IMAGES
-        return True
+        return
 
     # count number of images in all directories
     tot_images_number = 0
@@ -1524,7 +1527,7 @@ def inizialize_new_images_observation(self):
             QMessageBox.NoButton,
         )
         self.playerType = cfg.VIEWER_IMAGES
-        return True
+        return
 
     self.playerType = cfg.IMAGES
     # load image paths
@@ -1588,8 +1591,4 @@ def inizialize_new_images_observation(self):
     self.twEvents.setColumnCount(len(cfg.IMAGES_TW_EVENTS_FIELDS))
     self.twEvents.setHorizontalHeaderLabels(cfg.IMAGES_TW_EVENTS_FIELDS)
 
-    for dw in [self.dwEthogram, self.dwSubjects, self.dwObservations]:
-        dw.setVisible(True)
-
-    self.w_live.setVisible(False)  # button start
     self.w_obs_info.setVisible(True)

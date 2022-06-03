@@ -1838,13 +1838,22 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         logging.debug(f"begin load events from obs: {obs_id}")
 
+        if self.pj[cfg.OBSERVATIONS][obs_id][cfg.TYPE] == cfg.MEDIA:
+            self.twEvents.setColumnCount(len(cfg.MEDIA_TW_EVENTS_FIELDS))
+            self.twEvents.setHorizontalHeaderLabels(cfg.MEDIA_TW_EVENTS_FIELDS)
+
+        if self.pj[cfg.OBSERVATIONS][obs_id][cfg.TYPE] == cfg.LIVE:
+            self.twEvents.setColumnCount(len(cfg.LIVE_TW_EVENTS_FIELDS))
+            self.twEvents.setHorizontalHeaderLabels(cfg.LIVE_TW_EVENTS_FIELDS)
+
+        if self.pj[cfg.OBSERVATIONS][obs_id][cfg.TYPE] == cfg.IMAGES:
+            self.twEvents.setColumnCount(len(cfg.IMAGES_TW_EVENTS_FIELDS))
+            self.twEvents.setHorizontalHeaderLabels(cfg.IMAGES_TW_EVENTS_FIELDS)
+
         self.twEvents.setRowCount(len(self.pj[cfg.OBSERVATIONS][obs_id][cfg.EVENTS]))
         if self.filtered_behaviors or self.filtered_subjects:
             self.twEvents.setRowCount(0)
         row = 0
-
-        print(cfg.TW_EVENTS_FIELDS)
-        print(f"{self.playerType=}")
 
         for event in self.pj[cfg.OBSERVATIONS][obs_id][cfg.EVENTS]:
 
@@ -2754,7 +2763,17 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         self.save_project_json_started = True
 
-        self.pj["project_format_version"] = cfg.project_format_version
+        # check if project contains IMAGES observations
+        flag_images_obs = False
+        for obs_id in self.pj[cfg.OBSERVATIONS]:
+            if self.pj[cfg.OBSERVATIONS][obs_id][cfg.TYPE] == cfg.IMAGES:
+                flag_images_obs = True
+                break
+
+        if flag_images_obs:
+            self.pj[cfg.PROJECT_VERSION] = ".".join((str(x) for x in cfg.IMAGES_OBS_PROJECT_MIN_VERSION))
+        else:
+            self.pj[cfg.PROJECT_VERSION] = cfg.project_format_version
 
         try:
             if projectFileName.endswith(".boris.gz"):
