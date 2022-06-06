@@ -164,6 +164,8 @@ COMMENT = "comment"
 BEHAVIOR_KEY = "key"
 BEHAVIOR_CATEGORY = "category"
 
+IMAGE_INDEX = "image index"
+
 ZOOM_LEVEL = "zoom level"
 DISPLAY_MEDIA_SUBTITLES = "display subtitles"
 OVERLAY = "video overlay"

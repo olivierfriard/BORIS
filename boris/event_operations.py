@@ -211,7 +211,17 @@ def delete_all_events(self):
                     [
                         self.twEvents.item(row, cfg.TW_OBS_FIELD[self.playerType][cfg.SUBJECT]).text(),
                         self.twEvents.item(row, cfg.TW_OBS_FIELD[self.playerType][cfg.BEHAVIOR_CODE]).text(),
-                        self.twEvents.item(row, cfg.TW_OBS_FIELD[self.playerType][cfg.IMAGE_INDEX]).text(),
+                        int(self.twEvents.item(row, cfg.TW_OBS_FIELD[self.playerType][cfg.IMAGE_INDEX]).text()),
+                    ]
+                )
+
+            print(f"{rows_to_delete=}")
+            for event in self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS]:
+                print(
+                    [
+                        event[cfg.PJ_OBS_FIELDS[self.playerType][cfg.SUBJECT]],
+                        event[cfg.PJ_OBS_FIELDS[self.playerType][cfg.BEHAVIOR_CODE]],
+                        event[cfg.PJ_OBS_FIELDS[self.playerType][cfg.IMAGE_INDEX]],
                     ]
                 )
 
@@ -219,9 +229,9 @@ def delete_all_events(self):
                 event
                 for event in self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS]
                 if [
-                    event[cfg.EVENT_SUBJECT_FIELD_IDX],
-                    event[cfg.EVENT_BEHAVIOR_FIELD_IDX],
-                    event[cfg.EVENT_IMAGEIDX_FIELD_IDX],
+                    event[cfg.PJ_OBS_FIELDS[self.playerType][cfg.SUBJECT]],
+                    event[cfg.PJ_OBS_FIELDS[self.playerType][cfg.BEHAVIOR_CODE]],
+                    event[cfg.PJ_OBS_FIELDS[self.playerType][cfg.IMAGE_INDEX]],
                 ]
                 not in rows_to_delete
             ]
