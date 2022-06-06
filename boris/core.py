@@ -80,6 +80,7 @@ from . import select_modifiers
 from . import select_observations
 from . import subjects_pad
 from . import version
+from . import event_operations
 from . import cmd_arguments
 from . import core_qrc
 from .core_ui import Ui_MainWindow
@@ -3792,9 +3793,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             return
 
         # fill the undo list
-        self.undo_queue.append(self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS][:])
-        if len(self.undo_queue) > cfg.MAX_UNDO_QUEUE:
-            self.undo_queue.popleft()
+        event_operations.fill_events_undo_list(self)
 
         editing_event = "row" in event
 

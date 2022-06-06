@@ -160,6 +160,15 @@ def show_all_events(self):
     self.dwObservations.setWindowTitle(f"Events for “{self.observationId}” observation")
 
 
+def fill_events_undo_list(self):
+    """
+    fill the undo events list for Undo function (CTRL + Z)
+    """
+    self.undo_queue.append(self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS][:])
+    if len(self.undo_queue) > cfg.MAX_UNDO_QUEUE:
+        self.undo_queue.popleft()
+
+
 def delete_all_events(self):
     """
     delete all (filtered) events in current observation
@@ -181,6 +190,10 @@ def delete_all_events(self):
         )
         == cfg.YES
     ):
+
+        # fill the undo list
+        fill_events_undo_list(self)
+
         rows_to_delete = []
         if self.playerType in (cfg.MEDIA, cfg.VIEWER_MEDIA, cfg.LIVE, cfg.VIEWER_LIVE):
             for row in range(self.twEvents.rowCount()):
@@ -198,9 +211,9 @@ def delete_all_events(self):
                 event
                 for event in self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS]
                 if [
-                    event[cfg.EVENT_TIME_FIELD_IDX],
-                    event[cfg.EVENT_SUBJECT_FIELD_IDX],
-                    event[cfg.EVENT_BEHAVIOR_FIELD_IDX],
+                    event[cfg.PJ_OBS_FIELDS[self.playerType]["time"]],
+                    event[cfg.PJ_OBS_FIELDS[self.playerType][cfg.SUBJECT]],
+                    event[cfg.PJ_OBS_FIELDS[self.playerType][cfg.BEHAVIOR_CODE]],
                 ]
                 not in rows_to_delete
             ]
@@ -212,16 +225,6 @@ def delete_all_events(self):
                         self.twEvents.item(row, cfg.TW_OBS_FIELD[self.playerType][cfg.SUBJECT]).text(),
                         self.twEvents.item(row, cfg.TW_OBS_FIELD[self.playerType][cfg.BEHAVIOR_CODE]).text(),
                         int(self.twEvents.item(row, cfg.TW_OBS_FIELD[self.playerType][cfg.IMAGE_INDEX]).text()),
-                    ]
-                )
-
-            print(f"{rows_to_delete=}")
-            for event in self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS]:
-                print(
-                    [
-                        event[cfg.PJ_OBS_FIELDS[self.playerType][cfg.SUBJECT]],
-                        event[cfg.PJ_OBS_FIELDS[self.playerType][cfg.BEHAVIOR_CODE]],
-                        event[cfg.PJ_OBS_FIELDS[self.playerType][cfg.IMAGE_INDEX]],
                     ]
                 )
 
@@ -255,8 +258,11 @@ def delete_selected_events(self):
         QMessageBox.warning(self, cfg.programName, "No event selected!")
     else:
         # list of rows to delete (set for unique)
-        try:
-            rows_to_delete = []
+        # fill the undo list
+        fill_events_undo_list(self)
+
+        rows_to_delete = []
+        if self.playerType in (cfg.MEDIA, cfg.VIEWER_MEDIA, cfg.LIVE, cfg.VIEWER_LIVE):
             for row in set([item.row() for item in self.twEvents.selectedIndexes()]):
                 rows_to_delete.append(
                     [
@@ -268,25 +274,40 @@ def delete_selected_events(self):
                     ]
                 )
 
-            # logging.debug(f"rows to delete: {rows_to_delete}")
-
             self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS] = [
                 event
-                for idx, event in enumerate(self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS])
+                for event in self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS]
                 if [
-                    event[cfg.EVENT_TIME_FIELD_IDX],
-                    event[cfg.EVENT_SUBJECT_FIELD_IDX],
-                    event[cfg.EVENT_BEHAVIOR_FIELD_IDX],
+                    event[cfg.PJ_OBS_FIELDS[self.playerType]["time"]],
+                    event[cfg.PJ_OBS_FIELDS[self.playerType][cfg.SUBJECT]],
+                    event[cfg.PJ_OBS_FIELDS[self.playerType][cfg.BEHAVIOR_CODE]],
                 ]
                 not in rows_to_delete
             ]
 
-            self.projectChanged = True
-            self.load_tw_events(self.observationId)
+        if self.playerType in (cfg.IMAGES, cfg.VIEWER_IMAGES):
+            for row in set([item.row() for item in self.twEvents.selectedIndexes()]):
+                rows_to_delete.append(
+                    [
+                        self.twEvents.item(row, cfg.TW_OBS_FIELD[self.playerType][cfg.SUBJECT]).text(),
+                        self.twEvents.item(row, cfg.TW_OBS_FIELD[self.playerType][cfg.BEHAVIOR_CODE]).text(),
+                        int(self.twEvents.item(row, cfg.TW_OBS_FIELD[self.playerType][cfg.IMAGE_INDEX]).text()),
+                    ]
+                )
 
-        except Exception:
-            logging.critical("Critical error during event deletion")
-            QMessageBox.critical(self, cfg.programName, "Problem during event deletion")
+            self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS] = [
+                event
+                for event in self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS]
+                if [
+                    event[cfg.PJ_OBS_FIELDS[self.playerType][cfg.SUBJECT]],
+                    event[cfg.PJ_OBS_FIELDS[self.playerType][cfg.BEHAVIOR_CODE]],
+                    event[cfg.PJ_OBS_FIELDS[self.playerType][cfg.IMAGE_INDEX]],
+                ]
+                not in rows_to_delete
+            ]
+
+        self.projectChanged = True
+        self.load_tw_events(self.observationId)
 
 
 def select_events_between_activated(self):
@@ -435,23 +456,35 @@ def edit_event(self):
             self.twEvents.item(twEvents_row, cfg.EVENT_SUBJECT_FIELD_IDX).text(),
             self.twEvents.item(twEvents_row, cfg.EVENT_BEHAVIOR_FIELD_IDX).text(),
         ]
+
+        row = [
+            idx
+            for idx, event in enumerate(self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS])
+            if [
+                event[cfg.EVENT_TIME_FIELD_IDX],
+                event[cfg.EVENT_SUBJECT_FIELD_IDX],
+                event[cfg.EVENT_BEHAVIOR_FIELD_IDX],
+            ]
+            == tsb_to_edit
+        ][0]
+
     if self.playerType in [cfg.IMAGES, cfg.VIEWER_IMAGES]:
         tsb_to_edit = [
-            Decimal(self.twEvents.item(twEvents_row, cfg.EVENT_TIME_FIELD_IDX).text()),
-            self.twEvents.item(twEvents_row, cfg.EVENT_SUBJECT_FIELD_IDX).text(),
-            self.twEvents.item(twEvents_row, cfg.EVENT_BEHAVIOR_FIELD_IDX).text(),
+            self.twEvents.item(twEvents_row, cfg.TW_OBS_FIELD[self.playerType][cfg.SUBJECT]).text(),
+            self.twEvents.item(twEvents_row, cfg.TW_OBS_FIELD[self.playerType][cfg.BEHAVIOR_CODE]).text(),
+            int(self.twEvents.item(twEvents_row, cfg.TW_OBS_FIELD[self.playerType][cfg.IMAGE_INDEX]).text()),
         ]
 
-    row = [
-        idx
-        for idx, event in enumerate(self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS])
-        if [
-            event[cfg.EVENT_TIME_FIELD_IDX],
-            event[cfg.EVENT_SUBJECT_FIELD_IDX],
-            event[cfg.EVENT_BEHAVIOR_FIELD_IDX],
-        ]
-        == tsb_to_edit
-    ][0]
+        row = [
+            idx
+            for idx, event in enumerate(self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS])
+            if [
+                event[cfg.PJ_OBS_FIELDS[self.playerType][cfg.SUBJECT]],
+                event[cfg.PJ_OBS_FIELDS[self.playerType][cfg.BEHAVIOR_CODE]],
+                event[cfg.PJ_OBS_FIELDS[self.playerType][cfg.IMAGE_INDEX]],
+            ]
+            == tsb_to_edit
+        ][0]
 
     editWindow = DlgEditEvent(
         logging.getLogger().getEffectiveLevel(),
