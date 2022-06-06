@@ -32,31 +32,16 @@ import urllib.request
 import tablib
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QColor
-from PyQt5.QtWidgets import (
-    QDialog,
-    QLabel,
-    QVBoxLayout,
-    QHBoxLayout,
-    QPushButton,
-    QSpacerItem,
-    QListWidget,
-    QListWidgetItem,
-    QInputDialog,
-    QSizePolicy,
-    QMessageBox,
-    QLineEdit,
-    QFileDialog,
-    QTableWidgetItem,
-    QHeaderView,
-    QCheckBox,
-    QMenu,
-)
+from PyQt5.QtWidgets import (QCheckBox, QDialog, QFileDialog, QHBoxLayout,
+                             QHeaderView, QInputDialog, QLabel, QLineEdit,
+                             QListWidget, QListWidgetItem, QMenu, QMessageBox,
+                             QPushButton, QSizePolicy, QSpacerItem,
+                             QTableWidgetItem, QVBoxLayout)
 
 from . import add_modifier
 from . import config as cfg
-from . import dialog, exclusion_matrix, export_observation, project_import
-from . import converters
-
+from . import (converters, dialog, exclusion_matrix, export_observation,
+               project_import)
 from .project_ui import Ui_dlgProject
 
 

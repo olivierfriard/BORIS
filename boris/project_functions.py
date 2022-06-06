@@ -27,7 +27,6 @@ import pathlib
 import sys
 from decimal import Decimal as dec
 from shutil import copyfile
-
 from typing import List, Tuple
 
 import tablib
@@ -36,6 +35,7 @@ from . import config as cfg
 from . import db_functions
 from . import portion as I
 from . import utilities as util
+from . import version
 
 
 def check_observation_exhaustivity(events: list, ethogram: list, state_events_list: list = []):
@@ -98,16 +98,10 @@ def check_observation_exhaustivity(events: list, ethogram: list, state_events_li
     count = 0
     total_duration = 0
     for subject in events_interval:
-        """
-        print("\n\nsubject", subject)
-        """
 
         tot_behav_for_subject = I.empty()
         for behav in events_interval[subject]:
             tot_behav_for_subject |= events_interval[subject][behav]
-        """
-        print(f"tot\n{tot_behav_for_subject}")
-        """
 
         obs_real_dur = interval_len(tot_behav_for_subject)
 
@@ -115,12 +109,6 @@ def check_observation_exhaustivity(events: list, ethogram: list, state_events_li
             obs_real_dur = obs_theo_dur
 
         total_duration += obs_real_dur
-        """
-        print(f"theo dur: {obs_theo_dur}  real: {obs_real_dur}  exhaustiv %: {obs_real_dur/obs_theo_dur}")
-        """
-    """
-    print(f"  {total_duration/(len(events_interval) * obs_theo_dur) } ")
-    """
     if len(events_interval) and obs_theo_dur:
         exhausivity_percent = total_duration / (len(events_interval) * obs_theo_dur) * 100
     else:
@@ -922,7 +910,7 @@ def open_project_json(projectFileName: str) -> tuple:
 
     # check if project file version is newer than current BORIS project file version
     if cfg.PROJECT_VERSION in pj and util.versiontuple(pj[cfg.PROJECT_VERSION]) > util.versiontuple(
-        cfg.project_format_version
+        version.__version__
     ):
         return (
             projectFileName,

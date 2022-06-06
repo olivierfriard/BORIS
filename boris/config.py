@@ -160,6 +160,7 @@ DATA_PLOT_STYLES = ["b-", "r-", "g-", "bo", "ro", "go"]
 BEHAVIOR_CODE = "code"
 SUBJECT = "subject"
 MODIFIER = "modifier"
+COMMENT = "comment"
 BEHAVIOR_KEY = "key"
 BEHAVIOR_CATEGORY = "category"
 
@@ -273,7 +274,7 @@ for observation_type in TW_EVENTS_FIELDS:
 
 
 PJ_OBS_FIELDS = {}
-for observation_type in TW_EVENTS_FIELDS:
+for observation_type in PJ_EVENTS_FIELDS:
     PJ_OBS_FIELDS[observation_type] = {}
     for idx, field in enumerate(PJ_EVENTS_FIELDS[observation_type]):
         PJ_OBS_FIELDS[observation_type][field] = idx

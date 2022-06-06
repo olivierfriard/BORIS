@@ -29,6 +29,7 @@ import os
 import pathlib
 import platform
 import re
+import bisect
 import subprocess
 import sys
 import tempfile
@@ -2588,7 +2589,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         else:
             newProjectWindow.resize(800, 400)
 
-        newProjectWindow.setWindowTitle(mode + " project")
+        newProjectWindow.setWindowTitle(f"{mode} project")
         newProjectWindow.tabProject.setCurrentIndex(0)  # project information
 
         newProjectWindow.obs = newProjectWindow.pj[cfg.ETHOGRAM]
@@ -2600,13 +2601,18 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         if mode == cfg.NEW:
             newProjectWindow.dteDate.setDateTime(QDateTime.currentDateTime())
             newProjectWindow.lbProjectFilePath.setText("")
+            newProjectWindow.lb_project_format_version.setText(f"Project format version: {cfg.project_format_version}")
 
         if mode == cfg.EDIT:
 
             if newProjectWindow.pj[cfg.PROJECT_NAME]:
                 newProjectWindow.leProjectName.setText(newProjectWindow.pj[cfg.PROJECT_NAME])
 
-            newProjectWindow.lbProjectFilePath.setText("Project file path: " + self.projectFileName)
+            newProjectWindow.lbProjectFilePath.setText(f"Project file path: {self.projectFileName}")
+
+            newProjectWindow.lb_project_format_version.setText(
+                f"Project format version: {newProjectWindow.pj[cfg.PROJECT_VERSION]}"
+            )
 
             if newProjectWindow.pj[cfg.PROJECT_DESCRIPTION]:
                 newProjectWindow.teDescription.setPlainText(newProjectWindow.pj[cfg.PROJECT_DESCRIPTION])
@@ -3266,7 +3272,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 ][0]
 
                 event = self.full_event(ethogram_idx)
-                self.writeEvent(event, self.getLaps())
+                self.write_event(event, self.getLaps())
         else:
             self.no_observation()
 
@@ -3300,7 +3306,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 return
 
             event = self.full_event(behavior_idx)
-            self.writeEvent(event, self.getLaps())
+            self.write_event(event, self.getLaps())
 
     def keypress_signal_from_behaviors_coding_map(self, event):
         """
@@ -3488,11 +3494,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 self.dw_player[n_player].player.playlist_pos = self.dw_player[n_player].player.playlist_count - 1
                 self.seek_mediaplayer(self.dw_player[n_player].media_durations[-1], player=n_player)
 
-    def timer_out2(self, value, scroll_slider=True):
+    def video_timer_out(self, value, scroll_slider=True):
         """
         indicate the video current position and total length for cfg.MPV player
         scroll video slider to video position
-        Time offset is cfg.NOT added!
+        Time offset is NOT added!
         """
 
         if not self.observationId:
@@ -3512,7 +3518,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         IndexError: list index out of range
 
         """
-        current_media_frame = round(value * self.dw_player[0].player.container_fps) + 1
 
         # observation time interval
         if self.pj[cfg.OBSERVATIONS][self.observationId].get(cfg.OBSERVATION_TIME_INTERVAL, [0, 0])[1]:
@@ -3599,6 +3604,12 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         if self.dw_player[0].player.time_pos is not None:
 
+            # check if video
+            current_media_frame = (
+                (round(value * self.dw_player[0].player.container_fps) + 1)
+                if self.dw_player[0].player.container_fps is not None
+                else "NA"
+            )
             msg = (
                 f"{current_media_name}: <b>{util.convertTime(self.timeFormat, current_media_time_pos)} / "
                 f"{util.convertTime(self.timeFormat, current_media_duration)}</b> frame: {current_media_frame}"
@@ -3761,7 +3772,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 for x in self.pj[cfg.OBSERVATIONS][obs_id][cfg.EVENTS]
             ]
 
-    def writeEvent(self, event: dict, mem_time: Decimal) -> None:
+    def write_event(self, event: dict, mem_time: Decimal) -> None:
         """
         add event from pressed key to observation
         offset is added to event time
@@ -3801,7 +3812,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         # remove key code from modifiers
         subject = event.get(cfg.SUBJECT, self.currentSubject)
-        comment = event.get("comment", "")
+        comment = event.get(cfg.COMMENT, "")
         if self.playerType == cfg.IMAGES:
             image_path = event.get("image path", "")
             image_idx = event.get("image index", "")
@@ -3999,17 +4010,29 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         else:
             # add event
             if self.playerType in (cfg.MEDIA, cfg.LIVE):
+                """
+                # removed to use bisect
                 self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS].append(
                     [mem_time, subject, event[cfg.BEHAVIOR_CODE], modifier_str, comment]
                 )
+                """
+                bisect.insort(
+                    self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS],
+                    [mem_time, subject, event[cfg.BEHAVIOR_CODE], modifier_str, comment],
+                )
+
             elif self.playerType == cfg.IMAGES:
                 self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS].append(
                     [mem_time, subject, event[cfg.BEHAVIOR_CODE], modifier_str, comment, image_idx, image_path]
                 )
 
+        """
+        # removed to use bisect
         # sort events in pj
         if self.playerType in (cfg.MEDIA, cfg.LIVE):
+            removed to use bisect
             self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS].sort()
+        """
 
         # reload all events in tw
         self.load_tw_events(self.observationId)
@@ -4464,7 +4487,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     event["image path"] = self.images_list[self.image_idx]
                     event["image index"] = self.image_idx + 1
 
-                self.writeEvent(event, memLaps)
+                self.write_event(event, memLaps)
 
             elif count == 0:
 

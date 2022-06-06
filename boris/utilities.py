@@ -32,7 +32,7 @@ import subprocess
 import sys
 import urllib.parse
 import wave
-from decimal import *
+from decimal import Decimal as dec
 from shutil import copyfile
 
 import numpy as np
@@ -107,7 +107,7 @@ def convertTime(time_format: str, sec: float) -> str:
     convert time in base at the current format (S or HHMMSS)
 
     Args:
-        sec: time in seconds
+        sec (float): time in seconds
 
     Returns:
         string: time in base of current format (self.timeFormat S or cfg.HHMMSS)
@@ -119,7 +119,7 @@ def convertTime(time_format: str, sec: float) -> str:
     if time_format == cfg.HHMMSS:
         return seconds2time(sec)
 
-    if isinstance(sec, Decimal.decimal) and sec.is_nan():
+    if isinstance(sec, dec) and sec.is_nan():
         return "NA"
 
 
@@ -135,11 +135,11 @@ def convert_time_to_decimal(pj: dict) -> dict:
     """
     for obs_id in pj[cfg.OBSERVATIONS]:
         if cfg.TIME_OFFSET in pj[cfg.OBSERVATIONS][obs_id]:
-            pj[cfg.OBSERVATIONS][obs_id][cfg.TIME_OFFSET] = Decimal(str(pj[cfg.OBSERVATIONS][obs_id][cfg.TIME_OFFSET]))
+            pj[cfg.OBSERVATIONS][obs_id][cfg.TIME_OFFSET] = dec(str(pj[cfg.OBSERVATIONS][obs_id][cfg.TIME_OFFSET]))
         for idx, _ in enumerate(pj[cfg.OBSERVATIONS][obs_id][cfg.EVENTS]):
-            pj[cfg.OBSERVATIONS][obs_id][cfg.EVENTS][idx][cfg.EVENT_TIME_FIELD_IDX] = Decimal(
+            pj[cfg.OBSERVATIONS][obs_id][cfg.EVENTS][idx][cfg.EVENT_TIME_FIELD_IDX] = dec(
                 pj[cfg.OBSERVATIONS][obs_id][cfg.EVENTS][idx][cfg.EVENT_TIME_FIELD_IDX]
-            ).quantize(Decimal(".001"))
+            ).quantize(dec(".001"))
 
     return pj
 
@@ -330,7 +330,7 @@ def group_events(pj: dict, obs_id: str, include_modifiers: bool = False) -> dict
 
 
 def get_current_states_modifiers_by_subject(
-    state_behaviors_codes: list, events: list, subjects: dict, time: Decimal, include_modifiers: bool = False
+    state_behaviors_codes: list, events: list, subjects: dict, time: dec, include_modifiers: bool = False
 ) -> dict:
     """
     get current states and modifiers (if requested) for subjects at given time
@@ -384,7 +384,7 @@ def get_current_states_modifiers_by_subject(
 
 
 def get_current_states_modifiers_by_subject_2(
-    state_behaviors_codes: list, events: list, subjects: dict, time: Decimal
+    state_behaviors_codes: list, events: list, subjects: dict, time: dec
 ) -> dict:
     """
     get current states and modifiers for subjects at given time
@@ -422,8 +422,8 @@ def get_current_points_by_subject(
     point_behaviors_codes: list,
     events: list,
     subjects: dict,
-    time: Decimal,
-    tolerance: Decimal,
+    time: dec,
+    tolerance: dec,
     include_modifiers: bool = False,
 ) -> dict:
     """
@@ -574,7 +574,7 @@ def extract_wav(ffmpeg_bin: str, media_file_path: str, tmp_dir: str) -> str:
 
 
 def decimal_default(obj):
-    if isinstance(obj, Decimal):
+    if isinstance(obj, dec):
         return float(round(obj, 3))
     raise TypeError
 
@@ -607,14 +607,12 @@ def datetime_iso8601(dt) -> str:
     return dt.isoformat(" ").split(".")[0]
 
 
-def seconds_of_day(dt) -> Decimal:
+def seconds_of_day(dt) -> dec:
     """
     return the number of seconds since start of the day
     """
 
-    return Decimal((dt - datetime.datetime.combine(dt.date(), datetime.time(0))).total_seconds()).quantize(
-        Decimal("0.001")
-    )
+    return dec((dt - datetime.datetime.combine(dt.date(), datetime.time(0))).total_seconds()).quantize(dec("0.001"))
 
 
 def sorted_keys(d: dict) -> list:
@@ -763,10 +761,10 @@ def float2decimal(f):
     """
     return decimal value
     """
-    return Decimal(str(f))
+    return dec(str(f))
 
 
-def time2seconds(time_: str) -> Decimal:
+def time2seconds(time_: str) -> dec:
     """
     convert hh:mm:ss.s to number of seconds (decimal)
 
@@ -781,13 +779,13 @@ def time2seconds(time_: str) -> Decimal:
         flag_neg = "-" in time_
         time_ = time_.replace("-", "")
         tsplit = time_.split(":")
-        h, m, s = int(tsplit[0]), int(tsplit[1]), Decimal(tsplit[2])
-        return Decimal(-(h * 3600 + m * 60 + s)) if flag_neg else Decimal(h * 3600 + m * 60 + s)
+        h, m, s = int(tsplit[0]), int(tsplit[1]), dec(tsplit[2])
+        return dec(-(h * 3600 + m * 60 + s)) if flag_neg else dec(h * 3600 + m * 60 + s)
     except Exception:
-        return Decimal("0.000")
+        return dec("0.000")
 
 
-def seconds2time(sec: Decimal) -> str:
+def seconds2time(sec: dec) -> str:
     """
     convert seconds to hh:mm:ss.sss format
 
@@ -797,7 +795,7 @@ def seconds2time(sec: Decimal) -> str:
         str: time in format hh:mm:ss
     """
 
-    if sec.is_nan():
+    if isinstance(sec, dec) and sec.is_nan():
         return "NA"
 
     if sec > 1_600_000_000:  # epoch time
@@ -999,7 +997,7 @@ def accurate_media_analysis(ffmpeg_bin: str, file_name: str) -> dict:
             if " fps," in r:
                 re_results = re.search(", (.{1,10}) fps,", r, re.IGNORECASE)
                 if re_results:
-                    fps = Decimal(re_results.group(1).strip())
+                    fps = dec(re_results.group(1).strip())
                     break
     except Exception:
         fps = 0

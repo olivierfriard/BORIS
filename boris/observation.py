@@ -615,7 +615,7 @@ class Observation(QDialog, Ui_Form):
 
                 w = dialog.Info_widget()
                 w.resize(350, 100)
-                w.setWindowFlags(Qt.WindowStaysOnTopHint)
+                # w.setWindowFlags(Qt.WindowStaysOnTopHint)
                 w.setWindowTitle("BORIS")
                 w.label.setText("Extracting WAV from media files...")
 

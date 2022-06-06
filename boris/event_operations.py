@@ -87,7 +87,7 @@ def add_event(self):
                 if editWindow.leComment.toPlainText():
                     event["comment"] = editWindow.leComment.toPlainText()
 
-                self.writeEvent(event, newTime)
+                self.write_event(event, newTime)
                 break
 
         self.currentStates = util.get_current_states_modifiers_by_subject(
@@ -182,27 +182,49 @@ def delete_all_events(self):
         == cfg.YES
     ):
         rows_to_delete = []
-        for row in range(self.twEvents.rowCount()):
-            rows_to_delete.append(
-                [
-                    util.time2seconds(self.twEvents.item(row, cfg.EVENT_TIME_FIELD_IDX).text())
-                    if self.timeFormat == cfg.HHMMSS
-                    else Decimal(self.twEvents.item(row, cfg.EVENT_TIME_FIELD_IDX).text()),
-                    self.twEvents.item(row, cfg.EVENT_SUBJECT_FIELD_IDX).text(),
-                    self.twEvents.item(row, cfg.EVENT_BEHAVIOR_FIELD_IDX).text(),
-                ]
-            )
+        if self.playerType in (cfg.MEDIA, cfg.VIEWER_MEDIA, cfg.LIVE, cfg.VIEWER_LIVE):
+            for row in range(self.twEvents.rowCount()):
+                rows_to_delete.append(
+                    [
+                        util.time2seconds(self.twEvents.item(row, cfg.EVENT_TIME_FIELD_IDX).text())
+                        if self.timeFormat == cfg.HHMMSS
+                        else Decimal(self.twEvents.item(row, cfg.EVENT_TIME_FIELD_IDX).text()),
+                        self.twEvents.item(row, cfg.EVENT_SUBJECT_FIELD_IDX).text(),
+                        self.twEvents.item(row, cfg.EVENT_BEHAVIOR_FIELD_IDX).text(),
+                    ]
+                )
 
-        self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS] = [
-            event
-            for idx, event in enumerate(self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS])
-            if [
-                event[cfg.EVENT_TIME_FIELD_IDX],
-                event[cfg.EVENT_SUBJECT_FIELD_IDX],
-                event[cfg.EVENT_BEHAVIOR_FIELD_IDX],
+            self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS] = [
+                event
+                for event in self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS]
+                if [
+                    event[cfg.EVENT_TIME_FIELD_IDX],
+                    event[cfg.EVENT_SUBJECT_FIELD_IDX],
+                    event[cfg.EVENT_BEHAVIOR_FIELD_IDX],
+                ]
+                not in rows_to_delete
             ]
-            not in rows_to_delete
-        ]
+
+        if self.playerType in (cfg.IMAGES, cfg.VIEWER_IMAGES):
+            for row in range(self.twEvents.rowCount()):
+                rows_to_delete.append(
+                    [
+                        self.twEvents.item(row, cfg.TW_OBS_FIELD[self.playerType][cfg.SUBJECT]).text(),
+                        self.twEvents.item(row, cfg.TW_OBS_FIELD[self.playerType][cfg.BEHAVIOR_CODE]).text(),
+                        self.twEvents.item(row, cfg.TW_OBS_FIELD[self.playerType][cfg.IMAGE_INDEX]).text(),
+                    ]
+                )
+
+            self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS] = [
+                event
+                for event in self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS]
+                if [
+                    event[cfg.EVENT_SUBJECT_FIELD_IDX],
+                    event[cfg.EVENT_BEHAVIOR_FIELD_IDX],
+                    event[cfg.EVENT_IMAGEIDX_FIELD_IDX],
+                ]
+                not in rows_to_delete
+            ]
 
         self.projectChanged = True
         self.load_tw_events(self.observationId)
@@ -496,14 +518,14 @@ def edit_event(self):
         for key in self.pj[cfg.ETHOGRAM]:
             if self.pj[cfg.ETHOGRAM][key][cfg.BEHAVIOR_CODE] == editWindow.cobCode.currentText():
                 event = self.full_event(key)
-                event["subject"] = editWindow.cobSubject.currentText()
+                event[cfg.SUBJECT] = editWindow.cobSubject.currentText()
                 event["comment"] = editWindow.leComment.toPlainText()
                 event["row"] = row
                 event["original_modifiers"] = self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS][row][
                     cfg.PJ_OBS_FIELDS[self.playerType]["modifier"]
                 ]
 
-                self.writeEvent(event, newTime)
+                self.write_event(event, newTime)
                 break
 
 
@@ -519,7 +541,7 @@ def edit_time_selected_events(self):
         return
 
     d, ok = QInputDialog.getDouble(
-        self, "Time value", "Value to add or subtract (use negative value):", 0, -86400, 86400, 3
+        self, "Time value", "Value to add or substract (use negative value):", 0, -86400, 86400, 3
     )
     if ok and d:
         if (

@@ -213,11 +213,9 @@ def load_observation(self, obs_id: str, mode: str = cfg.OBS_START) -> str:
     if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE] == cfg.LIVE:
 
         if mode == cfg.OBS_START:
-            self.playerType = cfg.LIVE
             initialize_new_live_observation(self)
 
         if mode == cfg.VIEW:
-
             self.playerType = cfg.VIEWER_LIVE
             self.dwObservations.setVisible(True)
 
@@ -855,22 +853,19 @@ def new_observation(self, mode=cfg.NEW, obsId=""):
             self.dwObservations.setWindowTitle(f"Events for “{self.observationId}“ observation")
 
             if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE] == cfg.LIVE:
-
                 self.playerType = cfg.LIVE
                 initialize_new_live_observation(self)
 
             if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE] == cfg.MEDIA:
                 self.playerType = cfg.MEDIA
                 # load events in table widget
-                if mode == cfg.EDIT:
-                    self.load_tw_events(self.observationId)
-
                 initialize_new_observation_media(self)
 
             if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE] == cfg.IMAGES:
                 # QMessageBox.critical(self, cfg.programName, "Observation from images directory is not yet implemented")
-                inizialize_new_images_observation(self)
+                initialize_new_images_observation(self)
 
+            self.load_tw_events(self.observationId)
             menu_options.update_menu(self)
 
 
@@ -1209,7 +1204,7 @@ def initialize_new_observation_media(self):
 
     menu_options.update_menu(self)
 
-    self.time_observer_signal.connect(self.timer_out2)
+    self.time_observer_signal.connect(self.video_timer_out)
 
     self.actionPlay.setIcon(QIcon(":/play"))
 
@@ -1407,7 +1402,7 @@ def initialize_new_observation_media(self):
     for player in self.dw_player:
         player.setVisible(True)
 
-    # inital synchro
+    # initial synchro
     for n_player in range(1, len(self.dw_player)):
         self.sync_time(n_player, 0)
 
@@ -1451,32 +1446,25 @@ def initialize_new_live_observation(self):
     # display observation time interval (if any)
     self.lb_obs_time_interval.setVisible(True)
     self.display_statusbar_info(self.observationId)
-    """
-    if self.timeFormat == cfg.HHMMSS:
-
-        if self.pj[cfg.OBSERVATIONS][self.observationId].get(START_FROM_CURRENT_TIME, False):
-            self.lb_current_media_time.setText(datetime.datetime.now().isoformat(" ").split(" ")[1][:12])
-        else:
-            self.lb_current_media_time.setText("00:00:00.000")
-
-    if self.timeFormat == S:
-        self.lb_current_media_time.setText("0.000")
-    """
 
     self.lbCurrentStates.setText("")
 
     self.liveStartTime = None
     self.liveTimer.stop()
 
+    """
     self.twEvents.setColumnCount(len(cfg.LIVE_TW_EVENTS_FIELDS))
     self.twEvents.setHorizontalHeaderLabels(cfg.LIVE_TW_EVENTS_FIELDS)
+    """
 
     # restore windows state: dockwidget positions ...
+    """
     if self.saved_state is None:
         self.saved_state = self.saveState()
         self.restoreState(self.saved_state)
     else:
         self.restoreState(self.saved_state)
+    """
 
 
 def initialize_new_images_observation(self):
@@ -1588,7 +1576,9 @@ def initialize_new_images_observation(self):
             self.saved_state = self.saveState()
             self.restoreState(self.saved_state)
 
+    """
     self.twEvents.setColumnCount(len(cfg.IMAGES_TW_EVENTS_FIELDS))
     self.twEvents.setHorizontalHeaderLabels(cfg.IMAGES_TW_EVENTS_FIELDS)
+    """
 
     self.w_obs_info.setVisible(True)

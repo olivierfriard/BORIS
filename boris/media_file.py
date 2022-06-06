@@ -102,7 +102,7 @@ def get_info(self):
                         r["has_audio"],
                     )
 
-                ffmpeg_output += f"Total duration: {self.convertTime(self.timeFormat, sum(self.dw_player[i].media_durations) / 1000)} (hh:mm:ss.sss)"
+                ffmpeg_output += f"Total duration: {util.convertTime(self.timeFormat, sum(self.dw_player[i].media_durations) / 1000)} (hh:mm:ss.sss)"
 
             tot_output += mpv_output + ffmpeg_output + "<br><hr>"
 
@@ -119,19 +119,17 @@ def get_info(self):
 
         if file_path:
             self.results = dialog.ResultsWidget()
-            self.results.setWindowTitle(cfg.programName + " - Media file information")
+            self.results.setWindowTitle(f"{cfg.programName} - Media file information")
             self.results.ptText.setReadOnly(True)
             self.results.ptText.appendHtml("<br><b>FFmpeg analysis</b><hr>")
             r = util.accurate_media_analysis(self.ffmpeg_bin, file_path)
             if "error" in r:
-                self.results.ptText.appendHtml(
-                    "File path: {filePath}<br><br>{error}<br><br>".format(filePath=file_path, error=r["error"])
-                )
+                self.results.ptText.appendHtml(f"File path: {file_path}<br><br>{r['error']}<br><br>")
             else:
                 self.results.ptText.appendHtml(
                     (
                         f"File path: {file_path}<br>"
-                        f"Duration: {self.convertTime(self.timeFormat, r['duration'])}<br>"
+                        f"Duration: {util.convertTime(self.timeFormat, r['duration'])}<br>"
                         f"Bitrate: {r['bitrate']}k<br>"
                         f"FPS: {r['fps']}<br>"
                         f"Has video: {r['has_video']}<br>"
