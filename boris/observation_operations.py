@@ -501,73 +501,155 @@ def new_observation(self, mode=cfg.NEW, obsId=""):
         # offset
         observationWindow.obs_time_offset.set_time(self.pj[cfg.OBSERVATIONS][obsId][cfg.TIME_OFFSET])
 
-        observationWindow.twVideo1.setRowCount(0)
-        for player in self.pj[cfg.OBSERVATIONS][obsId][cfg.FILE]:
-            if (
-                player in self.pj[cfg.OBSERVATIONS][obsId][cfg.FILE]
-                and self.pj[cfg.OBSERVATIONS][obsId][cfg.FILE][player]
-            ):
-                for mediaFile in self.pj[cfg.OBSERVATIONS][obsId][cfg.FILE][player]:
-                    observationWindow.twVideo1.setRowCount(observationWindow.twVideo1.rowCount() + 1)
-
-                    combobox = QComboBox()
-                    combobox.addItems(cfg.ALL_PLAYERS)
-                    combobox.setCurrentIndex(int(player) - 1)
-                    observationWindow.twVideo1.setCellWidget(observationWindow.twVideo1.rowCount() - 1, 0, combobox)
-
-                    # set offset
-                    try:
-                        observationWindow.twVideo1.setItem(
-                            observationWindow.twVideo1.rowCount() - 1,
-                            1,
-                            QTableWidgetItem(str(self.pj[cfg.OBSERVATIONS][obsId][cfg.MEDIA_INFO]["offset"][player])),
-                        )
-                    except Exception:
-                        observationWindow.twVideo1.setItem(
-                            observationWindow.twVideo1.rowCount() - 1, 1, QTableWidgetItem("0.0")
-                        )
-
-                    item = QTableWidgetItem(mediaFile)
-                    item.setFlags(Qt.ItemIsEnabled | Qt.ItemIsSelectable)
-                    observationWindow.twVideo1.setItem(observationWindow.twVideo1.rowCount() - 1, 2, item)
-
-                    # duration and FPS
-                    try:
-                        item = QTableWidgetItem(
-                            util.seconds2time(self.pj[cfg.OBSERVATIONS][obsId][cfg.MEDIA_INFO][cfg.LENGTH][mediaFile])
-                        )
-                        item.setFlags(Qt.ItemIsEnabled | Qt.ItemIsSelectable)
-                        observationWindow.twVideo1.setItem(observationWindow.twVideo1.rowCount() - 1, 3, item)
-
-                        item = QTableWidgetItem(
-                            f"{self.pj[cfg.OBSERVATIONS][obsId][cfg.MEDIA_INFO][cfg.FPS][mediaFile]:.2f}"
-                        )
-                        item.setFlags(Qt.ItemIsEnabled | Qt.ItemIsSelectable)
-                        observationWindow.twVideo1.setItem(observationWindow.twVideo1.rowCount() - 1, 4, item)
-                    except Exception:
-                        pass
-
-                    # has_video has_audio
-                    try:
-                        item = QTableWidgetItem(
-                            str(self.pj[cfg.OBSERVATIONS][obsId][cfg.MEDIA_INFO][cfg.HAS_VIDEO][mediaFile])
-                        )
-                        item.setFlags(Qt.ItemIsEnabled | Qt.ItemIsSelectable)
-                        observationWindow.twVideo1.setItem(observationWindow.twVideo1.rowCount() - 1, 5, item)
-
-                        item = QTableWidgetItem(
-                            str(self.pj[cfg.OBSERVATIONS][obsId][cfg.MEDIA_INFO][cfg.HAS_AUDIO][mediaFile])
-                        )
-                        item.setFlags(Qt.ItemIsEnabled | Qt.ItemIsSelectable)
-                        observationWindow.twVideo1.setItem(observationWindow.twVideo1.rowCount() - 1, 6, item)
-                    except Exception:
-                        pass
-
         if self.pj[cfg.OBSERVATIONS][obsId]["type"] == cfg.MEDIA:
             observationWindow.rb_media_files.setChecked(True)
 
+            observationWindow.twVideo1.setRowCount(0)
+            for player in self.pj[cfg.OBSERVATIONS][obsId][cfg.FILE]:
+                if (
+                    player in self.pj[cfg.OBSERVATIONS][obsId][cfg.FILE]
+                    and self.pj[cfg.OBSERVATIONS][obsId][cfg.FILE][player]
+                ):
+                    for mediaFile in self.pj[cfg.OBSERVATIONS][obsId][cfg.FILE][player]:
+                        observationWindow.twVideo1.setRowCount(observationWindow.twVideo1.rowCount() + 1)
+
+                        combobox = QComboBox()
+                        combobox.addItems(cfg.ALL_PLAYERS)
+                        combobox.setCurrentIndex(int(player) - 1)
+                        observationWindow.twVideo1.setCellWidget(observationWindow.twVideo1.rowCount() - 1, 0, combobox)
+
+                        # set offset
+                        try:
+                            observationWindow.twVideo1.setItem(
+                                observationWindow.twVideo1.rowCount() - 1,
+                                1,
+                                QTableWidgetItem(
+                                    str(self.pj[cfg.OBSERVATIONS][obsId][cfg.MEDIA_INFO]["offset"][player])
+                                ),
+                            )
+                        except Exception:
+                            observationWindow.twVideo1.setItem(
+                                observationWindow.twVideo1.rowCount() - 1, 1, QTableWidgetItem("0.0")
+                            )
+
+                        item = QTableWidgetItem(mediaFile)
+                        item.setFlags(Qt.ItemIsEnabled | Qt.ItemIsSelectable)
+                        observationWindow.twVideo1.setItem(observationWindow.twVideo1.rowCount() - 1, 2, item)
+
+                        # duration and FPS
+                        try:
+                            item = QTableWidgetItem(
+                                util.seconds2time(
+                                    self.pj[cfg.OBSERVATIONS][obsId][cfg.MEDIA_INFO][cfg.LENGTH][mediaFile]
+                                )
+                            )
+                            item.setFlags(Qt.ItemIsEnabled | Qt.ItemIsSelectable)
+                            observationWindow.twVideo1.setItem(observationWindow.twVideo1.rowCount() - 1, 3, item)
+
+                            item = QTableWidgetItem(
+                                f"{self.pj[cfg.OBSERVATIONS][obsId][cfg.MEDIA_INFO][cfg.FPS][mediaFile]:.2f}"
+                            )
+                            item.setFlags(Qt.ItemIsEnabled | Qt.ItemIsSelectable)
+                            observationWindow.twVideo1.setItem(observationWindow.twVideo1.rowCount() - 1, 4, item)
+                        except Exception:
+                            pass
+
+                        # has_video has_audio
+                        try:
+                            item = QTableWidgetItem(
+                                str(self.pj[cfg.OBSERVATIONS][obsId][cfg.MEDIA_INFO][cfg.HAS_VIDEO][mediaFile])
+                            )
+                            item.setFlags(Qt.ItemIsEnabled | Qt.ItemIsSelectable)
+                            observationWindow.twVideo1.setItem(observationWindow.twVideo1.rowCount() - 1, 5, item)
+
+                            item = QTableWidgetItem(
+                                str(self.pj[cfg.OBSERVATIONS][obsId][cfg.MEDIA_INFO][cfg.HAS_AUDIO][mediaFile])
+                            )
+                            item.setFlags(Qt.ItemIsEnabled | Qt.ItemIsSelectable)
+                            observationWindow.twVideo1.setItem(observationWindow.twVideo1.rowCount() - 1, 6, item)
+                        except Exception:
+                            pass
+
+            # spectrogram
+            observationWindow.cbVisualizeSpectrogram.setEnabled(True)
+            observationWindow.cbVisualizeSpectrogram.setChecked(
+                self.pj[cfg.OBSERVATIONS][obsId].get(cfg.VISUALIZE_SPECTROGRAM, False)
+            )
+
+            # waveform
+            observationWindow.cb_visualize_waveform.setEnabled(True)
+            observationWindow.cb_visualize_waveform.setChecked(
+                self.pj[cfg.OBSERVATIONS][obsId].get(cfg.VISUALIZE_WAVEFORM, False)
+            )
+
+            # plot data
+            if cfg.PLOT_DATA in self.pj[cfg.OBSERVATIONS][obsId]:
+                if self.pj[cfg.OBSERVATIONS][obsId][cfg.PLOT_DATA]:
+
+                    observationWindow.tw_data_files.setRowCount(0)
+                    for idx2 in util.sorted_keys(self.pj[cfg.OBSERVATIONS][obsId][cfg.PLOT_DATA]):
+                        observationWindow.tw_data_files.setRowCount(observationWindow.tw_data_files.rowCount() + 1)
+                        for idx3 in cfg.DATA_PLOT_FIELDS:
+                            if idx3 == cfg.PLOT_DATA_PLOTCOLOR_IDX:
+                                combobox = QComboBox()
+                                combobox.addItems(cfg.DATA_PLOT_STYLES)
+                                combobox.setCurrentIndex(
+                                    cfg.DATA_PLOT_STYLES.index(
+                                        self.pj[cfg.OBSERVATIONS][obsId][cfg.PLOT_DATA][idx2][
+                                            cfg.DATA_PLOT_FIELDS[idx3]
+                                        ]
+                                    )
+                                )
+
+                                observationWindow.tw_data_files.setCellWidget(
+                                    observationWindow.tw_data_files.rowCount() - 1,
+                                    cfg.PLOT_DATA_PLOTCOLOR_IDX,
+                                    combobox,
+                                )
+                            elif idx3 == cfg.PLOT_DATA_SUBSTRACT1STVALUE_IDX:
+                                combobox2 = QComboBox()
+                                combobox2.addItems(["False", "True"])
+                                combobox2.setCurrentIndex(
+                                    ["False", "True"].index(
+                                        self.pj[cfg.OBSERVATIONS][obsId][cfg.PLOT_DATA][idx2][
+                                            cfg.DATA_PLOT_FIELDS[idx3]
+                                        ]
+                                    )
+                                )
+
+                                observationWindow.tw_data_files.setCellWidget(
+                                    observationWindow.tw_data_files.rowCount() - 1,
+                                    cfg.PLOT_DATA_SUBSTRACT1STVALUE_IDX,
+                                    combobox2,
+                                )
+                            elif idx3 == cfg.PLOT_DATA_CONVERTERS_IDX:
+                                # convert dict to str
+                                observationWindow.tw_data_files.setItem(
+                                    observationWindow.tw_data_files.rowCount() - 1,
+                                    idx3,
+                                    QTableWidgetItem(
+                                        str(
+                                            self.pj[cfg.OBSERVATIONS][obsId][cfg.PLOT_DATA][idx2][
+                                                cfg.DATA_PLOT_FIELDS[idx3]
+                                            ]
+                                        )
+                                    ),
+                                )
+
+                            else:
+                                observationWindow.tw_data_files.setItem(
+                                    observationWindow.tw_data_files.rowCount() - 1,
+                                    idx3,
+                                    QTableWidgetItem(
+                                        self.pj[cfg.OBSERVATIONS][obsId][cfg.PLOT_DATA][idx2][
+                                            cfg.DATA_PLOT_FIELDS[idx3]
+                                        ]
+                                    ),
+                                )
+
         if self.pj[cfg.OBSERVATIONS][obsId]["type"] == cfg.IMAGES:
             observationWindow.rb_images.setChecked(True)
+            observationWindow.lw_images_directory.addItems(self.pj[cfg.OBSERVATIONS][obsId].get("directories_list", []))
 
         if self.pj[cfg.OBSERVATIONS][obsId]["type"] in [cfg.LIVE]:
             observationWindow.rb_live.setChecked(True)
@@ -586,18 +668,6 @@ def new_observation(self, mode=cfg.NEW, obsId=""):
                 self.pj[cfg.OBSERVATIONS][obsId].get(cfg.START_FROM_CURRENT_EPOCH_TIME, False)
             )
 
-        # spectrogram
-        observationWindow.cbVisualizeSpectrogram.setEnabled(True)
-        observationWindow.cbVisualizeSpectrogram.setChecked(
-            self.pj[cfg.OBSERVATIONS][obsId].get(cfg.VISUALIZE_SPECTROGRAM, False)
-        )
-
-        # waveform
-        observationWindow.cb_visualize_waveform.setEnabled(True)
-        observationWindow.cb_visualize_waveform.setChecked(
-            self.pj[cfg.OBSERVATIONS][obsId].get(cfg.VISUALIZE_WAVEFORM, False)
-        )
-
         # observation time interval
         observationWindow.cb_observation_time_interval.setEnabled(True)
         if self.pj[cfg.OBSERVATIONS][obsId].get(cfg.OBSERVATION_TIME_INTERVAL, [0, 0]) != [0, 0]:
@@ -612,69 +682,6 @@ def new_observation(self, mode=cfg.NEW, obsId=""):
                     f"{self.pj[cfg.OBSERVATIONS][obsId][cfg.OBSERVATION_TIME_INTERVAL][1]}"
                 )
             )
-
-        # plot data
-        if cfg.PLOT_DATA in self.pj[cfg.OBSERVATIONS][obsId]:
-            if self.pj[cfg.OBSERVATIONS][obsId][cfg.PLOT_DATA]:
-
-                observationWindow.tw_data_files.setRowCount(0)
-                for idx2 in util.sorted_keys(self.pj[cfg.OBSERVATIONS][obsId][cfg.PLOT_DATA]):
-                    observationWindow.tw_data_files.setRowCount(observationWindow.tw_data_files.rowCount() + 1)
-                    for idx3 in cfg.DATA_PLOT_FIELDS:
-                        if idx3 == cfg.PLOT_DATA_PLOTCOLOR_IDX:
-                            combobox = QComboBox()
-                            combobox.addItems(cfg.DATA_PLOT_STYLES)
-                            combobox.setCurrentIndex(
-                                cfg.DATA_PLOT_STYLES.index(
-                                    self.pj[cfg.OBSERVATIONS][obsId][cfg.PLOT_DATA][idx2][cfg.DATA_PLOT_FIELDS[idx3]]
-                                )
-                            )
-
-                            observationWindow.tw_data_files.setCellWidget(
-                                observationWindow.tw_data_files.rowCount() - 1, cfg.PLOT_DATA_PLOTCOLOR_IDX, combobox
-                            )
-                        elif idx3 == cfg.PLOT_DATA_SUBSTRACT1STVALUE_IDX:
-                            combobox2 = QComboBox()
-                            combobox2.addItems(["False", "True"])
-                            combobox2.setCurrentIndex(
-                                ["False", "True"].index(
-                                    self.pj[cfg.OBSERVATIONS][obsId][cfg.PLOT_DATA][idx2][cfg.DATA_PLOT_FIELDS[idx3]]
-                                )
-                            )
-
-                            observationWindow.tw_data_files.setCellWidget(
-                                observationWindow.tw_data_files.rowCount() - 1,
-                                cfg.PLOT_DATA_SUBSTRACT1STVALUE_IDX,
-                                combobox2,
-                            )
-                        elif idx3 == cfg.PLOT_DATA_CONVERTERS_IDX:
-                            # convert dict to str
-                            """
-                            s = ""
-                            for conv in self.pj[OBSERVATIONS][obsId][PLOT_DATA][idx2][DATA_PLOT_FIELDS[idx3]]:
-                                s += "," if s else ""
-                                s += "{}:{}".format(conv, self.pj[OBSERVATIONS][obsId][PLOT_DATA][idx2][DATA_PLOT_FIELDS[idx3]][conv])
-                            """
-                            observationWindow.tw_data_files.setItem(
-                                observationWindow.tw_data_files.rowCount() - 1,
-                                idx3,
-                                QTableWidgetItem(
-                                    str(
-                                        self.pj[cfg.OBSERVATIONS][obsId][cfg.PLOT_DATA][idx2][
-                                            cfg.DATA_PLOT_FIELDS[idx3]
-                                        ]
-                                    )
-                                ),
-                            )
-
-                        else:
-                            observationWindow.tw_data_files.setItem(
-                                observationWindow.tw_data_files.rowCount() - 1,
-                                idx3,
-                                QTableWidgetItem(
-                                    self.pj[cfg.OBSERVATIONS][obsId][cfg.PLOT_DATA][idx2][cfg.DATA_PLOT_FIELDS[idx3]]
-                                ),
-                            )
 
         # disabled due to problem when video goes back
         # if CLOSE_BEHAVIORS_BETWEEN_VIDEOS in self.pj[OBSERVATIONS][obsId]:

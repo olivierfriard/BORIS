@@ -199,11 +199,11 @@ def delete_all_events(self):
             for row in range(self.twEvents.rowCount()):
                 rows_to_delete.append(
                     [
-                        util.time2seconds(self.twEvents.item(row, cfg.EVENT_TIME_FIELD_IDX).text())
+                        util.time2seconds(self.twEvents.item(row, cfg.TW_OBS_FIELD[self.playerType]["time"]).text())
                         if self.timeFormat == cfg.HHMMSS
-                        else Decimal(self.twEvents.item(row, cfg.EVENT_TIME_FIELD_IDX).text()),
-                        self.twEvents.item(row, cfg.EVENT_SUBJECT_FIELD_IDX).text(),
-                        self.twEvents.item(row, cfg.EVENT_BEHAVIOR_FIELD_IDX).text(),
+                        else Decimal(self.twEvents.item(row, cfg.TW_OBS_FIELD[self.playerType]["time"]).text()),
+                        self.twEvents.item(row, cfg.TW_OBS_FIELD[self.playerType][cfg.SUBJECT]).text(),
+                        self.twEvents.item(row, cfg.TW_OBS_FIELD[self.playerType][cfg.BEHAVIOR_CODE]).text(),
                     ]
                 )
 

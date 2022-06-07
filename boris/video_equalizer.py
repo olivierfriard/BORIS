@@ -20,7 +20,7 @@ This file is part of BORIS.
 
 """
 
-from PyQt5.QtWidgets import QDialog, QApplication
+from PyQt5.QtWidgets import QDialog
 from PyQt5.QtCore import pyqtSignal, QEvent
 from .video_equalizer_ui import Ui_Equalizer
 
