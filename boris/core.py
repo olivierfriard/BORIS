@@ -1681,14 +1681,14 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         dw.frame_viewer.setPixmap(pixmap.scaled(dw.frame_viewer.size(), Qt.KeepAspectRatio, Qt.SmoothTransformation))
 
-        msg = f"Image index: {self.image_idx + 1} / {len(self.images_list)}"
+        msg = f"Image index: <b>{self.image_idx + 1} / {len(self.images_list)}</b>"
 
         # extract EXIF tag
         if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.USE_EXIF_DATE]:
             with open(self.images_list[self.image_idx], "rb") as f_in:
                 tags = exifread.process_file(f_in, details=False, stop_tag="EXIF DateTimeOriginal")
             date_time_original = f'{tags["EXIF DateTimeOriginal"].values[:4]}-{tags["EXIF DateTimeOriginal"].values[5:7]}-{tags["EXIF DateTimeOriginal"].values[8:10]} {tags["EXIF DateTimeOriginal"].values.split(" ")[-1]}'
-            msg += f"<br>EXIF Date/Time Original: {date_time_original}"
+            msg += f"<br>EXIF Date/Time Original: <b>{date_time_original}</b>"
 
             if self.image_idx == 0:
                 self.image_time_ref = datetime.datetime.strptime(date_time_original, "%Y-%m-%d %H:%M:%S")
@@ -1699,7 +1699,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 ).total_seconds()
             )
 
-            msg += f"<br>Seconds: {seconds}"
+            msg += f"<br>Seconds: <b>{seconds}</b>"
 
         # image path
         msg += f"<br><br>Image path: {self.images_list[self.image_idx]}"
