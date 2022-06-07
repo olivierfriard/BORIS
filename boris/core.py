@@ -56,12 +56,11 @@ from PyQt5.QtCore import (
     QT_VERSION_STR,
     PYQT_VERSION_STR,
 )
-from PyQt5.QtGui import *
+from PyQt5.QtGui import QIcon, QPixmap, QFont, QKeyEvent, QPolygon, QPainter, QDesktopServices
 from PyQt5.QtMultimedia import QSound
-from PyQt5.QtWidgets import *
+from PyQt5.QtWidgets import QMainWindow, QFrame, QDockWidget, QApplication, QAction, QAbstractItemView, QSplashScreen
 from PIL.ImageQt import ImageQt, Image
 
-from . import behav_coding_map_creator
 from . import dialog
 from . import gui_utilities
 from . import events_cursor
