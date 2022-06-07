@@ -1090,7 +1090,7 @@ def dir_images_number(dir_path_str: str) -> dict:
     if not dir_path.is_dir():
         return {"error": f"The directory {dir_path_str} does not exists"}
     img_count = 0
-    for pattern in ("*.jpg", "*.png", "*.jpeg"):
+    for pattern in cfg.IMAGE_EXTENSIONS:
         img_count += len(list(dir_path.glob(pattern)))
-
+        img_count += len(list(dir_path.glob(pattern.upper())))
     return {"number of images": img_count}

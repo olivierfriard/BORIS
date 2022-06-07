@@ -191,6 +191,9 @@
         </item>
         <item>
          <widget class="QRadioButton" name="rb_images">
+          <property name="enabled">
+           <bool>true</bool>
+          </property>
           <property name="text">
            <string>Observation from pictures</string>
           </property>
@@ -642,6 +645,13 @@
           </layout>
          </item>
         </layout>
+       </item>
+       <item>
+        <widget class="QCheckBox" name="cb_use_exif">
+         <property name="text">
+          <string>Use the EXIF DateTimeOriginal tag for time</string>
+         </property>
+        </widget>
        </item>
       </layout>
      </widget>

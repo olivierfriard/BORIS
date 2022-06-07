@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'boris/observation.ui'
+# Form implementation generated from reading ui file 'observation.ui'
 #
 # Created by: PyQt5 UI code generator 5.15.6
 #
@@ -111,6 +111,7 @@ class Ui_Form(object):
         self.rb_live.setObjectName("rb_live")
         self.horizontalLayout_4.addWidget(self.rb_live)
         self.rb_images = QtWidgets.QRadioButton(self.gb_observation_type)
+        self.rb_images.setEnabled(True)
         self.rb_images.setObjectName("rb_images")
         self.horizontalLayout_4.addWidget(self.rb_images)
         spacerItem1 = QtWidgets.QSpacerItem(40, 20, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
@@ -318,6 +319,9 @@ class Ui_Form(object):
         self.verticalLayout_9.addItem(spacerItem8)
         self.horizontalLayout_9.addLayout(self.verticalLayout_9)
         self.verticalLayout_10.addLayout(self.horizontalLayout_9)
+        self.cb_use_exif = QtWidgets.QCheckBox(self.pg_images)
+        self.cb_use_exif.setObjectName("cb_use_exif")
+        self.verticalLayout_10.addWidget(self.cb_use_exif)
         self.sw_observation_type.addWidget(self.pg_images)
         self.verticalLayout_6.addWidget(self.sw_observation_type)
         self.horizontalLayout = QtWidgets.QHBoxLayout()
@@ -412,6 +416,7 @@ class Ui_Form(object):
         self.rb_epoch_time.setText(_translate("Form", "Epoch time (seconds since 1970-01-01)"))
         self.pb_add_directory.setText(_translate("Form", "Add directory"))
         self.pb_remove_directory.setText(_translate("Form", "Remove directory"))
+        self.cb_use_exif.setText(_translate("Form", "Use the EXIF DateTimeOriginal tag for time"))
         self.pbCancel.setText(_translate("Form", "Cancel"))
         self.pbSave.setText(_translate("Form", "Save"))
         self.pbLaunch.setText(_translate("Form", "Start"))

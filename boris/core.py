@@ -83,7 +83,7 @@ from . import event_operations
 from . import cmd_arguments
 from . import core_qrc
 from .core_ui import Ui_MainWindow
-
+import exifread
 from . import config as cfg
 
 from .project import *
@@ -1681,6 +1681,31 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         dw.frame_viewer.setPixmap(pixmap.scaled(dw.frame_viewer.size(), Qt.KeepAspectRatio, Qt.SmoothTransformation))
 
+        msg = f"Image index: {self.image_idx + 1} / {len(self.images_list)}"
+
+        # extract EXIF tag
+        if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.USE_EXIF_DATE]:
+            with open(self.images_list[self.image_idx], "rb") as f_in:
+                tags = exifread.process_file(f_in, details=False, stop_tag="EXIF DateTimeOriginal")
+            date_time_original = f'{tags["EXIF DateTimeOriginal"].values[:4]}-{tags["EXIF DateTimeOriginal"].values[5:7]}-{tags["EXIF DateTimeOriginal"].values[8:10]} {tags["EXIF DateTimeOriginal"].values.split(" ")[-1]}'
+            msg += f"<br>EXIF Date/Time Original: {date_time_original}"
+
+            if self.image_idx == 0:
+                self.image_time_ref = datetime.datetime.strptime(date_time_original, "%Y-%m-%d %H:%M:%S")
+
+            seconds = int(
+                (
+                    datetime.datetime.strptime(date_time_original, "%Y-%m-%d %H:%M:%S") - self.image_time_ref
+                ).total_seconds()
+            )
+
+            msg += f"<br>Seconds: {seconds}"
+
+        # image path
+        msg += f"<br><br>Image path: {self.images_list[self.image_idx]}"
+
+        self.lb_current_media_time.setText(msg)
+
     def frame_image_clicked(self, n_player, event):
         geometric_measurement.image_clicked(self, n_player, event)
 
@@ -3106,8 +3131,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         show next frame
         """
         if self.playerType == cfg.IMAGES:
-            self.image_idx += 1
-            self.extract_frame(self.dw_player[0])
+            if self.image_idx < len(self.images_list) - 1:
+                self.image_idx += 1
+                self.extract_frame(self.dw_player[0])
 
         if self.playerType == cfg.MEDIA:
             for dw in self.dw_player:
@@ -3129,8 +3155,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         show previous frame
         """
         if self.playerType == cfg.IMAGES:
-            self.image_idx -= 1
-            self.extract_frame(self.dw_player[0])
+            if self.image_idx:
+                self.image_idx -= 1
+                self.extract_frame(self.dw_player[0])
 
         if self.playerType == cfg.MEDIA:
             for dw in self.dw_player:
@@ -3577,7 +3604,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         # index of current subject
         subject_idx = self.subject_name_index[self.currentSubject] if self.currentSubject else ""
-
         self.currentStates = util.get_current_states_modifiers_by_subject(
             StateBehaviorsCodes,
             self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS],
@@ -3585,7 +3611,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             currentTimeOffset,
             include_modifiers=True,
         )
-
         self.lbCurrentStates.setText(", ".join(self.currentStates[subject_idx]))
 
         # show current states in subjects table
@@ -3626,7 +3651,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             msg += f"<br>media #{self.dw_player[0].player.playlist_pos + 1} / {playlist_length}"
 
         else:  # player ended
-            # self.timer.stop()
             self.plot_timer.stop()
 
             # stop all timer for plotting data
@@ -4511,32 +4535,30 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         substract time offset if defined
         """
 
-        if self.twEvents.selectedIndexes():
+        if not self.twEvents.selectedIndexes():
+            return
 
-            row = self.twEvents.selectedIndexes()[0].row()  # first row selected
+        row = self.twEvents.selectedIndexes()[0].row()  # first row selected
 
-            if self.playerType == cfg.MEDIA:
-                time_str = self.twEvents.item(row, cfg.TW_OBS_FIELD[self.playerType]["time"]).text()
-                if ":" in time_str:
-                    time_ = util.time2seconds(time_str)
-                else:
-                    time_ = Decimal(time_str)
+        if self.playerType == cfg.MEDIA:
+            time_str = self.twEvents.item(row, cfg.TW_OBS_FIELD[self.playerType]["time"]).text()
+            time_ = util.time2seconds(time_str) if ":" in time_str else Decimal(time_str)
 
-                # substract time offset
-                time_ -= self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TIME_OFFSET]
+            # substract time offset
+            time_ -= self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TIME_OFFSET]
 
-                if time_ + self.repositioningTimeOffset >= 0:
-                    new_time = time_ + self.repositioningTimeOffset
-                else:
-                    new_time = 0
+            if time_ + self.repositioningTimeOffset >= 0:
+                new_time = time_ + self.repositioningTimeOffset
+            else:
+                new_time = 0
 
-                self.seek_mediaplayer(new_time)
-                self.update_visualizations()
+            self.seek_mediaplayer(new_time)
+            self.update_visualizations()
 
-            if self.playerType == cfg.IMAGES:
-                index_str = self.twEvents.item(row, cfg.TW_OBS_FIELD[self.playerType][cfg.IMAGE_INDEX]).text()
-                self.image_idx = int(index_str)
-                self.extract_frame(self.dw_player[0])
+        if self.playerType == cfg.IMAGES:
+            index_str = self.twEvents.item(row, cfg.TW_OBS_FIELD[self.playerType][cfg.IMAGE_INDEX]).text()
+            self.image_idx = int(index_str) - 1
+            self.extract_frame(self.dw_player[0])
 
     def twSubjects_doubleClicked(self):
         """

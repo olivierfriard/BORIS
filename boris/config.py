@@ -27,6 +27,7 @@ project_format_version = "7.0"
 # minimal project version for handling observations from images
 IMAGES_OBS_PROJECT_MIN_VERSION = (8, 6)
 
+IMAGE_EXTENSIONS = ("*.jpg", "*.png", "*.jpeg")
 
 CHECK_NEW_VERSION_DELAY = 15 * 24 * 60 * 60
 
@@ -170,6 +171,10 @@ IMAGE_PATH = "image path"
 ZOOM_LEVEL = "zoom level"
 DISPLAY_MEDIA_SUBTITLES = "display subtitles"
 OVERLAY = "video overlay"
+
+
+USE_EXIF_DATE = "use_exif_date"
+
 
 # fields for event configuration
 fields = {

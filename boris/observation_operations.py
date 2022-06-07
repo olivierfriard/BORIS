@@ -394,6 +394,7 @@ def new_observation(self, mode=cfg.NEW, obsId=""):
     observationWindow.dteDate.setDateTime(QDateTime.currentDateTime())
     observationWindow.ffmpeg_bin = self.ffmpeg_bin
     observationWindow.project_file_name = self.projectFileName
+    observationWindow.cb_use_exif.setChecked(False)
 
     # add independent variables
     if cfg.INDEPENDENT_VARIABLES in self.pj:
@@ -649,7 +650,10 @@ def new_observation(self, mode=cfg.NEW, obsId=""):
 
         if self.pj[cfg.OBSERVATIONS][obsId]["type"] == cfg.IMAGES:
             observationWindow.rb_images.setChecked(True)
-            observationWindow.lw_images_directory.addItems(self.pj[cfg.OBSERVATIONS][obsId].get("directories_list", []))
+            observationWindow.lw_images_directory.addItems(
+                self.pj[cfg.OBSERVATIONS][obsId].get(cfg.DIRECTORIES_LIST, [])
+            )
+            observationWindow.cb_use_exif.setChecked(self.pj[cfg.OBSERVATIONS][obsId].get(cfg.USE_EXIF_DATE, False))
 
         if self.pj[cfg.OBSERVATIONS][obsId]["type"] in [cfg.LIVE]:
             observationWindow.rb_live.setChecked(True)
@@ -815,6 +819,7 @@ def new_observation(self, mode=cfg.NEW, obsId=""):
                 observationWindow.lw_images_directory.item(i).text()
                 for i in range(observationWindow.lw_images_directory.count())
             ]
+            self.pj[cfg.OBSERVATIONS][new_obs_id][cfg.USE_EXIF_DATE] = observationWindow.cb_use_exif.isChecked()
 
         # media file
         self.pj[cfg.OBSERVATIONS][new_obs_id][cfg.FILE] = {}
@@ -1527,11 +1532,13 @@ def initialize_new_images_observation(self):
     self.playerType = cfg.IMAGES
     # load image paths
     self.images_list = []
-    for pattern in ("*.jpg", "*.png", "*.jpeg"):
-        img_list = sorted([str(x) for x in pl.Path(dir_path).glob(pattern)])
-        self.images_list.extend(img_list)
+    for pattern in cfg.IMAGE_EXTENSIONS:
+        self.images_list.extend([str(x) for x in pl.Path(dir_path).glob(pattern)])
+        self.images_list.extend([str(x) for x in pl.Path(dir_path).glob(pattern.upper())])
 
+    self.images_list.sort()
     self.image_idx = 0
+    self.image_time_ref = None
 
     # self.w_live.setVisible(True)
 
@@ -1555,11 +1562,6 @@ def initialize_new_images_observation(self):
     self.dw_player[i].resize_signal.connect(self.resize_dw)
 
     self.dw_player[i].stack.setCurrentIndex(cfg.PICTURE_VIEWER)
-    pixmap = QPixmap(self.images_list[self.image_idx])
-
-    self.dw_player[i].frame_viewer.setPixmap(
-        pixmap.scaled(self.dw_player[i].frame_viewer.size(), Qt.KeepAspectRatio, Qt.SmoothTransformation)
-    )
 
     menu_options.update_menu(self)
 
@@ -1588,4 +1590,5 @@ def initialize_new_images_observation(self):
     self.twEvents.setHorizontalHeaderLabels(cfg.IMAGES_TW_EVENTS_FIELDS)
     """
 
+    self.extract_frame(self.dw_player[i])
     self.w_obs_info.setVisible(True)
