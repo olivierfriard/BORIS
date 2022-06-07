@@ -5,14 +5,24 @@ widget to edit duration > 24 h or < 0
 https://stackoverflow.com/questions/44380202/creating-a-custom-widget-in-pyqt5
 """
 
-import decimal as dc
+import decimal as dec
 
-from PyQt5.QtWidgets import *
-from PyQt5.QtCore import *
+from PyQt5.QtWidgets import (
+    QWidget,
+    QHBoxLayout,
+    QPushButton,
+    QSpinBox,
+    QLabel,
+    QSpacerItem,
+    QSizePolicy,
+    QDoubleSpinBox,
+    QStackedWidget,
+    QRadioButton,
+)
 
-HHMMSS = "hh:mm:ss"
-HHMMSSZZZ = "hh:mm:ss.zzz"
-S = "s"
+from PyQt5.QtCore import pyqtSignal
+
+from . import config as cfg
 
 
 class Widget_hhmmss(QWidget):
@@ -142,10 +152,9 @@ class Widget_seconds(QWidget):
 class Duration_widget(QWidget):
     def __init__(self, time_value=0, parent=None):
 
-        # QWidget.__init__(self, parent=parent)
         super().__init__()
 
-        self.time_value = dc.Decimal(time_value).quantize(dc.Decimal(".001"))
+        self.time_value = dec.Decimal(time_value).quantize(dec.Decimal(".001"))
 
         lay = QHBoxLayout(self)
         lay.setSpacing(0)
@@ -162,7 +171,7 @@ class Duration_widget(QWidget):
 
         lay.addWidget(self.Stack)
 
-        self.format_hhmmss = QRadioButton("hh:mm:ss")
+        self.format_hhmmss = QRadioButton(cfg.HHMMSS)
         self.format_hhmmss.setChecked(True)
         self.format_hhmmss.clicked.connect(self.set_format_hhmmss)
         lay.addWidget(self.format_hhmmss)
@@ -222,23 +231,13 @@ class Duration_widget(QWidget):
         """
         switch time format in base of time_format value
         """
-        if time_format in [HHMMSS, HHMMSSZZZ]:
+        if time_format in [cfg.HHMMSS, cfg.HHMMSSZZZ]:
             self.set_format_hhmmss()
-        if time_format in [S]:
+        if time_format in [cfg.S]:
             self.set_format_s()
 
-    def get_time(self) -> dc.Decimal:
+    def get_time(self) -> dec.Decimal:
         """
         return time displayed by widget in seconds
         """
-        return dc.Decimal(self.time_value).quantize(dc.Decimal(".001"))
-
-
-"""
-if __name__ == '__main__':
-    import sys
-    app = QApplication(sys.argv)
-    w = Duration_widget()
-    w.show()
-    sys.exit(app.exec_())
-"""
+        return dec.Decimal(self.time_value).quantize(dec.Decimal(".001"))

@@ -165,6 +165,7 @@ BEHAVIOR_KEY = "key"
 BEHAVIOR_CATEGORY = "category"
 
 IMAGE_INDEX = "image index"
+IMAGE_PATH = "image path"
 
 ZOOM_LEVEL = "zoom level"
 DISPLAY_MEDIA_SUBTITLES = "display subtitles"

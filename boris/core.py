@@ -4091,7 +4091,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         if not self.observationId:
             return Decimal("0")
 
-        if self.pj[cfg.OBSERVATIONS][self.observationId]["type"] == cfg.LIVE:
+        if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE] == cfg.LIVE:
 
             if self.liveObservationStarted:
                 now = QTime()
@@ -4101,13 +4101,16 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             else:
                 return Decimal("0.0")
 
-        if self.pj[cfg.OBSERVATIONS][self.observationId]["type"] == cfg.MEDIA:
+        if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE] == cfg.IMAGES:
+            if self.playerType in [cfg.VIEWER_IMAGES]:
+                return Decimal("NaN")
+            if self.playerType == cfg.IMAGES:
+                return Decimal(self.image_idx + 1)
+
+        if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE] == cfg.MEDIA:
 
             if self.playerType in [cfg.VIEWER_LIVE, cfg.VIEWER_MEDIA]:
                 return Decimal("0.0")
-
-            if self.playerType in [cfg.VIEWER_IMAGES]:
-                return Decimal("NaN")
 
             if self.playerType == cfg.MEDIA:
                 # cumulative time
@@ -4510,24 +4513,30 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         if self.twEvents.selectedIndexes():
 
-            row = self.twEvents.selectedIndexes()[0].row()
-
-            if ":" in self.twEvents.item(row, 0).text():
-                time_ = util.time2seconds(self.twEvents.item(row, 0).text())
-            else:
-                time_ = Decimal(self.twEvents.item(row, 0).text())
-
-            # substract time offset
-            time_ -= self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TIME_OFFSET]
-
-            if time_ + self.repositioningTimeOffset >= 0:
-                newTime = time_ + self.repositioningTimeOffset
-            else:
-                newTime = 0
+            row = self.twEvents.selectedIndexes()[0].row()  # first row selected
 
             if self.playerType == cfg.MEDIA:
-                self.seek_mediaplayer(newTime)
+                time_str = self.twEvents.item(row, cfg.TW_OBS_FIELD[self.playerType]["time"]).text()
+                if ":" in time_str:
+                    time_ = util.time2seconds(time_str)
+                else:
+                    time_ = Decimal(time_str)
+
+                # substract time offset
+                time_ -= self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TIME_OFFSET]
+
+                if time_ + self.repositioningTimeOffset >= 0:
+                    new_time = time_ + self.repositioningTimeOffset
+                else:
+                    new_time = 0
+
+                self.seek_mediaplayer(new_time)
                 self.update_visualizations()
+
+            if self.playerType == cfg.IMAGES:
+                index_str = self.twEvents.item(row, cfg.TW_OBS_FIELD[self.playerType][cfg.IMAGE_INDEX]).text()
+                self.image_idx = int(index_str)
+                self.extract_frame(self.dw_player[0])
 
     def twSubjects_doubleClicked(self):
         """
