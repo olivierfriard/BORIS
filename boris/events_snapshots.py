@@ -22,21 +22,17 @@ Copyright 2012-2022 Olivier Friard
 """
 
 
-import os
 import logging
-import subprocess
+import os
 import pathlib
-from decimal import Decimal
+import subprocess
+from decimal import Decimal as dec
+
+from PyQt5.QtWidgets import QFileDialog, QInputDialog, QMessageBox
 
 from . import config as cfg
+from . import db_functions, dialog, project_functions, select_observations, select_subj_behav
 from . import utilities as util
-from . import dialog
-from . import project_functions
-from . import db_functions
-from . import select_subj_behav
-from . import select_observations
-
-from PyQt5.QtWidgets import QInputDialog, QMessageBox, QFileDialog
 
 
 def events_snapshots(self):
@@ -227,7 +223,7 @@ def events_snapshots(self):
                                 return
 
                         globalStart = (
-                            Decimal("0.000")
+                            dec("0.000")
                             if row["occurence"] < time_interval
                             else round(row["occurence"] - time_interval, 3)
                         )
@@ -239,7 +235,7 @@ def events_snapshots(self):
                             3,
                         )
                         if start < time_interval:
-                            start = Decimal("0.000")
+                            start = dec("0.000")
 
                         if cfg.POINT in behavior_state:
 
@@ -523,9 +519,7 @@ def extract_events(self):
                             continue
 
                         globalStart = (
-                            Decimal("0.000")
-                            if row["occurence"] < timeOffset
-                            else round(row["occurence"] - timeOffset, 3)
+                            dec("0.000") if row["occurence"] < timeOffset else round(row["occurence"] - timeOffset, 3)
                         )
                         start = round(
                             row["occurence"]
@@ -535,7 +529,7 @@ def extract_events(self):
                             3,
                         )
                         if start < timeOffset:
-                            start = Decimal("0.000")
+                            start = dec("0.000")
 
                         if cfg.POINT in behavior_state:
 

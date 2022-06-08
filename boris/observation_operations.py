@@ -337,17 +337,21 @@ def observation_length(pj: dict, selected_observations: list) -> tuple:
             )
             == cfg.YES
         ):
-            maxTime = 0  # max length for all events all subjects
-            max_length = 0
-            for obs_id in selected_observations:
-                if pj[cfg.OBSERVATIONS][obs_id][cfg.EVENTS]:
-                    maxTime += max(pj[cfg.OBSERVATIONS][obs_id][cfg.EVENTS])[0]
-                    max_length = max(max_length, max(pj[cfg.OBSERVATIONS][obs_id][cfg.EVENTS])[0])
+            try:
+                maxTime = 0  # max length for all events all subjects
+                max_length = 0
+                for obs_id in selected_observations:
+                    if pj[cfg.OBSERVATIONS][obs_id][cfg.EVENTS]:
+                        maxTime += max(pj[cfg.OBSERVATIONS][obs_id][cfg.EVENTS])[0]
+                        max_length = max(max_length, max(pj[cfg.OBSERVATIONS][obs_id][cfg.EVENTS])[0])
 
-            logging.debug(f"max time all events all subjects: {maxTime}")
+                logging.debug(f"max time all events all subjects: {maxTime}")
 
-            max_obs_length = max_length
-            selectedObsTotalMediaLength = maxTime
+                max_obs_length = max_length
+                selectedObsTotalMediaLength = maxTime
+            except Exception:
+                max_obs_length = -1
+                selectedObsTotalMediaLength = dec("-1")
 
         else:
             max_obs_length = -1

@@ -1720,7 +1720,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
     def extract_frame(self, dw):
         """
-        extract frame from video and visualize it in frame_viewer
+        for MEDIA obs: extract frame from video and visualize it in frame_viewer
+        for IMAGES obs: load picture and visualize it in frame_viewer, extract EXIF Date/Time Original tag if available
         """
         if self.playerType == cfg.MEDIA:
             pixmap = QPixmap.fromImage(ImageQt(dw.player.screenshot_raw()))
@@ -1759,7 +1760,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
             # image path
             msg += f"<br><br>Directory: <b>{pl.Path(self.images_list[self.image_idx]).parent}</b>"
-            msg += f"<br>File name: {pl.Path(self.images_list[self.image_idx]).name}</b>"
+            msg += f"<br>File name: <b>{pl.Path(self.images_list[self.image_idx]).name}</b>"
 
             self.lb_current_media_time.setText(msg)
 

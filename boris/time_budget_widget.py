@@ -34,6 +34,7 @@ from PyQt5.QtWidgets import (
     QInputDialog,
     QLabel,
     QListWidget,
+    QMessageBox,
     QPushButton,
     QSizePolicy,
     QSpacerItem,
@@ -330,6 +331,13 @@ def time_budget(self, mode: str, mode2: str = "list"):
         self.pj, selectedObservations
     )
     if max_obs_length == -1:  # media length not available, user choose to not use events
+        QMessageBox.warning(
+            None,
+            cfg.programName,
+            ("The observation length is not available"),
+            QMessageBox.Ok | QMessageBox.Default,
+            QMessageBox.NoButton,
+        )
         return
 
     logging.debug(f"max_obs_length: {max_obs_length}, selectedObsTotalMediaLength: {selectedObsTotalMediaLength}")

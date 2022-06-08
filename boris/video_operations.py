@@ -23,21 +23,24 @@ Copyright 2012-2022 Olivier Friard
 
 import logging
 import pathlib as pl
+import shutil
 from math import log2
+
+from PyQt5.QtWidgets import QFileDialog
 
 from . import config as cfg
 from . import dialog
 
-from PyQt5.QtWidgets import QMessageBox
-
 
 def snapshot(self):
     """
-    take snapshot of current video at current position
+    MEDIA obs: take snapshot of current video at current position
+    IMAGES obs: save a copy of the current image
+
     snapshot is saved on media path following the template: MEDIA-FILE-NAME_TIME-POSITION.png
     """
 
-    if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE] not in [cfg.MEDIA, cfg.IMAGES]:
+    if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE] not in (cfg.MEDIA, cfg.IMAGES):
         return
 
     if self.playerType == cfg.MEDIA:
@@ -53,12 +56,18 @@ def snapshot(self):
                 snapshot_file_path = str(p.parent / f"{p.stem}_{player.player.time_pos:0.3f}.png")
 
                 player.player.screenshot_to_file(snapshot_file_path)
-
+                self.statusbar.showMessage(f"Video snapshot saved in {snapshot_file_path}", 0)
                 logging.debug(f"video snapshot saved in {snapshot_file_path}")
 
     if self.playerType == cfg.IMAGES:
 
-        QMessageBox.critical(self, cfg.programName, "To be implemented")
+        output_file_name, _ = QFileDialog().getSaveFileName(
+            self, "Save copy of the current image", pl.Path(self.images_list[self.image_idx]).name
+        )
+        if output_file_name:
+            shutil.copyfile(self.images_list[self.image_idx], output_file_name)
+            self.statusbar.showMessage(f"Image saved in {output_file_name}", 0)
+            logging.debug(f"video snapshot saved in {output_file_name}")
 
 
 def zoom_level(self):

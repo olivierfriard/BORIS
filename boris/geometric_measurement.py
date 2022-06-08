@@ -21,27 +21,27 @@ This file is part of BORIS.
 """
 
 import logging
-from . import menu_options
-from . import utilities as util
 
-from PyQt5.QtCore import pyqtSignal, Qt, QPoint
-from PyQt5.QtGui import QPainter, QColor
+from PyQt5.QtCore import QPoint, Qt, pyqtSignal
+from PyQt5.QtGui import QColor, QPainter
 from PyQt5.QtWidgets import (
     QApplication,
-    QWidget,
-    QRadioButton,
-    QLabel,
-    QHBoxLayout,
-    QVBoxLayout,
-    QLineEdit,
-    QPlainTextEdit,
     QCheckBox,
-    QPushButton,
     QFileDialog,
+    QHBoxLayout,
+    QLabel,
+    QLineEdit,
     QMessageBox,
+    QPlainTextEdit,
+    QPushButton,
+    QRadioButton,
+    QVBoxLayout,
+    QWidget,
 )
-from . import dialog
+
 from . import config as cfg
+from . import dialog, menu_options
+from . import utilities as util
 
 
 class wgMeasurement(QWidget):
@@ -182,6 +182,10 @@ def show_widget(self):
 
         self.actionPlay.setEnabled(True)
 
+    if self.playerType == cfg.IMAGES:
+        QMessageBox.warning(None, cfg.programName, ("Not yet implemented"), QMessageBox.Ok)
+        return
+
     self.geometric_measurements_mode = True
     self.pause_video()
 
@@ -240,6 +244,9 @@ def image_clicked(self, n_player, event):
 
     logging.debug(f"function image_clicked")
 
+    if not self.geometric_measurements_mode:
+        return
+
     if self.mem_player != -1 and n_player != self.mem_player:
         self.mem_player = n_player
         return
@@ -273,7 +280,7 @@ def image_clicked(self, n_player, event):
             0 <= x <= self.dw_player[n_player].frame_viewer.pixmap().width()
             and 0 <= y <= self.dw_player[n_player].frame_viewer.pixmap().height()
         ):
-            self.measurement_w.status_lb.setText("<b>The click is outside the video area!</b>")
+            self.measurement_w.status_lb.setText("<b>The click is outside the video area</b>")
             return
 
         self.measurement_w.status_lb.clear()
