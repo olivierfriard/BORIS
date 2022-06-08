@@ -21,20 +21,25 @@ This file is part of BORIS.
 """
 
 import binascii
-import decimal
 import io
 import json
 import os
+from decimal import ROUND_DOWN
+from decimal import Decimal as dec
 from decimal import getcontext
 
-from PyQt5.QtCore import QLineF, QPoint, Qt, pyqtSignal, QByteArray, QBuffer, QIODevice
+from PyQt5.QtCore import QBuffer, QByteArray, QIODevice, QLineF, QPoint, Qt, pyqtSignal
 from PyQt5.QtGui import QBrush, QColor, QIcon, QMouseEvent, QPen, QPixmap, QPolygonF
 from PyQt5.QtWidgets import (
+    QAction,
     QApplication,
     QColorDialog,
     QFileDialog,
     QFrame,
+    QGraphicsEllipseItem,
     QGraphicsLineItem,
+    QGraphicsPixmapItem,
+    QGraphicsPolygonItem,
     QGraphicsScene,
     QGraphicsView,
     QHBoxLayout,
@@ -51,14 +56,11 @@ from PyQt5.QtWidgets import (
     QSplitter,
     QVBoxLayout,
     QWidget,
-    QAction,
-    QGraphicsPolygonItem,
-    QGraphicsEllipseItem,
-    QGraphicsPixmapItem,
 )
 
 from . import config as cfg
 from . import dialog
+from . import utilities as util
 
 designColor = QColor(255, 0, 0, 128)  # red opacity: 50%
 penWidth = 0
@@ -66,81 +68,6 @@ penStyle = Qt.NoPen
 selectedBrush = QBrush()
 selectedBrush.setStyle(Qt.SolidPattern)
 selectedBrush.setColor(QColor(255, 255, 0, 255))
-
-
-def intersection(A, B, C, D):
-    """
-    line segments intersection with decimal precision
-    return True when intersection else False
-    """
-    getcontext().prec = 28
-
-    Dec = decimal.Decimal
-    xa, ya = Dec(str(A[0])), Dec(str(A[1]))
-    xb, yb = Dec(str(B[0])), Dec(str(B[1]))
-    xc, yc = Dec(str(C[0])), Dec(str(C[1]))
-    xd, yd = Dec(str(D[0])), Dec(str(D[1]))
-
-    # check if first segment is vertical
-    try:
-        if xa == xb:
-            slope = (yc - yd) / (xc - xd)
-            intersept = yc - slope * xc
-            xm = xa
-            ym = slope * xm + intersept
-
-        # check if second segment is vertical
-        elif xc == xd:
-            slope = (ya - yb) / (xa - xb)
-            intersept = ya - slope * xa
-            xm = xc
-            ym = slope * xm + intersept
-        else:
-            xm = (
-                (
-                    xd * xa * yc
-                    - xd * xb * yc
-                    - xd * xa * yb
-                    - xc * xa * yd
-                    + xc * xa * yb
-                    + xd * ya * xb
-                    + xc * xb * yd
-                    - xc * ya * xb
-                )
-                / (-yb * xd + yb * xc + ya * xd - ya * xc + xb * yd - xb * yc - xa * yd + xa * yc)
-            ).quantize(Dec(".001"), rounding=decimal.ROUND_DOWN)
-            ym = (
-                (
-                    yb * xc * yd
-                    - yb * yc * xd
-                    - ya * xc * yd
-                    + ya * yc * xd
-                    - xa * yb * yd
-                    + xa * yb * yc
-                    + ya * xb * yd
-                    - ya * xb * yc
-                )
-                / (-yb * xd + yb * xc + ya * xd - ya * xc + xb * yd - xb * yc - xa * yd + xa * yc)
-            ).quantize(Dec(".001"), rounding=decimal.ROUND_DOWN)
-
-        xmin1, xmax1 = min(xa, xb), max(xa, xb)
-        xmin2, xmax2 = min(xc, xd), max(xc, xd)
-        ymin1, ymax1 = min(ya, yb), max(ya, yb)
-        ymin2, ymax2 = min(yc, yd), max(yc, yd)
-
-        return (
-            xm >= xmin1
-            and xm <= xmax1
-            and xm >= xmin2
-            and xm <= xmax2
-            and ym >= ymin1
-            and ym <= ymax1
-            and ym >= ymin2
-            and ym <= ymax2
-        )
-
-    except Exception:  # for cases xa=xb=xc=xd
-        return True
 
 
 class BehaviorsMapCreatorWindow(QMainWindow):
@@ -594,7 +521,7 @@ class BehaviorsMapCreatorWindow(QMainWindow):
 
                     for idx, _ in enumerate(self.view.points[:-2]):
 
-                        if intersection(
+                        if util.intersection(
                             self.view.points[idx],
                             self.view.points[idx + 1],
                             self.view.points[-1],
@@ -657,7 +584,7 @@ class BehaviorsMapCreatorWindow(QMainWindow):
 
                 for idx, _ in enumerate(self.view.points[1:-2]):
 
-                    if intersection(
+                    if util.intersection(
                         self.view.points[idx],
                         self.view.points[idx + 1],
                         self.view.points[-1],

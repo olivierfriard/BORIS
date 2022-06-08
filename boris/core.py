@@ -1703,6 +1703,20 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 else:
                     self.measurement_w.draw_mem = []
 
+    def extract_exif_DateTimeOriginal(self, file_path: str) -> int:
+        """
+        extract the exif extract_exif_DateTimeOriginal tag
+        return epoch time
+        """
+        try:
+            with open(file_path, "rb") as f_in:
+                tags = exifread.process_file(f_in, details=False, stop_tag="EXIF DateTimeOriginal")
+                date_time_original = f'{tags["EXIF DateTimeOriginal"].values[:4]}-{tags["EXIF DateTimeOriginal"].values[5:7]}-{tags["EXIF DateTimeOriginal"].values[8:10]} {tags["EXIF DateTimeOriginal"].values.split(" ")[-1]}'
+
+                return int(datetime.datetime.strptime(date_time_original, "%Y-%m-%d %H:%M:%S").timestamp())
+        except Exception:
+            return -1
+
     def extract_frame(self, dw):
         """
         extract frame from video and visualize it in frame_viewer
@@ -1718,24 +1732,26 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         # extract EXIF tag
         if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.USE_EXIF_DATE]:
-            with open(self.images_list[self.image_idx], "rb") as f_in:
-                tags = exifread.process_file(f_in, details=False, stop_tag="EXIF DateTimeOriginal")
-            date_time_original = f'{tags["EXIF DateTimeOriginal"].values[:4]}-{tags["EXIF DateTimeOriginal"].values[5:7]}-{tags["EXIF DateTimeOriginal"].values[8:10]} {tags["EXIF DateTimeOriginal"].values.split(" ")[-1]}'
-            msg += f"<br>EXIF Date/Time Original: <b>{date_time_original}</b>"
 
-            if self.image_idx == 0:
-                self.image_time_ref = datetime.datetime.strptime(date_time_original, "%Y-%m-%d %H:%M:%S")
-
-            seconds_from_1st = int(
-                (
-                    datetime.datetime.strptime(date_time_original, "%Y-%m-%d %H:%M:%S") - self.image_time_ref
-                ).total_seconds()
-            )
-
-            if self.timeFormat == cfg.HHMMSS:
-                seconds_from_1st_formated = util.seconds2time(seconds_from_1st)
+            date_time_original = self.extract_exif_DateTimeOriginal(self.images_list[self.image_idx])
+            if date_time_original != -1:
+                msg += f"<br>EXIF Date/Time Original: <b>{datetime.datetime.fromtimestamp(date_time_original):%Y-%m-%d %H:%M:%S}</b>"
             else:
-                seconds_from_1st_formated = seconds_from_1st
+                msg += f"<br>EXIF Date/Time Original: <b>NA</b>"
+
+            if self.image_idx == 0 and date_time_original != -1:
+                self.image_time_ref = date_time_original
+
+            if date_time_original != -1:
+                seconds_from_1st = date_time_original - self.image_time_ref
+
+                if self.timeFormat == cfg.HHMMSS:
+                    seconds_from_1st_formated = util.seconds2time(seconds_from_1st).split(".")[0]  # remove milliseconds
+                else:
+                    seconds_from_1st_formated = seconds_from_1st
+
+            else:
+                seconds_from_1st_formated = "NA"
 
             msg += f"<br>Time from 1st image: <b>{seconds_from_1st_formated}</b>"
 
@@ -3316,30 +3332,25 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         """
         add event by double-clicking the ethogram list
         """
-        if self.observationId:
-            if self.playerType in cfg.VIEWERS:
-                QMessageBox.critical(
-                    self,
-                    cfg.programName,
-                    (
-                        "The current observation is opened in VIEW mode.\n"
-                        "It is not allowed to log events in this mode."
-                    ),
-                )
-                return
-
-            if self.twEthogram.selectedIndexes():
-                ethogram_row = self.twEthogram.selectedIndexes()[0].row()
-                code = self.twEthogram.item(ethogram_row, 1).text()
-
-                ethogram_idx = [
-                    x for x in self.pj[cfg.ETHOGRAM] if self.pj[cfg.ETHOGRAM][x][cfg.BEHAVIOR_CODE] == code
-                ][0]
-
-                event = self.full_event(ethogram_idx)
-                self.write_event(event, self.getLaps())
-        else:
+        if not self.observationId:
             self.no_observation()
+            return
+        if self.playerType in cfg.VIEWERS:
+            QMessageBox.critical(
+                self,
+                cfg.programName,
+                ("The current observation is opened in VIEW mode.\n" "It is not allowed to log events in this mode."),
+            )
+            return
+
+        if self.twEthogram.selectedIndexes():
+            ethogram_row = self.twEthogram.selectedIndexes()[0].row()
+            code = self.twEthogram.item(ethogram_row, 1).text()
+
+            ethogram_idx = [x for x in self.pj[cfg.ETHOGRAM] if self.pj[cfg.ETHOGRAM][x][cfg.BEHAVIOR_CODE] == code][0]
+
+            event = self.full_event(ethogram_idx)
+            self.write_event(event, self.getLaps())
 
     def actionUser_guide_triggered(self):
         """
@@ -3858,11 +3869,13 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         # add time offset if not from editing
         if not editing_event:
+
             """
             if self.playerType == cfg.IMAGES:
-                mem_time = Decimal(round(mem_time + 1))
+                mem_time = dec(round(mem_time + 1))
             """
 
+            # add offset
             if self.playerType in (cfg.MEDIA, cfg.LIVE):
                 mem_time += dec(self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TIME_OFFSET]).quantize(dec(".001"))
 
@@ -3870,8 +3883,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         subject = event.get(cfg.SUBJECT, self.currentSubject)
         comment = event.get(cfg.COMMENT, "")
         if self.playerType == cfg.IMAGES:
-            image_path = event.get("image path", "")
-            image_idx = event.get("image index", "")
+            image_idx = event.get(cfg.IMAGE_INDEX, "")
+            image_path = event.get(cfg.IMAGE_PATH, "")
 
         # check if a same event is already in events list (time, subject, code)
         if self.playerType in (cfg.MEDIA, cfg.LIVE):
@@ -4407,7 +4420,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             memLaps = self.getLaps()
 
         if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE] == cfg.IMAGES:
-            memLaps = dec("NaN")
+            if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.USE_EXIF_DATE]:
+                memLaps = self.extract_exif_DateTimeOriginal(self.images_list[self.image_idx])
+            else:
+                memLaps = dec("NaN")
 
         if memLaps is None:
             return
@@ -4543,8 +4559,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 event = self.full_event(ethogram_idx)
 
                 if self.playerType == cfg.IMAGES:
-                    event["image path"] = self.images_list[self.image_idx]
-                    event["image index"] = self.image_idx + 1
+                    event[cfg.IMAGE_PATH] = self.images_list[self.image_idx]
+                    event[cfg.IMAGE_INDEX] = self.image_idx + 1
 
                 self.write_event(event, memLaps)
 

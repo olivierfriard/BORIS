@@ -24,7 +24,7 @@ Copyright 2012-2022 Olivier Friard
 import logging
 import sys
 import time
-from decimal import Decimal
+from decimal import Decimal as dec
 
 import numpy as np
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
@@ -111,7 +111,7 @@ class Plot_data(QWidget):
         self.plot_style = plot_style
         self.plot_title = plot_title
         try:
-            self.time_offset = Decimal(time_offset)
+            self.time_offset = dec(time_offset)
         except Exception:
             self.error_msg = f"The offset value {time_offset} is not a decimal value"
             return

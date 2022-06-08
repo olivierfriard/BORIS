@@ -75,6 +75,7 @@ def add_event(self):
 
     if editWindow.exec_():  # button OK
 
+        # MEDIA / LIVE
         if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE] in (cfg.MEDIA, cfg.LIVE):
             newTime = editWindow.time_widget.get_time()
 
@@ -102,6 +103,7 @@ def add_event(self):
             self.lbCurrentStates.setText(", ".join(self.currentStates[subject_idx]))
             self.show_current_states_in_subjects_table()
 
+        # IMAGES
         if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE] in (cfg.IMAGES):
             new_index = editWindow.img_idx_widget.value()
 

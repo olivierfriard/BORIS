@@ -24,7 +24,7 @@ import os
 import logging
 import time
 import tempfile
-from decimal import Decimal
+from decimal import Decimal as dec
 import pathlib as pl
 import datetime
 from PyQt5.QtWidgets import (
@@ -313,11 +313,11 @@ def observation_length(pj: dict, selected_observations: list) -> tuple:
         float: maximum media length for all observations
         float: total media length for all observations
     """
-    selectedObsTotalMediaLength = Decimal("0.0")
+    selectedObsTotalMediaLength = dec("0.0")
     max_obs_length = 0
     for obs_id in selected_observations:
         obs_length = project_functions.observation_total_length(pj[cfg.OBSERVATIONS][obs_id])
-        if obs_length in [Decimal("0"), Decimal("-1")]:
+        if obs_length in [dec("0"), dec("-1")]:
             selectedObsTotalMediaLength = -1
             break
         max_obs_length = max(max_obs_length, obs_length)
@@ -351,7 +351,7 @@ def observation_length(pj: dict, selected_observations: list) -> tuple:
 
         else:
             max_obs_length = -1
-            selectedObsTotalMediaLength = Decimal("-1")
+            selectedObsTotalMediaLength = dec("-1")
 
     return (max_obs_length, selectedObsTotalMediaLength)
 
@@ -920,7 +920,7 @@ def close_observation(self):
                 events_to_add = project_functions.fix_unpaired_state_events(
                     self.pj[cfg.ETHOGRAM],
                     self.pj[cfg.OBSERVATIONS][self.observationId],
-                    fix_at_time - Decimal("0.001"),
+                    fix_at_time - dec("0.001"),
                 )
                 if events_to_add:
                     self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS].extend(events_to_add)

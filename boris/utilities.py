@@ -33,10 +33,10 @@ import sys
 import urllib.parse
 import wave
 from decimal import Decimal as dec
+from decimal import getcontext, ROUND_DOWN
 from shutil import copyfile
 
 import numpy as np
-
 from PyQt5.QtGui import qRgb
 
 from . import config as cfg
@@ -1094,3 +1094,77 @@ def dir_images_number(dir_path_str: str) -> dict:
         img_count += len(list(dir_path.glob(pattern)))
         img_count += len(list(dir_path.glob(pattern.upper())))
     return {"number of images": img_count}
+
+
+def intersection(A, B, C, D):
+    """
+    line segments intersection with decimal precision
+    return True when intersection else False
+    """
+    getcontext().prec = 28
+
+    xa, ya = dec(str(A[0])), dec(str(A[1]))
+    xb, yb = dec(str(B[0])), dec(str(B[1]))
+    xc, yc = dec(str(C[0])), dec(str(C[1]))
+    xd, yd = dec(str(D[0])), dec(str(D[1]))
+
+    # check if first segment is vertical
+    try:
+        if xa == xb:
+            slope = (yc - yd) / (xc - xd)
+            intersept = yc - slope * xc
+            xm = xa
+            ym = slope * xm + intersept
+
+        # check if second segment is vertical
+        elif xc == xd:
+            slope = (ya - yb) / (xa - xb)
+            intersept = ya - slope * xa
+            xm = xc
+            ym = slope * xm + intersept
+        else:
+            xm = (
+                (
+                    xd * xa * yc
+                    - xd * xb * yc
+                    - xd * xa * yb
+                    - xc * xa * yd
+                    + xc * xa * yb
+                    + xd * ya * xb
+                    + xc * xb * yd
+                    - xc * ya * xb
+                )
+                / (-yb * xd + yb * xc + ya * xd - ya * xc + xb * yd - xb * yc - xa * yd + xa * yc)
+            ).quantize(dec(".001"), rounding=ROUND_DOWN)
+            ym = (
+                (
+                    yb * xc * yd
+                    - yb * yc * xd
+                    - ya * xc * yd
+                    + ya * yc * xd
+                    - xa * yb * yd
+                    + xa * yb * yc
+                    + ya * xb * yd
+                    - ya * xb * yc
+                )
+                / (-yb * xd + yb * xc + ya * xd - ya * xc + xb * yd - xb * yc - xa * yd + xa * yc)
+            ).quantize(dec(".001"), rounding=ROUND_DOWN)
+
+        xmin1, xmax1 = min(xa, xb), max(xa, xb)
+        xmin2, xmax2 = min(xc, xd), max(xc, xd)
+        ymin1, ymax1 = min(ya, yb), max(ya, yb)
+        ymin2, ymax2 = min(yc, yd), max(yc, yd)
+
+        return (
+            xm >= xmin1
+            and xm <= xmax1
+            and xm >= xmin2
+            and xm <= xmax2
+            and ym >= ymin1
+            and ym <= ymax1
+            and ym >= ymin2
+            and ym <= ymax2
+        )
+
+    except Exception:  # for cases xa=xb=xc=xd
+        return True

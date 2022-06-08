@@ -21,16 +21,13 @@ This file is part of BORIS.
 """
 
 import logging
-from decimal import Decimal
 import pathlib as pl
-from . import project_functions
-from . import dialog
-from . import time_budget_functions
-from . import select_subj_behav
-from . import config as cfg
-from . import select_observations
+from decimal import Decimal as dec
 
 from PyQt5.QtWidgets import QFileDialog, QMessageBox
+
+from . import config as cfg
+from . import dialog, project_functions, select_observations, select_subj_behav, time_budget_functions
 
 
 def synthetic_time_budget(self):
@@ -84,7 +81,7 @@ def synthetic_time_budget(self):
     if not selected_observations:
         return
 
-    selectedObsTotalMediaLength = Decimal("0.0")
+    selectedObsTotalMediaLength = dec("0.0")
     max_obs_length = 0
     for obsId in selected_observations:
         obs_length = project_functions.observation_total_length(self.pj[cfg.OBSERVATIONS][obsId])
@@ -252,7 +249,7 @@ def synthetic_binned_time_budget(self):
     if not selected_observations:
         return
 
-    selectedObsTotalMediaLength = Decimal("0.0")
+    selectedObsTotalMediaLength = dec("0.0")
     max_obs_length = 0
     for obsId in selected_observations:
         obs_length = project_functions.observation_total_length(self.pj[cfg.OBSERVATIONS][obsId])

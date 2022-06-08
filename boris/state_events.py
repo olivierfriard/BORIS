@@ -23,7 +23,7 @@ Module containing functions for state events
 
 """
 
-from decimal import Decimal
+from decimal import Decimal as dec
 
 from PyQt5.QtWidgets import QMessageBox
 
@@ -112,7 +112,7 @@ def fix_unpaired_events(self):
             events_to_add = project_functions.fix_unpaired_state_events(
                 self.pj[cfg.ETHOGRAM],
                 self.pj[cfg.OBSERVATIONS][self.observationId],
-                fix_at_time - Decimal("0.001"),
+                fix_at_time - dec("0.001"),
             )
 
             if events_to_add:
