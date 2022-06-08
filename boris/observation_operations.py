@@ -1531,12 +1531,24 @@ def initialize_new_images_observation(self):
 
     self.playerType = cfg.IMAGES
     # load image paths
+    # directories user order is maintained
+    # images are sorted inside each directory
     self.images_list = []
-    for pattern in cfg.IMAGE_EXTENSIONS:
-        self.images_list.extend([str(x) for x in pl.Path(dir_path).glob(pattern)])
-        self.images_list.extend([str(x) for x in pl.Path(dir_path).glob(pattern.upper())])
+    for dir_path in self.pj[cfg.OBSERVATIONS][self.observationId].get(cfg.DIRECTORIES_LIST, []):
+        for pattern in cfg.IMAGE_EXTENSIONS:
+            self.images_list.extend(
+                sorted(
+                    list(
+                        set(
+                            [str(x) for x in pl.Path(dir_path).glob(pattern)]
+                            + [str(x) for x in pl.Path(dir_path).glob(pattern.upper())]
+                        )
+                    )
+                )
+            )
 
-    self.images_list.sort()
+    # logging.debug(self.images_list)
+
     self.image_idx = 0
     self.image_time_ref = None
 

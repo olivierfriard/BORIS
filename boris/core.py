@@ -26,7 +26,7 @@ from math import log2
 import json
 import logging
 import os
-import pathlib
+import pathlib as pl
 import platform
 import re
 import bisect
@@ -37,7 +37,9 @@ import time
 import urllib.error
 import urllib.parse
 import urllib.request
-from decimal import *
+
+# from decimal import *
+from decimal import Decimal as dec
 import gzip
 from collections import deque
 
@@ -103,7 +105,7 @@ if util.versiontuple(platform.python_version()) < util.versiontuple("3.6"):
     msg = f"BORIS requires Python 3.6+! You are using Python v. {platform.python_version()}\n"
     logging.critical(msg)
     # append to boris_error.log file
-    with open(pathlib.Path("~").expanduser() / "boris_error.log", "a") as f_out:
+    with open(pl.Path("~").expanduser() / "boris_error.log", "a") as f_out:
         f_out.write(f"{datetime.datetime.now():%Y-%m-%d %H:%M}\n")
         f_out.write(msg)
         f_out.write("-" * 80 + "\n")
@@ -1044,8 +1046,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 )
 
                 wav_file_path = (
-                    pathlib.Path(tmp_dir)
-                    / pathlib.Path(
+                    pl.Path(tmp_dir)
+                    / pl.Path(
                         self.dw_player[0].player.playlist[self.dw_player[0].player.playlist_pos]["filename"] + ".wav"
                     ).name
                 )
@@ -1140,8 +1142,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 )
 
                 wav_file_path = (
-                    pathlib.Path(tmp_dir)
-                    / pathlib.Path(
+                    pl.Path(tmp_dir)
+                    / pl.Path(
                         self.dw_player[0].player.playlist[self.dw_player[0].player.playlist_pos]["filename"] + ".wav"
                     ).name
                 )
@@ -1248,8 +1250,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
             try:
                 wav_file_path = str(
-                    pathlib.Path(tmp_dir)
-                    / pathlib.Path(
+                    pl.Path(tmp_dir)
+                    / pl.Path(
                         self.dw_player[0].player.playlist[self.dw_player[0].player.playlist_pos]["filename"] + ".wav"
                     ).name
                 )
@@ -1513,7 +1515,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
             # check if media not first media
             if self.dw_player[0].player.playlist_pos > 0:
-                flagPaused = self.is_playing()
                 self.dw_player[0].player.playlist_prev()
 
             elif self.dw_player[0].player.playlist_count == 1:
@@ -1521,6 +1522,31 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
             if hasattr(self, "spectro"):
                 self.spectro.memChunk = -1
+
+        if self.playerType == cfg.IMAGES:
+
+            if len(self.pj[cfg.OBSERVATIONS][self.observationId].get(cfg.DIRECTORIES_LIST, [])) <= 1:
+                return
+            if self.image_idx == 0:
+                return
+
+            current_dir = pl.Path(self.images_list[self.image_idx]).parent
+            for image_path in self.images_list[self.image_idx - 1 :: -1]:
+                if pl.Path(image_path).parent != current_dir:
+                    self.image_idx = self.images_list.index(image_path)
+
+                    # seek to first image of directory
+                    current_dir2 = pl.Path(self.images_list[self.image_idx]).parent
+                    for image_path2 in self.images_list[self.image_idx - 1 :: -1]:
+                        if pl.Path(image_path2).parent != current_dir2:
+                            self.image_idx = self.images_list.index(image_path2) + 1
+                            break
+                        if self.images_list.index(image_path2) == 0:
+                            self.image_idx = 0
+                            break
+
+                    self.extract_frame(self.dw_player[0])
+                    break
 
     def next_media_file(self):
         """
@@ -1533,10 +1559,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
             # check if media not last media
             if self.dw_player[0].player.playlist_pos < self.dw_player[0].player.playlist_count - 1:
-
-                # remember if player paused (go previous will start playing)
-                flagPaused = self.is_playing()
-
                 self.dw_player[0].player.playlist_next()
 
             else:
@@ -1548,6 +1570,17 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             if hasattr(self, "spectro"):
                 self.spectro.memChunk = -1
 
+        if self.playerType == cfg.IMAGES:
+
+            if len(self.pj[cfg.OBSERVATIONS][self.observationId].get(cfg.DIRECTORIES_LIST, [])) <= 1:
+                return
+            current_dir = pl.Path(self.images_list[self.image_idx]).parent
+            for image_path in self.images_list[self.image_idx + 1 :]:
+                if pl.Path(image_path).parent != current_dir:
+                    self.image_idx = self.images_list.index(image_path)
+                    self.extract_frame(self.dw_player[0])
+                    break
+
     def set_volume(self, nplayer, new_volume):
         """
         set volume for player nplayer
@@ -1556,9 +1589,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             nplayer (str): player to set
             new_volume (int): volume to set
         """
-
-        logging.debug(f"set volume to {new_volume}")
-        self.dw_player[nplayer].player.volume = new_volume
+        if self.playerType == cfg.MEDIA:
+            logging.debug(f"set volume to {new_volume}")
+            self.dw_player[nplayer].player.volume = new_volume
 
     def automatic_backup(self):
         """
@@ -1693,13 +1726,18 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             if self.image_idx == 0:
                 self.image_time_ref = datetime.datetime.strptime(date_time_original, "%Y-%m-%d %H:%M:%S")
 
-            seconds = int(
+            seconds_from_1st = int(
                 (
                     datetime.datetime.strptime(date_time_original, "%Y-%m-%d %H:%M:%S") - self.image_time_ref
                 ).total_seconds()
             )
 
-            msg += f"<br>Seconds: <b>{seconds}</b>"
+            if self.timeFormat == cfg.HHMMSS:
+                seconds_from_1st_formated = util.seconds2time(seconds_from_1st)
+            else:
+                seconds_from_1st_formated = seconds_from_1st
+
+            msg += f"<br>Time from 1st image: <b>{seconds_from_1st_formated}</b>"
 
         # image path
         msg += f"<br><br>Image path: {self.images_list[self.image_idx]}"
@@ -2043,7 +2081,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         """
         self.menuRecent_projects.clear()
         for project_file_path in self.recent_projects:
-            if pathlib.Path(project_file_path).is_file():
+            if pl.Path(project_file_path).is_file():
                 action = QAction(self, visible=False, triggered=self.open_project_activated)
                 action.setText(project_file_path)
                 action.setVisible(True)
@@ -2355,7 +2393,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.projectChanged = memProjectChanged
         self.load_behaviors_in_twEthogram([self.pj[cfg.ETHOGRAM][x][cfg.BEHAVIOR_CODE] for x in self.pj[cfg.ETHOGRAM]])
         self.load_subjects_in_twSubjects([self.pj[cfg.SUBJECTS][x][cfg.SUBJECT_NAME] for x in self.pj[cfg.SUBJECTS]])
-        self.projectFileName = str(pathlib.Path(project_path).absolute())
+        self.projectFileName = str(pl.Path(project_path).absolute())
         self.project = True
         if str(self.projectFileName) not in self.recent_projects:
             self.recent_projects = [str(self.projectFileName)] + self.recent_projects
@@ -2859,7 +2897,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     project_new_file_name = os.path.splitext(os.path.splitext(project_new_file_name)[0])[0]
                 project_new_file_name += ".boris"
                 # check if file name with extension already exists
-                if pathlib.Path(project_new_file_name).is_file():
+                if pl.Path(project_new_file_name).is_file():
                     if (
                         dialog.MessageDialog(
                             cfg.programName,
@@ -2878,7 +2916,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     project_new_file_name = os.path.splitext(project_new_file_name)[0]
                 project_new_file_name += ".boris.gz"
                 # check if file name with extension already exists
-                if pathlib.Path(project_new_file_name).is_file():
+                if pl.Path(project_new_file_name).is_file():
                     if (
                         dialog.MessageDialog(
                             cfg.programName,
@@ -2924,7 +2962,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     self.projectFileName = os.path.splitext(os.path.splitext(self.projectFileName)[0])[0]
                 self.projectFileName += ".boris"
                 # check if file name with extension already exists
-                if pathlib.Path(self.projectFileName).is_file():
+                if pl.Path(self.projectFileName).is_file():
                     if (
                         dialog.MessageDialog(
                             cfg.programName,
@@ -2946,7 +2984,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
                 self.projectFileName += ".boris.gz"
                 # check if file name with extension already exists
-                if pathlib.Path(self.projectFileName).is_file():
+                if pl.Path(self.projectFileName).is_file():
                     if (
                         dialog.MessageDialog(
                             cfg.programName,
@@ -3440,7 +3478,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                         self.dw_player[n_player].stack.setCurrentIndex(1)
                     else:
 
-                        if new_time - Decimal(
+                        if new_time - dec(
                             self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO]["offset"][str(n_player + 1)]
                         ) > sum(self.dw_player[n_player].media_durations):
                             # hide video if required time > video time + offset
@@ -3451,7 +3489,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
                             self.seek_mediaplayer(
                                 new_time
-                                - Decimal(
+                                - dec(
                                     self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO]["offset"][
                                         str(n_player + 1)
                                     ]
@@ -3461,7 +3499,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
                 elif self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO]["offset"][str(n_player + 1)] < 0:
 
-                    if new_time - Decimal(
+                    if new_time - dec(
                         self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO]["offset"][str(n_player + 1)]
                     ) > sum(self.dw_player[n_player].media_durations):
                         # hide video if required time > video time + offset
@@ -3470,7 +3508,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                         self.dw_player[n_player].stack.setCurrentIndex(0)
                         self.seek_mediaplayer(
                             new_time
-                            - Decimal(
+                            - dec(
                                 self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO]["offset"][
                                     str(n_player + 1)
                                 ]
@@ -3577,7 +3615,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                         ct0
                         - (
                             ct
-                            + Decimal(
+                            + dec(
                                 self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO]["offset"][
                                     str(n_player + 1)
                                 ]
@@ -3588,9 +3626,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 ):
                     self.sync_time(n_player, ct0)  # self.seek_mediaplayer(ct0, n_player)
 
-        currentTimeOffset = Decimal(
-            cumulative_time_pos + self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TIME_OFFSET]
-        )
+        currentTimeOffset = dec(cumulative_time_pos + self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TIME_OFFSET])
 
         all_media_duration = sum(self.dw_player[0].media_durations) / 1000
         mediaName = ""
@@ -3617,7 +3653,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.show_current_states_in_subjects_table()
 
         if self.dw_player[0].player.playlist_pos is not None:
-            current_media_name = pathlib.Path(
+            current_media_name = pl.Path(
                 self.dw_player[0].player.playlist[self.dw_player[0].player.playlist_pos]["filename"]
             ).name
         else:
@@ -3761,7 +3797,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 else:
                     mem_behav[f"{subject}|{code}|{modifier}"] = 1
 
-    def checkSameEvent(self, obs_id: str, time: Decimal, subject: str, code: str) -> bool:
+    def checkSameEvent(self, obs_id: str, time: dec, subject: str, code: str) -> bool:
         """
         check if a same event is already in events list (time, subject, code)
         """
@@ -3796,7 +3832,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 for x in self.pj[cfg.OBSERVATIONS][obs_id][cfg.EVENTS]
             ]
 
-    def write_event(self, event: dict, mem_time: Decimal) -> None:
+    def write_event(self, event: dict, mem_time: dec) -> None:
         """
         add event from pressed key to observation
         offset is added to event time
@@ -3828,9 +3864,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             """
 
             if self.playerType in (cfg.MEDIA, cfg.LIVE):
-                mem_time += Decimal(self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TIME_OFFSET]).quantize(
-                    Decimal(".001")
-                )
+                mem_time += dec(self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TIME_OFFSET]).quantize(dec(".001"))
 
         # remove key code from modifiers
         subject = event.get(cfg.SUBJECT, self.currentSubject)
@@ -4100,7 +4134,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             else:
                 return None
 
-    def getLaps(self, n_player: int = 0) -> Decimal:
+    def getLaps(self, n_player: int = 0) -> dec:
         """
         Cumulative laps time from begining of observation
         no more add time offset!
@@ -4113,28 +4147,28 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         """
 
         if not self.observationId:
-            return Decimal("0")
+            return dec("0")
 
         if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE] == cfg.LIVE:
 
             if self.liveObservationStarted:
                 now = QTime()
                 now.start()  # current time
-                memLaps = Decimal(str(round(self.liveStartTime.msecsTo(now) / 1000, 3)))
+                memLaps = dec(str(round(self.liveStartTime.msecsTo(now) / 1000, 3)))
                 return memLaps
             else:
-                return Decimal("0.0")
+                return dec("0.0")
 
         if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE] == cfg.IMAGES:
             if self.playerType in [cfg.VIEWER_IMAGES]:
-                return Decimal("NaN")
+                return dec("NaN")
             if self.playerType == cfg.IMAGES:
-                return Decimal(self.image_idx + 1)
+                return dec(self.image_idx + 1)
 
         if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE] == cfg.MEDIA:
 
             if self.playerType in [cfg.VIEWER_LIVE, cfg.VIEWER_MEDIA]:
-                return Decimal("0.0")
+                return dec("0.0")
 
             if self.playerType == cfg.MEDIA:
                 # cumulative time
@@ -4146,7 +4180,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     else self.dw_player[n_player].player.time_pos * 1000
                 )
 
-                return Decimal(str(round(mem_laps / 1000, 3)))
+                return dec(str(round(mem_laps / 1000, 3)))
 
     def full_event(self, behavior_idx: str) -> dict:
         """
@@ -4358,14 +4392,14 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE] == cfg.LIVE:
             if self.pj[cfg.OBSERVATIONS][self.observationId].get(cfg.SCAN_SAMPLING_TIME, 0):
                 if self.timeFormat == cfg.HHMMSS:
-                    memLaps = Decimal(int(util.time2seconds(self.lb_current_media_time.text())))
+                    memLaps = dec(int(util.time2seconds(self.lb_current_media_time.text())))
                 if self.timeFormat == cfg.S:
-                    memLaps = Decimal(int(Decimal(self.lb_current_media_time.text())))
+                    memLaps = dec(int(dec(self.lb_current_media_time.text())))
             else:  # no scan sampling
                 if self.pj[cfg.OBSERVATIONS][self.observationId].get(cfg.START_FROM_CURRENT_TIME, False):
-                    memLaps = Decimal(str(util.seconds_of_day(datetime.datetime.now())))
+                    memLaps = dec(str(util.seconds_of_day(datetime.datetime.now())))
                 elif self.pj[cfg.OBSERVATIONS][self.observationId].get(cfg.START_FROM_CURRENT_EPOCH_TIME, False):
-                    memLaps = Decimal(time.time())
+                    memLaps = dec(time.time())
                 else:
                     memLaps = self.getLaps()
 
@@ -4373,7 +4407,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             memLaps = self.getLaps()
 
         if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE] == cfg.IMAGES:
-            memLaps = Decimal("NaN")
+            memLaps = dec("NaN")
 
         if memLaps is None:
             return
@@ -4542,7 +4576,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         if self.playerType == cfg.MEDIA:
             time_str = self.twEvents.item(row, cfg.TW_OBS_FIELD[self.playerType]["time"]).text()
-            time_ = util.time2seconds(time_str) if ":" in time_str else Decimal(time_str)
+            time_ = util.time2seconds(time_str) if ":" in time_str else dec(time_str)
 
             # substract time offset
             time_ -= self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TIME_OFFSET]
@@ -5043,6 +5077,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 self.seek_mediaplayer(0)
 
             self.update_visualizations()
+
+        if self.playerType == cfg.IMAGES:
+            self.image_idx = 0
+            self.extract_frame(self.dw_player[0])
 
     ''' 2019-12-12
     def changedFocusSlot(self, old, now):
