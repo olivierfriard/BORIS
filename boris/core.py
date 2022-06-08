@@ -1707,6 +1707,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         """
         extract the exif extract_exif_DateTimeOriginal tag
         return epoch time
+        if the tag is not available return -1
         """
         try:
             with open(file_path, "rb") as f_in:
@@ -1723,42 +1724,46 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         """
         if self.playerType == cfg.MEDIA:
             pixmap = QPixmap.fromImage(ImageQt(dw.player.screenshot_raw()))
+
         if self.playerType == cfg.IMAGES:
             pixmap = QPixmap(self.images_list[self.image_idx])
 
-        dw.frame_viewer.setPixmap(pixmap.scaled(dw.frame_viewer.size(), Qt.KeepAspectRatio, Qt.SmoothTransformation))
+            msg = f"Image index: <b>{self.image_idx + 1} / {len(self.images_list)}</b>"
 
-        msg = f"Image index: <b>{self.image_idx + 1} / {len(self.images_list)}</b>"
+            # extract EXIF tag
+            if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.USE_EXIF_DATE]:
 
-        # extract EXIF tag
-        if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.USE_EXIF_DATE]:
-
-            date_time_original = self.extract_exif_DateTimeOriginal(self.images_list[self.image_idx])
-            if date_time_original != -1:
-                msg += f"<br>EXIF Date/Time Original: <b>{datetime.datetime.fromtimestamp(date_time_original):%Y-%m-%d %H:%M:%S}</b>"
-            else:
-                msg += f"<br>EXIF Date/Time Original: <b>NA</b>"
-
-            if self.image_idx == 0 and date_time_original != -1:
-                self.image_time_ref = date_time_original
-
-            if date_time_original != -1:
-                seconds_from_1st = date_time_original - self.image_time_ref
-
-                if self.timeFormat == cfg.HHMMSS:
-                    seconds_from_1st_formated = util.seconds2time(seconds_from_1st).split(".")[0]  # remove milliseconds
+                date_time_original = self.extract_exif_DateTimeOriginal(self.images_list[self.image_idx])
+                if date_time_original != -1:
+                    msg += f"<br>EXIF Date/Time Original: <b>{datetime.datetime.fromtimestamp(date_time_original):%Y-%m-%d %H:%M:%S}</b>"
                 else:
-                    seconds_from_1st_formated = seconds_from_1st
+                    msg += f"<br>EXIF Date/Time Original: <b>NA</b>"
 
-            else:
-                seconds_from_1st_formated = "NA"
+                if self.image_idx == 0 and date_time_original != -1:
+                    self.image_time_ref = date_time_original
 
-            msg += f"<br>Time from 1st image: <b>{seconds_from_1st_formated}</b>"
+                if date_time_original != -1:
+                    seconds_from_1st = date_time_original - self.image_time_ref
 
-        # image path
-        msg += f"<br><br>Image path: {self.images_list[self.image_idx]}"
+                    if self.timeFormat == cfg.HHMMSS:
+                        seconds_from_1st_formated = util.seconds2time(seconds_from_1st).split(".")[
+                            0
+                        ]  # remove milliseconds
+                    else:
+                        seconds_from_1st_formated = seconds_from_1st
 
-        self.lb_current_media_time.setText(msg)
+                else:
+                    seconds_from_1st_formated = "NA"
+
+                msg += f"<br>Time from 1st image: <b>{seconds_from_1st_formated}</b>"
+
+            # image path
+            msg += f"<br><br>Directory: <b>{pl.Path(self.images_list[self.image_idx]).parent}</b>"
+            msg += f"<br>File name: {pl.Path(self.images_list[self.image_idx]).name}</b>"
+
+            self.lb_current_media_time.setText(msg)
+
+        dw.frame_viewer.setPixmap(pixmap.scaled(dw.frame_viewer.size(), Qt.KeepAspectRatio, Qt.SmoothTransformation))
 
     def frame_image_clicked(self, n_player, event):
         geometric_measurement.image_clicked(self, n_player, event)
@@ -1959,7 +1964,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     field = event[cfg.PJ_OBS_FIELDS[self.playerType][field_type]]
                     if field_type == "time":
                         field = str(util.convertTime(self.timeFormat, field))
-                    if field_type == "image index":
+                    if field_type == cfg.IMAGE_INDEX:
                         field = str(round(field))
 
                     self.twEvents.setItem(row, cfg.TW_OBS_FIELD[self.playerType][field_type], QTableWidgetItem(field))
@@ -3349,8 +3354,25 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
             ethogram_idx = [x for x in self.pj[cfg.ETHOGRAM] if self.pj[cfg.ETHOGRAM][x][cfg.BEHAVIOR_CODE] == code][0]
 
-            event = self.full_event(ethogram_idx)
-            self.write_event(event, self.getLaps())
+            if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE] in (cfg.MEDIA, cfg.LIVE):
+                event = self.full_event(ethogram_idx)
+                self.write_event(event, self.getLaps())
+
+            if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE] in (cfg.IMAGES):
+                event = self.full_event(ethogram_idx)
+                event[cfg.IMAGE_INDEX] = self.image_idx + 1
+                event[cfg.IMAGE_PATH] = self.images_list[self.image_idx]
+
+                if (
+                    self.pj[cfg.OBSERVATIONS][self.observationId][cfg.USE_EXIF_DATE]
+                    and self.extract_exif_DateTimeOriginal(self.images_list[self.image_idx]) != -1
+                ):
+                    self.write_event(
+                        event,
+                        self.extract_exif_DateTimeOriginal(self.images_list[self.image_idx]) - self.image_time_ref,
+                    )
+                else:
+                    self.write_event(event, dec("NaN"))
 
     def actionUser_guide_triggered(self):
         """
@@ -4055,8 +4077,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     )
 
         # add event to pj
-        if editing_event:
-            # modifying event
+        if editing_event:  # modifying event
             if self.playerType in (cfg.MEDIA, cfg.LIVE):
                 self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS][event["row"]] = [
                     mem_time,
@@ -4076,8 +4097,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     image_path,
                 ]
 
-        else:
-            # add event
+        else:  # add event
             if self.playerType in (cfg.MEDIA, cfg.LIVE):
                 """
                 # removed to use bisect
@@ -4093,6 +4113,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             elif self.playerType == cfg.IMAGES:
                 self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS].append(
                     [mem_time, subject, event[cfg.BEHAVIOR_CODE], modifier_str, comment, image_idx, image_path]
+                )
+                self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS].sort(
+                    key=lambda x: x[cfg.PJ_OBS_FIELDS[self.playerType][cfg.IMAGE_INDEX]]
                 )
 
         """
@@ -4420,8 +4443,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             memLaps = self.getLaps()
 
         if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE] == cfg.IMAGES:
-            if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.USE_EXIF_DATE]:
-                memLaps = self.extract_exif_DateTimeOriginal(self.images_list[self.image_idx])
+            if (
+                self.pj[cfg.OBSERVATIONS][self.observationId][cfg.USE_EXIF_DATE]
+                and self.extract_exif_DateTimeOriginal(self.images_list[self.image_idx]) != -1
+            ):
+                memLaps = self.extract_exif_DateTimeOriginal(self.images_list[self.image_idx]) - self.image_time_ref
             else:
                 memLaps = dec("NaN")
 
