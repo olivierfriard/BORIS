@@ -27,4 +27,4 @@ If applicable, add screenshots to help explain your problem.
  - OS: [windows 10, Ubuntu 22.04 ... ]
  - BORIS Version
 
-See http://www.boris.unito.it/pages/report_a_bug.html for details
+See [how to report a bug](http://www.boris.unito.it/pages/report_a_bug.html) for details
