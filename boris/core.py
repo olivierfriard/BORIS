@@ -3449,13 +3449,25 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS]:
             ct = self.getLaps()
-            if ct >= self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS][-1][0]:
+            # add time offset if any
+            ct += dec(self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TIME_OFFSET])
+
+            if (
+                ct
+                >= self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS][-1][
+                    cfg.TW_OBS_FIELD[self.playerType]["time"]
+                ]
+            ):
                 self.events_current_row = len(self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS])
             else:
                 cr_list = [
                     idx
                     for idx, x in enumerate(self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS][:-1])
-                    if x[0] <= ct and self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS][idx + 1][0] > ct
+                    if x[0] <= ct
+                    and self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS][idx + 1][
+                        cfg.TW_OBS_FIELD[self.playerType]["time"]
+                    ]
+                    > ct
                 ]
 
                 if cr_list:
@@ -4174,7 +4186,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     def getLaps(self, n_player: int = 0) -> dec:
         """
         Cumulative laps time from begining of observation
-        no more add time offset!
+        do not add time offset
 
         Args:
             n_player (int): player

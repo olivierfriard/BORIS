@@ -41,7 +41,6 @@ from PyQt5.QtWidgets import (
     QTableWidgetItem,
     QApplication,
     QMenu,
-    QAbstractItemView,
     QListWidgetItem,
 )
 
@@ -123,6 +122,10 @@ class Observation(QDialog, Ui_Form):
         # observation type
         self.rb_media_files.toggled.connect(self.obs_type_changed)
         self.rb_live.toggled.connect(self.obs_type_changed)
+
+        # DISBALE observation from images
+        self.rb_images.setEnabled(False)
+
         self.rb_images.toggled.connect(self.obs_type_changed)
 
         menu_items = [
