@@ -3716,14 +3716,14 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                         time.sleep(0.2)
                         self.dw_player[player].mediaplayer.set_time(
                             int(
-                            new_time
-                            - sum(
-                                self.dw_player[player].media_durations[
-                                    0 : self.dw_player[player].media_list.index_of_item(
-                                        self.dw_player[player].mediaplayer.get_media()
-                                    )
-                                ]
-                            )
+                                new_time
+                                - sum(
+                                    self.dw_player[player].media_durations[
+                                        0 : self.dw_player[player].media_list.index_of_item(
+                                            self.dw_player[player].mediaplayer.get_media()
+                                        )
+                                    ]
+                                )
                             )
                         )
 
@@ -3739,14 +3739,14 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                                         break
                                 self.dw_player[player].mediaplayer.set_time(
                                     int(
-                                    new_time
-                                    - sum(
-                                        self.dw_player[player].media_durations[
-                                            0 : self.dw_player[player].media_list.index_of_item(
-                                                self.dw_player[player].mediaplayer.get_media()
-                                            )
-                                        ]
-                                    )
+                                        new_time
+                                        - sum(
+                                            self.dw_player[player].media_durations[
+                                                0 : self.dw_player[player].media_list.index_of_item(
+                                                    self.dw_player[player].mediaplayer.get_media()
+                                                )
+                                            ]
+                                        )
                                     )
                                 )
 
@@ -11102,6 +11102,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         if self.pj[OBSERVATIONS][self.observationId][EVENTS]:
             ct = self.getLaps()
+
+            # add time offset if any
+            ct += dec(self.pj[OBSERVATIONS][self.observationId][TIME_OFFSET])
+
             if ct >= self.pj[OBSERVATIONS][self.observationId][EVENTS][-1][0]:
                 ROW = len(self.pj[OBSERVATIONS][self.observationId][EVENTS])
             else:
@@ -11246,14 +11250,15 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                                 self.dw_player[n_player].mediaListPlayer.pause()
 
                             self.dw_player[n_player].mediaplayer.set_time(
-                                int(new_time
-                                - sum(
-                                    self.dw_player[n_player].media_durations[
-                                        0 : self.dw_player[n_player].media_list.index_of_item(
-                                            self.dw_player[n_player].mediaplayer.get_media()
-                                        )
-                                    ]
-                                )
+                                int(
+                                    new_time
+                                    - sum(
+                                        self.dw_player[n_player].media_durations[
+                                            0 : self.dw_player[n_player].media_list.index_of_item(
+                                                self.dw_player[n_player].mediaplayer.get_media()
+                                            )
+                                        ]
+                                    )
                                 )
                             )
                             break
