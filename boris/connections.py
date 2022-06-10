@@ -225,7 +225,6 @@ def connections(self):
     self.actionNext.triggered.connect(self.next_media_file)
 
     self.actionSnapshot.triggered.connect(lambda: video_operations.snapshot(self))
-    """self.actionFrame_by_frame.triggered.connect(self.switch_playing_mode)"""
 
     self.actionFrame_backward.triggered.connect(self.previous_frame)
     self.actionFrame_forward.triggered.connect(self.next_frame)

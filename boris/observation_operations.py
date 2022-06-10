@@ -317,7 +317,7 @@ def observation_length(pj: dict, selected_observations: list) -> tuple:
     max_obs_length = 0
     for obs_id in selected_observations:
         obs_length = project_functions.observation_total_length(pj[cfg.OBSERVATIONS][obs_id])
-        if obs_length in [dec("0"), dec("-1")]:
+        if obs_length in [dec(0), dec(-1)]:
             selectedObsTotalMediaLength = -1
             break
         max_obs_length = max(max_obs_length, obs_length)
@@ -330,8 +330,8 @@ def observation_length(pj: dict, selected_observations: list) -> tuple:
             dialog.MessageDialog(
                 cfg.programName,
                 (
-                    f"A media length is not available for the observation <b>{obs_id}</b>.<br>"
-                    "Use last event time as media length?"
+                    f"The observation length is not available (<b>{obs_id}</b>).<br>"
+                    "Use last event time as observation length?"
                 ),
                 (cfg.YES, cfg.NO),
             )
@@ -398,7 +398,7 @@ def new_observation(self, mode=cfg.NEW, obsId=""):
     observationWindow.dteDate.setDateTime(QDateTime.currentDateTime())
     observationWindow.ffmpeg_bin = self.ffmpeg_bin
     observationWindow.project_file_name = self.projectFileName
-    observationWindow.cb_use_exif.setChecked(False)
+    observationWindow.rb_no_time.setChecked(True)
 
     # add independent variables
     if cfg.INDEPENDENT_VARIABLES in self.pj:
@@ -657,7 +657,10 @@ def new_observation(self, mode=cfg.NEW, obsId=""):
             observationWindow.lw_images_directory.addItems(
                 self.pj[cfg.OBSERVATIONS][obsId].get(cfg.DIRECTORIES_LIST, [])
             )
-            observationWindow.cb_use_exif.setChecked(self.pj[cfg.OBSERVATIONS][obsId].get(cfg.USE_EXIF_DATE, False))
+            observationWindow.rb_use_exif.setChecked(self.pj[cfg.OBSERVATIONS][obsId].get(cfg.USE_EXIF_DATE, False))
+            if self.pj[cfg.OBSERVATIONS][obsId].get(cfg.TIME_LAPSE, 0):
+                observationWindow.rb_time_lapse.setChecked(True)
+                observationWindow.sb_time_lapse.setValue(self.pj[cfg.OBSERVATIONS][obsId].get(cfg.TIME_LAPSE, 0))
 
         if self.pj[cfg.OBSERVATIONS][obsId]["type"] in [cfg.LIVE]:
             observationWindow.rb_live.setChecked(True)
@@ -823,7 +826,11 @@ def new_observation(self, mode=cfg.NEW, obsId=""):
                 observationWindow.lw_images_directory.item(i).text()
                 for i in range(observationWindow.lw_images_directory.count())
             ]
-            self.pj[cfg.OBSERVATIONS][new_obs_id][cfg.USE_EXIF_DATE] = observationWindow.cb_use_exif.isChecked()
+            self.pj[cfg.OBSERVATIONS][new_obs_id][cfg.USE_EXIF_DATE] = observationWindow.rb_use_exif.isChecked()
+            if observationWindow.rb_time_lapse.isChecked():
+                self.pj[cfg.OBSERVATIONS][new_obs_id][cfg.TIME_LAPSE] = observationWindow.sb_time_lapse.value()
+            else:
+                self.pj[cfg.OBSERVATIONS][new_obs_id][cfg.TIME_LAPSE] = 0
 
         # media file
         self.pj[cfg.OBSERVATIONS][new_obs_id][cfg.FILE] = {}

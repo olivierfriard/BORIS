@@ -40,6 +40,7 @@ import urllib.request
 
 # from decimal import *
 from decimal import Decimal as dec
+from decimal import ROUND_DOWN
 import gzip
 from collections import deque
 
@@ -1732,7 +1733,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             msg = f"Image index: <b>{self.image_idx + 1} / {len(self.images_list)}</b>"
 
             # extract EXIF tag
-            if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.USE_EXIF_DATE]:
+            if self.pj[cfg.OBSERVATIONS][self.observationId].get(cfg.USE_EXIF_DATE, False):
 
                 date_time_original = self.extract_exif_DateTimeOriginal(self.images_list[self.image_idx])
                 if date_time_original != -1:
@@ -3355,25 +3356,19 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
             ethogram_idx = [x for x in self.pj[cfg.ETHOGRAM] if self.pj[cfg.ETHOGRAM][x][cfg.BEHAVIOR_CODE] == code][0]
 
+            event = self.full_event(ethogram_idx)
+            # MEDIA / LIVE
+            """
             if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE] in (cfg.MEDIA, cfg.LIVE):
-                event = self.full_event(ethogram_idx)
-                self.write_event(event, self.getLaps())
+                time_ = self.getLaps()
+            """
 
-            if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE] in (cfg.IMAGES):
-                event = self.full_event(ethogram_idx)
+            # IMAGES
+            if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE] == cfg.IMAGES:
                 event[cfg.IMAGE_INDEX] = self.image_idx + 1
                 event[cfg.IMAGE_PATH] = self.images_list[self.image_idx]
 
-                if (
-                    self.pj[cfg.OBSERVATIONS][self.observationId][cfg.USE_EXIF_DATE]
-                    and self.extract_exif_DateTimeOriginal(self.images_list[self.image_idx]) != -1
-                ):
-                    self.write_event(
-                        event,
-                        self.extract_exif_DateTimeOriginal(self.images_list[self.image_idx]) - self.image_time_ref,
-                    )
-                else:
-                    self.write_event(event, dec("NaN"))
+            self.write_event(event, self.getLaps())
 
     def actionUser_guide_triggered(self):
         """
@@ -3405,6 +3400,12 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 return
 
             event = self.full_event(behavior_idx)
+
+            # IMAGES
+            if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE] == cfg.IMAGES:
+                event[cfg.IMAGE_INDEX] = self.image_idx + 1
+                event[cfg.IMAGE_PATH] = self.images_list[self.image_idx]
+
             self.write_event(event, self.getLaps())
 
     def keypress_signal_from_behaviors_coding_map(self, event):
@@ -3905,11 +3906,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         # add time offset if not from editing
         if not editing_event:
 
-            """
-            if self.playerType == cfg.IMAGES:
-                mem_time = dec(round(mem_time + 1))
-            """
-
             # add offset
             if self.playerType in (cfg.MEDIA, cfg.LIVE):
                 mem_time += dec(self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TIME_OFFSET]).quantize(dec(".001"))
@@ -3917,6 +3913,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         # remove key code from modifiers
         subject = event.get(cfg.SUBJECT, self.currentSubject)
         comment = event.get(cfg.COMMENT, "")
+
         if self.playerType == cfg.IMAGES:
             image_idx = event.get(cfg.IMAGE_INDEX, "")
             image_path = event.get(cfg.IMAGE_PATH, "")
@@ -4091,6 +4088,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         # add event to pj
         if editing_event:  # modifying event
+
             if self.playerType in (cfg.MEDIA, cfg.LIVE):
                 self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS][event["row"]] = [
                     mem_time,
@@ -4099,6 +4097,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     modifier_str,
                     comment,
                 ]
+
             elif self.playerType == cfg.IMAGES:
                 self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS][event["row"]] = [
                     mem_time,
@@ -4127,6 +4126,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS].append(
                     [mem_time, subject, event[cfg.BEHAVIOR_CODE], modifier_str, comment, image_idx, image_path]
                 )
+                # order by image index ASC
                 self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS].sort(
                     key=lambda x: x[cfg.PJ_OBS_FIELDS[self.playerType][cfg.IMAGE_INDEX]]
                 )
@@ -4206,18 +4206,30 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 memLaps = dec(str(round(self.liveStartTime.msecsTo(now) / 1000, 3)))
                 return memLaps
             else:
-                return dec("0.0")
+                return dec(0)
 
         if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE] == cfg.IMAGES:
+
             if self.playerType in [cfg.VIEWER_IMAGES]:
                 return dec("NaN")
+
             if self.playerType == cfg.IMAGES:
-                return dec(self.image_idx + 1)
+                time_ = dec("NaN")
+                if (
+                    self.pj[cfg.OBSERVATIONS][self.observationId].get(cfg.USE_EXIF_DATE, False)
+                    and self.extract_exif_DateTimeOriginal(self.images_list[self.image_idx]) != -1
+                ):
+                    time_ = self.extract_exif_DateTimeOriginal(self.images_list[self.image_idx]) - self.image_time_ref
+
+                elif self.pj[cfg.OBSERVATIONS][self.observationId].get(cfg.TIME_LAPSE, 0):
+                    time_ = self.image_idx * self.pj[cfg.OBSERVATIONS][self.observationId].get(cfg.TIME_LAPSE, 0)
+
+                return dec(time_).quantize(dec("0.001"), rounding=ROUND_DOWN)
 
         if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE] == cfg.MEDIA:
 
             if self.playerType in [cfg.VIEWER_LIVE, cfg.VIEWER_MEDIA]:
-                return dec("0.0")
+                return dec(0)
 
             if self.playerType == cfg.MEDIA:
                 # cumulative time
@@ -4452,17 +4464,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 else:
                     memLaps = self.getLaps()
 
-        if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE] == cfg.MEDIA:
+        if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE] in (cfg.MEDIA, cfg.IMAGES):
             memLaps = self.getLaps()
-
-        if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE] == cfg.IMAGES:
-            if (
-                self.pj[cfg.OBSERVATIONS][self.observationId][cfg.USE_EXIF_DATE]
-                and self.extract_exif_DateTimeOriginal(self.images_list[self.image_idx]) != -1
-            ):
-                memLaps = self.extract_exif_DateTimeOriginal(self.images_list[self.image_idx]) - self.image_time_ref
-            else:
-                memLaps = dec("NaN")
 
         if memLaps is None:
             return

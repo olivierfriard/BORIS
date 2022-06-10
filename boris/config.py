@@ -174,6 +174,7 @@ OVERLAY = "video overlay"
 
 
 USE_EXIF_DATE = "use_exif_date"
+TIME_LAPSE = "time_lapse_delay"
 
 
 # fields for event configuration

@@ -718,7 +718,7 @@ def observed_interval(observation: dict) -> tuple:
 
 def observation_total_length(observation: dict) -> dec:
     """
-    Total length of media file(s) for observation
+    Total observation length
     tested
 
     media: if media length not available return 0
@@ -735,15 +735,28 @@ def observation_total_length(observation: dict) -> dec:
 
     """
 
+    if observation[cfg.TYPE] == cfg.IMAGES:
+        if observation[cfg.EVENTS]:
+            try:
+                first_event = obs_length = min(observation[cfg.EVENTS])[cfg.TW_OBS_FIELD[cfg.IMAGES]["time"]]
+                last_event = obs_length = max(observation[cfg.EVENTS])[cfg.TW_OBS_FIELD[cfg.IMAGES]["time"]]
+                obs_length = last_event - first_event
+            except Exception:
+                logging.critical(f"Length of observation from images not available")
+                obs_length = dec(-1)
+        else:
+            obs_length = dec(0)
+        return obs_length
+
     if observation[cfg.TYPE] == cfg.LIVE:
         if observation[cfg.EVENTS]:
             obs_length = max(observation[cfg.EVENTS])[cfg.EVENT_TIME_FIELD_IDX]
         else:
-            obs_length = dec("0.0")
+            obs_length = dec(0)
         return obs_length
 
     if observation[cfg.TYPE] == cfg.MEDIA:
-        media_max_total_length = dec("0.0")
+        media_max_total_length = dec(0)
 
         media_total_length = {}
 
@@ -751,7 +764,7 @@ def observation_total_length(observation: dict) -> dec:
             if not observation[cfg.FILE][nplayer]:
                 continue
 
-            media_total_length[nplayer] = dec("0.0")
+            media_total_length[nplayer] = dec(0)
             for mediaFile in observation[cfg.FILE][nplayer]:
                 mediaLength = 0
                 try:
@@ -764,7 +777,7 @@ def observation_total_length(observation: dict) -> dec:
                     break
 
         if -1 in [media_total_length[x] for x in media_total_length]:
-            return dec("-1")
+            return dec(-1)
 
         # totalMediaLength = max([total_media_length[x] for x in total_media_length])
 
@@ -778,7 +791,7 @@ def observation_total_length(observation: dict) -> dec:
 
     logging.critical("observation not LIVE nor MEDIA")
 
-    return dec("0.0")
+    return dec(0)
 
 
 def events_start_stop(ethogram: dict, events: list) -> list:

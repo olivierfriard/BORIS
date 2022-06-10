@@ -602,7 +602,7 @@ def synthetic_time_budget(pj: dict, selected_observations: list, parameters_obs:
 
 def time_budget_analysis(
     ethogram: dict, cursor, selected_observations: list, parameters: dict, by_category: bool = False
-):
+) -> tuple:
     """
     extract number of occurrences, total duration, mean ...
     if start_time = 0 and end_time = 0 all events are extracted
@@ -950,8 +950,8 @@ def time_budget_analysis(
     for subject in parameters[cfg.SELECTED_SUBJECTS]:
         for behavior in parameters[cfg.SELECTED_BEHAVIORS]:
             for row in out:
-                if row["subject"] == subject and row["behavior"] == behavior:
+                if row[cfg.SUBJECT] == subject and row[cfg.BEHAVIOR_CODE] == behavior:
                     out_sorted.append(row)
 
     # http://stackoverflow.com/questions/673867/python-arbitrary-order-by
-    return out_sorted, categories
+    return (out_sorted, categories)

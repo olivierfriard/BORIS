@@ -24,6 +24,7 @@ Copyright 2012-2022 Olivier Friard
 import logging
 from decimal import Decimal as dec
 from decimal import InvalidOperation
+from decimal import ROUND_DOWN
 from . import config as cfg
 from . import utilities as util
 from . import dialog
@@ -55,10 +56,15 @@ def add_event(self):
         QMessageBox.warning(self, cfg.programName, "The ethogram is not set!")
         return
 
+    if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE] == cfg.IMAGES:
+        current_time = self.image_idx + 1
+    else:
+        current_time = self.getLaps()
+
     editWindow = DlgEditEvent(
         observation_type=self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE],
         time_value=0,
-        current_time=self.getLaps(),
+        current_time=current_time,
         time_format=self.timeFormat,
         show_set_current_time=True,
     )
@@ -104,7 +110,7 @@ def add_event(self):
             self.show_current_states_in_subjects_table()
 
         # IMAGES
-        if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE] in (cfg.IMAGES):
+        if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE] == cfg.IMAGES:
             new_index = editWindow.img_idx_widget.value()
 
             for idx in self.pj[cfg.ETHOGRAM]:
@@ -119,7 +125,17 @@ def add_event(self):
                     event[cfg.IMAGE_PATH] = self.images_list[new_index]
                     event[cfg.IMAGE_INDEX] = new_index
 
-                    self.write_event(event, dec("NaN"))
+                    time_ = dec("NaN")
+                    if (
+                        self.pj[cfg.OBSERVATIONS][self.observationId].get(cfg.USE_EXIF_DATE, False)
+                        and self.extract_exif_DateTimeOriginal(self.images_list[new_index]) != -1
+                    ):
+                        time_ = self.extract_exif_DateTimeOriginal(self.images_list[new_index]) - self.image_time_ref
+
+                    elif self.pj[cfg.OBSERVATIONS][self.observationId].get(cfg.TIME_LAPSE, 0):
+                        time_ = new_index * self.pj[cfg.OBSERVATIONS][self.observationId].get(cfg.TIME_LAPSE, 0)
+
+                    self.write_event(event, dec(time_).quantize(dec("0.001"), rounding=ROUND_DOWN))
                     break
 
     if self.pause_before_addevent:
@@ -466,7 +482,7 @@ def edit_event(self):
 
     twEvents_row = self.twEvents.selectedItems()[0].row()
 
-    if self.playerType in [cfg.MEDIA, cfg.LIVE, cfg.VIEWER_MEDIA, cfg.VIEWER_LIVE]:
+    if self.playerType in (cfg.MEDIA, cfg.LIVE, cfg.VIEWER_MEDIA, cfg.VIEWER_LIVE):
         tsb_to_edit = [
             util.time2seconds(self.twEvents.item(twEvents_row, cfg.EVENT_TIME_FIELD_IDX).text())
             if self.timeFormat == cfg.HHMMSS
@@ -520,10 +536,15 @@ def edit_event(self):
         )
         return
 
+    if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE] == cfg.IMAGES:
+        current_time = self.image_idx + 1
+    else:
+        current_time = self.getLaps()
+
     editWindow = DlgEditEvent(
         observation_type=self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE],
         time_value=value,
-        current_time=self.getLaps(),
+        current_time=current_time,
         time_format=self.timeFormat,
         show_set_current_time=True,
     )

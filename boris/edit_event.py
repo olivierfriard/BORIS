@@ -69,7 +69,10 @@ class DlgEditEvent(QDialog, Ui_Form):
 
             self.horizontalLayout_2.insertWidget(0, self.time_widget)
 
-        if observation_type in (cfg.IMAGES):
+        print(observation_type)
+        if observation_type == cfg.IMAGES:
+            self.label.setText("Image index")
+            self.pb_set_to_current_time.setText("Set to current image index")
             self.img_idx_widget = QSpinBox()
             self.img_idx_widget.setValue(self.time_value)
 

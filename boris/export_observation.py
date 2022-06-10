@@ -281,7 +281,9 @@ def export_events_jwatcher(
     return True, ""
 
 
-def export_events(parameters, obsId, observation, ethogram, file_name, output_format):
+def export_events(
+    parameters, obsId: str, observation: dict, ethogram: dict, file_name: str, output_format: str
+) -> tuple:
     """
     export events
 
@@ -301,7 +303,6 @@ def export_events(parameters, obsId, observation, ethogram, file_name, output_fo
     total_length = f"{project_functions.observation_total_length(observation):.3f}"
 
     eventsWithStatus = project_functions.events_start_stop(ethogram, observation[cfg.EVENTS])
-    print(eventsWithStatus)
 
     # check max number of modifiers
     max_modifiers = 0
@@ -311,7 +312,7 @@ def export_events(parameters, obsId, observation, ethogram, file_name, output_fo
 
     # media file number
     mediaNb = 0
-    if observation["type"] == cfg.MEDIA:
+    if observation[cfg.TYPE] == cfg.MEDIA:
         for player in observation[cfg.FILE]:
             mediaNb += len(observation[cfg.FILE][player])
 
@@ -322,33 +323,37 @@ def export_events(parameters, obsId, observation, ethogram, file_name, output_fo
     rows.append([""])
 
     # media file name
-    if observation["type"] in [cfg.MEDIA]:
+    if observation[cfg.TYPE] == cfg.MEDIA:
         rows.append(["Media file(s)"])
-    elif observation["type"] in [cfg.LIVE]:
+    elif observation[cfg.TYPE] == cfg.LIVE:
         rows.append(["Live observation"])
+    elif observation[cfg.TYPE] == cfg.IMAGES:
+        rows.append(["From directories of images"])
     else:
-        rows.append(["?"])
+        rows.append([""])
     rows.append([""])
 
-    if observation[cfg.TYPE] in [cfg.MEDIA]:
+    if observation[cfg.TYPE] == cfg.MEDIA:
         for player in sorted(list(observation[cfg.FILE].keys())):
             for media in observation[cfg.FILE][player]:
                 rows.append([f"Player #{player}", media])
+
+    if observation[cfg.TYPE] == cfg.IMAGES:
+        for dir in observation[cfg.DIRECTORIES_LIST]:
+            rows.append([f"Directory", dir])
+
     rows.append([""])
 
     # date
-    if "date" in observation:
-        rows.append(["Observation date", observation["date"].replace("T", " ")])
+    rows.append(["Observation date", observation.get("date", "").replace("T", " ")])
     rows.append([""])
 
     # description
-    if "description" in observation:
-        rows.append(["Description", util.eol2space(observation["description"])])
+    rows.append(["Description", util.eol2space(observation.get("description", ""))])
     rows.append([""])
 
     # time offset
-    if "time offset" in observation:
-        rows.append(["Time offset (s)", observation["time offset"]])
+    rows.append(["Time offset (s)", observation.get(cfg.TIME_OFFSET, 0)])
     rows.append([""])
 
     # independent variables
@@ -363,7 +368,21 @@ def export_events(parameters, obsId, observation, ethogram, file_name, output_fo
     # write table header
     col = 0
     header = ["Time"]
-    header.extend(["Media file path", "Total length", "FPS"])
+    if observation[cfg.TYPE] == cfg.MEDIA:
+        header.extend(["Media file path", "Total length", "FPS"])
+    if observation[cfg.TYPE] == cfg.IMAGES:
+        header.extend(
+            [
+                "Image file path",
+                "Image index",
+            ]
+        )
+    if observation[cfg.TYPE] == cfg.LIVE:
+        header.extend(
+            [
+                "Total length",
+            ]
+        )
 
     header.extend(["Subject", "Behavior", "Behavioral category"])
 
@@ -376,10 +395,10 @@ def export_events(parameters, obsId, observation, ethogram, file_name, output_fo
     rows.append(header)
 
     duration1 = []  # in seconds
-    if observation["type"] in [cfg.MEDIA]:
+    if observation[cfg.TYPE] == cfg.MEDIA:
         try:
             for mediaFile in observation[cfg.FILE][cfg.PLAYER1]:
-                duration1.append(observation[cfg.MEDIA_INFO]["length"][mediaFile])
+                duration1.append(observation[cfg.MEDIA_INFO][cfg.LENGTH][mediaFile])
         except KeyError:
             pass
 
@@ -392,7 +411,7 @@ def export_events(parameters, obsId, observation, ethogram, file_name, output_fo
             fields = []
             fields.append(util.intfloatstr(str(event[cfg.EVENT_TIME_FIELD_IDX])))
 
-            if observation["type"] in [cfg.MEDIA]:
+            if observation[cfg.TYPE] == cfg.MEDIA:
 
                 time_ = event[cfg.EVENT_TIME_FIELD_IDX] - observation[cfg.TIME_OFFSET]
                 if time_ < 0:
@@ -405,33 +424,36 @@ def export_events(parameters, obsId, observation, ethogram, file_name, output_fo
                     # FPS
                     try:
                         fields.append(
-                            observation[cfg.MEDIA_INFO]["fps"][observation[cfg.FILE][cfg.PLAYER1][mediaFileIdx]]
+                            observation[cfg.MEDIA_INFO][cfg.FPS][observation[cfg.FILE][cfg.PLAYER1][mediaFileIdx]]
                         )  # fps
                     except KeyError:
-                        fields.append("NA")
+                        fields.append(cfg.NA)
                 else:
-                    fields.append("NA")  # media file
-                    fields.append("NA")  # FPS
+                    fields.append(cfg.NA)  # media file
+                    fields.append(cfg.NA)  # FPS
 
-            if observation["type"] in [cfg.LIVE]:
-                fields.append(cfg.LIVE)  # media
+            if observation[cfg.TYPE] == cfg.LIVE:
                 fields.append(total_length)  # total length
-                fields.append("NA")  # FPS
 
-            fields.append(event[cfg.EVENT_SUBJECT_FIELD_IDX])
-            fields.append(event[cfg.EVENT_BEHAVIOR_FIELD_IDX])
+            if observation[cfg.TYPE] == cfg.IMAGES:
+                print(cfg.PJ_EVENTS_FIELDS)
+                fields.append(event[cfg.PJ_OBS_FIELDS[cfg.IMAGES][cfg.IMAGE_PATH]])  # image file path
+                fields.append(event[cfg.PJ_OBS_FIELDS[cfg.IMAGES][cfg.IMAGE_INDEX]])  # image file index
+
+            fields.append(event[cfg.PJ_OBS_FIELDS[observation[cfg.TYPE]][cfg.SUBJECT]])
+            fields.append(event[cfg.PJ_OBS_FIELDS[observation[cfg.TYPE]][cfg.BEHAVIOR_CODE]])
 
             # behavioral category
 
             try:
-                behav_category = behavioral_category[event[cfg.EVENT_BEHAVIOR_FIELD_IDX]]
+                behav_category = behavioral_category[event[cfg.PJ_OBS_FIELDS[observation[cfg.TYPE]][cfg.BEHAVIOR_CODE]]]
             except Exception:
                 behav_category = ""
             fields.append(behav_category)
 
             # modifiers
             if max_modifiers:
-                modifiers = event[cfg.EVENT_MODIFIER_FIELD_IDX].split("|")
+                modifiers = event[cfg.PJ_OBS_FIELDS[observation[cfg.TYPE]][cfg.MODIFIER]].split("|")
                 while len(modifiers) < max_modifiers:
                     modifiers.append("")
 
@@ -439,7 +461,7 @@ def export_events(parameters, obsId, observation, ethogram, file_name, output_fo
                     fields.append(m)
 
             # comment
-            fields.append(event[cfg.EVENT_COMMENT_FIELD_IDX].replace(os.linesep, " "))
+            fields.append(event[cfg.PJ_OBS_FIELDS[observation[cfg.TYPE]][cfg.COMMENT]].replace(os.linesep, " "))
             # status
             fields.append(event[-1])
 
@@ -449,14 +471,6 @@ def export_events(parameters, obsId, observation, ethogram, file_name, output_fo
     data = tablib.Dataset()
 
     data.title = util.safe_xl_worksheet_title(obsId, output_format)
-    """
-    if output_format in ["xls", "xlsx"]:
-        for forbidden_char in EXCEL_FORBIDDEN_CHARACTERS:
-            data.title = data.title.replace(forbidden_char, " ")
-        if output_format in ["xls"]:
-            if len(data.title) > 31:
-                data.title = data.title[0:31]
-    """
 
     for row in rows:
         data.append(util.complete(row, maxLen))
@@ -549,24 +563,25 @@ def export_aggregated_events(pj: dict, parameters: dict, obsId: str):
     observation = pj[cfg.OBSERVATIONS][obsId]
 
     # obs description
-    obs_description = observation["description"]
+    obs_description = observation[cfg.DESCRIPTION]
 
     duration1 = []  # in seconds
-    if observation[cfg.TYPE] in [cfg.MEDIA]:
+    if observation[cfg.TYPE] == cfg.MEDIA:
         try:
             for mediaFile in observation[cfg.FILE][cfg.PLAYER1]:
                 if cfg.MEDIA_INFO in observation:
-                    duration1.append(observation[cfg.MEDIA_INFO]["length"][mediaFile])
+                    duration1.append(observation[cfg.MEDIA_INFO][cfg.LENGTH][mediaFile])
         except Exception:
             duration1 = []
 
     obs_length = project_functions.observation_total_length(pj[cfg.OBSERVATIONS][obsId])
-    if obs_length == Decimal("-1"):  # media length not available
+    if obs_length == Decimal(-1):  # media length not available
         interval = cfg.TIME_EVENTS
 
+    print(f"{interval=}")
     logging.debug(f"obs_length: {obs_length}")
 
-    ok, msg, connector = db_functions.load_aggregated_events_in_db(
+    _, _, connector = db_functions.load_aggregated_events_in_db(
         pj, parameters[cfg.SELECTED_SUBJECTS], [obsId], parameters[cfg.SELECTED_BEHAVIORS]
     )
     if connector is None:
@@ -667,7 +682,7 @@ def export_aggregated_events(pj: dict, parameters: dict, obsId: str):
 
                 for row in rows:
 
-                    if observation[cfg.TYPE] in [cfg.MEDIA]:
+                    if observation[cfg.TYPE] == cfg.MEDIA:
                         if duration1:
                             mediaFileIdx = [
                                 idx1 for idx1, _ in enumerate(duration1) if row["start"] >= sum(duration1[0:idx1])
@@ -689,8 +704,12 @@ def export_aggregated_events(pj: dict, parameters: dict, obsId: str):
                                 mediaFileString = cfg.NA
                             fpsString = cfg.NA
 
-                    if observation[cfg.TYPE] in [cfg.LIVE]:
+                    if observation[cfg.TYPE] == cfg.LIVE:
                         mediaFileString = "LIVE"
+                        fpsString = cfg.NA
+
+                    if observation[cfg.TYPE] == cfg.IMAGES:
+                        mediaFileString = "IMAGES"
                         fpsString = cfg.NA
 
                     if row["type"] == cfg.POINT:
@@ -731,7 +750,7 @@ def export_aggregated_events(pj: dict, parameters: dict, obsId: str):
                                 cfg.POINT,
                                 f"{row['start']:.3f}",  # start
                                 f"{row['stop']:.3f}",  # stop
-                                "NA",  # duration
+                                cfg.NA,  # duration
                                 row["comment"],
                                 "",
                             ]

@@ -24,7 +24,6 @@ import datetime
 import logging
 import os
 import re
-import sys
 import tablib
 import pathlib as pl
 
@@ -53,7 +52,7 @@ def export_events_as_behavioral_sequences(self, separated_subjects=False, timed=
     """
 
     # ask user for observations to analyze
-    result, selected_observations = select_observations.select_observations(
+    _, selected_observations = select_observations.select_observations(
         self.pj, cfg.MULTIPLE, "Select observations to export as behavioral sequences"
     )
 
@@ -229,9 +228,6 @@ def export_tabular_events(self, mode: str = "tabular"):
     mem_command = ""  # remember user choice when file already exists
     for obsId in selectedObservations:
         if len(selectedObservations) > 1 or mode == "jwatcher":
-            """
-            fileName = str(pathlib.Path(pathlib.Path(exportDir) / safeFileName(obsId)).with suffix("." + outputFormat))
-            """
             fileName = f"{pl.Path(exportDir) / util.safeFileName(obsId)}.{outputFormat}"
             # check if file with new extension already exists
             if mem_command != "Overwrite all" and pl.Path(fileName).is_file():
@@ -266,7 +262,7 @@ def export_aggregated_events(self):
     Formats can be SQL (sql), SDIS (sds) or Tabular format (tsv, csv, ods, xlsx, xls, html)
     """
 
-    result, selectedObservations = select_observations.select_observations(
+    _, selectedObservations = select_observations.select_observations(
         self.pj, cfg.MULTIPLE, "Select observations for exporting events"
     )
     if not selectedObservations:
