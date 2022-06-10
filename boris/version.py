@@ -19,5 +19,5 @@ This file is part of BORIS.
   along with this program; if not see <http://www.gnu.org/licenses/>.
 """
 
-__version__ = "7.13.6"
-__version_date__ = "2022-05-18"
+__version__ = "7.13.7"
+__version_date__ = "2022-06-10"
