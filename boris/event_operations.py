@@ -611,6 +611,7 @@ def edit_event(self):
 
         self.projectChanged = True
 
+        # MEDIA / LIVE
         if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE] in (cfg.MEDIA, cfg.LIVE):
 
             newTime = editWindow.time_widget.get_time()
@@ -639,6 +640,7 @@ def edit_event(self):
             self.lbCurrentStates.setText(", ".join(self.currentStates[subject_idx]))
             self.show_current_states_in_subjects_table()
 
+        # IMAGES
         if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE] in (cfg.IMAGES):
             new_index = editWindow.img_idx_widget.value()
 
@@ -655,7 +657,18 @@ def edit_event(self):
                     event[cfg.IMAGE_PATH] = self.images_list[new_index]
                     event[cfg.IMAGE_INDEX] = new_index
 
-                    self.write_event(event, dec("NaN"))
+                    time_ = dec("NaN")
+                    if (
+                        self.pj[cfg.OBSERVATIONS][self.observationId].get(cfg.USE_EXIF_DATE, False)
+                        and self.extract_exif_DateTimeOriginal(self.images_list[new_index]) != -1
+                    ):
+                        time_ = self.extract_exif_DateTimeOriginal(self.images_list[new_index]) - self.image_time_ref
+
+                    elif self.pj[cfg.OBSERVATIONS][self.observationId].get(cfg.TIME_LAPSE, 0):
+                        time_ = new_index * self.pj[cfg.OBSERVATIONS][self.observationId].get(cfg.TIME_LAPSE, 0)
+
+                    self.write_event(event, dec(time_).quantize(dec("0.001"), rounding=ROUND_DOWN))
+
                     break
 
 

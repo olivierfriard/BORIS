@@ -4097,6 +4097,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     modifier_str,
                     comment,
                 ]
+                # order by image index ASC
+                self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS].sort()
 
             elif self.playerType == cfg.IMAGES:
                 self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS][event["row"]] = [
@@ -4108,6 +4110,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     image_idx,
                     image_path,
                 ]
+                # order by image index ASC
+                self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS].sort(
+                    key=lambda x: x[cfg.PJ_OBS_FIELDS[self.playerType][cfg.IMAGE_INDEX]]
+                )
 
         else:  # add event
             if self.playerType in (cfg.MEDIA, cfg.LIVE):
@@ -4222,7 +4228,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     time_ = self.extract_exif_DateTimeOriginal(self.images_list[self.image_idx]) - self.image_time_ref
 
                 elif self.pj[cfg.OBSERVATIONS][self.observationId].get(cfg.TIME_LAPSE, 0):
-                    time_ = self.image_idx * self.pj[cfg.OBSERVATIONS][self.observationId].get(cfg.TIME_LAPSE, 0)
+                    time_ = (self.image_idx + 1) * self.pj[cfg.OBSERVATIONS][self.observationId].get(cfg.TIME_LAPSE, 0)
 
                 return dec(time_).quantize(dec("0.001"), rounding=ROUND_DOWN)
 
