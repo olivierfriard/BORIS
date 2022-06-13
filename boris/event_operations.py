@@ -607,69 +607,90 @@ def edit_event(self):
         self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS][row][cfg.EVENT_COMMENT_FIELD_IDX]
     )
 
-    if editWindow.exec_():  # button OK
+    flag_ok = False  # for looping until event is OK or Cancel pressed
+    while True:
+        if editWindow.exec_():  # button OK
 
-        self.projectChanged = True
+            self.projectChanged = True
 
-        # MEDIA / LIVE
-        if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE] in (cfg.MEDIA, cfg.LIVE):
+            # MEDIA / LIVE
+            if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE] in (cfg.MEDIA, cfg.LIVE):
 
-            newTime = editWindow.time_widget.get_time()
-            for key in self.pj[cfg.ETHOGRAM]:
-                if self.pj[cfg.ETHOGRAM][key][cfg.BEHAVIOR_CODE] == editWindow.cobCode.currentText():
-                    event = self.full_event(key)
-                    event[cfg.SUBJECT] = editWindow.cobSubject.currentText()
-                    event[cfg.COMMENT] = editWindow.leComment.toPlainText()
-                    event["row"] = row
-                    event["original_modifiers"] = self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS][row][
-                        cfg.PJ_OBS_FIELDS[self.playerType][cfg.MODIFIER]
-                    ]
+                newTime = editWindow.time_widget.get_time()
+                for key in self.pj[cfg.ETHOGRAM]:
+                    if self.pj[cfg.ETHOGRAM][key][cfg.BEHAVIOR_CODE] == editWindow.cobCode.currentText():
+                        event = self.full_event(key)
+                        event[cfg.SUBJECT] = editWindow.cobSubject.currentText()
+                        event[cfg.COMMENT] = editWindow.leComment.toPlainText()
+                        event["row"] = row
+                        event["original_modifiers"] = self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS][row][
+                            cfg.PJ_OBS_FIELDS[self.playerType][cfg.MODIFIER]
+                        ]
 
-                    self.write_event(event, newTime)
-                    break
+                        r = self.write_event(event, newTime)
+                        if r == 1:  # same event already present
+                            continue
+                        if not r:
+                            flag_ok = True
+                        break
 
-            # update subjects table
-            self.currentStates = util.get_current_states_modifiers_by_subject(
-                util.state_behavior_codes(self.pj[cfg.ETHOGRAM]),
-                self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS],
-                dict(self.pj[cfg.SUBJECTS], **{"": {"name": ""}}),  # add no focal subject
-                newTime,
-                include_modifiers=True,
-            )
-            subject_idx = self.subject_name_index[self.currentSubject] if self.currentSubject else ""
-            self.lbCurrentStates.setText(", ".join(self.currentStates[subject_idx]))
-            self.show_current_states_in_subjects_table()
+                # update subjects table
+                self.currentStates = util.get_current_states_modifiers_by_subject(
+                    util.state_behavior_codes(self.pj[cfg.ETHOGRAM]),
+                    self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS],
+                    dict(self.pj[cfg.SUBJECTS], **{"": {"name": ""}}),  # add no focal subject
+                    newTime,
+                    include_modifiers=True,
+                )
+                subject_idx = self.subject_name_index[self.currentSubject] if self.currentSubject else ""
+                self.lbCurrentStates.setText(", ".join(self.currentStates[subject_idx]))
+                self.show_current_states_in_subjects_table()
 
-        # IMAGES
-        if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE] in (cfg.IMAGES):
-            new_index = editWindow.img_idx_widget.value()
+            # IMAGES
+            if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE] in (cfg.IMAGES):
+                new_index = editWindow.img_idx_widget.value()
 
-            for key in self.pj[cfg.ETHOGRAM]:
-                if self.pj[cfg.ETHOGRAM][key][cfg.BEHAVIOR_CODE] == editWindow.cobCode.currentText():
-                    event = self.full_event(key)
-                    event[cfg.SUBJECT] = editWindow.cobSubject.currentText()
-                    event[cfg.COMMENT] = editWindow.leComment.toPlainText()
-                    event["row"] = row
-                    event["original_modifiers"] = self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS][row][
-                        cfg.PJ_OBS_FIELDS[self.playerType][cfg.MODIFIER]
-                    ]
+                for key in self.pj[cfg.ETHOGRAM]:
+                    if self.pj[cfg.ETHOGRAM][key][cfg.BEHAVIOR_CODE] == editWindow.cobCode.currentText():
+                        event = self.full_event(key)
+                        event[cfg.SUBJECT] = editWindow.cobSubject.currentText()
+                        event[cfg.COMMENT] = editWindow.leComment.toPlainText()
+                        event["row"] = row
+                        event["original_modifiers"] = self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS][row][
+                            cfg.PJ_OBS_FIELDS[self.playerType][cfg.MODIFIER]
+                        ]
 
-                    event[cfg.IMAGE_PATH] = self.images_list[new_index]
-                    event[cfg.IMAGE_INDEX] = new_index
+                        try:
+                            event[cfg.IMAGE_PATH] = self.images_list[new_index]
+                        except IndexError:
+                            event[cfg.IMAGE_PATH] = ""
+                        event[cfg.IMAGE_INDEX] = new_index
 
-                    time_ = dec("NaN")
-                    if (
-                        self.pj[cfg.OBSERVATIONS][self.observationId].get(cfg.USE_EXIF_DATE, False)
-                        and self.extract_exif_DateTimeOriginal(self.images_list[new_index]) != -1
-                    ):
-                        time_ = self.extract_exif_DateTimeOriginal(self.images_list[new_index]) - self.image_time_ref
+                        time_ = dec("NaN")
+                        if (
+                            self.pj[cfg.OBSERVATIONS][self.observationId].get(cfg.USE_EXIF_DATE, False)
+                            and self.extract_exif_DateTimeOriginal(self.images_list[new_index]) != -1
+                        ):
+                            time_ = (
+                                self.extract_exif_DateTimeOriginal(self.images_list[new_index]) - self.image_time_ref
+                            )
 
-                    elif self.pj[cfg.OBSERVATIONS][self.observationId].get(cfg.TIME_LAPSE, 0):
-                        time_ = new_index * self.pj[cfg.OBSERVATIONS][self.observationId].get(cfg.TIME_LAPSE, 0)
+                        elif self.pj[cfg.OBSERVATIONS][self.observationId].get(cfg.TIME_LAPSE, 0):
+                            time_ = new_index * self.pj[cfg.OBSERVATIONS][self.observationId].get(cfg.TIME_LAPSE, 0)
 
-                    self.write_event(event, dec(time_).quantize(dec("0.001"), rounding=ROUND_DOWN))
+                        r = self.write_event(event, dec(time_).quantize(dec("0.001"), rounding=ROUND_DOWN))
+                        print(f"{r=}")
 
-                    break
+                        if r == 1:  # same event already present
+                            continue
+                        if not r:
+                            flag_ok = True
+
+                        break
+        else:
+            flag_ok = True
+        if flag_ok:
+            break
 
 
 def edit_time_selected_events(self):

@@ -75,20 +75,27 @@ def select_observations(pj: dict, mode: str, windows_title: str = "") -> tuple:
         observed_interval_str = str(interval[1] - interval[0])
 
         # media
-        mediaList = []
-        if pj[cfg.OBSERVATIONS][obs][cfg.TYPE] in [cfg.MEDIA]:
+        media = ""
+        if pj[cfg.OBSERVATIONS][obs][cfg.TYPE] == cfg.MEDIA:
+            media_list = []
             if pj[cfg.OBSERVATIONS][obs][cfg.FILE]:
                 for player in sorted(pj[cfg.OBSERVATIONS][obs][cfg.FILE].keys()):
                     for media in pj[cfg.OBSERVATIONS][obs][cfg.FILE][player]:
-                        mediaList.append(f"#{player}: {media}")
+                        media_list.append(f"#{player}: {media}")
 
-            if len(mediaList) > 8:
-                media = " ".join(mediaList)
+            if len(media_list) > 8:
+                media = " ".join(media_list)
             else:
-                media = "\n".join(mediaList)
+                media = "\n".join(media_list)
 
-        elif pj[cfg.OBSERVATIONS][obs][cfg.TYPE] in [cfg.LIVE]:
+        if pj[cfg.OBSERVATIONS][obs][cfg.TYPE] == cfg.LIVE:
             media = cfg.LIVE
+
+        if pj[cfg.OBSERVATIONS][obs][cfg.TYPE] == cfg.IMAGES:
+            dir_list = []
+            for dir_path in pj[cfg.OBSERVATIONS][obs].get(cfg.DIRECTORIES_LIST, []):
+                dir_list.append(dir_path)
+            media = "; ".join(dir_list)
 
         # independent variables
         indepvar = []
@@ -104,6 +111,7 @@ def select_observations(pj: dict, mode: str, windows_title: str = "") -> tuple:
         if not ok:
             not_paired.append(obs)
 
+        # exaustivity
         if pj[cfg.OBSERVATIONS][obs][cfg.TYPE] in (cfg.MEDIA, cfg.LIVE):
             # check exhaustivity of observation
             exhaustivity = project_functions.check_observation_exhaustivity(

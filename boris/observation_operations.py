@@ -202,6 +202,9 @@ def load_observation(self, obs_id: str, mode: str = cfg.OBS_START) -> str:
 
     if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE] == cfg.IMAGES:
 
+        self.image_idx = 0
+        self.images_list = []
+
         if mode == cfg.OBS_START:
             self.playerType = cfg.IMAGES
             initialize_new_images_observation(self)

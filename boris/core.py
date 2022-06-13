@@ -2964,7 +2964,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         if not self.projectFileName:
             if not self.pj["project_name"]:
-                txt = "cfg.NONAME.boris"
+                txt = "NONAME.boris"
             else:
                 txt = self.pj["project_name"] + ".boris"
             os.chdir(os.path.expanduser("~"))
@@ -3872,7 +3872,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             """
             return (time, subject, code) in [
                 (
-                    x[cfg.PJ_OBS_FIELDS[self.pj[cfg.OBSERVATIONS][obs_id][cfg.TYPE]]["image index"]],
+                    x[cfg.PJ_OBS_FIELDS[self.pj[cfg.OBSERVATIONS][obs_id][cfg.TYPE]][cfg.IMAGE_INDEX]],
                     x[cfg.EVENT_SUBJECT_FIELD_IDX],
                     x[cfg.EVENT_BEHAVIOR_FIELD_IDX],
                 )
@@ -3893,6 +3893,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         """
 
+        print(f"{event=}")
+
         logging.debug(f"write event - event: {event}  memtime: {mem_time}")
 
         if event is None:
@@ -3907,19 +3909,21 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         if not editing_event:
 
             # add offset
-            if self.playerType in (cfg.MEDIA, cfg.LIVE):
+            if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE] in (cfg.MEDIA, cfg.LIVE):
                 mem_time += dec(self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TIME_OFFSET]).quantize(dec(".001"))
 
         # remove key code from modifiers
         subject = event.get(cfg.SUBJECT, self.currentSubject)
         comment = event.get(cfg.COMMENT, "")
 
-        if self.playerType == cfg.IMAGES:
+        if self.playerType in (cfg.IMAGES, cfg.VIEWER_IMAGES):
             image_idx = event.get(cfg.IMAGE_INDEX, "")
             image_path = event.get(cfg.IMAGE_PATH, "")
 
         # check if a same event is already in events list (time, subject, code)
-        if self.playerType in (cfg.MEDIA, cfg.LIVE):
+
+        if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE] in (cfg.MEDIA, cfg.LIVE):
+            # adding event
             if (not editing_event) and self.checkSameEvent(
                 self.observationId,
                 mem_time,
@@ -3929,9 +3933,25 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 _ = dialog.MessageDialog(
                     cfg.programName, "The same event already exists (same time, behavior code and subject).", [cfg.OK]
                 )
-                return
+                return 1
 
-        if self.playerType in (cfg.IMAGES):
+            # modifying event and time was changed
+            if editing_event and mem_time != self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS][event["row"]][0]:
+                if self.checkSameEvent(
+                    self.observationId,
+                    mem_time,
+                    subject,
+                    event[cfg.BEHAVIOR_CODE],
+                ):
+                    _ = dialog.MessageDialog(
+                        cfg.programName,
+                        "The same event already exists (same time, behavior code and subject).",
+                        [cfg.OK],
+                    )
+                return 1
+
+        if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE] == cfg.IMAGES:
+            # adding event
             if (not editing_event) and self.checkSameEvent(
                 self.observationId,
                 image_idx,
@@ -3943,7 +3963,28 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     "The same event already exists (same image index, behavior code and subject).",
                     [cfg.OK],
                 )
-                return
+                return 1
+
+            # modifying event and time was changed
+            if (
+                editing_event
+                and image_idx
+                != self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS][event["row"]][
+                    cfg.PJ_OBS_FIELDS[cfg.IMAGES][cfg.IMAGE_INDEX]
+                ]
+            ):
+                if self.checkSameEvent(
+                    self.observationId,
+                    image_idx,
+                    subject,
+                    event[cfg.BEHAVIOR_CODE],
+                ):
+                    _ = dialog.MessageDialog(
+                        cfg.programName,
+                        "The same event already exists (same image index, behavior code and subject).",
+                        [cfg.OK],
+                    )
+                    return 1
 
         if "from map" not in event:  # modifiers only for behaviors without coding map
             # check if event has modifiers
@@ -4083,13 +4124,13 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 ):
                     # add excluded state event to observations (= STOP them)
                     self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS].append(
-                        [mem_time, self.currentSubject, cs, cm[cs], ""]
+                        [mem_time - dec("0.001"), self.currentSubject, cs, cm[cs], ""]
                     )
 
         # add event to pj
         if editing_event:  # modifying event
 
-            if self.playerType in (cfg.MEDIA, cfg.LIVE):
+            if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE] in (cfg.MEDIA, cfg.LIVE):
                 self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS][event["row"]] = [
                     mem_time,
                     subject,
@@ -4100,7 +4141,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 # order by image index ASC
                 self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS].sort()
 
-            elif self.playerType == cfg.IMAGES:
+            elif self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE] == cfg.IMAGES:
                 self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS][event["row"]] = [
                     mem_time,
                     subject,
@@ -4116,7 +4157,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 )
 
         else:  # add event
-            if self.playerType in (cfg.MEDIA, cfg.LIVE):
+            if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE] in (cfg.MEDIA, cfg.LIVE):
                 """
                 # removed to use bisect
                 self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS].append(
@@ -4128,7 +4169,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     [mem_time, subject, event[cfg.BEHAVIOR_CODE], modifier_str, comment],
                 )
 
-            elif self.playerType == cfg.IMAGES:
+            elif self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE] == cfg.IMAGES:
                 self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS].append(
                     [mem_time, subject, event[cfg.BEHAVIOR_CODE], modifier_str, comment, image_idx, image_path]
                 )
@@ -4159,6 +4200,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 self.twEvents.scrollToItem(self.twEvents.item(position_in_events, 0), QAbstractItemView.EnsureVisible)
 
         self.projectChanged = True
+
+        return 0
 
     def fill_lwDetailed(self, obs_key, memLaps):
         """
