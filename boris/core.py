@@ -88,6 +88,7 @@ from . import core_qrc
 from .core_ui import Ui_MainWindow
 import exifread
 from . import config as cfg
+from . import video_operations
 
 from .project import *
 from . import utilities as util
@@ -168,6 +169,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     overlays = {}  # dict for storing video overlays
 
     undo_queue = deque()
+    undo_description = deque()
 
     saved_state = None
     user_move_slider = False
@@ -293,7 +295,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.toolBar.setEnabled(True)
 
         # start with dock widget invisible
-        for w in [self.dwObservations, self.dwEthogram, self.dwSubjects]:
+        for w in [self.dwEvents, self.dwEthogram, self.dwSubjects]:
             w.setVisible(False)
             w.keyPressEvent = self.keyPressEvent
 
@@ -350,7 +352,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         """
         allow to block Qdockwidgets on main window because they can have a strange behavior specially on Mac
         """
-        for w in [self.dwObservations, self.dwEthogram, self.dwSubjects]:
+        for w in [self.dwEvents, self.dwEthogram, self.dwSubjects]:
             if self.action_block_dockwidgets.isChecked():
                 w.setFloating(False)
                 w.setFeatures(QDockWidget.NoDockWidgetFeatures)
@@ -2729,9 +2731,17 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                         if field == cfg.TYPE:
                             item.setText(cfg.DEFAULT_BEHAVIOR_TYPE)
                         if field in newProjectWindow.pj[cfg.ETHOGRAM][i]:
-                            item.setText(str(newProjectWindow.pj[cfg.ETHOGRAM][i][field]))  # str for modifiers dict
+                            if field == "modifiers":
+                                item.setText(
+                                    json.dumps(newProjectWindow.pj[cfg.ETHOGRAM][i][field])
+                                    if newProjectWindow.pj[cfg.ETHOGRAM][i][field]
+                                    else ""
+                                )
+                            else:
+                                item.setText(newProjectWindow.pj[cfg.ETHOGRAM][i][field])
                         else:
                             item.setText("")
+                        # cell with gray background (not editable but double-click needed to change value)
                         if field in [cfg.TYPE, "category", "excluded", "coding map", "modifiers"]:
                             item.setFlags(Qt.ItemIsEnabled)
                             item.setBackground(QColor(230, 230, 230))
@@ -3893,15 +3903,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         """
 
-        print(f"{event=}")
-
         logging.debug(f"write event - event: {event}  memtime: {mem_time}")
 
         if event is None:
             return
-
-        # fill the undo list
-        event_operations.fill_events_undo_list(self)
 
         editing_event = "row" in event
 
@@ -4075,8 +4080,15 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             include_modifiers=False,
         )
 
-        logging.debug(f"self.currentSubject {self.currentSubject}")
-        logging.debug(f"current_states {current_states}")
+        # logging.debug(f"self.currentSubject {self.currentSubject}")
+        # logging.debug(f"current_states {current_states}")
+
+        # fill the undo list
+        event_operations.fill_events_undo_list(
+            self, "Undo last event edition" if editing_event else "Undo last event insertion"
+        )
+
+        logging.debug(f"save list of events for undo operation")
 
         if not editing_event:
             if self.currentSubject:
@@ -4106,8 +4118,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     if ev[cfg.EVENT_SUBJECT_FIELD_IDX] == self.currentSubject:
                         if ev[cfg.EVENT_BEHAVIOR_FIELD_IDX] == cs:
                             cm[cs] = ev[cfg.EVENT_MODIFIER_FIELD_IDX]
-
-            logging.debug(f"cm {cm}")
 
             for cs in csj:
                 # close state if same state without modifier
@@ -4422,19 +4432,19 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         # speed down
         if ek == Qt.Key_End:
             if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE] in [cfg.MEDIA]:
-                self.video_slower_activated()
+                video_operations.video_slower_activated(self)
             return
 
         # speed up
         if ek == Qt.Key_Home:
             if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE] in [cfg.MEDIA]:
-                self.video_faster_activated()
+                video_operations.video_faster_activated(self)
             return
 
         # speed normal
         if ek == Qt.Key_Backspace:
             if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE] in [cfg.MEDIA]:
-                self.video_normalspeed_activated()
+                video_operations.video_normalspeed_activated(self)
             return
 
         # play / pause with space bar
@@ -4521,14 +4531,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         # undo
         if ek == 90 and modifier == cfg.CTRL_KEY:
-            if len(self.undo_queue) == 0:
-                self.statusbar.showMessage(f"The Undo buffer is empty", 5000)
-                return
-            events = self.undo_queue.pop()
-            self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS] = events[:]
 
-            # reload all events in tw
-            self.load_tw_events(self.observationId)
+            event_operations.undo_event_operation(self)
 
             """
             position_in_events = [
@@ -4540,9 +4544,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             else:
                 self.twEvents.scrollToItem(self.twEvents.item(position_in_events, 0), QAbstractItemView.EnsureVisible)
             """
-            self.projectChanged = True
 
-            self.statusbar.showMessage(f"Last event removed", 5000)
             return
 
         if (

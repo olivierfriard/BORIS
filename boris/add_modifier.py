@@ -586,7 +586,7 @@ class addModifierDialog(QDialog, Ui_Dialog):
                 self.cbType.setCurrentIndex(self.modifiers_sets_dict[str(tabIndex)]["type"])
                 self.lwModifiers.addItems(self.modifiers_sets_dict[str(tabIndex)]["values"])
 
-    def getModifiers(self):
+    def getModifiers(self) -> str:
         """
         returns modifiers as string
         """
@@ -601,4 +601,4 @@ class addModifierDialog(QDialog, Ui_Dialog):
         for idx in keys_to_delete:
             del self.modifiers_sets_dict[idx]
 
-        return str(self.modifiers_sets_dict) if self.modifiers_sets_dict else ""
+        return json.dumps(self.modifiers_sets_dict) if self.modifiers_sets_dict else ""

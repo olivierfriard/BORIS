@@ -245,6 +245,7 @@
     <addaction name="actionAdd_event"/>
     <addaction name="actionEdit_selected_events"/>
     <addaction name="actionEdit_event_time"/>
+    <addaction name="actionUndo"/>
     <addaction name="separator"/>
     <addaction name="actionExplore_project"/>
     <addaction name="actionFind_events"/>
@@ -253,8 +254,8 @@
     <addaction name="actionClose_unpaired_events"/>
     <addaction name="actionSelect_observations"/>
     <addaction name="separator"/>
-    <addaction name="actionDelete_selected_observations"/>
-    <addaction name="actionDelete_all_observations"/>
+    <addaction name="actionDelete_selected_events"/>
+    <addaction name="actionDelete_all_events"/>
     <addaction name="separator"/>
     <addaction name="menuExport_events"/>
     <addaction name="separator"/>
@@ -483,7 +484,7 @@
     <bool>true</bool>
    </property>
   </widget>
-  <widget class="QDockWidget" name="dwObservations">
+  <widget class="QDockWidget" name="dwEvents">
    <property name="focusPolicy">
     <enum>Qt::NoFocus</enum>
    </property>
@@ -663,12 +664,12 @@
     <string>Load configuration</string>
    </property>
   </action>
-  <action name="actionDelete_selected_observations">
+  <action name="actionDelete_selected_events">
    <property name="text">
     <string>Delete selected events</string>
    </property>
   </action>
-  <action name="actionDelete_all_observations">
+  <action name="actionDelete_all_events">
    <property name="text">
     <string>Delete all events</string>
    </property>
@@ -1453,6 +1454,11 @@
   <action name="action_latency">
    <property name="text">
     <string>Latency</string>
+   </property>
+  </action>
+  <action name="actionUndo">
+   <property name="text">
+    <string>Undo</string>
    </property>
   </action>
  </widget>

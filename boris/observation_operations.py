@@ -211,7 +211,7 @@ def load_observation(self, obs_id: str, mode: str = cfg.OBS_START) -> str:
 
         if mode == cfg.VIEW:
             self.playerType = cfg.VIEWER_IMAGES
-            self.dwObservations.setVisible(True)
+            self.dwEvents.setVisible(True)
 
     if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE] == cfg.LIVE:
 
@@ -220,7 +220,7 @@ def load_observation(self, obs_id: str, mode: str = cfg.OBS_START) -> str:
 
         if mode == cfg.VIEW:
             self.playerType = cfg.VIEWER_LIVE
-            self.dwObservations.setVisible(True)
+            self.dwEvents.setVisible(True)
 
     if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE] == cfg.MEDIA:
 
@@ -233,13 +233,13 @@ def load_observation(self, obs_id: str, mode: str = cfg.OBS_START) -> str:
 
         if mode == cfg.VIEW:
             self.playerType = cfg.VIEWER_MEDIA
-            self.dwObservations.setVisible(True)
+            self.dwEvents.setVisible(True)
 
     self.load_tw_events(self.observationId)
 
     menu_options.update_menu(self)
     # title of dock widget  “  ”
-    self.dwObservations.setWindowTitle(f"Events for “{self.observationId}” observation")
+    self.dwEvents.setWindowTitle(f"Events for “{self.observationId}” observation")
 
     logging.debug(f"end load observation")
     return ""
@@ -876,7 +876,7 @@ def new_observation(self, mode=cfg.NEW, obsId=""):
             self.observationId = new_obs_id
 
             # title of dock widget
-            self.dwObservations.setWindowTitle(f"Events for “{self.observationId}“ observation")
+            self.dwEvents.setWindowTitle(f"Events for “{self.observationId}“ observation")
 
             if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE] == cfg.LIVE:
                 self.playerType = cfg.LIVE
@@ -1021,7 +1021,7 @@ def close_observation(self):
 
     self.statusbar.showMessage("", 0)
 
-    self.dwObservations.setVisible(False)
+    self.dwEvents.setVisible(False)
 
     self.w_obs_info.setVisible(False)
 
@@ -1053,7 +1053,7 @@ def initialize_new_observation_media(self):
 
     logging.debug("function: initialize new observation for media file(s)")
 
-    for dw in [self.dwEthogram, self.dwSubjects, self.dwObservations]:
+    for dw in [self.dwEthogram, self.dwSubjects, self.dwEvents]:
         dw.setVisible(True)
 
     ok, msg = project_functions.check_if_media_available(
@@ -1449,7 +1449,7 @@ def initialize_new_live_observation(self):
     font.setPointSize(48)
     self.lb_current_media_time.setFont(font)
 
-    for dw in [self.dwEthogram, self.dwSubjects, self.dwObservations]:
+    for dw in [self.dwEthogram, self.dwSubjects, self.dwEvents]:
         dw.setVisible(True)
 
     self.w_live.setVisible(True)  # button start
@@ -1498,7 +1498,7 @@ def initialize_new_images_observation(self):
     initialize a new observation from directories of images
     """
 
-    for dw in [self.dwEthogram, self.dwSubjects, self.dwObservations]:
+    for dw in [self.dwEthogram, self.dwSubjects, self.dwEvents]:
         dw.setVisible(True)
     self.w_live.setVisible(False)  # button start
 

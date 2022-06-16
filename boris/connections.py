@@ -84,6 +84,8 @@ def connections(self):
 
     self.actionAdd_event.triggered.connect(lambda: event_operations.add_event(self))
     self.actionEdit_event.triggered.connect(lambda: event_operations.edit_event(self))
+    self.actionUndo.setEnabled(False)
+    self.actionUndo.triggered.connect(lambda: event_operations.undo_event_operation(self))
     self.actionFilter_events.triggered.connect(lambda: event_operations.filter_events(self))
     self.actionShow_all_events.triggered.connect(lambda: event_operations.show_all_events(self))
 
@@ -109,8 +111,8 @@ def connections(self):
     self.actionExplore_project.triggered.connect(self.explore_project)
     self.actionFind_events.triggered.connect(lambda: event_operations.find_events(self))
     self.actionFind_replace_events.triggered.connect(self.find_replace_events)
-    self.actionDelete_all_observations.triggered.connect(lambda: event_operations.delete_all_events(self))
-    self.actionDelete_selected_observations.triggered.connect(lambda: event_operations.delete_selected_events(self))
+    self.actionDelete_all_events.triggered.connect(lambda: event_operations.delete_all_events(self))
+    self.actionDelete_selected_events.triggered.connect(lambda: event_operations.delete_selected_events(self))
 
     self.actionMedia_file_information.triggered.connect(lambda: media_file.get_info(self))
 
@@ -300,8 +302,8 @@ def connections(self):
     separator2.setSeparator(True)
     self.twEvents.addAction(separator2)
 
-    self.twEvents.addAction(self.actionDelete_selected_observations)
-    self.twEvents.addAction(self.actionDelete_all_observations)
+    self.twEvents.addAction(self.actionDelete_selected_events)
+    # self.twEvents.addAction(self.actionDelete_all_events)
 
     # Actions for twSubjects context menu
     self.actionDeselectCurrentSubject.triggered.connect(lambda: self.update_subject(""))

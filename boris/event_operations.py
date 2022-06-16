@@ -181,26 +181,61 @@ def filter_events(self):
     logging.debug(f"self.filtered_behaviors: {self.filtered_behaviors}")
 
     self.load_tw_events(self.observationId)
-    self.dwObservations.setWindowTitle(f"Events for “{self.observationId}” observation (filtered)")
+    self.dwEvents.setWindowTitle(f"Events for “{self.observationId}” observation (filtered)")
 
 
-def show_all_events(self):
+def show_all_events(self) -> None:
     """
     show all events (disable filter)
     """
     self.filtered_subjects = []
     self.filtered_behaviors = []
     self.load_tw_events(self.observationId)
-    self.dwObservations.setWindowTitle(f"Events for “{self.observationId}” observation")
+    self.dwEvents.setWindowTitle(f"Events for “{self.observationId}” observation")
 
 
-def fill_events_undo_list(self):
+def fill_events_undo_list(self, operation_description: str) -> None:
     """
     fill the undo events list for Undo function (CTRL + Z)
     """
     self.undo_queue.append(self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS][:])
+    self.undo_description.append(operation_description)
+
+    self.actionUndo.setText(operation_description)
+    self.actionUndo.setEnabled(True)
+
+    logging.debug(f"{operation_description} added to undo events list")
+
     if len(self.undo_queue) > cfg.MAX_UNDO_QUEUE:
         self.undo_queue.popleft()
+        self.undo_description.popleft()
+        logging.debug(f"Max events undo ")
+
+
+def undo_event_operation(self) -> None:
+    """
+    undo operation on event(s)
+    """
+    if len(self.undo_queue) == 0:
+        self.statusbar.showMessage(f"The Undo buffer is empty", 5000)
+        return
+    events = self.undo_queue.pop()
+    operation_description = self.undo_description.pop()
+    self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS] = events[:]
+    self.projectChanged = True
+
+    self.statusbar.showMessage(operation_description, 5000)
+
+    logging.debug(operation_description)
+
+    # reload all events in tw
+    self.load_tw_events(self.observationId)
+
+    if not len(self.undo_queue):
+        self.actionUndo.setText("Undo")
+        self.actionUndo.setEnabled(False)
+    else:
+        self.actionUndo.setText(self.undo_description[-1])
 
 
 def delete_all_events(self):
@@ -226,7 +261,7 @@ def delete_all_events(self):
     ):
 
         # fill the undo list
-        fill_events_undo_list(self)
+        fill_events_undo_list(self, "Undo 'Delete all events'")
 
         rows_to_delete = []
         if self.playerType in (cfg.MEDIA, cfg.VIEWER_MEDIA, cfg.LIVE, cfg.VIEWER_LIVE):
@@ -293,7 +328,7 @@ def delete_selected_events(self):
     else:
         # list of rows to delete (set for unique)
         # fill the undo list
-        fill_events_undo_list(self)
+        fill_events_undo_list(self, "Undo 'Delete selected events'")
 
         rows_to_delete = []
         if self.playerType in (cfg.MEDIA, cfg.VIEWER_MEDIA, cfg.LIVE, cfg.VIEWER_LIVE):

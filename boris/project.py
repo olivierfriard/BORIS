@@ -24,7 +24,6 @@ import json
 import logging
 import pathlib
 import re
-import sys
 import urllib.error
 import urllib.parse
 import urllib.request
@@ -32,16 +31,29 @@ import urllib.request
 import tablib
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QColor
-from PyQt5.QtWidgets import (QCheckBox, QDialog, QFileDialog, QHBoxLayout,
-                             QHeaderView, QInputDialog, QLabel, QLineEdit,
-                             QListWidget, QListWidgetItem, QMenu, QMessageBox,
-                             QPushButton, QSizePolicy, QSpacerItem,
-                             QTableWidgetItem, QVBoxLayout)
+from PyQt5.QtWidgets import (
+    QCheckBox,
+    QDialog,
+    QFileDialog,
+    QHBoxLayout,
+    QHeaderView,
+    QInputDialog,
+    QLabel,
+    QLineEdit,
+    QListWidget,
+    QListWidgetItem,
+    QMenu,
+    QMessageBox,
+    QPushButton,
+    QSizePolicy,
+    QSpacerItem,
+    QTableWidgetItem,
+    QVBoxLayout,
+)
 
 from . import add_modifier
 from . import config as cfg
-from . import (converters, dialog, exclusion_matrix, export_observation,
-               project_import)
+from . import converters, dialog, exclusion_matrix, export_observation, project_import
 from .project_ui import Ui_dlgProject
 
 
@@ -730,7 +742,7 @@ class projectDialog(QDialog, Ui_dlgProject):
 
         # check if double click on excluded column
         if column == cfg.behavioursFields["excluded"]:
-            self.pbExclusionMatrix_clicked()
+            self.exclusion_matrix()
 
         # check if double click on 'coding map' column
         if column == cfg.behavioursFields["coding map"]:
