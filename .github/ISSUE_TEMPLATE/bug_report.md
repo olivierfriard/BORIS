@@ -1,6 +1,6 @@
 ---
 name: Bug report
-about: Create a report to help us improve. See `bug report <http://www.boris.unito.it/pages/report_a_bug.html>`_ for details
+about: Create a report to help us improve. See http://www.boris.unito.it/pages/report_a_bug.html for details
 title: ''
 labels: ''
 assignees: ''
@@ -27,4 +27,4 @@ If applicable, add screenshots to help explain your problem.
  - OS: [windows 10, Ubuntu 22.04 ... ]
  - BORIS Version
 
-
+**In case of crash** copy the content of the boris_error.log file (before relaunching BORIS).
