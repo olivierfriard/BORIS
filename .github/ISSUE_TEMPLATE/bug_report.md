@@ -1,6 +1,6 @@
 ---
 name: Bug report
-about: Create a report to help us improve. See http://www.boris.unito.it/pages/report_a_bug.html for details
+about: Create a report to help us improve. See `bug report <http://www.boris.unito.it/pages/report_a_bug.html>`_ for details
 title: ''
 labels: ''
 assignees: ''
