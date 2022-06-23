@@ -1925,12 +1925,14 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 return
             self.subjects_pad.compose()
             self.subjects_pad.show()
+            """
             self.subjects_pad.setGeometry(
                 self.subjectspad_geometry_memory.x(),
                 self.subjectspad_geometry_memory.y(),
                 self.subjectspad_geometry_memory.width(),
                 self.subjectspad_geometry_memory.height(),
             )
+            """
         else:
             filtered_subjects = [
                 self.twSubjects.item(i, SUBJECT_NAME_FIELD_IDX).text() for i in range(self.twSubjects.rowCount())
@@ -11104,7 +11106,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             ct = self.getLaps()
 
             # add time offset if any
-            ct += dec(self.pj[OBSERVATIONS][self.observationId][TIME_OFFSET])
+            ct += Decimal(self.pj[OBSERVATIONS][self.observationId][TIME_OFFSET])
 
             if ct >= self.pj[OBSERVATIONS][self.observationId][EVENTS][-1][0]:
                 ROW = len(self.pj[OBSERVATIONS][self.observationId][EVENTS])
