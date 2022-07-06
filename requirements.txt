@@ -4,7 +4,7 @@ cycler==0.11.0
 feedgen==0.9.0
 fonttools==4.33.3
 kiwisolver==1.4.2
-lxml==4.8.0
+lxml==4.9.1
 matplotlib==3.3.3
 mypy-extensions==0.4.3
 numpy==1.22.3
