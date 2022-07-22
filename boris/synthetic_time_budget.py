@@ -234,9 +234,9 @@ def synthetic_binned_time_budget(self):
 
     if out:
         if not_paired_obs_list:
-            out += "<br>The observations with UNPAIRED state events will be removed from the analysis"
+            out += "<br>The observations with UNPAIRED state events will not be used in the analysis"
         self.results = dialog.Results_dialog()
-        self.results.setWindowTitle(cfg.programName + " - Check selected observations")
+        self.results.setWindowTitle(f"{cfg.programName} - Check selected observations")
         self.results.ptText.setReadOnly(True)
         self.results.ptText.appendHtml(out)
         self.results.pbSave.setVisible(False)

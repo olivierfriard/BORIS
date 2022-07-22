@@ -381,6 +381,9 @@ def time_budget(self, mode: str, mode2: str = "list"):
             if obs_length == dec("-1"):  # media length not available
                 parameters[cfg.TIME_INTERVAL] = cfg.TIME_EVENTS
 
+            if obs_length == dec("-2"):  # images obs without time
+                parameters[cfg.TIME_INTERVAL] = cfg.TIME_EVENTS
+
             if parameters[cfg.TIME_INTERVAL] == cfg.TIME_FULL_OBS:
                 min_time = float(0)
                 # check if the last event is recorded after media file length

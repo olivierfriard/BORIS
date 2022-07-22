@@ -320,6 +320,9 @@ def observation_length(pj: dict, selected_observations: list) -> tuple:
     max_obs_length = 0
     for obs_id in selected_observations:
         obs_length = project_functions.observation_total_length(pj[cfg.OBSERVATIONS][obs_id])
+        if obs_length == dec(-2):  # IMAGES OBS with time not available
+            selectedObsTotalMediaLength = -2
+            break
         if obs_length in [dec(0), dec(-1)]:
             selectedObsTotalMediaLength = -1
             break
@@ -359,6 +362,10 @@ def observation_length(pj: dict, selected_observations: list) -> tuple:
         else:
             max_obs_length = -1
             selectedObsTotalMediaLength = dec("-1")
+
+    if selectedObsTotalMediaLength == -2:  # IMAGES OBS with time not available
+        max_obs_length = dec("NaN")
+        selectedObsTotalMediaLength = dec("NaN")
 
     return (max_obs_length, selectedObsTotalMediaLength)
 

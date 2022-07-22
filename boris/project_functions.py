@@ -743,7 +743,7 @@ def observation_total_length(observation: dict) -> dec:
                 obs_length = last_event - first_event
             except Exception:
                 logging.critical(f"Length of observation from images not available")
-                obs_length = dec(-1)
+                obs_length = dec(-2)
         else:
             obs_length = dec(0)
         return obs_length

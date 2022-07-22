@@ -25,7 +25,7 @@ import logging
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QFont
 from PyQt5.QtWidgets import QCheckBox, QListWidgetItem, QMessageBox
-
+from decimal import Decimal as dec
 from . import config as cfg
 from . import gui_utilities, param_panel, project_functions
 from . import utilities as util
@@ -35,7 +35,7 @@ def choose_obs_subj_behav_category(
     self,
     selected_observations,
     min_time=0,
-    maxTime=0,
+    maxTime=dec("NaN"),
     flagShowIncludeModifiers=True,
     flagShowExcludeBehaviorsWoEvents=True,
     by_category=False,
@@ -80,16 +80,16 @@ def choose_obs_subj_behav_category(
         paramPanelWindow.cbIncludeModifiers.setVisible(False)
         paramPanelWindow.cbExcludeBehaviors.setVisible(False)
 
-    # start and end time
-    paramPanelWindow.frm_time_interval.setEnabled(False)
-    paramPanelWindow.start_time.set_format(self.timeFormat)
-    paramPanelWindow.end_time.set_format(self.timeFormat)
-    paramPanelWindow.start_time.set_time(min_time)
-    paramPanelWindow.end_time.set_time(maxTime)
-
     # hide max time
-    if not maxTime:
+    if maxTime.is_nan():
         paramPanelWindow.frm_time.setVisible(False)
+    else:
+        # start and end time
+        paramPanelWindow.frm_time_interval.setEnabled(False)
+        paramPanelWindow.start_time.set_format(self.timeFormat)
+        paramPanelWindow.end_time.set_format(self.timeFormat)
+        paramPanelWindow.start_time.set_time(min_time)
+        paramPanelWindow.end_time.set_time(maxTime)
 
     if selected_observations:
         observedSubjects = project_functions.extract_observed_subjects(self.pj, selected_observations)
