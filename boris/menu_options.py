@@ -35,18 +35,18 @@ def update_menu(self):
     project_contains_obs = self.pj[cfg.OBSERVATIONS] != {}
 
     if not project_opened:
-        pn = ""
+        project_name = ""
     else:
         if self.pj["project_name"]:
-            pn = self.pj["project_name"]
+            project_name = self.pj["project_name"]
         else:
             if self.projectFileName:
-                pn = f"Unnamed project ({self.projectFileName})"
+                project_name = f"Unnamed project ({self.projectFileName})"
             else:
-                pn = "Unnamed project"
+                project_name = "Unnamed project"
 
     self.setWindowTitle(
-        f"{self.observationId + ' - ' * observation_is_active}{pn + (' - ' * (pn != ''))}{cfg.programName}"
+        f"{self.observationId + ' - ' * observation_is_active}{project_name}{'*' * self.projectChanged}{(' - ' * (project_name != ''))}{cfg.programName}"
     )
 
     # enabled if project loaded

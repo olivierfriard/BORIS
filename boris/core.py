@@ -188,7 +188,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     repositioningTimeOffset = 0
     automaticBackup = 0  # automatic backup interval (0 no backup)
     events_current_row = -1
-    projectChanged = False
+    projectChanged: bool = False  # store if project was changed
     liveObservationStarted = False
     # data structures for external data plot
     plot_data = {}
@@ -411,6 +411,14 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         else:
             QMessageBox.information(self, cfg.programName, "The current project has no issues")
 
+    def project_changed(self):
+        """
+        
+        """
+        self.projectChanged = True
+        
+
+
     def remove_media_files_path(self):
         """
         remove path of media files
@@ -436,8 +444,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         """
         show details about the selected behavior
         """
-        if not self.project:
-            return
 
         if self.twEthogram.selectedIndexes():
             behav = dict(self.pj[cfg.ETHOGRAM][str(self.twEthogram.selectedIndexes()[0].row())])
@@ -2116,10 +2122,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         """
         edit project menu option triggered
         """
-        if self.project:
-            self.edit_project(cfg.EDIT)
-        else:
-            QMessageBox.warning(self, cfg.programName, "There is no project to edit")
+        self.edit_project(cfg.EDIT)
 
     def display_statusbar_info(self, obs_id: str):
         """
