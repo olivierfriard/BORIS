@@ -101,7 +101,7 @@ class Plot_spectrogram_RT(QWidget):
         """
         send event (if keypress) to main window
         """
-        if (event.type() == QEvent.KeyPress):
+        if event.type() == QEvent.KeyPress:
             self.sendEvent.emit(event)
             return True
         else:
@@ -116,7 +116,7 @@ class Plot_spectrogram_RT(QWidget):
         """
         if action == -1 and self.interval <= 5:
             return
-        self.interval += (5 * action)
+        self.interval += 5 * action
         self.plot_spectro(current_time=self.time_mem, force_plot=True)
 
     def frequency_interval_changed(self):
@@ -138,7 +138,8 @@ class Plot_spectrogram_RT(QWidget):
 
         try:
             self.sound_info, self.frame_rate = self.get_wav_info(wav_file_path)
-            print(self.sound_info)
+            print(f"{self.sound_info=}")
+            print(f"{self.frame_rate=}")
             if not self.frame_rate:
                 return {"error": f"unknown format for file {wav_file_path}"}
         except FileNotFoundError:
@@ -171,12 +172,13 @@ class Plot_spectrogram_RT(QWidget):
         if current_time <= self.interval / 2:
 
             Pxx, freqs, bins, im = ax.specgram(
-                self.sound_info[:int((self.interval) * self.frame_rate)],
+                self.sound_info[: int((self.interval) * self.frame_rate)],
                 mode="psd",
-                #NFFT=1024,
+                # NFFT=1024,
                 Fs=self.frame_rate,
-                #noverlap=900,
-                cmap=self.spectro_color_map)
+                # noverlap=900,
+                cmap=self.spectro_color_map,
+            )
 
             ax.set_xlim(current_time - self.interval / 2, current_time + self.interval / 2)
 
@@ -190,10 +192,11 @@ class Plot_spectrogram_RT(QWidget):
             Pxx, freqs, bins, im = ax.specgram(
                 self.sound_info[i:],
                 mode="psd",
-                #NFFT=1024,
+                # NFFT=1024,
                 Fs=self.frame_rate,
-                #noverlap=900,
-                cmap=self.spectro_color_map)
+                # noverlap=900,
+                cmap=self.spectro_color_map,
+            )
 
             lim1 = current_time - (self.media_length - self.interval / 2)
             lim2 = lim1 + self.interval
@@ -212,14 +215,17 @@ class Plot_spectrogram_RT(QWidget):
             end = (current_time + self.interval / 2) * self.frame_rate
 
             Pxx, freqs, bins, im = ax.specgram(
-                self.sound_info[int(round(
-                    (current_time - self.interval / 2) *
-                    self.frame_rate, 0)):int(round((current_time + self.interval / 2) * self.frame_rate, 0))],
+                self.sound_info[
+                    int(round((current_time - self.interval / 2) * self.frame_rate, 0)) : int(
+                        round((current_time + self.interval / 2) * self.frame_rate, 0)
+                    )
+                ],
                 mode="psd",
-                #NFFT=1024,
+                # NFFT=1024,
                 Fs=self.frame_rate,
-                #noverlap=900,
-                cmap=self.spectro_color_map)
+                # noverlap=900,
+                cmap=self.spectro_color_map,
+            )
 
             ax.set_xticklabels([str(round(current_time + w - self.interval / 2, 1)) for w in ax.get_xticks()])
 

@@ -3128,8 +3128,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 else tempfile.gettempdir()
             )
 
-            wav_file_path = str(
-                pathlib.Path(tmp_dir) / pathlib.Path(self.dw_player[0].mediaplayer.get_media().get_mrl() + ".wav").name
+            wav_file_path = (
+                pathlib.Path(tmp_dir)
+                / pathlib.Path(
+                    urllib.parse.unquote(url2path(self.dw_player[0].mediaplayer.get_media().get_mrl())) + ".wav"
+                ).name
             )
 
             # waveform
@@ -3138,10 +3141,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 if not hasattr(self, "waveform"):
                     return
 
-                if self.waveform.wav_file_path == wav_file_path:
+                if self.waveform.wav_file_path == str(wav_file_path):
                     self.waveform.plot_waveform(current_media_time)
                 else:
-                    r = self.waveform.load_wav(wav_file_path)
+                    r = self.waveform.load_wav(str(wav_file_path))
                     if "error" not in r:
                         self.waveform.plot_waveform(current_media_time)
                     else:
@@ -3153,10 +3156,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 if not hasattr(self, "spectro"):
                     return
 
-                if self.spectro.wav_file_path == wav_file_path:
+                if self.spectro.wav_file_path == str(wav_file_path):
                     self.spectro.plot_spectro(current_media_time)
                 else:
-                    r = self.spectro.load_wav(wav_file_path)
+                    r = self.spectro.load_wav(str(wav_file_path))
                     if "error" not in r:
                         self.spectro.plot_spectro(current_media_time)
                     else:
