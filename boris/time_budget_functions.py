@@ -950,7 +950,8 @@ def time_budget_analysis(
     for subject in parameters[cfg.SELECTED_SUBJECTS]:
         for behavior in parameters[cfg.SELECTED_BEHAVIORS]:
             for row in out:
-                if row[cfg.SUBJECT] == subject and row[cfg.BEHAVIOR_CODE] == behavior:
+                print(row)
+                if row[cfg.SUBJECT] == subject and row["behavior"] == behavior:
                     out_sorted.append(row)
 
     # http://stackoverflow.com/questions/673867/python-arbitrary-order-by
