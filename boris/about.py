@@ -27,6 +27,7 @@ import matplotlib
 from . import version
 from . import config as cfg
 from . import utilities as util
+from . import mpv
 
 from PyQt5.QtCore import QT_VERSION_STR, PYQT_VERSION_STR
 from PyQt5.QtGui import QPixmap
@@ -38,7 +39,7 @@ def actionAbout_activated(self):
     About dialog
     """
 
-    programs_versions = ["MPV media player"]
+    programs_versions = ["MPV media player", f"Library version: {mpv.sofile}"]
 
     # ffmpeg
     if self.ffmpeg_bin == "ffmpeg" and sys.platform.startswith("linux"):
@@ -59,6 +60,7 @@ def actionAbout_activated(self):
 
     # graphviz
     gv_result = subprocess.getoutput("dot -V")
+
     programs_versions.extend(
         ["\nGraphViz", gv_result if "graphviz" in gv_result else "not installed", "https://www.graphviz.org/"]
     )

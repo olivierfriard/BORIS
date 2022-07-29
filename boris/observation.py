@@ -126,8 +126,6 @@ class Observation(QDialog, Ui_Form):
         # DISBALE observation from images
         # self.rb_images.setEnabled(False)
 
-        self.rb_images.setEnabled(False)
-
         self.rb_images.toggled.connect(self.obs_type_changed)
 
         menu_items = [

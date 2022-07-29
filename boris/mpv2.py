@@ -537,6 +537,11 @@ def _mpv_client_api_version():
     ver = backend.mpv_client_api_version()
     return ver>>16, ver&0xFFFF
 
+MPV_VERSION = _mpv_client_api_version()
+if MPV_VERSION < (1, 108):
+    ver = '.'.join(str(num) for num in MPV_VERSION)
+    raise RuntimeError(f"python-mpv requires libmpv with an API version of 1.108 or higher (libmpv >= 0.33), but you have an older version ({ver}).")
+
 backend.mpv_free.argtypes = [c_void_p]
 _mpv_free = backend.mpv_free
 
@@ -1385,7 +1390,7 @@ class MPV(object):
         """Mapped mpv print-text command, see man mpv(1)."""
         self.command('print-text', text)
 
-    def show_text(self, string, duration='-1', level=None):
+    def show_text(self, string, duration='-1', level=0):
         """Mapped mpv show_text command, see man mpv(1)."""
         self.command('show_text', string, duration, level)
 
@@ -1478,13 +1483,13 @@ class MPV(object):
         function decorator if no handler is given.
 
         To unregister the observer, call either of ``mpv.unobserve_property(name, handler)``,
-        ``mpv.unobserve_all_properties(handler)`` or the handler's ``unregister_mpv_properties`` attribute::
+        ``mpv.unobserve_all_properties(handler)`` or the handler's ``unobserve_mpv_properties`` attribute::
 
-            @player.observe_property('volume')
-            def my_handler(new_volume, *):
-                print("It's loud!", volume)
+            @player.property_observer('volume')
+            def my_handler(property_name, new_volume):
+                print("It's loud!", new_volume)
 
-            my_handler.unregister_mpv_properties()
+            my_handler.unobserve_mpv_properties()
 
         exit_handler is a function taking no arguments that is called when the underlying mpv handle is terminated (e.g.
         from calling MPV.terminate() or issuing a "quit" input command).
