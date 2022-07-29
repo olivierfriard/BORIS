@@ -412,12 +412,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             QMessageBox.information(self, cfg.programName, "The current project has no issues")
 
     def project_changed(self):
-        """
-        
-        """
+        """ """
         self.projectChanged = True
-        
-
 
     def remove_media_files_path(self):
         """
@@ -4070,16 +4066,23 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         # TODO: verify event["subject"] / self.currentSubject
 
         # extract State events
-        StateBehaviorsCodes = util.state_behavior_codes(self.pj[cfg.ETHOGRAM])
+        state_behaviors_codes = util.state_behavior_codes(self.pj[cfg.ETHOGRAM])
 
         # index of current subject
         # subject_idx = self.subject_name_index[self.currentSubject] if self.currentSubject else ""
 
+        # print(f"{self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS]=}")
+
+        if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE] in (cfg.LIVE, cfg.MEDIA):
+            position = mem_time
+        if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE] == cfg.IMAGES:
+            position = image_idx
+
         current_states = util.get_current_states_modifiers_by_subject(
-            StateBehaviorsCodes,
+            state_behaviors_codes,
             self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS],
             dict(self.pj[cfg.SUBJECTS], **{"": {"name": ""}}),
-            mem_time,
+            position,
             include_modifiers=False,
         )
 
@@ -4112,10 +4115,16 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
             logging.debug(f"csj {csj}")
 
+            if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE] in (cfg.LIVE, cfg.MEDIA):
+                check_index = cfg.EVENT_TIME_FIELD_IDX
+            if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE] == cfg.IMAGES:
+                check_index = cfg.PJ_OBS_FIELDS[cfg.IMAGES]["image index"]
+
             cm = {}  # modifiers for current behaviors
             for cs in csj:
                 for ev in self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS]:
-                    if ev[cfg.EVENT_TIME_FIELD_IDX] > mem_time:
+
+                    if ev[check_index] > position:
                         break
 
                     if ev[cfg.EVENT_SUBJECT_FIELD_IDX] == self.currentSubject:

@@ -349,6 +349,8 @@ def time_budget(self, mode: str, mode2: str = "list"):
         by_category=(mode == "by_category"),
     )
 
+    print(f"{parameters=}")
+
     if not parameters[cfg.SELECTED_SUBJECTS] or not parameters[cfg.SELECTED_BEHAVIORS]:
         return
 

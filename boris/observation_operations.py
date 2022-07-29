@@ -38,7 +38,7 @@ from PyQt5.QtWidgets import (
     QDockWidget,
 )
 from PyQt5.QtCore import Qt, QDateTime, QTimer
-from PyQt5.QtGui import QFont, QIcon, QPixmap
+from PyQt5.QtGui import QFont, QIcon
 
 from PyQt5 import QtTest
 

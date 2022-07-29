@@ -19,6 +19,7 @@ Copyright 2012-2022 Olivier Friard
   MA 02110-1301, USA.
 """
 
+from cmath import isnan
 import csv
 import datetime
 import hashlib
@@ -339,14 +340,19 @@ def get_current_states_modifiers_by_subject(
         state_behaviors_codes (list): list of behavior codes defined as STATE event
         events (list): list of events
         subjects (dict): dictionary of subjects
-        time (Decimal): time
+        time (Decimal): time or image index for an observation from images
         include_modifiers (bool): include modifier if True (default: False)
 
     Returns:
         dict: current states by subject. dict of list
     """
-    current_states = {}
+    # check if time contains NA
+    if [x for x in events if events[cfg.EVENT_TIME_FIELD_IDX][cfg.EVENT_TIME_FIELD_IDX].is_nan()]:
+        check_index = cfg.PJ_OBS_FIELDS[cfg.IMAGES]["image index"]
+    else:
+        check_index = cfg.EVENT_TIME_FIELD_IDX
 
+    current_states = {}
     if include_modifiers:
         for idx in subjects:
             current_states[idx] = []
@@ -356,7 +362,7 @@ def get_current_states_modifiers_by_subject(
                     for x in events
                     if x[cfg.EVENT_SUBJECT_FIELD_IDX] == subjects[idx][cfg.SUBJECT_NAME]
                     and x[cfg.EVENT_BEHAVIOR_FIELD_IDX] == sbc
-                    and x[cfg.EVENT_TIME_FIELD_IDX] <= time
+                    and x[check_index] <= time
                 ]
 
                 if len(bl) % 2:  # test if odd
@@ -373,7 +379,7 @@ def get_current_states_modifiers_by_subject(
                             for x in events
                             if x[cfg.EVENT_SUBJECT_FIELD_IDX] == subjects[idx][cfg.SUBJECT_NAME]
                             and x[cfg.EVENT_BEHAVIOR_FIELD_IDX] == sbc
-                            and x[cfg.EVENT_TIME_FIELD_IDX] <= time
+                            and x[check_index] <= time
                         ]
                     )
                     % 2
@@ -795,7 +801,7 @@ def seconds2time(sec: dec) -> str:
         str: time in format hh:mm:ss
     """
 
-    if isinstance(sec, dec) and sec.is_nan():
+    if math.isnan(sec):
         return "NA"
 
     if sec > 1_600_000_000:  # epoch time

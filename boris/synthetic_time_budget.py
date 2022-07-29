@@ -27,7 +27,14 @@ from decimal import Decimal as dec
 from PyQt5.QtWidgets import QFileDialog, QMessageBox
 
 from . import config as cfg
-from . import dialog, project_functions, select_observations, select_subj_behav, time_budget_functions
+from . import (
+    dialog,
+    project_functions,
+    select_observations,
+    select_subj_behav,
+    time_budget_functions,
+    observation_operations,
+)
 
 
 def synthetic_time_budget(self):
@@ -81,6 +88,7 @@ def synthetic_time_budget(self):
     if not selected_observations:
         return
 
+    """
     selectedObsTotalMediaLength = dec("0.0")
     max_obs_length = 0
     for obsId in selected_observations:
@@ -115,11 +123,27 @@ def synthetic_time_budget(self):
             selectedObsTotalMediaLength = maxTime
         else:
             selectedObsTotalMediaLength = 0
+    """
+
+    max_obs_length, selectedObsTotalMediaLength = observation_operations.observation_length(
+        self.pj, selected_observations
+    )
+    if max_obs_length == -1:  # media length not available, user choose to not use events
+        QMessageBox.warning(
+            None,
+            cfg.programName,
+            ("The observation length is not available"),
+            QMessageBox.Ok | QMessageBox.Default,
+            QMessageBox.NoButton,
+        )
+        return
+
+    logging.debug(f"max_obs_length: {max_obs_length}, selectedObsTotalMediaLength: {selectedObsTotalMediaLength}")
 
     synth_tb_param = select_subj_behav.choose_obs_subj_behav_category(
         self,
         selected_observations,
-        maxTime=max_obs_length,
+        maxTime=max_obs_length if len(selected_observations) > 1 else selectedObsTotalMediaLength,
         flagShowExcludeBehaviorsWoEvents=False,
         by_category=False,
     )
