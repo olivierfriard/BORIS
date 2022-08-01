@@ -99,7 +99,11 @@ def events_snapshots(self):
         return
 
     parameters = select_subj_behav.choose_obs_subj_behav_category(
-        self, selected_observations, maxTime=0, flagShowIncludeModifiers=False, flagShowExcludeBehaviorsWoEvents=False
+        self,
+        selected_observations,
+        maxTime=dec(0),
+        flagShowIncludeModifiers=False,
+        flagShowExcludeBehaviorsWoEvents=False,
     )
 
     if not parameters[cfg.SELECTED_SUBJECTS] or not parameters[cfg.SELECTED_BEHAVIORS]:
@@ -375,7 +379,11 @@ def extract_events(self):
         return
 
     parameters = select_subj_behav.choose_obs_subj_behav_category(
-        self, selected_observations, maxTime=0, flagShowIncludeModifiers=False, flagShowExcludeBehaviorsWoEvents=False
+        self,
+        selected_observations,
+        maxTime=dec(0),
+        flagShowIncludeModifiers=False,
+        flagShowExcludeBehaviorsWoEvents=False,
     )
 
     if not parameters[cfg.SELECTED_SUBJECTS] or not parameters[cfg.SELECTED_BEHAVIORS]:

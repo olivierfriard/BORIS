@@ -124,7 +124,7 @@ class Observation(QDialog, Ui_Form):
         self.rb_live.toggled.connect(self.obs_type_changed)
 
         # DISBALE observation from images
-        # self.rb_images.setEnabled(False)
+        self.rb_images.setEnabled(False)
 
         self.rb_images.toggled.connect(self.obs_type_changed)
 

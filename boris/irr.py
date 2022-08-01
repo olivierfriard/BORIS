@@ -22,7 +22,7 @@ Copyright 2012-2022 Olivier Friard
 """
 
 import logging
-from decimal import Decimal
+from decimal import Decimal as dec
 
 import numpy as np
 from PyQt5.QtWidgets import QInputDialog, QMessageBox
@@ -33,7 +33,7 @@ from . import utilities as util
 from . import select_observations
 
 
-def subj_behav_modif(cursor, obsid: str, subject: str, time: Decimal, interval, include_modifiers: bool) -> list:
+def subj_behav_modif(cursor, obsid: str, subject: str, time: dec, interval, include_modifiers: bool) -> list:
     """
     current behaviors for observation obsId at time
 
@@ -99,7 +99,7 @@ def subj_behav_modif(cursor, obsid: str, subject: str, time: Decimal, interval, 
     return s
 
 
-def cohen_kappa(cursor, obsid1: str, obsid2: str, interval: Decimal, selected_subjects: list, include_modifiers: bool):
+def cohen_kappa(cursor, obsid1: str, obsid2: str, interval: dec, selected_subjects: list, include_modifiers: bool):
     """
     Inter-rater reliability Cohen's kappa coefficient (time-unit)
     see Sequential Analysis and Observational Methods for the Behavioral Sciences p. 77
@@ -159,7 +159,7 @@ def cohen_kappa(cursor, obsid1: str, obsid2: str, interval: Decimal, selected_su
 
     total_states = []
 
-    currentTime = Decimal(str(first_event))
+    currentTime = dec(str(first_event))
     while currentTime <= last_event:
 
         for obsid in [obsid1, obsid2]:
@@ -182,7 +182,7 @@ def cohen_kappa(cursor, obsid1: str, obsid2: str, interval: Decimal, selected_su
 
     seq1 = {}
     seq2 = {}
-    currentTime = Decimal(str(first_event))
+    currentTime = dec(str(first_event))
     while currentTime <= last_event:
 
         seq1[currentTime] = []
@@ -300,7 +300,11 @@ def irr_cohen_kappa(self):
         return
 
     plot_parameters = select_subj_behav.choose_obs_subj_behav_category(
-        self, selected_observations, maxTime=0, flagShowIncludeModifiers=True, flagShowExcludeBehaviorsWoEvents=False
+        self,
+        selected_observations,
+        maxTime=dec(0),
+        flagShowIncludeModifiers=True,
+        flagShowExcludeBehaviorsWoEvents=False,
     )
 
     if not plot_parameters[cfg.SELECTED_SUBJECTS] or not plot_parameters[cfg.SELECTED_BEHAVIORS]:
@@ -524,7 +528,7 @@ def needleman_wunsch_identity(
 
     seq1, seq2 = {}, {}
 
-    currentTime = Decimal(str(first_event))
+    currentTime = dec(str(first_event))
     while currentTime <= last_event:
 
         seq1[currentTime], seq2[currentTime] = [], []
@@ -607,7 +611,11 @@ def needleman_wunch(self):
         return
 
     plot_parameters = select_subj_behav.choose_obs_subj_behav_category(
-        self, selected_observations, maxTime=0, flagShowIncludeModifiers=True, flagShowExcludeBehaviorsWoEvents=False
+        self,
+        selected_observations,
+        maxTime=dec(0),
+        flagShowIncludeModifiers=True,
+        flagShowExcludeBehaviorsWoEvents=False,
     )
 
     if not plot_parameters[cfg.SELECTED_SUBJECTS] or not plot_parameters[cfg.SELECTED_BEHAVIORS]:

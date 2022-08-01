@@ -26,6 +26,7 @@ import os
 import re
 import tablib
 import pathlib as pl
+from decimal import Decimal as dec
 
 from . import observation_operations
 from . import utilities as util
@@ -62,7 +63,7 @@ def export_events_as_behavioral_sequences(self, separated_subjects=False, timed=
     parameters = select_subj_behav.choose_obs_subj_behav_category(
         self,
         selected_observations,
-        maxTime=0,
+        maxTime=dec(0),
         flagShowIncludeModifiers=True,
         flagShowExcludeBehaviorsWoEvents=False,
     )
@@ -153,7 +154,7 @@ def export_tabular_events(self, mode: str = "tabular"):
     parameters = select_subj_behav.choose_obs_subj_behav_category(
         self,
         selectedObservations,
-        maxTime=0,
+        maxTime=dec(0),
         flagShowIncludeModifiers=False,
         flagShowExcludeBehaviorsWoEvents=False,
     )
@@ -551,7 +552,7 @@ def export_state_events_as_textgrid(self):
     plot_parameters = select_subj_behav.choose_obs_subj_behav_category(
         self,
         selectedObservations,
-        maxTime=0,
+        maxTime=dec(0),
         flagShowIncludeModifiers=False,
         flagShowExcludeBehaviorsWoEvents=False,
     )

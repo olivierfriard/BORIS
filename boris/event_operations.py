@@ -166,7 +166,7 @@ def filter_events(self):
     parameters = select_subj_behav.choose_obs_subj_behav_category(
         self,
         [],  # empty selection of observations for selecting all subjects and behaviors
-        maxTime=0,
+        maxTime=dec(0),
         flagShowIncludeModifiers=False,
         flagShowExcludeBehaviorsWoEvents=False,
         by_category=False,

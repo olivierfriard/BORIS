@@ -80,6 +80,8 @@ def choose_obs_subj_behav_category(
         paramPanelWindow.cbIncludeModifiers.setVisible(False)
         paramPanelWindow.cbExcludeBehaviors.setVisible(False)
 
+    print(f"{type(maxTime)=} {maxTime}")
+
     # hide max time
     if maxTime.is_nan():
         paramPanelWindow.frm_time.setVisible(False)

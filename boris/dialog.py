@@ -26,6 +26,7 @@ import pathlib as pl
 import traceback
 import platform
 import datetime as dt
+from decimal import Decimal as dec
 
 from PyQt5.QtCore import Qt, pyqtSignal, QT_VERSION_STR, PYQT_VERSION_STR
 from PyQt5.QtGui import QFont
@@ -982,7 +983,7 @@ def extract_observed_behaviors(pj, selected_observations, selectedSubjects):
 def choose_obs_subj_behav_category(
     pj: dict,
     selected_observations: list,
-    maxTime=0,
+    maxTime=dec(0),
     flagShowIncludeModifiers: bool = True,
     flagShowExcludeBehaviorsWoEvents: bool = True,
     by_category: bool = False,

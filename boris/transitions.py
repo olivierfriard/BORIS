@@ -24,6 +24,7 @@ import logging
 import os
 import subprocess
 import tempfile
+from decimal import Decimal as dec
 
 from PyQt5.QtWidgets import QFileDialog, QMessageBox
 
@@ -181,7 +182,11 @@ def transitions_matrix(self, mode):
         return
 
     plot_parameters = select_subj_behav.choose_obs_subj_behav_category(
-        self, selectedObservations, maxTime=0, flagShowIncludeModifiers=True, flagShowExcludeBehaviorsWoEvents=False
+        self,
+        selectedObservations,
+        maxTime=dec(0),
+        flagShowIncludeModifiers=True,
+        flagShowExcludeBehaviorsWoEvents=False,
     )
 
     if not plot_parameters["selected subjects"] or not plot_parameters["selected behaviors"]:
