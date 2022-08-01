@@ -128,7 +128,8 @@ def synthetic_time_budget(self):
     max_obs_length, selectedObsTotalMediaLength = observation_operations.observation_length(
         self.pj, selected_observations
     )
-    if max_obs_length == -1:  # media length not available, user choose to not use events
+    print(f"{max_obs_length=}")
+    if max_obs_length == dec(-1):  # media length not available, user choose to not use events
         QMessageBox.warning(
             None,
             cfg.programName,
@@ -152,15 +153,18 @@ def synthetic_time_budget(self):
         return
 
     # ask for excluding behaviors durations from total time
-    cancel_pressed, synth_tb_param[cfg.EXCLUDED_BEHAVIORS] = self.filter_behaviors(
-        title="Select behaviors to exclude",
-        text=("The duration of the selected behaviors will " "be subtracted from the total time"),
-        table="",
-        behavior_type=[cfg.STATE_EVENT],
-    )
+    if not max_obs_length.is_nan():
+        cancel_pressed, synth_tb_param[cfg.EXCLUDED_BEHAVIORS] = self.filter_behaviors(
+            title="Select behaviors to exclude from the total time",
+            text=("The duration of the selected behaviors will " "be subtracted from the total time"),
+            table="",
+            behavior_type=[cfg.STATE_EVENT],
+        )
 
-    if cancel_pressed:
-        return
+        if cancel_pressed:
+            return
+    else:
+        synth_tb_param[cfg.EXCLUDED_BEHAVIORS] = []
 
     extended_file_formats = [
         "Tab Separated Values (*.tsv)",
@@ -307,6 +311,8 @@ def synthetic_binned_time_budget(self):
             selectedObsTotalMediaLength = maxTime
         else:
             selectedObsTotalMediaLength = 0
+
+    print(f"{max_obs_length=}")
 
     synth_tb_param = select_subj_behav.choose_obs_subj_behav_category(
         self,

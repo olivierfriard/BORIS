@@ -367,8 +367,6 @@ def synthetic_time_budget(pj: dict, selected_observations: list, parameters_obs:
         tablib.Dataset: dataset containing synthetic time budget data
     """
 
-    print(f"{parameters_obs=}")
-
     selected_subjects = parameters_obs[cfg.SELECTED_SUBJECTS]
     selected_behaviors = parameters_obs[cfg.SELECTED_BEHAVIORS]
     include_modifiers = parameters_obs[cfg.INCLUDE_MODIFIERS]
@@ -390,6 +388,8 @@ def synthetic_time_budget(pj: dict, selected_observations: list, parameters_obs:
     ok, msg, db_connector = db_functions.load_aggregated_events_in_db(
         pj, selected_subjects, selected_observations, selected_behaviors
     )
+
+    # return
 
     if not ok:
         return False, msg, None
@@ -452,7 +452,6 @@ def synthetic_time_budget(pj: dict, selected_observations: list, parameters_obs:
 
         db_connector.create_aggregate("stdev", 1, StdevFunc)
         cursor = db_connector.cursor()
-
         # if modifiers not to be included set modifiers to ""
         if not include_modifiers:
             cursor.execute("UPDATE aggregated_events SET modifiers = ''")
@@ -460,10 +459,10 @@ def synthetic_time_budget(pj: dict, selected_observations: list, parameters_obs:
         # time
         obs_length = project_functions.observation_total_length(pj[cfg.OBSERVATIONS][obs_id])
 
-        if obs_length == dec("-1"):  # media length not available
+        if obs_length == dec(-1):  # media length not available
             interval = cfg.TIME_EVENTS
 
-        if obs_length == dec("-2"):  # images obs without time
+        if obs_length == dec(-2):  # images obs without time
             interval = cfg.TIME_EVENTS
 
         if interval == cfg.TIME_FULL_OBS:
@@ -484,71 +483,73 @@ def synthetic_time_budget(pj: dict, selected_observations: list, parameters_obs:
             min_time = float(start_time)
             max_time = float(end_time)
 
-        # adapt start and stop to the selected time interval
-        cursor.execute(
-            "UPDATE aggregated_events SET start = ? WHERE observation = ? AND start < ? AND stop BETWEEN ? AND ?",
-            (
-                min_time,
-                obs_id,
-                min_time,
-                min_time,
-                max_time,
-            ),
-        )
-        cursor.execute(
-            "UPDATE aggregated_events SET stop = ? WHERE observation = ? AND stop > ? AND start BETWEEN ? AND ?",
-            (
-                max_time,
-                obs_id,
-                max_time,
-                min_time,
-                max_time,
-            ),
-        )
+        if obs_length != dec(-2):  # # obs not an images obs without time
+            # adapt start and stop to the selected time interval
+            cursor.execute(
+                "UPDATE aggregated_events SET start = ? WHERE observation = ? AND start < ? AND stop BETWEEN ? AND ?",
+                (
+                    min_time,
+                    obs_id,
+                    min_time,
+                    min_time,
+                    max_time,
+                ),
+            )
+            cursor.execute(
+                "UPDATE aggregated_events SET stop = ? WHERE observation = ? AND stop > ? AND start BETWEEN ? AND ?",
+                (
+                    max_time,
+                    obs_id,
+                    max_time,
+                    min_time,
+                    max_time,
+                ),
+            )
 
-        cursor.execute(
-            "UPDATE aggregated_events SET start = ?, stop = ? WHERE observation = ? AND start < ? AND stop > ?",
-            (
-                min_time,
-                max_time,
-                obs_id,
-                min_time,
-                max_time,
-            ),
-        )
+            cursor.execute(
+                "UPDATE aggregated_events SET start = ?, stop = ? WHERE observation = ? AND start < ? AND stop > ?",
+                (
+                    min_time,
+                    max_time,
+                    obs_id,
+                    min_time,
+                    max_time,
+                ),
+            )
 
-        cursor.execute(
-            "DELETE FROM aggregated_events WHERE observation = ? AND (start < ? AND stop < ?) OR (start > ? AND stop > ?)",
-            (
-                obs_id,
-                min_time,
-                min_time,
-                max_time,
-                max_time,
-            ),
-        )
+            cursor.execute(
+                "DELETE FROM aggregated_events WHERE observation = ? AND (start < ? AND stop < ?) OR (start > ? AND stop > ?)",
+                (
+                    obs_id,
+                    min_time,
+                    min_time,
+                    max_time,
+                    max_time,
+                ),
+            )
 
         for subject in selected_subjects:
 
             # check if behaviors are to exclude from total time
             time_to_subtract = 0
-            if cfg.EXCLUDED_BEHAVIORS in parameters_obs:
-                for excluded_behav in parameters_obs[cfg.EXCLUDED_BEHAVIORS]:
-                    cursor.execute(
-                        (
-                            "SELECT SUM(stop-start) "
-                            "FROM aggregated_events "
-                            "WHERE observation = ? AND subject = ? AND behavior = ? "
-                        ),
-                        (
-                            obs_id,
-                            subject,
-                            excluded_behav,
-                        ),
-                    )
-                    for row in cursor.fetchall():
-                        if row[0] is not None:
-                            time_to_subtract += row[0]
+            if obs_length != dec(-2):  # obs not an images obs without time
+                if cfg.EXCLUDED_BEHAVIORS in parameters_obs:
+                    for excluded_behav in parameters_obs[cfg.EXCLUDED_BEHAVIORS]:
+                        cursor.execute(
+                            (
+                                "SELECT SUM(stop-start) "
+                                "FROM aggregated_events "
+                                "WHERE observation = ? AND subject = ? AND behavior = ? "
+                            ),
+                            (
+                                obs_id,
+                                subject,
+                                excluded_behav,
+                            ),
+                        )
+                        for row in cursor.fetchall():
+                            if row[0] is not None:
+                                time_to_subtract += row[0]
 
             for behavior_modifiers in distinct_behav_modif:
                 behavior, modifiers = behavior_modifiers
@@ -569,30 +570,48 @@ def synthetic_time_budget(pj: dict, selected_observations: list, parameters_obs:
                 )
 
                 for row in cursor.fetchall():
-                    behaviors[subject][behavior_modifiers_str]["duration"] = 0 if row[0] is None else f"{row[0]:.3f}"
 
                     behaviors[subject][behavior_modifiers_str]["number"] = 0 if row[1] is None else row[1]
-                    behaviors[subject][behavior_modifiers_str]["duration mean"] = (
-                        0 if row[2] is None else f"{row[2]:.3f}"
-                    )
-                    behaviors[subject][behavior_modifiers_str]["duration stdev"] = (
-                        0 if row[3] is None else f"{row[3]:.3f}"
-                    )
 
-                    if behavior not in parameters_obs[cfg.EXCLUDED_BEHAVIORS]:
-                        try:
-                            behaviors[subject][behavior_modifiers_str]["proportion of time"] = (
-                                0 if row[0] is None else f"{row[0] / ((max_time - min_time) - time_to_subtract):.3f}"
-                            )
-                        except ZeroDivisionError:
-                            behaviors[subject][behavior_modifiers_str]["proportion of time"] = "-"
+                    if obs_length == dec(-2):  # images obs without time
+
+                        behaviors[subject][behavior_modifiers_str]["duration"] = dec("NaN")
+                        behaviors[subject][behavior_modifiers_str]["duration mean"] = dec("NaN")
+                        behaviors[subject][behavior_modifiers_str]["duration stdev"] = dec("NaN")
+                        behaviors[subject][behavior_modifiers_str]["proportion of time"] = dec("NaN")
+
                     else:
-                        # behavior subtracted
-                        behaviors[subject][behavior_modifiers_str]["proportion of time"] = (
-                            0 if row[0] is None else f"{row[0] / (max_time - min_time):.3f}"
+
+                        behaviors[subject][behavior_modifiers_str]["duration"] = (
+                            0 if row[0] is None else f"{row[0]:.3f}"
                         )
 
-        columns = [obs_id, f"{max_time - min_time:0.3f}"]
+                        behaviors[subject][behavior_modifiers_str]["duration mean"] = (
+                            0 if row[2] is None else f"{row[2]:.3f}"
+                        )
+                        behaviors[subject][behavior_modifiers_str]["duration stdev"] = (
+                            0 if row[3] is None else f"{row[3]:.3f}"
+                        )
+
+                        if behavior not in parameters_obs[cfg.EXCLUDED_BEHAVIORS]:
+                            try:
+                                behaviors[subject][behavior_modifiers_str]["proportion of time"] = (
+                                    0
+                                    if row[0] is None
+                                    else f"{row[0] / ((max_time - min_time) - time_to_subtract):.3f}"
+                                )
+                            except ZeroDivisionError:
+                                behaviors[subject][behavior_modifiers_str]["proportion of time"] = "-"
+                        else:
+                            # behavior subtracted
+                            behaviors[subject][behavior_modifiers_str]["proportion of time"] = (
+                                0 if row[0] is None else f"{row[0] / (max_time - min_time):.3f}"
+                            )
+
+        if obs_length == dec(-2):
+            columns = [obs_id, "NaN"]
+        else:
+            columns = [obs_id, f"{max_time - min_time:0.3f}"]
         for subj in selected_subjects:
             for behavior_modifiers in distinct_behav_modif:
                 behavior, modifiers = behavior_modifiers
@@ -602,6 +621,8 @@ def synthetic_time_budget(pj: dict, selected_observations: list, parameters_obs:
                     columns.append(behaviors[subj][behavior_modifiers_str][param[0]])
 
         data_report.append(columns)
+
+    print(f"{data_report}=")
 
     return True, msg, data_report
 

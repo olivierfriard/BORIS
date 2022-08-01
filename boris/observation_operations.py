@@ -317,14 +317,14 @@ def observation_length(pj: dict, selected_observations: list) -> tuple:
         float: total media length for all observations
     """
     selectedObsTotalMediaLength = dec("0.0")
-    max_obs_length = 0
+    max_obs_length = dec(0)
     for obs_id in selected_observations:
         obs_length = project_functions.observation_total_length(pj[cfg.OBSERVATIONS][obs_id])
         if obs_length == dec(-2):  # IMAGES OBS with time not available
-            selectedObsTotalMediaLength = -2
+            selectedObsTotalMediaLength = dec(-2)
             break
         if obs_length in [dec(0), dec(-1)]:
-            selectedObsTotalMediaLength = -1
+            selectedObsTotalMediaLength = dec(-1)
             break
         max_obs_length = max(max_obs_length, obs_length)
         selectedObsTotalMediaLength += obs_length
@@ -344,8 +344,8 @@ def observation_length(pj: dict, selected_observations: list) -> tuple:
             == cfg.YES
         ):
             try:
-                maxTime = 0  # max length for all events all subjects
-                max_length = 0
+                maxTime = dec(0)  # max length for all events all subjects
+                max_length = dec(0)
                 for obs_id in selected_observations:
                     if pj[cfg.OBSERVATIONS][obs_id][cfg.EVENTS]:
                         maxTime += max(pj[cfg.OBSERVATIONS][obs_id][cfg.EVENTS])[0]
@@ -356,14 +356,14 @@ def observation_length(pj: dict, selected_observations: list) -> tuple:
                 max_obs_length = max_length
                 selectedObsTotalMediaLength = maxTime
             except Exception:
-                max_obs_length = -1
+                max_obs_length = dec(-1)
                 selectedObsTotalMediaLength = dec("-1")
 
         else:
-            max_obs_length = -1
-            selectedObsTotalMediaLength = dec("-1")
+            max_obs_length = dec(-1)
+            selectedObsTotalMediaLength = dec(-1)
 
-    if selectedObsTotalMediaLength == -2:  # IMAGES OBS with time not available
+    if selectedObsTotalMediaLength == dec(-2):  # IMAGES OBS with time not available
         max_obs_length = dec("NaN")
         selectedObsTotalMediaLength = dec("NaN")
 
