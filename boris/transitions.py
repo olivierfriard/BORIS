@@ -184,7 +184,6 @@ def transitions_matrix(self, mode):
     plot_parameters = select_subj_behav.choose_obs_subj_behav_category(
         self,
         selectedObservations,
-        maxTime=dec(0),
         flagShowIncludeModifiers=True,
         flagShowExcludeBehaviorsWoEvents=False,
     )

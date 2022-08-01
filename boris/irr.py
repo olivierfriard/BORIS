@@ -302,7 +302,6 @@ def irr_cohen_kappa(self):
     plot_parameters = select_subj_behav.choose_obs_subj_behav_category(
         self,
         selected_observations,
-        maxTime=dec(0),
         flagShowIncludeModifiers=True,
         flagShowExcludeBehaviorsWoEvents=False,
     )
@@ -613,7 +612,6 @@ def needleman_wunch(self):
     plot_parameters = select_subj_behav.choose_obs_subj_behav_category(
         self,
         selected_observations,
-        maxTime=dec(0),
         flagShowIncludeModifiers=True,
         flagShowExcludeBehaviorsWoEvents=False,
     )

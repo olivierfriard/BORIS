@@ -101,7 +101,6 @@ def events_snapshots(self):
     parameters = select_subj_behav.choose_obs_subj_behav_category(
         self,
         selected_observations,
-        maxTime=dec(0),
         flagShowIncludeModifiers=False,
         flagShowExcludeBehaviorsWoEvents=False,
     )
@@ -381,7 +380,6 @@ def extract_events(self):
     parameters = select_subj_behav.choose_obs_subj_behav_category(
         self,
         selected_observations,
-        maxTime=dec(0),
         flagShowIncludeModifiers=False,
         flagShowExcludeBehaviorsWoEvents=False,
     )

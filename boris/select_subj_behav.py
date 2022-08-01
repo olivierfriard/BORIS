@@ -35,7 +35,7 @@ def choose_obs_subj_behav_category(
     self,
     selected_observations,
     min_time=0,
-    maxTime=dec("NaN"),
+    maxTime=dec("NaN"),  # default: do not show time interval selection
     flagShowIncludeModifiers=True,
     flagShowExcludeBehaviorsWoEvents=True,
     by_category=False,
@@ -79,8 +79,6 @@ def choose_obs_subj_behav_category(
     if by_category:
         paramPanelWindow.cbIncludeModifiers.setVisible(False)
         paramPanelWindow.cbExcludeBehaviors.setVisible(False)
-
-    print(f"{type(maxTime)=} {maxTime}")
 
     # hide max time
     if maxTime.is_nan():

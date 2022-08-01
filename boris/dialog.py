@@ -979,7 +979,7 @@ def extract_observed_behaviors(pj, selected_observations, selectedSubjects):
     return observed_behaviors
 '''
 
-
+'''
 def choose_obs_subj_behav_category(
     pj: dict,
     selected_observations: list,
@@ -1179,3 +1179,4 @@ def choose_obs_subj_behav_category(
         cfg.START_TIME: startTime,
         cfg.END_TIME: endTime,
     }
+'''
