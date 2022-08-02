@@ -19,6 +19,7 @@ Copyright 2012-2022 Olivier Friard
   MA 02110-1301, USA.
 """
 
+from decimal import Decimal as dec
 import pathlib
 import re
 import statistics
@@ -357,16 +358,28 @@ def event_filtering(self):
         results.ptText.appendHtml(out)
         results.pbSave.setVisible(False)
         results.pbCancel.setVisible(True)
-
         if not results.exec_():
             return
+
+    # remove observations with unpaired state events
     selected_observations = [x for x in selected_observations if x not in not_paired_obs_list]
     if not selected_observations:
         return
 
     # observations length
     max_obs_length, _ = observation_operations.observation_length(self.pj, selected_observations)
-    if max_obs_length == -1:  # media length not available, user choose to not use events
+    if max_obs_length == dec(-1):  # media length not available, user choose to not use events
+        return
+
+    # exit with message if events do not have timestamp
+    if max_obs_length.is_nan():
+        QMessageBox.critical(
+            None,
+            cfg.programName,
+            ("This function is not available for observations with events that do not have timestamp"),
+            QMessageBox.Ok | QMessageBox.Default,
+            QMessageBox.NoButton,
+        )
         return
 
     parameters = select_subj_behav.choose_obs_subj_behav_category(

@@ -2210,8 +2210,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
             if not selected_observations:
                 return
+
         if mode == "current" and self.observationId:
             selected_observations = [self.observationId]
+
         # check if state events are paired
         out = ""
         not_paired_obs_list = []
@@ -2235,21 +2237,27 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
             if not self.results.exec_():
                 return
+
+        # remove observations with unpaired state events
         selected_observations = [x for x in selected_observations if x not in not_paired_obs_list]
         if not selected_observations:
             return
 
-        # check if almost one selected observation has events
-        """
-        flag_no_events = True
-        for obs_id in selected_observations:
-            if self.pj[cfg.OBSERVATIONS][obs_id][cfg.EVENTS]:
-                flag_no_events = False
-                break
-        if flag_no_events:
-            QMessageBox.warning(self, cfg.programName, "No events found in the selected observations")
+        (max_obs_length, _) = observation_operations.observation_length(self.pj, selected_observations)
+        if max_obs_length == dec(-1):  # media length not available, user choose to not use events
             return
-        """
+
+        # exit with message if events do not have timestamp
+        if max_obs_length.is_nan():
+            QMessageBox.critical(
+                None,
+                cfg.programName,
+                ("This function is not available for observations with events that do not have timestamp"),
+                QMessageBox.Ok | QMessageBox.Default,
+                QMessageBox.NoButton,
+            )
+            return
+
         # select dir if many observations
         plot_directory = ""
         file_format = "png"
@@ -2271,10 +2279,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 file_format = item.lower()
             else:
                 return
-
-        (max_obs_length, _) = observation_operations.observation_length(self.pj, selected_observations)
-        if max_obs_length == -1:  # media length not available, user choose to not use events
-            return
 
         parameters = select_subj_behav.choose_obs_subj_behav_category(
             self,
@@ -2330,6 +2334,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             if not results.exec_():
                 return
 
+        # remove observations with unpaired state events
         selected_observations = [x for x in selected_observations if x not in not_paired_obs_list]
         if not selected_observations:
             return
@@ -2344,28 +2349,48 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             QMessageBox.warning(self, cfg.programName, "No events found in the selected observations")
             return
 
+        max_obs_length, selectedObsTotalMediaLength = observation_operations.observation_length(
+            self.pj, selected_observations
+        )
+
+        if max_obs_length == dec(-1):  # media length not available, user choose to not use events
+            QMessageBox.warning(
+                None,
+                cfg.programName,
+                ("The observation length is not available"),
+                QMessageBox.Ok | QMessageBox.Default,
+                QMessageBox.NoButton,
+            )
+            return
+
+        logging.debug(f"max_obs_length: {max_obs_length}, selectedObsTotalMediaLength: {selectedObsTotalMediaLength}")
+
+        # exit with message if events do not have timestamp
+        if max_obs_length.is_nan():
+            QMessageBox.critical(
+                None,
+                cfg.programName,
+                ("This function is not available for observations with events that do not have timestamp"),
+                QMessageBox.Ok | QMessageBox.Default,
+                QMessageBox.NoButton,
+            )
+            return
+
+        """
         max_obs_length = -1
         for obsId in selected_observations:
             totalMediaLength = project_functions.observation_total_length(self.pj[cfg.OBSERVATIONS][obsId])
             if totalMediaLength == -1:
                 totalMediaLength = 0
             max_obs_length = max(max_obs_length, totalMediaLength)
-
-        if len(selected_observations) == 1:
-            parameters = select_subj_behav.choose_obs_subj_behav_category(
-                self,
-                selected_observations,
-                maxTime=totalMediaLength,
-                flagShowIncludeModifiers=False,
-                flagShowExcludeBehaviorsWoEvents=True,
-            )
-        else:
-            parameters = select_subj_behav.choose_obs_subj_behav_category(
-                self,
-                selected_observations,
-                flagShowIncludeModifiers=False,
-                flagShowExcludeBehaviorsWoEvents=True,
-            )
+        """
+        parameters = select_subj_behav.choose_obs_subj_behav_category(
+            self,
+            selected_observations,
+            maxTime=max_obs_length if len(selected_observations) > 1 else selectedObsTotalMediaLength,
+            flagShowIncludeModifiers=False,
+            flagShowExcludeBehaviorsWoEvents=True,
+        )
 
         if not parameters[cfg.SELECTED_SUBJECTS] or not parameters[cfg.SELECTED_BEHAVIORS]:
             QMessageBox.warning(self, cfg.programName, "Select subject(s) and behavior(s) to plot")

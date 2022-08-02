@@ -622,8 +622,6 @@ def synthetic_time_budget(pj: dict, selected_observations: list, parameters_obs:
 
         data_report.append(columns)
 
-    print(f"{data_report}=")
-
     return True, msg, data_report
 
 

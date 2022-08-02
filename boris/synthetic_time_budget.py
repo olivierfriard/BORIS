@@ -84,51 +84,15 @@ def synthetic_time_budget(self):
         if not self.results.exec_():
             return
 
+    # remove observations with unpaired state events
     selected_observations = [x for x in selected_observations if x not in not_paired_obs_list]
     if not selected_observations:
         return
 
-    """
-    selectedObsTotalMediaLength = dec("0.0")
-    max_obs_length = 0
-    for obsId in selected_observations:
-        obs_length = project_functions.observation_total_length(self.pj[cfg.OBSERVATIONS][obsId])
-
-        logging.debug(f"media length for {obsId}: {obs_length}")
-
-        if obs_length in [0, -1]:
-            selectedObsTotalMediaLength = -1
-            break
-        max_obs_length = max(max_obs_length, obs_length)
-        selectedObsTotalMediaLength += obs_length
-
-    # an observation media length is not available
-    if selectedObsTotalMediaLength == -1:
-        # propose to user to use max event time
-        if (
-            dialog.MessageDialog(
-                cfg.programName,
-                "A media length is not available.<br>Use last event time as media length?",
-                [cfg.YES, cfg.NO],
-            )
-            == cfg.YES
-        ):
-            maxTime = 0  # max length for all events all subjects
-            for obsId in selected_observations:
-                if self.pj[cfg.OBSERVATIONS][obsId][cfg.EVENTS]:
-                    maxTime += max(self.pj[cfg.OBSERVATIONS][obsId][cfg.EVENTS])[0]
-
-            logging.debug(f"max time all events all subjects: {maxTime}")
-
-            selectedObsTotalMediaLength = maxTime
-        else:
-            selectedObsTotalMediaLength = 0
-    """
-
     max_obs_length, selectedObsTotalMediaLength = observation_operations.observation_length(
         self.pj, selected_observations
     )
-    print(f"{max_obs_length=}")
+
     if max_obs_length == dec(-1):  # media length not available, user choose to not use events
         QMessageBox.warning(
             None,
@@ -204,6 +168,8 @@ def synthetic_time_budget(self):
         results.exec_()
         return
 
+    # print(data_report.export("cli", tablefmt="github"))
+
     if output_format in ["tsv", "csv", "html"]:
         with open(file_name, "wb") as f:
             f.write(str.encode(data_report.export(output_format)))
@@ -217,6 +183,7 @@ def synthetic_binned_time_budget(self):
     Synthetic time budget with time bin
     """
 
+    """
     QMessageBox.warning(
         None,
         cfg.programName,
@@ -230,7 +197,7 @@ def synthetic_binned_time_budget(self):
         QMessageBox.Ok | QMessageBox.Default,
         QMessageBox.NoButton,
     )
-
+    """
     _, selected_observations = select_observations.select_observations(
         self.pj, mode=cfg.MULTIPLE, windows_title="Select observations for synthetic binned time budget"
     )
@@ -273,51 +240,42 @@ def synthetic_binned_time_budget(self):
         if not self.results.exec_():
             return
 
+    # remove observations with unpaired state events
     selected_observations = [x for x in selected_observations if x not in not_paired_obs_list]
     if not selected_observations:
         return
 
-    selectedObsTotalMediaLength = dec("0.0")
-    max_obs_length = 0
-    for obsId in selected_observations:
-        obs_length = project_functions.observation_total_length(self.pj[cfg.OBSERVATIONS][obsId])
+    max_obs_length, selectedObsTotalMediaLength = observation_operations.observation_length(
+        self.pj, selected_observations
+    )
 
-        logging.debug(f"media length for {obsId}: {obs_length}")
+    if max_obs_length == dec(-1):  # media length not available, user choose to not use events
+        QMessageBox.warning(
+            None,
+            cfg.programName,
+            ("The observation length is not available"),
+            QMessageBox.Ok | QMessageBox.Default,
+            QMessageBox.NoButton,
+        )
+        return
 
-        if obs_length in [0, -1]:
-            selectedObsTotalMediaLength = -1
-            break
-        max_obs_length = max(max_obs_length, obs_length)
-        selectedObsTotalMediaLength += obs_length
+    logging.debug(f"max_obs_length: {max_obs_length}, selectedObsTotalMediaLength: {selectedObsTotalMediaLength}")
 
-    # an observation media length is not available
-    if selectedObsTotalMediaLength == -1:
-        # propose to user to use max event time
-        if (
-            dialog.MessageDialog(
-                cfg.programName,
-                "A media length is not available.<br>Use last event time as media length?",
-                [cfg.YES, cfg.NO],
-            )
-            == cfg.YES
-        ):
-            maxTime = 0  # max length for all events all subjects
-            for obsId in selected_observations:
-                if self.pj[cfg.OBSERVATIONS][obsId][cfg.EVENTS]:
-                    maxTime += max(self.pj[cfg.OBSERVATIONS][obsId][cfg.EVENTS])[0]
-
-            logging.debug(f"max time all events all subjects: {maxTime}")
-
-            selectedObsTotalMediaLength = maxTime
-        else:
-            selectedObsTotalMediaLength = 0
-
-    print(f"{max_obs_length=}")
+    # exit with message if events do not have timestamp
+    if max_obs_length.is_nan():
+        QMessageBox.critical(
+            None,
+            cfg.programName,
+            ("This function is not available for observations with events that do not have timestamp"),
+            QMessageBox.Ok | QMessageBox.Default,
+            QMessageBox.NoButton,
+        )
+        return
 
     synth_tb_param = select_subj_behav.choose_obs_subj_behav_category(
         self,
         selected_observations,
-        maxTime=max_obs_length,
+        maxTime=max_obs_length if len(selected_observations) > 1 else selectedObsTotalMediaLength,
         flagShowExcludeBehaviorsWoEvents=False,
         by_category=False,
         show_time_bin_size=True,
@@ -327,14 +285,17 @@ def synthetic_binned_time_budget(self):
         return
 
     # ask for excluding behaviors durations from total time
-    cancel_pressed, synth_tb_param[cfg.EXCLUDED_BEHAVIORS] = self.filter_behaviors(
-        title="Select behaviors to exclude",
-        text=("The duration of the selected behaviors will " "be subtracted from the total time"),
-        table="",
-        behavior_type=[cfg.STATE_EVENT],
-    )
-    if cancel_pressed:
-        return
+    if not max_obs_length.is_nan():
+        cancel_pressed, synth_tb_param[cfg.EXCLUDED_BEHAVIORS] = self.filter_behaviors(
+            title="Select behaviors to exclude",
+            text=("The duration of the selected behaviors will " "be subtracted from the total time"),
+            table="",
+            behavior_type=[cfg.STATE_EVENT],
+        )
+        if cancel_pressed:
+            return
+    else:
+        synth_tb_param[cfg.EXCLUDED_BEHAVIORS] = []
 
     extended_file_formats = [
         "Tab Separated Values (*.tsv)",
@@ -347,7 +308,7 @@ def synthetic_binned_time_budget(self):
     file_formats = ["tsv", "csv", "ods", "xlsx", "xls", "html"]
 
     file_name, filter_ = QFileDialog().getSaveFileName(
-        self, "Synthetic time budget", "", ";;".join(extended_file_formats)
+        self, "Synthetic time budget with time bin", "", ";;".join(extended_file_formats)
     )
     if not file_name:
         return
