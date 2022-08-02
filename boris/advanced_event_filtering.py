@@ -338,6 +338,7 @@ def event_filtering(self):
     if not selected_observations:
         return
 
+    """
     # check if state events are paired
     out = ""
     not_paired_obs_list = []
@@ -360,10 +361,10 @@ def event_filtering(self):
         results.pbCancel.setVisible(True)
         if not results.exec_():
             return
+    """
 
-    # remove observations with unpaired state events
-    selected_observations = [x for x in selected_observations if x not in not_paired_obs_list]
-    if not selected_observations:
+    not_ok, selected_observations = project_functions.check_state_events(self.pj, selected_observations)
+    if not_ok or not selected_observations:
         return
 
     # observations length

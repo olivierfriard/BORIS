@@ -30,9 +30,11 @@ from shutil import copyfile
 from typing import List, Tuple
 
 import tablib
+from PyQt5.QtWidgets import QMessageBox
 
 from . import config as cfg
 from . import db_functions
+from . import dialog
 from . import portion as I
 from . import utilities as util
 from . import version
@@ -137,28 +139,6 @@ def behavior_category(ethogram: dict) -> dict:
     return behavioral_category
 
 
-def check_coded_behaviors(pj: dict) -> set:
-    """
-    check if behaviors coded in events are defined in ethogram
-
-    Args:
-        pj (dict): project dictionary
-
-    Returns:
-        set: behaviors present in observations that are not define in ethogram
-    """
-
-    # set of behaviors defined in ethogram
-    ethogram_behavior_codes = {pj[cfg.ETHOGRAM][idx][cfg.BEHAVIOR_CODE] for idx in pj[cfg.ETHOGRAM]}
-    behaviors_not_defined = []
-
-    for obs_id in pj[cfg.OBSERVATIONS]:
-        for event in pj[cfg.OBSERVATIONS][obs_id][cfg.EVENTS]:
-            if event[cfg.EVENT_BEHAVIOR_FIELD_IDX] not in ethogram_behavior_codes:
-                behaviors_not_defined.append(event[cfg.EVENT_BEHAVIOR_FIELD_IDX])
-    return set(sorted(behaviors_not_defined))
-
-
 def check_if_media_available(observation: dict, project_file_name: str):
     """
     check if media files available
@@ -204,6 +184,53 @@ def check_directories_availability(observation: dict, project_file_name: str):
             return (False, f"Directory <b>{dir_path}</b> not found")
 
     return (True, "")
+
+
+def check_coded_behaviors_in_obs_list(pj: dict, observations_list: list) -> bool:
+    """
+    check if coded behaviors in a list of observations are defined in the ethogram
+    """
+    out = ""
+    ethogram_behavior_codes = {pj[cfg.ETHOGRAM][idx][cfg.BEHAVIOR_CODE] for idx in pj[cfg.ETHOGRAM]}
+    behaviors_not_defined = []
+    out = ""  # will contain the output
+    for obs_id in observations_list:
+        for event in pj[cfg.OBSERVATIONS][obs_id][cfg.EVENTS]:
+            if event[cfg.EVENT_BEHAVIOR_FIELD_IDX] not in ethogram_behavior_codes:
+                behaviors_not_defined.append(event[cfg.EVENT_BEHAVIOR_FIELD_IDX])
+    if set(sorted(behaviors_not_defined)):
+        out += f"The following behaviors are not defined in the ethogram: <b>{', '.join(set(sorted(behaviors_not_defined)))}</b><br><br>"
+        results = dialog.Results_dialog()
+        results.setWindowTitle(f"{cfg.programName} - Check selected observations")
+        results.ptText.setReadOnly(True)
+        results.ptText.appendHtml(out)
+        results.pbSave.setVisible(False)
+        results.pbCancel.setVisible(True)
+        if not results.exec_():
+            return True
+    return False
+
+
+def check_coded_behaviors(pj: dict) -> set:
+    """
+    check if behaviors coded in events are defined in ethogram for all observations
+
+    Args:
+        pj (dict): project dictionary
+
+    Returns:
+        set: behaviors present in observations that are not define in ethogram
+    """
+
+    # set of behaviors defined in ethogram
+    ethogram_behavior_codes = {pj[cfg.ETHOGRAM][idx][cfg.BEHAVIOR_CODE] for idx in pj[cfg.ETHOGRAM]}
+    behaviors_not_defined = []
+
+    for obs_id in pj[cfg.OBSERVATIONS]:
+        for event in pj[cfg.OBSERVATIONS][obs_id][cfg.EVENTS]:
+            if event[cfg.EVENT_BEHAVIOR_FIELD_IDX] not in ethogram_behavior_codes:
+                behaviors_not_defined.append(event[cfg.EVENT_BEHAVIOR_FIELD_IDX])
+    return set(sorted(behaviors_not_defined))
 
 
 def check_state_events_obs(obsId: str, ethogram: dict, observation: dict, time_format: str = cfg.HHMMSS) -> tuple:
@@ -280,6 +307,40 @@ def check_state_events_obs(obsId: str, ethogram: dict, observation: dict, time_f
                         )
 
     return (False, out) if out else (True, "No problem detected")
+
+
+def check_state_events(pj: dict, observations_list: list) -> Tuple[bool, tuple]:
+    """
+    check if state events are paired in a list of observations
+    use check_state_events_obs function
+    """
+
+    out = ""
+    not_paired_obs_list = []
+    for obs_id in observations_list:
+        r, msg = check_state_events_obs(obs_id, pj[cfg.ETHOGRAM], pj[cfg.OBSERVATIONS][obs_id])
+
+        if not r:
+            out += f"Observation: <strong>{obs_id}</strong><br>{msg}<br>"
+            not_paired_obs_list.append(obs_id)
+
+    if out:
+        out = f"The observations with UNPAIRED state events will be removed from the analysis<br><br>{out}"
+        results = dialog.Results_dialog()
+        results.setWindowTitle(f"{cfg.programName} - Check selected observations")
+        results.ptText.setReadOnly(True)
+        results.ptText.appendHtml(out)
+        results.pbSave.setVisible(False)
+        results.pbCancel.setVisible(True)
+        if not results.exec_():
+            return True, []
+
+    # remove observations with unpaired state events
+    new_observations_list = [x for x in observations_list if x not in not_paired_obs_list]
+    if not new_observations_list:
+        QMessageBox.warning(None, cfg.programName, "The observation list is empty")
+
+    return False, new_observations_list  # no state events are unpaired
 
 
 def check_project_integrity(

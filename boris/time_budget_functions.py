@@ -650,7 +650,7 @@ def time_budget_analysis(
 
         for behavior in parameters[cfg.SELECTED_BEHAVIORS]:
 
-            if parameters[cfg.INCLUDE_MODIFIERS]:
+            if parameters[cfg.INCLUDE_MODIFIERS]:  # with modifiers
 
                 cursor.execute(
                     "SELECT DISTINCT modifiers FROM events WHERE subject = ? AND code = ?", (subject, behavior)
@@ -818,7 +818,7 @@ def time_budget_analysis(
                         for occurence, observation in rows:
                             print(f"{parameters['start time']=}")
                             print(f"{occurence=}")
-                            if occurence != "NaN":
+                            if occurence is not None:
                                 new_occurence = max(float(parameters["start time"]), occurence)
                                 new_occurence = min(new_occurence, float(parameters["end time"]))
                             else:
@@ -920,9 +920,11 @@ def time_budget_analysis(
                         for idx, row in enumerate(rows):
                             # event
                             if idx % 2 == 0:
-                                new_init, new_end = float(row[0]), float(rows[idx + 1][0])
-
-                                all_event_durations.append(new_end - new_init)
+                                if row[0] is not None and rows[idx + 1][0] is not None:
+                                    new_init, new_end = float(row[0]), float(rows[idx + 1][0])
+                                    all_event_durations.append(new_end - new_init)
+                                else:
+                                    all_event_durations.append(float("NaN"))
 
                             # inter event if same observation
                             if idx % 2 and idx != len(rows) - 1 and row[1] == rows[idx + 1][1]:
@@ -932,25 +934,35 @@ def time_budget_analysis(
                                 ):
                                     all_event_interdurations.append(float(rows[idx + 1][0]) - float(row[0]))
 
+                        if [x for x in all_event_durations if math.isnan(x)] or not len(all_event_durations):
+                            duration_mean = float("NaN")
+                            duration_stdev = float("NaN")
+                        else:
+                            duration_mean = round(statistics.mean(all_event_durations), 3)
+                            if len(all_event_durations) > 1:
+                                duration_stdev = round(statistics.stdev(all_event_durations), 3)
+                            else:
+                                duration_stdev = float("NaN")
+                        if [x for x in all_event_interdurations if math.isnan(x)] or not len(all_event_interdurations):
+                            inter_duration_mean = float("NaN")
+                            inter_duration_stdev = float("NaN")
+                        else:
+                            inter_duration_mean = round(statistics.mean(all_event_interdurations), 3)
+                            if len(all_event_interdurations) > 1:
+                                inter_duration_stdev = round(statistics.stdev(all_event_interdurations), 3)
+                            else:
+                                inter_duration_stdev = float("NaN")
                         out_cat.append(
                             {
                                 "subject": subject,
                                 "behavior": behavior,
                                 "modifiers": "",
                                 "duration": round(sum(all_event_durations), 3),
-                                "duration_mean": round(statistics.mean(all_event_durations), 3)
-                                if len(all_event_durations)
-                                else float("NaN"),
-                                "duration_stdev": round(statistics.stdev(all_event_durations), 3)
-                                if len(all_event_durations) > 1
-                                else float("NaN"),
+                                "duration_mean": duration_mean,
+                                "duration_stdev": duration_stdev,
                                 "number": len(all_event_durations),
-                                "inter_duration_mean": round(statistics.mean(all_event_interdurations), 3)
-                                if len(all_event_interdurations)
-                                else float("NaN"),
-                                "inter_duration_stdev": round(statistics.stdev(all_event_interdurations), 3)
-                                if len(all_event_interdurations) > 1
-                                else float("NaN"),
+                                "inter_duration_mean": inter_duration_mean,
+                                "inter_duration_stdev": inter_duration_stdev,
                             }
                         )
 

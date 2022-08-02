@@ -284,41 +284,13 @@ def time_budget(self, mode: str, mode2: str = "list"):
             return
 
     # check if coded behaviors are defined in ethogram
-    ethogram_behavior_codes = {self.pj[cfg.ETHOGRAM][idx][cfg.BEHAVIOR_CODE] for idx in self.pj[cfg.ETHOGRAM]}
-    behaviors_not_defined = []
-    out = ""  # will contain the output
-    for obs_id in selectedObservations:
-        for event in self.pj[cfg.OBSERVATIONS][obs_id][cfg.EVENTS]:
-            if event[cfg.EVENT_BEHAVIOR_FIELD_IDX] not in ethogram_behavior_codes:
-                behaviors_not_defined.append(event[cfg.EVENT_BEHAVIOR_FIELD_IDX])
-    if set(sorted(behaviors_not_defined)):
-        out += (
-            "The following behaviors are not defined in the ethogram: "
-            f"<b>{', '.join(set(sorted(behaviors_not_defined)))}</b><br><br>"
-        )
+    if project_functions.check_coded_behaviors_in_obs_list(self.pj, selectedObservations):
+        return
 
     # check if state events are paired
-    not_paired_obs_list = []
-    for obs_id in selectedObservations:
-        r, msg = project_functions.check_state_events_obs(
-            obs_id, self.pj[cfg.ETHOGRAM], self.pj[cfg.OBSERVATIONS][obs_id], self.timeFormat
-        )
-
-        if not r:
-            out += f"Observation: <strong>{obs_id}</strong><br>{msg}<br>"
-            not_paired_obs_list.append(obs_id)
-
-    if out:
-        out = f"Some selected observations have issues:<br><br>{out}"
-        self.results = dialog.Results_dialog()
-        self.results.setWindowTitle(f"{cfg.programName} - Check selected observations")
-        self.results.ptText.setReadOnly(True)
-        self.results.ptText.appendHtml(out)
-        self.results.pbSave.setVisible(False)
-        self.results.pbCancel.setVisible(True)
-
-        if not self.results.exec_():
-            return
+    not_ok, selected_observations = project_functions.check_state_events(self.pj, selectedObservations)
+    if not_ok or not selected_observations:
+        return
 
     flagGroup = False
     if len(selectedObservations) > 1:
@@ -330,11 +302,11 @@ def time_budget(self, mode: str, mode2: str = "list"):
     max_obs_length, selectedObsTotalMediaLength = observation_operations.observation_length(
         self.pj, selectedObservations
     )
-    if max_obs_length == -1:  # media length not available, user choose to not use events
+    if max_obs_length == dec(-1):  # media length not available, user choose to not use events
         QMessageBox.warning(
             None,
             cfg.programName,
-            ("The observation length is not available"),
+            ("The duration of one or more observation is not available"),
             QMessageBox.Ok | QMessageBox.Default,
             QMessageBox.NoButton,
         )
@@ -353,14 +325,17 @@ def time_budget(self, mode: str, mode2: str = "list"):
         return
 
     # ask for excluding behaviors durations from total time
-    cancel_pressed, parameters[cfg.EXCLUDED_BEHAVIORS] = self.filter_behaviors(
-        title="Select behaviors to exclude",
-        text=("The duration of the selected behaviors will " "be subtracted from the total time"),
-        table="",
-        behavior_type=[cfg.STATE_EVENT],
-    )
-    if cancel_pressed:
-        return
+    if not max_obs_length.is_nan():
+        cancel_pressed, parameters[cfg.EXCLUDED_BEHAVIORS] = self.filter_behaviors(
+            title="Select behaviors to exclude",
+            text=("The duration of the selected behaviors will " "be subtracted from the total time"),
+            table="",
+            behavior_type=[cfg.STATE_EVENT],
+        )
+        if cancel_pressed:
+            return
+    else:
+        parameters[cfg.EXCLUDED_BEHAVIORS] = []
 
     # check if time_budget window must be used
     if flagGroup or len(selectedObservations) == 1:
@@ -378,10 +353,10 @@ def time_budget(self, mode: str, mode2: str = "list"):
 
             obs_length = project_functions.observation_total_length(self.pj[cfg.OBSERVATIONS][obsId])
 
-            if obs_length == dec("-1"):  # media length not available
+            if obs_length == dec(-1):  # media length not available
                 parameters[cfg.TIME_INTERVAL] = cfg.TIME_EVENTS
 
-            if obs_length == dec("-2"):  # images obs without time
+            if obs_length == dec(-2):  # images obs without time
                 parameters[cfg.TIME_INTERVAL] = cfg.TIME_EVENTS
 
             if parameters[cfg.TIME_INTERVAL] == cfg.TIME_FULL_OBS:

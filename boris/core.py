@@ -2214,33 +2214,13 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         if mode == "current" and self.observationId:
             selected_observations = [self.observationId]
 
+        # check if coded behaviors are defined in ethogram
+        if project_functions.check_coded_behaviors_in_obs_list(self.pj, selected_observations):
+            return
+
         # check if state events are paired
-        out = ""
-        not_paired_obs_list = []
-        for obs_id in selected_observations:
-            r, msg = project_functions.check_state_events_obs(
-                obs_id, self.pj[cfg.ETHOGRAM], self.pj[cfg.OBSERVATIONS][obs_id], self.timeFormat
-            )
-
-            if not r:
-                out += f"Observation: <strong>{obs_id}</strong><br>{msg}<br>"
-                not_paired_obs_list.append(obs_id)
-
-        if out:
-            out = "The observations with UNPAIRED state events will be removed from the plot<br><br>" + out
-            self.results = dialog.Results_dialog()
-            self.results.setWindowTitle(cfg.programName + " - Check selected observations")
-            self.results.ptText.setReadOnly(True)
-            self.results.ptText.appendHtml(out)
-            self.results.pbSave.setVisible(False)
-            self.results.pbCancel.setVisible(True)
-
-            if not self.results.exec_():
-                return
-
-        # remove observations with unpaired state events
-        selected_observations = [x for x in selected_observations if x not in not_paired_obs_list]
-        if not selected_observations:
+        not_ok, selected_observations = project_functions.check_state_events(self.pj, selected_observations)
+        if not_ok or not selected_observations:
             return
 
         (max_obs_length, _) = observation_operations.observation_length(self.pj, selected_observations)
@@ -2313,30 +2293,13 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         if not selected_observations:
             return
 
+        # check if coded behaviors are defined in ethogram
+        if project_functions.check_coded_behaviors_in_obs_list(self.pj, selected_observations):
+            return
+
         # check if state events are paired
-        out = ""
-        not_paired_obs_list = []
-        for obsId in selected_observations:
-            r, msg = project_functions.check_state_events_obs(
-                obsId, self.pj[cfg.ETHOGRAM], self.pj[cfg.OBSERVATIONS][obsId], self.timeFormat
-            )
-
-            if not r:
-                out += f"Observation: <strong>{obsId}</strong><br>{msg}<br>"
-                not_paired_obs_list.append(obsId)
-
-        if out:
-            out = "The observations with UNPAIRED state events will be removed from the plot<br>br>" + out
-            results = dialog.Results_dialog()
-            results.setWindowTitle(cfg.programName + " - Check selected observations")
-            results.ptText.setReadOnly(True)
-            results.ptText.appendHtml(out)
-            if not results.exec_():
-                return
-
-        # remove observations with unpaired state events
-        selected_observations = [x for x in selected_observations if x not in not_paired_obs_list]
-        if not selected_observations:
+        not_ok, selected_observations = project_functions.check_state_events(self.pj, selected_observations)
+        if not_ok or not selected_observations:
             return
 
         # check if almost one selected observation has events
@@ -2357,7 +2320,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             QMessageBox.warning(
                 None,
                 cfg.programName,
-                ("The observation length is not available"),
+                ("The duration of one or more observation is not available"),
                 QMessageBox.Ok | QMessageBox.Default,
                 QMessageBox.NoButton,
             )
@@ -2376,14 +2339,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             )
             return
 
-        """
-        max_obs_length = -1
-        for obsId in selected_observations:
-            totalMediaLength = project_functions.observation_total_length(self.pj[cfg.OBSERVATIONS][obsId])
-            if totalMediaLength == -1:
-                totalMediaLength = 0
-            max_obs_length = max(max_obs_length, totalMediaLength)
-        """
         parameters = select_subj_behav.choose_obs_subj_behav_category(
             self,
             selected_observations,
@@ -3171,31 +3126,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             return
 
         # check if state events are paired
-        out = ""
-        not_paired_obs_list = []
-        for obsId in selected_observations:
-            r, msg = project_functions.check_state_events_obs(
-                obsId, self.pj[cfg.ETHOGRAM], self.pj[cfg.OBSERVATIONS][obsId], self.timeFormat
-            )
-
-            if not r:
-                out += f"Observation: <strong>{obsId}</strong><br>{msg}<br>"
-                not_paired_obs_list.append(obsId)
-
-        if out:
-            out = "The observations with UNPAIRED state events will be removed from the plot<br><br>" + out
-            self.results = dialog.Results_dialog()
-            self.results.setWindowTitle(cfg.programName + " - Check selected observations")
-            self.results.ptText.setReadOnly(True)
-            self.results.ptText.appendHtml(out)
-            self.results.pbSave.setVisible(False)
-            self.results.pbCancel.setVisible(True)
-
-            if not self.results.exec_():
-                return
-
-        selected_observations = [x for x in selected_observations if x not in not_paired_obs_list]
-        if not selected_observations:
+        not_ok, selected_observations = project_functions.check_state_events(self.pj, selected_observations)
+        if not_ok or not selected_observations:
             return
 
         parameters = select_subj_behav.choose_obs_subj_behav_category(self, selected_observations, 0)

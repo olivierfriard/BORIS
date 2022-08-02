@@ -49,44 +49,13 @@ def synthetic_time_budget(self):
     if not selected_observations:
         return
 
-    out = ""
     # check if coded behaviors are defined in ethogram
-    ethogram_behavior_codes = {self.pj[cfg.ETHOGRAM][idx][cfg.BEHAVIOR_CODE] for idx in self.pj[cfg.ETHOGRAM]}
-    behaviors_not_defined = []
-    out = ""  # will contain the output
-    for obs_id in selected_observations:
-        for event in self.pj[cfg.OBSERVATIONS][obs_id][cfg.EVENTS]:
-            if event[cfg.EVENT_BEHAVIOR_FIELD_IDX] not in ethogram_behavior_codes:
-                behaviors_not_defined.append(event[cfg.EVENT_BEHAVIOR_FIELD_IDX])
-    if set(sorted(behaviors_not_defined)):
-        out += f"The following behaviors are not defined in the ethogram: <b>{', '.join(set(sorted(behaviors_not_defined)))}</b><br><br>"
+    if project_functions.check_coded_behaviors_in_obs_list(self.pj, selected_observations):
+        return
 
     # check if state events are paired
-    not_paired_obs_list = []
-    for obs_id in selected_observations:
-        r, msg = project_functions.check_state_events_obs(
-            obs_id, self.pj[cfg.ETHOGRAM], self.pj[cfg.OBSERVATIONS][obs_id], self.timeFormat
-        )
-        if not r:
-            out += f"Observation: <strong>{obs_id}</strong><br>{msg}<br>"
-            not_paired_obs_list.append(obs_id)
-
-    if out:
-        if not_paired_obs_list:
-            out += "<br>The observations with UNPAIRED state events will be removed from the analysis"
-        self.results = dialog.Results_dialog()
-        self.results.setWindowTitle(cfg.programName + " - Check selected observations")
-        self.results.ptText.setReadOnly(True)
-        self.results.ptText.appendHtml(out)
-        self.results.pbSave.setVisible(False)
-        self.results.pbCancel.setVisible(True)
-
-        if not self.results.exec_():
-            return
-
-    # remove observations with unpaired state events
-    selected_observations = [x for x in selected_observations if x not in not_paired_obs_list]
-    if not selected_observations:
+    not_ok, selected_observations = project_functions.check_state_events(self.pj, selected_observations)
+    if not_ok or not selected_observations:
         return
 
     max_obs_length, selectedObsTotalMediaLength = observation_operations.observation_length(
@@ -97,7 +66,7 @@ def synthetic_time_budget(self):
         QMessageBox.warning(
             None,
             cfg.programName,
-            ("The observation length is not available"),
+            ("The duration of one or more observation is not available"),
             QMessageBox.Ok | QMessageBox.Default,
             QMessageBox.NoButton,
         )
@@ -205,44 +174,13 @@ def synthetic_binned_time_budget(self):
     if not selected_observations:
         return
 
-    out = ""
     # check if coded behaviors are defined in ethogram
-    ethogram_behavior_codes = {self.pj[cfg.ETHOGRAM][idx][cfg.BEHAVIOR_CODE] for idx in self.pj[cfg.ETHOGRAM]}
-    behaviors_not_defined = []
-    out = ""  # will contain the output
-    for obs_id in selected_observations:
-        for event in self.pj[cfg.OBSERVATIONS][obs_id][cfg.EVENTS]:
-            if event[cfg.EVENT_BEHAVIOR_FIELD_IDX] not in ethogram_behavior_codes:
-                behaviors_not_defined.append(event[cfg.EVENT_BEHAVIOR_FIELD_IDX])
-    if set(sorted(behaviors_not_defined)):
-        out += f"The following behaviors are not defined in the ethogram: <b>{', '.join(set(sorted(behaviors_not_defined)))}</b><br><br>"
+    if project_functions.check_coded_behaviors_in_obs_list(self.pj, selected_observations):
+        return
 
     # check if state events are paired
-    not_paired_obs_list = []
-    for obs_id in selected_observations:
-        r, msg = project_functions.check_state_events_obs(
-            obs_id, self.pj[cfg.ETHOGRAM], self.pj[cfg.OBSERVATIONS][obs_id], self.timeFormat
-        )
-        if not r:
-            out += f"Observation: <strong>{obs_id}</strong><br>{msg}<br>"
-            not_paired_obs_list.append(obs_id)
-
-    if out:
-        if not_paired_obs_list:
-            out += "<br>The observations with UNPAIRED state events will not be used in the analysis"
-        self.results = dialog.Results_dialog()
-        self.results.setWindowTitle(f"{cfg.programName} - Check selected observations")
-        self.results.ptText.setReadOnly(True)
-        self.results.ptText.appendHtml(out)
-        self.results.pbSave.setVisible(False)
-        self.results.pbCancel.setVisible(True)
-
-        if not self.results.exec_():
-            return
-
-    # remove observations with unpaired state events
-    selected_observations = [x for x in selected_observations if x not in not_paired_obs_list]
-    if not selected_observations:
+    not_ok, selected_observations = project_functions.check_state_events(self.pj, selected_observations)
+    if not_ok or not selected_observations:
         return
 
     max_obs_length, selectedObsTotalMediaLength = observation_operations.observation_length(
@@ -253,7 +191,7 @@ def synthetic_binned_time_budget(self):
         QMessageBox.warning(
             None,
             cfg.programName,
-            ("The observation length is not available"),
+            ("The duration of one or more observation is not available"),
             QMessageBox.Ok | QMessageBox.Default,
             QMessageBox.NoButton,
         )
