@@ -60,6 +60,15 @@ def export_events_as_behavioral_sequences(self, separated_subjects=False, timed=
     if not selected_observations:
         return
 
+    # check if coded behaviors are defined in ethogram
+    if project_functions.check_coded_behaviors_in_obs_list(self.pj, selected_observations):
+        return
+
+    # check if state events are paired
+    not_ok, selected_observations = project_functions.check_state_events(self.pj, selected_observations)
+    if not_ok or not selected_observations:
+        return
+
     parameters = select_subj_behav.choose_obs_subj_behav_category(
         self,
         selected_observations,
@@ -128,6 +137,7 @@ def export_tabular_events(self, mode: str = "tabular"):
         )
 
     # check if state events are paired
+    # UNPAIRED observations must not be removed!
     not_paired_obs_list = []
     for obsId in selectedObservations:
         r, msg = project_functions.check_state_events_obs(
@@ -554,6 +564,30 @@ def export_state_events_as_textgrid(self):
     if not selectedObservations:
         return
 
+    # check if coded behaviors are defined in ethogram
+    if project_functions.check_coded_behaviors_in_obs_list(self.pj, selected_observations):
+        return
+
+    # check if state events are paired
+    not_ok, selected_observations = project_functions.check_state_events(self.pj, selected_observations)
+    if not_ok or not selected_observations:
+        return
+
+    max_obs_length, selectedObsTotalMediaLength = observation_operations.observation_length(
+        self.pj, selected_observations
+    )
+
+    # exit with message if events do not have timestamp
+    if max_obs_length.is_nan():
+        QMessageBox.critical(
+            None,
+            cfg.programName,
+            ("This function is not available for observations with events that do not have timestamp"),
+            QMessageBox.Ok | QMessageBox.Default,
+            QMessageBox.NoButton,
+        )
+        return
+
     plot_parameters = select_subj_behav.choose_obs_subj_behav_category(
         self,
         selectedObservations,
@@ -562,38 +596,6 @@ def export_state_events_as_textgrid(self):
     )
 
     if not plot_parameters[cfg.SELECTED_SUBJECTS] or not plot_parameters[cfg.SELECTED_BEHAVIORS]:
-        return
-
-    # check if state events are paired
-    out = ""
-    not_paired_obs_list = []
-    for obsId in selectedObservations:
-        r, msg = project_functions.check_state_events_obs(
-            obsId, self.pj[cfg.ETHOGRAM], self.pj[cfg.OBSERVATIONS][obsId], self.timeFormat
-        )
-
-        if not r:
-            # check if unpaired behavior is included in behaviors to extract
-            for behav in plot_parameters[cfg.SELECTED_BEHAVIORS]:
-                if f"behavior <b>{behav}</b>" in msg:
-                    out += f"Observation: <strong>{obsId}</strong><br>{msg}<br>"
-                    not_paired_obs_list.append(obsId)
-
-    if out:
-        out = "The observations with UNPAIRED state events will be removed from the analysis<br><br>" + out
-        results = dialog.Results_dialog()
-        results.setWindowTitle(f"{cfg.programName} - Check selected observations and selected behaviors")
-        results.ptText.setReadOnly(True)
-        results.ptText.appendHtml(out)
-        results.pbSave.setVisible(False)
-        results.pbCancel.setVisible(True)
-
-        if not results.exec_():
-            return
-
-    # remove observations with unpaired state events
-    selectedObservations = [x for x in selectedObservations if x not in not_paired_obs_list]
-    if not selectedObservations:
         return
 
     exportDir = QFileDialog(self).getExistingDirectory(

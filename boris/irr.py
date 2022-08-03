@@ -31,6 +31,7 @@ from . import config as cfg
 from . import db_functions, dialog, project_functions, select_subj_behav
 from . import utilities as util
 from . import select_observations
+from . import observation_operations
 
 
 def subj_behav_modif(cursor, obsid: str, subject: str, time: dec, interval, include_modifiers: bool) -> list:
@@ -270,33 +271,13 @@ def irr_cohen_kappa(self):
         QMessageBox.information(self, cfg.programName, "Select almost 2 observations for IRR analysis")
         return
 
+    # check if coded behaviors are defined in ethogram
+    if project_functions.check_coded_behaviors_in_obs_list(self.pj, selected_observations):
+        return
+
     # check if state events are paired
-    out = ""
-    not_paired_obs_list = []
-    for obsId in selected_observations:
-        r, msg = project_functions.check_state_events_obs(
-            obsId, self.pj[cfg.ETHOGRAM], self.pj[cfg.OBSERVATIONS][obsId], self.timeFormat
-        )
-
-        if not r:
-            out += f"Observation: <strong>{obsId}</strong><br>{msg}<br>"
-            not_paired_obs_list.append(obsId)
-
-    if out:
-        out = "The observations with UNPAIRED state events will be removed from the analysis<br><br>" + out
-        results = dialog.Results_dialog()
-        results.setWindowTitle(cfg.programName + " - Check selected observations")
-        results.ptText.setReadOnly(True)
-        results.ptText.appendHtml(out)
-        results.pbSave.setVisible(False)
-        results.pbCancel.setVisible(True)
-
-        if not results.exec_():
-            return
-
-    # remove observations with unpaired state events
-    selected_observations = [x for x in selected_observations if x not in not_paired_obs_list]
-    if not selected_observations:
+    not_ok, selected_observations = project_functions.check_state_events(self.pj, selected_observations)
+    if not_ok or not selected_observations:
         return
 
     plot_parameters = select_subj_behav.choose_obs_subj_behav_category(
@@ -305,6 +286,20 @@ def irr_cohen_kappa(self):
         flagShowIncludeModifiers=True,
         flagShowExcludeBehaviorsWoEvents=False,
     )
+
+    max_obs_length, selectedObsTotalMediaLength = observation_operations.observation_length(
+        self.pj, selected_observations
+    )
+    # exit with message if events do not have timestamp
+    if max_obs_length.is_nan():
+        QMessageBox.critical(
+            None,
+            cfg.programName,
+            ("This function is not available for observations with events that do not have timestamp"),
+            QMessageBox.Ok | QMessageBox.Default,
+            QMessageBox.NoButton,
+        )
+        return
 
     if not plot_parameters[cfg.SELECTED_SUBJECTS] or not plot_parameters[cfg.SELECTED_BEHAVIORS]:
         return
@@ -580,33 +575,28 @@ def needleman_wunch(self):
         )
         return
 
+    # check if coded behaviors are defined in ethogram
+    if project_functions.check_coded_behaviors_in_obs_list(self.pj, selected_observations):
+        return
+
     # check if state events are paired
-    out = ""
-    not_paired_obs_list = []
-    for obsId in selected_observations:
-        r, msg = project_functions.check_state_events_obs(
-            obsId, self.pj[cfg.ETHOGRAM], self.pj[cfg.OBSERVATIONS][obsId], self.timeFormat
+    not_ok, selected_observations = project_functions.check_state_events(self.pj, selected_observations)
+    if not_ok or not selected_observations:
+        return
+
+    max_obs_length, selectedObsTotalMediaLength = observation_operations.observation_length(
+        self.pj, selected_observations
+    )
+
+    # exit with message if events do not have timestamp
+    if max_obs_length.is_nan():
+        QMessageBox.critical(
+            None,
+            cfg.programName,
+            ("This function is not available for observations with events that do not have timestamp"),
+            QMessageBox.Ok | QMessageBox.Default,
+            QMessageBox.NoButton,
         )
-
-        if not r:
-            out += f"Observation: <strong>{obsId}</strong><br>{msg}<br>"
-            not_paired_obs_list.append(obsId)
-
-    if out:
-        out = "The observations with UNPAIRED state events will be removed from the analysis<br><br>" + out
-        results = dialog.Results_dialog()
-        results.setWindowTitle(f"{cfg.programName} - Check selected observations")
-        results.ptText.setReadOnly(True)
-        results.ptText.appendHtml(out)
-        results.pbSave.setVisible(False)
-        results.pbCancel.setVisible(True)
-
-        if not results.exec_():
-            return
-
-    # remove observations with unpaired state events
-    selected_observations = [x for x in selected_observations if x not in not_paired_obs_list]
-    if not selected_observations:
         return
 
     plot_parameters = select_subj_behav.choose_obs_subj_behav_category(

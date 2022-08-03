@@ -338,31 +338,6 @@ def event_filtering(self):
     if not selected_observations:
         return
 
-    """
-    # check if state events are paired
-    out = ""
-    not_paired_obs_list = []
-    for obs_id in selected_observations:
-        r, msg = project_functions.check_state_events_obs(
-            obs_id, self.pj[cfg.ETHOGRAM], self.pj[cfg.OBSERVATIONS][obs_id]
-        )
-
-        if not r:
-            out += f"Observation: <strong>{obs_id}</strong><br>{msg}<br>"
-            not_paired_obs_list.append(obs_id)
-
-    if out:
-        out = f"The observations with UNPAIRED state events will be removed from tha analysis<br><br>{out}"
-        results = dialog.Results_dialog()
-        results.setWindowTitle(f"{cfg.programName} - Check selected observations")
-        results.ptText.setReadOnly(True)
-        results.ptText.appendHtml(out)
-        results.pbSave.setVisible(False)
-        results.pbCancel.setVisible(True)
-        if not results.exec_():
-            return
-    """
-
     not_ok, selected_observations = project_functions.check_state_events(self.pj, selected_observations)
     if not_ok or not selected_observations:
         return
@@ -377,7 +352,7 @@ def event_filtering(self):
         QMessageBox.critical(
             None,
             cfg.programName,
-            ("This function is not available for observations with events that do not have timestamp"),
+            ("This function is not available for observations with events that do not have a timestamp"),
             QMessageBox.Ok | QMessageBox.Default,
             QMessageBox.NoButton,
         )

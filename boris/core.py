@@ -3130,6 +3130,21 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         if not_ok or not selected_observations:
             return
 
+        max_obs_length, selectedObsTotalMediaLength = observation_operations.observation_length(
+            self.pj, selected_observations
+        )
+
+        # exit with message if events do not have timestamp
+        if max_obs_length.is_nan():
+            QMessageBox.critical(
+                None,
+                cfg.programName,
+                ("This function is not available for observations with events that do not have timestamp"),
+                QMessageBox.Ok | QMessageBox.Default,
+                QMessageBox.NoButton,
+            )
+            return
+
         parameters = select_subj_behav.choose_obs_subj_behav_category(self, selected_observations, 0)
         if not parameters[cfg.SELECTED_SUBJECTS] or not parameters[cfg.SELECTED_BEHAVIORS]:
             return

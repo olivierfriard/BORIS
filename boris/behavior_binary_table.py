@@ -22,9 +22,7 @@ Copyright 2012-2022 Olivier Friard
 import os
 import pathlib
 import re
-import sys
-from decimal import Decimal as dc
-import logging
+from decimal import Decimal as dec
 
 import tablib
 from PyQt5.QtCore import Qt
@@ -76,20 +74,20 @@ def create_behavior_binary_table(
         # check observation interval
         if parameters_obs["time"] == cfg.TIME_FULL_OBS:
             max_obs_length, _ = observation_operations.observation_length(pj, [obs_id])
-            start_time = dc("0.000")
-            end_time = dc(max_obs_length)
+            start_time = dec("0.000")
+            end_time = dec(max_obs_length)
 
         if parameters_obs["time"] == cfg.TIME_EVENTS:
 
             try:
-                start_time = dc(pj[cfg.OBSERVATIONS][obs_id][cfg.EVENTS][0][0])
+                start_time = dec(pj[cfg.OBSERVATIONS][obs_id][cfg.EVENTS][0][0])
             except Exception:
-                start_time = dc("0.000")
+                start_time = dec("0.000")
             try:
-                end_time = dc(pj[cfg.OBSERVATIONS][obs_id][cfg.EVENTS][-1][0])
+                end_time = dec(pj[cfg.OBSERVATIONS][obs_id][cfg.EVENTS][-1][0])
             except Exception:
                 max_obs_length, _ = observation_operations.observation_length(pj, [obs_id])
-                end_time = dc(max_obs_length)
+                end_time = dec(max_obs_length)
 
         if obs_id not in results_df:
             results_df[obs_id] = {}
@@ -189,35 +187,25 @@ def behavior_binary_table(self):
 
     if not selected_observations:
         return
+
     # check if state events are paired
-    out = ""
-    not_paired_obs_list = []
-    for obs_id in selected_observations:
-        r, msg = project_functions.check_state_events_obs(
-            obs_id, self.pj[cfg.ETHOGRAM], self.pj[cfg.OBSERVATIONS][obs_id]
-        )
-
-        if not r:
-            out += f"Observation: <strong>{obs_id}</strong><br>{msg}<br>"
-            not_paired_obs_list.append(obs_id)
-
-    if out:
-        out = f"The observations with UNPAIRED state events will be removed from the analysis<br><br>{out}"
-        results = dialog.Results_dialog()
-        results.setWindowTitle(f"{cfg.programName} - Check selected observations")
-        results.ptText.setReadOnly(True)
-        results.ptText.appendHtml(out)
-        results.pbSave.setVisible(False)
-        results.pbCancel.setVisible(True)
-
-        if not results.exec_():
-            return
-    selected_observations = [x for x in selected_observations if x not in not_paired_obs_list]
-    if not selected_observations:
+    not_ok, selected_observations = project_functions.check_state_events(self.pj, selected_observations)
+    if not_ok or not selected_observations:
         return
 
     max_obs_length, _ = observation_operations.observation_length(self.pj, selected_observations)
-    if max_obs_length == -1:  # media length not available, user choose to not use events
+    if max_obs_length == dec(-1):  # media length not available, user choose to not use events
+        return
+
+    # exit with message if events do not have timestamp
+    if max_obs_length.is_nan():
+        QMessageBox.critical(
+            None,
+            cfg.programName,
+            ("This function is not available for observations with events that do not have timestamp"),
+            QMessageBox.Ok | QMessageBox.Default,
+            QMessageBox.NoButton,
+        )
         return
 
     parameters = select_subj_behav.choose_obs_subj_behav_category(

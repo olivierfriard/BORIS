@@ -799,10 +799,12 @@ def events_to_behavioral_sequences(pj, obs_id: str, subj: str, parameters: dict,
 
     out = ""
     current_states = []
+    # add status (POINT, START, STOP) to event
     events_with_status = project_functions.events_start_stop(pj[cfg.ETHOGRAM], pj[cfg.OBSERVATIONS][obs_id][cfg.EVENTS])
 
     for event in events_with_status:
         # check if event in selected behaviors
+
         if event[cfg.EVENT_BEHAVIOR_FIELD_IDX] not in parameters[cfg.SELECTED_BEHAVIORS]:
             continue
 
@@ -810,7 +812,8 @@ def events_to_behavioral_sequences(pj, obs_id: str, subj: str, parameters: dict,
             subj == cfg.NO_FOCAL_SUBJECT and event[cfg.EVENT_SUBJECT_FIELD_IDX] == ""
         ):
 
-            if event[cfg.EVENT_STATUS_FIELD_IDX] == cfg.POINT:
+            # if event[cfg.EVENT_STATUS_FIELD_IDX] == cfg.POINT:
+            if event[-1] == cfg.POINT:  # status is last element
                 if current_states:
                     out += "+".join(current_states) + "+" + event[cfg.EVENT_BEHAVIOR_FIELD_IDX]
                 else:
@@ -821,7 +824,8 @@ def events_to_behavioral_sequences(pj, obs_id: str, subj: str, parameters: dict,
 
                 out += behav_seq_separator
 
-            if event[cfg.EVENT_STATUS_FIELD_IDX] == cfg.START:
+            # if event[cfg.EVENT_STATUS_FIELD_IDX] == cfg.START:
+            if event[-1] == cfg.START:  # status is last element
                 if parameters[cfg.INCLUDE_MODIFIERS]:
                     current_states.append(
                         (
@@ -837,7 +841,8 @@ def events_to_behavioral_sequences(pj, obs_id: str, subj: str, parameters: dict,
 
                 out += behav_seq_separator
 
-            if event[cfg.EVENT_STATUS_FIELD_IDX] == cfg.STOP:
+            # if event[cfg.EVENT_STATUS_FIELD_IDX] == cfg.STOP:
+            if event[-1] == cfg.STOP:
 
                 if parameters[cfg.INCLUDE_MODIFIERS]:
                     behav_modif = (
@@ -1020,12 +1025,24 @@ def observation_to_behavioral_sequences(
                     descr = descr.replace("\r", "\n# ")
                 out_file.write(f"# observation description: {descr}\n\n")
                 # media file name
-                if pj[cfg.OBSERVATIONS][obs_id][cfg.TYPE] in [cfg.MEDIA]:
-                    out_file.write(
-                        f"# Media file name: {', '.join([os.path.basename(x) for x in pj[cfg.OBSERVATIONS][obs_id][cfg.FILE][cfg.PLAYER1]])}\n\n"
-                    )
-                if pj[cfg.OBSERVATIONS][obs_id][cfg.TYPE] in [cfg.LIVE]:
-                    out_file.write(f"# Live observation{os.linesep}{os.linesep}")
+                if pj[cfg.OBSERVATIONS][obs_id][cfg.TYPE] == cfg.MEDIA:
+                    out_file.write(f"# Observation type: Media file{os.linesep}")
+                    media_file_str = ""
+
+                    for player in pj[cfg.OBSERVATIONS][obs_id][cfg.FILE]:
+                        if pj[cfg.OBSERVATIONS][obs_id][cfg.FILE][player]:
+                            media_file_str += f"player #{player}: "
+                            # fps_str += f"player #{player}: "
+                            for media_file in pj[cfg.OBSERVATIONS][obs_id][cfg.FILE][player]:
+                                media_file_str += f"{media_file}; "
+                                # fps_str += f"{pj[cfg.OBSERVATIONS][obs_id][cfg.MEDIA_INFO][cfg.FPS].get(media_file, cfg.NA):.3f}; "
+
+                    out_file.write(f"# Media file path: {media_file_str}\n\n")
+                if pj[cfg.OBSERVATIONS][obs_id][cfg.TYPE] == cfg.LIVE:
+                    out_file.write(f"# Observation type: Live observation{os.linesep}{os.linesep}")
+
+                if pj[cfg.OBSERVATIONS][obs_id][cfg.TYPE] == cfg.IMAGES:
+                    out_file.write(f"# Observation type: From pictures{os.linesep}{os.linesep}")
 
                 # independent variables
                 if cfg.INDEPENDENT_VARIABLES in pj[cfg.OBSERVATIONS][obs_id]:
@@ -1053,6 +1070,7 @@ def observation_to_behavioral_sequences(
 
                         if not timed:
                             out = events_to_behavioral_sequences(pj, obs_id, subject, parameters, behaviors_separator)
+
                         if timed:
                             out = events_to_timed_behavioral_sequences(
                                 pj, obs_id, subject, parameters, 0.001, behaviors_separator

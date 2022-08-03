@@ -48,13 +48,14 @@ def events_snapshots(self):
         return
 
     # check if obs are MEDIA
-    live_obs_list = []
+    live_images_obs_list = []
     for obs_id in selected_observations:
-        if self.pj[cfg.OBSERVATIONS][obs_id][cfg.TYPE] in [cfg.LIVE]:
-            live_obs_list.append(obs_id)
-    if live_obs_list:
-        out = "The following observations are live observations and will not be used<br><br>"
-        out += "<br>".join(live_obs_list)
+        if self.pj[cfg.OBSERVATIONS][obs_id][cfg.TYPE] in [cfg.LIVE, cfg.IMAGES]:
+            live_images_obs_list.append(obs_id)
+
+    if live_images_obs_list:
+        out = "The following observations are live observations or observation from images and will be removed from analysis<br><br>"
+        out += "<br>".join(live_images_obs_list)
         results = dialog.Results_dialog()
         results.setWindowTitle(cfg.programName)
         results.ptText.setReadOnly(True)
@@ -64,38 +65,14 @@ def events_snapshots(self):
         if not results.exec_():
             return
 
-    # remove live  observations
-    selected_observations = [x for x in selected_observations if x not in live_obs_list]
+    # remove live observations
+    selected_observations = [x for x in selected_observations if x not in live_images_obs_list]
     if not selected_observations:
         return
 
     # check if state events are paired
-    out = ""
-    not_paired_obs_list = []
-    for obsId in selected_observations:
-        r, msg = project_functions.check_state_events_obs(
-            obsId, self.pj[cfg.ETHOGRAM], self.pj[cfg.OBSERVATIONS][obsId], self.timeFormat
-        )
-
-        if not r:
-            out += f"Observation: <strong>{obsId}</strong><br>{msg}<br>"
-            not_paired_obs_list.append(obsId)
-
-    if out:
-        out = "The observations with UNPAIRED state events will be removed from the analysis<br><br>" + out
-        results = dialog.Results_dialog()
-        results.setWindowTitle(f"{cfg.programName} - Check selected observations")
-        results.ptText.setReadOnly(True)
-        results.ptText.appendHtml(out)
-        results.pbSave.setVisible(False)
-        results.pbCancel.setVisible(True)
-
-        if not results.exec_():
-            return
-
-    # remove observations with unpaired state events
-    selected_observations = [x for x in selected_observations if x not in not_paired_obs_list]
-    if not selected_observations:
+    not_ok, selected_observations = project_functions.check_state_events(self.pj, selected_observations)
+    if not_ok or not selected_observations:
         return
 
     parameters = select_subj_behav.choose_obs_subj_behav_category(
@@ -356,13 +333,14 @@ def extract_events(self):
         return
 
     # check if obs are MEDIA
-    live_obs_list = []
+    live_images_obs_list = []
     for obs_id in selected_observations:
-        if self.pj[cfg.OBSERVATIONS][obs_id][cfg.TYPE] in [cfg.LIVE]:
-            live_obs_list.append(obs_id)
-    if live_obs_list:
-        out = "The following observations are live observations and will be removed from analysis<br><br>"
-        out += "<br>".join(live_obs_list)
+        if self.pj[cfg.OBSERVATIONS][obs_id][cfg.TYPE] in [cfg.LIVE, cfg.IMAGES]:
+            live_images_obs_list.append(obs_id)
+
+    if live_images_obs_list:
+        out = "The following observations are live observations or observation from images and will be removed from analysis<br><br>"
+        out += "<br>".join(live_images_obs_list)
         results = dialog.Results_dialog()
         results.setWindowTitle(cfg.programName)
         results.ptText.setReadOnly(True)
@@ -373,7 +351,7 @@ def extract_events(self):
             return
 
     # remove live observations
-    selected_observations = [x for x in selected_observations if x not in live_obs_list]
+    selected_observations = [x for x in selected_observations if x not in live_images_obs_list]
     if not selected_observations:
         return
 
@@ -388,35 +366,8 @@ def extract_events(self):
         return
 
     # check if state events are paired
-    out = ""
-    not_paired_obs_list = []
-    for obsId in selected_observations:
-        r, msg = project_functions.check_state_events_obs(
-            obsId, self.pj[cfg.ETHOGRAM], self.pj[cfg.OBSERVATIONS][obsId], self.timeFormat
-        )
-
-        if not r:
-            # check if unpaired behavior is included in behaviors to extract
-            for behav in parameters[cfg.SELECTED_BEHAVIORS]:
-                if f"behavior <b>{behav}</b>" in msg:
-                    out += f"Observation: <strong>{obsId}</strong><br>{msg}<br>"
-                    not_paired_obs_list.append(obsId)
-
-    if out:
-        out = "The observations with UNPAIRED state events will be removed from the analysis<br><br>" + out
-        results = dialog.Results_dialog()
-        results.setWindowTitle(f"{cfg.programName} - Check selected observations and selected behaviors")
-        results.ptText.setReadOnly(True)
-        results.ptText.appendHtml(out)
-        results.pbSave.setVisible(False)
-        results.pbCancel.setVisible(True)
-
-        if not results.exec_():
-            return
-
-    # remove observations with unpaired state events
-    selected_observations = [x for x in selected_observations if x not in not_paired_obs_list]
-    if not selected_observations:
+    not_ok, selected_observations = project_functions.check_state_events(self.pj, selected_observations)
+    if not_ok or not selected_observations:
         return
 
     # Ask for time interval around the event
@@ -447,8 +398,6 @@ def extract_events(self):
     )
     if not exportDir:
         return
-
-    flagUnpairedEventFound = False
 
     cursor = db_functions.load_events_in_db(
         self.pj,
@@ -487,7 +436,6 @@ def extract_events(self):
 
                     behavior_state = project_functions.event_type(behavior, self.pj[cfg.ETHOGRAM])
                     if cfg.STATE in behavior_state and len(rows) % 2:  # unpaired events
-                        flagUnpairedEventFound = True
                         continue
 
                     for idx, row in enumerate(rows):
@@ -574,7 +522,7 @@ def extract_events(self):
                             p = subprocess.Popen(
                                 ffmpeg_command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True
                             )
-                            out, error = p.communicate()
+                            out, _ = p.communicate()
 
                         if cfg.STATE in behavior_state:
                             if idx % 2 == 0:

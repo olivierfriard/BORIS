@@ -480,7 +480,7 @@ def create_subtitles(pj: dict, selected_observations: list, parameters: dict, ex
 
     try:
         ok, msg, db_connector = db_functions.load_aggregated_events_in_db(
-            pj, parameters["selected subjects"], selected_observations, parameters["selected behaviors"]
+            pj, parameters[cfg.SELECTED_SUBJECTS], selected_observations, parameters[cfg.SELECTED_BEHAVIORS]
         )
         if not ok:
             return False, msg
@@ -498,10 +498,10 @@ def create_subtitles(pj: dict, selected_observations: list, parameters: dict, ex
                         "AND behavior in ({}) "
                         "ORDER BY start"
                     ).format(
-                        ",".join(["?"] * len(parameters["selected subjects"])),
-                        ",".join(["?"] * len(parameters["selected behaviors"])),
+                        ",".join(["?"] * len(parameters[cfg.SELECTED_SUBJECTS])),
+                        ",".join(["?"] * len(parameters[cfg.SELECTED_BEHAVIORS])),
                     ),
-                    [obsId] + parameters["selected subjects"] + parameters["selected behaviors"],
+                    [obsId] + parameters[cfg.SELECTED_SUBJECTS] + parameters[cfg.SELECTED_BEHAVIORS],
                 )
 
                 for idx, row in enumerate(cursor.fetchall()):
