@@ -282,7 +282,7 @@ def remove_observations(self):
     _, selected_observations = select_observations.select_observations(
         self.pj, cfg.MULTIPLE, windows_title="Remove observations"
     )
-    if not select_observations:
+    if not selected_observations:
         return
 
     if len(selected_observations) > 1:
@@ -357,7 +357,7 @@ def observation_length(pj: dict, selected_observations: list) -> tuple:
                 selectedObsTotalMediaLength = maxTime
             except Exception:
                 max_obs_length = dec(-1)
-                selectedObsTotalMediaLength = dec("-1")
+                selectedObsTotalMediaLength = dec(-1)
 
         else:
             max_obs_length = dec(-1)
