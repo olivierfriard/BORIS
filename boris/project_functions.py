@@ -870,7 +870,7 @@ def events_start_stop(ethogram: dict, events: list) -> list:
     state_events_list = util.state_behavior_codes(ethogram)
 
     events_flagged = []
-    for event in events:
+    for idx, event in enumerate(events):
         """
         time, subject, code, modifier = (
             event[cfg.EVENT_TIME_FIELD_IDX],
@@ -889,11 +889,10 @@ def events_start_stop(ethogram: dict, events: list) -> list:
                 len(
                     [
                         x[cfg.EVENT_BEHAVIOR_FIELD_IDX]
-                        for x in events
-                        if x[cfg.EVENT_BEHAVIOR_FIELD_IDX] == code
-                        and x[cfg.EVENT_TIME_FIELD_IDX] < time
-                        and x[cfg.EVENT_SUBJECT_FIELD_IDX] == subject
-                        and x[cfg.EVENT_MODIFIER_FIELD_IDX] == modifier
+                        for idx1, x in enumerate(events)
+                        if x[cfg.EVENT_BEHAVIOR_FIELD_IDX] == code and idx1 < idx
+                        # and x[cfg.EVENT_TIME_FIELD_IDX] < time
+                        and x[cfg.EVENT_SUBJECT_FIELD_IDX] == subject and x[cfg.EVENT_MODIFIER_FIELD_IDX] == modifier
                     ]
                 )
                 % 2
