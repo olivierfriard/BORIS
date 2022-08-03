@@ -26,7 +26,7 @@ import sys
 import datetime
 import pathlib
 from . import dialog
-from decimal import Decimal
+from decimal import Decimal as dec
 
 from . import config as cfg
 from . import utilities as util
@@ -542,7 +542,7 @@ def dataset_write(dataset, file_name, output_format):
 
 def export_aggregated_events(pj: dict, parameters: dict, obsId: str):
     """
-    export aggregated events
+    export aggregated events of one observation
 
     Args:
         pj (dict): BORIS project
@@ -574,11 +574,16 @@ def export_aggregated_events(pj: dict, parameters: dict, obsId: str):
         except Exception:
             duration1 = []
 
+    logging.debug(f"duration1: {duration1}")
+
     obs_length = project_functions.observation_total_length(pj[cfg.OBSERVATIONS][obsId])
-    if obs_length == Decimal(-1):  # media length not available
+
+    if obs_length == dec(-1):  # media length not available
         interval = cfg.TIME_EVENTS
 
-    print(f"{interval=}")
+    if obs_length == dec(-2):  # obs without timestamp
+        interval = cfg.TIME_EVENTS
+
     logging.debug(f"obs_length: {obs_length}")
 
     _, _, connector = db_functions.load_aggregated_events_in_db(
@@ -609,49 +614,52 @@ def export_aggregated_events(pj: dict, parameters: dict, obsId: str):
         min_time = float(start_time)
         max_time = float(end_time)
 
+    logging.debug(f"min_time: {min_time}  max_time: {max_time}")
+
     # adapt start and stop to the selected time interval
-    cursor.execute(
-        "UPDATE aggregated_events SET start = ? WHERE observation = ? AND start < ? AND stop BETWEEN ? AND ?",
-        (
-            min_time,
-            obsId,
-            min_time,
-            min_time,
-            max_time,
-        ),
-    )
-    cursor.execute(
-        "UPDATE aggregated_events SET stop = ? WHERE observation = ? AND stop > ? AND start BETWEEN ? AND ?",
-        (
-            max_time,
-            obsId,
-            max_time,
-            min_time,
-            max_time,
-        ),
-    )
+    if obs_length != dec(-2):
+        cursor.execute(
+            "UPDATE aggregated_events SET start = ? WHERE observation = ? AND start < ? AND stop BETWEEN ? AND ?",
+            (
+                min_time,
+                obsId,
+                min_time,
+                min_time,
+                max_time,
+            ),
+        )
+        cursor.execute(
+            "UPDATE aggregated_events SET stop = ? WHERE observation = ? AND stop > ? AND start BETWEEN ? AND ?",
+            (
+                max_time,
+                obsId,
+                max_time,
+                min_time,
+                max_time,
+            ),
+        )
 
-    cursor.execute(
-        "UPDATE aggregated_events SET start = ?, stop = ? WHERE observation = ? AND start < ? AND stop > ?",
-        (
-            min_time,
-            max_time,
-            obsId,
-            min_time,
-            max_time,
-        ),
-    )
+        cursor.execute(
+            "UPDATE aggregated_events SET start = ?, stop = ? WHERE observation = ? AND start < ? AND stop > ?",
+            (
+                min_time,
+                max_time,
+                obsId,
+                min_time,
+                max_time,
+            ),
+        )
 
-    cursor.execute(
-        "DELETE FROM aggregated_events WHERE observation = ? AND (start < ? AND stop < ?) OR (start > ? AND stop > ?)",
-        (
-            obsId,
-            min_time,
-            min_time,
-            max_time,
-            max_time,
-        ),
-    )
+        cursor.execute(
+            "DELETE FROM aggregated_events WHERE observation = ? AND (start < ? AND stop < ?) OR (start > ? AND stop > ?)",
+            (
+                obsId,
+                min_time,
+                min_time,
+                max_time,
+                max_time,
+            ),
+        )
 
     behavioral_category = project_functions.behavior_category(pj[cfg.ETHOGRAM])
 
@@ -678,68 +686,62 @@ def export_aggregated_events(pj: dict, parameters: dict, obsId: str):
                     ),
                     (subject, behavior, distinct_modifiers),
                 )
-                rows = list(cursor.fetchall())
 
-                for row in rows:
+                for row in cursor.fetchall():
 
                     if observation[cfg.TYPE] == cfg.MEDIA:
-                        if duration1:
-                            mediaFileIdx = [
-                                idx1 for idx1, _ in enumerate(duration1) if row["start"] >= sum(duration1[0:idx1])
-                            ][-1]
-                            mediaFileString = observation[cfg.FILE][cfg.PLAYER1][mediaFileIdx]
-                            try:
-                                fpsString = observation[cfg.MEDIA_INFO]["fps"][
-                                    observation[cfg.FILE][cfg.PLAYER1][mediaFileIdx]
-                                ]
-                            except Exception:
-                                fpsString = cfg.NA
-                        else:
-                            try:
-                                if len(observation[cfg.FILE][cfg.PLAYER1]) == 1:
-                                    mediaFileString = observation[cfg.FILE][cfg.PLAYER1][0]
-                                else:
-                                    mediaFileString = cfg.NA
-                            except Exception:
-                                mediaFileString = cfg.NA
-                            fpsString = cfg.NA
+                        observation_type = "Media file"
+                        media_file_str = ""
+                        fps_str = ""
+                        for player in observation[cfg.FILE]:
+                            if observation[cfg.FILE][player]:
+                                media_file_str += f"player #{player}: "
+                                fps_str += f"player #{player}: "
+                                for media_file in observation[cfg.FILE][player]:
+                                    media_file_str += f"{media_file}; "
+                                    fps_str += f"{observation[cfg.MEDIA_INFO][cfg.FPS].get(media_file, cfg.NA):.3f}; "
 
                     if observation[cfg.TYPE] == cfg.LIVE:
-                        mediaFileString = "LIVE"
-                        fpsString = cfg.NA
+                        observation_type = "Live observation"
+                        media_file_str = cfg.NA
+                        fps_str = cfg.NA
 
                     if observation[cfg.TYPE] == cfg.IMAGES:
-                        mediaFileString = "IMAGES"
-                        fpsString = cfg.NA
+                        observation_type = "From pictures"
+                        media_file_str = ""
+                        for dir in observation[cfg.DIRECTORIES_LIST]:
+                            media_file_str += f"{dir}; "
+                        fps_str = cfg.NA
+
+                    row_data = []
+                    row_data.extend(
+                        [
+                            obsId,
+                            observation["date"].replace("T", " "),
+                            obs_description,
+                            observation_type,
+                            media_file_str,
+                            f"{obs_length:.3f}" if obs_length not in (dec(-1), dec(-2)) else float("NaN"),
+                            fps_str,
+                        ]
+                    )
+
+                    # independent variables
+                    if cfg.INDEPENDENT_VARIABLES in pj:
+                        for idx_var in util.sorted_keys(pj[cfg.INDEPENDENT_VARIABLES]):
+                            if (
+                                pj[cfg.INDEPENDENT_VARIABLES][idx_var]["label"]
+                                in observation[cfg.INDEPENDENT_VARIABLES]
+                            ):
+                                row_data.append(
+                                    observation[cfg.INDEPENDENT_VARIABLES][
+                                        pj[cfg.INDEPENDENT_VARIABLES][idx_var]["label"]
+                                    ]
+                                )
+                            else:
+                                row_data.append("")
 
                     if row["type"] == cfg.POINT:
-
-                        row_data = []
-                        row_data.extend(
-                            [
-                                obsId,
-                                observation["date"].replace("T", " "),
-                                obs_description,
-                                mediaFileString,
-                                f"{obs_length:.3f}" if obs_length != Decimal("-1") else cfg.NA,
-                                fpsString,
-                            ]
-                        )
-
-                        # independent variables
-                        if cfg.INDEPENDENT_VARIABLES in pj:
-                            for idx_var in util.sorted_keys(pj[cfg.INDEPENDENT_VARIABLES]):
-                                if (
-                                    pj[cfg.INDEPENDENT_VARIABLES][idx_var]["label"]
-                                    in observation[cfg.INDEPENDENT_VARIABLES]
-                                ):
-                                    row_data.append(
-                                        observation[cfg.INDEPENDENT_VARIABLES][
-                                            pj[cfg.INDEPENDENT_VARIABLES][idx_var]["label"]
-                                        ]
-                                    )
-                                else:
-                                    row_data.append("")
 
                         row_data.extend(
                             [
@@ -748,42 +750,16 @@ def export_aggregated_events(pj: dict, parameters: dict, obsId: str):
                                 behavioral_category[behavior],
                                 row["modifiers"],
                                 cfg.POINT,
-                                f"{row['start']:.3f}",  # start
-                                f"{row['stop']:.3f}",  # stop
+                                f"{row['start']:.3f}" if row["start"] is not None else float("NaN"),  # start
+                                f"{row['stop']:.3f}" if row["stop"] is not None else float("NaN"),  # stop
                                 cfg.NA,  # duration
-                                row["comment"],
-                                "",
+                                row["comment"],  # comment start
+                                "",  # comment stop
                             ]
                         )
                         data.append(row_data)
 
                     if row["type"] == cfg.STATE:
-                        row_data = []
-                        row_data.extend(
-                            [
-                                obsId,
-                                observation["date"].replace("T", " "),
-                                obs_description,
-                                mediaFileString,
-                                f"{obs_length:.3f}" if obs_length != Decimal("-1") else "NA",
-                                fpsString,
-                            ]
-                        )
-
-                        # independent variables
-                        if cfg.INDEPENDENT_VARIABLES in pj:
-                            for idx_var in util.sorted_keys(pj[cfg.INDEPENDENT_VARIABLES]):
-                                if (
-                                    pj[cfg.INDEPENDENT_VARIABLES][idx_var]["label"]
-                                    in observation[cfg.INDEPENDENT_VARIABLES]
-                                ):
-                                    row_data.append(
-                                        observation[cfg.INDEPENDENT_VARIABLES][
-                                            pj[cfg.INDEPENDENT_VARIABLES][idx_var]["label"]
-                                        ]
-                                    )
-                                else:
-                                    row_data.append("")
 
                         row_data.extend(
                             [
@@ -792,9 +768,11 @@ def export_aggregated_events(pj: dict, parameters: dict, obsId: str):
                                 behavioral_category[behavior],
                                 row["modifiers"],
                                 cfg.STATE,
-                                f"{row['start']:.3f}",
-                                f"{row['stop']:.3f}",
-                                f"{row['stop'] - row['start']:.3f}",
+                                f"{row['start']:.3f}" if row["start"] is not None else float("NaN"),
+                                f"{row['stop']:.3f}" if row["stop"] is not None else float("NaN"),
+                                f"{row['stop'] - row['start']:.3f}"
+                                if (row["stop"] is not None) and (row["start"] is not None)
+                                else float("NaN"),  # duration
                                 row["comment"],
                                 row["comment_stop"],
                             ]
@@ -993,9 +971,9 @@ def events_to_timed_behavioral_sequences(
     # events_with_status = project_functions.events_start_stop(pj[ETHOGRAM], pj[cfg.OBSERVATIONS][obs_id][cfg.EVENTS])
 
     state_behaviors_codes = util.state_behavior_codes(pj[cfg.ETHOGRAM])
-    delta = Decimal(str(round(precision, 3)))
+    delta = dec(str(round(precision, 3)))
     out = ""
-    t = Decimal("0.000")
+    t = dec("0.000")
 
     current = []
     while t < pj[cfg.OBSERVATIONS][obs_id][cfg.EVENTS][-1][0]:

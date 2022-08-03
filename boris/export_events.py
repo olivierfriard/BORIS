@@ -267,21 +267,13 @@ def export_aggregated_events(self):
     if not selectedObservations:
         return
 
+    # check if coded behaviors are defined in ethogram
+    if project_functions.check_coded_behaviors_in_obs_list(self.pj, selectedObservations):
+        return
+
     # check if state events are paired
-    out, not_paired_obs_list = "", []
-    for obsId in selectedObservations:
-        r, msg = project_functions.check_state_events_obs(
-            obsId, self.pj[cfg.ETHOGRAM], self.pj[cfg.OBSERVATIONS][obsId], self.timeFormat
-        )
-        if not r:
-            out += f"Observation: <strong>{obsId}</strong><br>{msg}<br>"
-            not_paired_obs_list.append(obsId)
-    if out:
-        self.results = dialog.ResultsWidget()
-        self.results.setWindowTitle(f"{cfg.programName} - Check selected observations")
-        self.results.ptText.setReadOnly(True)
-        self.results.ptText.appendHtml(out)
-        self.results.show()
+    not_ok, selectedObservations = project_functions.check_state_events(self.pj, selectedObservations)
+    if not_ok or not selectedObservations:
         return
 
     max_obs_length, selectedObsTotalMediaLength = observation_operations.observation_length(
@@ -290,7 +282,14 @@ def export_aggregated_events(self):
 
     logging.debug(f"max_obs_length:{max_obs_length}  selectedObsTotalMediaLength:{selectedObsTotalMediaLength}")
 
-    if max_obs_length == -1:
+    if max_obs_length == dec(-1):  # media length not available, user choose to not use events
+        QMessageBox.warning(
+            None,
+            cfg.programName,
+            ("The duration of one or more observation is not available"),
+            QMessageBox.Ok | QMessageBox.Default,
+            QMessageBox.NoButton,
+        )
         return
 
     parameters = select_subj_behav.choose_obs_subj_behav_category(
@@ -400,7 +399,15 @@ def export_aggregated_events(self):
 
         return
 
-    header = ["Observation id", "Observation date", "Description", "Media file", "Total length", "FPS"]
+    header = [
+        "Observation id",
+        "Observation date",
+        "Description",
+        "Observation type",
+        "Source",
+        "Total length",
+        "FPS",
+    ]
     if cfg.INDEPENDENT_VARIABLES in self.pj:
         for idx in util.sorted_keys(self.pj[cfg.INDEPENDENT_VARIABLES]):
             header.append(self.pj[cfg.INDEPENDENT_VARIABLES][idx]["label"])

@@ -270,7 +270,7 @@ def synthetic_binned_time_budget(self):
         results.setWindowTitle("Synthetic time budget with time bin")
         results.ptText.clear()
         results.ptText.setReadOnly(True)
-        results.ptText.appendHtml(msg.replace("\n", "<br>"))
+        results.ptText.appendHtml("Error during the creation of the synthetic time budget with time bin")
         results.exec_()
         return
 
