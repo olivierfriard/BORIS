@@ -267,7 +267,8 @@ def export_tabular_events(self, mode: str = "tabular"):
 
 def export_aggregated_events(self):
     """
-    export aggregated events.
+    export aggregated events for the selected observations.
+
     Formats can be SQL (sql), SDIS (sds) or Tabular format (tsv, csv, ods, xlsx, xls, html)
     """
 
@@ -422,14 +423,27 @@ def export_aggregated_events(self):
         for idx in util.sorted_keys(self.pj[cfg.INDEPENDENT_VARIABLES]):
             header.append(self.pj[cfg.INDEPENDENT_VARIABLES][idx]["label"])
 
-    header.extend(["Subject", "Behavior", "Behavioral category"])
-    header.extend(["Modifiers"])
-    header.extend(["Behavior type", "Start (s)", "Stop (s)", "Duration (s)", "Comment start", "Comment stop"])
+    header.extend(
+        [
+            "Subject",
+            "Behavior",
+            "Behavioral category",
+            "Modifiers",
+            "Behavior type",
+            "Start (s)",
+            "Stop (s)",
+            "Duration (s)",
+            "Image index",  # add image index and image file path to header
+            "Image file path",
+            "Comment start",
+            "Comment stop",
+        ]
+    )
 
     data = tablib.Dataset()
     # sort by start time
-    start_idx = -5
-    stop_idx = -4
+    start_idx = -7
+    stop_idx = -6
 
     mem_command = ""  # remember user choice when file already exists
     for obsId in selectedObservations:

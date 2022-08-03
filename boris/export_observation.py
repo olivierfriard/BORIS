@@ -714,6 +714,7 @@ def export_aggregated_events(pj: dict, parameters: dict, obsId: str):
                         fps_str = cfg.NA
 
                     row_data = []
+
                     row_data.extend(
                         [
                             obsId,
@@ -753,6 +754,8 @@ def export_aggregated_events(pj: dict, parameters: dict, obsId: str):
                                 f"{row['start']:.3f}" if row["start"] is not None else float("NaN"),  # start
                                 f"{row['stop']:.3f}" if row["stop"] is not None else float("NaN"),  # stop
                                 cfg.NA,  # duration
+                                "image index",
+                                "image file path",
                                 row["comment"],  # comment start
                                 "",  # comment stop
                             ]
@@ -773,6 +776,8 @@ def export_aggregated_events(pj: dict, parameters: dict, obsId: str):
                                 f"{row['stop'] - row['start']:.3f}"
                                 if (row["stop"] is not None) and (row["start"] is not None)
                                 else float("NaN"),  # duration
+                                "image index",
+                                "image file path",
                                 row["comment"],
                                 row["comment_stop"],
                             ]
