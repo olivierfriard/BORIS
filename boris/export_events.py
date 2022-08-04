@@ -333,6 +333,7 @@ def export_aggregated_events(self):
         "HTML (*.html)",
         "SDIS (*.sds)",
         "SQL dump file (*.sql)",
+        "Pandas DataFrame (*.pkl)",
     ]
 
     if flag_group:
@@ -345,6 +346,7 @@ def export_aggregated_events(self):
             "html",
             "sds",
             "sql",
+            "pkl",
         ]  # must be in same order than extended_file_formats
 
         fileName, filter_ = QFileDialog().getSaveFileName(
@@ -378,10 +380,12 @@ def export_aggregated_events(self):
             "HTML (*.html)",
             "SDIS (*.sds)",
             "Timed Behavioral Sequences (*.tbs)",
+            "Pandas DataFrame (*.pkl)",
         )
         item, ok = QInputDialog.getItem(self, "Export events format", "Available formats", items, 0, False)
         if not ok:
             return
+        # read the output format code
         outputFormat = re.sub(".* \(\*\.", "", item)[:-1]
 
         exportDir = QFileDialog().getExistingDirectory(
@@ -446,14 +450,15 @@ def export_aggregated_events(self):
     # sort by start time
     start_idx = -9
     stop_idx = -8
+    obs_id_idx = 0
 
     mem_command = ""  # remember user choice when file already exists
-    for obsId in selectedObservations:
-        d = export_observation.export_aggregated_events(self.pj, parameters, obsId)
+    for obs_id in selectedObservations:
+        d = export_observation.export_aggregated_events(self.pj, parameters, obs_id)
         data.extend(d)
 
         if not flag_group and outputFormat not in ["sds", "tbs"]:
-            fileName = f"{pl.Path(exportDir) / util.safeFileName(obsId)}.{outputFormat}"
+            fileName = f"{pl.Path(exportDir) / util.safeFileName(obs_id)}.{outputFormat}"
             # check if file with new extension already exists
             if mem_command != cfg.OVERWRITE_ALL and pl.Path(fileName).is_file():
                 if mem_command == "Skip all":
@@ -465,11 +470,13 @@ def export_aggregated_events(self):
                 )
                 if mem_command == cfg.CANCEL:
                     return
-                if mem_command in ["Skip" "Skip all"]:
+                if mem_command in ["Skip", "Skip all"]:
                     continue
 
-            data = tablib.Dataset(*sorted(list(data), key=lambda x: float(x[start_idx])), headers=header)
-            data.title = obsId
+            data = tablib.Dataset(
+                *sorted(list(data), key=lambda x: (x[obs_id_idx], float(x[start_idx]))), headers=header
+            )
+            data.title = obs_id
             r, msg = export_observation.dataset_write(data, fileName, outputFormat)
             if not r:
                 QMessageBox.warning(
@@ -477,7 +484,7 @@ def export_aggregated_events(self):
                 )
             data = tablib.Dataset()
 
-    data = tablib.Dataset(*sorted(list(data), key=lambda x: float(x[start_idx])), headers=header)
+    data = tablib.Dataset(*sorted(list(data), key=lambda x: (x[obs_id_idx], float(x[start_idx]))), headers=header)
     data.title = "Aggregated events"
 
     # TODO: finish

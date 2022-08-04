@@ -19,15 +19,17 @@ Copyright 2012-2022 Olivier Friard
   MA 02110-1301, USA.
 """
 
+from decimal import Decimal as dec
 import tablib
 import logging
 import os
 import sys
 import datetime
 import pathlib
-from . import dialog
-from decimal import Decimal as dec
+from io import StringIO
+import pandas as pd
 
+from . import dialog
 from . import config as cfg
 from . import utilities as util
 from . import project_functions
@@ -497,26 +499,34 @@ def dataset_write(dataset, file_name, output_format):
     logging.debug("function: dataset_write")
 
     try:
+
+        if output_format == "pkl":
+            df = pd.read_csv(
+                StringIO(dataset.export("tsv")),
+                sep="\t",
+                dtype={"Observation id": "str", "Description": "str", "Comment start": "str", "Comment stop": "str"},
+                parse_dates=[1],
+            )
+            df.to_pickle(file_name)
+            return True, ""
+
         if output_format == "tsv":
             with open(file_name, "wb") as f:
                 f.write(str.encode(dataset.tsv))
             return True, ""
+
         if output_format == "csv":
             with open(file_name, "wb") as f:
                 f.write(str.encode(dataset.csv))
             return True, ""
+
         if output_format == "ods":
             with open(file_name, "wb") as f:
                 f.write(dataset.ods)
             return True, ""
 
         dataset.title = util.safe_xl_worksheet_title(dataset.title, output_format)
-        """
-        if output_format in ["xls", "xlsx"]:
-            # check worksheet title
-            for forbidden_char in EXCEL_FORBIDDEN_CHARACTERS:
-                dataset.title = dataset.title.replace(forbidden_char, " ")
-        """
+
         if output_format == "xlsx":
             with open(file_name, "wb") as f:
                 f.write(dataset.xlsx)
@@ -756,7 +766,7 @@ def export_aggregated_events(pj: dict, parameters: dict, obsId: str):
                                 cfg.POINT,
                                 f"{row['start']:.3f}" if row["start"] is not None else float("NaN"),  # start
                                 f"{row['stop']:.3f}" if row["stop"] is not None else float("NaN"),  # stop
-                                cfg.NA,  # duration
+                                0,  # duration
                                 row["image_index_start"],
                                 row["image_index_stop"],
                                 row["image_path_start"],
