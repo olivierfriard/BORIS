@@ -433,8 +433,10 @@ def export_aggregated_events(self):
             "Start (s)",
             "Stop (s)",
             "Duration (s)",
-            "Image index",  # add image index and image file path to header
-            "Image file path",
+            "Image index start",  # add image index and image file path to header
+            "Image index stop",
+            "Image file path start",
+            "Image file path stop",
             "Comment start",
             "Comment stop",
         ]
@@ -442,8 +444,8 @@ def export_aggregated_events(self):
 
     data = tablib.Dataset()
     # sort by start time
-    start_idx = -7
-    stop_idx = -6
+    start_idx = -9
+    stop_idx = -8
 
     mem_command = ""  # remember user choice when file already exists
     for obsId in selectedObservations:

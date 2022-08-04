@@ -565,6 +565,7 @@ def export_aggregated_events(pj: dict, parameters: dict, obsId: str):
     # obs description
     obs_description = observation[cfg.DESCRIPTION]
 
+    """
     duration1 = []  # in seconds
     if observation[cfg.TYPE] == cfg.MEDIA:
         try:
@@ -575,6 +576,7 @@ def export_aggregated_events(pj: dict, parameters: dict, obsId: str):
             duration1 = []
 
     logging.debug(f"duration1: {duration1}")
+    """
 
     obs_length = project_functions.observation_total_length(pj[cfg.OBSERVATIONS][obsId])
 
@@ -681,8 +683,9 @@ def export_aggregated_events(pj: dict, parameters: dict, obsId: str):
 
                 cursor.execute(
                     (
-                        "SELECT start, stop, type, modifiers, comment, comment_stop FROM aggregated_events "
-                        "WHERE subject = ? AND behavior = ? AND modifiers = ? ORDER by start"
+                        "SELECT start, stop, type, modifiers, comment, comment_stop, "
+                        "image_index_start, image_index_stop, image_path_start, image_path_stop FROM aggregated_events "
+                        "WHERE subject = ? AND behavior = ? AND modifiers = ? ORDER by start, image_index_start"
                     ),
                     (subject, behavior, distinct_modifiers),
                 )
@@ -754,8 +757,10 @@ def export_aggregated_events(pj: dict, parameters: dict, obsId: str):
                                 f"{row['start']:.3f}" if row["start"] is not None else float("NaN"),  # start
                                 f"{row['stop']:.3f}" if row["stop"] is not None else float("NaN"),  # stop
                                 cfg.NA,  # duration
-                                "image index",
-                                "image file path",
+                                row["image_index_start"],
+                                row["image_index_stop"],
+                                row["image_path_start"],
+                                row["image_path_stop"],
                                 row["comment"],  # comment start
                                 "",  # comment stop
                             ]
@@ -776,8 +781,10 @@ def export_aggregated_events(pj: dict, parameters: dict, obsId: str):
                                 f"{row['stop'] - row['start']:.3f}"
                                 if (row["stop"] is not None) and (row["start"] is not None)
                                 else float("NaN"),  # duration
-                                "image index",
-                                "image file path",
+                                row["image_index_start"],
+                                row["image_index_stop"],
+                                row["image_path_start"],
+                                row["image_path_stop"],
                                 row["comment"],
                                 row["comment_stop"],
                             ]

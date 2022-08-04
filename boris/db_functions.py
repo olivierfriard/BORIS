@@ -59,15 +59,20 @@ def load_events_in_db(
     ]
 
     # selected behaviors defined as point event
+    """
     point_behaviors_codes = [
         pj[cfg.ETHOGRAM][x][cfg.BEHAVIOR_CODE]
         for x in pj[cfg.ETHOGRAM]
         if cfg.POINT in pj[cfg.ETHOGRAM][x][cfg.TYPE].upper()
         and pj[cfg.ETHOGRAM][x][cfg.BEHAVIOR_CODE] in selected_behaviors
     ]
+    """
 
-    db = sqlite3.connect(":memory:", isolation_level=None)
-    # db = sqlite3.connect("/tmp/ramdisk/events.sqlite", isolation_level=None)
+    # db = sqlite3.connect(":memory:", isolation_level=None)
+    import os
+
+    os.system("rm /tmp/ramdisk/events.sqlite")
+    db = sqlite3.connect("/tmp/ramdisk/events.sqlite", isolation_level=None)
 
     db.row_factory = sqlite3.Row
     cursor = db.cursor()
@@ -79,7 +84,9 @@ def load_events_in_db(
             "type TEXT, "
             "modifiers TEXT, "
             "occurence FLOAT, "
-            "comment TEXT)"
+            "comment TEXT,"
+            "image_index INTEGER,"
+            "image_path TEXT)"
         )
     )
 
@@ -101,28 +108,57 @@ def load_events_in_db(
                         event[cfg.EVENT_SUBJECT_FIELD_IDX] == subject_to_analyze
                     ):
 
-                        cursor.execute(
-                            (
-                                "INSERT INTO events "
-                                "(observation, subject, code, type, modifiers, occurence, comment) "
-                                "VALUES (?,?,?,?,?,?,?)"
-                            ),
-                            (
-                                obs_id,
-                                cfg.NO_FOCAL_SUBJECT
-                                if event[cfg.EVENT_SUBJECT_FIELD_IDX] == ""
-                                else event[cfg.EVENT_SUBJECT_FIELD_IDX],
-                                event[cfg.EVENT_BEHAVIOR_FIELD_IDX],
-                                cfg.STATE
-                                if event[cfg.EVENT_BEHAVIOR_FIELD_IDX] in state_behaviors_codes
-                                else cfg.POINT,
-                                event[cfg.EVENT_MODIFIER_FIELD_IDX],
-                                float(event[cfg.EVENT_TIME_FIELD_IDX])
-                                if not event[cfg.EVENT_TIME_FIELD_IDX].is_nan()
-                                else None,
-                                event[cfg.EVENT_COMMENT_FIELD_IDX],
-                            ),
-                        )
+                        if pj[cfg.OBSERVATIONS][obs_id][cfg.TYPE] in (cfg.MEDIA, cfg.LIVE):
+
+                            cursor.execute(
+                                (
+                                    "INSERT INTO events "
+                                    "(observation, subject, code, type, modifiers, occurence, comment) "
+                                    "VALUES (?,?,?,?,?,?,?)"
+                                ),
+                                (
+                                    obs_id,
+                                    cfg.NO_FOCAL_SUBJECT
+                                    if event[cfg.EVENT_SUBJECT_FIELD_IDX] == ""
+                                    else event[cfg.EVENT_SUBJECT_FIELD_IDX],
+                                    event[cfg.EVENT_BEHAVIOR_FIELD_IDX],
+                                    cfg.STATE
+                                    if event[cfg.EVENT_BEHAVIOR_FIELD_IDX] in state_behaviors_codes
+                                    else cfg.POINT,
+                                    event[cfg.EVENT_MODIFIER_FIELD_IDX],
+                                    float(event[cfg.EVENT_TIME_FIELD_IDX])
+                                    if not event[cfg.EVENT_TIME_FIELD_IDX].is_nan()
+                                    else None,
+                                    event[cfg.EVENT_COMMENT_FIELD_IDX],
+                                ),
+                            )
+
+                        if pj[cfg.OBSERVATIONS][obs_id][cfg.TYPE] == cfg.IMAGES:
+                            print(event)
+                            cursor.execute(
+                                (
+                                    "INSERT INTO events "
+                                    "(observation, subject, code, type, modifiers, occurence, comment, image_index, image_path) "
+                                    "VALUES (?,?,?,?,?,?,?,?,?)"
+                                ),
+                                (
+                                    obs_id,
+                                    cfg.NO_FOCAL_SUBJECT
+                                    if event[cfg.EVENT_SUBJECT_FIELD_IDX] == ""
+                                    else event[cfg.EVENT_SUBJECT_FIELD_IDX],
+                                    event[cfg.EVENT_BEHAVIOR_FIELD_IDX],
+                                    cfg.STATE
+                                    if event[cfg.EVENT_BEHAVIOR_FIELD_IDX] in state_behaviors_codes
+                                    else cfg.POINT,
+                                    event[cfg.EVENT_MODIFIER_FIELD_IDX],
+                                    float(event[cfg.EVENT_TIME_FIELD_IDX])
+                                    if not event[cfg.EVENT_TIME_FIELD_IDX].is_nan()
+                                    else None,
+                                    event[cfg.EVENT_COMMENT_FIELD_IDX],
+                                    event[cfg.PJ_OBS_FIELDS[cfg.IMAGES][cfg.IMAGE_INDEX]],
+                                    event[cfg.PJ_OBS_FIELDS[cfg.IMAGES][cfg.IMAGE_PATH]],
+                                ),
+                            )
 
     db.commit()
     return cursor
@@ -190,8 +226,11 @@ def load_aggregated_events_in_db(
         and pj[cfg.ETHOGRAM][x][cfg.BEHAVIOR_CODE] in selected_behaviors
     ]
 
-    db = sqlite3.connect(":memory:")
-    # db = sqlite3.connect("/tmp/ramdisk/aggreg.sqlite", isolation_level=None)
+    # db = sqlite3.connect(":memory:")
+    import os
+
+    os.system("rm /tmp/ramdisk/aggreg.sqlite")
+    db = sqlite3.connect("/tmp/ramdisk/aggreg.sqlite", isolation_level=None)
 
     db.row_factory = sqlite3.Row
     cursor2 = db.cursor()
@@ -207,7 +246,11 @@ def load_aggregated_events_in_db(
             "start FLOAT, "
             "stop FLOAT, "
             "comment TEXT, "
-            "comment_stop TEXT)"
+            "comment_stop TEXT,"
+            "image_index_start INTEGER,"
+            "image_index_stop INTEGER,"
+            "image_path_start TEXT,"
+            "image_path_stop TEXT)"
         )
     )
 
@@ -217,6 +260,13 @@ def load_aggregated_events_in_db(
     cursor2.execute("CREATE INDEX modifiers_idx ON aggregated_events(modifiers)")
 
     # too slow! cursor1 = load_events_in_db(pj, selected_subjects, selected_observations, selected_behaviors)
+
+    insert_sql = (
+        "INSERT INTO aggregated_events (observation, subject, behavior, type, modifiers, "
+        "                               start, stop, comment, comment_stop, "
+        "image_index_start, image_index_stop, image_path_start, image_path_stop) "
+        "VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)"
+    )
 
     for obs_id in selected_observations:
 
@@ -239,7 +289,7 @@ def load_aggregated_events_in_db(
 
                     cursor1.execute(
                         (
-                            "SELECT occurence, comment FROM events "
+                            "SELECT occurence, comment, image_index, image_path FROM events "
                             "WHERE subject = ? AND code = ? AND modifiers = ? ORDER by occurence"
                         ),
                         (subject, behavior, distinct_modifiers),
@@ -249,45 +299,42 @@ def load_aggregated_events_in_db(
                     for idx, row in enumerate(rows):
 
                         if behavior in point_behaviors_codes:
-                            cursor2.execute(
-                                (
-                                    "INSERT INTO aggregated_events (observation, subject, behavior, type, modifiers, "
-                                    "                               start, stop, comment, comment_stop) "
-                                    "VALUES (?,?,?,?,?,?,?,?,?)"
-                                ),
-                                (
-                                    obs_id,
-                                    subject,
-                                    behavior,
-                                    cfg.POINT,
-                                    distinct_modifiers,
-                                    row["occurence"],
-                                    row["occurence"],
-                                    row["comment"],
-                                    "",
-                                ),
+                            data = (
+                                obs_id,
+                                subject,
+                                behavior,
+                                cfg.POINT,
+                                distinct_modifiers,
+                                row["occurence"],
+                                row["occurence"],
+                                row["comment"],
+                                "",  # no stop comment for point event
+                                row["image_index"],
+                                row["image_index"],
+                                row["image_path"],
+                                row["image_path"],
                             )
+                            cursor2.execute(insert_sql, data)
 
                         if behavior in state_behaviors_codes:
                             if idx % 2 == 0:
-                                cursor2.execute(
-                                    (
-                                        "INSERT INTO aggregated_events (observation, subject, behavior, type, modifiers,"
-                                        "                               start, stop, comment, comment_stop) "
-                                        "VALUES (?,?,?,?,?,?,?,?,?)"
-                                    ),
-                                    (
-                                        obs_id,
-                                        subject,
-                                        behavior,
-                                        cfg.STATE,
-                                        distinct_modifiers,
-                                        row["occurence"],
-                                        rows[idx + 1]["occurence"],
-                                        row["comment"],
-                                        rows[idx + 1]["comment"],
-                                    ),
+                                data = (
+                                    obs_id,
+                                    subject,
+                                    behavior,
+                                    cfg.STATE,
+                                    distinct_modifiers,
+                                    row["occurence"],
+                                    rows[idx + 1]["occurence"],
+                                    row["comment"],
+                                    rows[idx + 1]["comment"],
+                                    row["image_index"],
+                                    rows[idx + 1]["image_index"],
+                                    row["image_path"],
+                                    rows[idx + 1]["image_path"],
                                 )
+
+                                cursor2.execute(insert_sql, data)
 
     db.commit()
 
