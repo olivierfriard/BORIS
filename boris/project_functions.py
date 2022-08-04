@@ -141,7 +141,7 @@ def behavior_category(ethogram: dict) -> dict:
 
 def check_if_media_available(observation: dict, project_file_name: str):
     """
-    check if media files available
+    check if media files available for media and images observations
 
     Args:
         observation (dict): observation to be checked
@@ -154,14 +154,24 @@ def check_if_media_available(observation: dict, project_file_name: str):
     if observation[cfg.TYPE] == cfg.LIVE:
         return (True, "")
 
-    for nplayer in cfg.ALL_PLAYERS:
-        if nplayer in observation.get(cfg.FILE, {}):
-            if not isinstance(observation[cfg.FILE][nplayer], list):
-                return (False, "error")
-            for media_file in observation[cfg.FILE][nplayer]:
-                if not media_full_path(media_file, project_file_name):
-                    return (False, f"Media file <b>{media_file}</b> not found")
-    return (True, "")
+    # TODO: check all files before returning False
+    if observation[cfg.TYPE] == cfg.IMAGES:
+        for img_dir in observation.get(cfg.DIRECTORIES_LIST, []):
+            if not media_full_path(img_dir, project_file_name):
+                return (False, f"The images directory <b>{img_dir}</b> was not found")
+        return (True, "")
+
+    if observation[cfg.TYPE] == cfg.MEDIA:
+        for nplayer in cfg.ALL_PLAYERS:
+            if nplayer in observation.get(cfg.FILE, {}):
+                if not isinstance(observation[cfg.FILE][nplayer], list):
+                    return (False, "error")
+                for media_file in observation[cfg.FILE][nplayer]:
+                    if not media_full_path(media_file, project_file_name):
+                        return (False, f"Media file <b>{media_file}</b> was not found")
+        return (True, "")
+
+    return (False, "Observation type not found")
 
 
 def check_directories_availability(observation: dict, project_file_name: str):
@@ -414,16 +424,20 @@ def check_project_integrity(
 
         # check if media length available
         for obs_id in pj[cfg.OBSERVATIONS]:
+
+            # TODO: add images observations
             if pj[cfg.OBSERVATIONS][obs_id][cfg.TYPE] in [cfg.LIVE]:
                 continue
-            for nplayer in cfg.ALL_PLAYERS:
-                if nplayer in pj[cfg.OBSERVATIONS][obs_id][cfg.FILE]:
-                    for media_file in pj[cfg.OBSERVATIONS][obs_id][cfg.FILE][nplayer]:
-                        try:
-                            pj[cfg.OBSERVATIONS][obs_id][cfg.MEDIA_INFO][cfg.LENGTH][media_file]
-                        except KeyError:
-                            out += "<br><br>" if out else ""
-                            out += f"Observation: <b>{obs_id}</b><br>Length not available for media file <b>{media_file}</b>"
+
+            if pj[cfg.OBSERVATIONS][obs_id][cfg.TYPE] == cfg.MEDIA:
+                for nplayer in cfg.ALL_PLAYERS:
+                    if nplayer in pj[cfg.OBSERVATIONS][obs_id][cfg.FILE]:
+                        for media_file in pj[cfg.OBSERVATIONS][obs_id][cfg.FILE][nplayer]:
+                            try:
+                                pj[cfg.OBSERVATIONS][obs_id][cfg.MEDIA_INFO][cfg.LENGTH][media_file]
+                            except KeyError:
+                                out += "<br><br>" if out else ""
+                                out += f"Observation: <b>{obs_id}</b><br>Length not available for media file <b>{media_file}</b>"
 
         # check for leading/trailing spaces/special chars in observation id
         for obs_id in pj[cfg.OBSERVATIONS]:
@@ -723,27 +737,27 @@ def remove_media_files_path(pj):
     return dict(pj)
 
 
-def media_full_path(media_file: str, project_file_name: str) -> str:
+def media_full_path(path: str, project_file_name: str) -> str:
     """
-    media full path
+    returns the media full path or the images directory full path
     add path of BORIS project if media without path
 
     Args:
-        media_file (str): media file path
+        path (str): media file path or images directory path
         project_file_name (str): project file name
 
     Returns:
         str: media full path
     """
 
-    media_path = pathlib.Path(media_file)
-    if media_path.exists():
-        return str(media_path)
+    source_path = pathlib.Path(path)
+    if source_path.exists():
+        return str(source_path)
     else:
         # check relative path (to project path)
         project_path = pathlib.Path(project_file_name)
-        if (project_path.parent / media_path).exists():
-            return str(project_path.parent / media_path)
+        if (project_path.parent / source_path).exists():
+            return str(project_path.parent / source_path)
         else:
             return ""
 
