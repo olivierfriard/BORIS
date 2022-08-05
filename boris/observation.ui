@@ -220,7 +220,7 @@
    <item>
     <widget class="QStackedWidget" name="sw_observation_type">
      <property name="currentIndex">
-      <number>3</number>
+      <number>1</number>
      </property>
      <widget class="QWidget" name="page"/>
      <widget class="QWidget" name="pg_media_files">
@@ -234,143 +234,156 @@
           <attribute name="title">
            <string>Media files</string>
           </attribute>
-          <layout class="QVBoxLayout" name="verticalLayout_5">
+          <layout class="QVBoxLayout" name="verticalLayout">
            <item>
-            <widget class="QSplitter" name="splitter_3">
+            <layout class="QVBoxLayout" name="verticalLayout_3">
+             <item>
+              <widget class="QTableWidget" name="twVideo1">
+               <property name="editTriggers">
+                <set>QAbstractItemView::AnyKeyPressed|QAbstractItemView::DoubleClicked|QAbstractItemView::EditKeyPressed</set>
+               </property>
+               <property name="alternatingRowColors">
+                <bool>true</bool>
+               </property>
+               <property name="selectionMode">
+                <enum>QAbstractItemView::MultiSelection</enum>
+               </property>
+               <property name="selectionBehavior">
+                <enum>QAbstractItemView::SelectRows</enum>
+               </property>
+               <property name="textElideMode">
+                <enum>Qt::ElideNone</enum>
+               </property>
+               <column>
+                <property name="text">
+                 <string>Player</string>
+                </property>
+               </column>
+               <column>
+                <property name="text">
+                 <string>Offset (seconds)</string>
+                </property>
+               </column>
+               <column>
+                <property name="text">
+                 <string>Path</string>
+                </property>
+               </column>
+               <column>
+                <property name="text">
+                 <string>Duration</string>
+                </property>
+               </column>
+               <column>
+                <property name="text">
+                 <string>FPS</string>
+                </property>
+               </column>
+               <column>
+                <property name="text">
+                 <string>Video</string>
+                </property>
+               </column>
+               <column>
+                <property name="text">
+                 <string>Audio</string>
+                </property>
+               </column>
+              </widget>
+             </item>
+            </layout>
+           </item>
+           <item>
+            <layout class="QHBoxLayout" name="horizontalLayout_3">
+             <item>
+              <widget class="QPushButton" name="pbAddVideo">
+               <property name="text">
+                <string>Add media</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QPushButton" name="pbRemoveVideo">
+               <property name="text">
+                <string>Remove selected media</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <spacer name="horizontalSpacer_6">
+               <property name="orientation">
+                <enum>Qt::Horizontal</enum>
+               </property>
+               <property name="sizeHint" stdset="0">
+                <size>
+                 <width>40</width>
+                 <height>20</height>
+                </size>
+               </property>
+              </spacer>
+             </item>
+            </layout>
+           </item>
+           <item>
+            <layout class="QHBoxLayout" name="horizontalLayout_12">
+             <item>
+              <widget class="QPushButton" name="pb_use_media_file_name_as_obsid">
+               <property name="text">
+                <string>Use media file name as observation id</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <spacer name="horizontalSpacer_8">
+               <property name="orientation">
+                <enum>Qt::Horizontal</enum>
+               </property>
+               <property name="sizeHint" stdset="0">
+                <size>
+                 <width>40</width>
+                 <height>20</height>
+                </size>
+               </property>
+              </spacer>
+             </item>
+            </layout>
+           </item>
+           <item>
+            <widget class="QCheckBox" name="cbVisualizeSpectrogram">
+             <property name="text">
+              <string>Visualize the sound spectrogram for the player #1</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QCheckBox" name="cb_visualize_waveform">
+             <property name="text">
+              <string>Visualize the waveform for the player #1</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QCheckBox" name="cbCloseCurrentBehaviorsBetweenVideo">
+             <property name="text">
+              <string>Stop ongoing state events between successive media files</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <spacer name="verticalSpacer">
              <property name="orientation">
               <enum>Qt::Vertical</enum>
              </property>
-             <widget class="QWidget" name="layoutWidget_2">
-              <layout class="QVBoxLayout" name="verticalLayout_3">
-               <item>
-                <widget class="QTableWidget" name="twVideo1">
-                 <property name="editTriggers">
-                  <set>QAbstractItemView::AnyKeyPressed|QAbstractItemView::DoubleClicked|QAbstractItemView::EditKeyPressed</set>
-                 </property>
-                 <property name="alternatingRowColors">
-                  <bool>true</bool>
-                 </property>
-                 <property name="selectionMode">
-                  <enum>QAbstractItemView::MultiSelection</enum>
-                 </property>
-                 <property name="selectionBehavior">
-                  <enum>QAbstractItemView::SelectRows</enum>
-                 </property>
-                 <property name="textElideMode">
-                  <enum>Qt::ElideNone</enum>
-                 </property>
-                 <column>
-                  <property name="text">
-                   <string>Player</string>
-                  </property>
-                 </column>
-                 <column>
-                  <property name="text">
-                   <string>Offset (seconds)</string>
-                  </property>
-                 </column>
-                 <column>
-                  <property name="text">
-                   <string>Path</string>
-                  </property>
-                 </column>
-                 <column>
-                  <property name="text">
-                   <string>Duration</string>
-                  </property>
-                 </column>
-                 <column>
-                  <property name="text">
-                   <string>FPS</string>
-                  </property>
-                 </column>
-                 <column>
-                  <property name="text">
-                   <string>Video</string>
-                  </property>
-                 </column>
-                 <column>
-                  <property name="text">
-                   <string>Audio</string>
-                  </property>
-                 </column>
-                </widget>
-               </item>
-              </layout>
-             </widget>
-             <widget class="QWidget" name="layoutWidget_3">
-              <layout class="QVBoxLayout" name="verticalLayout">
-               <item>
-                <layout class="QHBoxLayout" name="horizontalLayout_3">
-                 <item>
-                  <widget class="QPushButton" name="pbAddVideo">
-                   <property name="text">
-                    <string>Add media</string>
-                   </property>
-                  </widget>
-                 </item>
-                 <item>
-                  <widget class="QPushButton" name="pbRemoveVideo">
-                   <property name="text">
-                    <string>Remove selected media</string>
-                   </property>
-                  </widget>
-                 </item>
-                 <item>
-                  <spacer name="horizontalSpacer_6">
-                   <property name="orientation">
-                    <enum>Qt::Horizontal</enum>
-                   </property>
-                   <property name="sizeHint" stdset="0">
-                    <size>
-                     <width>40</width>
-                     <height>20</height>
-                    </size>
-                   </property>
-                  </spacer>
-                 </item>
-                </layout>
-               </item>
-               <item>
-                <widget class="QCheckBox" name="cbVisualizeSpectrogram">
-                 <property name="text">
-                  <string>Visualize the sound spectrogram for the player #1</string>
-                 </property>
-                </widget>
-               </item>
-               <item>
-                <widget class="QCheckBox" name="cb_visualize_waveform">
-                 <property name="text">
-                  <string>Visualize the waveform for the player #1</string>
-                 </property>
-                </widget>
-               </item>
-               <item>
-                <widget class="QCheckBox" name="cbCloseCurrentBehaviorsBetweenVideo">
-                 <property name="text">
-                  <string>Stop ongoing state events between successive media files</string>
-                 </property>
-                </widget>
-               </item>
-               <item>
-                <spacer name="verticalSpacer">
-                 <property name="orientation">
-                  <enum>Qt::Vertical</enum>
-                 </property>
-                 <property name="sizeType">
-                  <enum>QSizePolicy::MinimumExpanding</enum>
-                 </property>
-                 <property name="sizeHint" stdset="0">
-                  <size>
-                   <width>20</width>
-                   <height>40</height>
-                  </size>
-                 </property>
-                </spacer>
-               </item>
-              </layout>
-             </widget>
-            </widget>
+             <property name="sizeType">
+              <enum>QSizePolicy::MinimumExpanding</enum>
+             </property>
+             <property name="sizeHint" stdset="0">
+              <size>
+               <width>20</width>
+               <height>256</height>
+              </size>
+             </property>
+            </spacer>
            </item>
           </layout>
          </widget>

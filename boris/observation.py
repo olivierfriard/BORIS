@@ -23,7 +23,7 @@ This file is part of BORIS.
 import glob
 import logging
 import os
-from pathlib import Path
+import pathlib as pl
 
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QColor
@@ -163,6 +163,8 @@ class Observation(QDialog, Ui_Form):
         self.pb_view_data_head.clicked.connect(self.view_data_file_head)
         self.pb_plot_data.clicked.connect(self.plot_data_file)
 
+        self.pb_use_media_file_name_as_obsid.clicked.connect(self.use_media_file_name_as_obsid)
+
         self.cbVisualizeSpectrogram.clicked.connect(self.extract_wav)
         self.cb_visualize_waveform.clicked.connect(self.extract_wav)
         self.cb_observation_time_interval.clicked.connect(self.limit_time_interval)
@@ -190,6 +192,37 @@ class Observation(QDialog, Ui_Form):
         self.pb_remove_directory.clicked.connect(self.remove_images_directory)
 
         self.tabWidget.setCurrentIndex(0)
+
+    def use_media_file_name_as_obsid(self):
+        """
+        set observation id with the media file name value (without path)
+        """
+        if not self.twVideo1.rowCount():
+            self.qm = QMessageBox()
+            self.qm.setIcon(QMessageBox.Critical)
+            self.qm.setText("Select a media file first")
+            self.qm.exec_()
+            return
+
+        players_list = []
+        first_media_file = ""
+        for row in range(self.twVideo1.rowCount()):
+            if int(self.twVideo1.cellWidget(row, 0).currentText()) == 1:
+                first_media_file = self.twVideo1.item(row, 2).text()
+                break
+            """
+            players_list.append(int(self.twVideo1.cellWidget(row, 0).currentText()))
+            if not media
+            """
+        # check if player #1 is used
+        if not first_media_file:
+            self.qm = QMessageBox()
+            self.qm.setIcon(QMessageBox.Critical)
+            self.qm.setText("A media file must be loaded in player #1")
+            self.qm.exec_()
+            return False
+
+        self.leObservationId.setText(pl.Path(first_media_file).name)
 
     def obs_type_changed(self):
         """
@@ -438,7 +471,7 @@ class Observation(QDialog, Ui_Form):
             return
 
         fd = QFileDialog()
-        fd.setDirectory(os.path.expanduser("~") if (" abs " in mode) else str(Path(self.project_path).parent))
+        fd.setDirectory(os.path.expanduser("~") if (" abs " in mode) else str(pl.Path(self.project_path).parent))
 
         fn = fd.getOpenFileName(self, "Add data file", "", "All files (*)")
         file_name = fn[0] if type(fn) is tuple else fn
@@ -464,7 +497,7 @@ class Observation(QDialog, Ui_Form):
                 return  # problem with header
 
             w = dialog.View_data_head()
-            w.setWindowTitle(f"Data file: {Path(file_name).name}")
+            w.setWindowTitle(f"Data file: {pl.Path(file_name).name}")
             """w.setWindowFlags(Qt.WindowStaysOnTopHint)"""
 
             w.tw.setColumnCount(r["fields number"])
@@ -506,12 +539,12 @@ class Observation(QDialog, Ui_Form):
             if " rel " in mode:
 
                 try:
-                    file_path = str(Path(file_name).relative_to(Path(self.project_path).parent))
+                    file_path = str(pl.Path(file_name).relative_to(pl.Path(self.project_path).parent))
                 except ValueError:
                     QMessageBox.critical(
                         self,
                         cfg.programName,
-                        f"The directory <b>{Path(file_name).parent}</b> is not contained in <b>{Path(self.project_path).parent}</b>.",
+                        f"The directory <b>{pl.Path(file_name).parent}</b> is not contained in <b>{pl.Path(self.project_path).parent}</b>.",
                     )
                     return
 
@@ -574,7 +607,7 @@ class Observation(QDialog, Ui_Form):
         if header:
 
             w = dialog.View_data_head()
-            w.setWindowTitle(f"Data file: {Path(data_file_path).name}")
+            w.setWindowTitle(f"Data file: {pl.Path(data_file_path).name}")
             w.label.setText("Index of columns to plot")
             w.le.setEnabled(False)
             w.le.setText(columns_to_plot)
@@ -890,7 +923,7 @@ class Observation(QDialog, Ui_Form):
 
                 if " rel " in mode:
                     # convert to relative path (relative to BORIS project file)
-                    file_path = str(Path(file_path).relative_to(Path(self.project_path).parent))
+                    file_path = str(pl.Path(file_path).relative_to(pl.Path(self.project_path).parent))
 
                 self.mediaDurations[file_path] = float(media_info["duration"])
                 self.mediaFPS[file_path] = float(media_info["fps"])
@@ -935,9 +968,9 @@ class Observation(QDialog, Ui_Form):
 
         fd = QFileDialog()
         if self.mem_dir:
-            fd.setDirectory(self.mem_dir if (" abs " in mode) else str(Path(self.project_path).parent))
+            fd.setDirectory(self.mem_dir if (" abs " in mode) else str(pl.Path(self.project_path).parent))
         else:
-            fd.setDirectory(os.path.expanduser("~") if (" abs " in mode) else str(Path(self.project_path).parent))
+            fd.setDirectory(os.path.expanduser("~") if (" abs " in mode) else str(pl.Path(self.project_path).parent))
 
         if "media " in mode:
 
@@ -946,16 +979,16 @@ class Observation(QDialog, Ui_Form):
 
             if file_paths:
                 # store directory for next usage
-                self.mem_dir = str(Path(file_paths[0]).parent)
+                self.mem_dir = str(pl.Path(file_paths[0]).parent)
                 # check if media dir in contained in the BORIS file project dir
                 if " rel " in mode:
                     try:
-                        Path(file_paths[0]).parent.relative_to(Path(self.project_path).parent)
+                        pl.Path(file_paths[0]).parent.relative_to(pl.Path(self.project_path).parent)
                     except ValueError:
                         QMessageBox.critical(
                             self,
                             cfg.programName,
-                            f"The directory <b>{Path(file_paths[0]).parent}</b> is not contained in <b>{Path(self.project_path).parent}</b>.",
+                            f"The directory <b>{pl.Path(file_paths[0]).parent}</b> is not contained in <b>{pl.Path(self.project_path).parent}</b>.",
                         )
                         return
 
