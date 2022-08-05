@@ -195,7 +195,7 @@ def choose_obs_subj_behav_category(
     gui_utilities.restore_geometry(paramPanelWindow, "param panel", (600, 500))
 
     if not paramPanelWindow.exec_():
-        return {"selected subjects": [], "selected behaviors": []}
+        return {cfg.SELECTED_SUBJECTS: [], cfg.SELECTED_BEHAVIORS: []}
 
     gui_utilities.save_geometry(paramPanelWindow, "param panel")
 
@@ -223,7 +223,7 @@ def choose_obs_subj_behav_category(
             QMessageBox.Ok | QMessageBox.Default,
             QMessageBox.NoButton,
         )
-        return {"selected subjects": [], "selected behaviors": []}
+        return {cfg.SELECTED_SUBJECTS: [], cfg.SELECTED_BEHAVIORS: []}
 
     if paramPanelWindow.rb_full.isChecked():
         time_param = cfg.TIME_FULL_OBS

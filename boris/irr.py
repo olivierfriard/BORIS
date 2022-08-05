@@ -349,7 +349,7 @@ def irr_cohen_kappa(self):
         out2 += f"{selected_observations[r]}\t"
         out2 += "\t".join(["%8.6f" % x for x in irr_results[r, :]]) + "\n"
 
-    self.results = dialog.ResultsWidget()
+    self.results = dialog.Results_dialog()
     self.results.setWindowTitle(f"BORIS - IRR - Cohen's Kappa (time-unit) analysis results")
     self.results.ptText.setReadOnly(True)
     if len(selected_observations) == 2:
@@ -652,7 +652,7 @@ def needleman_wunch(self):
         out2 += f"{selected_observations[r]}\t"
         out2 += "\t".join([f"{x:8.6f}" for x in nws_results[r, :]]) + "\n"
 
-    self.results = dialog.ResultsWidget()
+    self.results = dialog.Results_dialog()
     self.results.setWindowTitle(cfg.programName + " - Needleman-Wunsch similarity")
     self.results.ptText.setReadOnly(True)
     if len(selected_observations) == 2:

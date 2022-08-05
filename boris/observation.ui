@@ -220,7 +220,7 @@
    <item>
     <widget class="QStackedWidget" name="sw_observation_type">
      <property name="currentIndex">
-      <number>1</number>
+      <number>3</number>
      </property>
      <widget class="QWidget" name="page"/>
      <widget class="QWidget" name="pg_media_files">
@@ -620,7 +620,7 @@
       </layout>
      </widget>
      <widget class="QWidget" name="pg_images">
-      <layout class="QVBoxLayout" name="verticalLayout_10">
+      <layout class="QVBoxLayout" name="verticalLayout_5">
        <item>
         <layout class="QHBoxLayout" name="horizontalLayout_9">
          <item>
@@ -656,6 +656,30 @@
             </spacer>
            </item>
           </layout>
+         </item>
+        </layout>
+       </item>
+       <item>
+        <layout class="QHBoxLayout" name="horizontalLayout_13">
+         <item>
+          <widget class="QPushButton" name="pb_use_img_dir_as_obsid">
+           <property name="text">
+            <string>Use the pictures directory as observation id</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <spacer name="horizontalSpacer_9">
+           <property name="orientation">
+            <enum>Qt::Horizontal</enum>
+           </property>
+           <property name="sizeHint" stdset="0">
+            <size>
+             <width>40</width>
+             <height>20</height>
+            </size>
+           </property>
+          </spacer>
          </item>
         </layout>
        </item>

@@ -25,6 +25,7 @@ import pathlib as pl
 from decimal import Decimal as dec
 
 from PyQt5.QtWidgets import QFileDialog, QMessageBox
+from PyQt5.QtGui import QFont, QTextOption, QTextCursor
 
 from . import config as cfg
 from . import (
@@ -99,34 +100,6 @@ def synthetic_time_budget(self):
     else:
         synth_tb_param[cfg.EXCLUDED_BEHAVIORS] = []
 
-    extended_file_formats = [
-        "Tab Separated Values (*.tsv)",
-        "Comma Separated Values (*.csv)",
-        "Open Document Spreadsheet ODS (*.ods)",
-        "Microsoft Excel Spreadsheet XLSX (*.xlsx)",
-        "Legacy Microsoft Excel Spreadsheet XLS (*.xls)",
-        "HTML (*.html)",
-    ]
-    file_formats = ["tsv", "csv", "ods", "xlsx", "xls", "html"]
-
-    file_name, filter_ = QFileDialog().getSaveFileName(
-        self, "Synthetic time budget", "", ";;".join(extended_file_formats)
-    )
-    if not file_name:
-        return
-
-    output_format = file_formats[extended_file_formats.index(filter_)]
-    if pl.Path(file_name).suffix != "." + output_format:
-        file_name = str(pl.Path(file_name)) + "." + output_format
-        if pl.Path(file_name).is_file():
-            if (
-                dialog.MessageDialog(
-                    cfg.programName, f"The file {file_name} already exists.", [cfg.CANCEL, cfg.OVERWRITE]
-                )
-                == cfg.CANCEL
-            ):
-                return
-
     ok, msg, data_report = time_budget_functions.synthetic_time_budget(self.pj, selected_observations, synth_tb_param)
     if not ok:
         results = dialog.Results_dialog()
@@ -137,14 +110,54 @@ def synthetic_time_budget(self):
         results.exec_()
         return
 
-    # print(data_report.export("cli", tablefmt="github"))
+    results = dialog.Results_dialog()
+    results.dataset = True
+    results.setWindowTitle("Synthetic time budget")
+    font = QFont("Courier", 12)
+    results.ptText.setFont(font)
+    results.ptText.setWordWrapMode(QTextOption.NoWrap)
+    results.ptText.setReadOnly(True)
+    results.ptText.appendPlainText(data_report.export("cli", tablefmt="grid"))  # other available format: github
+    results.ptText.moveCursor(QTextCursor.Start)
+    results.resize(960, 640)
 
-    if output_format in ["tsv", "csv", "html"]:
-        with open(file_name, "wb") as f:
-            f.write(str.encode(data_report.export(output_format)))
-    if output_format in ["ods", "xlsx", "xls"]:
-        with open(file_name, "wb") as f:
-            f.write(data_report.export(output_format))
+    if results.exec_() == cfg.SAVE_DATASET:
+        extended_file_formats = [
+            "Tab Separated Values (*.tsv)",
+            "Comma Separated Values (*.csv)",
+            "Open Document Spreadsheet ODS (*.ods)",
+            "Microsoft Excel Spreadsheet XLSX (*.xlsx)",
+            "Legacy Microsoft Excel Spreadsheet XLS (*.xls)",
+            "HTML (*.html)",
+            "Text file",  # tablib format: cli
+        ]
+        file_formats = ["tsv", "csv", "ods", "xlsx", "xls", "html", "cli"]
+
+        file_name, filter_ = QFileDialog().getSaveFileName(
+            self, "Synthetic time budget", "", ";;".join(extended_file_formats)
+        )
+        if not file_name:
+            return
+
+        output_format = file_formats[extended_file_formats.index(filter_)]
+        if output_format != "cli" and pl.Path(file_name).suffix != "." + output_format:
+            file_name = str(pl.Path(file_name)) + "." + output_format
+            if pl.Path(file_name).is_file():
+                if (
+                    dialog.MessageDialog(
+                        cfg.programName, f"The file {file_name} already exists.", [cfg.CANCEL, cfg.OVERWRITE]
+                    )
+                    == cfg.CANCEL
+                ):
+                    return
+
+        if output_format in ["tsv", "csv", "html", "cli"]:
+            with open(file_name, "wb") as f:
+                f.write(str.encode(data_report.export(output_format)))
+
+        if output_format in ["ods", "xlsx", "xls"]:
+            with open(file_name, "wb") as f:
+                f.write(data_report.export(output_format))
 
 
 def synthetic_binned_time_budget(self):
@@ -235,48 +248,59 @@ def synthetic_binned_time_budget(self):
     else:
         synth_tb_param[cfg.EXCLUDED_BEHAVIORS] = []
 
-    extended_file_formats = [
-        "Tab Separated Values (*.tsv)",
-        "Comma Separated Values (*.csv)",
-        "Open Document Spreadsheet ODS (*.ods)",
-        "Microsoft Excel Spreadsheet XLSX (*.xlsx)",
-        "Legacy Microsoft Excel Spreadsheet XLS (*.xls)",
-        "HTML (*.html)",
-    ]
-    file_formats = ["tsv", "csv", "ods", "xlsx", "xls", "html"]
-
-    file_name, filter_ = QFileDialog().getSaveFileName(
-        self, "Synthetic time budget with time bin", "", ";;".join(extended_file_formats)
-    )
-    if not file_name:
-        return
-
-    output_format = file_formats[extended_file_formats.index(filter_)]
-    if pl.Path(file_name).suffix != "." + output_format:
-        file_name = str(pl.Path(file_name)) + "." + output_format
-        if pl.Path(file_name).is_file():
-            if (
-                dialog.MessageDialog(
-                    cfg.programName, f"The file {file_name} already exists.", [cfg.CANCEL, cfg.OVERWRITE]
-                )
-                == cfg.CANCEL
-            ):
-                return
-
     ok, data_report = time_budget_functions.synthetic_time_budget_bin(self.pj, selected_observations, synth_tb_param)
 
     if not ok:
         results = dialog.Results_dialog()
         results.setWindowTitle("Synthetic time budget with time bin")
-        results.ptText.clear()
-        results.ptText.setReadOnly(True)
         results.ptText.appendHtml("Error during the creation of the synthetic time budget with time bin")
         results.exec_()
         return
 
-    if output_format in ["tsv", "csv", "html"]:
-        with open(file_name, "wb") as f:
-            f.write(str.encode(data_report.export(output_format)))
-    if output_format in ["ods", "xlsx", "xls"]:
-        with open(file_name, "wb") as f:
-            f.write(data_report.export(output_format))
+    results = dialog.Results_dialog()
+    results.dataset = True
+    results.setWindowTitle("Synthetic time budget by time bin")
+    font = QFont("Courier", 12)
+    results.ptText.setFont(font)
+    results.ptText.setWordWrapMode(QTextOption.NoWrap)
+    results.ptText.setReadOnly(True)
+    results.ptText.appendPlainText(data_report.export("cli", tablefmt="grid"))  # other available format: github
+    results.ptText.moveCursor(QTextCursor.Start)
+    results.resize(960, 640)
+
+    if results.exec_() == cfg.SAVE_DATASET:
+        extended_file_formats = [
+            "Tab Separated Values (*.tsv)",
+            "Comma Separated Values (*.csv)",
+            "Open Document Spreadsheet ODS (*.ods)",
+            "Microsoft Excel Spreadsheet XLSX (*.xlsx)",
+            "Legacy Microsoft Excel Spreadsheet XLS (*.xls)",
+            "HTML (*.html)",
+            "Text file",  # tablib format: cli
+        ]
+        file_formats = ["tsv", "csv", "ods", "xlsx", "xls", "html", "cli"]
+
+        file_name, filter_ = QFileDialog().getSaveFileName(
+            self, "Synthetic time budget with time bin", "", ";;".join(extended_file_formats)
+        )
+        if not file_name:
+            return
+
+        output_format = file_formats[extended_file_formats.index(filter_)]
+        if output_format != "cli" and pl.Path(file_name).suffix != "." + output_format:
+            file_name = str(pl.Path(file_name)) + "." + output_format
+            if pl.Path(file_name).is_file():
+                if (
+                    dialog.MessageDialog(
+                        cfg.programName, f"The file {file_name} already exists.", [cfg.CANCEL, cfg.OVERWRITE]
+                    )
+                    == cfg.CANCEL
+                ):
+                    return
+
+        if output_format in ["tsv", "csv", "html", "cli"]:
+            with open(file_name, "wb") as f:
+                f.write(str.encode(data_report.export(output_format)))
+        if output_format in ["ods", "xlsx", "xls"]:
+            with open(file_name, "wb") as f:
+                f.write(data_report.export(output_format))

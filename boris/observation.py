@@ -164,6 +164,7 @@ class Observation(QDialog, Ui_Form):
         self.pb_plot_data.clicked.connect(self.plot_data_file)
 
         self.pb_use_media_file_name_as_obsid.clicked.connect(self.use_media_file_name_as_obsid)
+        self.pb_use_img_dir_as_obsid.clicked.connect(self.use_img_dir_as_obsid)
 
         self.cbVisualizeSpectrogram.clicked.connect(self.extract_wav)
         self.cb_visualize_waveform.clicked.connect(self.extract_wav)
@@ -193,48 +194,46 @@ class Observation(QDialog, Ui_Form):
 
         self.tabWidget.setCurrentIndex(0)
 
-    def use_media_file_name_as_obsid(self):
+    def use_media_file_name_as_obsid(self) -> None:
         """
         set observation id with the media file name value (without path)
         """
         if not self.twVideo1.rowCount():
-            self.qm = QMessageBox()
-            self.qm.setIcon(QMessageBox.Critical)
-            self.qm.setText("Select a media file first")
-            self.qm.exec_()
+            QMessageBox.critical(self, cfg.programName, "A media file must be loaded in player #1")
             return
 
-        players_list = []
         first_media_file = ""
         for row in range(self.twVideo1.rowCount()):
             if int(self.twVideo1.cellWidget(row, 0).currentText()) == 1:
                 first_media_file = self.twVideo1.item(row, 2).text()
                 break
-            """
-            players_list.append(int(self.twVideo1.cellWidget(row, 0).currentText()))
-            if not media
-            """
         # check if player #1 is used
         if not first_media_file:
-            self.qm = QMessageBox()
-            self.qm.setIcon(QMessageBox.Critical)
-            self.qm.setText("A media file must be loaded in player #1")
-            self.qm.exec_()
-            return False
+            QMessageBox.critical(self, cfg.programName, "A media file must be loaded in player #1")
+            return
 
         self.leObservationId.setText(pl.Path(first_media_file).name)
 
-    def obs_type_changed(self):
+    def use_img_dir_as_obsid(self) -> None:
+        """
+        set observation id with the images directory (without path)
+        """
+
+        if not self.lw_images_directory.count():
+            QMessageBox.critical(self, cfg.programName, "You have to select at least one images directory")
+            return
+
+        self.leObservationId.setText(pl.Path(self.lw_images_directory.item(0).text()).name)
+
+    def obs_type_changed(self) -> None:
         """
         change stacked widget page in base at the observation type
 
         """
-        if self.rb_media_files.isChecked():
-            self.sw_observation_type.setCurrentIndex(1)
-        if self.rb_live.isChecked():
-            self.sw_observation_type.setCurrentIndex(2)
-        if self.rb_images.isChecked():
-            self.sw_observation_type.setCurrentIndex(3)
+
+        for idx, rb in enumerate([self.rb_media_files, self.rb_live, self.rb_images]):
+            if rb.isChecked():
+                self.sw_observation_type.setCurrentIndex(idx + 1)
 
     def add_images_directory(self):
         """
@@ -785,15 +784,14 @@ class Observation(QDialog, Ui_Form):
 
             # check if more media in player #1 and media in other players
             if len(players[1]) > 1 and set(players.keys()) != {1}:
-                self.qm = QMessageBox()
-                self.qm.setIcon(QMessageBox.Critical)
-                self.qm.setText(
+                QMessageBox.critical(
+                    self,
+                    cfg.programName,
                     (
                         "It is not possible to play another media synchronously "
                         "when many media are queued in the first media player"
-                    )
+                    ),
                 )
-                self.qm.exec_()
                 return False
 
             # check that the longuest media is in player #1
@@ -834,7 +832,7 @@ class Observation(QDialog, Ui_Form):
                     )
                     return False
 
-        if self.rb_images.isChecked():
+        if self.rb_images.isChecked():  # observation based on images directory
             if not self.lw_images_directory.count():
                 QMessageBox.critical(self, cfg.programName, "You have to select at least one images directory")
                 return False

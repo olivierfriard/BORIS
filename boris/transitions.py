@@ -188,7 +188,7 @@ def transitions_matrix(self, mode):
         flagShowExcludeBehaviorsWoEvents=False,
     )
 
-    if not plot_parameters["selected subjects"] or not plot_parameters["selected behaviors"]:
+    if not plot_parameters[cfg.SELECTED_SUBJECTS] or not plot_parameters[cfg.SELECTED_BEHAVIORS]:
         return
 
     flagMulti = False

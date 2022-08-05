@@ -121,6 +121,21 @@ def export_tabular_events(self, mode: str = "tabular"):
     if not selectedObservations:
         return
 
+    if mode == "jwatcher":
+        # check if images observation in list
+        max_obs_length, _ = observation_operations.observation_length(self.pj, selectedObservations)
+
+        # exit with message if events do not have timestamp
+        if max_obs_length.is_nan():
+            QMessageBox.critical(
+                None,
+                cfg.programName,
+                ("This function is not available for observations with events that do not have timestamp"),
+                QMessageBox.Ok | QMessageBox.Default,
+                QMessageBox.NoButton,
+            )
+            return
+
     out = ""
     # check if coded behaviors are defined in ethogram
     ethogram_behavior_codes = {self.pj[cfg.ETHOGRAM][idx][cfg.BEHAVIOR_CODE] for idx in self.pj[cfg.ETHOGRAM]}
@@ -167,7 +182,7 @@ def export_tabular_events(self, mode: str = "tabular"):
         flagShowExcludeBehaviorsWoEvents=False,
     )
 
-    if not parameters["selected subjects"] or not parameters["selected behaviors"]:
+    if not parameters[cfg.SELECTED_SUBJECTS] or not parameters[cfg.SELECTED_BEHAVIORS]:
         return
 
     if mode == "tabular":
@@ -253,7 +268,7 @@ def export_tabular_events(self, mode: str = "tabular"):
                     continue
 
         if mode == "tabular":
-            export_function = export_observation.export_events
+            export_function = export_observation.export_tabular_events
         if mode == "jwatcher":
             export_function = export_observation.export_events_jwatcher
 
@@ -452,6 +467,14 @@ def export_aggregated_events(self):
     stop_idx = -8
     obs_id_idx = 0
 
+    # check indep var type for dataframe output
+    """ to be finished
+    column_type = {"Observation id": "str", "Description": "str", "Comment start": "str", "Comment stop": "str"}
+    for idx_var in util.sorted_keys(pj[cfg.INDEPENDENT_VARIABLES]):
+        column_type[self.pj[cfg.INDEPENDENT_VARIABLES][idx_var]["label"]] = 
+        if self.pj[cfg.INDEPENDENT_VARIABLES][idx_var]["type"] == "timestamp":
+    """
+
     mem_command = ""  # remember user choice when file already exists
     for obs_id in selectedObservations:
         d = export_observation.export_aggregated_events(self.pj, parameters, obs_id)
@@ -582,9 +605,9 @@ def export_state_events_as_textgrid(self):
     export state events as Praat textgrid
     """
 
-    _, selectedObservations = select_observations.select_observations(self.pj, mode=cfg.MULTIPLE, windows_title="")
+    _, selected_observations = select_observations.select_observations(self.pj, mode=cfg.MULTIPLE, windows_title="")
 
-    if not selectedObservations:
+    if not selected_observations:
         return
 
     # check if coded behaviors are defined in ethogram
@@ -596,9 +619,7 @@ def export_state_events_as_textgrid(self):
     if not_ok or not selected_observations:
         return
 
-    max_obs_length, selectedObsTotalMediaLength = observation_operations.observation_length(
-        self.pj, selected_observations
-    )
+    max_obs_length, _ = observation_operations.observation_length(self.pj, selected_observations)
 
     # exit with message if events do not have timestamp
     if max_obs_length.is_nan():
@@ -613,7 +634,7 @@ def export_state_events_as_textgrid(self):
 
     plot_parameters = select_subj_behav.choose_obs_subj_behav_category(
         self,
-        selectedObservations,
+        selected_observations,
         flagShowIncludeModifiers=False,
         flagShowExcludeBehaviorsWoEvents=False,
     )
@@ -628,7 +649,7 @@ def export_state_events_as_textgrid(self):
         return
 
     mem_command = ""
-    for obsId in selectedObservations:
+    for obsId in selected_observations:
 
         subjectheader = (
             "    item [{subjectIdx}]:\n"
@@ -653,7 +674,7 @@ def export_state_events_as_textgrid(self):
         cursor = db_functions.load_events_in_db(
             self.pj,
             plot_parameters[cfg.SELECTED_SUBJECTS],
-            selectedObservations,
+            selected_observations,
             plot_parameters[cfg.SELECTED_BEHAVIORS],
             time_interval=cfg.TIME_FULL_OBS,
         )

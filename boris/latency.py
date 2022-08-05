@@ -202,10 +202,9 @@ def get_latency(self):
 
         out += "<br><br>"
 
-    self.results = dialog.ResultsWidget()
+    self.results = dialog.Results_dialog()
     self.results.setWindowTitle("Latency")
     self.results.ptText.clear()
-    self.results.ptText.setReadOnly(True)
     self.results.ptText.appendHtml(out)
     self.results.show()
 
@@ -364,7 +363,7 @@ def get_latency_old(self):
 
         out += "<br><br>"
 
-    self.results = dialog.ResultsWidget()
+    self.results = dialog.Results_dialog()
     self.results.setWindowTitle("Latency")
     self.results.ptText.clear()
     self.results.ptText.setReadOnly(True)

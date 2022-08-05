@@ -23,7 +23,7 @@ import gzip
 import json
 import logging
 import os
-import pathlib
+import pathlib as pl
 import sys
 from decimal import Decimal as dec
 from shutil import copyfile
@@ -486,7 +486,7 @@ def create_subtitles(pj: dict, selected_observations: list, parameters: dict, ex
             return (
                 """<font color="{}">""".format(
                     cfg.subtitlesColors[
-                        parameters["selected subjects"].index(row["subject"]) % len(cfg.subtitlesColors)
+                        parameters[cfg.SELECTED_SUBJECTS].index(row["subject"]) % len(cfg.subtitlesColors)
                     ]
                 ),
                 "</font>",
@@ -541,7 +541,7 @@ def create_subtitles(pj: dict, selected_observations: list, parameters: dict, ex
                 """
                 file_name = str(pathlib.Path(pathlib.Path(export_dir) / util.safeFileName(obsId)).with suffix(".srt"))
                 """
-                file_name = f"{pathlib.Path(export_dir) / util.safeFileName(obsId)}.srt"
+                file_name = f"{pl.Path(export_dir) / util.safeFileName(obsId)}.srt"
                 try:
                     with open(file_name, "w") as f:
                         f.write(out)
@@ -570,10 +570,10 @@ def create_subtitles(pj: dict, selected_observations: list, parameters: dict, ex
                                 "AND behavior in ({}) "
                                 "ORDER BY start"
                             ).format(
-                                ",".join(["?"] * len(parameters["selected subjects"])),
-                                ",".join(["?"] * len(parameters["selected behaviors"])),
+                                ",".join(["?"] * len(parameters[cfg.SELECTED_SUBJECTS])),
+                                ",".join(["?"] * len(parameters[cfg.SELECTED_BEHAVIORS])),
                             ),
-                            [obsId, init, end] + parameters["selected subjects"] + parameters["selected behaviors"],
+                            [obsId, init, end] + parameters[cfg.SELECTED_SUBJECTS] + parameters[cfg.SELECTED_BEHAVIORS],
                         )
 
                         for idx, row in enumerate(cursor.fetchall()):
@@ -609,7 +609,7 @@ def create_subtitles(pj: dict, selected_observations: list, parameters: dict, ex
                         """
                         file_name = str(pathlib.Path(pathlib.Path(export_dir) / pathlib.Path(mediaFile).name).with suffix(".srt"))
                         """
-                        file_name = f"{pathlib.Path(export_dir) / pathlib.Path(mediaFile).name}.srt"
+                        file_name = f"{pl.Path(export_dir) / pl.Path(mediaFile).name}.srt"
                         try:
                             with open(file_name, "w") as f:
                                 f.write(out)
@@ -704,7 +704,7 @@ def export_observations_list(pj: dict, selected_observations: list, file_name: s
 
 def remove_media_files_path(pj):
     """
-    remove path from media files
+    remove path from media files and from images directory
     tested
 
     Args:
@@ -715,26 +715,32 @@ def remove_media_files_path(pj):
     """
 
     for obs_id in pj[cfg.OBSERVATIONS]:
-        if pj[cfg.OBSERVATIONS][obs_id][cfg.TYPE] not in [cfg.MEDIA]:
-            continue
-        for n_player in cfg.ALL_PLAYERS:
-            if n_player in pj[cfg.OBSERVATIONS][obs_id][cfg.FILE]:
-                for idx, media_file in enumerate(pj[cfg.OBSERVATIONS][obs_id][cfg.FILE][n_player]):
-                    p = str(pathlib.Path(media_file).name)
-                    if p != media_file:
-                        pj[cfg.OBSERVATIONS][obs_id][cfg.FILE][n_player][idx] = p
-                        if cfg.MEDIA_INFO in pj[cfg.OBSERVATIONS][obs_id]:
-                            for info in [cfg.LENGTH, cfg.HAS_AUDIO, cfg.HAS_VIDEO, cfg.FPS]:
-                                if (
-                                    info in pj[cfg.OBSERVATIONS][obs_id][cfg.MEDIA_INFO]
-                                    and media_file in pj[cfg.OBSERVATIONS][obs_id][cfg.MEDIA_INFO][info]
-                                ):
-                                    pj[cfg.OBSERVATIONS][obs_id][cfg.MEDIA_INFO][info][p] = pj[cfg.OBSERVATIONS][
-                                        obs_id
-                                    ][cfg.MEDIA_INFO][info][media_file]
-                                    del pj[cfg.OBSERVATIONS][obs_id][cfg.MEDIA_INFO][info][media_file]
 
-    return dict(pj)
+        if pj[cfg.OBSERVATIONS][obs_id][cfg.TYPE] == cfg.IMAGES:
+            new_img_dir_list = []
+            for img_dir in pj[cfg.OBSERVATIONS][obs_id][cfg.DIRECTORIES_LIST]:
+                new_img_dir_list.append(str(pl.Path(img_dir).name))
+            pj[cfg.OBSERVATIONS][obs_id][cfg.DIRECTORIES_LIST] = new_img_dir_list
+
+        if pj[cfg.OBSERVATIONS][obs_id][cfg.TYPE] == cfg.MEDIA:
+            for n_player in cfg.ALL_PLAYERS:
+                if n_player in pj[cfg.OBSERVATIONS][obs_id][cfg.FILE]:
+                    for idx, media_file in enumerate(pj[cfg.OBSERVATIONS][obs_id][cfg.FILE][n_player]):
+                        p = str(pl.Path(media_file).name)
+                        if p != media_file:
+                            pj[cfg.OBSERVATIONS][obs_id][cfg.FILE][n_player][idx] = p
+                            if cfg.MEDIA_INFO in pj[cfg.OBSERVATIONS][obs_id]:
+                                for info in [cfg.LENGTH, cfg.HAS_AUDIO, cfg.HAS_VIDEO, cfg.FPS]:
+                                    if (
+                                        info in pj[cfg.OBSERVATIONS][obs_id][cfg.MEDIA_INFO]
+                                        and media_file in pj[cfg.OBSERVATIONS][obs_id][cfg.MEDIA_INFO][info]
+                                    ):
+                                        pj[cfg.OBSERVATIONS][obs_id][cfg.MEDIA_INFO][info][p] = pj[cfg.OBSERVATIONS][
+                                            obs_id
+                                        ][cfg.MEDIA_INFO][info][media_file]
+                                        del pj[cfg.OBSERVATIONS][obs_id][cfg.MEDIA_INFO][info][media_file]
+
+    # return dict(pj)
 
 
 def media_full_path(path: str, project_file_name: str) -> str:
@@ -750,12 +756,12 @@ def media_full_path(path: str, project_file_name: str) -> str:
         str: media full path
     """
 
-    source_path = pathlib.Path(path)
+    source_path = pl.Path(path)
     if source_path.exists():
         return str(source_path)
     else:
         # check relative path (to project path)
-        project_path = pathlib.Path(project_file_name)
+        project_path = pl.Path(project_file_name)
         if (project_path.parent / source_path).exists():
             return str(project_path.parent / source_path)
         else:

@@ -106,9 +106,8 @@ def get_info(self):
 
             tot_output += mpv_output + ffmpeg_output + "<br><hr>"
 
-        self.results = dialog.ResultsWidget()
+        self.results = dialog.Results_dialog()
         self.results.setWindowTitle(cfg.programName + " - Media file information")
-        self.results.ptText.setReadOnly(True)
         self.results.ptText.appendHtml(tot_output)
         self.results.show()
 
@@ -118,9 +117,8 @@ def get_info(self):
         file_path = fn[0] if type(fn) is tuple else fn
 
         if file_path:
-            self.results = dialog.ResultsWidget()
+            self.results = dialog.Results_dialog()
             self.results.setWindowTitle(f"{cfg.programName} - Media file information")
-            self.results.ptText.setReadOnly(True)
             self.results.ptText.appendHtml("<br><b>FFmpeg analysis</b><hr>")
             r = util.accurate_media_analysis(self.ffmpeg_bin, file_path)
             if "error" in r:

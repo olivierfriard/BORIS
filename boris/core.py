@@ -402,10 +402,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         )
         if msg:
             msg = f"Some issues were found in the project<br><br>{msg}"
-            self.results = dialog.ResultsWidget()
+            self.results = dialog.Results_dialog()
             self.results.setWindowTitle("Check project integrity")
             self.results.ptText.clear()
-            self.results.ptText.setReadOnly(True)
             self.results.ptText.appendHtml(msg)
             self.results.show()
         else:
@@ -424,7 +423,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             dialog.MessageDialog(
                 cfg.programName,
                 (
-                    "Removing the path of media files from the project file is irreversible.<br>"
+                    "Removing the path of media files and image directories from the project file is irreversible.<br>"
                     "Are you sure to continue?"
                 ),
                 [cfg.YES, cfg.NO],
@@ -433,8 +432,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         ):
             return
 
-        self.pj = project_functions.remove_media_files_path(self.pj)
-        self.projectChanged = True
+        project_functions.remove_media_files_path(self.pj)
+        self.project_changed()
 
     def view_behavior(self):
         """

@@ -54,13 +54,13 @@ def export_events_jwatcher(
         bool: result: True if OK else False
         str: error message
     """
-    for subject in parameters["selected subjects"]:
+    for subject in parameters[cfg.SELECTED_SUBJECTS]:
 
         # select events for current subject
         events = []
         for event in observation[cfg.EVENTS]:
             if event[cfg.EVENT_SUBJECT_FIELD_IDX] == subject or (
-                subject == "No focal subject" and event[cfg.EVENT_SUBJECT_FIELD_IDX] == ""
+                subject == cfg.NO_FOCAL_SUBJECT and event[cfg.EVENT_SUBJECT_FIELD_IDX] == ""
             ):
                 events.append(event)
 
@@ -283,7 +283,7 @@ def export_events_jwatcher(
     return True, ""
 
 
-def export_events(
+def export_tabular_events(
     parameters, obsId: str, observation: dict, ethogram: dict, file_name: str, output_format: str
 ) -> tuple:
     """
@@ -575,19 +575,6 @@ def export_aggregated_events(pj: dict, parameters: dict, obsId: str):
     # obs description
     obs_description = observation[cfg.DESCRIPTION]
 
-    """
-    duration1 = []  # in seconds
-    if observation[cfg.TYPE] == cfg.MEDIA:
-        try:
-            for mediaFile in observation[cfg.FILE][cfg.PLAYER1]:
-                if cfg.MEDIA_INFO in observation:
-                    duration1.append(observation[cfg.MEDIA_INFO][cfg.LENGTH][mediaFile])
-        except Exception:
-            duration1 = []
-
-    logging.debug(f"duration1: {duration1}")
-    """
-
     obs_length = project_functions.observation_total_length(pj[cfg.OBSERVATIONS][obsId])
 
     if obs_length == dec(-1):  # media length not available
@@ -694,7 +681,8 @@ def export_aggregated_events(pj: dict, parameters: dict, obsId: str):
                 cursor.execute(
                     (
                         "SELECT start, stop, type, modifiers, comment, comment_stop, "
-                        "image_index_start, image_index_stop, image_path_start, image_path_stop FROM aggregated_events "
+                        "image_index_start, image_index_stop, image_path_start, image_path_stop "
+                        "FROM aggregated_events "
                         "WHERE subject = ? AND behavior = ? AND modifiers = ? ORDER by start, image_index_start"
                     ),
                     (subject, behavior, distinct_modifiers),
@@ -747,11 +735,13 @@ def export_aggregated_events(pj: dict, parameters: dict, obsId: str):
                                 pj[cfg.INDEPENDENT_VARIABLES][idx_var]["label"]
                                 in observation[cfg.INDEPENDENT_VARIABLES]
                             ):
-                                row_data.append(
-                                    observation[cfg.INDEPENDENT_VARIABLES][
-                                        pj[cfg.INDEPENDENT_VARIABLES][idx_var]["label"]
-                                    ]
-                                )
+                                var_value = observation[cfg.INDEPENDENT_VARIABLES][
+                                    pj[cfg.INDEPENDENT_VARIABLES][idx_var]["label"]
+                                ]
+                                if pj[cfg.INDEPENDENT_VARIABLES][idx_var]["type"] == "timestamp":
+                                    var_value = var_value.replace("T", " ")
+
+                                row_data.append(var_value)
                             else:
                                 row_data.append("")
 

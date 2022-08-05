@@ -780,6 +780,8 @@ class Results_dialog(QDialog):
     def __init__(self):
         super().__init__()
 
+        self.dataset = False
+
         self.setWindowTitle("")
 
         hbox = QVBoxLayout()
@@ -788,17 +790,16 @@ class Results_dialog(QDialog):
         hbox.addWidget(self.lb)
 
         self.ptText = QPlainTextEdit()
+        self.ptText.setReadOnly(True)
         hbox.addWidget(self.ptText)
 
         hbox2 = QHBoxLayout()
-        self.pbSave = QPushButton("Save text")
-        self.pbSave.clicked.connect(self.save_results)
+        self.pbSave = QPushButton("Save results", clicked=self.save_results)
         hbox2.addWidget(self.pbSave)
 
         hbox2.addItem(QSpacerItem(241, 20, QSizePolicy.Expanding, QSizePolicy.Minimum))
 
-        self.pbCancel = QPushButton(cfg.CANCEL)
-        self.pbCancel.clicked.connect(self.reject)
+        self.pbCancel = QPushButton(cfg.CANCEL, clicked=self.reject)
         hbox2.addWidget(self.pbCancel)
         self.pbCancel.setVisible(False)
 
@@ -807,75 +808,29 @@ class Results_dialog(QDialog):
         hbox2.addWidget(self.pbOK)
 
         hbox.addLayout(hbox2)
-
         self.setLayout(hbox)
 
-        self.resize(540, 640)
+        self.resize(800, 640)
 
     def save_results(self):
         """
         save content of self.ptText
         """
 
-        fn = QFileDialog().getSaveFileName(self, "Save results", "", "Text files (*.txt *.tsv);;All files (*)")
-        file_name = fn[0] if type(fn) is tuple else fn
+        if not self.dataset:
+            fn = QFileDialog().getSaveFileName(self, "Save results", "", "Text files (*.txt *.tsv);;All files (*)")
+            file_name = fn[0] if type(fn) is tuple else fn
 
-        if not file_name:
-            return
-        try:
-            with open(file_name, "w") as f:
-                f.write(self.ptText.toPlainText())
-        except Exception:
-            QMessageBox.critical(self, cfg.programName, f"The file {file_name} can not be saved")
-
-
-class ResultsWidget(QWidget):
-    """
-    widget for visualizing text output
-    """
-
-    def __init__(self):
-        super().__init__()
-
-        self.setWindowTitle("")
-
-        hbox = QVBoxLayout()
-
-        self.lb = QLabel("")
-        hbox.addWidget(self.lb)
-
-        self.ptText = QPlainTextEdit()
-        hbox.addWidget(self.ptText)
-
-        hbox2 = QHBoxLayout()
-        hbox2.addItem(QSpacerItem(241, 20, QSizePolicy.Expanding, QSizePolicy.Minimum))
-
-        self.pbSave = QPushButton("Save results", clicked=self.save_results)
-        hbox2.addWidget(self.pbSave)
-
-        self.pbOK = QPushButton("OK", clicked=self.close)
-        hbox2.addWidget(self.pbOK)
-
-        hbox.addLayout(hbox2)
-
-        self.setLayout(hbox)
-
-        self.resize(540, 640)
-
-    def save_results(self):
-        """
-        save content of self.ptText
-        """
-
-        fn = QFileDialog().getSaveFileName(self, "Save results", "", "Text files (*.txt *.tsv);;All files (*)")
-        file_name = fn[0] if type(fn) is tuple else fn
-
-        if file_name:
+            if not file_name:
+                return
             try:
                 with open(file_name, "w") as f:
                     f.write(self.ptText.toPlainText())
             except Exception:
                 QMessageBox.critical(self, cfg.programName, f"The file {file_name} can not be saved")
+
+        else:
+            self.done(cfg.SAVE_DATASET)
 
 
 class View_data_head(QDialog):
@@ -954,229 +909,3 @@ class View_explore_project_results(QWidget):
     def tw_cellDoubleClicked(self, r, c):
 
         self.double_click_signal.emit(self.tw.item(r, 0).text(), int(self.tw.item(r, 1).text()))
-
-
-'''
-def extract_observed_behaviors(pj, selected_observations, selectedSubjects):
-    """
-    extract unique behaviors codes from obs_id observation
-    """
-
-    observed_behaviors = []
-
-    # extract events from selected observations
-    all_events = [pj[OBSERVATIONS][x][EVENTS] for x in pj[OBSERVATIONS] if x in selected_observations]
-
-    for events in all_events:
-        for event in events:
-            if (event[EVENT_SUBJECT_FIELD_IDX] in selectedSubjects or
-               (not event[EVENT_SUBJECT_FIELD_IDX] and NO_FOCAL_SUBJECT in selectedSubjects)):
-                observed_behaviors.append(event[EVENT_BEHAVIOR_FIELD_IDX])
-
-    # remove duplicate
-    observed_behaviors = list(set(observed_behaviors))
-
-    return observed_behaviors
-'''
-
-'''
-def choose_obs_subj_behav_category(
-    pj: dict,
-    selected_observations: list,
-    maxTime=dec(0),
-    flagShowIncludeModifiers: bool = True,
-    flagShowExcludeBehaviorsWoEvents: bool = True,
-    by_category: bool = False,
-    show_time: bool = False,
-    timeFormat: str = cfg.HHMMSS,
-):
-    """
-    show window for:
-      - selection of subjects
-      - selection of behaviors (based on selected subjects)
-      - selection of time interval
-      - inclusion/exclusion of modifiers
-      - inclusion/exclusion of behaviors without events (flagShowExcludeBehaviorsWoEvents == True)
-
-    Returns:
-         dict: {"selected subjects": selectedSubjects,
-                "selected behaviors": selectedBehaviors,
-                "include modifiers": True/False,
-                "exclude behaviors": True/False,
-                "time": TIME_FULL_OBS / TIME_EVENTS / TIME_ARBITRARY_INTERVAL
-                "start time": startTime,
-                "end time": endTime
-                }
-    """
-
-    paramPanelWindow = param_panel.Param_panel()
-    paramPanelWindow.resize(600, 500)
-    paramPanelWindow.setWindowTitle("Select subjects and behaviors")
-    paramPanelWindow.selectedObservations = selected_observations
-    paramPanelWindow.pj = pj
-
-    if not flagShowIncludeModifiers:
-        paramPanelWindow.cbIncludeModifiers.setVisible(False)
-    if not flagShowExcludeBehaviorsWoEvents:
-        paramPanelWindow.cbExcludeBehaviors.setVisible(False)
-
-    if by_category:
-        paramPanelWindow.cbIncludeModifiers.setVisible(False)
-        paramPanelWindow.cbExcludeBehaviors.setVisible(False)
-
-    paramPanelWindow.frm_time_interval.setEnabled(False)
-
-    if timeFormat == cfg.HHMMSS:
-        paramPanelWindow.start_time.set_format_hhmmss()
-        paramPanelWindow.end_time.set_format_hhmmss()
-
-    if timeFormat == cfg.S:
-        paramPanelWindow.start_time.set_format_s()
-        paramPanelWindow.end_time.set_format_s()
-    paramPanelWindow.start_time.set_time(0)
-    paramPanelWindow.end_time.set_time(maxTime)
-
-    # hide max time
-    if not maxTime:
-        paramPanelWindow.frm_time.setVisible(False)
-
-    if selected_observations:
-        observedSubjects = project_functions.extract_observed_subjects(pj, selected_observations)
-    else:
-        # load all subjects and "No focal subject"
-        observedSubjects = [pj[cfg.SUBJECTS][x][cfg.SUBJECT_NAME] for x in pj[cfg.SUBJECTS]] + [""]
-    selectedSubjects = []
-
-    # add 'No focal subject'
-    if "" in observedSubjects:
-        selectedSubjects.append(cfg.NO_FOCAL_SUBJECT)
-        paramPanelWindow.item = QListWidgetItem(paramPanelWindow.lwSubjects)
-        paramPanelWindow.ch = QCheckBox()
-        paramPanelWindow.ch.setText(cfg.NO_FOCAL_SUBJECT)
-        paramPanelWindow.ch.stateChanged.connect(paramPanelWindow.cb_changed)
-        paramPanelWindow.ch.setChecked(True)
-        paramPanelWindow.lwSubjects.setItemWidget(paramPanelWindow.item, paramPanelWindow.ch)
-
-    all_subjects = [pj[cfg.SUBJECTS][x][cfg.SUBJECT_NAME] for x in util.sorted_keys(pj[cfg.SUBJECTS])]
-
-    for subject in all_subjects:
-        paramPanelWindow.item = QListWidgetItem(paramPanelWindow.lwSubjects)
-        paramPanelWindow.ch = QCheckBox()
-        paramPanelWindow.ch.setText(subject)
-        paramPanelWindow.ch.stateChanged.connect(paramPanelWindow.cb_changed)
-        if subject in observedSubjects:
-            selectedSubjects.append(subject)
-            paramPanelWindow.ch.setChecked(True)
-        paramPanelWindow.lwSubjects.setItemWidget(paramPanelWindow.item, paramPanelWindow.ch)
-
-    logging.debug(f"selectedSubjects: {selectedSubjects}")
-
-    if selected_observations:
-        observedBehaviors = paramPanelWindow.extract_observed_behaviors(
-            selected_observations, selectedSubjects
-        )  # not sorted
-    else:
-        # load all behaviors
-        observedBehaviors = [pj[cfg.ETHOGRAM][x][cfg.BEHAVIOR_CODE] for x in pj[cfg.ETHOGRAM]]
-
-    logging.debug(f"observed behaviors: {observedBehaviors}")
-
-    if cfg.BEHAVIORAL_CATEGORIES in pj:
-        categories = pj[cfg.BEHAVIORAL_CATEGORIES][:]
-        # check if behavior not included in a category
-        try:
-            if "" in [
-                pj[cfg.ETHOGRAM][idx][cfg.BEHAVIOR_CATEGORY]
-                for idx in pj[cfg.ETHOGRAM]
-                if cfg.BEHAVIOR_CATEGORY in pj[cfg.ETHOGRAM][idx]
-            ]:
-                categories += [""]
-        except Exception:
-            categories = ["###no category###"]
-
-    else:
-        categories = ["###no category###"]
-
-    for category in categories:
-
-        if category != "###no category###":
-            if category == "":
-                paramPanelWindow.item = QListWidgetItem("No category")
-                paramPanelWindow.item.setData(34, "No category")
-            else:
-                paramPanelWindow.item = QListWidgetItem(category)
-                paramPanelWindow.item.setData(34, category)
-
-            font = QFont()
-            font.setBold(True)
-            paramPanelWindow.item.setFont(font)
-            paramPanelWindow.item.setData(33, "category")
-            paramPanelWindow.item.setData(35, False)
-
-            paramPanelWindow.lwBehaviors.addItem(paramPanelWindow.item)
-
-        for behavior in [pj[cfg.ETHOGRAM][x][cfg.BEHAVIOR_CODE] for x in util.sorted_keys(pj[cfg.ETHOGRAM])]:
-
-            if (categories == ["###no category###"]) or (
-                behavior
-                in [
-                    pj[cfg.ETHOGRAM][x][cfg.BEHAVIOR_CODE]
-                    for x in pj[cfg.ETHOGRAM]
-                    if cfg.BEHAVIOR_CATEGORY in pj[cfg.ETHOGRAM][x]
-                    and pj[cfg.ETHOGRAM][x][cfg.BEHAVIOR_CATEGORY] == category
-                ]
-            ):
-
-                paramPanelWindow.item = QListWidgetItem(behavior)
-                if behavior in observedBehaviors:
-                    paramPanelWindow.item.setCheckState(Qt.Checked)
-                else:
-                    paramPanelWindow.item.setCheckState(Qt.Unchecked)
-
-                if category != "###no category###":
-                    paramPanelWindow.item.setData(33, "behavior")
-                    if category == "":
-                        paramPanelWindow.item.setData(34, "No category")
-                    else:
-                        paramPanelWindow.item.setData(34, category)
-
-                paramPanelWindow.lwBehaviors.addItem(paramPanelWindow.item)
-
-    if not paramPanelWindow.exec_():
-        return {cfg.SELECTED_SUBJECTS: [], cfg.SELECTED_BEHAVIORS: []}
-
-    selectedSubjects = paramPanelWindow.selectedSubjects
-    selectedBehaviors = paramPanelWindow.selectedBehaviors
-
-    logging.debug(f"selected subjects: {selectedSubjects}")
-    logging.debug(f"selected behaviors: {selectedBehaviors}")
-
-    startTime = paramPanelWindow.start_time.get_time()
-    endTime = paramPanelWindow.end_time.get_time()
-    if startTime > endTime:
-        QMessageBox.warning(
-            None,
-            cfg.programName,
-            "The start time is greater than the end time",
-            QMessageBox.Ok | QMessageBox.Default,
-            QMessageBox.NoButton,
-        )
-        return {cfg.SELECTED_SUBJECTS: [], cfg.SELECTED_BEHAVIORS: []}
-
-    if paramPanelWindow.rb_full.isChecked():
-        time_param = cfg.TIME_FULL_OBS
-    if paramPanelWindow.rb_limit.isChecked():
-        time_param = cfg.TIME_EVENTS
-    if paramPanelWindow.rb_interval.isChecked():
-        time_param = cfg.TIME_ARBITRARY_INTERVAL
-
-    return {
-        cfg.SELECTED_SUBJECTS: selectedSubjects,
-        cfg.SELECTED_BEHAVIORS: selectedBehaviors,
-        cfg.INCLUDE_MODIFIERS: paramPanelWindow.cbIncludeModifiers.isChecked(),
-        cfg.EXCLUDE_BEHAVIORS: paramPanelWindow.cbExcludeBehaviors.isChecked(),
-        "time": time_param,
-        cfg.START_TIME: startTime,
-        cfg.END_TIME: endTime,
-    }
-'''

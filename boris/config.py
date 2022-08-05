@@ -133,6 +133,8 @@ FILE = "file"
 DESCRIPTION = "description"
 DIRECTORIES_LIST = "directories_list"
 
+SAVE_DATASET = 32
+
 PLOT_DATA = "plot_data"
 
 PLOT_DATA_FILEPATH_IDX = 0
