@@ -9163,7 +9163,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             else:  # .boris and other extensions
                 with open(projectFileName, "w") as f_out:
                     # f_out.write(json.dumps(self.pj, indent=1, separators=(",", ":"), default=decimal_default))
-                    f_out.write(json.dumps(self.pj, default=decimal_default))
+                    f_out.write(json.dumps(self.pj, indent=1, default=decimal_default))
 
             self.projectChanged = False
             self.save_project_json_started = False
