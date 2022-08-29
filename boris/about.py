@@ -39,7 +39,9 @@ def actionAbout_activated(self):
     About dialog
     """
 
-    programs_versions = ["MPV media player", f"Library version: {mpv.sofile}"]
+    programs_versions = ["MPV media player"]
+    if sys.platform.startswith("linux"):
+        programs_versions.append(f"Library version: {mpv.sofile}")
 
     # ffmpeg
     if self.ffmpeg_bin == "ffmpeg" and sys.platform.startswith("linux"):
