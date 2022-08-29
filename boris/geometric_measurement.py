@@ -45,11 +45,13 @@ from . import utilities as util
 
 
 class wgMeasurement(QWidget):
-    """ """
+    """
+    widget for geometric measurements
+    """
 
-    closeSignal, clearSignal = pyqtSignal(), pyqtSignal()
-    flagSaved = True
-    draw_mem = []
+    closeSignal = pyqtSignal()
+    flag_saved = True  # store if measurements are saved
+    draw_mem = {}
 
     def __init__(self):
         super().__init__()
@@ -118,36 +120,51 @@ class wgMeasurement(QWidget):
         vbox.addLayout(hbox3)
 
     def closeEvent(self, event):
-
-        print("close event")
-        self.pbClose_clicked()
-
-    def pbClear_clicked(self):
         """
-        clear measurements draw and results
+        Intercept the close event to check if measurements are saved
         """
-        self.draw_mem = {}
-        self.pte.clear()
-        self.clearSignal.emit()
 
-    def pbClose_clicked(self):
-
-        print("pb close clicked")
-        if not self.flagSaved:
+        if not self.flag_saved:
             response = dialog.MessageDialog(
                 cfg.programName,
-                "The current measurements are not saved. Do you want to save results before closing?",
+                "The current measurements are not saved. Do you want to save the measurement results before closing?",
                 [cfg.YES, cfg.NO, cfg.CANCEL],
             )
             if response == cfg.YES:
                 self.pbSave_clicked()
             if response == cfg.CANCEL:
                 return
+
+        self.flag_saved = True
         self.closeSignal.emit()
+
+    def pbClear_clicked(self):
+        """
+        clear measurements draw and results
+        """
+
+        if not self.flag_saved:
+            response = dialog.MessageDialog(
+                cfg.programName,
+                "Confirm clearing",
+                [cfg.YES, cfg.CANCEL],
+            )
+            if response == cfg.CANCEL:
+                return
+
+        self.draw_mem = {}
+        self.pte.clear()
+        # self.clearSignal.emit()
+
+    def pbClose_clicked(self):
+        """
+        Close button
+        """
+        self.close()
 
     def pbSave_clicked(self):
         """
-        save results
+        Save results
         """
         if self.pte.toPlainText():
             fileName, _ = QFileDialog().getSaveFileName(
@@ -157,7 +174,7 @@ class wgMeasurement(QWidget):
                 try:
                     with open(fileName, "w") as f:
                         f.write(self.pte.toPlainText())
-                    self.flagSaved = True
+                    self.flag_saved = True
                 except Exception:
                     QMessageBox.warning(self, cfg.programName, "An error occured during saving the measurements")
         else:
@@ -194,12 +211,11 @@ def show_widget(self):
     self.actionPlay.setEnabled(False)
 
     self.measurement_w = wgMeasurement()
-    self.measurement_w.draw_mem = {}
     self.measurement_w.setWindowFlags(Qt.WindowStaysOnTopHint)
     self.measurement_w.closeSignal.connect(close_measurement_widget)
     self.measurement_w.show()
 
-    for _, dw in enumerate(self.dw_player):
+    for dw in self.dw_player:
         dw.setWindowTitle("Geometric measurements")
         dw.stack.setCurrentIndex(cfg.PICTURE_VIEWER)
         self.extract_frame(dw)
@@ -300,6 +316,7 @@ def image_clicked(self, n_player, event):
                         f"Frame: {current_frame}\tPoint: {x_video},{y_video}"
                     )
                 )
+                self.measurement_w.flag_saved = False
 
         # distance
         elif self.measurement_w.rbDistance.isChecked():
@@ -335,7 +352,7 @@ def image_clicked(self, n_player, event):
                         f"Frame: {current_frame}\tDistance: {round(distance, 1)}"
                     )
                 )
-                self.measurement_w.flagSaved = False
+                self.measurement_w.flag_saved = False
                 self.memx, self.memy = -1, -1
 
         # angle 1st clic -> vertex
@@ -360,7 +377,7 @@ def image_clicked(self, n_player, event):
                             f"Angle: {round(util.angle(self.memPoints[0], self.memPoints[1], self.memPoints[2]), 1)}"
                         )
                     )
-                    self.measurement_w.flagSaved = False
+                    self.measurement_w.flag_saved = False
                     if current_frame in self.measurement_w.draw_mem:
                         self.measurement_w.draw_mem[current_frame].append([n_player, "angle", self.memPoints])
                     else:
@@ -430,6 +447,7 @@ def image_clicked(self, n_player, event):
                         f"Frame: {current_frame}\tArea: {round(area, 1)}"
                     )
                 )
+                self.measurement_w.flag_saved = False
                 self.memPoints, self.memPoints_video = [], []
 
         else:
