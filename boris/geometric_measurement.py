@@ -304,7 +304,7 @@ def image_clicked(self, n_player, event):
         # distance
         elif self.measurement_w.rbDistance.isChecked():
             if event.button() == 1:  # left
-                cfg.geometric_measurement.draw_point(self, x, y, cfg.ACTIVE_MEASUREMENTS_COLOR, n_player)
+                draw_point(self, x, y, cfg.ACTIVE_MEASUREMENTS_COLOR, n_player)
                 self.memx, self.memy = x, y
                 self.memx_video, self.memy_video = x_video, y_video
 
@@ -374,7 +374,13 @@ def image_clicked(self, n_player, event):
                 draw_point(self, x, y, cfg.ACTIVE_MEASUREMENTS_COLOR)
                 if len(self.memPoints):
                     draw_line(
-                        self.memPoints[-1][0], self.memPoints[-1][1], x, y, cfg.ACTIVE_MEASUREMENTS_COLOR, n_player
+                        self,
+                        self.memPoints[-1][0],
+                        self.memPoints[-1][1],
+                        x,
+                        y,
+                        cfg.ACTIVE_MEASUREMENTS_COLOR,
+                        n_player,
                     )
                 self.memPoints.append((x, y))
                 self.memPoints_video.append((x_video, y_video))
