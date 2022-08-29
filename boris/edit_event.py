@@ -69,7 +69,6 @@ class DlgEditEvent(QDialog, Ui_Form):
 
             self.horizontalLayout_2.insertWidget(0, self.time_widget)
 
-        print(observation_type)
         if observation_type == cfg.IMAGES:
             self.label.setText("Image index")
             self.pb_set_to_current_time.setText("Set to current image index")
@@ -182,4 +181,7 @@ class EditSelectedEvents(QDialog):
         self.accept()
 
     def pbCancel_clicked(self):
+        """
+        Cancel editing
+        """
         self.reject()

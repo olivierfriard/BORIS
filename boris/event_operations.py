@@ -650,7 +650,7 @@ def edit_event(self):
             # MEDIA / LIVE
             if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE] in (cfg.MEDIA, cfg.LIVE):
 
-                newTime = editWindow.time_widget.get_time()
+                new_time = editWindow.time_widget.get_time()
                 for key in self.pj[cfg.ETHOGRAM]:
                     if self.pj[cfg.ETHOGRAM][key][cfg.BEHAVIOR_CODE] == editWindow.cobCode.currentText():
                         event = self.full_event(key)
@@ -661,7 +661,7 @@ def edit_event(self):
                             cfg.PJ_OBS_FIELDS[self.playerType][cfg.MODIFIER]
                         ]
 
-                        r = self.write_event(event, newTime)
+                        r = self.write_event(event, new_time)
                         if r == 1:  # same event already present
                             continue
                         if not r:
@@ -673,7 +673,7 @@ def edit_event(self):
                     util.state_behavior_codes(self.pj[cfg.ETHOGRAM]),
                     self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS],
                     dict(self.pj[cfg.SUBJECTS], **{"": {"name": ""}}),  # add no focal subject
-                    newTime,
+                    new_time,
                     include_modifiers=True,
                 )
                 subject_idx = self.subject_name_index[self.currentSubject] if self.currentSubject else ""
@@ -721,8 +721,10 @@ def edit_event(self):
                             flag_ok = True
 
                         break
-        else:
+
+        else:  # Cancel button
             flag_ok = True
+
         if flag_ok:
             break
 

@@ -3922,7 +3922,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                         "The same event already exists (same time, behavior code and subject).",
                         [cfg.OK],
                     )
-                return 1
+                    return 1
 
         if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE] == cfg.IMAGES:
             # adding event
