@@ -349,6 +349,7 @@ def export_aggregated_events(self):
         "SDIS (*.sds)",
         "SQL dump file (*.sql)",
         "Pandas DataFrame (*.pkl)",
+        "R dataframe (*.rds)",
     ]
 
     if flag_group:
@@ -362,6 +363,7 @@ def export_aggregated_events(self):
             "sds",
             "sql",
             "pkl",
+            "rds",
         ]  # must be in same order than extended_file_formats
 
         fileName, filter_ = QFileDialog().getSaveFileName(
@@ -396,6 +398,7 @@ def export_aggregated_events(self):
             "SDIS (*.sds)",
             "Timed Behavioral Sequences (*.tbs)",
             "Pandas DataFrame (*.pkl)",
+            "R dataframe (*.rds)",
         )
         item, ok = QInputDialog.getItem(self, "Export events format", "Available formats", items, 0, False)
         if not ok:
@@ -445,6 +448,7 @@ def export_aggregated_events(self):
     header.extend(
         [
             "Subject",
+            "Observation duration by subject by observation",
             "Behavior",
             "Behavioral category",
             "Modifiers",
@@ -600,7 +604,7 @@ def export_aggregated_events(self):
             QMessageBox.warning(None, cfg.programName, msg, QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
 
 
-def export_state_events_as_textgrid(self):
+def export_events_as_textgrid(self):
     """
     export state events as Praat textgrid
     """

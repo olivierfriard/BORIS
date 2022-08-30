@@ -28,6 +28,7 @@ import datetime
 import pathlib
 from io import StringIO
 import pandas as pd
+import pyreadr
 
 from . import dialog
 from . import config as cfg
@@ -500,48 +501,33 @@ def dataset_write(dataset, file_name, output_format):
 
     try:
 
-        if output_format == "pkl":
+        if output_format in ("pkl", "rds"):
+            # build pandas dataframe from the tsv export of tablib dataset
             df = pd.read_csv(
                 StringIO(dataset.export("tsv")),
                 sep="\t",
                 dtype={"Observation id": "str", "Description": "str", "Comment start": "str", "Comment stop": "str"},
                 parse_dates=[1],
             )
-            df.to_pickle(file_name)
+            if output_format == "pkl":
+                df.to_pickle(file_name)
+
+            if output_format == "rds":
+                pyreadr.write_rds(file_name, df)
+
             return True, ""
 
-        if output_format == "tsv":
+        if output_format in ("csv", "tsv", "html"):
             with open(file_name, "wb") as f:
-                f.write(str.encode(dataset.tsv))
+                f.write(str.encode(dataset.export(output_format)))
             return True, ""
 
-        if output_format == "csv":
-            with open(file_name, "wb") as f:
-                f.write(str.encode(dataset.csv))
-            return True, ""
+        if output_format in ("ods", "xls", "xlsx"):
 
-        if output_format == "ods":
-            with open(file_name, "wb") as f:
-                f.write(dataset.ods)
-            return True, ""
+            dataset.title = util.safe_xl_worksheet_title(dataset.title, output_format)
 
-        dataset.title = util.safe_xl_worksheet_title(dataset.title, output_format)
-
-        if output_format == "xlsx":
             with open(file_name, "wb") as f:
-                f.write(dataset.xlsx)
-            return True, ""
-
-        if output_format == "xls":
-            if len(dataset.title) > 31:
-                dataset.title = dataset.title[:31]
-            with open(file_name, "wb") as f:
-                f.write(dataset.xls)
-            return True, ""
-
-        if output_format == "html":
-            with open(file_name, "wb") as f:
-                f.write(str.encode(dataset.html))
+                f.write(dataset.export(output_format))
             return True, ""
 
         return False, f"Format {output_format} not found"
@@ -664,10 +650,18 @@ def export_aggregated_events(pj: dict, parameters: dict, obsId: str):
 
     for subject in parameters[cfg.SELECTED_SUBJECTS]:
 
+        # calculate observation duration by subject (by obs)
+        cursor.execute(
+            ("SELECT SUM(stop - start) AS duration " "FROM aggregated_events " "WHERE subject = ? "), (subject,)
+        )
+        duration_by_subject_by_obs = cursor.fetchone()["duration"]
+        if duration_by_subject_by_obs is not None:
+            duration_by_subject_by_obs = round(duration_by_subject_by_obs, 3)
+
         for behavior in parameters[cfg.SELECTED_BEHAVIORS]:
 
             cursor.execute(
-                "SELECT distinct modifiers FROM aggregated_events where subject=? AND behavior=? order by modifiers",
+                "SELECT DISTINCT modifiers FROM aggregated_events WHERE subject=? AND behavior=? ORDER BY modifiers",
                 (
                     subject,
                     behavior,
@@ -683,7 +677,7 @@ def export_aggregated_events(pj: dict, parameters: dict, obsId: str):
                         "SELECT start, stop, type, modifiers, comment, comment_stop, "
                         "image_index_start, image_index_stop, image_path_start, image_path_stop "
                         "FROM aggregated_events "
-                        "WHERE subject = ? AND behavior = ? AND modifiers = ? ORDER by start, image_index_start"
+                        "WHERE subject = ? AND behavior = ? AND modifiers = ? ORDER BY start, image_index_start"
                     ),
                     (subject, behavior, distinct_modifiers),
                 )
@@ -750,6 +744,7 @@ def export_aggregated_events(pj: dict, parameters: dict, obsId: str):
                         row_data.extend(
                             [
                                 subject,
+                                duration_by_subject_by_obs,
                                 behavior,
                                 behavioral_category[behavior],
                                 row["modifiers"],
@@ -772,6 +767,7 @@ def export_aggregated_events(pj: dict, parameters: dict, obsId: str):
                         row_data.extend(
                             [
                                 subject,
+                                duration_by_subject_by_obs,
                                 behavior,
                                 behavioral_category[behavior],
                                 row["modifiers"],
