@@ -649,27 +649,41 @@ def export_state_events_as_textgrid(self):
         return
 
     mem_command = ""
-    for obsId in selected_observations:
 
-        subjectheader = (
-            "    item [{subjectIdx}]:\n"
-            '        class = "IntervalTier"\n'
-            '        name = "{subject}"\n'
-            "        xmin = {intervalsMin}\n"
-            "        xmax = {intervalsMax}\n"
-            "        intervals: size = {intervalsSize}\n"
-        )
+    # see https://www.fon.hum.uva.nl/praat/manual/TextGrid_file_formats.html
 
-        template = (
-            "        intervals [{count}]:\n"
-            "            xmin = {xmin}\n"
-            "            xmax = {xmax}\n"
-            '            text = "{name}"\n'
-        )
+    interval_subject_header = (
+        "    item [{subjectIdx}]:\n"
+        '        class = "IntervalTier"\n'
+        '        name = "{subject}"\n'
+        "        xmin = {intervalsMin}\n"
+        "        xmax = {intervalsMax}\n"
+        "        intervals: size = {intervalsSize}\n"
+    )
+
+    interval_template = (
+        "        intervals [{count}]:\n"
+        "            xmin = {xmin}\n"
+        "            xmax = {xmax}\n"
+        '            text = "{name}"\n'
+    )
+
+    point_subject_header = (
+        "    item [{subjectIdx}]:\n"
+        '        class = "TextTier"\n'
+        '        name = "{subject}"\n'
+        "        xmin = {intervalsMin}\n"
+        "        xmax = {intervalsMax}\n"
+        "        points: size = {intervalsSize}\n"
+    )
+
+    point_template = "        points [{count}]:\n" "            number = {number}\n" '            mark = "{mark}"\n'
+
+    for obs_id in selected_observations:
 
         flagUnpairedEventFound = False
 
-        totalMediaDuration = round(project_functions.observation_total_length(self.pj[cfg.OBSERVATIONS][obsId]), 3)
+        totalMediaDuration = round(project_functions.observation_total_length(self.pj[cfg.OBSERVATIONS][obs_id]), 3)
 
         cursor = db_functions.load_events_in_db(
             self.pj,
@@ -681,12 +695,12 @@ def export_state_events_as_textgrid(self):
 
         cursor.execute(
             (
-                "SELECT count(distinct subject) FROM events "
+                "SELECT COUNT(DISTINCT subject) FROM events "
                 "WHERE observation = ? AND subject IN ({}) AND type = 'STATE' ".format(
                     ",".join(["?"] * len(plot_parameters[cfg.SELECTED_SUBJECTS]))
                 )
             ),
-            [obsId] + plot_parameters[cfg.SELECTED_SUBJECTS],
+            [obs_id] + plot_parameters[cfg.SELECTED_SUBJECTS],
         )
 
         subjectsNum = int(list(cursor.fetchall())[0][0])
@@ -706,32 +720,25 @@ def export_state_events_as_textgrid(self):
 
         subjectIdx = 0
         for subject in plot_parameters[cfg.SELECTED_SUBJECTS]:
-            if subject not in [x[cfg.EVENT_SUBJECT_FIELD_IDX] for x in self.pj[cfg.OBSERVATIONS][obsId][cfg.EVENTS]]:
+            if subject not in [x[cfg.EVENT_SUBJECT_FIELD_IDX] for x in self.pj[cfg.OBSERVATIONS][obs_id][cfg.EVENTS]]:
                 continue
-
-            subjectIdx += 1
-
-            cursor.execute(
-                "SELECT count(*) FROM events WHERE observation = ? AND subject = ? AND type = 'STATE' ",
-                (obsId, subject),
-            )
-            intervalsSize = int(list(cursor.fetchall())[0][0] / 2)
 
             intervalsMin, intervalsMax = 0, totalMediaDuration
 
-            out += subjectheader
-
+            # STATE events
             cursor.execute(
                 (
                     "SELECT occurence, code FROM events "
-                    "WHERE observation = ? AND subject = ? AND type = 'STATE' order by occurence"
+                    "WHERE observation = ? AND subject = ? AND type = 'STATE' ORDER BY occurence"
                 ),
-                (obsId, subject),
+                (obs_id, subject),
             )
 
             rows = [{"occurence": util.float2decimal(r["occurence"]), "code": r["code"]} for r in cursor.fetchall()]
             if not rows:
                 continue
+
+            out += interval_subject_header
 
             count = 0
 
@@ -739,7 +746,7 @@ def export_state_events_as_textgrid(self):
 
             if rows[0]["occurence"] > 0:
                 count += 1
-                out += template.format(count=count, name="null", xmin=0.0, xmax=rows[0]["occurence"])
+                out += interval_template.format(count=count, name="null", xmin=0.0, xmax=rows[0]["occurence"])
 
             for idx, row in enumerate(rows):
                 if idx % 2 == 0:
@@ -756,7 +763,7 @@ def export_state_events_as_textgrid(self):
                         return
 
                     count += 1
-                    out += template.format(
+                    out += interval_template.format(
                         count=count, name=row["code"], xmin=row["occurence"], xmax=rows[idx + 1]["occurence"]
                     )
 
@@ -764,7 +771,7 @@ def export_state_events_as_textgrid(self):
                     if len(rows) > idx + 2:
                         if rows[idx + 2]["occurence"] - rows[idx + 1]["occurence"] > 0.001:
 
-                            out += template.format(
+                            out += interval_template.format(
                                 count=count + 1,
                                 name="null",
                                 xmin=rows[idx + 1]["occurence"],
@@ -775,11 +782,46 @@ def export_state_events_as_textgrid(self):
                             rows[idx + 2]["occurence"] = rows[idx + 1]["occurence"]
 
             # check if last event ends at the end of media file
-            if rows[-1]["occurence"] < project_functions.observation_total_length(self.pj[cfg.OBSERVATIONS][obsId]):
+            if rows[-1]["occurence"] < project_functions.observation_total_length(self.pj[cfg.OBSERVATIONS][obs_id]):
                 count += 1
-                out += template.format(count=count, name="null", xmin=rows[-1]["occurence"], xmax=totalMediaDuration)
+                out += interval_template.format(
+                    count=count, name="null", xmin=rows[-1]["occurence"], xmax=totalMediaDuration
+                )
 
             # add info
+            subjectIdx += 1
+            out = out.format(
+                subjectIdx=subjectIdx,
+                subject=subject,
+                intervalsSize=count,
+                intervalsMin=intervalsMin,
+                intervalsMax=intervalsMax,
+            )
+
+            # POINT events
+            cursor.execute(
+                (
+                    "SELECT occurence, code FROM events "
+                    "WHERE observation = ? AND subject = ? AND type = 'POINT' ORDER BY occurence"
+                ),
+                (obs_id, subject),
+            )
+
+            rows = [{"occurence": util.float2decimal(r["occurence"]), "code": r["code"]} for r in cursor.fetchall()]
+            if not rows:
+                continue
+
+            out += point_subject_header
+
+            count = 0
+
+            for idx, row in enumerate(rows):
+
+                count += 1
+                out += point_template.format(count=count, mark=row["code"], number=row["occurence"])
+
+            # add info
+            subjectIdx += 1
             out = out.format(
                 subjectIdx=subjectIdx,
                 subject=subject,
@@ -791,13 +833,13 @@ def export_state_events_as_textgrid(self):
         # check if file already exists
         if (
             mem_command != cfg.OVERWRITE_ALL
-            and pl.Path(f"{pl.Path(exportDir) / util.safeFileName(obsId)}.textGrid").is_file()
+            and pl.Path(f"{pl.Path(exportDir) / util.safeFileName(obs_id)}.textGrid").is_file()
         ):
             if mem_command == "Skip all":
                 continue
             mem_command = dialog.MessageDialog(
                 cfg.programName,
-                f"The file <b>{pl.Path(exportDir) / util.safeFileName(obsId)}.textGrid</b> already exists.",
+                f"The file <b>{pl.Path(exportDir) / util.safeFileName(obs_id)}.textGrid</b> already exists.",
                 [cfg.OVERWRITE, cfg.OVERWRITE_ALL, "Skip", "Skip all", cfg.CANCEL],
             )
             if mem_command == cfg.CANCEL:
@@ -806,7 +848,7 @@ def export_state_events_as_textgrid(self):
                 continue
 
         try:
-            with open(f"{pl.Path(exportDir) / util.safeFileName(obsId)}.textGrid", "w") as f:
+            with open(f"{pl.Path(exportDir) / util.safeFileName(obs_id)}.textGrid", "w") as f:
                 f.write(out)
 
             if flagUnpairedEventFound:
