@@ -219,15 +219,8 @@ class ModifiersMapCreatorWindow(QMainWindow):
         cd.setOptions(QColorDialog.ShowAlphaChannel | QColorDialog.DontUseNativeDialog)
 
         if cd.exec_():
-            col = cd.currentColor()
-            self.btColor.setStyleSheet("QWidget {background-color:%s}" % col.name())
-            self.areaColor = col
-        """
-        col = cd.getColor()
-        if col.isValid():
-            self.btColor.setStyleSheet("QWidget {background-color:%s}" % col.name())
-            self.areaColor = col
-        """
+            self.areaColor = cd.currentColor()
+            self.btColor.setStyleSheet(f"QWidget {{background-color:{self.areaColor.name()}}}")
 
         if self.selectedPolygon:
             self.selectedPolygon.setBrush(self.areaColor)

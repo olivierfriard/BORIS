@@ -379,9 +379,8 @@ class BehaviorsMapCreatorWindow(QMainWindow):
         # col = cd.getColor()
         # if col.isValid():
         if cd.exec_():
-            col = cd.currentColor()
-            self.btColor.setStyleSheet(f"QWidget {{background-color:{col.name()}}}")
-            self.areaColor = col
+            self.areaColor = cd.currentColor()
+            self.btColor.setStyleSheet(f"QWidget {{background-color:{self.areaColor.name()}}}")
             self.areaColor.setAlpha(int(self.slAlpha.value() / 100 * 255))
 
         if self.selectedPolygon:
