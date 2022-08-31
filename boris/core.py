@@ -1657,6 +1657,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 break
         return currentMedia, round(frameCurrentMedia)
 
+    '''
     def redraw_measurements(self):
         """
         redraw measurements from previous frames
@@ -1706,6 +1707,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                                     dw.frame_viewer.update()
                 else:
                     self.measurement_w.draw_mem = []
+    '''
 
     def extract_exif_DateTimeOriginal(self, file_path: str) -> int:
         """
@@ -3186,7 +3188,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     self.extract_frame(dw)
 
             if self.geometric_measurements_mode:
-                self.redraw_measurements()
+                geometric_measurement.redraw_measurements(self)
 
             self.actionPlay.setIcon(QIcon(":/play"))
 
@@ -3210,7 +3212,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     self.extract_frame(dw)
 
             if self.geometric_measurements_mode:
-                self.redraw_measurements()
+                geometric_measurement.redraw_measurements(self)
 
             self.actionPlay.setIcon(QIcon(":/play"))
 

@@ -23,7 +23,7 @@ This file is part of BORIS.
 import logging
 
 from PyQt5.QtCore import QPoint, Qt, pyqtSignal
-from PyQt5.QtGui import QColor, QPainter
+from PyQt5.QtGui import QColor, QPainter, QPolygon
 from PyQt5.QtWidgets import (
     QApplication,
     QCheckBox,
@@ -258,7 +258,7 @@ def draw_point(self, x, y, color: str, n_player: int = 0):
     self.dw_player[n_player].frame_viewer.update()
 
 
-def draw_line(self, x1, y1, x2, y2, color, n_player=0):
+def draw_line(self, x1, y1, x2, y2, color: str, n_player=0):
     """
     draw line on frame-by-frame image
     """
@@ -482,6 +482,61 @@ def image_clicked(self, n_player, event):
             QMessageBox.Ok | QMessageBox.Default,
             QMessageBox.NoButton,
         )
+
+
+def redraw_measurements(self):
+    """
+    redraw measurements from previous frames
+    """
+    for idx, dw in enumerate(self.dw_player):
+        if hasattr(self, "measurement_w") and self.measurement_w is not None and self.measurement_w.isVisible():
+            if self.measurement_w.cbPersistentMeasurements.isChecked():
+
+                logging.debug("Redraw measurement marks")
+
+                print(f"{self.measurement_w.draw_mem=}")
+
+                for frame in self.measurement_w.draw_mem:
+
+                    print(f"{dw.player.estimated_frame_number=}")
+
+                    if frame == dw.player.estimated_frame_number:
+                        elementsColor = cfg.ACTIVE_MEASUREMENTS_COLOR
+                    else:
+                        elementsColor = cfg.PASSIVE_MEASUREMENTS_COLOR
+
+                    for element in self.measurement_w.draw_mem[frame]:
+                        if element[0] == idx:
+                            if element[1] == "point":
+                                x, y = element[2:]
+                                draw_point(self, x, y, elementsColor, n_player=idx)
+
+                            if element[1] == "line":
+                                x1, y1, x2, y2 = element[2:]
+                                draw_line(self, x1, y1, x2, y2, elementsColor, n_player=idx)
+                                draw_point(self, x1, y1, elementsColor, n_player=idx)
+                                draw_point(self, x2, y2, elementsColor, n_player=idx)
+                            if element[1] == "angle":
+                                x1, y1 = element[2][0]
+                                x2, y2 = element[2][1]
+                                x3, y3 = element[2][2]
+                                draw_line(self, x1, y1, x2, y2, elementsColor, n_player=idx)
+                                draw_line(self, x1, y1, x3, y3, elementsColor, n_player=idx)
+                                draw_point(self, x1, y1, elementsColor, n_player=idx)
+                                draw_point(self, x2, y2, elementsColor, n_player=idx)
+                                draw_point(self, x3, y3, elementsColor, n_player=idx)
+                            if element[1] == "polygon":
+                                polygon = QPolygon()
+                                for point in element[2]:
+                                    polygon.append(QPoint(point[0], point[1]))
+                                painter = QPainter()
+                                painter.begin(self.dw_player[idx].frame_viewer.pixmap())
+                                painter.setPen(QColor(elementsColor))
+                                painter.drawPolygon(polygon)
+                                painter.end()
+                                dw.frame_viewer.update()
+            else:
+                self.measurement_w.draw_mem = []
 
 
 if __name__ == "__main__":
