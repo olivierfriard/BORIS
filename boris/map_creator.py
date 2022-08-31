@@ -212,16 +212,22 @@ class ModifiersMapCreatorWindow(QMainWindow):
 
     def chooseColor(self):
         """
-        area color button clocked
+        area color button clicked
         """
         cd = QColorDialog()
+        cd.setWindowFlags(Qt.WindowStaysOnTopHint)
+        cd.setOptions(QColorDialog.ShowAlphaChannel | QColorDialog.DontUseNativeDialog)
 
-        cd.setOptions(QColorDialog.ShowAlphaChannel)
-
+        if cd.exec_():
+            col = cd.currentColor()
+            self.btColor.setStyleSheet("QWidget {background-color:%s}" % col.name())
+            self.areaColor = col
+        """
         col = cd.getColor()
         if col.isValid():
             self.btColor.setStyleSheet("QWidget {background-color:%s}" % col.name())
             self.areaColor = col
+        """
 
         if self.selectedPolygon:
             self.selectedPolygon.setBrush(self.areaColor)

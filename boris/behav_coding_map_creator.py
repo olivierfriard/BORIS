@@ -226,8 +226,7 @@ class BehaviorsMapCreatorWindow(QMainWindow):
         self.btEditAreaCode.setVisible(False)
         hlayout_area.addWidget(self.btEditAreaCode)
 
-        self.btColor = QPushButton()
-        self.btColor.clicked.connect(self.chooseColor)
+        self.btColor = QPushButton(clicked=self.chooseColor)
         self.btColor.setVisible(False)
         self.btColor.setStyleSheet(f"QWidget {{background-color:{self.areaColor.name()}}}")
         hlayout_area.addWidget(self.btColor)
@@ -374,10 +373,14 @@ class BehaviorsMapCreatorWindow(QMainWindow):
         area color button clicked
         """
         cd = QColorDialog()
+        cd.setWindowFlags(Qt.WindowStaysOnTopHint)
+        cd.setOptions(QColorDialog.DontUseNativeDialog)
 
-        col = cd.getColor()
-        if col.isValid():
-            self.btColor.setStyleSheet("QWidget {background-color:%s}" % col.name())
+        # col = cd.getColor()
+        # if col.isValid():
+        if cd.exec_():
+            col = cd.currentColor()
+            self.btColor.setStyleSheet(f"QWidget {{background-color:{col.name()}}}")
             self.areaColor = col
             self.areaColor.setAlpha(int(self.slAlpha.value() / 100 * 255))
 

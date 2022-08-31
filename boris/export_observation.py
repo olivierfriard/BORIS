@@ -502,13 +502,32 @@ def dataset_write(dataset, file_name, output_format):
     try:
 
         if output_format in ("pkl", "rds"):
+
             # build pandas dataframe from the tsv export of tablib dataset
             df = pd.read_csv(
                 StringIO(dataset.export("tsv")),
                 sep="\t",
-                dtype={"Observation id": "str", "Description": "str", "Comment start": "str", "Comment stop": "str"},
+                dtype={
+                    "Observation id": str,
+                    "Description": str,
+                    "Start (s)": float,
+                    "Stop (s)": float,
+                    "Comment start": str,
+                    "Comment stop": str,
+                    "Image index start": float,
+                    "Image index stop": float,
+                    "Image file path start": str,
+                    "Image file path stop": str,
+                    "Behavior type": str,
+                },
                 parse_dates=[1],
             )
+
+            """
+            print(f"{df.info()=}")
+            print(f"{df=}")
+            """
+
             if output_format == "pkl":
                 df.to_pickle(file_name)
 
@@ -746,7 +765,7 @@ def export_aggregated_events(pj: dict, parameters: dict, obsId: str):
                                 subject,
                                 duration_by_subject_by_obs,
                                 behavior,
-                                behavioral_category[behavior],
+                                behavioral_category[behavior] if behavioral_category[behavior] else "Not defined",
                                 row["modifiers"],
                                 cfg.POINT,
                                 f"{row['start']:.3f}" if row["start"] is not None else float("NaN"),  # start
@@ -769,14 +788,15 @@ def export_aggregated_events(pj: dict, parameters: dict, obsId: str):
                                 subject,
                                 duration_by_subject_by_obs,
                                 behavior,
-                                behavioral_category[behavior],
+                                behavioral_category[behavior] if behavioral_category[behavior] else "Not defined",
                                 row["modifiers"],
                                 cfg.STATE,
                                 f"{row['start']:.3f}" if row["start"] is not None else float("NaN"),
                                 f"{row['stop']:.3f}" if row["stop"] is not None else float("NaN"),
+                                # duration
                                 f"{row['stop'] - row['start']:.3f}"
                                 if (row["stop"] is not None) and (row["start"] is not None)
-                                else float("NaN"),  # duration
+                                else float("NaN"),
                                 row["image_index_start"],
                                 row["image_index_stop"],
                                 row["image_path_start"],

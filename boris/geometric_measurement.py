@@ -37,6 +37,7 @@ from PyQt5.QtWidgets import (
     QRadioButton,
     QVBoxLayout,
     QWidget,
+    QColorDialog,
 )
 
 from . import config as cfg
@@ -50,6 +51,7 @@ class wgMeasurement(QWidget):
     """
 
     closeSignal = pyqtSignal()
+    mark_color: str = cfg.ACTIVE_MEASUREMENTS_COLOR
     flag_saved = True  # store if measurements are saved
     draw_mem = {}
 
@@ -75,6 +77,12 @@ class wgMeasurement(QWidget):
         self.cbPersistentMeasurements = QCheckBox("Measurements are persistent")
         self.cbPersistentMeasurements.setChecked(True)
         vbox.addWidget(self.cbPersistentMeasurements)
+
+        # color chooser
+
+        self.bt_color_chooser = QPushButton("Choose color of marks", clicked=self.choose_marks_color)
+        self.bt_color_chooser.setStyleSheet(f"QWidget {{background-color:{self.mark_color}}}")
+        vbox.addWidget(self.bt_color_chooser)
 
         vbox.addWidget(QLabel("<b>Scale</b>"))
 
@@ -119,6 +127,19 @@ class wgMeasurement(QWidget):
 
         vbox.addLayout(hbox3)
 
+    def choose_marks_color(self):
+        """
+        show the color chooser dialog
+        """
+        cd = QColorDialog()
+        cd.setWindowFlags(Qt.WindowStaysOnTopHint)
+        cd.setOptions(QColorDialog.ShowAlphaChannel | QColorDialog.DontUseNativeDialog)
+
+        if cd.exec_():
+            new_color = cd.currentColor()
+            self.bt_color_chooser.setStyleSheet(f"QWidget {{background-color:{new_color.name()}}}")
+            self.mark_color = new_color.name()
+
     def closeEvent(self, event):
         """
         Intercept the close event to check if measurements are saved
@@ -154,7 +175,7 @@ class wgMeasurement(QWidget):
 
         self.draw_mem = {}
         self.pte.clear()
-        # self.clearSignal.emit()
+        self.flag_saved = True
 
     def pbClose_clicked(self):
         """
@@ -221,7 +242,7 @@ def show_widget(self):
         self.extract_frame(dw)
 
 
-def draw_point(self, x, y, color, n_player=0):
+def draw_point(self, x, y, color: str, n_player: int = 0):
     """
     draw point on frame-by-frame image
     """
@@ -304,7 +325,7 @@ def image_clicked(self, n_player, event):
         # point
         if self.measurement_w.rbPoint.isChecked():
             if event.button() == 1:  # left
-                draw_point(self, x, y, cfg.ACTIVE_MEASUREMENTS_COLOR, n_player)
+                draw_point(self, x, y, self.measurement_w.mark_color, n_player)
                 if current_frame in self.measurement_w.draw_mem:
                     self.measurement_w.draw_mem[current_frame].append([n_player, "point", x, y])
                 else:
@@ -321,13 +342,13 @@ def image_clicked(self, n_player, event):
         # distance
         elif self.measurement_w.rbDistance.isChecked():
             if event.button() == 1:  # left
-                draw_point(self, x, y, cfg.ACTIVE_MEASUREMENTS_COLOR, n_player)
+                draw_point(self, x, y, self.measurement_w.mark_color, n_player)
                 self.memx, self.memy = x, y
                 self.memx_video, self.memy_video = x_video, y_video
 
             if event.button() == 2 and self.memx != -1 and self.memy != -1:
-                draw_point(self, x, y, cfg.ACTIVE_MEASUREMENTS_COLOR, n_player)
-                draw_line(self, self.memx, self.memy, x, y, cfg.ACTIVE_MEASUREMENTS_COLOR, n_player)
+                draw_point(self, x, y, self.measurement_w.mark_color, n_player)
+                draw_line(self, self.memx, self.memy, x, y, self.measurement_w.mark_color, n_player)
 
                 if current_frame in self.measurement_w.draw_mem:
                     self.measurement_w.draw_mem[current_frame].append([n_player, "line", self.memx, self.memy, x, y])
@@ -358,13 +379,13 @@ def image_clicked(self, n_player, event):
         # angle 1st clic -> vertex
         elif self.measurement_w.rbAngle.isChecked():
             if event.button() == 1:  # left for vertex
-                draw_point(self, x, y, cfg.ACTIVE_MEASUREMENTS_COLOR, n_player)
+                draw_point(self, x, y, self.measurement_w.mark_color, n_player)
                 self.memPoints = [(x, y)]
 
             if event.button() == 2 and len(self.memPoints):
-                draw_point(self, x, y, cfg.ACTIVE_MEASUREMENTS_COLOR, n_player)
+                draw_point(self, x, y, self.measurement_w.mark_color, n_player)
                 draw_line(
-                    self, self.memPoints[0][0], self.memPoints[0][1], x, y, cfg.ACTIVE_MEASUREMENTS_COLOR, n_player
+                    self, self.memPoints[0][0], self.memPoints[0][1], x, y, self.measurement_w.mark_color, n_player
                 )
 
                 self.memPoints.append((x, y))
@@ -388,7 +409,7 @@ def image_clicked(self, n_player, event):
         # Area
         elif self.measurement_w.rbArea.isChecked():
             if event.button() == 1:  # left
-                draw_point(self, x, y, cfg.ACTIVE_MEASUREMENTS_COLOR)
+                draw_point(self, x, y, self.measurement_w.mark_color)
                 if len(self.memPoints):
                     draw_line(
                         self,
@@ -396,16 +417,16 @@ def image_clicked(self, n_player, event):
                         self.memPoints[-1][1],
                         x,
                         y,
-                        cfg.ACTIVE_MEASUREMENTS_COLOR,
+                        self.measurement_w.mark_color,
                         n_player,
                     )
                 self.memPoints.append((x, y))
                 self.memPoints_video.append((x_video, y_video))
 
             if event.button() == 2 and len(self.memPoints) >= 2:
-                draw_point(self, x, y, cfg.ACTIVE_MEASUREMENTS_COLOR, n_player)
+                draw_point(self, x, y, self.measurement_w.mark_color, n_player)
                 draw_line(
-                    self, self.memPoints[-1][0], self.memPoints[-1][1], x, y, cfg.ACTIVE_MEASUREMENTS_COLOR, n_player
+                    self, self.memPoints[-1][0], self.memPoints[-1][1], x, y, self.measurement_w.mark_color, n_player
                 )
                 self.memPoints.append((x, y))
                 self.memPoints_video.append((x_video, y_video))
@@ -417,7 +438,7 @@ def image_clicked(self, n_player, event):
                     self.memPoints[-1][1],
                     self.memPoints[0][0],
                     self.memPoints[0][1],
-                    cfg.ACTIVE_MEASUREMENTS_COLOR,
+                    self.measurement_w.mark_color,
                     n_player,
                 )
                 area = util.polygon_area(self.memPoints_video)
