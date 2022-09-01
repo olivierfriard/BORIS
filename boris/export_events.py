@@ -657,7 +657,7 @@ def export_events_as_textgrid(self):
     # see https://www.fon.hum.uva.nl/praat/manual/TextGrid_file_formats.html
 
     interval_subject_header = (
-        "    item [{subjectIdx}]:\n"
+        "    item [{subject_index}]:\n"
         '        class = "IntervalTier"\n'
         '        name = "{subject}"\n'
         "        xmin = {intervalsMin}\n"
@@ -673,7 +673,7 @@ def export_events_as_textgrid(self):
     )
 
     point_subject_header = (
-        "    item [{subjectIdx}]:\n"
+        "    item [{subject_index}]:\n"
         '        class = "TextTier"\n'
         '        name = "{subject}"\n'
         "        xmin = {intervalsMin}\n"
@@ -687,7 +687,7 @@ def export_events_as_textgrid(self):
 
         flagUnpairedEventFound = False
 
-        totalMediaDuration = round(project_functions.observation_total_length(self.pj[cfg.OBSERVATIONS][obs_id]), 3)
+        total_media_duration = round(project_functions.observation_total_length(self.pj[cfg.OBSERVATIONS][obs_id]), 3)
 
         cursor = db_functions.load_events_in_db(
             self.pj,
@@ -709,7 +709,7 @@ def export_events_as_textgrid(self):
 
         subjectsNum = int(list(cursor.fetchall())[0][0])
 
-        subjectsMin, subjectsMax = 0, totalMediaDuration
+        subjectsMin, subjectsMax = 0, total_media_duration
 
         out = (
             'File type = "ooTextFile"\n'
@@ -722,12 +722,12 @@ def export_events_as_textgrid(self):
             "item []:\n"
         )
 
-        subjectIdx = 0
+        subject_index = 0
         for subject in plot_parameters[cfg.SELECTED_SUBJECTS]:
             if subject not in [x[cfg.EVENT_SUBJECT_FIELD_IDX] for x in self.pj[cfg.OBSERVATIONS][obs_id][cfg.EVENTS]]:
                 continue
 
-            intervalsMin, intervalsMax = 0, totalMediaDuration
+            intervalsMin, intervalsMax = 0, total_media_duration
 
             # STATE events
             cursor.execute(
@@ -789,13 +789,13 @@ def export_events_as_textgrid(self):
             if rows[-1]["occurence"] < project_functions.observation_total_length(self.pj[cfg.OBSERVATIONS][obs_id]):
                 count += 1
                 out += interval_template.format(
-                    count=count, name="null", xmin=rows[-1]["occurence"], xmax=totalMediaDuration
+                    count=count, name="null", xmin=rows[-1]["occurence"], xmax=total_media_duration
                 )
 
             # add info
-            subjectIdx += 1
+            subject_index += 1
             out = out.format(
-                subjectIdx=subjectIdx,
+                subject_index=subject_index,
                 subject=subject,
                 intervalsSize=count,
                 intervalsMin=intervalsMin,
@@ -825,9 +825,9 @@ def export_events_as_textgrid(self):
                 out += point_template.format(count=count, mark=row["code"], number=row["occurence"])
 
             # add info
-            subjectIdx += 1
+            subject_index += 1
             out = out.format(
-                subjectIdx=subjectIdx,
+                subject_index=subject_index,
                 subject=subject,
                 intervalsSize=count,
                 intervalsMin=intervalsMin,

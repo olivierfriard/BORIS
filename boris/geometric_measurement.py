@@ -187,21 +187,21 @@ class wgMeasurement(QWidget):
 
     def pbSave_clicked(self):
         """
-        Save results
+        Save measurements results in plain text file
         """
         if self.pte.toPlainText():
-            fileName, _ = QFileDialog().getSaveFileName(
+            file_name, _ = QFileDialog().getSaveFileName(
                 self, "Save geometric measurements", "", "Text files (*.txt);;All files (*)"
             )
-            if fileName:
+            if file_name:
                 try:
-                    with open(fileName, "w") as f:
+                    with open(file_name, "w") as f:
                         f.write(self.pte.toPlainText())
                     self.flag_saved = True
                 except Exception:
-                    QMessageBox.warning(self, cfg.programName, "An error occured during saving the measurements")
+                    QMessageBox.warning(self, cfg.programName, "An error occured during saving the measurement results")
         else:
-            QMessageBox.information(self, cfg.programName, "There are no measurements to save")
+            QMessageBox.information(self, cfg.programName, "There are no measurement results to save")
 
 
 def show_widget(self):
@@ -495,56 +495,60 @@ def redraw_measurements(self):
     """
     redraw measurements from previous frames
     """
+    logging.debug("Redraw measurement marks")
+
+    if not (hasattr(self, "measurement_w") and self.measurement_w is not None and self.measurement_w.isVisible()):
+        return
+
+    if not self.measurement_w.cbPersistentMeasurements.isChecked():
+        self.measurement_w.draw_mem = []
+        return
+
     for idx, dw in enumerate(self.dw_player):
-        if hasattr(self, "measurement_w") and self.measurement_w is not None and self.measurement_w.isVisible():
-            if self.measurement_w.cbPersistentMeasurements.isChecked():
 
-                logging.debug("Redraw measurement marks")
+        for frame in self.measurement_w.draw_mem:
 
-                for frame in self.measurement_w.draw_mem:
+            print(f"{frame=}")
+            print(f"{self.measurement_w.draw_mem[frame]=}")
 
-                    print(self.measurement_w.draw_mem[frame])
+            for element in self.measurement_w.draw_mem[frame]:
 
-                    for element in self.measurement_w.draw_mem[frame]:
+                if frame == dw.player.estimated_frame_number:
+                    elementsColor = element[2]  # color
+                else:
+                    elementsColor = cfg.PASSIVE_MEASUREMENTS_COLOR
 
-                        if frame == dw.player.estimated_frame_number:
-                            elementsColor = element[2]  # color
-                        else:
-                            elementsColor = cfg.PASSIVE_MEASUREMENTS_COLOR
+                if element[0] == idx:
+                    if element[1] == "point":
+                        x, y = element[3:]
+                        draw_point(self, x, y, elementsColor, n_player=idx)
 
-                        if element[0] == idx:
-                            if element[1] == "point":
-                                x, y = element[3:]
-                                draw_point(self, x, y, elementsColor, n_player=idx)
+                    if element[1] == "line":
+                        x1, y1, x2, y2 = element[3:]
+                        draw_line(self, x1, y1, x2, y2, elementsColor, n_player=idx)
+                        draw_point(self, x1, y1, elementsColor, n_player=idx)
+                        draw_point(self, x2, y2, elementsColor, n_player=idx)
 
-                            if element[1] == "line":
-                                x1, y1, x2, y2 = element[3:]
-                                draw_line(self, x1, y1, x2, y2, elementsColor, n_player=idx)
-                                draw_point(self, x1, y1, elementsColor, n_player=idx)
-                                draw_point(self, x2, y2, elementsColor, n_player=idx)
+                    if element[1] == "angle":
+                        x1, y1 = element[3][0]
+                        x2, y2 = element[3][1]
+                        x3, y3 = element[3][2]
+                        draw_line(self, x1, y1, x2, y2, elementsColor, n_player=idx)
+                        draw_line(self, x1, y1, x3, y3, elementsColor, n_player=idx)
+                        draw_point(self, x1, y1, elementsColor, n_player=idx)
+                        draw_point(self, x2, y2, elementsColor, n_player=idx)
+                        draw_point(self, x3, y3, elementsColor, n_player=idx)
 
-                            if element[1] == "angle":
-                                x1, y1 = element[3][0]
-                                x2, y2 = element[3][1]
-                                x3, y3 = element[3][2]
-                                draw_line(self, x1, y1, x2, y2, elementsColor, n_player=idx)
-                                draw_line(self, x1, y1, x3, y3, elementsColor, n_player=idx)
-                                draw_point(self, x1, y1, elementsColor, n_player=idx)
-                                draw_point(self, x2, y2, elementsColor, n_player=idx)
-                                draw_point(self, x3, y3, elementsColor, n_player=idx)
-
-                            if element[1] == "polygon":
-                                polygon = QPolygon()
-                                for point in element[3]:
-                                    polygon.append(QPoint(point[0], point[1]))
-                                painter = QPainter()
-                                painter.begin(self.dw_player[idx].frame_viewer.pixmap())
-                                painter.setPen(QColor(elementsColor))
-                                painter.drawPolygon(polygon)
-                                painter.end()
-                                dw.frame_viewer.update()
-            else:
-                self.measurement_w.draw_mem = []
+                    if element[1] == "polygon":
+                        polygon = QPolygon()
+                        for point in element[3]:
+                            polygon.append(QPoint(point[0], point[1]))
+                        painter = QPainter()
+                        painter.begin(self.dw_player[idx].frame_viewer.pixmap())
+                        painter.setPen(QColor(elementsColor))
+                        painter.drawPolygon(polygon)
+                        painter.end()
+                        dw.frame_viewer.update()
 
 
 if __name__ == "__main__":
