@@ -37,6 +37,7 @@ import time
 import urllib.error
 import urllib.parse
 import urllib.request
+from typing import Union
 
 # from decimal import *
 from decimal import Decimal as dec
@@ -1657,58 +1658,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 break
         return currentMedia, round(frameCurrentMedia)
 
-    '''
-    def redraw_measurements(self):
-        """
-        redraw measurements from previous frames
-        """
-        for idx, dw in enumerate(self.dw_player):
-            if hasattr(self, "measurement_w") and self.measurement_w is not None and self.measurement_w.isVisible():
-                if self.measurement_w.cbPersistentMeasurements.isChecked():
-
-                    logging.debug("Redraw measurements")
-
-                    for frame in self.measurement_w.draw_mem:
-
-                        if frame == dw.player.estimated_frame_number + 1:
-                            elementsColor = cfg.ACTIVE_MEASUREMENTS_COLOR
-                        else:
-                            elementsColor = cfg.PASSIVE_MEASUREMENTS_COLOR
-
-                        for element in self.measurement_w.draw_mem[frame]:
-                            if element[0] == idx:
-                                if element[1] == "point":
-                                    x, y = element[2:]
-                                    geometric_measurement.draw_point(self, x, y, elementsColor, n_player=idx)
-
-                                if element[1] == "line":
-                                    x1, y1, x2, y2 = element[2:]
-                                    geometric_measurement.draw_line(self, x1, y1, x2, y2, elementsColor, n_player=idx)
-                                    geometric_measurement.draw_point(self, x1, y1, elementsColor, n_player=idx)
-                                    geometric_measurement.draw_point(self, x2, y2, elementsColor, n_player=idx)
-                                if element[1] == "angle":
-                                    x1, y1 = element[2][0]
-                                    x2, y2 = element[2][1]
-                                    x3, y3 = element[2][2]
-                                    geometric_measurement.draw_line(self, x1, y1, x2, y2, elementsColor, n_player=idx)
-                                    geometric_measurement.draw_line(self, x1, y1, x3, y3, elementsColor, n_player=idx)
-                                    geometric_measurement.draw_point(self, x1, y1, elementsColor, n_player=idx)
-                                    geometric_measurement.draw_point(self, x2, y2, elementsColor, n_player=idx)
-                                    geometric_measurement.draw_point(self, x3, y3, elementsColor, n_player=idx)
-                                if element[1] == "polygon":
-                                    polygon = QPolygon()
-                                    for point in element[2]:
-                                        polygon.append(QPoint(point[0], point[1]))
-                                    painter = QPainter()
-                                    painter.begin(self.dw_player[idx].frame_viewer.pixmap())
-                                    painter.setPen(QColor(elementsColor))
-                                    painter.drawPolygon(polygon)
-                                    painter.end()
-                                    dw.frame_viewer.update()
-                else:
-                    self.measurement_w.draw_mem = []
-    '''
-
     def extract_exif_DateTimeOriginal(self, file_path: str) -> int:
         """
         extract the exif extract_exif_DateTimeOriginal tag
@@ -1730,7 +1679,28 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         for IMAGES obs: load picture and visualize it in frame_viewer, extract EXIF Date/Time Original tag if available
         """
         if self.playerType == cfg.MEDIA:
+
+            time.sleep(0.3)
             pixmap = QPixmap.fromImage(ImageQt(dw.player.screenshot_raw()))
+
+            print(f"\nextract frame: {dw.player.estimated_frame_number + 1=}\n")
+            """
+            pixmap.save(f"/tmp/ramdisk/{dw.player.estimated_frame_number + 1}.jpg")
+            
+            from io import StringIO
+            img_data = StringIO()
+            dw.player.screenshot_to_file(img_data)
+            print(img_data)
+            """
+
+            """
+            p = QPixmap(f"/tmp/ramdisk/{dw.player.estimated_frame_number + 1}.jpg")
+            dw.frame_viewer.setPixmap(p)
+            """
+
+            dw.frame_viewer.setPixmap(
+                pixmap.scaled(dw.frame_viewer.size(), Qt.KeepAspectRatio, Qt.SmoothTransformation)
+            )
 
         if self.playerType == cfg.IMAGES:
             pixmap = QPixmap(self.images_list[self.image_idx])
@@ -1770,7 +1740,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
             self.lb_current_media_time.setText(msg)
 
-        dw.frame_viewer.setPixmap(pixmap.scaled(dw.frame_viewer.size(), Qt.KeepAspectRatio, Qt.SmoothTransformation))
+            dw.frame_viewer.setPixmap(
+                pixmap.scaled(dw.frame_viewer.size(), Qt.KeepAspectRatio, Qt.SmoothTransformation)
+            )
 
     def frame_image_clicked(self, n_player, event):
         geometric_measurement.image_clicked(self, n_player, event)
@@ -3168,7 +3140,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 QMessageBox.NoButton,
             )
 
-    def next_frame(self):
+    def next_frame(self) -> None:
         """
         show next frame
         """
@@ -3179,20 +3151,25 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         if self.playerType == cfg.MEDIA:
             for dw in self.dw_player:
+
+                """print(f"\nbefore: {dw.player.estimated_frame_number + 1=}\n")"""
                 dw.player.frame_step()
-                self.plot_timer_out()
-                for idx in self.plot_data:
-                    self.timer_plot_data_out(self.plot_data[idx])
+                """time.sleep(1)"""
+                """print(f"\nAFter {dw.player.estimated_frame_number + 1=}\n")"""
 
                 if self.geometric_measurements_mode:
                     self.extract_frame(dw)
+
+                self.plot_timer_out()
+                for idx in self.plot_data:
+                    self.timer_plot_data_out(self.plot_data[idx])
 
             if self.geometric_measurements_mode:
                 geometric_measurement.redraw_measurements(self)
 
             self.actionPlay.setIcon(QIcon(":/play"))
 
-    def previous_frame(self):
+    def previous_frame(self) -> None:
         """
         show previous frame
         """
@@ -3204,12 +3181,12 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         if self.playerType == cfg.MEDIA:
             for dw in self.dw_player:
                 dw.player.frame_back_step()
+                if self.geometric_measurements_mode:
+                    self.extract_frame(dw)
+
                 self.plot_timer_out()
                 for idx in self.plot_data:
                     self.timer_plot_data_out(self.plot_data[idx])
-
-                if self.geometric_measurements_mode:
-                    self.extract_frame(dw)
 
             if self.geometric_measurements_mode:
                 geometric_measurement.redraw_measurements(self)
@@ -3587,9 +3564,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 self.dw_player[n_player].player.playlist_pos = self.dw_player[n_player].player.playlist_count - 1
                 self.seek_mediaplayer(self.dw_player[n_player].media_durations[-1], player=n_player)
 
-    def video_timer_out(self, value, scroll_slider=True):
+    def mpv_timer_out(self, value: Union[float, None], scroll_slider=True):
         """
-        indicate the video current position and total length for cfg.MPV player
+        print the media current position and total length for MPV player
         scroll video slider to video position
         Time offset is NOT added!
         """
@@ -3691,14 +3668,21 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         # update media info
         msg = ""
 
-        if self.dw_player[0].player.time_pos is not None:
+        if self.dw_player[0].player.time_pos is not None:  # check if video
 
-            # check if video
             current_media_frame = (
                 (round(value * self.dw_player[0].player.container_fps) + 1)
                 if self.dw_player[0].player.container_fps is not None
                 else "NA"
             )
+
+            """
+            print()
+            print(f"{self.dw_player[0].player.estimated_frame_number + 1=}")
+            print(f"{current_media_frame=}")
+            print()
+            """
+
             msg = (
                 f"{current_media_name}: <b>{util.convertTime(self.timeFormat, current_media_time_pos)} / "
                 f"{util.convertTime(self.timeFormat, current_media_duration)}</b> frame: {current_media_frame}"

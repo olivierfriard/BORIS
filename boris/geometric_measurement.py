@@ -291,7 +291,7 @@ def image_clicked(self, n_player, event):
         return
 
     self.mem_player = n_player
-    current_frame = self.dw_player[n_player].player.estimated_frame_number
+    current_frame = self.dw_player[n_player].player.estimated_frame_number + 1
     if hasattr(self, "measurement_w") and self.measurement_w is not None and self.measurement_w.isVisible():
         x, y = event.pos().x(), event.pos().y()
 
@@ -330,6 +330,7 @@ def image_clicked(self, n_player, event):
                 draw_point(self, x, y, self.measurement_w.mark_color, n_player)
                 if current_frame not in self.measurement_w.draw_mem:
                     self.measurement_w.draw_mem[current_frame] = []
+
                 self.measurement_w.draw_mem[current_frame].append(
                     [n_player, "point", self.measurement_w.mark_color, x, y]
                 )
@@ -506,14 +507,19 @@ def redraw_measurements(self):
 
     for idx, dw in enumerate(self.dw_player):
 
+        """
+        print(f"{self.measurement_w.draw_mem=}")
+        print(f"{dw.player.estimated_frame_number=}")
+        """
+        current_frame = dw.player.estimated_frame_number + 1
+
         for frame in self.measurement_w.draw_mem:
 
-            print(f"{frame=}")
-            print(f"{self.measurement_w.draw_mem[frame]=}")
+            """print(f"{frame=}")"""
 
             for element in self.measurement_w.draw_mem[frame]:
 
-                if frame == dw.player.estimated_frame_number:
+                if frame == current_frame:
                     elementsColor = element[2]  # color
                 else:
                     elementsColor = cfg.PASSIVE_MEASUREMENTS_COLOR

@@ -225,7 +225,7 @@ def load_observation(self, obs_id: str, mode: str = cfg.OBS_START) -> str:
     if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE] == cfg.MEDIA:
 
         if mode == cfg.OBS_START:
-            if not initialize_new_observation_media(self):
+            if not initialize_new_media_observation(self):
                 self.observationId = ""
                 self.twEvents.setRowCount(0)
                 menu_options.update_menu(self)
@@ -892,7 +892,7 @@ def new_observation(self, mode=cfg.NEW, obsId=""):
             if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE] == cfg.MEDIA:
                 self.playerType = cfg.MEDIA
                 # load events in table widget
-                initialize_new_observation_media(self)
+                initialize_new_media_observation(self)
 
             if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE] == cfg.IMAGES:
                 # QMessageBox.critical(self, cfg.programName, "Observation from images directory is not yet implemented")
@@ -1053,7 +1053,7 @@ def close_observation(self):
     logging.info(f"Observation {self.playerType} closed")
 
 
-def initialize_new_observation_media(self):
+def initialize_new_media_observation(self):
     """
     initialize new observation from media file(s)
     """
@@ -1237,7 +1237,7 @@ def initialize_new_observation_media(self):
 
     menu_options.update_menu(self)
 
-    self.time_observer_signal.connect(self.video_timer_out)
+    self.time_observer_signal.connect(self.mpv_timer_out)
 
     self.actionPlay.setIcon(QIcon(":/play"))
 
@@ -1438,6 +1438,8 @@ def initialize_new_observation_media(self):
     # initial synchro
     for n_player in range(1, len(self.dw_player)):
         self.sync_time(n_player, 0)
+
+    self.mpv_timer_out(value=0.0)
 
     return True
 
