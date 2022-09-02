@@ -816,8 +816,6 @@ def time_budget_analysis(
                     if len(selected_observations) == 1:
                         new_rows = []
                         for occurence, observation in rows:
-                            print(f"{parameters['start time']=}")
-                            print(f"{occurence=}")
                             if occurence is not None:
                                 new_occurence = max(float(parameters["start time"]), occurence)
                                 new_occurence = min(new_occurence, float(parameters["end time"]))
