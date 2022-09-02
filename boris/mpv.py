@@ -1097,8 +1097,10 @@ class MPV(object):
             raise ValueError('Screenshot in unknown format "{}". Currently, only bgr0 is supported.'
                     .format(res['format']))
         img = Image.frombytes('RGBA', (res['stride']//4, res['h']), res['data'])
+        
         b,g,r,a = img.split()
         return Image.merge('RGB', (r,g,b))
+
 
     def allocate_overlay_id(self):
         free_ids = set(range(64)) - self.overlay_ids
