@@ -56,14 +56,13 @@ from PyQt5.QtCore import (
     QDateTime,
     QTime,
     QUrl,
-    QPoint,
     QT_VERSION_STR,
     PYQT_VERSION_STR,
 )
-from PyQt5.QtGui import QIcon, QPixmap, QFont, QKeyEvent, QImage, QPolygon, QPainter, QDesktopServices
+from PyQt5.QtGui import QIcon, QPixmap, QFont, QKeyEvent, QDesktopServices
 from PyQt5.QtMultimedia import QSound
 from PyQt5.QtWidgets import QMainWindow, QFrame, QDockWidget, QApplication, QAction, QAbstractItemView, QSplashScreen
-from PIL.ImageQt import ImageQt, Image
+from PIL.ImageQt import Image
 
 from . import dialog
 from . import gui_utilities
@@ -1673,24 +1672,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         except Exception:
             return -1
 
-
-    def pil2pixmap(self, im):
-
-        if im.mode == "RGB":
-            r, g, b = im.split()
-            im = Image.merge("RGB", (b, g, r))
-        elif im.mode == "RGBA":
-            r, g, b, a = im.split()
-            im = Image.merge("RGBA", (b, g, r, a))
-        elif im.mode == "L":
-            im = im.convert("RGBA")
-        # Bild in RGBA konvertieren, falls nicht bereits passiert
-        im2 = im.convert("RGBA")
-        data = im2.tobytes("raw", "RGBA")
-        qim = QImage(data, im.size[0], im.size[1], QImage.Format_ARGB32)
-        pixmap = QPixmap.fromImage(qim)
-        return pixmap
-
     def extract_frame(self, dw):
         """
         for MEDIA obs: extract frame from video and visualize it in frame_viewer
@@ -1698,31 +1679,12 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         """
         if self.playerType == cfg.MEDIA:
 
-            time.sleep(0.3)
-            pixmap = self.pil2pixmap(dw.player.screenshot_raw())
-
-
-            #pixmap = QPixmap.fromImage(ImageQt(dw.player.screenshot_raw()))
-
-            print(pixmap)
-
-            print(f"\nextract frame: {dw.player.estimated_frame_number + 1=}\n")
-            
-            # pixmap.save(f"{dw.player.estimated_frame_number + 1}.jpg")
-            
-            """
-            from io import StringIO
-            img_data = StringIO()
-            dw.player.screenshot_to_file(img_data)
-            print(img_data)
-            """
-            
-            #p = QPixmap(f"{dw.player.estimated_frame_number + 1}.jpg")
-            #dw.frame_viewer.setPixmap(p)
-            
+            time.sleep(0.3)  # required for correct frame number
 
             dw.frame_viewer.setPixmap(
-                pixmap.scaled(dw.frame_viewer.size(), Qt.KeepAspectRatio, Qt.SmoothTransformation)
+                util.pil2pixmap(dw.player.screenshot_raw()).scaled(
+                    dw.frame_viewer.size(), Qt.KeepAspectRatio, Qt.SmoothTransformation
+                )
             )
 
         if self.playerType == cfg.IMAGES:
