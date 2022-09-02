@@ -28,7 +28,13 @@ import datetime
 import pathlib
 from io import StringIO
 import pandas as pd
-import pyreadr
+
+try:
+    import pyreadr
+
+    flag_pyreadr_loaded = True
+except ModuleNotFoundError:
+    flag_pyreadr_loaded = False
 
 from . import dialog
 from . import config as cfg
@@ -439,7 +445,6 @@ def export_tabular_events(
                 fields.append(total_length)  # total length
 
             if observation[cfg.TYPE] == cfg.IMAGES:
-                print(cfg.PJ_EVENTS_FIELDS)
                 fields.append(event[cfg.PJ_OBS_FIELDS[cfg.IMAGES][cfg.IMAGE_PATH]])  # image file path
                 fields.append(event[cfg.PJ_OBS_FIELDS[cfg.IMAGES][cfg.IMAGE_INDEX]])  # image file index
 
@@ -523,15 +528,10 @@ def dataset_write(dataset, file_name, output_format):
                 parse_dates=[1],
             )
 
-            """
-            print(f"{df.info()=}")
-            print(f"{df=}")
-            """
-
             if output_format == "pkl":
                 df.to_pickle(file_name)
 
-            if output_format == "rds":
+            if flag_pyreadr_loaded and output_format == "rds":
                 pyreadr.write_rds(file_name, df)
 
             return True, ""

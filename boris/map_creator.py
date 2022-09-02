@@ -754,7 +754,6 @@ class ModifiersMapCreatorWindow(QMainWindow):
         """
 
         if self.selectedPolygon:
-            print("selected polygon")
             self.view.scene().removeItem(self.selectedPolygon)
             self.view.scene().removeItem(self.polygonsList2[self.selectedPolygonAreaCode])
 

@@ -34,6 +34,7 @@ setup(
         "pandas==1.3.5",
         "tablib[html, ods, xls, xlsx, pandas, cli]>=3",
         "pyqt5>=5.15",
+        "pyreadr",
     ],
     package_data={
         "boris": [

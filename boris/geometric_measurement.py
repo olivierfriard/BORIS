@@ -507,15 +507,9 @@ def redraw_measurements(self):
 
     for idx, dw in enumerate(self.dw_player):
 
-        """
-        print(f"{self.measurement_w.draw_mem=}")
-        print(f"{dw.player.estimated_frame_number=}")
-        """
         current_frame = dw.player.estimated_frame_number + 1
 
         for frame in self.measurement_w.draw_mem:
-
-            """print(f"{frame=}")"""
 
             for element in self.measurement_w.draw_mem[frame]:
 
