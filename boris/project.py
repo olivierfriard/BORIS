@@ -259,9 +259,20 @@ class projectDialog(QDialog, Ui_dlgProject):
         self.add_button_menu(subjects_button_items, menu)
         self.pb_subjects.setMenu(menu)
 
+        subjects_import_button_items = [
+            "boris|from a BORIS project",
+            "spreadsheet|from a spreadsheet file (XLSX or ODS)",
+            "text|from a text file (CSV or TSV)",
+            "clipboard|from the clipboard",
+        ]
+        menu = QMenu()
+        menu.triggered.connect(lambda x: self.import_subjects(action=x.statusTip()))
+        self.add_button_menu(subjects_import_button_items, menu)
+        self.pbImportSubjectsFromProject.setMenu(menu)
+
         self.twSubjects.cellChanged[int, int].connect(self.twSubjects_cellChanged)
 
-        self.pbImportSubjectsFromProject.clicked.connect(lambda: project_import.import_subjects_from_project(self))
+        # self.pbImportSubjectsFromProject.clicked.connect(lambda: project_import.import_subjects_from_project(self))
         self.pb_import_subjects_from_clipboard.clicked.connect(
             lambda: project_import.import_subjects_from_clipboard(self)
         )
@@ -379,6 +390,19 @@ class projectDialog(QDialog, Ui_dlgProject):
             project_import.import_behaviors_from_clipboard(self)
         if action == "repository":
             project_import.import_behaviors_from_repository(self)
+
+    def import_subjects(self, action: str):
+        """
+        import subjects
+        """
+        if action == "boris":
+            project_import.import_subjects_from_project(self)
+        if action == "text":
+            project_import.import_subjects_from_text_file(self)
+        if action == "spreadsheet":
+            project_import.import_subjects_from_spreadsheet(self)
+        if action == "clipboard":
+            project_import.import_subjects_from_clipboard(self)
 
     def subjects(self, action: str):
         """
