@@ -352,13 +352,6 @@
                 </widget>
                </item>
                <item>
-                <widget class="QPushButton" name="pb_import_subjects_from_clipboard">
-                 <property name="text">
-                  <string>Import from clipboard</string>
-                 </property>
-                </widget>
-               </item>
-               <item>
                 <spacer name="verticalSpacer_2">
                  <property name="orientation">
                   <enum>Qt::Vertical</enum>

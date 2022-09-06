@@ -189,21 +189,12 @@ def load_dataframe_into_subjects_tablewidget(self, df: pd.DataFrame) -> int:
 
         self.twSubjects.setRowCount(self.twSubjects.rowCount() + 1)
 
-        self.twSubjects.setItem(
-            self.twSubjects.rowCount() - 1, 0, QTableWidgetItem(str(row["Key"]) if str(row["Key"]) != "nan" else "")
-        )
-
-        self.twSubjects.setItem(
-            self.twSubjects.rowCount() - 1,
-            1,
-            QTableWidgetItem(str(row["Subject name"]) if str(row["Subject name"]) != "nan" else ""),
-        )
-
-        self.twSubjects.setItem(
-            self.twSubjects.rowCount() - 1,
-            2,
-            QTableWidgetItem(str(row["Description"]) if str(row["Description"]) != "nan" else ""),
-        )
+        for idx, field in enumerate(("Key", "Subject name", "Description")):
+            self.twSubjects.setItem(
+                self.twSubjects.rowCount() - 1,
+                idx,
+                QTableWidgetItem(str(row[field]) if str(row[field]) != "nan" else ""),
+            )
 
     return 0
 
