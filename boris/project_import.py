@@ -100,10 +100,10 @@ def import_behaviors_from_text_file(self):
         )
         return
 
-    load_dataframe_into_tablewidget(self, df)
+    load_dataframe_into_behaviors_tablewidget(self, df)
 
 
-def load_dataframe_into_tablewidget(self, df: pd.DataFrame) -> int:
+def load_dataframe_into_behaviors_tablewidget(self, df: pd.DataFrame) -> int:
     """
     Load pandas dataframe into the twBehaviors table widget
     """
@@ -166,6 +166,50 @@ def load_dataframe_into_tablewidget(self, df: pd.DataFrame) -> int:
     return 0
 
 
+def load_dataframe_into_subjects_tablewidget(self, df: pd.DataFrame) -> int:
+    """
+    Load pandas dataframe into the twSubjects table widget
+    """
+    for column in ["Subject name", "Description", "Key"]:
+        if column not in list(df.columns):
+            QMessageBox.warning(
+                None,
+                cfg.programName,
+                (
+                    "The first row of spreadsheet must contain the following labels:<br>"
+                    "Subject name, Description, Key<br>"
+                    "Respect the case!"
+                ),
+                QMessageBox.Ok | QMessageBox.Default,
+                QMessageBox.NoButton,
+            )
+            return 1
+
+    for _, row in df.iterrows():
+
+        self.twSubjects.setRowCount(self.twSubjects.rowCount() + 1)
+
+        self.twSubjects.setItem(
+            self.twSubjects.rowCount() - 1,
+            0,
+            QTableWidgetItem(row["Key"] if str(row["Key"]) != "nan" else ""),
+        )
+
+        self.twSubjects.setItem(
+            self.twSubjects.rowCount() - 1,
+            1,
+            QTableWidgetItem(row["Subject name"] if str(row["Subject name"]) != "nan" else ""),
+        )
+
+        self.twSubjects.setItem(
+            self.twSubjects.rowCount() - 1,
+            1,
+            QTableWidgetItem(row["Description"] if str(row["Description"]) != "nan" else ""),
+        )
+
+    return 0
+
+
 def import_behaviors_from_spreadsheet(self):
     """
     Import behaviors from a spreadsheet file (XLSX or ODS)
@@ -217,7 +261,7 @@ def import_behaviors_from_spreadsheet(self):
         )
         return
 
-    load_dataframe_into_tablewidget(self, df)
+    load_dataframe_into_behaviors_tablewidget(self, df)
 
 
 def import_behaviors_from_clipboard(self):
@@ -604,7 +648,7 @@ def import_behaviors_from_project(self):
 
 def import_subjects_from_project(self):
     """
-    import subjects from another project
+    import subjects from a BORIS project
     """
 
     fn = QFileDialog().getOpenFileName(
@@ -622,7 +666,7 @@ def import_subjects_from_project(self):
         QMessageBox.critical(self, cfg.programName, project["error"])
         return
 
-    # configuration of behaviours
+    # configuration of subjects
     if not (cfg.SUBJECTS in project and project[cfg.SUBJECTS]):
         QMessageBox.warning(self, cfg.programName, "No subjects configuration found in project")
         return
@@ -656,6 +700,69 @@ def import_subjects_from_project(self):
                 self.twSubjects.setItem(self.twSubjects.rowCount() - 1, idx2, QTableWidgetItem(""))
 
     self.twSubjects.resizeColumnsToContents()
+
+
+def import_subjects_from_text_file(self):
+    """
+    import subjects from a text file (CSV or TSV)
+    """
+
+    pass
+
+
+def import_subjects_from_spreadsheet(self):
+    """
+    import subjects from a spreadsheet file (XLSX or ODS)
+    """
+
+    if self.twSubjects.rowCount():
+        response = dialog.MessageDialog(
+            cfg.programName,
+            ("There are subjects already configured. " "Do you want to append subjects or replace them?"),
+            [cfg.APPEND, cfg.REPLACE, cfg.CANCEL],
+        )
+
+        if response == cfg.CANCEL:
+            return
+
+    fn = QFileDialog().getOpenFileName(
+        self, "Import subjects from a spreadsheet file", "", "Spreadsheet files (*.xlsx *.ods);;All files (*)"
+    )
+    file_name = fn[0] if type(fn) is tuple else fn
+
+    if not file_name:
+        return
+
+    if self.twBehaviors.rowCount() and response == cfg.REPLACE:
+        self.twSubjects.setRowCount(0)
+
+    if pl.Path(file_name).suffix.upper() == ".XLSX":
+        engine = "openpyxl"
+    elif pl.Path(file_name).suffix.upper() == ".ODS":
+        engine = "odf"
+    else:
+        QMessageBox.warning(
+            None,
+            cfg.programName,
+            ("The type of file was not recognized. Must be Excel XLSX format or Open Document ODS"),
+            QMessageBox.Ok | QMessageBox.Default,
+            QMessageBox.NoButton,
+        )
+        return
+
+    try:
+        df = pd.read_excel(file_name, sheet_name=0, engine=engine)
+    except Exception:
+        QMessageBox.warning(
+            None,
+            cfg.programName,
+            ("The type of file was not recognized. Must be Excel XLSX format or Open Document ODS"),
+            QMessageBox.Ok | QMessageBox.Default,
+            QMessageBox.NoButton,
+        )
+        return
+
+    load_dataframe_into_subjects_tablewidget(self, df)
 
 
 def import_indep_variables_from_project(self):
