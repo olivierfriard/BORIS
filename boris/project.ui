@@ -19,7 +19,7 @@
      <item>
       <widget class="QTabWidget" name="tabProject">
        <property name="currentIndex">
-        <number>0</number>
+        <number>2</number>
        </property>
        <widget class="QWidget" name="tabInformation">
         <attribute name="title">
@@ -347,8 +347,7 @@
                <item>
                 <widget class="QPushButton" name="pbImportSubjectsFromProject">
                  <property name="text">
-                  <string>Import subjects
-from a BORIS project</string>
+                  <string>Import subjects</string>
                  </property>
                 </widget>
                </item>

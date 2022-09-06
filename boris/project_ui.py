@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'project.ui'
+# Form implementation generated from reading ui file 'boris/project.ui'
 #
 # Created by: PyQt5 UI code generator 5.15.6
 #
@@ -451,7 +451,7 @@ class Ui_dlgProject(object):
         self.verticalLayout_7.addLayout(self.verticalLayout_6)
 
         self.retranslateUi(dlgProject)
-        self.tabProject.setCurrentIndex(0)
+        self.tabProject.setCurrentIndex(2)
         QtCore.QMetaObject.connectSlotsByName(dlgProject)
 
     def retranslateUi(self, dlgProject):
@@ -499,8 +499,7 @@ class Ui_dlgProject(object):
         item = self.twSubjects.horizontalHeaderItem(2)
         item.setText(_translate("dlgProject", "Description"))
         self.pb_subjects.setText(_translate("dlgProject", "Subjects"))
-        self.pbImportSubjectsFromProject.setText(_translate("dlgProject", "Import subjects\n"
-"from a BORIS project"))
+        self.pbImportSubjectsFromProject.setText(_translate("dlgProject", "Import subjects"))
         self.pb_import_subjects_from_clipboard.setText(_translate("dlgProject", "Import from clipboard"))
         self.lbSubjectsState.setText(_translate("dlgProject", "TextLabel"))
         self.tabProject.setTabText(self.tabProject.indexOf(self.tabSubjects), _translate("dlgProject", "Subjects"))

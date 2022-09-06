@@ -94,7 +94,7 @@ def import_behaviors_from_text_file(self):
         QMessageBox.warning(
             None,
             cfg.programName,
-            ("The type of file was not recognized. Must be Excel XLSX format or Open Document ODS"),
+            ("The type of file was not recognized. Must be Comma Separated Values (,) or Tab Separated Values"),
             QMessageBox.Ok | QMessageBox.Default,
             QMessageBox.NoButton,
         )
@@ -707,7 +707,54 @@ def import_subjects_from_text_file(self):
     import subjects from a text file (CSV or TSV)
     """
 
-    pass
+    if self.twSubjects.rowCount():
+        response = dialog.MessageDialog(
+            cfg.programName,
+            ("There are subjects already configured. " "Do you want to append subjects or replace them?"),
+            [cfg.APPEND, cfg.REPLACE, cfg.CANCEL],
+        )
+
+        if response == cfg.CANCEL:
+            return
+
+    fn = QFileDialog().getOpenFileName(
+        self, "Import behaviors from text file (CSV, TSV)", "", "Text files (*.txt *.tsv *.csv);;All files (*)"
+    )
+    file_name = fn[0] if type(fn) is tuple else fn
+
+    if not file_name:
+        return
+
+    if self.twSubjects.rowCount() and response == cfg.REPLACE:
+        self.twSubjects.setRowCount(0)
+
+    if pl.Path(file_name).suffix.upper() == ".CSV":
+        delimiter = ","
+    elif pl.Path(file_name).suffix.upper() == ".TSV":
+        delimiter = "\t"
+    else:
+        QMessageBox.warning(
+            None,
+            cfg.programName,
+            ("The type of file was not recognized. Must be Comma Separated Values (,) or Tab Separated Values"),
+            QMessageBox.Ok | QMessageBox.Default,
+            QMessageBox.NoButton,
+        )
+        return
+
+    try:
+        df = pd.read_csv(file_name, delimiter=delimiter)
+    except Exception:
+        QMessageBox.warning(
+            None,
+            cfg.programName,
+            ("The type of file was not recognized. Must be Comma Separated Values (,) or Tab Separated Values"),
+            QMessageBox.Ok | QMessageBox.Default,
+            QMessageBox.NoButton,
+        )
+        return
+
+    load_dataframe_into_subjects_tablewidget(self, df)
 
 
 def import_subjects_from_spreadsheet(self):
@@ -733,7 +780,7 @@ def import_subjects_from_spreadsheet(self):
     if not file_name:
         return
 
-    if self.twBehaviors.rowCount() and response == cfg.REPLACE:
+    if self.twSubjects.rowCount() and response == cfg.REPLACE:
         self.twSubjects.setRowCount(0)
 
     if pl.Path(file_name).suffix.upper() == ".XLSX":
