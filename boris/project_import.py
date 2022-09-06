@@ -155,7 +155,7 @@ def load_dataframe_into_behaviors_tablewidget(self, df: pd.DataFrame) -> int:
                     return 2
 
             else:
-                item = QTableWidgetItem(behavior[field_type])
+                item = QTableWidgetItem(str(behavior[field_type]))
 
             if field_type not in cfg.ETHOGRAM_EDITABLE_FIELDS:
                 item.setFlags(Qt.ItemIsEnabled)
@@ -187,24 +187,24 @@ def load_dataframe_into_subjects_tablewidget(self, df: pd.DataFrame) -> int:
 
     for _, row in df.iterrows():
 
+        print(f'{row["Key"]=}  ', type(row["Key"]))
+
         self.twSubjects.setRowCount(self.twSubjects.rowCount() + 1)
 
         self.twSubjects.setItem(
-            self.twSubjects.rowCount() - 1,
-            0,
-            QTableWidgetItem(row["Key"] if str(row["Key"]) != "nan" else ""),
+            self.twSubjects.rowCount() - 1, 0, QTableWidgetItem(str(row["Key"]) if str(row["Key"]) != "nan" else "")
         )
 
         self.twSubjects.setItem(
             self.twSubjects.rowCount() - 1,
             1,
-            QTableWidgetItem(row["Subject name"] if str(row["Subject name"]) != "nan" else ""),
+            QTableWidgetItem(str(row["Subject name"]) if str(row["Subject name"]) != "nan" else ""),
         )
 
         self.twSubjects.setItem(
             self.twSubjects.rowCount() - 1,
-            1,
-            QTableWidgetItem(row["Description"] if str(row["Description"]) != "nan" else ""),
+            2,
+            QTableWidgetItem(str(row["Description"]) if str(row["Description"]) != "nan" else ""),
         )
 
     return 0
