@@ -23,6 +23,8 @@ This file is part of BORIS.
 import logging
 import urllib
 import json
+import pathlib as pl
+import pandas as pd
 
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QColor, QFont
@@ -38,11 +40,9 @@ def check_text_file_type(rows):
     check text file
     returns separator and number of fields (if unique)
     """
-    separators = "\t,;"
-    for separator in separators:
+    for separator in "\t,;":
         cs = []
         for row in rows:
-
             cs.append(row.count(separator))
         if len(set(cs)) == 1:
             return separator, cs[0] + 1
@@ -51,101 +51,173 @@ def check_text_file_type(rows):
 
 def import_behaviors_from_text_file(self):
     """
-    Import behaviors from text file
+    Import behaviors from text file (CSV or TSV)
     """
 
     if self.twBehaviors.rowCount():
         response = dialog.MessageDialog(
             cfg.programName,
             "There are behaviors already configured. Do you want to append behaviors or replace them?",
-            ["Append", "Replace", cfg.CANCEL],
+            [cfg.APPEND, cfg.REPLACE, cfg.CANCEL],
         )
         if response == cfg.CANCEL:
             return
 
     fn = QFileDialog().getOpenFileName(
-        self, "Import behaviors from text file", "", "Text files (*.txt *.tsv *.csv);;All files (*)"
+        self, "Import behaviors from text file (CSV, TSV)", "", "Text files (*.txt *.tsv *.csv);;All files (*)"
     )
-    fileName = fn[0] if type(fn) is tuple else fn
+    file_name = fn[0] if type(fn) is tuple else fn
 
-    if not fileName:
+    if not file_name:
         return
 
     if self.twBehaviors.rowCount() and response == cfg.REPLACE:
         self.twBehaviors.setRowCount(0)
 
-    with open(fileName, mode="rb") as f:
-        rows_b = f.read().splitlines()
+    if pl.Path(file_name).suffix.upper() == ".CSV":
+        delimiter = ","
+    elif pl.Path(file_name).suffix.upper() == ".TSV":
+        delimiter = "\t"
+    else:
+        QMessageBox.warning(
+            None,
+            cfg.programName,
+            ("The type of file was not recognized. Must be Comma Separated Values (,) or Tab Separated Values"),
+            QMessageBox.Ok | QMessageBox.Default,
+            QMessageBox.NoButton,
+        )
+        return
 
-    rows = []
-    idx = 1
-    for row in rows_b:
-        try:
-            rows.append(row.decode("utf-8"))
-        except Exception:
-            QMessageBox.critical(
+    try:
+        df = pd.read_csv(file_name, delimiter=delimiter)
+    except Exception:
+        QMessageBox.warning(
+            None,
+            cfg.programName,
+            ("The type of file was not recognized. Must be Excel XLSX format or Open Document ODS"),
+            QMessageBox.Ok | QMessageBox.Default,
+            QMessageBox.NoButton,
+        )
+        return
+
+    load_dataframe_into_tablewidget(self, df)
+
+
+def load_dataframe_into_tablewidget(self, df: pd.DataFrame) -> int:
+    """
+    Load pandas dataframe into the twBehaviors table widget
+    """
+    for column in ["Behavior code", "Behavior type", "Description", "Key", "Behavioral category", "Excluded behaviors"]:
+        if column not in list(df.columns):
+            QMessageBox.warning(
                 None,
                 cfg.programName,
-                (f"Error while reading file\nThe line # {idx}\n" f"{row}\ncontains characters that are not readable."),
+                (
+                    "The first row of spreadsheet must contain the following labels:<br>"
+                    "Behavior code, Behavior type, Description, Key, Behavioral category, Excluded behaviors<br>"
+                    "Respect the case!"
+                ),
                 QMessageBox.Ok | QMessageBox.Default,
                 QMessageBox.NoButton,
             )
-            return
-        idx += 1
+            return 1
 
-    fieldSeparator, fieldsNumber = check_text_file_type(rows)
+    for _, row in df.iterrows():
 
-    logging.debug(f"fields separator: {fieldSeparator}  fields number: {fieldsNumber}")
+        behavior = {
+            "key": row["Key"] if str(row["Key"]) != "nan" else "",
+            "code": row["Behavior code"] if str(row["Behavior code"]) != "nan" else "",
+            "description": row["Description"] if str(row["Description"]) != "nan" else "",
+            "modifiers": "",
+            "excluded": row["Excluded behaviors"] if str(row["Excluded behaviors"]) != "nan" else "",
+            "coding map": "",
+            "category": row["Behavioral category"] if str(row["Behavioral category"]) != "nan" else "",
+        }
 
-    if fieldSeparator is None:
-        QMessageBox.critical(
-            self,
-            cfg.programName,
-            "Separator character not found! Use plain text file and TAB or comma as value separator",
-        )
-    else:
+        self.twBehaviors.setRowCount(self.twBehaviors.rowCount() + 1)
 
-        for row in rows:
-
-            type_, key, code, description = "", "", "", ""
-
-            if fieldsNumber == 3:  # fields: type, key, code
-                type_, key, code = row.split(fieldSeparator)
-                description = ""
-            if fieldsNumber == 4:  # fields:  type, key, code, description
-                type_, key, code, description = row.split(fieldSeparator)
-
-            if fieldsNumber > 4:
-                type_, key, code, description = row.split(fieldSeparator)[:4]
-
-            behavior = {
-                "key": key,
-                "code": code,
-                "description": description,
-                "modifiers": "",
-                "excluded": "",
-                "coding map": "",
-                "category": "",
-            }
-
-            self.twBehaviors.setRowCount(self.twBehaviors.rowCount() + 1)
-
-            for field_type in cfg.behavioursFields:
-                if field_type == cfg.TYPE:
-                    item = QTableWidgetItem(cfg.DEFAULT_BEHAVIOR_TYPE)
-                    # add type combobox
-                    if cfg.POINT in type_.upper():
-                        item = QTableWidgetItem(cfg.POINT_EVENT)
-                    if cfg.STATE in type_.upper():
-                        item = QTableWidgetItem(cfg.STATE_EVENT)
+        for field_type in cfg.behavioursFields:
+            if field_type == cfg.TYPE:
+                item = QTableWidgetItem(cfg.DEFAULT_BEHAVIOR_TYPE)
+                # add type combobox
+                if cfg.POINT in row["Behavior type"].upper():
+                    item = QTableWidgetItem(cfg.POINT_EVENT)
+                elif cfg.STATE in row["Behavior type"].upper():
+                    item = QTableWidgetItem(cfg.STATE_EVENT)
                 else:
-                    item = QTableWidgetItem(behavior[field_type])
+                    QMessageBox.critical(
+                        None,
+                        cfg.programName,
+                        f"{row['Behavior code']} has no behavior type (POINT or STATE)",
+                        QMessageBox.Ok | QMessageBox.Default,
+                        QMessageBox.NoButton,
+                    )
+                    return 2
 
-                if field_type not in cfg.ETHOGRAM_EDITABLE_FIELDS:
-                    item.setFlags(Qt.ItemIsEnabled)
-                    item.setBackground(QColor(230, 230, 230))
+            else:
+                item = QTableWidgetItem(behavior[field_type])
 
-                self.twBehaviors.setItem(self.twBehaviors.rowCount() - 1, cfg.behavioursFields[field_type], item)
+            if field_type not in cfg.ETHOGRAM_EDITABLE_FIELDS:
+                item.setFlags(Qt.ItemIsEnabled)
+                item.setBackground(QColor(230, 230, 230))
+
+            self.twBehaviors.setItem(self.twBehaviors.rowCount() - 1, cfg.behavioursFields[field_type], item)
+
+    return 0
+
+
+def import_behaviors_from_spreadsheet(self):
+    """
+    Import behaviors from a spreadsheet file (XLSX or ODS)
+    """
+
+    if self.twBehaviors.rowCount():
+        response = dialog.MessageDialog(
+            cfg.programName,
+            "There are behaviors already configured. Do you want to append behaviors or replace them?",
+            [cfg.APPEND, cfg.REPLACE, cfg.CANCEL],
+        )
+        if response == cfg.CANCEL:
+            return
+
+    fn = QFileDialog().getOpenFileName(
+        self, "Import behaviors from a spreadsheet file", "", "Spreadsheet files (*.xlsx *.ods);;All files (*)"
+    )
+    file_name = fn[0] if type(fn) is tuple else fn
+
+    if not file_name:
+        return
+
+    if self.twBehaviors.rowCount() and response == cfg.REPLACE:
+        self.twBehaviors.setRowCount(0)
+
+    if pl.Path(file_name).suffix.upper() == ".XLSX":
+        engine = "openpyxl"
+    elif pl.Path(file_name).suffix.upper() == ".ODS":
+        engine = "odf"
+    else:
+        QMessageBox.warning(
+            None,
+            cfg.programName,
+            ("The type of file was not recognized. Must be Excel XLSX format or Open Document ODS"),
+            QMessageBox.Ok | QMessageBox.Default,
+            QMessageBox.NoButton,
+        )
+        return
+
+    try:
+        df = pd.read_excel(file_name, sheet_name=0, engine=engine)
+    except Exception:
+        QMessageBox.warning(
+            None,
+            cfg.programName,
+            ("The type of file was not recognized. Must be Excel XLSX format or Open Document ODS"),
+            QMessageBox.Ok | QMessageBox.Default,
+            QMessageBox.NoButton,
+        )
+        return
+
+    load_dataframe_into_tablewidget(self, df)
 
 
 def import_behaviors_from_clipboard(self):

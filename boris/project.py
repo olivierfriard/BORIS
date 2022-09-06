@@ -24,7 +24,6 @@ import json
 import logging
 import pathlib
 import re
-import urllib.error
 import urllib.parse
 import urllib.request
 
@@ -222,8 +221,9 @@ class projectDialog(QDialog, Ui_dlgProject):
 
         import_button_items = [
             "boris|from a BORIS project",
+            "spreadsheet|from a spreadsheet file (XLSX or ODS)",
             "jwatcher|from a JWatcher project",
-            "text|from a text file",
+            "text|from a text file (CSV or TSV)",
             "clipboard|from the clipboard",
             "repository|from the BORIS repository",
         ]
@@ -373,6 +373,8 @@ class projectDialog(QDialog, Ui_dlgProject):
             project_import.import_behaviors_from_JWatcher(self)
         if action == "text":
             project_import.import_behaviors_from_text_file(self)
+        if action == "spreadsheet":
+            project_import.import_behaviors_from_spreadsheet(self)
         if action == "clipboard":
             project_import.import_behaviors_from_clipboard(self)
         if action == "repository":
