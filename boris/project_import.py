@@ -187,8 +187,6 @@ def load_dataframe_into_subjects_tablewidget(self, df: pd.DataFrame) -> int:
 
     for _, row in df.iterrows():
 
-        print(f'{row["Key"]=}  ', type(row["Key"]))
-
         self.twSubjects.setRowCount(self.twSubjects.rowCount() + 1)
 
         self.twSubjects.setItem(
