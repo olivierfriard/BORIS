@@ -272,11 +272,6 @@ class projectDialog(QDialog, Ui_dlgProject):
 
         self.twSubjects.cellChanged[int, int].connect(self.twSubjects_cellChanged)
 
-        # self.pbImportSubjectsFromProject.clicked.connect(lambda: project_import.import_subjects_from_project(self))
-        self.pb_import_subjects_from_clipboard.clicked.connect(
-            lambda: project_import.import_subjects_from_clipboard(self)
-        )
-
         # independent variables tab
         self.pbAddVariable.clicked.connect(self.pbAddVariable_clicked)
         self.pbRemoveVariable.clicked.connect(self.pbRemoveVariable_clicked)
