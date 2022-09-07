@@ -29,10 +29,220 @@ import pandas as pd
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QColor, QFont
 from PyQt5.QtWidgets import QApplication, QFileDialog, QListWidgetItem, QMessageBox, QTableWidgetItem
+import tablib
 
 from . import config as cfg
-from . import dialog, param_panel, project_functions
+from . import dialog, param_panel, project_functions, export_observation
 from . import utilities as util
+
+
+def export_ethogram(self):
+    """
+    export ethogram in various format
+    """
+    extended_file_formats = [
+        "Tab Separated Values (*.tsv)",
+        "Comma Separated Values (*.csv)",
+        "Open Document Spreadsheet ODS (*.ods)",
+        "Microsoft Excel Spreadsheet XLSX (*.xlsx)",
+        "Legacy Microsoft Excel Spreadsheet XLS (*.xls)",
+        "HTML (*.html)",
+    ]
+    file_formats = ["tsv", "csv", "ods", "xlsx", "xls", "html"]
+
+    filediag_func = QFileDialog().getSaveFileName
+
+    fileName, filter_ = filediag_func(self, "Export ethogram", "", ";;".join(extended_file_formats))
+    if not fileName:
+        return
+
+    outputFormat = file_formats[extended_file_formats.index(filter_)]
+    if pl.Path(fileName).suffix != "." + outputFormat:
+        fileName = str(pl.Path(fileName)) + "." + outputFormat
+
+    ethogram_data = tablib.Dataset()
+    ethogram_data.title = "Ethogram"
+    if self.leProjectName.text():
+        ethogram_data.title = f"Ethogram of {self.leProjectName.text()} project"
+
+    ethogram_data.headers = [
+        "Behavior code",
+        "Behavior type",
+        "Description",
+        "Key",
+        "Behavioral category",
+        "Excluded behaviors",
+        "modifiers names and values",
+        "modifiers (JSON)",
+    ]
+
+    for r in range(self.twBehaviors.rowCount()):
+        row = []
+        for field in ["code", cfg.TYPE, "description", "key", "category", "excluded"]:
+            row.append(self.twBehaviors.item(r, cfg.behavioursFields[field]).text())
+
+        # modifiers
+        if self.twBehaviors.item(r, cfg.behavioursFields["modifiers"]).text():
+            modifiers_dict = eval(self.twBehaviors.item(r, cfg.behavioursFields["modifiers"]).text())
+            modifiers_list = []
+            for key in modifiers_dict:
+                if modifiers_dict[key]["values"]:
+                    values = ", ".join(modifiers_dict[key]["values"])
+                    modifiers_list.append(f"{modifiers_dict[key]['name']} ({values})")
+                else:
+                    modifiers_list.append(modifiers_dict[key]["name"])
+
+            row.append(", ".join(modifiers_list))
+            row.append(json.dumps(modifiers_dict))
+        else:
+            row.append("")
+            row.append("")
+
+        ethogram_data.append(row)
+
+    ok, msg = export_observation.dataset_write(ethogram_data, fileName, outputFormat)
+    if not ok:
+        QMessageBox.critical(None, cfg.programName, msg, QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
+
+
+def export_subjects(self):
+    """
+    export the subjetcs list in various format
+    """
+    extended_file_formats = [
+        "Tab Separated Values (*.tsv)",
+        "Comma Separated Values (*.csv)",
+        "Open Document Spreadsheet ODS (*.ods)",
+        "Microsoft Excel Spreadsheet XLSX (*.xlsx)",
+        "Legacy Microsoft Excel Spreadsheet XLS (*.xls)",
+        "HTML (*.html)",
+    ]
+    file_formats = ["tsv", "csv", "ods", "xlsx", "xls", "html"]
+
+    filediag_func = QFileDialog().getSaveFileName
+
+    file_name, filter_ = filediag_func(self, "Export the subjects list", "", ";;".join(extended_file_formats))
+    if not file_name:
+        return
+
+    outputFormat = file_formats[extended_file_formats.index(filter_)]
+    if pl.Path(file_name).suffix != "." + outputFormat:
+        file_name = str(pl.Path(file_name)) + "." + outputFormat
+
+    subjects_data = tablib.Dataset()
+    subjects_data.title = "Subjects"
+    if self.leProjectName.text():
+        subjects_data.title = f"Subjects defined in the {self.leProjectName.text()} project"
+
+    subjects_data.headers = [
+        "Key",
+        "Subject name",
+        "Description",
+    ]
+
+    for r in range(self.twSubjects.rowCount()):
+
+        row = []
+        for idx, _ in enumerate(("Key", "Subject name", "Description")):
+            row.append(self.twSubjects.item(r, idx).text())
+
+        subjects_data.append(row)
+
+    ok, msg = export_observation.dataset_write(subjects_data, file_name, outputFormat)
+    if not ok:
+        QMessageBox.critical(None, cfg.programName, msg, QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
+
+
+def select_behaviors(
+    title: str = "Record value from external data file",
+    text: str = "Behaviors",
+    behavioral_categories: list = [],
+    ethogram: dict = {},
+    behavior_type=[cfg.STATE_EVENT, cfg.POINT_EVENT],
+) -> list:
+    """
+    allow user to select behaviors to import
+
+    Args:
+        title (str): title of dialog box
+        text (str): text of dialog box
+        behavioral_categories (list): behavioral categories
+        ethogram (dict): ethogram
+
+    """
+
+    paramPanelWindow = param_panel.Param_panel()
+    paramPanelWindow.resize(800, 600)
+    paramPanelWindow.setWindowTitle(title)
+    paramPanelWindow.lbBehaviors.setText(text)
+    for w in [
+        paramPanelWindow.lwSubjects,
+        paramPanelWindow.pbSelectAllSubjects,
+        paramPanelWindow.pbUnselectAllSubjects,
+        paramPanelWindow.pbReverseSubjectsSelection,
+        paramPanelWindow.lbSubjects,
+        paramPanelWindow.cbIncludeModifiers,
+        paramPanelWindow.cbExcludeBehaviors,
+        paramPanelWindow.frm_time,
+        paramPanelWindow.frm_time_bin_size,
+    ]:
+        w.setVisible(False)
+
+    if behavioral_categories:
+        categories = behavioral_categories
+        # check if behavior not included in a category
+        if "" in [ethogram[idx][cfg.BEHAVIOR_CATEGORY] for idx in ethogram if cfg.BEHAVIOR_CATEGORY in ethogram[idx]]:
+            categories += [""]
+    else:
+        categories = ["###no category###"]
+
+    for category in categories:
+
+        if category != "###no category###":
+
+            if category == "":
+                paramPanelWindow.item = QListWidgetItem("No category")
+                paramPanelWindow.item.setData(34, "No category")
+            else:
+                paramPanelWindow.item = QListWidgetItem(category)
+                paramPanelWindow.item.setData(34, category)
+
+            font = QFont()
+            font.setBold(True)
+            paramPanelWindow.item.setFont(font)
+            paramPanelWindow.item.setData(33, "category")
+            paramPanelWindow.item.setData(35, False)
+
+            paramPanelWindow.lwBehaviors.addItem(paramPanelWindow.item)
+
+        # check if behavior type must be shown
+        for behavior in [ethogram[x][cfg.BEHAVIOR_CODE] for x in util.sorted_keys(ethogram)]:
+
+            if (categories == ["###no category###"]) or (
+                behavior
+                in [
+                    ethogram[x][cfg.BEHAVIOR_CODE]
+                    for x in ethogram
+                    if cfg.BEHAVIOR_CATEGORY in ethogram[x] and ethogram[x][cfg.BEHAVIOR_CATEGORY] == category
+                ]
+            ):
+
+                paramPanelWindow.item = QListWidgetItem(behavior)
+                paramPanelWindow.item.setCheckState(Qt.Unchecked)
+
+                if category != "###no category###":
+                    paramPanelWindow.item.setData(33, "behavior")
+                    if category == "":
+                        paramPanelWindow.item.setData(34, "No category")
+                    else:
+                        paramPanelWindow.item.setData(34, category)
+
+                paramPanelWindow.lwBehaviors.addItem(paramPanelWindow.item)
+
+    if paramPanelWindow.exec_():
+        return paramPanelWindow.selectedBehaviors
+
+    return []
 
 
 def check_text_file_type(rows):
@@ -49,58 +259,75 @@ def check_text_file_type(rows):
     return None, None
 
 
-def import_behaviors_from_text_file(self):
+def import_ethogram_from_dict(self, project: dict):
     """
-    Import behaviors from text file (CSV or TSV)
+    Import behaviors from a BORIS project dictionary
     """
+    # import behavioral_categories
+    self.pj[cfg.BEHAVIORAL_CATEGORIES] = list(project.get(cfg.BEHAVIORAL_CATEGORIES, []))
+
+    # configuration of behaviours
+    if not (cfg.ETHOGRAM in project and project[cfg.ETHOGRAM]):
+        QMessageBox.warning(self, cfg.programName, "No behaviors configuration found in project")
+        return
 
     if self.twBehaviors.rowCount():
         response = dialog.MessageDialog(
             cfg.programName,
-            "There are behaviors already configured. Do you want to append behaviors or replace them?",
+            ("Some behaviors are already configured. " "Do you want to append behaviors or replace them?"),
             [cfg.APPEND, cfg.REPLACE, cfg.CANCEL],
         )
+        if response == cfg.REPLACE:
+            self.twBehaviors.setRowCount(0)
         if response == cfg.CANCEL:
             return
 
-    fn = QFileDialog().getOpenFileName(
-        self, "Import behaviors from text file (CSV, TSV)", "", "Text files (*.txt *.tsv *.csv);;All files (*)"
+    behaviors_to_import = select_behaviors(
+        title="Select the behaviors to import",
+        text="Behaviors",
+        behavioral_categories=list(project.get(cfg.BEHAVIORAL_CATEGORIES, [])),
+        ethogram=dict(project[cfg.ETHOGRAM]),
+        behavior_type=[cfg.STATE_EVENT, cfg.POINT_EVENT],
     )
-    file_name = fn[0] if type(fn) is tuple else fn
 
-    if not file_name:
-        return
+    for i in util.sorted_keys(project[cfg.ETHOGRAM]):
 
-    if self.twBehaviors.rowCount() and response == cfg.REPLACE:
-        self.twBehaviors.setRowCount(0)
+        if project[cfg.ETHOGRAM][i][cfg.BEHAVIOR_CODE] not in behaviors_to_import:
+            continue
 
-    if pl.Path(file_name).suffix.upper() == ".CSV":
-        delimiter = ","
-    elif pl.Path(file_name).suffix.upper() == ".TSV":
-        delimiter = "\t"
-    else:
-        QMessageBox.warning(
-            None,
-            cfg.programName,
-            ("The type of file was not recognized. Must be Comma Separated Values (,) or Tab Separated Values"),
-            QMessageBox.Ok | QMessageBox.Default,
-            QMessageBox.NoButton,
-        )
-        return
+        self.twBehaviors.setRowCount(self.twBehaviors.rowCount() + 1)
 
-    try:
-        df = pd.read_csv(file_name, delimiter=delimiter)
-    except Exception:
-        QMessageBox.warning(
-            None,
-            cfg.programName,
-            ("The type of file was not recognized. Must be Comma Separated Values (,) or Tab Separated Values"),
-            QMessageBox.Ok | QMessageBox.Default,
-            QMessageBox.NoButton,
-        )
-        return
+        for field in project[cfg.ETHOGRAM][i]:
 
-    load_dataframe_into_behaviors_tablewidget(self, df)
+            item = QTableWidgetItem()
+
+            if field == cfg.TYPE:
+                item.setText(project[cfg.ETHOGRAM][i][field])
+                item.setFlags(Qt.ItemIsEnabled)
+                item.setBackground(QColor(230, 230, 230))
+
+            else:
+                if field == "modifiers" and isinstance(project[cfg.ETHOGRAM][i][field], str):
+                    modif_set_dict = {}
+                    if project[cfg.ETHOGRAM][i][field]:
+                        modif_set_list = project[cfg.ETHOGRAM][i][field].split("|")
+                        for modif_set in modif_set_list:
+                            modif_set_dict[str(len(modif_set_dict))] = {
+                                "name": "",
+                                "type": cfg.SINGLE_SELECTION,
+                                "values": modif_set.split(","),
+                            }
+                    project[cfg.ETHOGRAM][i][field] = dict(modif_set_dict)
+
+                item.setText(str(project[cfg.ETHOGRAM][i][field]))
+
+                if field not in cfg.ETHOGRAM_EDITABLE_FIELDS:
+                    item.setFlags(Qt.ItemIsEnabled)
+                    item.setBackground(QColor(230, 230, 230))
+
+            self.twBehaviors.setItem(self.twBehaviors.rowCount() - 1, cfg.behavioursFields[field], item)
+
+    self.twBehaviors.resizeColumnsToContents()
 
 
 def load_dataframe_into_behaviors_tablewidget(self, df: pd.DataFrame) -> int:
@@ -166,42 +393,23 @@ def load_dataframe_into_behaviors_tablewidget(self, df: pd.DataFrame) -> int:
     return 0
 
 
-def load_dataframe_into_subjects_tablewidget(self, df: pd.DataFrame) -> int:
+def import_behaviors_from_project(self):
+
+    fn = QFileDialog().getOpenFileName(
+        self, "Import behaviors from project file", "", ("Project files (*.boris *.boris.gz);;" "All files (*)")
+    )
+    file_name = fn[0] if type(fn) is tuple else fn
+
+    if not file_name:
+        return
+    _, _, project, _ = project_functions.open_project_json(file_name)
+
+    import_ethogram_from_dict(self, project)
+
+
+def import_behaviors_from_text_file(self):
     """
-    Load pandas dataframe into the twSubjects table widget
-    """
-    for column in ["Subject name", "Description", "Key"]:
-        if column not in list(df.columns):
-            QMessageBox.warning(
-                None,
-                cfg.programName,
-                (
-                    "The first row of spreadsheet must contain the following labels:<br>"
-                    "Subject name, Description, Key<br>"
-                    "Respect the case!"
-                ),
-                QMessageBox.Ok | QMessageBox.Default,
-                QMessageBox.NoButton,
-            )
-            return 1
-
-    for _, row in df.iterrows():
-
-        self.twSubjects.setRowCount(self.twSubjects.rowCount() + 1)
-
-        for idx, field in enumerate(("Key", "Subject name", "Description")):
-            self.twSubjects.setItem(
-                self.twSubjects.rowCount() - 1,
-                idx,
-                QTableWidgetItem(str(row[field]) if str(row[field]) != "nan" else ""),
-            )
-
-    return 0
-
-
-def import_behaviors_from_spreadsheet(self):
-    """
-    Import behaviors from a spreadsheet file (XLSX or ODS)
+    Import behaviors from text file (CSV or TSV)
     """
 
     if self.twBehaviors.rowCount():
@@ -214,7 +422,61 @@ def import_behaviors_from_spreadsheet(self):
             return
 
     fn = QFileDialog().getOpenFileName(
-        self, "Import behaviors from a spreadsheet file", "", "Spreadsheet files (*.xlsx *.ods);;All files (*)"
+        self, "Import behaviors from text file (CSV, TSV)", "", "Text files (*.txt *.tsv *.csv);;All files (*)"
+    )
+    file_name = fn[0] if type(fn) is tuple else fn
+
+    if not file_name:
+        return
+
+    if self.twBehaviors.rowCount() and response == cfg.REPLACE:
+        self.twBehaviors.setRowCount(0)
+
+    if pl.Path(file_name).suffix.upper() == ".CSV":
+        delimiter = ","
+    elif pl.Path(file_name).suffix.upper() == ".TSV":
+        delimiter = "\t"
+    else:
+        QMessageBox.warning(
+            None,
+            cfg.programName,
+            ("The type of file was not recognized. Must be Comma Separated Values (,) or Tab Separated Values"),
+            QMessageBox.Ok | QMessageBox.Default,
+            QMessageBox.NoButton,
+        )
+        return
+
+    try:
+        df = pd.read_csv(file_name, delimiter=delimiter)
+    except Exception:
+        QMessageBox.warning(
+            None,
+            cfg.programName,
+            ("The type of file was not recognized. Must be Comma Separated Values (,) or Tab Separated Values"),
+            QMessageBox.Ok | QMessageBox.Default,
+            QMessageBox.NoButton,
+        )
+        return
+
+    load_dataframe_into_behaviors_tablewidget(self, df)
+
+
+def import_behaviors_from_spreadsheet(self):
+    """
+    Import behaviors from a spreadsheet file (XLSX)
+    """
+
+    if self.twBehaviors.rowCount():
+        response = dialog.MessageDialog(
+            cfg.programName,
+            "There are behaviors already configured. Do you want to append behaviors or replace them?",
+            [cfg.APPEND, cfg.REPLACE, cfg.CANCEL],
+        )
+        if response == cfg.CANCEL:
+            return
+
+    fn = QFileDialog().getOpenFileName(
+        self, "Import behaviors from a spreadsheet file", "", "Spreadsheet files (*.xlsx);;All files (*)"
     )
     file_name = fn[0] if type(fn) is tuple else fn
 
@@ -226,13 +488,15 @@ def import_behaviors_from_spreadsheet(self):
 
     if pl.Path(file_name).suffix.upper() == ".XLSX":
         engine = "openpyxl"
-    elif pl.Path(file_name).suffix.upper() == ".ODS":
-        engine = "odf"
+        """
+        elif pl.Path(file_name).suffix.upper() == ".ODS":
+            engine = "odf"
+        """
     else:
         QMessageBox.warning(
             None,
             cfg.programName,
-            ("The type of file was not recognized. Must be Excel XLSX format or Open Document ODS"),
+            ("The type of file was not recognized. Must be Microsoft-Excel XLSX format"),
             QMessageBox.Ok | QMessageBox.Default,
             QMessageBox.NoButton,
         )
@@ -244,7 +508,7 @@ def import_behaviors_from_spreadsheet(self):
         QMessageBox.warning(
             None,
             cfg.programName,
-            ("The type of file was not recognized. Must be Excel XLSX format or Open Document ODS"),
+            ("The type of file was not recognized. Must be Microsoft-Excel XLSX format"),
             QMessageBox.Ok | QMessageBox.Default,
             QMessageBox.NoButton,
         )
@@ -397,6 +661,102 @@ def import_behaviors_from_JWatcher(self):
                     self.twBehaviors.setItem(self.twBehaviors.rowCount() - 1, cfg.behavioursFields[field_type], item)
 
 
+def import_behaviors_from_repository(self):
+    """
+    import behaviors from the BORIS ethogram repository
+    """
+    ethogram_repository_URL = "http://www.boris.unito.it/static/ethograms/ethogram_list.json"
+    try:
+        ethogram_list = urllib.request.urlopen(ethogram_repository_URL).read().strip().decode("utf-8")
+    except Exception:
+
+        QMessageBox.critical(
+            self, cfg.programName, "An error occured during retrieving the ethogram list from BORIS repository"
+        )
+        return
+
+    try:
+        ethogram_list_list = json.loads(ethogram_list)
+    except Exception:
+        QMessageBox.critical(
+            self, cfg.programName, "An error occured during loading ethogram list from BORIS repository"
+        )
+        return
+
+    choice_dialog = dialog.ChooseObservationsToImport(
+        "Choose the ethogram to import:", sorted([f"{x['species']} by {x['author']}" for x in ethogram_list_list])
+    )
+    while True:
+        if not choice_dialog.exec_():
+            return
+
+        if len(choice_dialog.get_selected_observations()) == 0:
+            QMessageBox.critical(self, cfg.programName, "Choose one ethogram")
+            continue
+
+        if len(choice_dialog.get_selected_observations()) > 1:
+            QMessageBox.critical(self, cfg.programName, "Choose only one ethogram")
+            continue
+
+        break
+
+    for x in ethogram_list_list:
+        if f"{x['species']} by {x['author']}" == choice_dialog.get_selected_observations()[0]:
+            file_name = x["file name"]
+            break
+
+    try:
+        boris_project_str = (
+            urllib.request.urlopen(f"http://www.boris.unito.it/static/ethograms/{file_name}")
+            .read()
+            .strip()
+            .decode("utf-8")
+        )
+    except Exception:
+
+        QMessageBox.critical(
+            self, cfg.programName, f"An error occured during retrieving {file_name} from BORIS repository"
+        )
+        return
+    boris_project = json.loads(boris_project_str)
+
+    import_ethogram_from_dict(self, boris_project)
+
+
+def load_dataframe_into_subjects_tablewidget(self, df: pd.DataFrame) -> int:
+    """
+    Load pandas dataframe into the twSubjects table widget
+    """
+    print(df.columns)
+    for column in ["Subject name", "Description", "Key"]:
+        if column not in list(df.columns):
+            QMessageBox.warning(
+                None,
+                cfg.programName,
+                (
+                    "The first row of spreadsheet must contain the following labels:<br>"
+                    "Subject name, Description, Key<br>"
+                    "Respect the case!"
+                ),
+                QMessageBox.Ok | QMessageBox.Default,
+                QMessageBox.NoButton,
+            )
+            return 1
+
+    for _, row in df.iterrows():
+
+        self.twSubjects.setRowCount(self.twSubjects.rowCount() + 1)
+
+        for idx, field in enumerate(("Key", "Subject name", "Description")):
+            self.twSubjects.setItem(
+                self.twSubjects.rowCount() - 1,
+                idx,
+                QTableWidgetItem(str(row[field]) if str(row[field]) != "nan" else ""),
+            )
+
+    return 0
+
+
 def import_subjects_from_clipboard(self):
     """
     import subjects from clipboard
@@ -456,183 +816,6 @@ def import_subjects_from_clipboard(self):
             for idx, field_name in enumerate(cfg.subjectsFields):
                 item = QTableWidgetItem(subject.get(field_name, ""))
                 self.twSubjects.setItem(self.twSubjects.rowCount() - 1, idx, item)
-
-
-def select_behaviors(
-    title: str = "Record value from external data file",
-    text: str = "Behaviors",
-    behavioral_categories: list = [],
-    ethogram: dict = {},
-    behavior_type=[cfg.STATE_EVENT, cfg.POINT_EVENT],
-) -> list:
-    """
-    allow user to select behaviors to import
-
-    Args:
-        title (str): title of dialog box
-        text (str): text of dialog box
-        behavioral_categories (list): behavioral categories
-        ethogram (dict): ethogram
-
-    """
-
-    paramPanelWindow = param_panel.Param_panel()
-    paramPanelWindow.resize(800, 600)
-    paramPanelWindow.setWindowTitle(title)
-    paramPanelWindow.lbBehaviors.setText(text)
-    for w in [
-        paramPanelWindow.lwSubjects,
-        paramPanelWindow.pbSelectAllSubjects,
-        paramPanelWindow.pbUnselectAllSubjects,
-        paramPanelWindow.pbReverseSubjectsSelection,
-        paramPanelWindow.lbSubjects,
-        paramPanelWindow.cbIncludeModifiers,
-        paramPanelWindow.cbExcludeBehaviors,
-        paramPanelWindow.frm_time,
-        paramPanelWindow.frm_time_bin_size,
-    ]:
-        w.setVisible(False)
-
-    if behavioral_categories:
-        categories = behavioral_categories
-        # check if behavior not included in a category
-        if "" in [ethogram[idx][cfg.BEHAVIOR_CATEGORY] for idx in ethogram if cfg.BEHAVIOR_CATEGORY in ethogram[idx]]:
-            categories += [""]
-    else:
-        categories = ["###no category###"]
-
-    for category in categories:
-
-        if category != "###no category###":
-
-            if category == "":
-                paramPanelWindow.item = QListWidgetItem("No category")
-                paramPanelWindow.item.setData(34, "No category")
-            else:
-                paramPanelWindow.item = QListWidgetItem(category)
-                paramPanelWindow.item.setData(34, category)
-
-            font = QFont()
-            font.setBold(True)
-            paramPanelWindow.item.setFont(font)
-            paramPanelWindow.item.setData(33, "category")
-            paramPanelWindow.item.setData(35, False)
-
-            paramPanelWindow.lwBehaviors.addItem(paramPanelWindow.item)
-
-        # check if behavior type must be shown
-        for behavior in [ethogram[x][cfg.BEHAVIOR_CODE] for x in util.sorted_keys(ethogram)]:
-
-            if (categories == ["###no category###"]) or (
-                behavior
-                in [
-                    ethogram[x][cfg.BEHAVIOR_CODE]
-                    for x in ethogram
-                    if cfg.BEHAVIOR_CATEGORY in ethogram[x] and ethogram[x][cfg.BEHAVIOR_CATEGORY] == category
-                ]
-            ):
-
-                paramPanelWindow.item = QListWidgetItem(behavior)
-                paramPanelWindow.item.setCheckState(Qt.Unchecked)
-
-                if category != "###no category###":
-                    paramPanelWindow.item.setData(33, "behavior")
-                    if category == "":
-                        paramPanelWindow.item.setData(34, "No category")
-                    else:
-                        paramPanelWindow.item.setData(34, category)
-
-                paramPanelWindow.lwBehaviors.addItem(paramPanelWindow.item)
-
-    if paramPanelWindow.exec_():
-        return paramPanelWindow.selectedBehaviors
-
-    return []
-
-
-def import_ethogram_from_dict(self, project: dict):
-    """
-    Import behaviors from a BORIS project dictionary
-    """
-    # import behavioral_categories
-    self.pj[cfg.BEHAVIORAL_CATEGORIES] = list(project.get(cfg.BEHAVIORAL_CATEGORIES, []))
-
-    # configuration of behaviours
-    if not (cfg.ETHOGRAM in project and project[cfg.ETHOGRAM]):
-        QMessageBox.warning(self, cfg.programName, "No behaviors configuration found in project")
-        return
-
-    if self.twBehaviors.rowCount():
-        response = dialog.MessageDialog(
-            cfg.programName,
-            ("Some behaviors are already configured. " "Do you want to append behaviors or replace them?"),
-            [cfg.APPEND, cfg.REPLACE, cfg.CANCEL],
-        )
-        if response == cfg.REPLACE:
-            self.twBehaviors.setRowCount(0)
-        if response == cfg.CANCEL:
-            return
-
-    behaviors_to_import = select_behaviors(
-        title="Select the behaviors to import",
-        text="Behaviors",
-        behavioral_categories=list(project.get(cfg.BEHAVIORAL_CATEGORIES, [])),
-        ethogram=dict(project[cfg.ETHOGRAM]),
-        behavior_type=[cfg.STATE_EVENT, cfg.POINT_EVENT],
-    )
-
-    for i in util.sorted_keys(project[cfg.ETHOGRAM]):
-
-        if project[cfg.ETHOGRAM][i][cfg.BEHAVIOR_CODE] not in behaviors_to_import:
-            continue
-
-        self.twBehaviors.setRowCount(self.twBehaviors.rowCount() + 1)
-
-        for field in project[cfg.ETHOGRAM][i]:
-
-            item = QTableWidgetItem()
-
-            if field == cfg.TYPE:
-                item.setText(project[cfg.ETHOGRAM][i][field])
-                item.setFlags(Qt.ItemIsEnabled)
-                item.setBackground(QColor(230, 230, 230))
-
-            else:
-                if field == "modifiers" and isinstance(project[cfg.ETHOGRAM][i][field], str):
-                    modif_set_dict = {}
-                    if project[cfg.ETHOGRAM][i][field]:
-                        modif_set_list = project[cfg.ETHOGRAM][i][field].split("|")
-                        for modif_set in modif_set_list:
-                            modif_set_dict[str(len(modif_set_dict))] = {
-                                "name": "",
-                                "type": cfg.SINGLE_SELECTION,
-                                "values": modif_set.split(","),
-                            }
-                    project[cfg.ETHOGRAM][i][field] = dict(modif_set_dict)
-
-                item.setText(str(project[cfg.ETHOGRAM][i][field]))
-
-                if field not in cfg.ETHOGRAM_EDITABLE_FIELDS:
-                    item.setFlags(Qt.ItemIsEnabled)
-                    item.setBackground(QColor(230, 230, 230))
-
-            self.twBehaviors.setItem(self.twBehaviors.rowCount() - 1, cfg.behavioursFields[field], item)
-
-    self.twBehaviors.resizeColumnsToContents()
-
-
-def import_behaviors_from_project(self):
-
-    fn = QFileDialog().getOpenFileName(
-        self, "Import behaviors from project file", "", ("Project files (*.boris *.boris.gz);;" "All files (*)")
-    )
-    file_name = fn[0] if type(fn) is tuple else fn
-
-    if not file_name:
-        return
-    _, _, project, _ = project_functions.open_project_json(file_name)
-
-    import_ethogram_from_dict(self, project)
 
 
 def import_subjects_from_project(self):
@@ -762,7 +945,7 @@ def import_subjects_from_spreadsheet(self):
             return
 
     fn = QFileDialog().getOpenFileName(
-        self, "Import subjects from a spreadsheet file", "", "Spreadsheet files (*.xlsx *.ods);;All files (*)"
+        self, "Import subjects from a spreadsheet file", "", "Spreadsheet files (*.xlsx);;All files (*)"
     )
     file_name = fn[0] if type(fn) is tuple else fn
 
@@ -774,13 +957,13 @@ def import_subjects_from_spreadsheet(self):
 
     if pl.Path(file_name).suffix.upper() == ".XLSX":
         engine = "openpyxl"
-    elif pl.Path(file_name).suffix.upper() == ".ODS":
-        engine = "odf"
+        '''elif pl.Path(file_name).suffix.upper() == ".ODS":
+            engine = "odf"'''
     else:
         QMessageBox.warning(
             None,
             cfg.programName,
-            ("The type of file was not recognized. Must be Excel XLSX format or Open Document ODS"),
+            ("The type of file was not recognized. Must be Microsoft-Excel XLSX format"),
             QMessageBox.Ok | QMessageBox.Default,
             QMessageBox.NoButton,
         )
@@ -788,11 +971,12 @@ def import_subjects_from_spreadsheet(self):
 
     try:
         df = pd.read_excel(file_name, sheet_name=0, engine=engine)
+        print(df)
     except Exception:
         QMessageBox.warning(
             None,
             cfg.programName,
-            ("The type of file was not recognized. Must be Excel XLSX format or Open Document ODS"),
+            ("The type of file was not recognized. Must be Microsoft-Excel XLSX format"),
             QMessageBox.Ok | QMessageBox.Default,
             QMessageBox.NoButton,
         )
@@ -858,65 +1042,3 @@ def import_indep_variables_from_project(self):
     self.twVariables.resizeColumnsToContents()
     if flag_renamed:
         QMessageBox.information(self, cfg.programName, "Some variables already present were renamed")
-
-
-def import_behaviors_from_repository(self):
-    """
-    import behaviors from the BORIS ethogram repository
-    """
-    ethogram_repository_URL = "http://www.boris.unito.it/static/ethograms/ethogram_list.json"
-    try:
-        ethogram_list = urllib.request.urlopen(ethogram_repository_URL).read().strip().decode("utf-8")
-    except Exception:
-
-        QMessageBox.critical(
-            self, cfg.programName, "An error occured during retrieving the ethogram list from BORIS repository"
-        )
-        return
-
-    try:
-        ethogram_list_list = json.loads(ethogram_list)
-    except Exception:
-        QMessageBox.critical(
-            self, cfg.programName, "An error occured during loading ethogram list from BORIS repository"
-        )
-        return
-
-    choice_dialog = dialog.ChooseObservationsToImport(
-        "Choose the ethogram to import:", sorted([f"{x['species']} by {x['author']}" for x in ethogram_list_list])
-    )
-    while True:
-        if not choice_dialog.exec_():
-            return
-
-        if len(choice_dialog.get_selected_observations()) == 0:
-            QMessageBox.critical(self, cfg.programName, "Choose one ethogram")
-            continue
-
-        if len(choice_dialog.get_selected_observations()) > 1:
-            QMessageBox.critical(self, cfg.programName, "Choose only one ethogram")
-            continue
-
-        break
-
-    for x in ethogram_list_list:
-        if f"{x['species']} by {x['author']}" == choice_dialog.get_selected_observations()[0]:
-            file_name = x["file name"]
-            break
-
-    try:
-        boris_project_str = (
-            urllib.request.urlopen(f"http://www.boris.unito.it/static/ethograms/{file_name}")
-            .read()
-            .strip()
-            .decode("utf-8")
-        )
-    except Exception:
-
-        QMessageBox.critical(
-            self, cfg.programName, f"An error occured during retrieving {file_name} from BORIS repository"
-        )
-        return
-    boris_project = json.loads(boris_project_str)
-
-    import_ethogram_from_dict(self, boris_project)

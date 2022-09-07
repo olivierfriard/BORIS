@@ -22,12 +22,8 @@ This file is part of BORIS.
 
 import json
 import logging
-import pathlib
 import re
-import urllib.parse
-import urllib.request
 
-import tablib
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QColor
 from PyQt5.QtWidgets import (
@@ -52,7 +48,7 @@ from PyQt5.QtWidgets import (
 
 from . import add_modifier
 from . import config as cfg
-from . import converters, dialog, exclusion_matrix, export_observation, project_import
+from . import converters, dialog, exclusion_matrix, project_import_export
 from .project_ui import Ui_dlgProject
 
 
@@ -221,7 +217,7 @@ class projectDialog(QDialog, Ui_dlgProject):
 
         import_button_items = [
             "boris|from a BORIS project",
-            "spreadsheet|from a spreadsheet file (XLSX or ODS)",
+            "spreadsheet|from a spreadsheet file (XLSX)",
             "jwatcher|from a JWatcher project",
             "text|from a text file (CSV or TSV)",
             "clipboard|from the clipboard",
@@ -236,7 +232,7 @@ class projectDialog(QDialog, Ui_dlgProject):
 
         self.pb_exclusion_matrix.clicked.connect(self.exclusion_matrix)
 
-        self.pbExportEthogram.clicked.connect(self.export_ethogram)
+        self.pbExportEthogram.clicked.connect(lambda: project_import_export.export_ethogram(self))
 
         self.twBehaviors.cellChanged[int, int].connect(self.twBehaviors_cellChanged)
         self.twBehaviors.cellDoubleClicked[int, int].connect(self.twBehaviors_cellDoubleClicked)
@@ -261,7 +257,7 @@ class projectDialog(QDialog, Ui_dlgProject):
 
         subjects_import_button_items = [
             "boris|from a BORIS project",
-            "spreadsheet|from a spreadsheet file (XLSX or ODS)",
+            "spreadsheet|from a spreadsheet file (XLSX)",
             "text|from a text file (CSV or TSV)",
             "clipboard|from the clipboard",
         ]
@@ -269,6 +265,8 @@ class projectDialog(QDialog, Ui_dlgProject):
         menu.triggered.connect(lambda x: self.import_subjects(action=x.statusTip()))
         self.add_button_menu(subjects_import_button_items, menu)
         self.pbImportSubjectsFromProject.setMenu(menu)
+
+        self.pb_export_subjects.clicked.connect(lambda: project_import_export.export_subjects(self))
 
         self.twSubjects.cellChanged[int, int].connect(self.twSubjects_cellChanged)
 
@@ -374,30 +372,30 @@ class projectDialog(QDialog, Ui_dlgProject):
         import behaviors
         """
         if action == "boris":
-            project_import.import_behaviors_from_project(self)
+            project_import_export.import_behaviors_from_project(self)
         if action == "jwatcher":
-            project_import.import_behaviors_from_JWatcher(self)
+            project_import_export.import_behaviors_from_JWatcher(self)
         if action == "text":
-            project_import.import_behaviors_from_text_file(self)
+            project_import_export.import_behaviors_from_text_file(self)
         if action == "spreadsheet":
-            project_import.import_behaviors_from_spreadsheet(self)
+            project_import_export.import_behaviors_from_spreadsheet(self)
         if action == "clipboard":
-            project_import.import_behaviors_from_clipboard(self)
+            project_import_export.import_behaviors_from_clipboard(self)
         if action == "repository":
-            project_import.import_behaviors_from_repository(self)
+            project_import_export.import_behaviors_from_repository(self)
 
     def import_subjects(self, action: str):
         """
         import subjects
         """
         if action == "boris":
-            project_import.import_subjects_from_project(self)
+            project_import_export.import_subjects_from_project(self)
         if action == "text":
-            project_import.import_subjects_from_text_file(self)
+            project_import_export.import_subjects_from_text_file(self)
         if action == "spreadsheet":
-            project_import.import_subjects_from_spreadsheet(self)
+            project_import_export.import_subjects_from_spreadsheet(self)
         if action == "clipboard":
-            project_import.import_subjects_from_clipboard(self)
+            project_import_export.import_subjects_from_clipboard(self)
 
     def subjects(self, action: str):
         """
@@ -608,74 +606,6 @@ class projectDialog(QDialog, Ui_dlgProject):
             ):
                 del self.pj[cfg.BEHAVIORS_CODING_MAP][self.twBehavCodingMap.selectedIndexes()[0].row()]
                 self.twBehavCodingMap.removeRow(self.twBehavCodingMap.selectedIndexes()[0].row())
-
-    def export_ethogram(self):
-        """
-        export ethogram in various format
-        """
-        extended_file_formats = [
-            "Tab Separated Values (*.tsv)",
-            "Comma Separated Values (*.csv)",
-            "Open Document Spreadsheet ODS (*.ods)",
-            "Microsoft Excel Spreadsheet XLSX (*.xlsx)",
-            "Legacy Microsoft Excel Spreadsheet XLS (*.xls)",
-            "HTML (*.html)",
-        ]
-        file_formats = ["tsv", "csv", "ods", "xlsx", "xls", "html"]
-
-        filediag_func = QFileDialog().getSaveFileName
-
-        fileName, filter_ = filediag_func(self, "Export ethogram", "", ";;".join(extended_file_formats))
-        if not fileName:
-            return
-
-        outputFormat = file_formats[extended_file_formats.index(filter_)]
-        if pathlib.Path(fileName).suffix != "." + outputFormat:
-            fileName = str(pathlib.Path(fileName)) + "." + outputFormat
-
-        ethogram_data = tablib.Dataset()
-        ethogram_data.title = "Ethogram"
-        if self.leProjectName.text():
-            ethogram_data.title = f"Ethogram of {self.leProjectName.text()} project"
-
-        ethogram_data.headers = [
-            "Behavior code",
-            "Behavior type",
-            "Description",
-            "Key",
-            "Behavioral category",
-            "Excluded behaviors",
-            "modifiers names and values",
-            "modifiers (JSON)",
-        ]
-
-        for r in range(self.twBehaviors.rowCount()):
-            row = []
-            for field in ["code", cfg.TYPE, "description", "key", "category", "excluded"]:
-                row.append(self.twBehaviors.item(r, cfg.behavioursFields[field]).text())
-
-            # modifiers
-            if self.twBehaviors.item(r, cfg.behavioursFields["modifiers"]).text():
-                modifiers_dict = eval(self.twBehaviors.item(r, cfg.behavioursFields["modifiers"]).text())
-                modifiers_list = []
-                for key in modifiers_dict:
-                    if modifiers_dict[key]["values"]:
-                        values = ", ".join(modifiers_dict[key]["values"])
-                        modifiers_list.append(f"{modifiers_dict[key]['name']} ({values})")
-                    else:
-                        modifiers_list.append(modifiers_dict[key]["name"])
-
-                row.append(", ".join(modifiers_list))
-                row.append(json.dumps(modifiers_dict))
-            else:
-                row.append("")
-                row.append("")
-
-            ethogram_data.append(row)
-
-        ok, msg = export_observation.dataset_write(ethogram_data, fileName, outputFormat)
-        if not ok:
-            QMessageBox.critical(None, cfg.programName, msg, QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
 
     def leLabel_changed(self):
 
@@ -1026,7 +956,7 @@ class projectDialog(QDialog, Ui_dlgProject):
         import independent variables from another project
         """
 
-        project_import.import_indep_variables_from_project(self)
+        project_import_export.import_indep_variables_from_project(self)
 
     def exclusion_matrix(self):
         """
@@ -1484,6 +1414,8 @@ class projectDialog(QDialog, Ui_dlgProject):
                             self.twSubjects.removeRow(row_mem[nameToDelete])
                     else:  # remove without asking
                         self.twSubjects.removeRow(row_mem[nameToDelete])
+
+                self.twSubjects_cellChanged(0, 0)
 
     def twSubjects_cellChanged(self, row: int, column: int):
         """
