@@ -1521,7 +1521,7 @@ class projectDialog(QDialog, Ui_dlgProject):
     def check_ethogram(self) -> dict:
         """
         check ethogram for various parameter
-        returns ethogram dict or {"cancel": True"} in case of error
+        returns ethogram dict or {cfg.CANCEL: True"} in case of error
 
         """
         # store behaviors
@@ -1567,7 +1567,7 @@ class projectDialog(QDialog, Ui_dlgProject):
                 [cfg.YES, cfg.NO, cfg.CANCEL],
             )
         if remove_leading_trailing_spaces == cfg.CANCEL:
-            return {"cancel": True}
+            return {cfg.CANCEL: True}
 
         remove_leading_trailing_spaces_in_modifiers = cfg.NO
         if modifiers_with_leading_trailing_spaces:
@@ -1584,7 +1584,7 @@ class projectDialog(QDialog, Ui_dlgProject):
                 [cfg.YES, cfg.NO, cfg.CANCEL],
             )
         if remove_leading_trailing_spaces_in_modifiers == cfg.CANCEL:
-            return {"cancel": True}
+            return {cfg.CANCEL: True}
 
         codingMapsList = []
         for r in range(self.twBehaviors.rowCount()):
@@ -1602,7 +1602,7 @@ class projectDialog(QDialog, Ui_dlgProject):
                                 f"<b>{self.twBehaviors.item(r, cfg.behavioursFields[field]).text()}</b> !"
                             ),
                         )
-                        return {"cancel": True}
+                        return {cfg.CANCEL: True}
 
                     if remove_leading_trailing_spaces == cfg.YES:
                         row[field] = self.twBehaviors.item(r, cfg.behavioursFields[field]).text().strip()
@@ -1655,7 +1655,7 @@ class projectDialog(QDialog, Ui_dlgProject):
 
         if missing_data:
             QMessageBox.warning(self, cfg.programName, f"Missing data in ethogram at row {','.join(missing_data)} !")
-            return {"cancel": True}
+            return {cfg.CANCEL: True}
 
         # check if behavior belong to category that is not in categories list
         behavior_category = []
@@ -1680,7 +1680,7 @@ class projectDialog(QDialog, Ui_dlgProject):
             if response == "Add behavioral category/ies":
                 [self.pj[cfg.BEHAVIORAL_CATEGORIES].append(x1) for x1 in set(x[1] for x in behavior_category)]
             if response == cfg.CANCEL:
-                return {"cancel": True}
+                return {cfg.CANCEL: True}
 
         # delete coding maps loaded in pj and not cited in ethogram
         return checked_ethogram
@@ -1783,7 +1783,7 @@ class projectDialog(QDialog, Ui_dlgProject):
 
         # check ethogram
         r = dict(self.check_ethogram())
-        if "cancel" in r:
+        if cfg.CANCEL in r:
             return
         self.pj[cfg.ETHOGRAM] = dict(r)
 
