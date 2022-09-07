@@ -1518,6 +1518,173 @@ class projectDialog(QDialog, Ui_dlgProject):
         else:
             self.reject()
 
+    def check_ethogram(self) -> dict:
+        """
+        check ethogram for various parameter
+        returns ethogram dict or {"cancel": True"} in case of error
+
+        """
+        # store behaviors
+        missing_data = []
+        checked_ethogram = {}
+
+        # Ethogram
+        # coding maps in ethogram
+
+        # check for leading/trailing space in behaviors and modifiers
+        code_with_leading_trailing_spaces, modifiers_with_leading_trailing_spaces = [], []
+        for r in range(self.twBehaviors.rowCount()):
+
+            if (
+                self.twBehaviors.item(r, cfg.behavioursFields["code"]).text()
+                != self.twBehaviors.item(r, cfg.behavioursFields["code"]).text().strip()
+            ):
+                code_with_leading_trailing_spaces.append(self.twBehaviors.item(r, cfg.behavioursFields["code"]).text())
+
+            if self.twBehaviors.item(r, cfg.behavioursFields["modifiers"]).text():
+                try:
+                    modifiers_dict = eval(self.twBehaviors.item(r, cfg.behavioursFields["modifiers"]).text())
+                    for k in modifiers_dict:
+                        for value in modifiers_dict[k]["values"]:
+                            modif_code = value.split(" (")[0]
+                            if modif_code.strip() != modif_code:
+                                modifiers_with_leading_trailing_spaces.append(modif_code)
+                except Exception:
+                    logging.critical("error checking leading/trailing spaces in modifiers")
+
+        remove_leading_trailing_spaces = cfg.NO
+        if code_with_leading_trailing_spaces:
+            remove_leading_trailing_spaces = dialog.MessageDialog(
+                cfg.programName,
+                (
+                    "<b>Warning!</b> Some leading and/or trailing spaces are present"
+                    " in the following behaviors code(s):<br>"
+                    f"<b>{'<br>'.join([x.replace(' ', '&#9608;') for x in code_with_leading_trailing_spaces])}</b><br><br>"
+                    "Do you want to remove the leading and trailing spaces from behaviors?<br><br>"
+                    """<font color="red"><b>Be careful with this option"""
+                    """ if you have already done observations!</b></font>"""
+                ),
+                [cfg.YES, cfg.NO, cfg.CANCEL],
+            )
+        if remove_leading_trailing_spaces == cfg.CANCEL:
+            return {"cancel": True}
+
+        remove_leading_trailing_spaces_in_modifiers = cfg.NO
+        if modifiers_with_leading_trailing_spaces:
+            remove_leading_trailing_spaces_in_modifiers = dialog.MessageDialog(
+                cfg.programName,
+                (
+                    "<b>Warning!</b> Some leading and/or trailing spaces are present"
+                    " in the following modifier(s):<br>"
+                    f"<b>{'<br>'.join([x.replace(' ', '&#9608;') for x in set(modifiers_with_leading_trailing_spaces)])}</b><br><br>"
+                    "Do you want to remove the leading and trailing spaces from modifiers?<br><br>"
+                    """<font color="red"><b>Be careful with this option"""
+                    """ if you have already done observations!</b></font>"""
+                ),
+                [cfg.YES, cfg.NO, cfg.CANCEL],
+            )
+        if remove_leading_trailing_spaces_in_modifiers == cfg.CANCEL:
+            return {"cancel": True}
+
+        codingMapsList = []
+        for r in range(self.twBehaviors.rowCount()):
+            row = {}
+            for field in cfg.behavioursFields:
+                if self.twBehaviors.item(r, cfg.behavioursFields[field]):
+
+                    # check for | char in code
+                    if field == "code" and "|" in self.twBehaviors.item(r, cfg.behavioursFields[field]).text():
+                        QMessageBox.warning(
+                            self,
+                            cfg.programName,
+                            (
+                                "The pipe (|) character is not allowed in code "
+                                f"<b>{self.twBehaviors.item(r, cfg.behavioursFields[field]).text()}</b> !"
+                            ),
+                        )
+                        return {"cancel": True}
+
+                    if remove_leading_trailing_spaces == cfg.YES:
+                        row[field] = self.twBehaviors.item(r, cfg.behavioursFields[field]).text().strip()
+                    else:
+                        row[field] = self.twBehaviors.item(r, cfg.behavioursFields[field]).text()
+
+                    if field == "modifiers" and row["modifiers"]:
+
+                        if remove_leading_trailing_spaces_in_modifiers == cfg.YES:
+                            try:
+                                modifiers_dict = eval(row["modifiers"])
+                                for k in modifiers_dict:
+                                    for idx, value in enumerate(modifiers_dict[k]["values"]):
+                                        modif_code = value.split(" (")[0]
+
+                                        modifiers_dict[k]["values"][idx] = modifiers_dict[k]["values"][idx].replace(
+                                            modif_code, modif_code.strip()
+                                        )
+
+                                row["modifiers"] = dict(modifiers_dict)
+                            except Exception:
+
+                                logging.critical("Error removing leading/trailing spaces in modifiers")
+
+                                QMessageBox.critical(
+                                    self, cfg.programName, "Error removing leading/trailing spaces in modifiers"
+                                )
+
+                        else:
+                            row["modifiers"] = eval(row["modifiers"])
+                else:
+                    row[field] = ""
+
+            if (row["type"]) and (row["code"]):
+                checked_ethogram[str(len(checked_ethogram))] = row
+            else:
+                missing_data.append(str(r + 1))
+
+            if self.twBehaviors.item(r, cfg.behavioursFields["coding map"]).text():
+                codingMapsList.append(self.twBehaviors.item(r, cfg.behavioursFields["coding map"]).text())
+
+        # remove coding map from project if not in ethogram
+        cmToDelete = []
+        for cm in self.pj[cfg.CODING_MAP]:
+            if cm not in codingMapsList:
+                cmToDelete.append(cm)
+
+        for cm in cmToDelete:
+            del self.pj[cfg.CODING_MAP][cm]
+
+        if missing_data:
+            QMessageBox.warning(self, cfg.programName, f"Missing data in ethogram at row {','.join(missing_data)} !")
+            return {"cancel": True}
+
+        # check if behavior belong to category that is not in categories list
+        behavior_category = []
+        for idx in checked_ethogram:
+            if cfg.BEHAVIOR_CATEGORY in checked_ethogram[idx]:
+                if checked_ethogram[idx][cfg.BEHAVIOR_CATEGORY]:
+                    if checked_ethogram[idx][cfg.BEHAVIOR_CATEGORY] not in self.pj[cfg.BEHAVIORAL_CATEGORIES]:
+                        behavior_category.append(
+                            (checked_ethogram[idx][cfg.BEHAVIOR_CODE], checked_ethogram[idx][cfg.BEHAVIOR_CATEGORY])
+                        )
+        if behavior_category:
+
+            response = dialog.MessageDialog(
+                f"{cfg.programName} - Behavioral categories",
+                (
+                    "The behavioral categorie(s) "
+                    f"{', '.join(set(['<b>' + x[1] + '</b>' + ' (used with <b>' + x[0] + '</b>)' for x in behavior_category]))} "
+                    "are no more defined in behavioral categories list"
+                ),
+                ["Add behavioral category/ies", "Ignore", cfg.CANCEL],
+            )
+            if response == "Add behavioral category/ies":
+                [self.pj[cfg.BEHAVIORAL_CATEGORIES].append(x1) for x1 in set(x[1] for x in behavior_category)]
+            if response == cfg.CANCEL:
+                return {"cancel": True}
+
+        # delete coding maps loaded in pj and not cited in ethogram
+        return checked_ethogram
+
     def pbOK_clicked(self):
         """
         verify project configuration
@@ -1531,9 +1698,9 @@ class projectDialog(QDialog, Ui_dlgProject):
             QMessageBox.warning(self, cfg.programName, self.lbSubjectsState.text())
             return
 
-        self.pj["project_name"] = self.leProjectName.text().strip()
-        self.pj["project_date"] = self.dteDate.dateTime().toString(Qt.ISODate)
-        self.pj["project_description"] = self.teDescription.toPlainText()
+        self.pj[cfg.PROJECT_NAME] = self.leProjectName.text().strip()
+        self.pj[cfg.PROJECT_DATE] = self.dteDate.dateTime().toString(Qt.ISODate)
+        self.pj[cfg.PROJECT_DESCRIPTION] = self.teDescription.toPlainText()
 
         # time format
         if self.rbSeconds.isChecked():
@@ -1614,166 +1781,11 @@ class projectDialog(QDialog, Ui_dlgProject):
 
         self.pj[cfg.SUBJECTS] = dict(self.subjects_conf)
 
-        # store behaviors
-        missing_data = []
-        self.obs = {}
-
-        # Ethogram
-        # coding maps in ethogram
-
-        # check for leading/trailing space in behaviors and modifiers
-        code_with_leading_trailing_spaces, modifiers_with_leading_trailing_spaces = [], []
-        for r in range(self.twBehaviors.rowCount()):
-
-            if (
-                self.twBehaviors.item(r, cfg.behavioursFields["code"]).text()
-                != self.twBehaviors.item(r, cfg.behavioursFields["code"]).text().strip()
-            ):
-                code_with_leading_trailing_spaces.append(self.twBehaviors.item(r, cfg.behavioursFields["code"]).text())
-
-            if self.twBehaviors.item(r, cfg.behavioursFields["modifiers"]).text():
-                try:
-                    modifiers_dict = eval(self.twBehaviors.item(r, cfg.behavioursFields["modifiers"]).text())
-                    for k in modifiers_dict:
-                        for value in modifiers_dict[k]["values"]:
-                            modif_code = value.split(" (")[0]
-                            if modif_code.strip() != modif_code:
-                                modifiers_with_leading_trailing_spaces.append(modif_code)
-                except Exception:
-                    logging.critical("error checking leading/trailing spaces in modifiers")
-
-        remove_leading_trailing_spaces = cfg.NO
-        if code_with_leading_trailing_spaces:
-            remove_leading_trailing_spaces = dialog.MessageDialog(
-                cfg.programName,
-                (
-                    "<b>Warning!</b> Some leading and/or trailing spaces are present"
-                    " in the following behaviors code(s):<br>"
-                    f"<b>{'<br>'.join([x.replace(' ', '&#9608;') for x in code_with_leading_trailing_spaces])}</b><br><br>"
-                    "Do you want to remove the leading and trailing spaces from behaviors?<br><br>"
-                    """<font color="red"><b>Be careful with this option"""
-                    """ if you have already done observations!</b></font>"""
-                ),
-                [cfg.YES, cfg.NO, cfg.CANCEL],
-            )
-        if remove_leading_trailing_spaces == cfg.CANCEL:
+        # check ethogram
+        r = dict(self.check_ethogram())
+        if "cancel" in r:
             return
-
-        remove_leading_trailing_spaces_in_modifiers = cfg.NO
-        if modifiers_with_leading_trailing_spaces:
-            remove_leading_trailing_spaces_in_modifiers = dialog.MessageDialog(
-                cfg.programName,
-                (
-                    "<b>Warning!</b> Some leading and/or trailing spaces are present"
-                    " in the following modifier(s):<br>"
-                    f"<b>{'<br>'.join([x.replace(' ', '&#9608;') for x in set(modifiers_with_leading_trailing_spaces)])}</b><br><br>"
-                    "Do you want to remove the leading and trailing spaces from modifiers?<br><br>"
-                    """<font color="red"><b>Be careful with this option"""
-                    """ if you have already done observations!</b></font>"""
-                ),
-                [cfg.YES, cfg.NO, cfg.CANCEL],
-            )
-        if remove_leading_trailing_spaces_in_modifiers == cfg.CANCEL:
-            return
-
-        codingMapsList = []
-        for r in range(self.twBehaviors.rowCount()):
-            row = {}
-            for field in cfg.behavioursFields:
-                if self.twBehaviors.item(r, cfg.behavioursFields[field]):
-
-                    # check for | char in code
-                    if field == "code" and "|" in self.twBehaviors.item(r, cfg.behavioursFields[field]).text():
-                        QMessageBox.warning(
-                            self,
-                            cfg.programName,
-                            (
-                                "The pipe (|) character is not allowed in code "
-                                f"<b>{self.twBehaviors.item(r, cfg.behavioursFields[field]).text()}</b> !"
-                            ),
-                        )
-                        return
-
-                    if remove_leading_trailing_spaces == cfg.YES:
-                        row[field] = self.twBehaviors.item(r, cfg.behavioursFields[field]).text().strip()
-                    else:
-                        row[field] = self.twBehaviors.item(r, cfg.behavioursFields[field]).text()
-
-                    if field == "modifiers" and row["modifiers"]:
-
-                        if remove_leading_trailing_spaces_in_modifiers == cfg.YES:
-                            try:
-                                modifiers_dict = eval(row["modifiers"])
-                                for k in modifiers_dict:
-                                    for idx, value in enumerate(modifiers_dict[k]["values"]):
-                                        modif_code = value.split(" (")[0]
-
-                                        modifiers_dict[k]["values"][idx] = modifiers_dict[k]["values"][idx].replace(
-                                            modif_code, modif_code.strip()
-                                        )
-
-                                row["modifiers"] = dict(modifiers_dict)
-                            except Exception:
-
-                                logging.critical("Error removing leading/trailing spaces in modifiers")
-
-                                QMessageBox.critical(
-                                    self, cfg.programName, "Error removing leading/trailing spaces in modifiers"
-                                )
-
-                        else:
-                            row["modifiers"] = eval(row["modifiers"])
-                else:
-                    row[field] = ""
-
-            if (row["type"]) and (row["code"]):
-                self.obs[str(len(self.obs))] = row
-            else:
-                missing_data.append(str(r + 1))
-
-            if self.twBehaviors.item(r, cfg.behavioursFields["coding map"]).text():
-                codingMapsList.append(self.twBehaviors.item(r, cfg.behavioursFields["coding map"]).text())
-
-        # remove coding map from project if not in ethogram
-        cmToDelete = []
-        for cm in self.pj[cfg.CODING_MAP]:
-            if cm not in codingMapsList:
-                cmToDelete.append(cm)
-
-        for cm in cmToDelete:
-            del self.pj[cfg.CODING_MAP][cm]
-
-        if missing_data:
-            QMessageBox.warning(self, cfg.programName, f"Missing data in ethogram at row {','.join(missing_data)} !")
-            return
-
-        # check if behavior belong to category that is not in categories list
-        behavior_category = []
-        for idx in self.obs:
-            if cfg.BEHAVIOR_CATEGORY in self.obs[idx]:
-                if self.obs[idx][cfg.BEHAVIOR_CATEGORY]:
-                    if self.obs[idx][cfg.BEHAVIOR_CATEGORY] not in self.pj[cfg.BEHAVIORAL_CATEGORIES]:
-                        behavior_category.append(
-                            (self.obs[idx][cfg.BEHAVIOR_CODE], self.obs[idx][cfg.BEHAVIOR_CATEGORY])
-                        )
-        if behavior_category:
-
-            response = dialog.MessageDialog(
-                f"{cfg.programName} - Behavioral categories",
-                (
-                    "The behavioral categorie(s) "
-                    f"{', '.join(set(['<b>' + x[1] + '</b>' + ' (used with <b>' + x[0] + '</b>)' for x in behavior_category]))} "
-                    "are no more defined in behavioral categories list"
-                ),
-                ["Add behavioral category/ies", "Ignore", cfg.CANCEL],
-            )
-            if response == "Add behavioral category/ies":
-                [self.pj[cfg.BEHAVIORAL_CATEGORIES].append(x1) for x1 in set(x[1] for x in behavior_category)]
-            if response == cfg.CANCEL:
-                return
-
-        # delete coding maps loaded in pj and not cited in ethogram
-        self.pj[cfg.ETHOGRAM] = dict(self.obs)
+        self.pj[cfg.ETHOGRAM] = dict(r)
 
         # independent variables
         r, msg = self.check_indep_var_config()

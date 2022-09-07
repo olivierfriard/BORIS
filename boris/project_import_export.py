@@ -41,6 +41,7 @@ def export_ethogram(self):
     export ethogram in various format
     """
     extended_file_formats = [
+        "BORIS project file (*.boris)",
         "Tab Separated Values (*.tsv)",
         "Comma Separated Values (*.csv)",
         "Open Document Spreadsheet ODS (*.ods)",
@@ -48,17 +49,17 @@ def export_ethogram(self):
         "Legacy Microsoft Excel Spreadsheet XLS (*.xls)",
         "HTML (*.html)",
     ]
-    file_formats = ["tsv", "csv", "ods", "xlsx", "xls", "html"]
+    file_formats = ["boris", "tsv", "csv", "ods", "xlsx", "xls", "html"]
 
     filediag_func = QFileDialog().getSaveFileName
 
-    fileName, filter_ = filediag_func(self, "Export ethogram", "", ";;".join(extended_file_formats))
-    if not fileName:
+    file_name, filter_ = filediag_func(self, "Export ethogram", "", ";;".join(extended_file_formats))
+    if not file_name:
         return
 
-    outputFormat = file_formats[extended_file_formats.index(filter_)]
-    if pl.Path(fileName).suffix != "." + outputFormat:
-        fileName = str(pl.Path(fileName)) + "." + outputFormat
+    output_format = file_formats[extended_file_formats.index(filter_)]
+    if pl.Path(file_name).suffix != "." + output_format:
+        file_name = str(pl.Path(file_name)) + "." + output_format
 
     ethogram_data = tablib.Dataset()
     ethogram_data.title = "Ethogram"
@@ -72,8 +73,8 @@ def export_ethogram(self):
         "Key",
         "Behavioral category",
         "Excluded behaviors",
-        "modifiers names and values",
-        "modifiers (JSON)",
+        "modifiers",
+        # "modifiers (JSON)",
     ]
 
     for r in range(self.twBehaviors.rowCount()):
@@ -93,16 +94,38 @@ def export_ethogram(self):
                     modifiers_list.append(modifiers_dict[key]["name"])
 
             row.append(", ".join(modifiers_list))
-            row.append(json.dumps(modifiers_dict))
+            # row.append(json.dumps(modifiers_dict))
         else:
             row.append("")
-            row.append("")
+            # row.append("")
 
         ethogram_data.append(row)
 
-    ok, msg = export_observation.dataset_write(ethogram_data, fileName, outputFormat)
-    if not ok:
-        QMessageBox.critical(None, cfg.programName, msg, QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
+    if output_format == "boris":
+        r = self.check_ethogram()
+        if cfg.CANCEL in r:
+            return
+        pj = dict(cfg.EMPTY_PROJECT)
+        pj[cfg.ETHOGRAM] = dict(r)
+        # behavioral categories
+
+        pj[cfg.BEHAVIORAL_CATEGORIES] = list(self.pj[cfg.BEHAVIORAL_CATEGORIES])
+        try:
+            with open(file_name, "w") as f_out:
+                f_out.write(json.dumps(pj))
+        except Exception:
+            QMessageBox.critical(
+                None,
+                cfg.programName,
+                f"Error during file saving.",
+                QMessageBox.Ok | QMessageBox.Default,
+                QMessageBox.NoButton,
+            )
+
+    else:
+        ok, msg = export_observation.dataset_write(ethogram_data, file_name, output_format)
+        if not ok:
+            QMessageBox.critical(None, cfg.programName, msg, QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
 
 
 def export_subjects(self):
@@ -279,6 +302,7 @@ def import_ethogram_from_dict(self, project: dict):
         )
         if response == cfg.REPLACE:
             self.twBehaviors.setRowCount(0)
+            self.twBehaviors_cellChanged(0, 0)
         if response == cfg.CANCEL:
             return
 
