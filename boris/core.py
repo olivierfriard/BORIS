@@ -3971,6 +3971,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     # check if editing (original_modifiers key)
                     currentModifiers = event.get("original_modifiers", "")
 
+                    # print(f"{event=}")
+
                     modifiers_selector = select_modifiers.ModifiersList(
                         event["code"], eval(str(event["modifiers"])), currentModifiers
                     )
@@ -3980,7 +3982,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                         selected_modifiers = modifiers_selector.get_modifiers()
 
                     # restart media
-                    if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE] in [cfg.MEDIA]:
+                    if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE] == cfg.MEDIA:
                         if self.playerType == cfg.MEDIA:
                             if memState == "playing":
                                 self.play_video()
@@ -4356,10 +4358,20 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         if modifiers & (Qt.MetaModifier):
             modifier += "Meta"
 
-        logging.debug(f"text #{event.text()}#  event key: {event.key()} Modifier: {modifier}")
+        ek, ek_text = event.key(), event.text()
+
+        logging.debug(f"text #{ek_text}#  event key: {ek} Modifier: {modifier}")
+
+        # undo
+        if ek == 90 and modifier == cfg.CTRL_KEY:
+            event_operations.undo_event_operation(self)
+            return
+
+        if ek in [Qt.Key_Tab, Qt.Key_Shift, Qt.Key_Control, Qt.Key_Meta, Qt.Key_Alt, Qt.Key_AltGr]:
+            return
 
         if self.playerType in cfg.VIEWERS:
-            if event.key() in [Qt.Key_Shift, Qt.Key_Control, Qt.Key_Alt, Qt.Key_CapsLock, Qt.Key_AltGr]:
+            if event.key() in [Qt.Key_CapsLock]:
                 return
             QMessageBox.critical(
                 self,
@@ -4376,11 +4388,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.beep("key_sound")
 
         flagPlayerPlaying = self.is_playing()
-
-        ek, ek_text = event.key(), event.text()
-
-        if ek in [Qt.Key_Tab, Qt.Key_Shift, Qt.Key_Control, Qt.Key_Meta, Qt.Key_Alt, Qt.Key_AltGr]:
-            return
 
         # speed down
         if ek == Qt.Key_End:
@@ -4480,24 +4487,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             memLaps = self.getLaps()
 
         if memLaps is None:
-            return
-
-        # undo
-        if ek == 90 and modifier == cfg.CTRL_KEY:
-
-            event_operations.undo_event_operation(self)
-
-            """
-            position_in_events = [
-                i for i, t in enumerate(self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS]) if t[0] >= memLaps
-            ][-1]
-
-            if position_in_events == len(self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS]) - 1:
-                self.twEvents.scrollToBottom()
-            else:
-                self.twEvents.scrollToItem(self.twEvents.item(position_in_events, 0), QAbstractItemView.EnsureVisible)
-            """
-
             return
 
         if (

@@ -158,6 +158,7 @@ class EditSelectedEvents(QDialog):
             self.newText.clear()
 
     def pbOK_clicked(self):
+        """
         if not self.rbSubject.isChecked() and not self.rbBehavior.isChecked() and not self.rbComment.isChecked():
             QMessageBox.warning(
                 None,
@@ -167,6 +168,7 @@ class EditSelectedEvents(QDialog):
                 QMessageBox.NoButton,
             )
             return
+        """
 
         if (self.rbSubject.isChecked() or self.rbBehavior.isChecked()) and self.newText.selectedItems() == []:
             QMessageBox.warning(

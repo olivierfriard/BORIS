@@ -29,6 +29,7 @@ from . import config as cfg
 from . import utilities as util
 from . import dialog
 from . import select_subj_behav
+from . import select_modifiers
 from .edit_event import DlgEditEvent, EditSelectedEvents
 
 from PyQt5.QtWidgets import QMessageBox, QInputDialog, QLineEdit, QAbstractItemView, QApplication
@@ -471,6 +472,9 @@ def edit_selected_events(self):
 
         if dialogWindow.exec_():
 
+            # fill the undo list
+            fill_events_undo_list(self, "Undo 'Edit selected event(s)'")
+
             tsb_to_edit = []
             for row in twEvents_rows_to_edit:
                 tsb_to_edit.append(
@@ -483,21 +487,78 @@ def edit_selected_events(self):
                     ]
                 )
 
+            behavior_codes = []
+            modifiers_mem = []
+            mem_event_idx = []
             for idx, event in enumerate(self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS]):
                 if [
                     event[cfg.EVENT_TIME_FIELD_IDX],
                     event[cfg.EVENT_SUBJECT_FIELD_IDX],
                     event[cfg.EVENT_BEHAVIOR_FIELD_IDX],
                 ] in tsb_to_edit:
+                    new_event = list(event)
                     if dialogWindow.rbSubject.isChecked():
-                        event[cfg.EVENT_SUBJECT_FIELD_IDX] = dialogWindow.newText.selectedItems()[0].text()
+                        new_event[cfg.EVENT_SUBJECT_FIELD_IDX] = dialogWindow.newText.selectedItems()[0].text()
                     if dialogWindow.rbBehavior.isChecked():
-                        event[cfg.EVENT_BEHAVIOR_FIELD_IDX] = dialogWindow.newText.selectedItems()[0].text()
+                        new_event[cfg.EVENT_BEHAVIOR_FIELD_IDX] = dialogWindow.newText.selectedItems()[0].text()
                     if dialogWindow.rbComment.isChecked():
-                        event[cfg.EVENT_COMMENT_FIELD_IDX] = dialogWindow.commentText.text()
+                        new_event[cfg.EVENT_COMMENT_FIELD_IDX] = dialogWindow.commentText.text()
 
-                    self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS][idx] = event
+                    if new_event[cfg.EVENT_BEHAVIOR_FIELD_IDX] not in behavior_codes:
+                        behavior_codes.append(new_event[cfg.EVENT_BEHAVIOR_FIELD_IDX])
+
+                    if new_event[cfg.EVENT_MODIFIER_FIELD_IDX] not in modifiers_mem:
+                        modifiers_mem.append(new_event[cfg.EVENT_MODIFIER_FIELD_IDX])
+
+                    self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS][idx] = list(new_event)
+                    mem_event_idx.append(idx)
                     self.projectChanged = True
+
+            # check if behavior is unique for editing modifiers
+            if len(behavior_codes) == 1:
+
+                # get behavior index
+                for idx in self.pj[cfg.ETHOGRAM]:
+                    if self.pj[cfg.ETHOGRAM][idx][cfg.BEHAVIOR_CODE] == behavior_codes[0]:
+                        break
+                else:
+                    return
+
+                event = self.full_event(idx)
+
+                if len(modifiers_mem) == 1:
+                    current_modifier = modifiers_mem[0]
+                else:
+                    current_modifier = ""
+
+                if event["modifiers"]:
+                    modifiers_selector = select_modifiers.ModifiersList(
+                        behavior_codes[0], eval(str(event["modifiers"])), current_modifier
+                    )
+
+                    r = modifiers_selector.exec_()
+                    if r:
+                        selected_modifiers = modifiers_selector.get_modifiers()
+
+                        modifier_str = ""
+                        for idx1 in util.sorted_keys(selected_modifiers):
+                            if modifier_str:
+                                modifier_str += "|"
+                            if selected_modifiers[idx1]["type"] in (cfg.SINGLE_SELECTION, cfg.MULTI_SELECTION):
+                                modifier_str += ",".join(selected_modifiers[idx1].get("selected", ""))
+                            if selected_modifiers[idx1]["type"] in (cfg.NUMERIC_MODIFIER, cfg.EXTERNAL_DATA_MODIFIER):
+                                modifier_str += selected_modifiers[idx1].get("selected", "NA")
+
+                else:  # delete current modifier(s)
+                    modifier_str = ""
+
+                # set new modifier
+                for idx, event in enumerate(self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS]):
+                    if idx in mem_event_idx:
+                        self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS][idx][
+                            cfg.EVENT_MODIFIER_FIELD_IDX
+                        ] = modifier_str
+
             self.load_tw_events(self.observationId)
 
 

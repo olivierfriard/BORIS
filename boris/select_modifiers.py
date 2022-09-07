@@ -31,7 +31,7 @@ from . import utilities as util
 
 
 class ModifiersList(QDialog):
-    def __init__(self, code, modifiers_dict, currentModifier):
+    def __init__(self, code: str, modifiers_dict: dict, currentModifier: str):
 
         super().__init__()
         self.setWindowTitle(cfg.programName)
