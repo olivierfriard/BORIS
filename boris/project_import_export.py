@@ -453,9 +453,6 @@ def import_behaviors_from_text_file(self):
     if not file_name:
         return
 
-    if self.twBehaviors.rowCount() and response == cfg.REPLACE:
-        self.twBehaviors.setRowCount(0)
-
     if pl.Path(file_name).suffix.upper() == ".CSV":
         delimiter = ","
     elif pl.Path(file_name).suffix.upper() == ".TSV":
@@ -482,6 +479,9 @@ def import_behaviors_from_text_file(self):
         )
         return
 
+    if self.twBehaviors.rowCount() and response == cfg.REPLACE:
+        self.twBehaviors.setRowCount(0)
+
     load_dataframe_into_behaviors_tablewidget(self, df)
 
 
@@ -506,9 +506,6 @@ def import_behaviors_from_spreadsheet(self):
 
     if not file_name:
         return
-
-    if self.twBehaviors.rowCount() and response == cfg.REPLACE:
-        self.twBehaviors.setRowCount(0)
 
     if pl.Path(file_name).suffix.upper() == ".XLSX":
         engine = "openpyxl"
@@ -537,6 +534,9 @@ def import_behaviors_from_spreadsheet(self):
             QMessageBox.NoButton,
         )
         return
+
+    if self.twBehaviors.rowCount() and response == cfg.REPLACE:
+        self.twBehaviors.setRowCount(0)
 
     load_dataframe_into_behaviors_tablewidget(self, df)
 
