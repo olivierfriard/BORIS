@@ -68,7 +68,7 @@ def actionAbout_activated(self):
     )
 
     about_dialog = QMessageBox()
-    about_dialog.setIconPixmap(QPixmap(":/dbios_unito"))
+    about_dialog.setIconPixmap(QPixmap(":/small_logo"))
 
     about_dialog.setWindowTitle(f"About {cfg.programName}")
     about_dialog.setStandardButtons(QMessageBox.Ok)
