@@ -372,13 +372,18 @@ def get_current_states_modifiers_by_subject(
     Returns:
         dict: current states by subject. dict of list
     """
+    current_states = {}
+    if time.is_nan():
+        for idx in subjects:
+            current_states[idx] = []
+        return current_states
+
     # check if time contains NA
     if [x for x in events if events[cfg.EVENT_TIME_FIELD_IDX][cfg.EVENT_TIME_FIELD_IDX].is_nan()]:
         check_index = cfg.PJ_OBS_FIELDS[cfg.IMAGES]["image index"]
     else:
         check_index = cfg.EVENT_TIME_FIELD_IDX
 
-    current_states = {}
     if include_modifiers:
         for idx in subjects:
             current_states[idx] = []

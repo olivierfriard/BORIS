@@ -20,6 +20,7 @@ This file is part of BORIS.
 
 """
 
+from cmath import isnan
 import datetime
 
 from math import log2
@@ -163,6 +164,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     project: bool = False  # project is loaded?
     geometric_measurements_mode = False  # geometric measurement modae active?
 
+    state_behaviors_codes: tuple = tuple()
+
     time_observer_signal = pyqtSignal(float)
 
     processes = []  # list of QProcess processes
@@ -187,7 +190,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     timeFormat = cfg.HHMMSS  # 's' or 'hh:mm:ss'
     repositioningTimeOffset = 0
     automaticBackup = 0  # automatic backup interval (0 no backup)
-    events_current_row = -1
+    events_current_row: int = -1
     projectChanged: bool = False  # store if project was changed
     liveObservationStarted = False
     # data structures for external data plot
@@ -201,19 +204,19 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     behav_category_colors = cfg.CATEGORY_COLORS_LIST
 
     measurement_w = None
-    memPoints = []  # memory of clicked points for measurement tool
-    memPoints_video = []  # memory of clicked points for measurement tool
+    memPoints: list = []  # memory of clicked points for measurement tool
+    memPoints_video: list = []  # memory of clicked points for measurement tool
 
-    behav_seq_separator = "|"
+    behav_seq_separator: str = "|"
     # time laps
     fast = 10
 
-    currentStates = {}
+    currentStates: dict = {}
     subject_name_index = {}
     flag_slow = False
     play_rate = 1
     play_rate_step = 0.1
-    currentSubject = ""  # contains the current subject of observation
+    currentSubject: str = ""  # contains the current subject of observation
     detailedObs = {}
     coding_map_window_geometry = 0
     project_window_geometry = 0  # memorize size of project window
@@ -332,9 +335,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         # set painter for twEvents to highlight current row
         self.twEvents.setItemDelegate(events_cursor.StyledItemDelegateTriangle(self.events_current_row))
-
-        self.twEvents.setColumnCount(len(cfg.TW_EVENTS_FIELDS))
-        self.twEvents.setHorizontalHeaderLabels(cfg.TW_EVENTS_FIELDS)
 
         self.config_param = cfg.INIT_PARAM
 
@@ -1617,23 +1617,20 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 )
             )
 
-    def update_subject(self, subject):
+    def update_subject(self, subject: str) -> None:
         """
-        update the current subject
+        update the self.currentSubject variable with subject
+        update label lbFocalSubject with subject
 
         Args:
             subject (str): subject
         """
-        try:
-            if (not subject) or (subject == cfg.NO_FOCAL_SUBJECT) or (self.currentSubject == subject):
-                self.currentSubject = ""
-                self.lbFocalSubject.setText(cfg.NO_FOCAL_SUBJECT)
-            else:
-                self.currentSubject = subject
-                self.lbFocalSubject.setText(f" Focal subject: <b>{self.currentSubject}</b>")
-
-        except Exception:
-            logging.critical("error in update_subject function")
+        if (not subject) or (subject == cfg.NO_FOCAL_SUBJECT) or (self.currentSubject == subject):
+            self.currentSubject = ""
+            self.lbFocalSubject.setText(cfg.NO_FOCAL_SUBJECT)
+        else:
+            self.currentSubject = subject
+            self.lbFocalSubject.setText(f" Focal subject: <b>{self.currentSubject}</b>")
 
     def getCurrentMediaByFrame(self, player: str, requiredFrame: int, fps: float):
         """
@@ -1728,6 +1725,22 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             dw.frame_viewer.setPixmap(
                 pixmap.scaled(dw.frame_viewer.size(), Qt.KeepAspectRatio, Qt.SmoothTransformation)
             )
+            self.get_events_current_row()
+
+            # index of current subject selected by observer
+            subject_idx = self.subject_name_index[self.currentSubject] if self.currentSubject else ""
+
+            self.currentStates = util.get_current_states_modifiers_by_subject(
+                self.state_behaviors_codes,
+                self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS],
+                dict(self.pj[cfg.SUBJECTS], **{"": {"name": ""}}),
+                self.getLaps(),
+                include_modifiers=True,
+            )
+
+        self.lbCurrentStates.setText(f"Observed behaviors: {', '.join(self.currentStates[subject_idx])}")
+        # show current states in subjects table
+        self.show_current_states_in_subjects_table()
 
     def frame_image_clicked(self, n_player, event):
         geometric_measurement.image_clicked(self, n_player, event)
@@ -1887,17 +1900,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         logging.debug(f"begin load events from obs: {obs_id}")
 
-        if self.pj[cfg.OBSERVATIONS][obs_id][cfg.TYPE] == cfg.MEDIA:
-            self.twEvents.setColumnCount(len(cfg.MEDIA_TW_EVENTS_FIELDS))
-            self.twEvents.setHorizontalHeaderLabels(cfg.MEDIA_TW_EVENTS_FIELDS)
-
-        if self.pj[cfg.OBSERVATIONS][obs_id][cfg.TYPE] == cfg.LIVE:
-            self.twEvents.setColumnCount(len(cfg.LIVE_TW_EVENTS_FIELDS))
-            self.twEvents.setHorizontalHeaderLabels(cfg.LIVE_TW_EVENTS_FIELDS)
-
-        if self.pj[cfg.OBSERVATIONS][obs_id][cfg.TYPE] == cfg.IMAGES:
-            self.twEvents.setColumnCount(len(cfg.IMAGES_TW_EVENTS_FIELDS))
-            self.twEvents.setHorizontalHeaderLabels(cfg.IMAGES_TW_EVENTS_FIELDS)
+        self.twEvents.setColumnCount(len(cfg.TW_EVENTS_FIELDS[self.pj[cfg.OBSERVATIONS][obs_id][cfg.TYPE]]))
+        self.twEvents.setHorizontalHeaderLabels(
+            [s.capitalize() for s in cfg.TW_EVENTS_FIELDS[self.pj[cfg.OBSERVATIONS][obs_id][cfg.TYPE]]]
+        )
 
         self.twEvents.setRowCount(len(self.pj[cfg.OBSERVATIONS][obs_id][cfg.EVENTS]))
         if self.filtered_behaviors or self.filtered_subjects:
@@ -3136,12 +3142,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         if self.playerType == cfg.MEDIA:
             for dw in self.dw_player:
-
-                """print(f"\nbefore: {dw.player.estimated_frame_number + 1=}\n")"""
                 dw.player.frame_step()
-                """time.sleep(1)"""
-                """print(f"\nAFter {dw.player.estimated_frame_number + 1=}\n")"""
-
                 if self.geometric_measurements_mode:
                     self.extract_frame(dw)
 
@@ -3393,6 +3394,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS]:
             ct = self.getLaps()
+            if ct.is_nan():
+                self.events_current_row = -1
+                return
             # add time offset if any
             ct += dec(self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TIME_OFFSET])
 
@@ -3619,29 +3623,28 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         currentTimeOffset = dec(cumulative_time_pos + self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TIME_OFFSET])
 
         all_media_duration = sum(self.dw_player[0].media_durations) / 1000
-        mediaName = ""
         current_media_duration = self.dw_player[0].player.duration  # mediaplayer_length
         self.mediaTotalLength = current_media_duration
 
         # current state(s)
-        # extract State events
-        StateBehaviorsCodes = util.state_behavior_codes(self.pj[cfg.ETHOGRAM])
         self.currentStates = {}
 
-        # index of current subject
+        # index of current subject selected by observer
         subject_idx = self.subject_name_index[self.currentSubject] if self.currentSubject else ""
+
         self.currentStates = util.get_current_states_modifiers_by_subject(
-            StateBehaviorsCodes,
+            self.state_behaviors_codes,
             self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS],
             dict(self.pj[cfg.SUBJECTS], **{"": {"name": ""}}),
             currentTimeOffset,
             include_modifiers=True,
         )
-        self.lbCurrentStates.setText(", ".join(self.currentStates[subject_idx]))
 
+        self.lbCurrentStates.setText(f"Observed behaviors: {', '.join(self.currentStates[subject_idx])}")
         # show current states in subjects table
         self.show_current_states_in_subjects_table()
 
+        # current media name
         if self.dw_player[0].player.playlist_pos is not None:
             current_media_name = pl.Path(
                 self.dw_player[0].player.playlist[self.dw_player[0].player.playlist_pos]["filename"]
@@ -3650,9 +3653,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             current_media_name = ""
         playlist_length = len(self.dw_player[0].player.playlist)
 
-        # update media info
+        # update observation info
         msg = ""
-
         if self.dw_player[0].player.time_pos is not None:  # check if video
 
             current_media_frame = (
@@ -3660,13 +3662,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 if self.dw_player[0].player.container_fps is not None
                 else "NA"
             )
-
-            """
-            print()
-            print(f"{self.dw_player[0].player.estimated_frame_number + 1=}")
-            print(f"{current_media_frame=}")
-            print()
-            """
 
             msg = (
                 f"{current_media_name}: <b>{util.convertTime(self.timeFormat, current_media_time_pos)} / "
@@ -3763,7 +3758,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                         self.twSubjects.rowCount() - 1, len(cfg.subjectsFields), QTableWidgetItem("")
                     )
 
-    def update_events_start_stop(self):
+    def update_events_start_stop(self) -> None:
         """
         update status start/stop of state events in Events table
         take consideration of subject and modifiers
@@ -4224,7 +4219,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE] == cfg.IMAGES:
 
-            if self.playerType in [cfg.VIEWER_IMAGES]:
+            if self.playerType == cfg.VIEWER_IMAGES:
                 return dec("NaN")
 
             if self.playerType == cfg.IMAGES:

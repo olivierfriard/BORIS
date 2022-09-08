@@ -1244,6 +1244,8 @@ def initialize_new_media_observation(self):
     self.display_statusbar_info(self.observationId)
 
     self.currentSubject = ""
+    # store state behaviors for subject current state
+    self.state_behaviors_codes = tuple(util.state_behavior_codes(self.pj[cfg.ETHOGRAM]))
 
     self.lbSpeed.setText(f"Player rate: x{self.play_rate:.3f}")
 
@@ -1482,6 +1484,10 @@ def initialize_new_live_observation(self):
     self.lb_obs_time_interval.setVisible(True)
     self.display_statusbar_info(self.observationId)
 
+    self.currentSubject = ""
+    # store state behaviors for subject current state
+    self.state_behaviors_codes = tuple(util.state_behavior_codes(self.pj[cfg.ETHOGRAM]))
+
     self.lbCurrentStates.setText("")
 
     self.liveStartTime = None
@@ -1579,7 +1585,6 @@ def initialize_new_images_observation(self):
 
     self.setDockOptions(QMainWindow.AnimatedDocks | QMainWindow.AllowNestedDocks)
     self.dw_player = []
-    n_player = 1
     i = 0
     self.dw_player.append(player_dock_widget.DW_player(i, self))
     self.addDockWidget(Qt.TopDockWidgetArea, self.dw_player[i])
@@ -1603,6 +1608,8 @@ def initialize_new_images_observation(self):
     self.display_statusbar_info(self.observationId)
 
     self.currentSubject = ""
+    # store state behaviors for subject current state
+    self.state_behaviors_codes = tuple(util.state_behavior_codes(self.pj[cfg.ETHOGRAM]))
 
     # check if "filtered behaviors"
     if cfg.FILTERED_BEHAVIORS in self.pj[cfg.OBSERVATIONS][self.observationId]:
@@ -1627,3 +1634,5 @@ def initialize_new_images_observation(self):
 
     self.extract_frame(self.dw_player[i])
     self.w_obs_info.setVisible(True)
+
+    self.get_events_current_row()
