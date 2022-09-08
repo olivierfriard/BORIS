@@ -1493,19 +1493,7 @@ def initialize_new_live_observation(self):
     self.liveStartTime = None
     self.liveTimer.stop()
 
-    """
-    self.twEvents.setColumnCount(len(cfg.LIVE_TW_EVENTS_FIELDS))
-    self.twEvents.setHorizontalHeaderLabels(cfg.LIVE_TW_EVENTS_FIELDS)
-    """
-
-    # restore windows state: dockwidget positions ...
-    """
-    if self.saved_state is None:
-        self.saved_state = self.saveState()
-        self.restoreState(self.saved_state)
-    else:
-        self.restoreState(self.saved_state)
-    """
+    self.get_events_current_row()
 
 
 def initialize_new_images_observation(self):

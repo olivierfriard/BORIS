@@ -98,6 +98,7 @@ def add_event(self):
                     self.write_event(event, newTime)
                     break
 
+            """
             # update subjects table
             self.currentStates = util.get_current_states_modifiers_by_subject(
                 util.state_behavior_codes(self.pj[cfg.ETHOGRAM]),
@@ -109,6 +110,7 @@ def add_event(self):
             subject_idx = self.subject_name_index[self.currentSubject] if self.currentSubject else ""
             self.lbCurrentStates.setText(", ".join(self.currentStates[subject_idx]))
             self.show_current_states_in_subjects_table()
+            """
 
         # IMAGES
         if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE] == cfg.IMAGES:
@@ -597,7 +599,7 @@ def edit_event(self):
             == tsb_to_edit
         ][0]
 
-    if self.playerType in [cfg.IMAGES, cfg.VIEWER_IMAGES]:
+    if self.playerType in (cfg.IMAGES, cfg.VIEWER_IMAGES):
         tsb_to_edit = [
             self.twEvents.item(twEvents_row, cfg.TW_OBS_FIELD[self.playerType][cfg.SUBJECT]).text(),
             self.twEvents.item(twEvents_row, cfg.TW_OBS_FIELD[self.playerType][cfg.BEHAVIOR_CODE]).text(),
@@ -729,18 +731,6 @@ def edit_event(self):
                             flag_ok = True
                         break
 
-                # update subjects table
-                self.currentStates = util.get_current_states_modifiers_by_subject(
-                    util.state_behavior_codes(self.pj[cfg.ETHOGRAM]),
-                    self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS],
-                    dict(self.pj[cfg.SUBJECTS], **{"": {"name": ""}}),  # add no focal subject
-                    new_time,
-                    include_modifiers=True,
-                )
-                subject_idx = self.subject_name_index[self.currentSubject] if self.currentSubject else ""
-                self.lbCurrentStates.setText(", ".join(self.currentStates[subject_idx]))
-                self.show_current_states_in_subjects_table()
-
             # IMAGES
             if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE] in (cfg.IMAGES):
                 new_index = editWindow.img_idx_widget.value()
@@ -774,7 +764,6 @@ def edit_event(self):
                             time_ = new_index * self.pj[cfg.OBSERVATIONS][self.observationId].get(cfg.TIME_LAPSE, 0)
 
                         r = self.write_event(event, dec(time_).quantize(dec("0.001"), rounding=ROUND_DOWN))
-                        print(f"{r=}")
 
                         if r == 1:  # same event already present
                             continue

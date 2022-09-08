@@ -20,7 +20,6 @@ This file is part of BORIS.
 
 """
 
-from cmath import isnan
 import datetime
 
 from math import log2
@@ -40,7 +39,6 @@ import urllib.parse
 import urllib.request
 from typing import Union
 
-# from decimal import *
 from decimal import Decimal as dec
 from decimal import ROUND_DOWN
 import gzip
@@ -1725,18 +1723,18 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             dw.frame_viewer.setPixmap(
                 pixmap.scaled(dw.frame_viewer.size(), Qt.KeepAspectRatio, Qt.SmoothTransformation)
             )
-            self.get_events_current_row()
+        self.get_events_current_row()
 
-            # index of current subject selected by observer
-            subject_idx = self.subject_name_index[self.currentSubject] if self.currentSubject else ""
+        # index of current subject selected by observer
+        subject_idx = self.subject_name_index[self.currentSubject] if self.currentSubject else ""
 
-            self.currentStates = util.get_current_states_modifiers_by_subject(
-                self.state_behaviors_codes,
-                self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS],
-                dict(self.pj[cfg.SUBJECTS], **{"": {"name": ""}}),
-                self.getLaps(),
-                include_modifiers=True,
-            )
+        self.currentStates = util.get_current_states_modifiers_by_subject(
+            self.state_behaviors_codes,
+            self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS],
+            dict(self.pj[cfg.SUBJECTS], **{"": {"name": ""}}),
+            self.getLaps(),
+            include_modifiers=True,
+        )
 
         self.lbCurrentStates.setText(f"Observed behaviors: {', '.join(self.currentStates[subject_idx])}")
         # show current states in subjects table
@@ -3009,7 +3007,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         # show current states
         # index of current subject
         idx = self.subject_name_index[self.currentSubject] if self.currentSubject else ""
-        self.lbCurrentStates.setText(", ".join(self.currentStates[idx]))
+        self.lbCurrentStates.setText(f"Observed behaviors: {', '.join(self.currentStates[idx])}")
         self.show_current_states_in_subjects_table()
 
         self.plot_timer_out()
@@ -3392,45 +3390,50 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         scroll to corresponding event
         """
 
-        if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS]:
-            ct = self.getLaps()
-            if ct.is_nan():
-                self.events_current_row = -1
-                return
-            # add time offset if any
-            ct += dec(self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TIME_OFFSET])
+        if not self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS]:
+            return
+        ct = self.getLaps()
 
-            if (
-                ct
-                >= self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS][-1][
+        if ct.is_nan():
+            self.events_current_row = -1
+            return
+
+        # check if NaN in time column for observation from images
+        if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE] == cfg.IMAGES:
+            for event in self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS]:
+                if event[0].is_nan():
+                    return
+
+        # add time offset if any
+        ct += dec(self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TIME_OFFSET])
+
+        if (
+            ct
+            >= self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS][-1][cfg.TW_OBS_FIELD[self.playerType]["time"]]
+        ):
+            self.events_current_row = len(self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS])
+        else:
+            cr_list = [
+                idx
+                for idx, x in enumerate(self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS][:-1])
+                if x[0] <= ct
+                and self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS][idx + 1][
                     cfg.TW_OBS_FIELD[self.playerType]["time"]
                 ]
-            ):
-                self.events_current_row = len(self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS])
+                > ct
+            ]
+
+            if cr_list:
+                self.events_current_row = cr_list[0]
+                if not self.trackingCursorAboveEvent:
+                    self.events_current_row += 1
             else:
-                cr_list = [
-                    idx
-                    for idx, x in enumerate(self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS][:-1])
-                    if x[0] <= ct
-                    and self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS][idx + 1][
-                        cfg.TW_OBS_FIELD[self.playerType]["time"]
-                    ]
-                    > ct
-                ]
+                self.events_current_row = -1
 
-                if cr_list:
-                    self.events_current_row = cr_list[0]
-                    if not self.trackingCursorAboveEvent:
-                        self.events_current_row += 1
-                else:
-                    self.events_current_row = -1
+        self.twEvents.setItemDelegate(events_cursor.StyledItemDelegateTriangle(self.events_current_row))
 
-            self.twEvents.setItemDelegate(events_cursor.StyledItemDelegateTriangle(self.events_current_row))
-
-            if self.twEvents.item(self.events_current_row, 0):
-                self.twEvents.scrollToItem(
-                    self.twEvents.item(self.events_current_row, 0), QAbstractItemView.EnsureVisible
-                )
+        if self.twEvents.item(self.events_current_row, 0):
+            self.twEvents.scrollToItem(self.twEvents.item(self.events_current_row, 0), QAbstractItemView.EnsureVisible)
 
     def show_current_states_in_subjects_table(self):
         """
@@ -4014,7 +4017,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE] in (cfg.LIVE, cfg.MEDIA):
             position = mem_time
         if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE] == cfg.IMAGES:
-            position = image_idx
+            position = dec(image_idx)  # decimal to pass to util.get_current_states_modifiers_by_subject
 
         current_states = util.get_current_states_modifiers_by_subject(
             state_behaviors_codes,
@@ -4160,6 +4163,23 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 self.twEvents.scrollToItem(self.twEvents.item(position_in_events, 0), QAbstractItemView.EnsureVisible)
 
         self.projectChanged = True
+
+        self.get_events_current_row()
+
+        # index of current subject selected by observer
+        subject_idx = self.subject_name_index[self.currentSubject] if self.currentSubject else ""
+
+        self.currentStates = util.get_current_states_modifiers_by_subject(
+            self.state_behaviors_codes,
+            self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS],
+            dict(self.pj[cfg.SUBJECTS], **{"": {"name": ""}}),
+            self.getLaps(),
+            include_modifiers=True,
+        )
+
+        self.lbCurrentStates.setText(f"Observed behaviors: {', '.join(self.currentStates[subject_idx])}")
+        # show current states in subjects table
+        self.show_current_states_in_subjects_table()
 
         return 0
 
