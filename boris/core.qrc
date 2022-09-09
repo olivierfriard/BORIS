@@ -24,6 +24,7 @@
 <file alias="close_observation">icons/glyphicons_207_remove_2.png</file>
 <file alias="plot_current">icons/glyphicons_108_left_indent_modified.png</file>
 <file alias="find">icons/glyphicons_027_search.png</file>
+<file alias="export">icons/glyphicons_359_file_export.png</file>
 <file alias="beep">sounds/beep.wav</file>
 <file alias="key_sound">sounds/key_sound.wav</file>
 </qresource>
