@@ -2,6 +2,7 @@
 <qresource>
 <file alias="small_logo">icons/logo_eye.128px.png</file>
 <file alias="logo">icons/logo_boris.png</file>
+<file alias="boris_unito">icons/boris_unito.png</file>
 <file alias="dbios_unito">icons/dbios_unito.png</file>
 <file alias="splash">icons/splash.jpg</file>
 <file alias="observations_list">icons/glyphicons_157_show_thumbnails_with_lines.png</file>
