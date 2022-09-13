@@ -1160,7 +1160,7 @@ def initialize_new_media_observation(self):
 
             logging.debug(f"media file: {mediaFile}")
 
-            media_full_path = project_functions.media_full_path(mediaFile, self.projectFileName)
+            media_full_path = project_functions.full_path(mediaFile, self.projectFileName)
 
             logging.debug(f"media_full_path: {media_full_path}")
 
@@ -1309,7 +1309,7 @@ def initialize_new_media_observation(self):
         for idx in self.pj[cfg.OBSERVATIONS][self.observationId][cfg.PLOT_DATA]:
             if count == 0:
 
-                data_file_path = project_functions.media_full_path(
+                data_file_path = project_functions.full_path(
                     self.pj[cfg.OBSERVATIONS][self.observationId][cfg.PLOT_DATA][idx]["file_path"],
                     self.projectFileName,
                 )
@@ -1363,7 +1363,7 @@ def initialize_new_media_observation(self):
 
             if count == 1:
 
-                data_file_path = project_functions.media_full_path(
+                data_file_path = project_functions.full_path(
                     self.pj[cfg.OBSERVATIONS][self.observationId][cfg.PLOT_DATA][idx]["file_path"],
                     self.projectFileName,
                 )

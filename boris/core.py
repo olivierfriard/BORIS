@@ -955,7 +955,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         w.label.setText("Extracting WAV from media files...")
 
         for media in self.pj[cfg.OBSERVATIONS][self.observationId][cfg.FILE][cfg.PLAYER1]:
-            media_file_path = project_functions.media_full_path(media, self.projectFileName)
+            media_file_path = project_functions.full_path(media, self.projectFileName)
             if os.path.isfile(media_file_path):
 
                 w.show()
@@ -1005,7 +1005,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
                 # check if first media in player #1 has audio
                 for media in self.pj[cfg.OBSERVATIONS][self.observationId][cfg.FILE][cfg.PLAYER1]:
-                    media_file_path = project_functions.media_full_path(media, self.projectFileName)
+                    media_file_path = project_functions.full_path(media, self.projectFileName)
 
                     if not project_functions.has_audio(self.pj[cfg.OBSERVATIONS][self.observationId], media_file_path):
                         QMessageBox.critical(
@@ -1101,7 +1101,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
                 # check if first media in player #1 has audio
                 for media in self.pj[cfg.OBSERVATIONS][self.observationId][cfg.FILE][cfg.PLAYER1]:
-                    media_file_path = project_functions.media_full_path(media, self.projectFileName)
+                    media_file_path = project_functions.full_path(media, self.projectFileName)
 
                     if not project_functions.has_audio(self.pj[cfg.OBSERVATIONS][self.observationId], media_file_path):
                         QMessageBox.critical(

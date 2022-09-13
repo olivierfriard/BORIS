@@ -157,7 +157,7 @@ def check_if_media_available(observation: dict, project_file_name: str):
     # TODO: check all files before returning False
     if observation[cfg.TYPE] == cfg.IMAGES:
         for img_dir in observation.get(cfg.DIRECTORIES_LIST, []):
-            if not media_full_path(img_dir, project_file_name):
+            if not full_path(img_dir, project_file_name):
                 return (False, f"The images directory <b>{img_dir}</b> was not found")
         return (True, "")
 
@@ -167,7 +167,7 @@ def check_if_media_available(observation: dict, project_file_name: str):
                 if not isinstance(observation[cfg.FILE][nplayer], list):
                     return (False, "error")
                 for media_file in observation[cfg.FILE][nplayer]:
-                    if not media_full_path(media_file, project_file_name):
+                    if not full_path(media_file, project_file_name):
                         return (False, f"Media file <b>{media_file}</b> was not found")
         return (True, "")
 
@@ -190,7 +190,7 @@ def check_directories_availability(observation: dict, project_file_name: str):
         return (True, "")
 
     for dir_path in observation.get(cfg.DIRECTORIES_LIST, []):
-        if not media_full_path(dir_path, project_file_name):
+        if not full_path(dir_path, project_file_name):
             return (False, f"Directory <b>{dir_path}</b> not found")
 
     return (True, "")
@@ -702,7 +702,7 @@ def export_observations_list(pj: dict, selected_observations: list, file_name: s
     return True
 
 
-def remove_media_files_path(pj):
+def remove_media_files_path(pj: dict) -> None:
     """
     remove path from media files and from images directory
     tested
@@ -711,7 +711,7 @@ def remove_media_files_path(pj):
         pj (dict): project file
 
     Returns:
-        dict: project without media file paths
+        None
     """
 
     for obs_id in pj[cfg.OBSERVATIONS]:
@@ -735,25 +735,69 @@ def remove_media_files_path(pj):
                                         info in pj[cfg.OBSERVATIONS][obs_id][cfg.MEDIA_INFO]
                                         and media_file in pj[cfg.OBSERVATIONS][obs_id][cfg.MEDIA_INFO][info]
                                     ):
+                                        # add new file path
                                         pj[cfg.OBSERVATIONS][obs_id][cfg.MEDIA_INFO][info][p] = pj[cfg.OBSERVATIONS][
                                             obs_id
                                         ][cfg.MEDIA_INFO][info][media_file]
+                                        # remove old path
                                         del pj[cfg.OBSERVATIONS][obs_id][cfg.MEDIA_INFO][info][media_file]
 
-    # return dict(pj)
 
-
-def media_full_path(path: str, project_file_name: str) -> str:
+def remove_data_files_path(pj: dict) -> None:
     """
-    returns the media full path or the images directory full path
-    add path of BORIS project if media without path
+    remove path from data files
 
     Args:
-        path (str): media file path or images directory path
+        pj (dict): project file
+
+    Returns:
+        None
+    """
+
+    for obs_id in pj[cfg.OBSERVATIONS]:
+
+        if pj[cfg.OBSERVATIONS][obs_id][cfg.TYPE] != cfg.MEDIA:
+            continue
+        if cfg.PLOT_DATA in pj[cfg.OBSERVATIONS][obs_id]:
+            for idx in pj[cfg.OBSERVATIONS][obs_id][cfg.PLOT_DATA]:
+                if "file_path" in pj[cfg.OBSERVATIONS][obs_id][cfg.PLOT_DATA][idx]:
+                    p = str(pl.Path(pj[cfg.OBSERVATIONS][obs_id][cfg.PLOT_DATA][idx]["file_path"]).name)
+                    if p != pj[cfg.OBSERVATIONS][obs_id][cfg.PLOT_DATA][idx]["file_path"]:
+                        pj[cfg.OBSERVATIONS][obs_id][cfg.PLOT_DATA][idx]["file_path"] = p
+
+        """
+        for n_player in cfg.ALL_PLAYERS:
+            if n_player in pj[cfg.OBSERVATIONS][obs_id][cfg.FILE]:
+                for idx, media_file in enumerate(pj[cfg.OBSERVATIONS][obs_id][cfg.FILE][n_player]):
+                    p = str(pl.Path(media_file).name)
+                    if p != media_file:
+                        pj[cfg.OBSERVATIONS][obs_id][cfg.FILE][n_player][idx] = p
+                        if cfg.MEDIA_INFO in pj[cfg.OBSERVATIONS][obs_id]:
+                            for info in [cfg.LENGTH, cfg.HAS_AUDIO, cfg.HAS_VIDEO, cfg.FPS]:
+                                if (
+                                    info in pj[cfg.OBSERVATIONS][obs_id][cfg.MEDIA_INFO]
+                                    and media_file in pj[cfg.OBSERVATIONS][obs_id][cfg.MEDIA_INFO][info]
+                                ):
+                                    # add new file path
+                                    pj[cfg.OBSERVATIONS][obs_id][cfg.MEDIA_INFO][info][p] = pj[cfg.OBSERVATIONS][
+                                        obs_id
+                                    ][cfg.MEDIA_INFO][info][media_file]
+                                    # remove old path
+                                    del pj[cfg.OBSERVATIONS][obs_id][cfg.MEDIA_INFO][info][media_file]
+        """
+
+
+def full_path(path: str, project_file_name: str) -> str:
+    """
+    returns the media/data full path or the images directory full path
+    add path of BORIS project if media/data with relative path
+
+    Args:
+        path (str): file path or images directory path
         project_file_name (str): project file name
 
     Returns:
-        str: media full path
+        str: full path
     """
 
     source_path = pl.Path(path)

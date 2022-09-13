@@ -385,7 +385,7 @@ class Observation(QDialog, Ui_Form):
 
             plot_color = self.tw_data_files.cellWidget(row_idx, cfg.PLOT_DATA_PLOTCOLOR_IDX).currentText()
 
-            data_file_path = project_functions.media_full_path(filename, self.project_path)
+            data_file_path = project_functions.full_path(filename, self.project_path)
 
             if not data_file_path:
                 QMessageBox.critical(
@@ -589,10 +589,10 @@ class Observation(QDialog, Ui_Form):
             QMessageBox.warning(self, cfg.programName, "Select a data file")
 
         if self.tw_data_files.rowCount() == 1:
-            data_file_path = project_functions.media_full_path(self.tw_data_files.item(0, 0).text(), self.project_path)
+            data_file_path = project_functions.full_path(self.tw_data_files.item(0, 0).text(), self.project_path)
             columns_to_plot = self.tw_data_files.item(0, 1).text()
         else:
-            data_file_path = project_functions.media_full_path(
+            data_file_path = project_functions.full_path(
                 self.tw_data_files.item(self.tw_data_files.selectedIndexes()[0].row(), 0).text(), self.project_path
             )
             columns_to_plot = self.tw_data_files.item(self.tw_data_files.selectedIndexes()[0].row(), 1).text()
@@ -659,7 +659,7 @@ class Observation(QDialog, Ui_Form):
                     if self.twVideo1.cellWidget(row, 0).currentText() != "1":
                         continue
 
-                    media_file_path = project_functions.media_full_path(
+                    media_file_path = project_functions.full_path(
                         self.twVideo1.item(row, cfg.MEDIA_FILE_PATH_IDX).text(), self.project_path
                     )
                     if self.twVideo1.item(row, cfg.HAS_AUDIO_IDX).text() == "False":

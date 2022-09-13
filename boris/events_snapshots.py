@@ -219,7 +219,7 @@ def events_snapshots(self):
 
                         if cfg.POINT in behavior_state:
 
-                            media_path = project_functions.media_full_path(
+                            media_path = project_functions.full_path(
                                 self.pj[cfg.OBSERVATIONS][obsId][cfg.FILE][nplayer][mediaFileIdx],
                                 self.projectFileName,
                             )
@@ -293,7 +293,7 @@ def events_snapshots(self):
                                 except Exception:
                                     continue
 
-                                media_path = project_functions.media_full_path(
+                                media_path = project_functions.full_path(
                                     self.pj[cfg.OBSERVATIONS][obsId][cfg.FILE][nplayer][mediaFileIdx],
                                     self.projectFileName,
                                 )
@@ -499,7 +499,7 @@ def extract_events(self):
 
                             ffmpeg_command = ffmpeg_extract_command.format(
                                 ffmpeg_bin=self.ffmpeg_bin,
-                                input_=project_functions.media_full_path(
+                                input_=project_functions.full_path(
                                     self.pj[cfg.OBSERVATIONS][obsId][cfg.FILE][nplayer][mediaFileIdx],
                                     self.projectFileName,
                                 ),
@@ -569,7 +569,7 @@ def extract_events(self):
 
                                 ffmpeg_command = ffmpeg_extract_command.format(
                                     ffmpeg_bin=self.ffmpeg_bin,
-                                    input_=project_functions.media_full_path(
+                                    input_=project_functions.full_path(
                                         self.pj[cfg.OBSERVATIONS][obsId][cfg.FILE][nplayer][mediaFileIdx],
                                         self.projectFileName,
                                     ),

@@ -82,7 +82,7 @@ def get_info(self):
             ffmpeg_output = "<br><b>FFmpeg analysis</b><br>"
 
             for file_path in self.pj[cfg.OBSERVATIONS][self.observationId][cfg.FILE][str(i + 1)]:
-                media_full_path = project_functions.media_full_path(file_path, self.projectFileName)
+                media_full_path = project_functions.full_path(file_path, self.projectFileName)
                 r = util.accurate_media_analysis(self.ffmpeg_bin, media_full_path)
                 nframes = r["frames_number"]
                 if "error" in r:
