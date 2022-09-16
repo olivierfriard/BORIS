@@ -364,6 +364,7 @@ def check_project_integrity(
     check for leading and trailing spaces and special chars in modifiers
     check if media file are available
     check if media length available
+    check independent variables
 
     Args:
         pj (dict): BORIS project
@@ -376,82 +377,117 @@ def check_project_integrity(
     """
     out = ""
 
-    try:
-        # check if coded behaviors are defined in ethogram
-        r = check_coded_behaviors(pj)
-        if r:
-            out += f"The following behaviors are not defined in the ethogram: <b>{', '.join(r)}</b><br>"
+    # check if coded behaviors are defined in ethogram
+    r = check_coded_behaviors(pj)
+    if r:
+        out += f"The following behaviors are not defined in the ethogram: <b>{', '.join(r)}</b><br>"
 
-        # check for unpaired state events
+    # check for unpaired state events
+    for obs_id in pj[cfg.OBSERVATIONS]:
+        ok, msg = check_state_events_obs(obs_id, pj[cfg.ETHOGRAM], pj[cfg.OBSERVATIONS][obs_id], time_format)
+        if not ok:
+            out += "<br><br>" if out else ""
+            out += f"Observation: <b>{obs_id}</b><br>{msg}"
+
+    # check if behavior belong to category that is not in categories list
+    for idx in pj[cfg.ETHOGRAM]:
+        if cfg.BEHAVIOR_CATEGORY in pj[cfg.ETHOGRAM][idx]:
+            if pj[cfg.ETHOGRAM][idx][cfg.BEHAVIOR_CATEGORY]:
+                if pj[cfg.ETHOGRAM][idx][cfg.BEHAVIOR_CATEGORY] not in pj[cfg.BEHAVIORAL_CATEGORIES]:
+                    out += "<br><br>" if out else ""
+                    out += (
+                        f"The behavior <b>{pj[cfg.ETHOGRAM][idx][cfg.BEHAVIOR_CODE]}</b> belongs "
+                        f"to the behavioral category <b>{pj[cfg.ETHOGRAM][idx][cfg.BEHAVIOR_CATEGORY]}</b> "
+                        "that is no more in behavioral categories list."
+                    )
+
+    # check for leading/trailing spaces/special chars in modifiers defined in ethogram
+    for idx in pj[cfg.ETHOGRAM]:
+        for k in pj[cfg.ETHOGRAM][idx][cfg.MODIFIERS]:
+            for value in pj[cfg.ETHOGRAM][idx][cfg.MODIFIERS][k]["values"]:
+                modifier_code = value.split(" (")[0]
+                if modifier_code.strip() != modifier_code:
+                    out += "<br><br>" if out else ""
+                    out += (
+                        "The following <b>modifier</b> defined in ethogram "
+                        "has leading/trailing spaces or special chars: "
+                        f"<b>{util.replace_leading_trailing_chars(modifier_code.replace, ' ', '&#9608;')}</b>"
+                    )
+
+    # check if all media are available
+    if media_file_available:
         for obs_id in pj[cfg.OBSERVATIONS]:
-            ok, msg = check_state_events_obs(obs_id, pj[cfg.ETHOGRAM], pj[cfg.OBSERVATIONS][obs_id], time_format)
+            ok, msg = check_if_media_available(pj[cfg.OBSERVATIONS][obs_id], project_file_name)
             if not ok:
                 out += "<br><br>" if out else ""
                 out += f"Observation: <b>{obs_id}</b><br>{msg}"
 
-        # check if behavior belong to category that is not in categories list
-        for idx in pj[cfg.ETHOGRAM]:
-            if cfg.BEHAVIOR_CATEGORY in pj[cfg.ETHOGRAM][idx]:
-                if pj[cfg.ETHOGRAM][idx][cfg.BEHAVIOR_CATEGORY]:
-                    if pj[cfg.ETHOGRAM][idx][cfg.BEHAVIOR_CATEGORY] not in pj[cfg.BEHAVIORAL_CATEGORIES]:
-                        out += "<br><br>" if out else ""
-                        out += (
-                            f"The behavior <b>{pj[cfg.ETHOGRAM][idx][cfg.BEHAVIOR_CODE]}</b> belongs "
-                            f"to the behavioral category <b>{pj[cfg.ETHOGRAM][idx][cfg.BEHAVIOR_CATEGORY]}</b> "
-                            "that is no more in behavioral categories list."
-                        )
+    # check if media length available
+    for obs_id in pj[cfg.OBSERVATIONS]:
 
-        # check for leading/trailing spaces/special chars in modifiers defined in ethogram
-        for idx in pj[cfg.ETHOGRAM]:
-            for k in pj[cfg.ETHOGRAM][idx][cfg.MODIFIERS]:
-                for value in pj[cfg.ETHOGRAM][idx][cfg.MODIFIERS][k]["values"]:
-                    modifier_code = value.split(" (")[0]
-                    if modifier_code.strip() != modifier_code:
-                        out += "<br><br>" if out else ""
-                        out += (
-                            "The following <b>modifier</b> defined in ethogram "
-                            "has leading/trailing spaces or special chars: "
-                            f"<b>{modifier_code.replace(' ', '&#9608;')}</b>"
-                        )
+        # TODO: add images observations
+        if pj[cfg.OBSERVATIONS][obs_id][cfg.TYPE] in [cfg.LIVE]:
+            continue
 
-        # check if all media are available
-        if media_file_available:
-            for obs_id in pj[cfg.OBSERVATIONS]:
-                ok, msg = check_if_media_available(pj[cfg.OBSERVATIONS][obs_id], project_file_name)
-                if not ok:
-                    out += "<br><br>" if out else ""
-                    out += f"Observation: <b>{obs_id}</b><br>{msg}"
+        if pj[cfg.OBSERVATIONS][obs_id][cfg.TYPE] == cfg.MEDIA:
+            for nplayer in cfg.ALL_PLAYERS:
+                if nplayer in pj[cfg.OBSERVATIONS][obs_id][cfg.FILE]:
+                    for media_file in pj[cfg.OBSERVATIONS][obs_id][cfg.FILE][nplayer]:
+                        try:
+                            pj[cfg.OBSERVATIONS][obs_id][cfg.MEDIA_INFO][cfg.LENGTH][media_file]
+                        except KeyError:
+                            out += "<br><br>" if out else ""
+                            out += f"Observation: <b>{obs_id}</b><br>Length not available for media file <b>{media_file}</b>"
 
-        # check if media length available
-        for obs_id in pj[cfg.OBSERVATIONS]:
+    # check for leading/trailing spaces/special chars in observation id
+    for obs_id in pj[cfg.OBSERVATIONS]:
+        if obs_id != obs_id.strip():
+            out += "<br><br>" if out else ""
+            out += (
+                "The following <b>observation id</b> "
+                "has leading/trailing spaces or special chars: "
+                f"<b>{util.replace_leading_trailing_chars(obs_id, ' ', '&#9608;')}</b>"
+            )
 
-            # TODO: add images observations
-            if pj[cfg.OBSERVATIONS][obs_id][cfg.TYPE] in [cfg.LIVE]:
-                continue
+    # check independent variables present in observations are defined
+    defined_var_label = [pj[cfg.INDEPENDENT_VARIABLES][idx]["label"] for idx in pj.get(cfg.INDEPENDENT_VARIABLES, {})]
+    not_defined: dict = {}
+    for obs_id in pj[cfg.OBSERVATIONS]:
+        if cfg.INDEPENDENT_VARIABLES not in pj[cfg.OBSERVATIONS][obs_id]:
+            continue
+        for var_label in pj[cfg.OBSERVATIONS][obs_id][cfg.INDEPENDENT_VARIABLES]:
+            if var_label not in defined_var_label:
+                if var_label not in not_defined:
+                    not_defined[var_label] = [obs_id]
+                else:
+                    not_defined[var_label].append(obs_id)
+    if not_defined:
+        out += "<br><br>" if out else ""
+        for var_label in not_defined:
+            out += f"The independent variable <b>{util.replace_leading_trailing_chars(var_label, ' ', '&#9608;')}</b> present in {len(not_defined[var_label])} observation(s) is not defined.<br>"
 
-            if pj[cfg.OBSERVATIONS][obs_id][cfg.TYPE] == cfg.MEDIA:
-                for nplayer in cfg.ALL_PLAYERS:
-                    if nplayer in pj[cfg.OBSERVATIONS][obs_id][cfg.FILE]:
-                        for media_file in pj[cfg.OBSERVATIONS][obs_id][cfg.FILE][nplayer]:
-                            try:
-                                pj[cfg.OBSERVATIONS][obs_id][cfg.MEDIA_INFO][cfg.LENGTH][media_file]
-                            except KeyError:
-                                out += "<br><br>" if out else ""
-                                out += f"Observation: <b>{obs_id}</b><br>Length not available for media file <b>{media_file}</b>"
+    # check values of independent variables
+    defined_set_var_label: dict = dict(
+        [
+            (pj[cfg.INDEPENDENT_VARIABLES][idx]["label"], pj[cfg.INDEPENDENT_VARIABLES][idx]["possible values"])
+            for idx in pj.get(cfg.INDEPENDENT_VARIABLES, {})
+            if pj[cfg.INDEPENDENT_VARIABLES][idx]["type"] == "value from set"
+        ]
+    )
 
-        # check for leading/trailing spaces/special chars in observation id
-        for obs_id in pj[cfg.OBSERVATIONS]:
-            if obs_id != obs_id.strip():
-                out += "<br><br>" if out else ""
-                out += (
-                    "The following <b>observation id</b> "
-                    "has leading/trailing spaces or special chars: "
-                    f"<b>{obs_id}</b>"
-                )
+    out += "<br><br>" if out else ""
+    for obs_id in pj[cfg.OBSERVATIONS]:
+        if cfg.INDEPENDENT_VARIABLES not in pj[cfg.OBSERVATIONS][obs_id]:
+            continue
+        for var_label in pj[cfg.OBSERVATIONS][obs_id][cfg.INDEPENDENT_VARIABLES]:
+            if var_label in defined_set_var_label:
+                if pj[cfg.OBSERVATIONS][obs_id][cfg.INDEPENDENT_VARIABLES][var_label] not in defined_set_var_label[
+                    var_label
+                ].split(","):
 
-        return out
-    except Exception:
-        return str(sys.exc_info()[1])
+                    out += f"{obs_id}: the <b>{pj[cfg.OBSERVATIONS][obs_id][cfg.INDEPENDENT_VARIABLES][var_label]}</b> value  is not allowed for {var_label} (choose between {defined_set_var_label[var_label]})<br>"
+
+    return out
 
 
 def create_subtitles(pj: dict, selected_observations: list, parameters: dict, export_dir: str) -> tuple:

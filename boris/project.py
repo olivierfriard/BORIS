@@ -48,6 +48,7 @@ from PyQt5.QtWidgets import (
 
 from . import add_modifier
 from . import config as cfg
+from . import utilities as util
 from . import converters, dialog, exclusion_matrix, project_import_export
 from .project_ui import Ui_dlgProject
 
@@ -1559,8 +1560,8 @@ class projectDialog(QDialog, Ui_dlgProject):
                 (
                     "<b>Warning!</b> Some leading and/or trailing spaces are present"
                     " in the following behaviors code(s):<br>"
-                    f"<b>{'<br>'.join([x.replace(' ', '&#9608;') for x in code_with_leading_trailing_spaces])}</b><br><br>"
-                    "Do you want to remove the leading and trailing spaces from behaviors?<br><br>"
+                    f"<b>{'<br>'.join([util.replace_leading_trailing_chars(x, ' ', '&#9608;') for x in code_with_leading_trailing_spaces])}</b><br><br>"
+                    "Do you want to remove the leading and trailing spaces (visualized as black boxes) from behaviors?<br><br>"
                     """<font color="red"><b>Be careful with this option"""
                     """ if you have already done observations!</b></font>"""
                 ),
@@ -1576,8 +1577,8 @@ class projectDialog(QDialog, Ui_dlgProject):
                 (
                     "<b>Warning!</b> Some leading and/or trailing spaces are present"
                     " in the following modifier(s):<br>"
-                    f"<b>{'<br>'.join([x.replace(' ', '&#9608;') for x in set(modifiers_with_leading_trailing_spaces)])}</b><br><br>"
-                    "Do you want to remove the leading and trailing spaces from modifiers?<br><br>"
+                    f"<b>{'<br>'.join([util.replace_leading_trailing_chars(x, ' ', '&#9608;') for x in set(modifiers_with_leading_trailing_spaces)])}</b><br><br>"
+                    "Do you want to remove the leading and trailing spaces (visualized as black boxes) from modifiers?<br><br>"
                     """<font color="red"><b>Be careful with this option"""
                     """ if you have already done observations!</b></font>"""
                 ),
@@ -1806,6 +1807,7 @@ class projectDialog(QDialog, Ui_dlgProject):
                             f"The label of an indipendent variable can not be empty (check row #{r + 1}).",
                         )
                         return
+
                     row[field] = self.twVariables.item(r, idx).text().strip()
                 else:
                     row[field] = ""

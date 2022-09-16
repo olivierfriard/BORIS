@@ -87,6 +87,24 @@ def pil2pixmap(im) -> QPixmap:
     return pixmap
 
 
+def replace_leading_trailing_chars(s: str, old_char: str, new_char: str) -> str:
+    """
+    replace leading and trailing old_char by new_char
+
+    Args:
+        s: string
+        old_char: character to be replaced
+        new_char: character for replacing
+
+    Returns:
+        str: string with characters replaced
+    """
+
+    sp = s.partition(s.strip(old_char))
+
+    return f"{sp[0].replace(old_char, new_char)}{sp[1]}{sp[2].replace(old_char, new_char)}"
+
+
 def return_file_header(file_name: str, row_number: int = 5) -> list:
     """
     return file header

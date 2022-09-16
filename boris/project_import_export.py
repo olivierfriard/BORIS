@@ -358,15 +358,29 @@ def load_dataframe_into_behaviors_tablewidget(self, df: pd.DataFrame) -> int:
     """
     Load pandas dataframe into the twBehaviors table widget
     """
-    for column in ["Behavior code", "Behavior type", "Description", "Key", "Behavioral category", "Excluded behaviors"]:
+
+    expected_labels = [
+        "Behavior code",
+        "Behavior type",
+        "Description",
+        "Key",
+        "Behavioral category",
+        "Excluded behaviors",
+    ]
+
+    for column in expected_labels:
         if column not in list(df.columns):
             QMessageBox.warning(
                 None,
                 cfg.programName,
                 (
-                    "The first row of spreadsheet must contain the following labels:<br>"
-                    "Behavior code, Behavior type, Description, Key, Behavioral category, Excluded behaviors<br>"
-                    "Respect the case!"
+                    f"The {column } column was not found in the file header.<br>"
+                    "For information the current file header contains the following labels:<br>"
+                    f"{'<br>'.join(['<b>' + util.replace_leading_trailing_chars(x, ' ', '&#9608;') + '</b>' for x in df.columns])}<br>"
+                    "<br>"
+                    "The first row of the spreadsheet must contain the following labels:<br>"
+                    f"{'<br>'.join(['<b>' + x + '</b>' for x in expected_labels])}<br>"
+                    "<br>The order is not mandatory but respect the case!"
                 ),
                 QMessageBox.Ok | QMessageBox.Default,
                 QMessageBox.NoButton,
