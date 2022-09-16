@@ -53,7 +53,7 @@ class wgMeasurement(QWidget):
     closeSignal = pyqtSignal()
     mark_color: str = cfg.ACTIVE_MEASUREMENTS_COLOR
     flag_saved = True  # store if measurements are saved
-    draw_mem = {}
+    draw_mem: dict = {}
 
     def __init__(self):
         super().__init__()
@@ -329,6 +329,7 @@ def image_clicked(self, n_player, event):
             if event.button() == 1:  # left click
                 draw_point(self, x, y, self.measurement_w.mark_color, n_player)
                 if current_frame not in self.measurement_w.draw_mem:
+                    print(f"{current_frame=}")
                     self.measurement_w.draw_mem[current_frame] = []
 
                 self.measurement_w.draw_mem[current_frame].append(
@@ -502,7 +503,7 @@ def redraw_measurements(self):
         return
 
     if not self.measurement_w.cbPersistentMeasurements.isChecked():
-        self.measurement_w.draw_mem = []
+        self.measurement_w.draw_mem = {}
         return
 
     for idx, dw in enumerate(self.dw_player):

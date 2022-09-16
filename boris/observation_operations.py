@@ -373,6 +373,11 @@ def observation_length(pj: dict, selected_observations: list) -> tuple:
 def new_observation(self, mode=cfg.NEW, obsId=""):
     """
     define a new observation or edit an existing observation
+
+    Args:
+        mode (str): NEW or EDIT
+        obsId (str): observation Id to be edited
+
     """
     # check if current observation must be closed to create a new one
     if mode == cfg.NEW and self.observationId:
