@@ -22,7 +22,7 @@ This file is part of BORIS.
 
 import logging
 
-from PyQt5.QtCore import QPoint, Qt, pyqtSignal
+from PyQt5.QtCore import QPoint, Qt, pyqtSignal, QEvent
 from PyQt5.QtGui import QColor, QPainter, QPolygon
 from PyQt5.QtWidgets import (
     QApplication,
@@ -51,6 +51,7 @@ class wgMeasurement(QWidget):
     """
 
     closeSignal = pyqtSignal()
+    send_event_signal = pyqtSignal(QEvent)
     mark_color: str = cfg.ACTIVE_MEASUREMENTS_COLOR
     flag_saved = True  # store if measurements are saved
     draw_mem: dict = {}
@@ -126,6 +127,18 @@ class wgMeasurement(QWidget):
         hbox3.addWidget(self.pbClose)
 
         vbox.addLayout(hbox3)
+
+        self.installEventFilter(self)
+
+    def eventFilter(self, receiver, event):
+        """
+        send event (if keypress) to main window
+        """
+        if event.type() == QEvent.KeyPress:
+            self.send_event_signal.emit(event)
+            return True
+        else:
+            return False
 
     def choose_marks_color(self):
         """
@@ -236,6 +249,7 @@ def show_widget(self):
     self.measurement_w = wgMeasurement()
     self.measurement_w.setWindowFlags(Qt.WindowStaysOnTopHint)
     self.measurement_w.closeSignal.connect(close_measurement_widget)
+    self.measurement_w.send_event_signal.connect(self.signal_from_widget)
     self.measurement_w.show()
 
     for dw in self.dw_player:

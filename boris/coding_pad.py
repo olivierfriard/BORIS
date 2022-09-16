@@ -43,20 +43,22 @@ class CodingPad(QWidget):
     sendEventSignal = pyqtSignal(QEvent)
     close_signal = pyqtSignal(QRect, dict)
 
-    def __init__(self, pj, filtered_behaviors, parent=None):
+    def __init__(self, pj: dict, filtered_behaviors, parent=None):
         super().__init__(parent)
-        self.pj = pj
+        self.pj: dict = pj
         self.filtered_behaviors = filtered_behaviors
 
-        self.behavioral_category_colors_list = []
-        self.behavior_colors_list = []
+        self.behavioral_category_colors_list: list = []
+        self.behavior_colors_list: list = []
 
-        self.behavioral_category_colors = {}
-        self.behavior_colors = {}
+        self.behavioral_category_colors: dict = {}
+        self.behavior_colors: dict = {}
 
-        self.preferences = {"button font size": 20, "button color": cfg.BEHAVIOR_CATEGORY}
+        self.preferences: dict = {"button font size": 20, "button color": cfg.BEHAVIOR_CATEGORY}
 
-        self.button_css = "min-width: 50px; min-height:50px; font-weight: bold; max-height:5000px; max-width: 5000px;"
+        self.button_css: str = (
+            "min-width: 50px; min-height:50px; font-weight: bold; max-height:5000px; max-width: 5000px;"
+        )
 
         self.setWindowTitle("Coding pad")
 
