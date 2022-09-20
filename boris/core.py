@@ -775,7 +775,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         paramPanelWindow = param_panel.Param_panel()
         paramPanelWindow.setWindowTitle(title)
         paramPanelWindow.lbBehaviors.setText(text)
-        for w in [
+        for w in (
             paramPanelWindow.lwSubjects,
             paramPanelWindow.pbSelectAllSubjects,
             paramPanelWindow.pbUnselectAllSubjects,
@@ -785,7 +785,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             paramPanelWindow.cbExcludeBehaviors,
             paramPanelWindow.frm_time,
             paramPanelWindow.frm_time_bin_size,
-        ]:
+        ):
             w.setVisible(False)
 
         gui_utilities.restore_geometry(paramPanelWindow, "filter behaviors", (800, 600))

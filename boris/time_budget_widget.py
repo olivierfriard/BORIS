@@ -132,32 +132,23 @@ class timeBudgetResults(QWidget):
                 list: completed list
             """
 
-            while len(l) < max_:
-                l.append("")
+            l.extend([""] * (max_ - len(l)))
             return l
 
         logging.debug("save time budget results to file")
 
-        extended_file_formats = [
-            "Tab Separated Values (*.tsv)",
-            "Comma Separated Values (*.csv)",
-            "Open Document Spreadsheet ODS (*.ods)",
-            "Microsoft Excel Spreadsheet XLSX (*.xlsx)",
-            "Legacy Microsoft Excel Spreadsheet XLS (*.xls)",
-            "HTML (*.html)",
-        ]
-        file_formats = ["tsv", "csv", "ods", "xlsx", "xls", "html"]
+        file_formats = [cfg.TSV, cfg.CSV, cfg.ODS, cfg.XLSX, cfg.XLS, cfg.HTML]
 
         file_name, filter_ = QFileDialog().getSaveFileName(
-            self, "Save Time budget analysis", "", ";;".join(extended_file_formats)
+            self, "Save Time budget analysis", "", ";;".join(file_formats)
         )
 
         if not file_name:
             return
 
-        outputFormat = file_formats[extended_file_formats.index(filter_)]
-        if pl.Path(file_name).suffix != "." + outputFormat:
-            file_name = str(pl.Path(file_name)) + "." + outputFormat
+        # add correct file extension if not present
+        if pl.Path(file_name).suffix != f".{cfg.FILE_NAME_SUFFIX[filter_]}":
+            file_name = str(pl.Path(file_name)) + "." + cfg.FILE_NAME_SUFFIX[filter_]
             # check if file with new extension already exists
             if pl.Path(file_name).is_file():
                 if (
@@ -170,44 +161,121 @@ class timeBudgetResults(QWidget):
 
         rows = []
 
-        # 1 observation
-        if (
-            self.lw.count() == 1
-            and self.config_param.get(cfg.TIME_BUDGET_FORMAT, cfg.DEFAULT_TIME_BUDGET_FORMAT)
-            == cfg.COMPACT_TIME_BUDGET_FORMAT
-        ):
-            col1, indep_var_label = [], []
-            # add obs id
+        header = ["Observation id", "Observation date", "Description"]
+        # indep var labels
+        header.extend([self.pj[cfg.INDEPENDENT_VARIABLES][idx]["label"] for idx in self.pj[cfg.INDEPENDENT_VARIABLES]])
+        header.extend(["Time budget start", "Time budget stop", "Time budget duration"])
+
+        for idx in range(self.twTB.columnCount()):
+            header.append(self.twTB.horizontalHeaderItem(idx).text())
+        rows.append(header)
+
+        col1: list = []
+        # add obs id
+        if self.lw.count() == 1:
             col1.append(self.lw.item(0).text())
-            # add obs date
+        else:
+            col1.append("NA, observations grouped")
+
+        # add obs date
+        if self.lw.count() == 1:
             col1.append(self.pj[cfg.OBSERVATIONS][self.lw.item(0).text()].get("date", ""))
+        else:
+            # TODO: check if date is the same for all selected obs
+            col1.append("NA, observations grouped")
 
-            # description
+        # description
+        if self.lw.count() == 1:
             col1.append(util.eol2space(self.pj[cfg.OBSERVATIONS][self.lw.item(0).text()].get(cfg.DESCRIPTION, "")))
-            header = ["Observation id", "Observation date", "Description"]
+        else:
+            col1.append("NA, observations grouped")
 
-            # indep var
-            for var in self.pj[cfg.OBSERVATIONS][self.lw.item(0).text()].get(cfg.INDEPENDENT_VARIABLES, {}):
-                indep_var_label.append(var)
-                col1.append(self.pj[cfg.OBSERVATIONS][self.lw.item(0).text()][cfg.INDEPENDENT_VARIABLES][var])
+        # indep var values
+        for idx in self.pj.get(cfg.INDEPENDENT_VARIABLES, []):
+            if self.lw.count() == 1:
+                # var has value in obs?
+                if self.pj[cfg.INDEPENDENT_VARIABLES][idx]["label"] in self.pj[cfg.OBSERVATIONS][
+                    self.lw.item(0).text()
+                ].get(cfg.INDEPENDENT_VARIABLES, []):
+                    col1.append(
+                        self.pj[cfg.OBSERVATIONS][self.lw.item(0).text()][cfg.INDEPENDENT_VARIABLES][
+                            self.pj[cfg.INDEPENDENT_VARIABLES][idx]["label"]
+                        ]
+                    )
+                else:
+                    col1.append("")
+            else:
+                # TODO: check if var value is the same for all selected obs
+                col1.append("NA, observations grouped")
 
-            header.extend(indep_var_label)
-
+        if self.time_interval == cfg.TIME_ARBITRARY_INTERVAL:
             col1.extend([f"{self.min_time:0.3f}", f"{self.max_time:0.3f}", f"{self.max_time - self.min_time:0.3f}"])
-            header.extend(["Time budget start", "Time budget stop", "Time budget duration"])
 
+        if self.time_interval == cfg.TIME_FULL_OBS:
+            col1.extend([f"Full observation", f"Full observation", f"Full observation"])
+
+        if self.time_interval == cfg.TIME_EVENTS:
+            col1.extend([f"Limited to coded events", f"Limited to coded events", f"Limited to coded events"])
+
+        for row_idx in range(self.twTB.rowCount()):
+            values = []
             for col_idx in range(self.twTB.columnCount()):
-                header.append(self.twTB.horizontalHeaderItem(col_idx).text())
-            rows.append(header)
+                values.append(util.intfloatstr(self.twTB.item(row_idx, col_idx).text()))
+            rows.append(col1 + values)
 
-            for row_idx in range(self.twTB.rowCount()):
-                values = []
-                for col_idx in range(self.twTB.columnCount()):
-                    values.append(util.intfloatstr(self.twTB.item(row_idx, col_idx).text()))
-                rows.append(col1 + values)
-
+        """
         else:
             # observations list
+            obs_header = ["Observation id", "Observation date", "Description"]
+
+            # indep var
+            obs_header.extend(
+                [self.pj[cfg.INDEPENDENT_VARIABLES][idx]["label"] for idx in self.pj[cfg.INDEPENDENT_VARIABLES]]
+            )
+
+            obs_header.extend(["Time budget start", "Time budget stop", "Time budget duration"])
+
+            obs_rows = []
+            obs_rows.append(obs_header)
+            for idx in range(self.lw.count()):
+                row = []
+                # obs id
+                row.append(self.lw.item(idx).text())
+                row.append(self.pj[cfg.OBSERVATIONS][self.lw.item(idx).text()].get("date", ""))
+                row.append(util.eol2space(self.pj[cfg.OBSERVATIONS][self.lw.item(idx).text()].get(cfg.DESCRIPTION, "")))
+
+                for idx2 in self.pj.get(cfg.INDEPENDENT_VARIABLES, []):
+                    # var has value in obs?
+                    if self.pj[cfg.INDEPENDENT_VARIABLES][idx2]["label"] in self.pj[cfg.OBSERVATIONS][
+                        self.lw.item(idx).text()
+                    ].get(cfg.INDEPENDENT_VARIABLES, []):
+                        row.append(
+                            self.pj[cfg.OBSERVATIONS][self.lw.item(idx).text()][cfg.INDEPENDENT_VARIABLES][
+                                self.pj[cfg.INDEPENDENT_VARIABLES][idx2]["label"]
+                            ]
+                        )
+                    else:
+                        row.append("")
+                # start stop duration
+                row.extend([f"{self.min_time:0.3f}", f"{self.max_time:0.3f}", f"{self.max_time - self.min_time:0.3f}"])
+
+                obs_rows.append(row)
+
+            # write file with observations information
+            data = tablib.Dataset()
+            data.title = "Time budget - Observations information"
+
+            for row in obs_rows:
+                data.append(complete(row, max([len(r) for r in obs_rows])))
+
+            with open(pl.Path(file_name).with_suffix(f".observations_info.{cfg.FILE_NAME_SUFFIX[filter_]}"), "wb") as f:
+                if filter_ in [cfg.TSV, cfg.CSV, cfg.HTML]:
+                    f.write(str.encode(data.export(cfg.FILE_NAME_SUFFIX[filter_])))
+                if filter_ in [cfg.ODS, cfg.XLSX, cfg.XLS]:
+                    f.write(data.export(cfg.FILE_NAME_SUFFIX[filter_]))
+        """
+
+        """
             rows.append(["Observations:"])
             for idx in range(self.lw.count()):
                 rows.append([""])
@@ -233,37 +301,31 @@ class timeBudgetResults(QWidget):
 
             rows.extend([[""], [""], ["Time budget:"]])
 
-            # write header
-            header = []
-            for col_idx in range(self.twTB.columnCount()):
-                header.append(self.twTB.horizontalHeaderItem(col_idx).text())
 
+            # write header
+
+            header = [self.twTB.horizontalHeaderItem(col_idx).text() for col_idx in range(self.twTB.columnCount())]
             rows.append(header)
-            rows.append([""])
 
             for row in range(self.twTB.rowCount()):
                 values = []
                 for col_idx in range(self.twTB.columnCount()):
                     values.append(util.intfloatstr(self.twTB.item(row, col_idx).text()))
-
                 rows.append(values)
+        """
 
-        max_row_length = max([len(r) for r in rows])
         data = tablib.Dataset()
         data.title = "Time budget"
 
         for row in rows:
-            data.append(complete(row, max_row_length))
+            data.append(complete(row, max([len(r) for r in rows])))
 
-        if outputFormat in ["tsv", "csv", "html"]:
-            with open(file_name, "wb") as f:
-                f.write(str.encode(data.export(outputFormat)))
-            return
-
-        if outputFormat in ["ods", "xlsx", "xls"]:
-            with open(file_name, "wb") as f:
-                f.write(data.export(outputFormat))
-            return
+        # write results
+        with open(file_name, "wb") as f:
+            if filter_ in [cfg.TSV, cfg.CSV, cfg.HTML]:
+                f.write(str.encode(data.export(cfg.FILE_NAME_SUFFIX[filter_])))
+            if filter_ in [cfg.ODS, cfg.XLSX, cfg.XLS]:
+                f.write(data.export(cfg.FILE_NAME_SUFFIX[filter_]))
 
 
 def time_budget(self, mode: str, mode2: str = "list"):
@@ -295,7 +357,9 @@ def time_budget(self, mode: str, mode2: str = "list"):
     flagGroup = False
     if len(selectedObservations) > 1:
         flagGroup = (
-            dialog.MessageDialog(cfg.programName, "Group observations in one time budget analysis?", [cfg.YES, cfg.NO])
+            dialog.MessageDialog(
+                cfg.programName, "Group the selected observations in a single time budget analysis?", [cfg.YES, cfg.NO]
+            )
             == cfg.YES
         )
 
@@ -378,6 +442,7 @@ def time_budget(self, mode: str, mode2: str = "list"):
                 try:
                     max_time = float(self.pj[cfg.OBSERVATIONS][obsId][cfg.EVENTS][-1][0])  # last event
                 except Exception:
+                    # TODO: set to 0 if no events ?
                     max_time = float(obs_length)
 
             if parameters[cfg.TIME_INTERVAL] == cfg.TIME_ARBITRARY_INTERVAL:
@@ -477,6 +542,7 @@ def time_budget(self, mode: str, mode2: str = "list"):
         self.tb = timeBudgetResults(self.pj, self.config_param)
 
         # add min and max time
+        self.tb.time_interval = parameters[cfg.TIME_INTERVAL]
         self.tb.min_time = min_time
         self.tb.max_time = max_time
 
@@ -626,48 +692,48 @@ def time_budget(self, mode: str, mode2: str = "list"):
 
     if len(selectedObservations) > 1 and not flagGroup:
 
-        items = (
-            "Tab Separated Values (*.tsv)",
-            "Comma separated values (*.csv)",
-            "OpenDocument Spreadsheet (*.ods)",
-            "OpenDocument Workbook (*.ods)",
-            "Microsoft Excel Spreadsheet (*.xlsx)",
-            "Microsoft Excel Workbook (*.xlsx)",
-            "HTML (*.html)",
-            "Legacy Microsoft Excel Spreadsheet (*.xls)",
+        output_format, ok = QInputDialog.getItem(
+            self,
+            "Time budget analysis format",
+            "Available formats",
+            (
+                cfg.TSV,
+                cfg.CSV,
+                cfg.ODS,
+                cfg.ODS_WB,
+                cfg.XLSX,
+                cfg.XLSX_WB,
+                cfg.HTML,
+                cfg.XLS,
+            ),
+            0,
+            False,
         )
-
-        formats = [
-            "tsv",
-            "csv",
-            "od spreadsheet",
-            "od workbook",
-            "xlsx spreadsheet",
-            "xlsx workbook",
-            "html",
-            "xls legacy",
-        ]
-
-        item, ok = QInputDialog.getItem(self, "Time budget analysis format", "Available formats", items, 0, False)
         if not ok:
             return
 
-        outputFormat = formats[items.index(item)]
-        extension = re.sub(".* \(\*\.", "", item)[:-1]
+        extension = cfg.FILE_NAME_SUFFIX[output_format]
 
-        flagWorkBook = False
-
-        if "workbook" in outputFormat:
+        if output_format in (cfg.ODS_WB, cfg.XLSX_WB):
             workbook = tablib.Databook()
-            flagWorkBook = True
-            if "xls" in outputFormat:
-                filters = "Microsoft Excel Workbook *.xlsx (*.xlsx);;All files (*)"
-            if "od" in outputFormat:
-                filters = "Open Document Workbook *.ods (*.ods);;All files (*)"
 
-            WBfileName, filter_ = QFileDialog(self).getSaveFileName(self, "Save Time budget analysis", "", filters)
-            if not WBfileName:
+            wb_file_name, filter_ = QFileDialog(self).getSaveFileName(
+                self, "Save Time budget analysis", "", output_format
+            )
+            if not wb_file_name:
                 return
+
+            if pl.Path(wb_file_name).suffix != f".{cfg.FILE_NAME_SUFFIX[filter_]}":
+                wb_file_name = str(pl.Path(wb_file_name)) + "." + cfg.FILE_NAME_SUFFIX[filter_]
+                # check if file with new extension already exists
+                if pl.Path(wb_file_name).is_file():
+                    if (
+                        dialog.MessageDialog(
+                            cfg.programName, f"The file {wb_file_name} already exists.", [cfg.CANCEL, cfg.OVERWRITE]
+                        )
+                        == cfg.CANCEL
+                    ):
+                        return
 
         else:  # not workbook
             exportDir = QFileDialog(self).getExistingDirectory(
@@ -1003,70 +1069,42 @@ def time_budget(self, mode: str, mode2: str = "list"):
 
             # check worksheet/workbook title for forbidden char (excel)
             data.title = util.safe_xl_worksheet_title(data.title, extension)
-            """
-            if "xls" in outputFormat:
-                for forbidden_char in EXCEL_FORBIDDEN_CHARACTERS:
-                    data.title = data.title.replace(forbidden_char, " ")
-            """
 
-            if flagWorkBook:
-                """
-                for forbidden_char in EXCEL_FORBIDDEN_CHARACTERS:
-                    data.title = data.title.replace(forbidden_char, " ")
-                if "xls" in outputFormat:
-                    if len(data.title) > 31:
-                        data.title = data.title[:31]
-                """
+            if output_format in (cfg.ODS_WB, cfg.XLSX_WB):
                 workbook.add_sheet(data)
 
             else:
 
-                fileName = f"{pl.Path(exportDir) / pl.Path(util.safeFileName(obsId))}.{extension}"
-                if mem_command != cfg.OVERWRITE_ALL and pl.Path(fileName).is_file():
+                file_name = f"{pl.Path(exportDir) / pl.Path(util.safeFileName(obsId))}.{extension}"
+                if mem_command != cfg.OVERWRITE_ALL and pl.Path(file_name).is_file():
                     if mem_command == "Skip all":
                         continue
                     mem_command = dialog.MessageDialog(
                         cfg.programName,
-                        f"The file {fileName} already exists.",
-                        [cfg.OVERWRITE, cfg.OVERWRITE_ALL, "Skip", "Skip all", cfg.CANCEL],
+                        f"The file {file_name} already exists.",
+                        [cfg.OVERWRITE, cfg.OVERWRITE_ALL, cfg.SKIP, cfg.SKIP_ALL, cfg.CANCEL],
                     )
                     if mem_command == cfg.CANCEL:
                         return
-                    if mem_command in ["Skip", "Skip all"]:
+                    if mem_command in [cfg.SKIP, cfg.SKIP_ALL]:
                         continue
 
-                if outputFormat in ["tsv", "csv", "html"]:
-                    with open(fileName, "wb") as f:
-                        f.write(str.encode(data.export(outputFormat)))
+                with open(file_name, "wb") as f:
+                    if output_format in [cfg.TSV, cfg.CSV, cfg.HTML]:
+                        f.write(str.encode(data.export(cfg.FILE_NAME_SUFFIX[output_format])))
 
-                if outputFormat == "od spreadsheet":
-                    with open(fileName, "wb") as f:
+                    if output_format == cfg.ODS:
                         f.write(data.ods)
 
-                if outputFormat == "xlsx spreadsheet":
-                    with open(fileName, "wb") as f:
+                    if output_format == cfg.XLSX:
                         f.write(data.xlsx)
 
-                if outputFormat == "xls legacy":
-                    """
-                    if len(data.title) > 31:
-                        data.title = data.title[:31]
-                        QMessageBox.warning(
-                            None,
-                            programName,
-                            (f"The worksheet name <b>{obsId}</b> was shortened to <b>{data.title}</b> due to XLS format limitations.\n"
-                                "The limit on worksheet name length is 31 characters"),
-                            QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton
-                        )
-                    """
-
-                    with open(fileName, "wb") as f:
+                    if output_format == cfg.XLS:
                         f.write(data.xls)
 
-        if flagWorkBook:
-            if "xls" in outputFormat:
-                with open(WBfileName, "wb") as f:
-                    f.write(workbook.xlsx)
-            if "od" in outputFormat:
-                with open(WBfileName, "wb") as f:
-                    f.write(workbook.ods)
+        if output_format == cfg.XLSX_WB:
+            with open(wb_file_name, "wb") as f:
+                f.write(workbook.xlsx)
+        if output_format == cfg.ODS_WB:
+            with open(wb_file_name, "wb") as f:
+                f.write(workbook.ods)

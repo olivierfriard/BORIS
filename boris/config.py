@@ -125,6 +125,8 @@ DISCARD = "Discard"
 OK = "OK"
 OVERWRITE = "Overwrite"
 OVERWRITE_ALL = "Overwrite all"
+SKIP = "Skip"
+SKIP_ALL = "Skip all"
 
 NO_FOCAL_SUBJECT = "No focal subject"
 
@@ -637,4 +639,27 @@ INIT_PARAM = {
     MEMORY_FOR_FRAMES: DEFAULT_MEMORY_FOR_FRAMES,
     ADAPT_FAST_JUMP: ADAPT_FAST_JUMP_DEFAULT,
     TIME_BUDGET_FORMAT: DEFAULT_TIME_BUDGET_FORMAT,
+}
+
+
+# Output format
+TSV = "Tab Separated Values (*.tsv)"
+CSV = "Comma Separated Values (*.csv)"
+ODS = "OpenDocument Spreadsheet ODS (*.ods)"
+ODS_WB = "OpenDocument Workbook (*.ods)"
+XLSX = "Microsoft Excel Spreadsheet XLSX (*.xlsx)"
+XLSX_WB = "Microsoft Excel Workbook (*.xlsx)"
+XLS = "Legacy Microsoft Excel Spreadsheet XLS (*.xls)"
+HTML = "HTML (*.html)"
+
+
+FILE_NAME_SUFFIX = {
+    TSV: "tsv",
+    CSV: "csv",
+    ODS: "ods",
+    ODS_WB: "ods",
+    XLSX: "xlsx",
+    XLSX_WB: "xlsx",
+    XLS: "xls",
+    HTML: "html",
 }

@@ -188,18 +188,25 @@ def export_tabular_events(self, mode: str = "tabular"):
     if mode == "tabular":
         if len(selectedObservations) > 1:  # choose directory for exporting observations
 
-            items = (
-                "Tab Separated Values (*.tsv)",
-                "Comma separated values (*.csv)",
-                "Open Document Spreadsheet (*.ods)",
-                "Microsoft Excel Spreadsheet XLSX (*.xlsx)",
-                "Legacy Microsoft Excel Spreadsheet XLS (*.xls)",
-                "HTML (*.html)",
+            item, ok = QInputDialog.getItem(
+                self,
+                "Export events format",
+                "Available formats",
+                (
+                    cfg.TSV,
+                    cfg.CSV,
+                    cfg.ODS,
+                    cfg.XLSX,
+                    cfg.XLS,
+                    cfg.HTML,
+                ),
+                0,
+                False,
             )
-            item, ok = QInputDialog.getItem(self, "Export events format", "Available formats", items, 0, False)
             if not ok:
                 return
-            outputFormat = re.sub(".* \(\*\.", "", item)[:-1]
+            """outputFormat = re.sub(".* \(\*\.", "", item)[:-1]"""
+            outputFormat = cfg.FILE_NAME_SUFFIX[item]
 
             exportDir = QFileDialog().getExistingDirectory(
                 self,
@@ -212,14 +219,13 @@ def export_tabular_events(self, mode: str = "tabular"):
 
         if len(selectedObservations) == 1:
             extended_file_formats = [
-                "Tab Separated Values (*.tsv)",
-                "Comma Separated Values (*.csv)",
-                "Open Document Spreadsheet ODS (*.ods)",
-                "Microsoft Excel Spreadsheet XLSX (*.xlsx)",
-                "Legacy Microsoft Excel Spreadsheet XLS (*.xls)",
-                "HTML (*.html)",
+                cfg.TSV,
+                cfg.CSV,
+                cfg.ODS,
+                cfg.XLSX,
+                cfg.XLS,
+                cfg.HTML,
             ]
-            file_formats = ["tsv", "csv", "ods", "xlsx", "xls", "html"]
 
             fileName, filter_ = QFileDialog().getSaveFileName(
                 self, "Export events", "", ";;".join(extended_file_formats)
@@ -227,7 +233,8 @@ def export_tabular_events(self, mode: str = "tabular"):
             if not fileName:
                 return
 
-            outputFormat = file_formats[extended_file_formats.index(filter_)]
+            # outputFormat = file_formats[extended_file_formats.index(filter_)]
+            outputFormat = cfg.FILE_NAME_SUFFIX[filter_]
             if pl.Path(fileName).suffix != "." + outputFormat:
                 fileName = str(pl.Path(fileName)) + "." + outputFormat
                 # check if file with new extension already exists
@@ -254,17 +261,17 @@ def export_tabular_events(self, mode: str = "tabular"):
         if len(selectedObservations) > 1 or mode == "jwatcher":
             fileName = f"{pl.Path(exportDir) / util.safeFileName(obsId)}.{outputFormat}"
             # check if file with new extension already exists
-            if mem_command != "Overwrite all" and pl.Path(fileName).is_file():
-                if mem_command == "Skip all":
+            if mem_command != cfg.OVERWRITE_ALL and pl.Path(fileName).is_file():
+                if mem_command == cfg.SKIP_ALL:
                     continue
                 mem_command = dialog.MessageDialog(
                     cfg.programName,
                     f"The file {fileName} already exists.",
-                    [cfg.OVERWRITE, "Overwrite all", "Skip", "Skip all", cfg.CANCEL],
+                    [cfg.OVERWRITE, cfg.OVERWRITE_ALL, cfg.SKIP, cfg.SKIP_ALL, cfg.CANCEL],
                 )
                 if mem_command == cfg.CANCEL:
                     return
-                if mem_command in ["Skip", "Skip all"]:
+                if mem_command in [cfg.SKIP, cfg.SKIP_ALL]:
                     continue
 
         if mode == "tabular":
@@ -471,7 +478,7 @@ def export_aggregated_events(self):
     stop_idx = -8
     obs_id_idx = 0
 
-    # check indep var type for dataframe output
+    # TODO: check indep var type for dataframe output
     """ to be finished
     column_type = {"Observation id": "str", "Description": "str", "Comment start": "str", "Comment stop": "str"}
     for idx_var in util.sorted_keys(pj[cfg.INDEPENDENT_VARIABLES]):
