@@ -224,7 +224,7 @@ def undo_event_operation(self) -> None:
     events = self.undo_queue.pop()
     operation_description = self.undo_description.pop()
     self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS] = events[:]
-    self.projectChanged = True
+    self.project_changed()
 
     self.statusbar.showMessage(operation_description, 5000)
 
@@ -310,7 +310,7 @@ def delete_all_events(self):
                 not in rows_to_delete
             ]
 
-        self.projectChanged = True
+        self.project_changed()
         self.load_tw_events(self.observationId)
 
 
@@ -377,7 +377,7 @@ def delete_selected_events(self):
                 not in rows_to_delete
             ]
 
-        self.projectChanged = True
+        self.project_changed()
         self.load_tw_events(self.observationId)
 
 
@@ -514,7 +514,7 @@ def edit_selected_events(self):
 
                     self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS][idx] = list(new_event)
                     mem_event_idx.append(idx)
-                    self.projectChanged = True
+                    self.project_changed()
 
             # check if behavior is unique for editing modifiers
             if len(behavior_codes) == 1:
@@ -708,7 +708,7 @@ def edit_event(self):
     while True:
         if editWindow.exec_():  # button OK
 
-            self.projectChanged = True
+            self.project_changed()
 
             # MEDIA / LIVE
             if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE] in (cfg.MEDIA, cfg.LIVE):
@@ -828,7 +828,7 @@ def edit_time_selected_events(self):
                 self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS][idx][cfg.EVENT_TIME_FIELD_IDX] += dec(
                     f"{d:.3f}"
                 )
-                self.projectChanged = True
+                self.project_changed()
 
         self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS] = sorted(
             self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS]
@@ -902,7 +902,8 @@ def paste_clipboard_to_events(self):
         if event in self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS]:
             continue
         self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS].append(event)
-        self.projectChanged = True
+
+        self.project_changed()
 
     self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS] = sorted(
         self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS]

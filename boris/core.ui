@@ -152,7 +152,7 @@
      <x>0</x>
      <y>0</y>
      <width>1441</width>
-     <height>35</height>
+     <height>22</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuHelp">
@@ -166,7 +166,7 @@
    </widget>
    <widget class="QMenu" name="menuFile">
     <property name="title">
-     <string>File</string>
+     <string>Project</string>
     </property>
     <widget class="QMenu" name="menuRecent_projects">
      <property name="title">
@@ -180,6 +180,13 @@
      </property>
      <addaction name="actionNoldus_Observer_template"/>
     </widget>
+    <widget class="QMenu" name="menuMedia_file_Images_directories">
+     <property name="title">
+      <string>Media file / Images directories</string>
+     </property>
+     <addaction name="actionRemove_path_from_media_files"/>
+     <addaction name="actionSet_paths_relative_to_project_directory"/>
+    </widget>
     <addaction name="actionNew_project"/>
     <addaction name="actionOpen_project"/>
     <addaction name="menuRecent_projects"/>
@@ -190,7 +197,7 @@
     <addaction name="actionClose_project"/>
     <addaction name="separator"/>
     <addaction name="actionCheck_project"/>
-    <addaction name="actionRemove_path_from_media_files"/>
+    <addaction name="menuMedia_file_Images_directories"/>
     <addaction name="actionSend_project"/>
     <addaction name="separator"/>
     <addaction name="actionPreferences"/>
@@ -1245,7 +1252,7 @@
   </action>
   <action name="actionRemove_path_from_media_files">
    <property name="text">
-    <string>Remove path from media files / images directories</string>
+    <string>Remove paths</string>
    </property>
   </action>
   <action name="actionCheck_project">
@@ -1459,6 +1466,16 @@
   <action name="actionUndo">
    <property name="text">
     <string>Undo</string>
+   </property>
+  </action>
+  <action name="actionaaa">
+   <property name="text">
+    <string>aaa</string>
+   </property>
+  </action>
+  <action name="actionSet_paths_relative_to_project_directory">
+   <property name="text">
+    <string>Set paths relative to project directory</string>
    </property>
   </action>
  </widget>

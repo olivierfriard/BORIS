@@ -909,20 +909,14 @@ def time_budget(self, mode: str, mode2: str = "list"):
 
                 indep_var_label = []
                 indep_var_values = []
-                if cfg.INDEPENDENT_VARIABLES in self.pj and self.pj[cfg.INDEPENDENT_VARIABLES]:
-                    for idx in self.pj[cfg.INDEPENDENT_VARIABLES]:
-                        indep_var_label.append(self.pj[cfg.INDEPENDENT_VARIABLES][idx]["label"])
+                for idx, v in self.pj.get(cfg.INDEPENDENT_VARIABLES, {}).items():
+                    indep_var_label.append(v["label"])
 
-                        if (
-                            cfg.INDEPENDENT_VARIABLES in self.pj[cfg.OBSERVATIONS][obsId]
-                            and self.pj[cfg.INDEPENDENT_VARIABLES][idx]["label"]
-                            in self.pj[cfg.OBSERVATIONS][obsId][cfg.INDEPENDENT_VARIABLES]
-                        ):
-                            indep_var_values.append(
-                                self.pj[cfg.OBSERVATIONS][obsId][cfg.INDEPENDENT_VARIABLES][
-                                    self.pj[cfg.INDEPENDENT_VARIABLES][idx]["label"]
-                                ]
-                            )
+                    if (
+                        cfg.INDEPENDENT_VARIABLES in self.pj[cfg.OBSERVATIONS][obsId]
+                        and v["label"] in self.pj[cfg.OBSERVATIONS][obsId][cfg.INDEPENDENT_VARIABLES]
+                    ):
+                        indep_var_values.append(self.pj[cfg.OBSERVATIONS][obsId][cfg.INDEPENDENT_VARIABLES][v["label"]])
 
                 header.extend(indep_var_label)
                 col1.extend(indep_var_values)

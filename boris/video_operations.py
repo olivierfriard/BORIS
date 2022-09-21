@@ -99,7 +99,7 @@ def zoom_level(self):
             self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO][cfg.ZOOM_LEVEL][str(idx + 1)] = float(
                 zl.elements[f"Player #{idx + 1}"].currentText()
             )
-            self.projectChanged = True
+            self.project_changed()
 
 
 def display_subtitles(self):
@@ -137,7 +137,7 @@ def display_subtitles(self):
             self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO][cfg.DISPLAY_MEDIA_SUBTITLES][
                 str(idx + 1)
             ] = st.elements[f"Player #{idx + 1}"].isChecked()
-            self.projectChanged = True
+            self.project_changed()
 
 
 def video_normalspeed_activated(self):

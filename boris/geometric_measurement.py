@@ -343,7 +343,6 @@ def image_clicked(self, n_player, event):
             if event.button() == 1:  # left click
                 draw_point(self, x, y, self.measurement_w.mark_color, n_player)
                 if current_frame not in self.measurement_w.draw_mem:
-                    print(f"{current_frame=}")
                     self.measurement_w.draw_mem[current_frame] = []
 
                 self.measurement_w.draw_mem[current_frame].append(

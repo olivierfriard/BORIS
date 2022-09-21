@@ -147,4 +147,4 @@ def import_observations(self):
 
                 if flagImported:
                     QMessageBox.information(self, cfg.programName, "Observations imported successfully")
-                    self.projectChanged = True
+                    self.project_changed()

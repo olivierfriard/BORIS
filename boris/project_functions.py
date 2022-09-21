@@ -139,7 +139,7 @@ def behavior_category(ethogram: dict) -> dict:
     return behavioral_category
 
 
-def check_if_media_available(observation: dict, project_file_name: str):
+def check_if_media_available(observation: dict, project_file_name: str) -> tuple:
     """
     check if media files available for media and images observations
 
@@ -738,7 +738,7 @@ def export_observations_list(pj: dict, selected_observations: list, file_name: s
     return True
 
 
-def remove_media_files_path(pj: dict) -> None:
+def remove_media_files_path(pj: dict, project_file_name: str) -> bool:
     """
     remove path from media files and from images directory
     tested
@@ -750,11 +750,46 @@ def remove_media_files_path(pj: dict) -> None:
         None
     """
 
+    file_not_found = []
+    # check if media and images dir
+    for obs_id in pj[cfg.OBSERVATIONS]:
+
+        if pj[cfg.OBSERVATIONS][obs_id][cfg.TYPE] == cfg.IMAGES:
+            for img_dir in pj[cfg.OBSERVATIONS][obs_id][cfg.DIRECTORIES_LIST]:
+                if full_path(pl.Path(img_dir).name, project_file_name) == "":
+                    file_not_found.append(img_dir)
+
+        if pj[cfg.OBSERVATIONS][obs_id][cfg.TYPE] == cfg.MEDIA:
+            for n_player in cfg.ALL_PLAYERS:
+                if n_player in pj[cfg.OBSERVATIONS][obs_id][cfg.FILE]:
+                    for idx, media_file in enumerate(pj[cfg.OBSERVATIONS][obs_id][cfg.FILE][n_player]):
+                        if full_path(pl.Path(media_file).name, project_file_name) == "":
+                            file_not_found.append(media_file)
+
+    file_not_found = set(file_not_found)
+    if file_not_found:
+        if (
+            dialog.MessageDialog(
+                cfg.programName,
+                (
+                    "Some media files / images directories will not be found after this operation:<br><br>"
+                    f"{',<br>'.join(file_not_found)}"
+                    "<br><br>Are you sure to continue?"
+                ),
+                [cfg.YES, cfg.NO],
+            )
+            == cfg.NO
+        ):
+            return False
+
+    flag_changed = False
     for obs_id in pj[cfg.OBSERVATIONS]:
 
         if pj[cfg.OBSERVATIONS][obs_id][cfg.TYPE] == cfg.IMAGES:
             new_img_dir_list = []
             for img_dir in pj[cfg.OBSERVATIONS][obs_id][cfg.DIRECTORIES_LIST]:
+                if img_dir != pl.Path(img_dir).name:
+                    flag_changed = True
                 new_img_dir_list.append(str(pl.Path(img_dir).name))
             pj[cfg.OBSERVATIONS][obs_id][cfg.DIRECTORIES_LIST] = new_img_dir_list
 
@@ -762,8 +797,9 @@ def remove_media_files_path(pj: dict) -> None:
             for n_player in cfg.ALL_PLAYERS:
                 if n_player in pj[cfg.OBSERVATIONS][obs_id][cfg.FILE]:
                     for idx, media_file in enumerate(pj[cfg.OBSERVATIONS][obs_id][cfg.FILE][n_player]):
-                        p = str(pl.Path(media_file).name)
+                        p = pl.Path(media_file).name
                         if p != media_file:
+                            flag_changed = True
                             pj[cfg.OBSERVATIONS][obs_id][cfg.FILE][n_player][idx] = p
                             if cfg.MEDIA_INFO in pj[cfg.OBSERVATIONS][obs_id]:
                                 for info in [cfg.LENGTH, cfg.HAS_AUDIO, cfg.HAS_VIDEO, cfg.FPS]:
@@ -777,6 +813,81 @@ def remove_media_files_path(pj: dict) -> None:
                                         ][cfg.MEDIA_INFO][info][media_file]
                                         # remove old path
                                         del pj[cfg.OBSERVATIONS][obs_id][cfg.MEDIA_INFO][info][media_file]
+
+    return flag_changed
+
+
+def set_media_paths_relative_to_project_path(pj: dict, project_file_name: str) -> bool:
+    """
+    set path from media files and path of images directory relative to the project path
+
+    Args:
+        pj (dict): project file
+
+    Returns:
+        None
+    """
+
+    # chek if media and images dir are relative to project dir
+    for obs_id in pj[cfg.OBSERVATIONS]:
+        if pj[cfg.OBSERVATIONS][obs_id][cfg.TYPE] == cfg.IMAGES:
+            for img_dir in pj[cfg.OBSERVATIONS][obs_id][cfg.DIRECTORIES_LIST]:
+                try:
+                    pl.Path(img_dir).relative_to(pl.Path(project_file_name).parent)
+                except ValueError:
+                    QMessageBox.critical(
+                        None,
+                        cfg.programName,
+                        f"Observation <b>{obs_id}</b>:<br>the path of <b>{img_dir}</b> is not relative to <b>{project_file_name}</b>.",
+                    )
+                    return False
+        if pj[cfg.OBSERVATIONS][obs_id][cfg.TYPE] == cfg.MEDIA:
+            for n_player in cfg.ALL_PLAYERS:
+                if n_player in pj[cfg.OBSERVATIONS][obs_id][cfg.FILE]:
+                    for idx, media_file in enumerate(pj[cfg.OBSERVATIONS][obs_id][cfg.FILE][n_player]):
+                        try:
+                            pl.Path(media_file).relative_to(pl.Path(project_file_name).parent)
+                        except ValueError:
+                            QMessageBox.critical(
+                                None,
+                                cfg.programName,
+                                f"Observation <b>{obs_id}</b>:<br>the path of <b>{media_file}</b> is not relative to <b>{project_file_name}</b>",
+                            )
+                            return False
+
+    # set media path and image dir relative to project dir
+    flag_changed = False
+    for obs_id in pj[cfg.OBSERVATIONS]:
+        if pj[cfg.OBSERVATIONS][obs_id][cfg.TYPE] == cfg.IMAGES:
+            new_dir_list = [
+                str(pl.Path(img_dir).relative_to(pl.Path(project_file_name).parent))
+                for img_dir in pj[cfg.OBSERVATIONS][obs_id][cfg.DIRECTORIES_LIST]
+            ]
+            if pj[cfg.OBSERVATIONS][obs_id][cfg.DIRECTORIES_LIST] != new_dir_list:
+                flag_changed = True
+            pj[cfg.OBSERVATIONS][obs_id][cfg.DIRECTORIES_LIST] = new_dir_list
+
+        if pj[cfg.OBSERVATIONS][obs_id][cfg.TYPE] == cfg.MEDIA:
+            for n_player in cfg.ALL_PLAYERS:
+                if n_player in pj[cfg.OBSERVATIONS][obs_id][cfg.FILE]:
+                    for idx, media_file in enumerate(pj[cfg.OBSERVATIONS][obs_id][cfg.FILE][n_player]):
+                        p = str(pl.Path(media_file).relative_to(pl.Path(project_file_name).parent))
+                        if p != media_file:
+                            flag_changed = True
+                            pj[cfg.OBSERVATIONS][obs_id][cfg.FILE][n_player][idx] = p
+                            if cfg.MEDIA_INFO in pj[cfg.OBSERVATIONS][obs_id]:
+                                for info in [cfg.LENGTH, cfg.HAS_AUDIO, cfg.HAS_VIDEO, cfg.FPS]:
+                                    if (
+                                        info in pj[cfg.OBSERVATIONS][obs_id][cfg.MEDIA_INFO]
+                                        and media_file in pj[cfg.OBSERVATIONS][obs_id][cfg.MEDIA_INFO][info]
+                                    ):
+                                        # add new file path
+                                        pj[cfg.OBSERVATIONS][obs_id][cfg.MEDIA_INFO][info][p] = pj[cfg.OBSERVATIONS][
+                                            obs_id
+                                        ][cfg.MEDIA_INFO][info][media_file]
+                                        # remove old path
+                                        del pj[cfg.OBSERVATIONS][obs_id][cfg.MEDIA_INFO][info][media_file]
+    return flag_changed
 
 
 def remove_data_files_path(pj: dict) -> None:
@@ -800,27 +911,6 @@ def remove_data_files_path(pj: dict) -> None:
                     p = str(pl.Path(pj[cfg.OBSERVATIONS][obs_id][cfg.PLOT_DATA][idx]["file_path"]).name)
                     if p != pj[cfg.OBSERVATIONS][obs_id][cfg.PLOT_DATA][idx]["file_path"]:
                         pj[cfg.OBSERVATIONS][obs_id][cfg.PLOT_DATA][idx]["file_path"] = p
-
-        """
-        for n_player in cfg.ALL_PLAYERS:
-            if n_player in pj[cfg.OBSERVATIONS][obs_id][cfg.FILE]:
-                for idx, media_file in enumerate(pj[cfg.OBSERVATIONS][obs_id][cfg.FILE][n_player]):
-                    p = str(pl.Path(media_file).name)
-                    if p != media_file:
-                        pj[cfg.OBSERVATIONS][obs_id][cfg.FILE][n_player][idx] = p
-                        if cfg.MEDIA_INFO in pj[cfg.OBSERVATIONS][obs_id]:
-                            for info in [cfg.LENGTH, cfg.HAS_AUDIO, cfg.HAS_VIDEO, cfg.FPS]:
-                                if (
-                                    info in pj[cfg.OBSERVATIONS][obs_id][cfg.MEDIA_INFO]
-                                    and media_file in pj[cfg.OBSERVATIONS][obs_id][cfg.MEDIA_INFO][info]
-                                ):
-                                    # add new file path
-                                    pj[cfg.OBSERVATIONS][obs_id][cfg.MEDIA_INFO][info][p] = pj[cfg.OBSERVATIONS][
-                                        obs_id
-                                    ][cfg.MEDIA_INFO][info][media_file]
-                                    # remove old path
-                                    del pj[cfg.OBSERVATIONS][obs_id][cfg.MEDIA_INFO][info][media_file]
-        """
 
 
 def full_path(path: str, project_file_name: str) -> str:
@@ -1235,12 +1325,12 @@ def open_project_json(projectFileName: str) -> tuple:
         if "time offset second player" in pj[cfg.OBSERVATIONS][obs]:
             if cfg.MEDIA_INFO not in pj[cfg.OBSERVATIONS][obs]:
                 pj[cfg.OBSERVATIONS][obs][cfg.MEDIA_INFO] = {}
-            if "offset" not in pj[cfg.OBSERVATIONS][obs][cfg.MEDIA_INFO]:
-                pj[cfg.OBSERVATIONS][obs][cfg.MEDIA_INFO]["offset"] = {}
+            if cfg.OFFSET not in pj[cfg.OBSERVATIONS][obs][cfg.MEDIA_INFO]:
+                pj[cfg.OBSERVATIONS][obs][cfg.MEDIA_INFO][cfg.OFFSET] = {}
             for player in pj[cfg.OBSERVATIONS][obs][cfg.FILE]:
-                pj[cfg.OBSERVATIONS][obs][cfg.MEDIA_INFO]["offset"][player] = 0.0
+                pj[cfg.OBSERVATIONS][obs][cfg.MEDIA_INFO][cfg.OFFSET][player] = 0.0
             if pj[cfg.OBSERVATIONS][obs]["time offset second player"]:
-                pj[cfg.OBSERVATIONS][obs][cfg.MEDIA_INFO]["offset"]["2"] = float(
+                pj[cfg.OBSERVATIONS][obs][cfg.MEDIA_INFO][cfg.OFFSET]["2"] = float(
                     pj[cfg.OBSERVATIONS][obs]["time offset second player"]
                 )
 

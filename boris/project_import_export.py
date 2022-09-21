@@ -765,7 +765,6 @@ def load_dataframe_into_subjects_tablewidget(self, df: pd.DataFrame) -> int:
     """
     Load pandas dataframe into the twSubjects table widget
     """
-    print(df.columns)
     for column in ["Subject name", "Description", "Key"]:
         if column not in list(df.columns):
             QMessageBox.warning(
@@ -1009,7 +1008,6 @@ def import_subjects_from_spreadsheet(self):
 
     try:
         df = pd.read_excel(file_name, sheet_name=0, engine=engine)
-        print(df)
     except Exception:
         QMessageBox.warning(
             None,

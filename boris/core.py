@@ -187,14 +187,14 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     pause_before_addevent = False  # pause before "Add event" command CTRL + A
     timeFormat = cfg.HHMMSS  # 's' or 'hh:mm:ss'
     repositioningTimeOffset = 0
-    automaticBackup = 0  # automatic backup interval (0 no backup)
+    automaticBackup: int = 0  # automatic backup interval (0 no backup)
     events_current_row: int = -1
     projectChanged: bool = False  # store if project was changed
     liveObservationStarted = False
     # data structures for external data plot
     plot_data = {}
     ext_data_timer_list = []
-    projectFileName = ""
+    projectFileName: str = ""
     mediaTotalLength = None
     beep_every = 0
 
@@ -212,10 +212,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     currentStates: dict = {}
     subject_name_index = {}
     flag_slow = False
-    play_rate = 1
-    play_rate_step = 0.1
+    play_rate: float = 1
+    play_rate_step: float = 0.1
     currentSubject: str = ""  # contains the current subject of observation
-    detailedObs = {}
+    detailedObs: dict = {}
     coding_map_window_geometry = 0
     project_window_geometry = 0  # memorize size of project window
 
@@ -388,6 +388,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             [
                 ("cb", "Test media file accessibility", True),
             ],
+            f"Check project integrity",
         )
         if not ib.exec_():
             return
@@ -411,10 +412,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     def project_changed(self):
         """ """
         self.projectChanged = True
+        menu_options.update_windows_title(self)
 
     def remove_media_files_path(self):
         """
-        remove path of media files
+        remove path of media files and images directories
         """
 
         if (
@@ -430,8 +432,26 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         ):
             return
 
-        project_functions.remove_media_files_path(self.pj)
-        self.project_changed()
+        if project_functions.remove_media_files_path(self.pj, self.projectFileName):
+            self.project_changed()
+
+    def set_media_files_path_relative_to_project_dir(self):
+        """
+        ask user confirmation for setting path from media files and path of images directory relative to the project path
+        """
+
+        if (
+            dialog.MessageDialog(
+                cfg.programName,
+                ("Are you sure to continue?"),
+                [cfg.YES, cfg.NO],
+            )
+            == cfg.NO
+        ):
+            return
+
+        if project_functions.set_media_paths_relative_to_project_path(self.pj, self.projectFileName):
+            self.project_changed()
 
     def view_behavior(self):
         """
@@ -861,7 +881,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         if paramPanelWindow.exec_():
             if self.observationId and set(paramPanelWindow.selectedBehaviors) != set(filtered_behaviors):
-                self.projectChanged = True
+                self.project_changed()
 
             gui_utilities.save_geometry(paramPanelWindow, "filter behaviors")
 
@@ -920,7 +940,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         if paramPanelWindow.exec_():
             if self.observationId and set(paramPanelWindow.selectedBehaviors) != set(filtered_subjects):
-                self.projectChanged = True
+                self.project_changed()
+
             self.load_subjects_in_twSubjects(paramPanelWindow.selectedBehaviors)
 
             gui_utilities.save_geometry(paramPanelWindow, "filter subjects")
@@ -1375,7 +1396,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             cfg.programName,
             f"The behaviors coding map <b>{behav_coding_map['name']}</b> was added to current project",
         )
-        self.projectChanged = True
+        self.project_changed()
 
     def actionCheckUpdate_activated(self, flagMsgOnlyIfNew=False):
         """
@@ -2747,7 +2768,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
             if mode == cfg.NEW:
                 self.projectFileName = ""
-                self.projectChanged = True
+                self.project_changed()
 
             if mode == cfg.EDIT:
                 if not self.projectChanged:
@@ -2785,7 +2806,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         del newProjectWindow
 
-    def save_project_json(self, projectFileName):
+    def save_project_json(self, projectFileName: str) -> int:
         """
         save project to JSON file
         convert Decimal type in float
@@ -2826,6 +2847,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     f_out.write(json.dumps(self.pj, default=util.decimal_default))
 
             self.projectChanged = False
+            menu_options.update_windows_title(self)
             self.save_project_json_started = False
 
             logging.debug(f"end save_project_json function")
@@ -2902,6 +2924,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
             if self.save_project_json(project_new_file_name) == 0:
                 self.projectFileName = project_new_file_name
+                # update windows title
+                menu_options.update_windows_title(self)
             else:
                 return "Not saved"
 
@@ -2913,10 +2937,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         logging.debug(f"Project file name: {self.projectFileName}")
 
         if not self.projectFileName:
-            if not self.pj["project_name"]:
+            if not self.pj[cfg.PROJECT_NAME]:
                 txt = "NONAME.boris"
             else:
-                txt = self.pj["project_name"] + ".boris"
+                txt = self.pj[cfg.PROJECT_NAME] + ".boris"
             os.chdir(os.path.expanduser("~"))
 
             self.projectFileName, filtr = QFileDialog().getSaveFileName(
@@ -3063,7 +3087,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 if dialog.MessageDialog(cfg.programName, "Delete the current events?", [cfg.YES, cfg.NO]) == cfg.YES:
                     self.twEvents.setRowCount(0)
                     self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS] = []
-                self.projectChanged = True
+                self.project_changed()
 
             self.pb_live_obs.setText("Stop live observation")
 
@@ -3463,20 +3487,20 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         if self.dw_player[n_player].player.playlist_count == 1:
 
-            if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO]["offset"][str(n_player + 1)]:
+            if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO][cfg.OFFSET][str(n_player + 1)]:
 
-                if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO]["offset"][str(n_player + 1)] > 0:
+                if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO][cfg.OFFSET][str(n_player + 1)] > 0:
 
                     if (
                         new_time
-                        < self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO]["offset"][str(n_player + 1)]
+                        < self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO][cfg.OFFSET][str(n_player + 1)]
                     ):
                         # hide video if time < offset
                         self.dw_player[n_player].stack.setCurrentIndex(1)
                     else:
 
                         if new_time - dec(
-                            self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO]["offset"][str(n_player + 1)]
+                            self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO][cfg.OFFSET][str(n_player + 1)]
                         ) > sum(self.dw_player[n_player].media_durations):
                             # hide video if required time > video time + offset
                             self.dw_player[n_player].stack.setCurrentIndex(1)
@@ -3487,17 +3511,17 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                             self.seek_mediaplayer(
                                 new_time
                                 - dec(
-                                    self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO]["offset"][
+                                    self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO][cfg.OFFSET][
                                         str(n_player + 1)
                                     ]
                                 ),
                                 player=n_player,
                             )
 
-                elif self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO]["offset"][str(n_player + 1)] < 0:
+                elif self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO][cfg.OFFSET][str(n_player + 1)] < 0:
 
                     if new_time - dec(
-                        self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO]["offset"][str(n_player + 1)]
+                        self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO][cfg.OFFSET][str(n_player + 1)]
                     ) > sum(self.dw_player[n_player].media_durations):
                         # hide video if required time > video time + offset
                         self.dw_player[n_player].stack.setCurrentIndex(1)
@@ -3506,7 +3530,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                         self.seek_mediaplayer(
                             new_time
                             - dec(
-                                self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO]["offset"][
+                                self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO][cfg.OFFSET][
                                     str(n_player + 1)
                                 ]
                             ),
@@ -3613,7 +3637,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                         - (
                             ct
                             + dec(
-                                self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO]["offset"][
+                                self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO][cfg.OFFSET][
                                     str(n_player + 1)
                                 ]
                             )
@@ -3827,7 +3851,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 for x in self.pj[cfg.OBSERVATIONS][obs_id][cfg.EVENTS]
             ]
 
-    def write_event(self, event: dict, mem_time: dec) -> None:
+    def write_event(self, event: dict, mem_time: dec) -> int:
         """
         add event from pressed key to observation
         offset is added to event time
@@ -3968,8 +3992,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
                     # check if editing (original_modifiers key)
                     currentModifiers = event.get("original_modifiers", "")
-
-                    # print(f"{event=}")
 
                     modifiers_selector = select_modifiers.ModifiersList(
                         event["code"], eval(str(event["modifiers"])), currentModifiers
@@ -4162,7 +4184,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             else:
                 self.twEvents.scrollToItem(self.twEvents.item(position_in_events, 0), QAbstractItemView.EnsureVisible)
 
-        self.projectChanged = True
+        self.project_changed()
 
         self.get_events_current_row()
 
@@ -4893,7 +4915,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                         self.load_tw_events(self.observationId)
                         self.twEvents.scrollToItem(self.twEvents.item(event_idx, 0))
                         self.twEvents.selectRow(event_idx)
-                        self.projectChanged = True
+                        self.project_changed()
 
                         if msg == "FIND_REPLACE":
                             return

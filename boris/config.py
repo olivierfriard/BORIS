@@ -74,6 +74,8 @@ ETHOGRAM = "behaviors_conf"
 BEHAVIORAL_CATEGORIES = "behavioral_categories"
 CONVERTERS = "converters"
 
+OFFSET = "offset"
+
 OBSERVATION_TIME_INTERVAL = "observation time interval"
 
 SUBJECT_NAME = "name"

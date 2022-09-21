@@ -24,6 +24,27 @@ import logging
 from . import config as cfg
 
 
+def update_windows_title(self):
+    """
+    update the main window title
+    """
+
+    if not self.project:
+        project_name = ""
+    else:
+        if self.pj[cfg.PROJECT_NAME]:
+            project_name = self.pj[cfg.PROJECT_NAME]
+        else:
+            if self.projectFileName:
+                project_name = f"Unnamed project ({self.projectFileName})"
+            else:
+                project_name = "Unnamed project"
+
+    self.setWindowTitle(
+        f"{self.observationId + ' - ' * (self.observationId != '')}{project_name}{'*' * self.projectChanged}{(' - ' * (project_name != ''))}{cfg.programName}"
+    )
+
+
 def update_menu(self):
     """
     enable/disable menu option
@@ -34,20 +55,7 @@ def update_menu(self):
     observation_is_active = self.observationId != ""
     project_contains_obs = self.pj[cfg.OBSERVATIONS] != {}
 
-    if not project_opened:
-        project_name = ""
-    else:
-        if self.pj["project_name"]:
-            project_name = self.pj["project_name"]
-        else:
-            if self.projectFileName:
-                project_name = f"Unnamed project ({self.projectFileName})"
-            else:
-                project_name = "Unnamed project"
-
-    self.setWindowTitle(
-        f"{self.observationId + ' - ' * observation_is_active}{project_name}{'*' * self.projectChanged}{(' - ' * (project_name != ''))}{cfg.programName}"
-    )
+    update_windows_title(self)
 
     # enabled if project loaded
     for action in (
@@ -79,7 +87,7 @@ def update_menu(self):
     # observations
 
     # enabled if project contain one or more observations
-    for w in [
+    for w in (
         self.actionOpen_observation,
         self.actionEdit_observation_2,
         self.actionView_observation,
@@ -94,7 +102,9 @@ def update_menu(self):
         self.actionExtract_events_from_media_files,
         self.actionExtract_frames_from_media_files,
         self.actionRemove_observations,
-    ]:
+        self.menuMedia_file_Images_directories,
+        self.actionSet_paths_relative_to_project_directory,
+    ):
         w.setEnabled(project_contains_obs)
 
     # enabled if current observation

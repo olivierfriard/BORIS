@@ -301,7 +301,7 @@ def remove_observations(self):
     if response == cfg.YES:
         for obs_id in selected_observations:
             del self.pj[cfg.OBSERVATIONS][obs_id]
-            self.projectChanged = True
+            self.project_changed()
 
 
 def observation_length(pj: dict, selected_observations: list) -> tuple:
@@ -717,7 +717,7 @@ def new_observation(self, mode=cfg.NEW, obsId=""):
 
     if rv:
 
-        self.projectChanged = True
+        self.project_changed()
 
         new_obs_id = observationWindow.leObservationId.text().strip()
 
@@ -950,7 +950,7 @@ def close_observation(self):
                 )
                 if events_to_add:
                     self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS].extend(events_to_add)
-                    self.projectChanged = True
+                    self.project_changed()
                     self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS].sort()
 
                     self.load_tw_events(self.observationId)
@@ -1197,7 +1197,7 @@ def initialize_new_media_observation(self):
                     mediaLength = r["duration"] * 1000
                     mediaFPS = r["fps"]
 
-                    self.projectChanged = True
+                    self.project_changed()
 
             self.dw_player[i].media_durations.append(int(mediaLength))
             self.dw_player[i].fps[mediaFile] = mediaFPS

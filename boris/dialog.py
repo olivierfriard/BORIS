@@ -286,8 +286,10 @@ class Input_dialog(QDialog):
     dialog for user input. Elements can be checkbox, lineedit or spinbox
     """
 
-    def __init__(self, label_caption, elements_list):
+    def __init__(self, label_caption: str, elements_list: list, title: str = ""):
         super().__init__()
+
+        self.setWindowTitle(title)
 
         hbox = QVBoxLayout()
         self.label = QLabel()
@@ -344,8 +346,6 @@ class Input_dialog(QDialog):
         hbox.addLayout(hbox2)
 
         self.setLayout(hbox)
-
-        self.setWindowTitle("title")
 
 
 class DuplicateBehaviorCode(QDialog):

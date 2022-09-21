@@ -117,7 +117,7 @@ def fix_unpaired_events(self):
 
             if events_to_add:
                 self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS].extend(events_to_add)
-                self.projectChanged = True
+                self.project_changed()
                 self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS].sort()
                 self.load_tw_events(self.observationId)
                 item = self.twEvents.item(
@@ -161,7 +161,7 @@ def fix_unpaired_events(self):
                         self.pj[cfg.OBSERVATIONS][obs_id][cfg.EVENTS] = events_backup
                     else:
                         out += f"<b>{obs_id}</b><br>"
-                        self.projectChanged = True
+                        self.project_changed()
         if out:
             out = "The following observations were modified to fix the unpaired state events:<br><br>" + out
             self.results = dialog.Results_dialog()

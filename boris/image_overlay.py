@@ -50,7 +50,7 @@ def add_image_overlay(self):
             "transparency": w.sb_overlay_transparency.value(),
         }
         self.overlays[idx] = self.dw_player[idx].player.create_image_overlay()
-        self.projectChanged = True
+        self.project_changed()
         self.resize_dw(idx)
 
     except Exception:

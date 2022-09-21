@@ -135,7 +135,6 @@ def load_events_in_db(
                             )
 
                         if pj[cfg.OBSERVATIONS][obs_id][cfg.TYPE] == cfg.IMAGES:
-                            print(event)
                             cursor.execute(
                                 (
                                     "INSERT INTO events "
