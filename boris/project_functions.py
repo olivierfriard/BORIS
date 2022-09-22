@@ -738,6 +738,7 @@ def export_observations_list(pj: dict, selected_observations: list, file_name: s
     return True
 
 
+'''
 def remove_media_files_path(pj: dict, project_file_name: str) -> bool:
     """
     remove path from media files and from images directory
@@ -815,17 +816,19 @@ def remove_media_files_path(pj: dict, project_file_name: str) -> bool:
                                         del pj[cfg.OBSERVATIONS][obs_id][cfg.MEDIA_INFO][info][media_file]
 
     return flag_changed
+'''
 
 
-def set_media_paths_relative_to_project_path(pj: dict, project_file_name: str) -> bool:
+def set_media_paths_relative_to_project_dir(pj: dict, project_file_name: str) -> bool:
     """
-    set path from media files and path of images directory relative to the project path
+    set path from media files and path of images directory relative to the project directory
 
     Args:
-        pj (dict): project file
+        pj (dict): project
+        project_file_name (str): path of the project file
 
     Returns:
-        None
+        bool: True if project changed else False
     """
 
     # chek if media and images dir are relative to project dir
@@ -835,12 +838,18 @@ def set_media_paths_relative_to_project_path(pj: dict, project_file_name: str) -
                 try:
                     pl.Path(img_dir).relative_to(pl.Path(project_file_name).parent)
                 except ValueError:
-                    QMessageBox.critical(
-                        None,
-                        cfg.programName,
-                        f"Observation <b>{obs_id}</b>:<br>the path of <b>{img_dir}</b> is not relative to <b>{project_file_name}</b>.",
-                    )
-                    return False
+                    if (
+                        pl.Path(img_dir).is_absolute()
+                        or not (pl.Path(project_file_name).parent / pl.Path(img_dir)).is_dir()
+                    ):
+
+                        QMessageBox.critical(
+                            None,
+                            cfg.programName,
+                            f"Observation <b>{obs_id}</b>:<br>the path of <b>{img_dir}</b> is not relative to <b>{project_file_name}</b>.",
+                        )
+                        return False
+
         if pj[cfg.OBSERVATIONS][obs_id][cfg.TYPE] == cfg.MEDIA:
             for n_player in cfg.ALL_PLAYERS:
                 if n_player in pj[cfg.OBSERVATIONS][obs_id][cfg.FILE]:
@@ -848,21 +857,35 @@ def set_media_paths_relative_to_project_path(pj: dict, project_file_name: str) -
                         try:
                             pl.Path(media_file).relative_to(pl.Path(project_file_name).parent)
                         except ValueError:
-                            QMessageBox.critical(
-                                None,
-                                cfg.programName,
-                                f"Observation <b>{obs_id}</b>:<br>the path of <b>{media_file}</b> is not relative to <b>{project_file_name}</b>",
-                            )
-                            return False
+
+                            if (
+                                pl.Path(media_file).is_absolute()
+                                or not (pl.Path(project_file_name).parent / pl.Path(media_file)).is_file()
+                            ):
+
+                                QMessageBox.critical(
+                                    None,
+                                    cfg.programName,
+                                    f"Observation <b>{obs_id}</b>:<br>the path of <b>{media_file}</b> is not relative to <b>{project_file_name}</b>",
+                                )
+                                return False
 
     # set media path and image dir relative to project dir
     flag_changed = False
     for obs_id in pj[cfg.OBSERVATIONS]:
+
         if pj[cfg.OBSERVATIONS][obs_id][cfg.TYPE] == cfg.IMAGES:
-            new_dir_list = [
-                str(pl.Path(img_dir).relative_to(pl.Path(project_file_name).parent))
-                for img_dir in pj[cfg.OBSERVATIONS][obs_id][cfg.DIRECTORIES_LIST]
-            ]
+            new_dir_list = []
+            for img_dir in pj[cfg.OBSERVATIONS][obs_id][cfg.DIRECTORIES_LIST]:
+                try:
+                    new_dir_list.append(str(pl.Path(img_dir).relative_to(pl.Path(project_file_name).parent)))
+                except ValueError:
+                    if (
+                        not pl.Path(img_dir).is_absolute()
+                        and (pl.Path(project_file_name).parent / pl.Path(img_dir)).is_dir()
+                    ):
+                        new_dir_list.append(img_dir)
+
             if pj[cfg.OBSERVATIONS][obs_id][cfg.DIRECTORIES_LIST] != new_dir_list:
                 flag_changed = True
             pj[cfg.OBSERVATIONS][obs_id][cfg.DIRECTORIES_LIST] = new_dir_list
@@ -871,7 +894,14 @@ def set_media_paths_relative_to_project_path(pj: dict, project_file_name: str) -
             for n_player in cfg.ALL_PLAYERS:
                 if n_player in pj[cfg.OBSERVATIONS][obs_id][cfg.FILE]:
                     for idx, media_file in enumerate(pj[cfg.OBSERVATIONS][obs_id][cfg.FILE][n_player]):
-                        p = str(pl.Path(media_file).relative_to(pl.Path(project_file_name).parent))
+                        try:
+                            p = str(pl.Path(media_file).relative_to(pl.Path(project_file_name).parent))
+                        except ValueError:
+                            if (
+                                not pl.Path(media_file).is_absolute()
+                                and (pl.Path(project_file_name).parent / pl.Path(media_file)).is_file()
+                            ):
+                                p = media_file
                         if p != media_file:
                             flag_changed = True
                             pj[cfg.OBSERVATIONS][obs_id][cfg.FILE][n_player][idx] = p
@@ -890,6 +920,61 @@ def set_media_paths_relative_to_project_path(pj: dict, project_file_name: str) -
     return flag_changed
 
 
+def set_data_paths_relative_to_project_dir(pj: dict, project_file_name: str) -> bool:
+    """
+    set path from media files and path of images directory relative to the project directory
+
+        Args:
+        pj (dict): project
+        project_file_name (str): path of the project file
+
+    Returns:
+        bool: True if project changed else False
+    """
+    # chek if data paths are relative to project dir
+    for obs_id in pj[cfg.OBSERVATIONS]:
+        for _, v in pj[cfg.OBSERVATIONS][obs_id].get(cfg.PLOT_DATA, {}).items():
+            if cfg.FILE_PATH in v:
+                try:
+                    pl.Path(v[cfg.FILE_PATH]).relative_to(pl.Path(project_file_name).parent)
+                except ValueError:
+                    # check if file is in project dir
+                    if (
+                        pl.Path(v[cfg.FILE_PATH]).is_absolute()
+                        or not (pl.Path(project_file_name).parent / pl.Path(v[cfg.FILE_PATH])).is_file()
+                    ):
+                        QMessageBox.critical(
+                            None,
+                            cfg.programName,
+                            f"Observation <b>{obs_id}</b>:<br>the path of <b>{v[cfg.FILE_PATH]}</b> is not relative to <b>{project_file_name}</b>.",
+                        )
+                        return False
+
+    flag_changed = False
+    for obs_id in pj[cfg.OBSERVATIONS]:
+
+        if pj[cfg.OBSERVATIONS][obs_id][cfg.TYPE] != cfg.MEDIA:
+            continue
+        for idx, v in pj[cfg.OBSERVATIONS][obs_id].get(cfg.PLOT_DATA, {}).items():
+            if cfg.FILE_PATH in v:
+                try:
+                    p = str(pl.Path(v[cfg.FILE_PATH]).relative_to(pl.Path(project_file_name).parent))
+                except ValueError:
+                    # check if file is in project dir
+                    if (
+                        not pl.Path(v[cfg.FILE_PATH]).is_absolute()
+                        and (pl.Path(project_file_name).parent / pl.Path(v[cfg.FILE_PATH])).is_file()
+                    ):
+                        p = v[cfg.FILE_PATH]
+
+                if p != v[cfg.FILE_PATH]:
+                    pj[cfg.OBSERVATIONS][obs_id][cfg.PLOT_DATA][idx][cfg.FILE_PATH] = p
+                    flag_changed = True
+
+    return flag_changed
+
+
+'''
 def remove_data_files_path(pj: dict) -> None:
     """
     remove path from data files
@@ -911,6 +996,7 @@ def remove_data_files_path(pj: dict) -> None:
                     p = str(pl.Path(pj[cfg.OBSERVATIONS][obs_id][cfg.PLOT_DATA][idx]["file_path"]).name)
                     if p != pj[cfg.OBSERVATIONS][obs_id][cfg.PLOT_DATA][idx]["file_path"]:
                         pj[cfg.OBSERVATIONS][obs_id][cfg.PLOT_DATA][idx]["file_path"] = p
+'''
 
 
 def full_path(path: str, project_file_name: str) -> str:

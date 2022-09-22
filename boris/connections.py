@@ -57,10 +57,11 @@ def connections(self):
     self.actionSave_project_as.triggered.connect(self.save_project_as_activated)
     self.actionClose_project.triggered.connect(self.close_project)
 
-    self.actionRemove_path_from_media_files.triggered.connect(self.remove_media_files_path)
-    self.actionSet_paths_relative_to_project_directory.triggered.connect(
+    # self.actionRemove_path_from_media_files.triggered.connect(self.remove_media_files_path)
+    self.actionfor_media_file_and_images_directories.triggered.connect(
         self.set_media_files_path_relative_to_project_dir
     )
+    self.actionfor_data_files.triggered.connect(self.set_data_files_path_relative_to_project_dir)
 
     self.actionSend_project.triggered.connect(lambda: project_server.send_project_via_socket(self))
 

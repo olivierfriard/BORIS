@@ -437,7 +437,25 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
     def set_media_files_path_relative_to_project_dir(self):
         """
-        ask user confirmation for setting path from media files and path of images directory relative to the project path
+        ask user confirmation for setting path from media files and path of images directory relative to the project directory
+        """
+
+        if (
+            dialog.MessageDialog(
+                cfg.programName,
+                ("Are you sure to continue?"),
+                [cfg.YES, cfg.NO],
+            )
+            == cfg.NO
+        ):
+            return
+        print("xx")
+        if project_functions.set_media_paths_relative_to_project_dir(self.pj, self.projectFileName):
+            self.project_changed()
+
+    def set_data_files_path_relative_to_project_dir(self):
+        """
+        ask user confirmation for setting path from data files and path of images directory relative to the project directory
         """
 
         if (
@@ -450,7 +468,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         ):
             return
 
-        if project_functions.set_media_paths_relative_to_project_path(self.pj, self.projectFileName):
+        if project_functions.set_data_paths_relative_to_project_dir(self.pj, self.projectFileName):
             self.project_changed()
 
     def view_behavior(self):

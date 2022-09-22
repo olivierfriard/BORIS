@@ -103,7 +103,7 @@ def update_menu(self):
         self.actionExtract_frames_from_media_files,
         self.actionRemove_observations,
         self.menuMedia_file_Images_directories,
-        self.actionSet_paths_relative_to_project_directory,
+        # self.actionSet_paths_relative_to_project_directory,
     ):
         w.setEnabled(project_contains_obs)
 

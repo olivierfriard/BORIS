@@ -171,6 +171,8 @@ COMMENT = "comment"
 BEHAVIOR_KEY = "key"
 BEHAVIOR_CATEGORY = "category"
 
+FILE_PATH = "file_path"
+
 IMAGE_INDEX = "image index"
 IMAGE_PATH = "image path"
 

@@ -152,7 +152,7 @@
      <x>0</x>
      <y>0</y>
      <width>1441</width>
-     <height>22</height>
+     <height>35</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuHelp">
@@ -182,10 +182,17 @@
     </widget>
     <widget class="QMenu" name="menuMedia_file_Images_directories">
      <property name="title">
-      <string>Media file / Images directories</string>
+      <string>External files</string>
      </property>
+     <widget class="QMenu" name="menuSet_paths_relative_to_project_dir">
+      <property name="title">
+       <string>Set paths relative to project dir</string>
+      </property>
+      <addaction name="actionfor_media_file_and_images_directories"/>
+      <addaction name="actionfor_data_files"/>
+     </widget>
      <addaction name="actionRemove_path_from_media_files"/>
-     <addaction name="actionSet_paths_relative_to_project_directory"/>
+     <addaction name="menuSet_paths_relative_to_project_dir"/>
     </widget>
     <addaction name="actionNew_project"/>
     <addaction name="actionOpen_project"/>
@@ -1254,6 +1261,9 @@
    <property name="text">
     <string>Remove paths</string>
    </property>
+   <property name="visible">
+    <bool>false</bool>
+   </property>
   </action>
   <action name="actionCheck_project">
    <property name="text">
@@ -1473,9 +1483,14 @@
     <string>aaa</string>
    </property>
   </action>
-  <action name="actionSet_paths_relative_to_project_directory">
+  <action name="actionfor_media_file_and_images_directories">
    <property name="text">
-    <string>Set paths relative to project directory</string>
+    <string>for media file and images directories</string>
+   </property>
+  </action>
+  <action name="actionfor_data_files">
+   <property name="text">
+    <string>for data files</string>
    </property>
   </action>
  </widget>
