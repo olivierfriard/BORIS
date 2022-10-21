@@ -435,6 +435,24 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         if project_functions.remove_media_files_path(self.pj, self.projectFileName):
             self.project_changed()
 
+    def remove_data_files_path(self):
+        """
+        remove data files path
+        """
+
+        if (
+            dialog.MessageDialog(
+                cfg.programName,
+                ("Removing the path of external data files is irreversible.<br>" "Are you sure to continue?"),
+                [cfg.YES, cfg.NO],
+            )
+            == cfg.NO
+        ):
+            return
+
+        if project_functions.remove_data_files_path(self.pj, self.projectFileName):
+            self.project_changed()
+
     def set_media_files_path_relative_to_project_dir(self):
         """
         ask user confirmation for setting path from media files and path of images directory relative to the project directory
@@ -449,7 +467,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             == cfg.NO
         ):
             return
-        print("xx")
         if project_functions.set_media_paths_relative_to_project_dir(self.pj, self.projectFileName):
             self.project_changed()
 
@@ -3561,7 +3578,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         elif self.dw_player[n_player].player.playlist_count > 1:
 
             if new_time < sum(self.dw_player[n_player].media_durations):
-                """media_idx = self.dw_player[n_player].media_list.index_of_item(self.dw_player[n_player].mediaplayer.get_media())"""
+
                 media_idx = self.dw_player[n_player].player.playlist_pos
 
                 if (
@@ -3572,7 +3589,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     # in current media
                     logging.debug(f"{n_player + 1} correct media")
                     self.seek_mediaplayer(
-                        new_time - sum(self.dw_player[n_player].media_durations[0:media_idx], player=n_player)
+                        new_time - sum(self.dw_player[n_player].media_durations[0:media_idx]), player=n_player
                     )
                 else:
 

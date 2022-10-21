@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'boris/core.ui'
+# Form implementation generated from reading ui file 'core.ui'
 #
 # Created by: PyQt5 UI code generator 5.15.6
 #
@@ -14,7 +14,7 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
         MainWindow.setObjectName("MainWindow")
-        MainWindow.resize(1441, 604)
+        MainWindow.resize(1441, 745)
         MainWindow.setDockOptions(QtWidgets.QMainWindow.AllowNestedDocks|QtWidgets.QMainWindow.AllowTabbedDocks|QtWidgets.QMainWindow.AnimatedDocks)
         MainWindow.setUnifiedTitleAndToolBarOnMac(False)
         self.centralwidget = QtWidgets.QWidget(MainWindow)
@@ -98,6 +98,8 @@ class Ui_MainWindow(object):
         self.menuMedia_file_Images_directories.setObjectName("menuMedia_file_Images_directories")
         self.menuSet_paths_relative_to_project_dir = QtWidgets.QMenu(self.menuMedia_file_Images_directories)
         self.menuSet_paths_relative_to_project_dir.setObjectName("menuSet_paths_relative_to_project_dir")
+        self.menuRemove_paths = QtWidgets.QMenu(self.menuMedia_file_Images_directories)
+        self.menuRemove_paths.setObjectName("menuRemove_paths")
         self.menuObservations = QtWidgets.QMenu(self.menubar)
         self.menuObservations.setObjectName("menuObservations")
         self.menuCreate_transitions_matrix = QtWidgets.QMenu(self.menuObservations)
@@ -545,20 +547,27 @@ class Ui_MainWindow(object):
         self.actionUndo.setObjectName("actionUndo")
         self.actionaaa = QtWidgets.QAction(MainWindow)
         self.actionaaa.setObjectName("actionaaa")
-        self.actionfor_media_file_and_images_directories = QtWidgets.QAction(MainWindow)
-        self.actionfor_media_file_and_images_directories.setObjectName("actionfor_media_file_and_images_directories")
-        self.actionfor_data_files = QtWidgets.QAction(MainWindow)
-        self.actionfor_data_files.setObjectName("actionfor_data_files")
+        self.action_media_file_and_images_directories_relative_path = QtWidgets.QAction(MainWindow)
+        self.action_media_file_and_images_directories_relative_path.setObjectName("action_media_file_and_images_directories_relative_path")
+        self.action_data_files_relative_path = QtWidgets.QAction(MainWindow)
+        self.action_data_files_relative_path.setObjectName("action_data_files_relative_path")
+        self.action_remove_media_files_and_images_directories_path = QtWidgets.QAction(MainWindow)
+        self.action_remove_media_files_and_images_directories_path.setObjectName("action_remove_media_files_and_images_directories_path")
+        self.action_remove_data_files_path = QtWidgets.QAction(MainWindow)
+        self.action_remove_data_files_path.setObjectName("action_remove_data_files_path")
         self.menuHelp.addAction(self.actionUser_guide)
         self.menuHelp.addAction(self.actionCheckUpdate)
         self.menuHelp.addSeparator()
         self.menuHelp.addAction(self.actionAbout)
         self.menuRecent_projects.addSeparator()
         self.menuImport_project.addAction(self.actionNoldus_Observer_template)
-        self.menuSet_paths_relative_to_project_dir.addAction(self.actionfor_media_file_and_images_directories)
-        self.menuSet_paths_relative_to_project_dir.addAction(self.actionfor_data_files)
+        self.menuSet_paths_relative_to_project_dir.addAction(self.action_media_file_and_images_directories_relative_path)
+        self.menuSet_paths_relative_to_project_dir.addAction(self.action_data_files_relative_path)
+        self.menuRemove_paths.addAction(self.action_remove_media_files_and_images_directories_path)
+        self.menuRemove_paths.addAction(self.action_remove_data_files_path)
         self.menuMedia_file_Images_directories.addAction(self.actionRemove_path_from_media_files)
         self.menuMedia_file_Images_directories.addAction(self.menuSet_paths_relative_to_project_dir.menuAction())
+        self.menuMedia_file_Images_directories.addAction(self.menuRemove_paths.menuAction())
         self.menuFile.addAction(self.actionNew_project)
         self.menuFile.addAction(self.actionOpen_project)
         self.menuFile.addAction(self.menuRecent_projects.menuAction())
@@ -713,6 +722,7 @@ class Ui_MainWindow(object):
         self.menuImport_project.setTitle(_translate("MainWindow", "Import project from..."))
         self.menuMedia_file_Images_directories.setTitle(_translate("MainWindow", "External files"))
         self.menuSet_paths_relative_to_project_dir.setTitle(_translate("MainWindow", "Set paths relative to project dir"))
+        self.menuRemove_paths.setTitle(_translate("MainWindow", "Remove paths"))
         self.menuObservations.setTitle(_translate("MainWindow", "Observations"))
         self.menuCreate_transitions_matrix.setTitle(_translate("MainWindow", "Create transitions matrix"))
         self.menuExport_events.setTitle(_translate("MainWindow", "Export events"))
@@ -919,5 +929,7 @@ class Ui_MainWindow(object):
         self.action_latency.setText(_translate("MainWindow", "Latency"))
         self.actionUndo.setText(_translate("MainWindow", "Undo"))
         self.actionaaa.setText(_translate("MainWindow", "aaa"))
-        self.actionfor_media_file_and_images_directories.setText(_translate("MainWindow", "for media file and images directories"))
-        self.actionfor_data_files.setText(_translate("MainWindow", "for data files"))
+        self.action_media_file_and_images_directories_relative_path.setText(_translate("MainWindow", "for media file and images directories"))
+        self.action_data_files_relative_path.setText(_translate("MainWindow", "for data files"))
+        self.action_remove_media_files_and_images_directories_path.setText(_translate("MainWindow", "for media file and images directories"))
+        self.action_remove_data_files_path.setText(_translate("MainWindow", "for data files"))

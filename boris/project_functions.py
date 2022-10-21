@@ -738,85 +738,6 @@ def export_observations_list(pj: dict, selected_observations: list, file_name: s
     return True
 
 
-'''
-def remove_media_files_path(pj: dict, project_file_name: str) -> bool:
-    """
-    remove path from media files and from images directory
-    tested
-
-    Args:
-        pj (dict): project file
-
-    Returns:
-        None
-    """
-
-    file_not_found = []
-    # check if media and images dir
-    for obs_id in pj[cfg.OBSERVATIONS]:
-
-        if pj[cfg.OBSERVATIONS][obs_id][cfg.TYPE] == cfg.IMAGES:
-            for img_dir in pj[cfg.OBSERVATIONS][obs_id][cfg.DIRECTORIES_LIST]:
-                if full_path(pl.Path(img_dir).name, project_file_name) == "":
-                    file_not_found.append(img_dir)
-
-        if pj[cfg.OBSERVATIONS][obs_id][cfg.TYPE] == cfg.MEDIA:
-            for n_player in cfg.ALL_PLAYERS:
-                if n_player in pj[cfg.OBSERVATIONS][obs_id][cfg.FILE]:
-                    for idx, media_file in enumerate(pj[cfg.OBSERVATIONS][obs_id][cfg.FILE][n_player]):
-                        if full_path(pl.Path(media_file).name, project_file_name) == "":
-                            file_not_found.append(media_file)
-
-    file_not_found = set(file_not_found)
-    if file_not_found:
-        if (
-            dialog.MessageDialog(
-                cfg.programName,
-                (
-                    "Some media files / images directories will not be found after this operation:<br><br>"
-                    f"{',<br>'.join(file_not_found)}"
-                    "<br><br>Are you sure to continue?"
-                ),
-                [cfg.YES, cfg.NO],
-            )
-            == cfg.NO
-        ):
-            return False
-
-    flag_changed = False
-    for obs_id in pj[cfg.OBSERVATIONS]:
-
-        if pj[cfg.OBSERVATIONS][obs_id][cfg.TYPE] == cfg.IMAGES:
-            new_img_dir_list = []
-            for img_dir in pj[cfg.OBSERVATIONS][obs_id][cfg.DIRECTORIES_LIST]:
-                if img_dir != pl.Path(img_dir).name:
-                    flag_changed = True
-                new_img_dir_list.append(str(pl.Path(img_dir).name))
-            pj[cfg.OBSERVATIONS][obs_id][cfg.DIRECTORIES_LIST] = new_img_dir_list
-
-        if pj[cfg.OBSERVATIONS][obs_id][cfg.TYPE] == cfg.MEDIA:
-            for n_player in cfg.ALL_PLAYERS:
-                if n_player in pj[cfg.OBSERVATIONS][obs_id][cfg.FILE]:
-                    for idx, media_file in enumerate(pj[cfg.OBSERVATIONS][obs_id][cfg.FILE][n_player]):
-                        p = pl.Path(media_file).name
-                        if p != media_file:
-                            flag_changed = True
-                            pj[cfg.OBSERVATIONS][obs_id][cfg.FILE][n_player][idx] = p
-                            if cfg.MEDIA_INFO in pj[cfg.OBSERVATIONS][obs_id]:
-                                for info in [cfg.LENGTH, cfg.HAS_AUDIO, cfg.HAS_VIDEO, cfg.FPS]:
-                                    if (
-                                        info in pj[cfg.OBSERVATIONS][obs_id][cfg.MEDIA_INFO]
-                                        and media_file in pj[cfg.OBSERVATIONS][obs_id][cfg.MEDIA_INFO][info]
-                                    ):
-                                        # add new file path
-                                        pj[cfg.OBSERVATIONS][obs_id][cfg.MEDIA_INFO][info][p] = pj[cfg.OBSERVATIONS][
-                                            obs_id
-                                        ][cfg.MEDIA_INFO][info][media_file]
-                                        # remove old path
-                                        del pj[cfg.OBSERVATIONS][obs_id][cfg.MEDIA_INFO][info][media_file]
-
-    return flag_changed
-'''
 
 
 def set_media_paths_relative_to_project_dir(pj: dict, project_file_name: str) -> bool:
@@ -974,7 +895,6 @@ def set_data_paths_relative_to_project_dir(pj: dict, project_file_name: str) -> 
     return flag_changed
 
 
-'''
 def remove_data_files_path(pj: dict) -> None:
     """
     remove path from data files
@@ -996,7 +916,85 @@ def remove_data_files_path(pj: dict) -> None:
                     p = str(pl.Path(pj[cfg.OBSERVATIONS][obs_id][cfg.PLOT_DATA][idx]["file_path"]).name)
                     if p != pj[cfg.OBSERVATIONS][obs_id][cfg.PLOT_DATA][idx]["file_path"]:
                         pj[cfg.OBSERVATIONS][obs_id][cfg.PLOT_DATA][idx]["file_path"] = p
-'''
+
+
+def remove_media_files_path(pj: dict, project_file_name: str) -> bool:
+    """
+    remove path from media files and from images directory
+    tested
+
+    Args:
+        pj (dict): project file
+
+    Returns:
+        None
+    """
+
+    file_not_found = []
+    # check if media and images dir
+    for obs_id in pj[cfg.OBSERVATIONS]:
+
+        if pj[cfg.OBSERVATIONS][obs_id][cfg.TYPE] == cfg.IMAGES:
+            for img_dir in pj[cfg.OBSERVATIONS][obs_id][cfg.DIRECTORIES_LIST]:
+                if full_path(pl.Path(img_dir).name, project_file_name) == "":
+                    file_not_found.append(img_dir)
+
+        if pj[cfg.OBSERVATIONS][obs_id][cfg.TYPE] == cfg.MEDIA:
+            for n_player in cfg.ALL_PLAYERS:
+                if n_player in pj[cfg.OBSERVATIONS][obs_id][cfg.FILE]:
+                    for idx, media_file in enumerate(pj[cfg.OBSERVATIONS][obs_id][cfg.FILE][n_player]):
+                        if full_path(pl.Path(media_file).name, project_file_name) == "":
+                            file_not_found.append(media_file)
+
+    file_not_found = set(file_not_found)
+    if file_not_found:
+        if (
+            dialog.MessageDialog(
+                cfg.programName,
+                (
+                    "Some media files / images directories will not be found after this operation:<br><br>"
+                    f"{',<br>'.join(file_not_found)}"
+                    "<br><br>Are you sure to continue?"
+                ),
+                [cfg.YES, cfg.NO],
+            )
+            == cfg.NO
+        ):
+            return False
+
+    flag_changed = False
+    for obs_id in pj[cfg.OBSERVATIONS]:
+
+        if pj[cfg.OBSERVATIONS][obs_id][cfg.TYPE] == cfg.IMAGES:
+            new_img_dir_list = []
+            for img_dir in pj[cfg.OBSERVATIONS][obs_id][cfg.DIRECTORIES_LIST]:
+                if img_dir != pl.Path(img_dir).name:
+                    flag_changed = True
+                new_img_dir_list.append(str(pl.Path(img_dir).name))
+            pj[cfg.OBSERVATIONS][obs_id][cfg.DIRECTORIES_LIST] = new_img_dir_list
+
+        if pj[cfg.OBSERVATIONS][obs_id][cfg.TYPE] == cfg.MEDIA:
+            for n_player in cfg.ALL_PLAYERS:
+                if n_player in pj[cfg.OBSERVATIONS][obs_id][cfg.FILE]:
+                    for idx, media_file in enumerate(pj[cfg.OBSERVATIONS][obs_id][cfg.FILE][n_player]):
+                        p = pl.Path(media_file).name
+                        if p != media_file:
+                            flag_changed = True
+                            pj[cfg.OBSERVATIONS][obs_id][cfg.FILE][n_player][idx] = p
+                            if cfg.MEDIA_INFO in pj[cfg.OBSERVATIONS][obs_id]:
+                                for info in [cfg.LENGTH, cfg.HAS_AUDIO, cfg.HAS_VIDEO, cfg.FPS]:
+                                    if (
+                                        info in pj[cfg.OBSERVATIONS][obs_id][cfg.MEDIA_INFO]
+                                        and media_file in pj[cfg.OBSERVATIONS][obs_id][cfg.MEDIA_INFO][info]
+                                    ):
+                                        # add new file path
+                                        pj[cfg.OBSERVATIONS][obs_id][cfg.MEDIA_INFO][info][p] = pj[cfg.OBSERVATIONS][
+                                            obs_id
+                                        ][cfg.MEDIA_INFO][info][media_file]
+                                        # remove old path
+                                        del pj[cfg.OBSERVATIONS][obs_id][cfg.MEDIA_INFO][info][media_file]
+
+    return flag_changed
 
 
 def full_path(path: str, project_file_name: str) -> str:

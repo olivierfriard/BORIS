@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>1441</width>
-    <height>604</height>
+    <height>745</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -188,11 +188,19 @@
       <property name="title">
        <string>Set paths relative to project dir</string>
       </property>
-      <addaction name="actionfor_media_file_and_images_directories"/>
-      <addaction name="actionfor_data_files"/>
+      <addaction name="action_media_file_and_images_directories_relative_path"/>
+      <addaction name="action_data_files_relative_path"/>
+     </widget>
+     <widget class="QMenu" name="menuRemove_paths">
+      <property name="title">
+       <string>Remove paths</string>
+      </property>
+      <addaction name="action_remove_media_files_and_images_directories_path"/>
+      <addaction name="action_remove_data_files_path"/>
      </widget>
      <addaction name="actionRemove_path_from_media_files"/>
      <addaction name="menuSet_paths_relative_to_project_dir"/>
+     <addaction name="menuRemove_paths"/>
     </widget>
     <addaction name="actionNew_project"/>
     <addaction name="actionOpen_project"/>
@@ -1483,12 +1491,22 @@
     <string>aaa</string>
    </property>
   </action>
-  <action name="actionfor_media_file_and_images_directories">
+  <action name="action_media_file_and_images_directories_relative_path">
    <property name="text">
     <string>for media file and images directories</string>
    </property>
   </action>
-  <action name="actionfor_data_files">
+  <action name="action_data_files_relative_path">
+   <property name="text">
+    <string>for data files</string>
+   </property>
+  </action>
+  <action name="action_remove_media_files_and_images_directories_path">
+   <property name="text">
+    <string>for media file and images directories</string>
+   </property>
+  </action>
+  <action name="action_remove_data_files_path">
    <property name="text">
     <string>for data files</string>
    </property>
