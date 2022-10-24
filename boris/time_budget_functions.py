@@ -191,7 +191,7 @@ def synthetic_time_budget_bin(pj: dict, selected_observations: list, parameters_
         # add selected behaviors that are not observed
         for behav in selected_behaviors:
             if [x for x in distinct_behav_modif if x[0] == behav] == []:
-                distinct_behav_modif.append([behav, ""])
+                distinct_behav_modif.append((behav, ""))
         '''
         print("distinct_behav_modif with not observed behav", distinct_behav_modif)
         '''
