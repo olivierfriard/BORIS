@@ -7253,20 +7253,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         Synthetic time budget with time bin
         """
 
-        QMessageBox.warning(
-            None,
-            programName,
-            (
-                f"This function is experimental. Please test it and report any bug at <br>"
-                '<a href="https://github.com/olivierfriard/BORIS/issues">'
-                "https://github.com/olivierfriard/BORIS/issues</a><br>"
-                "or by email (See the About page on the BORIS web site.<br><br>"
-                "Thank you for your collaboration!"
-            ),
-            QMessageBox.Ok | QMessageBox.Default,
-            QMessageBox.NoButton,
-        )
-
         result, selected_observations = self.selectObservations(MULTIPLE)
         if not selected_observations:
             return
