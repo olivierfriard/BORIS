@@ -141,12 +141,12 @@ def synthetic_time_budget_bin(pj: dict, selected_observations: list, parameters_
         else:
             return sum([x.upper - x.lower for x in interval]) / len(interval)
 
-    def interval_std_dev(interval):
+    def interval_std_dev(interval) -> str:
         if interval.empty:
             return "NA"
         else:
             try:
-                return round(statistics.stdev([x.upper - x.lower for x in interval]), 3)
+                return f"{statistics.stdev([x.upper - x.lower for x in interval]):.3f}"
             except:
                 return "NA"
 
@@ -189,7 +189,7 @@ def synthetic_time_budget_bin(pj: dict, selected_observations: list, parameters_
     # add selected behaviors that are not observed
     for behav in selected_behaviors:
         if [x for x in distinct_behav_modif if x[0] == behav] == []:
-            distinct_behav_modif.append([behav, ""])
+            distinct_behav_modif.append((behav, ""))
 
     behaviors = init_behav_modif_bin(
         pj[cfg.ETHOGRAM], selected_subjects, distinct_behav_modif, include_modifiers, parameters
@@ -300,6 +300,7 @@ def synthetic_time_budget_bin(pj: dict, selected_observations: list, parameters_
                 time_bin_end = max_time
         else:
             time_bin_end = max_time
+
         while True:
 
             for subject in events_interval:
@@ -324,13 +325,13 @@ def synthetic_time_budget_bin(pj: dict, selected_observations: list, parameters_
                     else:
                         proportion = dur / ((time_bin_end - time_bin_start) - time_to_subtract)
 
-                    behaviors[subject][behav]["duration"] = dur
+                    behaviors[subject][behav]["duration"] = f"{dur:.3f}"
                     behaviors[subject][behav]["number"] = nocc
-                    behaviors[subject][behav]["duration mean"] = mean
+                    behaviors[subject][behav]["duration mean"] = f"{mean:.3f}"
                     behaviors[subject][behav]["duration stdev"] = interval_std_dev(interval_intersec)
                     behaviors[subject][behav]["proportion of time"] = f"{proportion:.3f}"
 
-            columns = [obs_id, f"{max_time - min_time:0.3f}", f"{time_bin_start:.3f}-{time_bin_end:.3f}"]
+            columns = [obs_id, f"{max_time - min_time:.3f}", f"{time_bin_start:.3f}-{time_bin_end:.3f}"]
             for subject in selected_subjects:
                 for behavior_modifiers in distinct_behav_modif:
                     behavior, modifiers = behavior_modifiers
