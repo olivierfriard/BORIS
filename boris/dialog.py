@@ -29,7 +29,6 @@ import datetime as dt
 from decimal import Decimal as dec
 
 from PyQt5.QtCore import Qt, pyqtSignal, QT_VERSION_STR, PYQT_VERSION_STR
-from PyQt5.QtGui import QFont
 from PyQt5.QtWidgets import (
     QApplication,
     QAbstractItemView,
@@ -45,7 +44,6 @@ from PyQt5.QtWidgets import (
     QMessageBox,
     QPlainTextEdit,
     QPushButton,
-    QRadioButton,
     QSizePolicy,
     QSpacerItem,
     QSpinBox,
@@ -56,8 +54,7 @@ from PyQt5.QtWidgets import (
 )
 
 from . import config as cfg
-from . import duration_widget, param_panel, project_functions
-from . import utilities as util
+from . import duration_widget
 from . import version
 
 
@@ -132,7 +129,7 @@ def error_message() -> None:
 def global_error_message(exception_type, exception_value, traceback_object):
     """
     global error management
-    save error using loggin.critical and append error message to ~/boris_error.log
+    save error using loggin.critical and append error message to ~/boris.log
     """
 
     error_text: str = (
@@ -147,8 +144,8 @@ def global_error_message(exception_type, exception_value, traceback_object):
 
     logging.critical(error_text)
 
-    # append to boris_error.log file
-    with open(pl.Path("~").expanduser() / "boris_error.log", "a") as f_out:
+    # append to boris.log file
+    with open(pl.Path("~").expanduser() / "boris.log", "a") as f_out:
         f_out.write(error_text + "\n")
         f_out.write("-" * 80 + "\n")
 

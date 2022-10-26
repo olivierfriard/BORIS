@@ -27,7 +27,13 @@ import matplotlib
 from . import version
 from . import config as cfg
 from . import utilities as util
-from . import mpv
+
+from . import mpv2 as mpv
+
+# check if MPV API v. 1
+if "libmpv.so.1" in mpv.sofile:
+    from . import mpv as mpv
+
 
 from PyQt5.QtCore import QT_VERSION_STR, PYQT_VERSION_STR
 from PyQt5.QtGui import QPixmap

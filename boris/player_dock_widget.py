@@ -30,12 +30,17 @@ import datetime as dt
 os.environ["PATH"] = os.path.dirname(__file__) + os.sep + "misc" + os.pathsep + os.environ["PATH"]
 
 try:
-    from . import mpv
+    from . import mpv2 as mpv
+
+    # check if MPV API v. 1
+    if "libmpv.so.1" in mpv.sofile:
+        from . import mpv as mpv
+
 except OSError:
     msg = "LIBMPV library not found!\n"
     logging.critical(msg)
-    # append to boris_error.log file
-    with open(pl.Path("~").expanduser() / "boris_error.log", "a") as f_out:
+    # append to boris.log file
+    with open(pl.Path("~").expanduser() / "boris.log", "a") as f_out:
         f_out.write(f"{dt.datetime.now():%Y-%m-%d %H:%M}\n")
         f_out.write(msg)
         f_out.write("-" * 80 + "\n")
