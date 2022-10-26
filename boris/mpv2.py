@@ -31,6 +31,7 @@ import traceback
 if os.name == "nt":
     # Note: mpv-2.dll with API version 2 corresponds to mpv v0.35.0. Most things should work with the fallback, too.
     dll = ctypes.util.find_library("mpv-2.dll") or ctypes.util.find_library("mpv-1.dll")
+    print(dll)
     if dll is None:
         raise OSError(
             "Cannot find mpv-1.dll or mpv-2.dll in your system %PATH%. One way to deal with this is to ship "
