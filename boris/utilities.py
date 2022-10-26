@@ -278,7 +278,7 @@ def txt2np_array(file_name: str, columns_str: str, substract_first_value: str, c
     return True, "", data
 
 
-def versiontuple(version_str: str) -> tuple[str, str, str]:
+def versiontuple(version_str: str):
     """
     Convert version from str to tuple of str
 
