@@ -65,7 +65,7 @@ def actionAbout_activated(self):
         )
     if sys.platform.startswith("win"):
         programs_versions.append(
-            f"Library version: {'.'.join([str(x) for x in mpv._mpv_client_api_version()])} file: {mpv.sofile}"
+            f"Library version: {'.'.join([str(x) for x in mpv._mpv_client_api_version()])} file: {mpv.dll}"
         )
 
     # ffmpeg
