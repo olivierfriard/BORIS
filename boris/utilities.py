@@ -278,19 +278,20 @@ def txt2np_array(file_name: str, columns_str: str, substract_first_value: str, c
     return True, "", data
 
 
-def versiontuple(version_str: str) -> tuple:
-    """Convert version from text to tuple
+def versiontuple(version_str: str) -> tuple[str, str, str]:
+    """
+    Convert version from str to tuple of str
 
     Args:
         version_str (str): version
 
     Returns:
-        tuple: version in tuple format (for comparison)
+        tuple[str, str, str]: version in tuple format (for comparison)
     """
-    try:
-        return tuple(map(int, (version_str.split("."))))
-    except Exception:
-        return ()
+    filled = []
+    for point in version_str.split("."):
+        filled.append(point.zfill(8))
+    return tuple(filled)
 
 
 def state_behavior_codes(ethogram: dict) -> list:
