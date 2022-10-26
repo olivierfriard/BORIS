@@ -20,7 +20,7 @@ setup(
         "Issues": "https://github.com/olivierfriard/BORIS/issues",
        
     },
-    python_requires=">=3.6",/project/sqlite-utils/
+    python_requires=">=3.6"
     classifiers=[
         "Topic :: Scientific/Engineering",
         "Intended Audience :: Science/Research",
