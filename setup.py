@@ -11,6 +11,7 @@ setup(
     author="Olivier Friard - Marco Gamba",
     author_email="olivier.friard@unito.it",
     long_description=open("README.rst", "r").read(),
+    long_description_content_type="text/x-rst",
     # long_description_content_type="text/markdown",
     url="http://www.boris.unito.it",
     project_urls={
