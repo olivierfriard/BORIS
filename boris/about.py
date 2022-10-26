@@ -42,11 +42,11 @@ try:
 except RuntimeError:  # libmpv found but version too old
     from . import mpv as mpv
 
-
+"""
 # check if MPV API v. 1
 if "libmpv.so.1" in mpv.sofile:
     from . import mpv as mpv
-
+"""
 
 from PyQt5.QtCore import QT_VERSION_STR, PYQT_VERSION_STR
 from PyQt5.QtGui import QPixmap
