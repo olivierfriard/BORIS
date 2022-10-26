@@ -33,8 +33,12 @@ try:
     from . import mpv2 as mpv
 
     # check if MPV API v. 1
-    if "libmpv.so.1" in mpv.sofile:
-        from . import mpv as mpv
+    try:
+        if "libmpv.so.1" in mpv.sofile:
+            from . import mpv as mpv
+    except AttributeError:
+        if "mpv-1.dll" in mpv.dll:
+            from . import mpv as mpv
 
 except OSError:
     msg = "LIBMPV library not found!\n"
