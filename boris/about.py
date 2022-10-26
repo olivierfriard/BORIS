@@ -28,7 +28,20 @@ from . import version
 from . import config as cfg
 from . import utilities as util
 
-from . import mpv2 as mpv
+try:
+    from . import mpv2 as mpv
+
+    # check if MPV API v. 1
+    try:
+        if "libmpv.so.1" in mpv.sofile:
+            from . import mpv as mpv
+    except AttributeError:
+        if "mpv-1.dll" in mpv.dll:
+            from . import mpv as mpv
+
+except RuntimeError:  # libmpv found but version too old
+    from . import mpv as mpv
+
 
 # check if MPV API v. 1
 if "libmpv.so.1" in mpv.sofile:
@@ -47,7 +60,13 @@ def actionAbout_activated(self):
 
     programs_versions = ["MPV media player"]
     if sys.platform.startswith("linux"):
-        programs_versions.append(f"Library version: {mpv.sofile}")
+        programs_versions.append(
+            f"Library version: {'.'.join([str(x) for x in mpv._mpv_client_api_version()])} file: {mpv.sofile}"
+        )
+    if sys.platform.startswith("win"):
+        programs_versions.append(
+            f"Library version: {'.'.join([str(x) for x in mpv._mpv_client_api_version()])} file: {mpv.sofile}"
+        )
 
     # ffmpeg
     if self.ffmpeg_bin == "ffmpeg" and sys.platform.startswith("linux"):

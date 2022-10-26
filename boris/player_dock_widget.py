@@ -40,7 +40,10 @@ try:
         if "mpv-1.dll" in mpv.dll:
             from . import mpv as mpv
 
-except OSError:
+except RuntimeError:  # libmpv found but version too old
+    from . import mpv as mpv
+
+except OSError:  # libmpv not found
     msg = "LIBMPV library not found!\n"
     logging.critical(msg)
     # append to boris.log file

@@ -50,7 +50,7 @@ else:
     locale.setlocale(locale.LC_NUMERIC, "C")
 
     sofile = ctypes.util.find_library("mpv")
-    print(sofile)
+
     if sofile is None:
         raise OSError(
             "Cannot find libmpv in the usual places. Depending on your distro, you may try installing an "
