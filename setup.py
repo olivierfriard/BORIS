@@ -18,9 +18,8 @@ setup(
         "Changelog": "https://github.com/olivierfriard/BORIS/wiki/BORIS-change-log-v.8",
         "Source code": "https://github.com/olivierfriard/BORIS",
         "Issues": "https://github.com/olivierfriard/BORIS/issues",
-       
     },
-    python_requires=">=3.6"
+    python_requires=">=3.6",
     classifiers=[
         "Topic :: Scientific/Engineering",
         "Intended Audience :: Science/Research",
