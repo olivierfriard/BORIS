@@ -7,13 +7,20 @@ setup(
     version=[x for x in open("boris/version.py", "r").read().split("\n") if "__version__" in x][0]
     .split(" = ")[1]
     .replace('"', ""),
-    description="BORIS",
+    description="BORIS - Behavioral Observation Research Interactive Software",
     author="Olivier Friard - Marco Gamba",
     author_email="olivier.friard@unito.it",
-    long_description=open("README_pip.rst", "r").read(),
+    long_description=open("README.rst", "r").read(),
     # long_description_content_type="text/markdown",
     url="http://www.boris.unito.it",
-    python_requires=">=3.6",
+    project_urls={
+        "Documentation": "https://boris.readthedocs.io/en/latest/",
+        "Changelog": "https://github.com/olivierfriard/BORIS/wiki/BORIS-change-log-v.8",
+        "Source code": "https://github.com/olivierfriard/BORIS",
+        "Issues": "https://github.com/olivierfriard/BORIS/issues",
+       
+    },
+    python_requires=">=3.6",/project/sqlite-utils/
     classifiers=[
         "Topic :: Scientific/Engineering",
         "Intended Audience :: Science/Research",
@@ -23,6 +30,7 @@ setup(
         "Programming Language :: Python :: 3.8",
         "Programming Language :: Python :: 3.9",
         "Programming Language :: Python :: 3.10",
+        "Programming Language :: Python :: 3.11",
         "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
         "Operating System :: OS Independent",
     ],

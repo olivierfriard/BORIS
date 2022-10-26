@@ -8,17 +8,16 @@ BORIS is a free and open-source software available for GNU/Linux, Windows and Ma
 
 It provides also some analysis tools like time budget.
 
-The BORIS paper has more than `900 citations in scientific publications <http://www.boris.unito.it/pages/citations.html>`_ with peer-reviewing.
+The BORIS paper has more than `1000 citations in peer-reviewed scientific publications <http://www.boris.unito.it/pages/citations.html>`_.
 
 See http://www.boris.unito.it
 
-..
-    .. image:: https://img.shields.io/pypi/l/boris_behav_obs   :alt: PyPI - License
-
-    .. image:: https://img.shields.io/pypi/l/boris-behav-obs   :alt: PyPI - License
 
 .. image:: https://static.pepy.tech/personalized-badge/boris-behav-obs?period=total&units=international_system&left_color=black&right_color=orange&left_text=Downloads
  :target: https://pepy.tech/project/boris-behav-obs
+
+
+
 
 
 Documentation
@@ -33,11 +32,18 @@ Some video tutorials are available:
 https://www.youtube.com/channel/UCo-Jyvzawwp0bRMEor4aLVQ
 
 
+
+
+
 Bug reports and feature requests
 --------------------------------------
 
 To search for bugs, report them or request a feature, please use the github tracker:
 https://github.com/olivierfriard/BORIS/issues
+
+
+
+
 
 Citing BORIS
 --------------------------------------
