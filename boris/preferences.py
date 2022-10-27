@@ -135,6 +135,10 @@ def preferences(self):
     preferencesWindow.cb_display_subtitles.setChecked(self.config_param[cfg.DISPLAY_SUBTITLES])
     # pause before add event
     preferencesWindow.cb_pause_before_addevent.setChecked(self.pause_before_addevent)
+    # MPV hwdec
+    preferencesWindow.cb_hwdec.setCurrentIndex(
+        cfg.MPV_HWDEC_OPTIONS.index(self.config_param.get(cfg.MPV_HWDEC, cfg.MPV_HWDEC_DEFAULT_VALUE))
+    )
 
     preferencesWindow.cb_compact_time_budget.setChecked(
         self.config_param.get(cfg.TIME_BUDGET_FORMAT, cfg.DEFAULT_TIME_BUDGET_FORMAT) == cfg.COMPACT_TIME_BUDGET_FORMAT
@@ -237,6 +241,9 @@ def preferences(self):
         self.config_param[cfg.DISPLAY_SUBTITLES] = preferencesWindow.cb_display_subtitles.isChecked()
 
         self.pause_before_addevent = preferencesWindow.cb_pause_before_addevent.isChecked()
+
+        # MPV hwdec
+        self.config_param[cfg.MPV_HWDEC] = cfg.MPV_HWDEC_OPTIONS[preferencesWindow.cb_hwdec.currentIndex()]
 
         if self.observationId:
             self.load_tw_events(self.observationId)
