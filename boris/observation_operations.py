@@ -1206,7 +1206,7 @@ def initialize_new_media_observation(self):
             # self.dw_player[i].player.loadfile(media_full_path)
             # self.dw_player[i].player.pause = True
 
-        self.dw_player[i].player.hwdec = "auto-safe"
+        #self.dw_player[i].player.hwdec = "auto-safe"
         self.dw_player[i].player.playlist_pos = 0
         self.dw_player[i].player.wait_until_playing()
         self.dw_player[i].player.pause = True
