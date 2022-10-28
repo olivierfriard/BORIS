@@ -26,18 +26,34 @@ from decimal import Decimal as dec
 import tablib
 
 from . import config as cfg
-from . import db_functions, dialog
+from . import db_functions
 from . import portion as I
 from . import project_functions
 
 
-def default_value(ethogram, behav, param):
+def default_value(ethogram: dict, behav: str, param):
     """
     return value for duration in case of point event
     """
-    default_value_ = 0
-    if project_functions.event_type(behav, ethogram) == "POINT EVENT" and param in ["duration"]:
-        default_value_ = "-"
+    default_value_ = 0.0
+    behav_type = project_functions.event_type(behav, ethogram)
+
+    print(f"{behav_type=}")
+
+    if behav_type == "POINT EVENT" and param in (
+        "duration",
+        "duration mean",
+        "duration stdev",
+        "proportion of time",
+    ):
+        default_value_ = cfg.NA
+
+    if behav_type == "STATE EVENT" and param in (
+        "duration mean",
+        "duration stdev",
+    ):
+        default_value_ = cfg.NA
+
     return default_value_
 
 
@@ -57,7 +73,7 @@ def init_behav_modif(ethogram, selected_subjects, distinct_behav_modif, include_
                 behaviors[subj][behav_modif_str] = {}
 
             for param in parameters:
-                behaviors[subj][behav_modif_str][param[0]] = default_value(ethogram, behav_modif_str, param[0])
+                behaviors[subj][behav_modif_str][param[0]] = default_value(ethogram, behav, param[0])
 
     return behaviors
 
@@ -71,15 +87,11 @@ def init_behav_modif_bin(ethogram, selected_subjects, distinct_behav_modif, incl
         behaviors[subj] = {}
         for behav_modif in distinct_behav_modif:
 
-            # behav, modif = behav_modif
-            # behav_modif_str = "|".join(behav_modif) if modif else behav
-            behav_modif_str = behav_modif
-
-            if behav_modif_str not in behaviors[subj]:
-                behaviors[subj][behav_modif_str] = {}
+            if behav_modif not in behaviors[subj]:
+                behaviors[subj][behav_modif] = {}
 
             for param in parameters:
-                behaviors[subj][behav_modif_str][param[0]] = default_value(ethogram, behav_modif_str, param[0])
+                behaviors[subj][behav_modif][param[0]] = default_value(ethogram, behav_modif[0], param[0])
 
     return behaviors
 
@@ -317,19 +329,34 @@ def synthetic_time_budget_bin(pj: dict, selected_observations: list, parameters_
 
                     interval_intersec = events_interval[subject][behav] & I.closed(time_bin_start, time_bin_end)
 
-                    dur = interval_len(interval_intersec)
                     nocc = interval_number(interval_intersec)
-                    mean = interval_mean(interval_intersec)
-                    if behav[0] in parameters_obs.get(cfg.EXCLUDED_BEHAVIORS, []):
-                        proportion = dur / ((time_bin_end - time_bin_start))
-                    else:
-                        proportion = dur / ((time_bin_end - time_bin_start) - time_to_subtract)
-
-                    behaviors[subject][behav]["duration"] = f"{dur:.3f}"
                     behaviors[subject][behav]["number"] = nocc
-                    behaviors[subject][behav]["duration mean"] = f"{mean:.3f}"
-                    behaviors[subject][behav]["duration stdev"] = interval_std_dev(interval_intersec)
-                    behaviors[subject][behav]["proportion of time"] = f"{proportion:.3f}"
+
+                    behav_type = project_functions.event_type(behav[0], pj[cfg.ETHOGRAM])
+                    if behav_type == "STATE EVENT":
+                        dur = interval_len(interval_intersec)
+                        behaviors[subject][behav]["duration"] = f"{dur:.3f}"
+                        """mean = interval_mean(interval_intersec)"""
+                        behaviors[subject][behav]["duration mean"] = f"{interval_mean(interval_intersec):.3f}"
+                        behaviors[subject][behav]["duration stdev"] = interval_std_dev(interval_intersec)
+
+                        if behav[0] in parameters_obs.get(cfg.EXCLUDED_BEHAVIORS, []):
+                            proportion = dur / ((time_bin_end - time_bin_start))
+                        else:
+                            proportion = dur / ((time_bin_end - time_bin_start) - time_to_subtract)
+                        behaviors[subject][behav]["proportion of time"] = f"{proportion:.3f}"
+
+                    if behav_type == "POINT EVENT":
+                        behaviors[subject][behav]["duration"] = cfg.NA
+                        behaviors[subject][behav]["duration mean"] = cfg.NA
+                        behaviors[subject][behav]["duration stdev"] = cfg.NA
+                        behaviors[subject][behav]["proportion of time"] = cfg.NA
+
+                    '''behaviors[subject][behav]["duration"] = f"{dur:.3f}"'''
+                    """behaviors[subject][behav]["number"] = nocc"""
+                    '''behaviors[subject][behav]["duration mean"] = f"{mean:.3f}"'''
+                    """behaviors[subject][behav]["duration stdev"] = interval_std_dev(interval_intersec)"""
+                    '''behaviors[subject][behav]["proportion of time"] = f"{proportion:.3f}"'''
 
             columns = [obs_id, f"{max_time - min_time:.3f}", f"{time_bin_start:.3f}-{time_bin_end:.3f}"]
             for subject in selected_subjects:
@@ -558,7 +585,10 @@ def synthetic_time_budget(pj: dict, selected_observations: list, parameters_obs:
 
                 cursor.execute(
                     (
-                        "SELECT SUM(stop-start), COUNT(*), AVG(stop-start), stdev(stop-start) "
+                        "SELECT SUM(stop - start) AS duration, "
+                        "COUNT(*) AS n_occurences, "
+                        "AVG(stop - start) AS mean, "
+                        "stdev(stop - start) AS ST_DEV, type "
                         "FROM aggregated_events "
                         "WHERE observation = ? AND subject = ? AND behavior = ? AND modifiers = ? "
                     ),
@@ -572,7 +602,9 @@ def synthetic_time_budget(pj: dict, selected_observations: list, parameters_obs:
 
                 for row in cursor.fetchall():
 
-                    behaviors[subject][behavior_modifiers_str]["number"] = 0 if row[1] is None else row[1]
+                    behaviors[subject][behavior_modifiers_str]["number"] = (
+                        0 if row["n_occurences"] is None else row["n_occurences"]
+                    )
 
                     if obs_length == dec(-2):  # images obs without time
 
@@ -583,31 +615,39 @@ def synthetic_time_budget(pj: dict, selected_observations: list, parameters_obs:
 
                     else:
 
-                        behaviors[subject][behavior_modifiers_str]["duration"] = (
-                            0 if row[0] is None else f"{row[0]:.3f}"
-                        )
+                        if row["type"] == cfg.POINT:
+                            behaviors[subject][behavior_modifiers_str]["duration"] = cfg.NA
+                            behaviors[subject][behavior_modifiers_str]["duration mean"] = cfg.NA
+                            behaviors[subject][behavior_modifiers_str]["duration stdev"] = cfg.NA
+                            behaviors[subject][behavior_modifiers_str]["proportion of time"] = cfg.NA
 
-                        behaviors[subject][behavior_modifiers_str]["duration mean"] = (
-                            0 if row[2] is None else f"{row[2]:.3f}"
-                        )
-                        behaviors[subject][behavior_modifiers_str]["duration stdev"] = (
-                            0 if row[3] is None else f"{row[3]:.3f}"
-                        )
-
-                        if behavior not in parameters_obs[cfg.EXCLUDED_BEHAVIORS]:
-                            try:
-                                behaviors[subject][behavior_modifiers_str]["proportion of time"] = (
-                                    0
-                                    if row[0] is None
-                                    else f"{row[0] / ((max_time - min_time) - time_to_subtract):.3f}"
-                                )
-                            except ZeroDivisionError:
-                                behaviors[subject][behavior_modifiers_str]["proportion of time"] = "-"
-                        else:
-                            # behavior subtracted
-                            behaviors[subject][behavior_modifiers_str]["proportion of time"] = (
-                                0 if row[0] is None else f"{row[0] / (max_time - min_time):.3f}"
+                        if row["type"] == cfg.STATE:
+                            behaviors[subject][behavior_modifiers_str]["duration"] = (
+                                cfg.NA if row["duration"] is None else f"{row['duration']:.3f}"
                             )
+                            behaviors[subject][behavior_modifiers_str]["duration mean"] = (
+                                cfg.NA if row["mean"] is None else f"{row['mean']:.3f}"
+                            )
+                            behaviors[subject][behavior_modifiers_str]["duration stdev"] = (
+                                cfg.NA if row["ST_DEV"] is None else f"{row['ST_DEV']:.3f}"
+                            )
+
+                            if behavior not in parameters_obs[cfg.EXCLUDED_BEHAVIORS]:
+                                try:
+                                    behaviors[subject][behavior_modifiers_str]["proportion of time"] = (
+                                        cfg.NA
+                                        if row["duration"] is None
+                                        else f"{row['duration'] / ((max_time - min_time) - time_to_subtract):.3f}"
+                                    )
+                                except ZeroDivisionError:
+                                    behaviors[subject][behavior_modifiers_str]["proportion of time"] = cfg.NA
+                            else:
+                                # behavior subtracted
+                                behaviors[subject][behavior_modifiers_str]["proportion of time"] = (
+                                    cfg.NA
+                                    if row["duration"] is None
+                                    else f"{row['duration'] / (max_time - min_time):.3f}"
+                                )
 
         if obs_length == dec(-2):
             columns = [obs_id, "NaN"]
@@ -645,7 +685,8 @@ def time_budget_analysis(
         dict:
     """
 
-    categories, out = {}, []
+    categories: dict = {}
+    out: list = []
     for subject in parameters[cfg.SELECTED_SUBJECTS]:
         out_cat, categories[subject] = [], {}
 
@@ -668,12 +709,12 @@ def time_budget_analysis(
                                     "subject": subject,
                                     "behavior": behavior,
                                     "modifiers": "",
-                                    "duration": 0,
-                                    "duration_mean": 0,
-                                    "duration_stdev": float("NaN"),
+                                    "duration": 0.0,
+                                    "duration_mean": cfg.NA,
+                                    "duration_stdev": cfg.NA,
                                     "number": "0",
-                                    "inter_duration_mean": float("NaN"),
-                                    "inter_duration_stdev": float("NaN"),
+                                    "inter_duration_mean": cfg.NA,
+                                    "inter_duration_stdev": cfg.NA,
                                 }
                             )
                         else:  # point
@@ -682,12 +723,12 @@ def time_budget_analysis(
                                     "subject": subject,
                                     "behavior": behavior,
                                     "modifiers": "",
-                                    "duration": 0,
-                                    "duration_mean": 0,
-                                    "duration_stdev": float("NaN"),
+                                    "duration": cfg.NA,
+                                    "duration_mean": cfg.NA,
+                                    "duration_stdev": cfg.NA,
                                     "number": "0",
-                                    "inter_duration_mean": float("NaN"),
-                                    "inter_duration_stdev": float("NaN"),
+                                    "inter_duration_mean": cfg.NA,
+                                    "inter_duration_stdev": cfg.NA,
                                 }
                             )
                     continue
@@ -786,17 +827,17 @@ def time_budget_analysis(
                                     "duration": round(sum(all_event_durations), 3),
                                     "duration_mean": round(statistics.mean(all_event_durations), 3)
                                     if len(all_event_durations)
-                                    else float("NaN"),
+                                    else cfg.NA,
                                     "duration_stdev": round(statistics.stdev(all_event_durations), 3)
                                     if len(all_event_durations) > 1
-                                    else float("NaN"),
+                                    else cfg.NA,
                                     "number": len(all_event_durations),
                                     "inter_duration_mean": round(statistics.mean(all_event_interdurations), 3)
                                     if len(all_event_interdurations)
-                                    else float("NaN"),
+                                    else cfg.NA,
                                     "inter_duration_stdev": round(statistics.stdev(all_event_interdurations), 3)
                                     if len(all_event_interdurations) > 1
-                                    else float("NaN"),
+                                    else cfg.NA,
                                 }
                             )
 
@@ -836,7 +877,7 @@ def time_budget_analysis(
                                     "duration": cfg.NA,
                                     "duration_mean": cfg.NA,
                                     "duration_stdev": cfg.NA,
-                                    "number": "0",
+                                    "number": 0,
                                     "inter_duration_mean": cfg.NA,
                                     "inter_duration_stdev": cfg.NA,
                                 }
@@ -859,16 +900,16 @@ def time_budget_analysis(
                             "subject": subject,
                             "behavior": behavior,
                             "modifiers": "",
-                            "duration": float("NaN"),
-                            "duration_mean": float("NaN"),
-                            "duration_stdev": float("NaN"),
+                            "duration": cfg.NA,
+                            "duration_mean": cfg.NA,
+                            "duration_stdev": cfg.NA,
                             "number": len(rows),
                             "inter_duration_mean": round(statistics.mean(all_event_interdurations), 3)
                             if len(all_event_interdurations)
-                            else float("NaN"),
+                            else cfg.NA,
                             "inter_duration_stdev": inter_duration_stdev
                             if len(all_event_interdurations) > 1
-                            else float("NaN"),
+                            else cfg.NA,
                         }
                     )
 
@@ -890,12 +931,12 @@ def time_budget_analysis(
                                     "subject": subject,
                                     "behavior": behavior,
                                     "modifiers": "",
-                                    "duration": 0,
-                                    "duration_mean": 0,
-                                    "duration_stdev": float("NaN"),
+                                    "duration": 0.0,
+                                    "duration_mean": cfg.NA,
+                                    "duration_stdev": cfg.NA,
                                     "number": 0,
-                                    "inter_duration_mean": "-",
-                                    "inter_duration_stdev": "-",
+                                    "inter_duration_mean": cfg.NA,
+                                    "inter_duration_stdev": cfg.NA,
                                 }
                             )
                         continue
@@ -934,23 +975,23 @@ def time_budget_analysis(
                                     all_event_interdurations.append(float(rows[idx + 1][0]) - float(row[0]))
 
                         if [x for x in all_event_durations if math.isnan(x)] or not len(all_event_durations):
-                            duration_mean = float("NaN")
-                            duration_stdev = float("NaN")
+                            duration_mean = cfg.NA
+                            duration_stdev = cfg.NA
                         else:
                             duration_mean = round(statistics.mean(all_event_durations), 3)
                             if len(all_event_durations) > 1:
                                 duration_stdev = round(statistics.stdev(all_event_durations), 3)
                             else:
-                                duration_stdev = float("NaN")
+                                duration_stdev = cfg.NA
                         if [x for x in all_event_interdurations if math.isnan(x)] or not len(all_event_interdurations):
-                            inter_duration_mean = float("NaN")
-                            inter_duration_stdev = float("NaN")
+                            inter_duration_mean = cfg.NA
+                            inter_duration_stdev = cfg.NA
                         else:
                             inter_duration_mean = round(statistics.mean(all_event_interdurations), 3)
                             if len(all_event_interdurations) > 1:
                                 inter_duration_stdev = round(statistics.stdev(all_event_interdurations), 3)
                             else:
-                                inter_duration_stdev = float("NaN")
+                                inter_duration_stdev = cfg.NA
                         out_cat.append(
                             {
                                 "subject": subject,

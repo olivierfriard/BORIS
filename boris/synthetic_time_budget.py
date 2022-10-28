@@ -101,18 +101,17 @@ def synthetic_time_budget(self):
         synth_tb_param[cfg.EXCLUDED_BEHAVIORS] = []
 
     ok, msg, data_report = time_budget_functions.synthetic_time_budget(self.pj, selected_observations, synth_tb_param)
+
+    results = dialog.Results_dialog()
+    results.setWindowTitle("Synthetic time budget")
     if not ok:
-        results = dialog.Results_dialog()
-        results.setWindowTitle("Synthetic time budget")
         results.ptText.clear()
         results.ptText.setReadOnly(True)
         results.ptText.appendHtml(msg.replace("\n", "<br>"))
         results.exec_()
         return
 
-    results = dialog.Results_dialog()
     results.dataset = True
-    results.setWindowTitle("Synthetic time budget")
     font = QFont("Courier", 12)
     results.ptText.setFont(font)
     results.ptText.setWordWrapMode(QTextOption.NoWrap)
@@ -151,12 +150,10 @@ def synthetic_time_budget(self):
                 ):
                     return
 
-        if output_format in ["tsv", "csv", "html", "cli"]:
-            with open(file_name, "wb") as f:
+        with open(file_name, "wb") as f:
+            if output_format in ["tsv", "csv", "html", "cli"]:
                 f.write(str.encode(data_report.export(output_format)))
-
-        if output_format in ["ods", "xlsx", "xls"]:
-            with open(file_name, "wb") as f:
+            if output_format in ["ods", "xlsx", "xls"]:
                 f.write(data_report.export(output_format))
 
 
@@ -165,21 +162,6 @@ def synthetic_binned_time_budget(self):
     Synthetic time budget with time bin
     """
 
-    """
-    QMessageBox.warning(
-        None,
-        cfg.programName,
-        (
-            f"This function is experimental. Please test it and report any bug at <br>"
-            '<a href="https://github.com/olivierfriard/BORIS/issues">'
-            "https://github.com/olivierfriard/BORIS/issues</a><br>"
-            "or by email (See the About page on the BORIS web site.<br><br>"
-            "Thank you for your collaboration!"
-        ),
-        QMessageBox.Ok | QMessageBox.Default,
-        QMessageBox.NoButton,
-    )
-    """
     _, selected_observations = select_observations.select_observations(
         self.pj, mode=cfg.MULTIPLE, windows_title="Select observations for synthetic binned time budget"
     )
@@ -298,9 +280,8 @@ def synthetic_binned_time_budget(self):
                 ):
                     return
 
-        if output_format in ["tsv", "csv", "html", "cli"]:
-            with open(file_name, "wb") as f:
+        with open(file_name, "wb") as f:
+            if output_format in ["tsv", "csv", "html", "cli"]:
                 f.write(str.encode(data_report.export(output_format)))
-        if output_format in ["ods", "xlsx", "xls"]:
-            with open(file_name, "wb") as f:
+            if output_format in ["ods", "xlsx", "xls"]:
                 f.write(data_report.export(output_format))

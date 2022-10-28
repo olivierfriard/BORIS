@@ -614,12 +614,11 @@ def time_budget(self, mode: str, mode2: str = "list"):
                 self.tb.twTB.setRowCount(self.tb.twTB.rowCount() + 1)
                 column = 0
                 for field in fields:
-                    """
-                    if field == "duration":
-                        item = QTableWidgetItem("{:0.3f}".format(row[field]))
+
+                    if isinstance(row[field], float):
+                        item = QTableWidgetItem(f"{row[field]:.3f}")
                     else:
-                    """
-                    item = QTableWidgetItem(str(row[field]).replace(" ()", ""))
+                        item = QTableWidgetItem(str(row[field]).replace(" ()", ""))
                     # no modif allowed
                     item.setFlags(Qt.ItemIsEnabled)
                     self.tb.twTB.setItem(self.tb.twTB.rowCount() - 1, column, item)
@@ -636,7 +635,8 @@ def time_budget(self, mode: str, mode2: str = "list"):
                         and row["behavior"] not in parameters[cfg.EXCLUDED_BEHAVIORS]
                     ):
                         tot_time -= excl_behaviors_total_time[row["subject"]]
-                    item = QTableWidgetItem(str(round(row["duration"] / tot_time * 100, 1)) if tot_time > 0 else "-")
+                    item = QTableWidgetItem(f"{row['duration'] / tot_time * 100:.1f}" if tot_time > 0 else "-")
+
                 else:
                     item = QTableWidgetItem("-")
 
@@ -675,7 +675,7 @@ def time_budget(self, mode: str, mode2: str = "list"):
 
                         if field == "duration":
                             try:
-                                item = QTableWidgetItem("{:0.3f}".format(categories[subject][category][field]))
+                                item = QTableWidgetItem(f"{categories[subject][category][field]:0.3f}")
                             except Exception:
                                 item = QTableWidgetItem(categories[subject][category][field])
                         else:

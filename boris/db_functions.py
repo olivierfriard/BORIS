@@ -227,6 +227,7 @@ def load_aggregated_events_in_db(
     ]
 
     db = sqlite3.connect(":memory:")
+
     """
     import os
     os.system("rm /tmp/ramdisk/aggreg.sqlite")
