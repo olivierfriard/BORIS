@@ -57,7 +57,7 @@ def default_value(ethogram: dict, behav: str, param):
     return default_value_
 
 
-def init_behav_modif(ethogram, selected_subjects, distinct_behav_modif, include_modifiers, parameters):
+def init_behav_modif(ethogram, selected_subjects, distinct_behav_modif, parameters):
     """
     initialize dictionary with subject, behaviors and modifiers
     """
@@ -78,7 +78,7 @@ def init_behav_modif(ethogram, selected_subjects, distinct_behav_modif, include_
     return behaviors
 
 
-def init_behav_modif_bin(ethogram, selected_subjects, distinct_behav_modif, include_modifiers, parameters):
+def init_behav_modif_bin(ethogram, selected_subjects, distinct_behav_modif, parameters):
     """
     initialize dictionary with subject, behaviors and modifiers
     """
@@ -203,9 +203,7 @@ def synthetic_time_budget_bin(pj: dict, selected_observations: list, parameters_
         if [x for x in distinct_behav_modif if x[0] == behav] == []:
             distinct_behav_modif.append((behav, ""))
 
-    behaviors = init_behav_modif_bin(
-        pj[cfg.ETHOGRAM], selected_subjects, distinct_behav_modif, include_modifiers, parameters
-    )
+    behaviors = init_behav_modif_bin(pj[cfg.ETHOGRAM], selected_subjects, distinct_behav_modif, parameters)
 
     param_header = ["Observations id", "Total length (s)", "Time interval (s)"]
     subj_header, behav_header, modif_header = (
@@ -438,9 +436,7 @@ def synthetic_time_budget(pj: dict, selected_observations: list, parameters_obs:
         if [x for x in distinct_behav_modif if x[0] == behav] == []:
             distinct_behav_modif.append([behav, ""])
 
-    behaviors = init_behav_modif(
-        pj[cfg.ETHOGRAM], selected_subjects, distinct_behav_modif, include_modifiers, parameters
-    )
+    behaviors = init_behav_modif(pj[cfg.ETHOGRAM], selected_subjects, distinct_behav_modif, parameters)
 
     param_header = ["Observations id", "Total length (s)"]
     subj_header, behav_header, modif_header = (
