@@ -13,7 +13,7 @@ The upcoming version 8 contains more features: `features added in v. 8 <http://w
 
 
 The `BORIS publication <https://besjournals.onlinelibrary.wiley.com/doi/full/10.1111/2041-210X.12584>`_ 
-has more than `900 citations in scientific publications <http://www.boris.unito.it/pages/citations.html>`_ with peer-reviewing (Scopus source).
+has more than `1000 citations in scientific publications <http://www.boris.unito.it/pages/citations.html>`_ with peer-reviewing (Scopus source).
 
 See http://www.boris.unito.it
 
