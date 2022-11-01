@@ -23,8 +23,17 @@ This file is part of BORIS.
 import logging
 import os
 import pathlib as pl
-import re
 from decimal import Decimal as dec
+from io import StringIO
+import pandas as pd
+
+try:
+    import pyreadr
+
+    flag_pyreadr_loaded = True
+except ModuleNotFoundError:
+    flag_pyreadr_loaded = False
+
 
 import tablib
 from PyQt5.QtCore import Qt
@@ -137,7 +146,7 @@ class timeBudgetResults(QWidget):
 
         logging.debug("save time budget results to file")
 
-        file_formats = [cfg.TSV, cfg.CSV, cfg.ODS, cfg.XLSX, cfg.XLS, cfg.HTML]
+        file_formats = [cfg.TSV, cfg.CSV, cfg.ODS, cfg.XLSX, cfg.XLS, cfg.HTML, cfg.PANDAS_DF, cfg.RDS]
 
         file_name, filter_ = QFileDialog().getSaveFileName(
             self, "Save Time budget analysis", "", ";;".join(file_formats)
@@ -320,11 +329,49 @@ class timeBudgetResults(QWidget):
         for row in rows:
             data.append(complete(row, max([len(r) for r in rows])))
 
+        if filter_ in (cfg.PANDAS_DF, cfg.RDS):
+            pass
+            """
+            # build pandas dataframe from the tsv export of tablib dataset
+            df = pd.read_csv(
+                StringIO(data.export("tsv")),
+                sep="\t",
+                dtype={
+                    "Observation id": str,
+                    "Observation date": str,
+                    "Description": str,
+# variables
+                    "Time budget start": str,
+                     "Time budget stop": str,
+                    "Time budget duration": str,
+                    "Subject": str,
+                    "Behavior": str,
+                    "Modifiers": str,
+                    "Total number of occurences": float,
+                    "Total duration (s)": float,
+                    "Duration mean (s)": float,
+                    "Duration std dev": float,
+                    "inter-event intervals mean (s)": float,
+                    "inter-event intervals std dev": float,
+                    "% of total length	": float,
+                },
+                parse_dates=[1],
+            )
+
+            if filter_ == cfg.PANDAS_DF:
+                df.to_pickle(file_name)
+
+            if flag_pyreadr_loaded and filter_ == cfg.RDS:
+                pyreadr.write_rds(file_name, df)
+
+            return
+            """
+
         # write results
         with open(file_name, "wb") as f:
-            if filter_ in [cfg.TSV, cfg.CSV, cfg.HTML]:
+            if filter_ in (cfg.TSV, cfg.CSV, cfg.HTML):
                 f.write(str.encode(data.export(cfg.FILE_NAME_SUFFIX[filter_])))
-            if filter_ in [cfg.ODS, cfg.XLSX, cfg.XLS]:
+            if filter_ in (cfg.ODS, cfg.XLSX, cfg.XLS):
                 f.write(data.export(cfg.FILE_NAME_SUFFIX[filter_]))
 
 

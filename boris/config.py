@@ -660,7 +660,11 @@ XLSX = "Microsoft Excel Spreadsheet XLSX (*.xlsx)"
 XLSX_WB = "Microsoft Excel Workbook (*.xlsx)"
 XLS = "Legacy Microsoft Excel Spreadsheet XLS (*.xls)"
 HTML = "HTML (*.html)"
-
+PANDAS_DF = "Pandas DataFrame (*.pkl)"
+RDS = "R dataframe (*.rds)"
+SQL = ("SQL dump file (*.sql)",)
+SDIS = "SDIS (*.sds)"
+TBS = "Timed Behavioral Sequences (*.tbs)"
 
 FILE_NAME_SUFFIX = {
     TSV: "tsv",
@@ -671,4 +675,9 @@ FILE_NAME_SUFFIX = {
     XLSX_WB: "xlsx",
     XLS: "xls",
     HTML: "html",
+    PANDAS_DF: "pkl",
+    RDS: "rds",
+    SQL: "sql",
+    SDIS: "sds",
+    TBS: "tbs",
 }

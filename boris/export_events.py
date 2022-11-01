@@ -346,41 +346,30 @@ def export_aggregated_events(self):
             == cfg.YES
         )
 
-    extended_file_formats = [
-        "Tab Separated Values (*.tsv)",
-        "Comma Separated Values (*.csv)",
-        "Open Document Spreadsheet ODS (*.ods)",
-        "Microsoft Excel Spreadsheet XLSX (*.xlsx)",
-        "Legacy Microsoft Excel Spreadsheet XLS (*.xls)",
-        "HTML (*.html)",
-        "SDIS (*.sds)",
-        "SQL dump file (*.sql)",
-        "Pandas DataFrame (*.pkl)",
-        "R dataframe (*.rds)",
-    ]
-
     if flag_group:
-        file_formats = [
-            "tsv",
-            "csv",
-            "ods",
-            "xlsx",
-            "xls",
-            "html",
-            "sds",
-            "sql",
-            "pkl",
-            "rds",
-        ]  # must be in same order than extended_file_formats
+
+        available_formats = (
+            cfg.TSV,
+            cfg.CSV,
+            cfg.ODS,
+            cfg.XLSX,
+            cfg.XLS,
+            cfg.HTML,
+            cfg.SDIS,
+            cfg.SQL,
+            cfg.PANDAS_DF,
+            cfg.RDS,
+        )
 
         fileName, filter_ = QFileDialog().getSaveFileName(
-            self, "Export aggregated events", "", ";;".join(extended_file_formats)
+            self, "Export aggregated events", "", ";;".join(available_formats)
         )
 
         if not fileName:
             return
 
-        outputFormat = file_formats[extended_file_formats.index(filter_)]
+        """outputFormat = file_formats[extended_file_formats.index(filter_)]"""
+        outputFormat = cfg.FILE_NAME_SUFFIX[filter_]
         if pl.Path(fileName).suffix != "." + outputFormat:
             # check if file with new extension already exists
             fileName = str(pl.Path(fileName)) + "." + outputFormat
@@ -395,23 +384,24 @@ def export_aggregated_events(self):
 
     else:  # not grouping
 
-        items = (
-            "Tab Separated Values (*.tsv)",
-            "Comma Separated values (*.csv)",
-            "Open Document Spreadsheet (*.ods)",
-            "Microsoft Excel Spreadsheet XLSX (*.xlsx)",
-            "Legacy Microsoft Excel Spreadsheet XLS (*.xls)",
-            "HTML (*.html)",
-            "SDIS (*.sds)",
-            "Timed Behavioral Sequences (*.tbs)",
-            "Pandas DataFrame (*.pkl)",
-            "R dataframe (*.rds)",
+        available_formats = (
+            cfg.TSV,
+            cfg.CSV,
+            cfg.ODS,
+            cfg.XLSX,
+            cfg.XLS,
+            cfg.HTML,
+            cfg.SDIS,
+            cfg.TBS,
+            cfg.PANDAS_DF,
+            cfg.RDS,
         )
-        item, ok = QInputDialog.getItem(self, "Export events format", "Available formats", items, 0, False)
+        item, ok = QInputDialog.getItem(self, "Export events format", "Available formats", available_formats, 0, False)
         if not ok:
             return
         # read the output format code
-        outputFormat = re.sub(".* \(\*\.", "", item)[:-1]
+        outputFormat = cfg.FILE_NAME_SUFFIX[item]
+        """outputFormat = re.sub(".* \(\*\.", "", item)[:-1]"""
 
         exportDir = QFileDialog().getExistingDirectory(
             self, "Choose a directory to export events", os.path.expanduser("~"), options=QFileDialog.ShowDirsOnly
