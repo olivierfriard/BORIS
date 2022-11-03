@@ -139,10 +139,11 @@ def preferences(self):
     preferencesWindow.cb_hwdec.setCurrentIndex(
         cfg.MPV_HWDEC_OPTIONS.index(self.config_param.get(cfg.MPV_HWDEC, cfg.MPV_HWDEC_DEFAULT_VALUE))
     )
-
+    """ 2022-11-03
     preferencesWindow.cb_compact_time_budget.setChecked(
         self.config_param.get(cfg.TIME_BUDGET_FORMAT, cfg.DEFAULT_TIME_BUDGET_FORMAT) == cfg.COMPACT_TIME_BUDGET_FORMAT
     )
+    """
 
     # FFmpeg for frame by frame mode
     preferencesWindow.lbFFmpegPath.setText(f"FFmpeg path: {self.ffmpeg_bin}")
@@ -251,10 +252,12 @@ def preferences(self):
 
         # result
 
+        """
         if preferencesWindow.cb_compact_time_budget.isChecked():
             self.config_param[cfg.TIME_BUDGET_FORMAT] = cfg.COMPACT_TIME_BUDGET_FORMAT
         else:
             self.config_param[cfg.TIME_BUDGET_FORMAT] = cfg.DEFAULT_TIME_BUDGET_FORMAT
+        """
 
         self.ffmpeg_cache_dir = preferencesWindow.leFFmpegCacheDir.text()
         self.ffmpeg_cache_dir_max_size = preferencesWindow.sbFFmpegCacheDirMaxSize.value()

@@ -81,9 +81,11 @@ OBSERVATION_TIME_INTERVAL = "observation time interval"
 SUBJECT_NAME = "name"
 
 TIME_BUDGET_FORMAT = "time_budget_format"
+"""
 COMPACT_TIME_BUDGET_FORMAT = "compact"
 LONG_TIME_BUDGET_FORMAT = "long"
 DEFAULT_TIME_BUDGET_FORMAT = LONG_TIME_BUDGET_FORMAT
+"""
 
 TIME_BIN_SIZE = "time bin size"
 

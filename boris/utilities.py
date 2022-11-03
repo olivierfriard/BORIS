@@ -1084,7 +1084,6 @@ def accurate_media_analysis(ffmpeg_bin: str, file_name: str) -> dict:
     except Exception:
         hasAudio = False
 
-    # if duration == 0 or bitrate == -1:
     if not hasVideo and not hasAudio:
         return {"error": "This file does not seem to be a media file"}
 

@@ -331,30 +331,38 @@ class timeBudgetResults(QWidget):
 
         if filter_ in (cfg.PANDAS_DF, cfg.RDS):
             pass
-            """
+
             # build pandas dataframe from the tsv export of tablib dataset
+            dtype = {
+                "Observation id": str,
+                "Observation date": str,
+                "Description": str,
+                "Time budget start": str,
+                "Time budget stop": str,
+                "Time budget duration": str,
+                "Subject": str,
+                "Behavior": str,
+                "Modifiers": str,
+                "Total number of occurences": float,
+                "Total duration (s)": float,
+                "Duration mean (s)": float,
+                "Duration std dev": float,
+                "inter-event intervals mean (s)": float,
+                "inter-event intervals std dev": float,
+                "% of total length	": float,
+            }
+
+            # indep var values
+            for idx in self.pj.get(cfg.INDEPENDENT_VARIABLES, []):
+                if self.pj[cfg.INDEPENDENT_VARIABLES][idx]["type"] == "numeric":
+                    dtype[self.pj[cfg.INDEPENDENT_VARIABLES][idx]["label"]] = float
+                else:
+                    dtype[self.pj[cfg.INDEPENDENT_VARIABLES][idx]["label"]] = str
+
             df = pd.read_csv(
                 StringIO(data.export("tsv")),
                 sep="\t",
-                dtype={
-                    "Observation id": str,
-                    "Observation date": str,
-                    "Description": str,
-# variables
-                    "Time budget start": str,
-                     "Time budget stop": str,
-                    "Time budget duration": str,
-                    "Subject": str,
-                    "Behavior": str,
-                    "Modifiers": str,
-                    "Total number of occurences": float,
-                    "Total duration (s)": float,
-                    "Duration mean (s)": float,
-                    "Duration std dev": float,
-                    "inter-event intervals mean (s)": float,
-                    "inter-event intervals std dev": float,
-                    "% of total length	": float,
-                },
+                dtype=dtype,
                 parse_dates=[1],
             )
 
@@ -365,7 +373,6 @@ class timeBudgetResults(QWidget):
                 pyreadr.write_rds(file_name, df)
 
             return
-            """
 
         # write results
         with open(file_name, "wb") as f:
@@ -942,85 +949,89 @@ def time_budget(self, mode: str, mode2: str = "list"):
                     )
 
             # compact format
+            """ 2022-11-03 removed time budget long format
             if (
                 self.config_param.get(cfg.TIME_BUDGET_FORMAT, cfg.DEFAULT_TIME_BUDGET_FORMAT)
                 == cfg.COMPACT_TIME_BUDGET_FORMAT
             ):
-                rows = []
-                col1 = []
-                # observation id
-                col1.append(obsId)
-                col1.append(self.pj[cfg.OBSERVATIONS][obsId].get("date", ""))
-                col1.append(util.eol2space(self.pj[cfg.OBSERVATIONS][obsId].get(cfg.DESCRIPTION, "")))
-                header = ["Observation id", "Observation date", "Description"]
+            """
 
-                indep_var_label = []
-                indep_var_values = []
-                for idx, v in self.pj.get(cfg.INDEPENDENT_VARIABLES, {}).items():
-                    indep_var_label.append(v["label"])
+            rows = []
+            col1 = []
+            # observation id
+            col1.append(obsId)
+            col1.append(self.pj[cfg.OBSERVATIONS][obsId].get("date", ""))
+            col1.append(util.eol2space(self.pj[cfg.OBSERVATIONS][obsId].get(cfg.DESCRIPTION, "")))
+            header = ["Observation id", "Observation date", "Description"]
 
-                    if (
-                        cfg.INDEPENDENT_VARIABLES in self.pj[cfg.OBSERVATIONS][obsId]
-                        and v["label"] in self.pj[cfg.OBSERVATIONS][obsId][cfg.INDEPENDENT_VARIABLES]
-                    ):
-                        indep_var_values.append(self.pj[cfg.OBSERVATIONS][obsId][cfg.INDEPENDENT_VARIABLES][v["label"]])
+            indep_var_label = []
+            indep_var_values = []
+            for idx, v in self.pj.get(cfg.INDEPENDENT_VARIABLES, {}).items():
+                indep_var_label.append(v["label"])
 
-                header.extend(indep_var_label)
-                col1.extend(indep_var_values)
+                if (
+                    cfg.INDEPENDENT_VARIABLES in self.pj[cfg.OBSERVATIONS][obsId]
+                    and v["label"] in self.pj[cfg.OBSERVATIONS][obsId][cfg.INDEPENDENT_VARIABLES]
+                ):
+                    indep_var_values.append(self.pj[cfg.OBSERVATIONS][obsId][cfg.INDEPENDENT_VARIABLES][v["label"]])
 
-                # interval analysis
-                col1.extend([f"{min_time:0.3f}", f"{max_time:0.3f}", f"{max_time - min_time:0.3f}"])
-                header.extend(["Time budget start", "Time budget stop", "Time budget duration"])
+            header.extend(indep_var_label)
+            col1.extend(indep_var_values)
 
-                if mode == "by_behavior":
+            # interval analysis
+            col1.extend([f"{min_time:0.3f}", f"{max_time:0.3f}", f"{max_time - min_time:0.3f}"])
+            header.extend(["Time budget start", "Time budget stop", "Time budget duration"])
 
-                    # header
-                    rows.append(header + tb_fields)
+            if mode == "by_behavior":
 
-                    for row in out:
+                # header
+                rows.append(header + tb_fields)
+
+                for row in out:
+                    values = []
+                    for field in fields:
+                        values.append(str(row[field]).replace(" ()", ""))
+                    # % of total time
+                    if row["duration"] in [0, cfg.NA]:
+                        values.append(row["duration"])
+                    elif row["duration"] not in ["-", cfg.UNPAIRED] and selectedObsTotalMediaLength:
+                        tot_time = float(max_time - min_time)
+                        # substract duration of excluded behaviors from total time for each subject
+                        if (
+                            row["subject"] in excl_behaviors_total_time
+                            and row["behavior"] not in parameters[cfg.EXCLUDED_BEHAVIORS]
+                        ):
+                            tot_time -= excl_behaviors_total_time[row["subject"]]
+                        # % of tot time
+                        values.append(round(row["duration"] / tot_time * 100, 1) if tot_time > 0 else "-")
+                    else:
+                        values.append("-")
+
+                    rows.append(col1 + values)
+
+            if mode == "by_category":
+                rows.append(header + tb_fields)
+
+                for subject in categories:
+
+                    for category in categories[subject]:
                         values = []
-                        for field in fields:
-                            values.append(str(row[field]).replace(" ()", ""))
-                        # % of total time
-                        if row["duration"] in [0, cfg.NA]:
-                            values.append(row["duration"])
-                        elif row["duration"] not in ["-", cfg.UNPAIRED] and selectedObsTotalMediaLength:
-                            tot_time = float(max_time - min_time)
-                            # substract duration of excluded behaviors from total time for each subject
-                            if (
-                                row["subject"] in excl_behaviors_total_time
-                                and row["behavior"] not in parameters[cfg.EXCLUDED_BEHAVIORS]
-                            ):
-                                tot_time -= excl_behaviors_total_time[row["subject"]]
-                            # % of tot time
-                            values.append(round(row["duration"] / tot_time * 100, 1) if tot_time > 0 else "-")
+                        values.append(subject)
+                        if category == "":
+                            values.append("No category")
                         else:
-                            values.append("-")
+                            values.append(category)
+
+                        values.append(categories[subject][category]["number"])
+                        try:
+                            values.append(f"{categories[subject][category]['duration']:0.3f}")
+                        except Exception:
+                            values.append(categories[subject][category]["duration"])
 
                         rows.append(col1 + values)
 
-                if mode == "by_category":
-                    rows.append(header + tb_fields)
-
-                    for subject in categories:
-
-                        for category in categories[subject]:
-                            values = []
-                            values.append(subject)
-                            if category == "":
-                                values.append("No category")
-                            else:
-                                values.append(category)
-
-                            values.append(categories[subject][category]["number"])
-                            try:
-                                values.append(f"{categories[subject][category]['duration']:0.3f}")
-                            except Exception:
-                                values.append(categories[subject][category]["duration"])
-
-                            rows.append(col1 + values)
-
             # long format
+            """ 2022-11-03 removed time budget long format
             if (
                 self.config_param.get(cfg.TIME_BUDGET_FORMAT, cfg.DEFAULT_TIME_BUDGET_FORMAT)
                 == cfg.LONG_TIME_BUDGET_FORMAT
@@ -1103,6 +1114,8 @@ def time_budget(self, mode: str, mode2: str = "list"):
 
                             rows.append(values)
 
+            """
+
             data = tablib.Dataset()
             data.title = obsId
             for row in rows:
@@ -1127,21 +1140,15 @@ def time_budget(self, mode: str, mode2: str = "list"):
                     )
                     if mem_command == cfg.CANCEL:
                         return
-                    if mem_command in [cfg.SKIP, cfg.SKIP_ALL]:
+                    if mem_command in (cfg.SKIP, cfg.SKIP_ALL):
                         continue
 
                 with open(file_name, "wb") as f:
-                    if output_format in [cfg.TSV, cfg.CSV, cfg.HTML]:
+                    if output_format in (cfg.TSV, cfg.CSV, cfg.HTML):
                         f.write(str.encode(data.export(cfg.FILE_NAME_SUFFIX[output_format])))
 
-                    if output_format == cfg.ODS:
-                        f.write(data.ods)
-
-                    if output_format == cfg.XLSX:
-                        f.write(data.xlsx)
-
-                    if output_format == cfg.XLS:
-                        f.write(data.xls)
+                    if output_format in (cfg.ODS, cfg.XLSX, cfg.XLS):
+                        f.write(data.export(cfg.FILE_NAME_SUFFIX[output_format]))
 
         if output_format == cfg.XLSX_WB:
             with open(wb_file_name, "wb") as f:
