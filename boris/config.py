@@ -664,10 +664,10 @@ XLS = "Legacy Microsoft Excel Spreadsheet XLS (*.xls)"
 HTML = "HTML (*.html)"
 PANDAS_DF = "Pandas DataFrame (*.pkl)"
 RDS = "R dataframe (*.rds)"
-SQL = ("SQL dump file (*.sql)",)
+SQL = "SQL dump file (*.sql)"
 SDIS = "SDIS (*.sds)"
-TBS = ("Timed Behavioral Sequences (*.tbs)",)
-TEXT_FILE = ("Text file",)
+TBS = "Timed Behavioral Sequences (*.tbs)"
+TEXT_FILE = "Text file"
 
 FILE_NAME_SUFFIX = {
     TSV: "tsv",

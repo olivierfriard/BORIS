@@ -292,7 +292,253 @@ def export_events_jwatcher(
 
 def export_tabular_events(
     parameters, obsId: str, observation: dict, ethogram: dict, file_name: str, output_format: str
-) -> tuple:
+) -> tuple[bool, str]:
+    """
+    export events
+
+    Args:
+        parameters (dict): subjects, behaviors
+        obsId (str): observation id
+        observation (dict): observation
+        ethogram (dict): ethogram of project
+        file_name (str): file name for exporting events
+        output_format (str): output for exporting events
+
+    Returns:
+        bool: result: True if OK else False
+        str: error message
+    """
+
+    total_length = f"{project_functions.observation_total_length(observation):.3f}"
+
+    eventsWithStatus = project_functions.events_start_stop(ethogram, observation[cfg.EVENTS])
+
+    # check max number of modifiers
+    max_modifiers = 0
+    for event in eventsWithStatus:
+        if event[cfg.EVENT_MODIFIER_FIELD_IDX]:
+            max_modifiers = max(max_modifiers, len(event[cfg.EVENT_MODIFIER_FIELD_IDX].split("|")))
+
+    # media file number
+    mediaNb = 0
+    if observation[cfg.TYPE] == cfg.MEDIA:
+        for player in observation[cfg.FILE]:
+            mediaNb += len(observation[cfg.FILE][player])
+
+    rows = []
+
+    """
+    # observation id
+    rows.append(["Observation id", obsId])
+    rows.append([""])
+
+    # media file name
+    if observation[cfg.TYPE] == cfg.MEDIA:
+        rows.append(["Media file(s)"])
+    elif observation[cfg.TYPE] == cfg.LIVE:
+        rows.append(["Live observation"])
+    elif observation[cfg.TYPE] == cfg.IMAGES:
+        rows.append(["From directories of images"])
+    else:
+        rows.append([""])
+    rows.append([""])
+
+    if observation[cfg.TYPE] == cfg.MEDIA:
+        for player in sorted(list(observation[cfg.FILE].keys())):
+            for media in observation[cfg.FILE][player]:
+                rows.append([f"Player #{player}", media])
+
+    if observation[cfg.TYPE] == cfg.IMAGES:
+        for dir in observation[cfg.DIRECTORIES_LIST]:
+            rows.append([f"Directory", dir])
+
+    rows.append([""])
+
+    # date
+    rows.append(["Observation date", observation.get("date", "").replace("T", " ")])
+    rows.append([""])
+
+    # description
+    rows.append(["Description", util.eol2space(observation.get("description", ""))])
+    rows.append([""])
+
+    # time offset
+    rows.append(["Time offset (s)", observation.get(cfg.TIME_OFFSET, 0)])
+    rows.append([""])
+
+    # independent variables
+    if cfg.INDEPENDENT_VARIABLES in observation:
+        rows.extend([["independent variables"], ["variable", "value"]])
+
+        for variable in observation[cfg.INDEPENDENT_VARIABLES]:
+            rows.append([variable, observation[cfg.INDEPENDENT_VARIABLES][variable]])
+
+    rows.append([""])
+    """
+
+    # write table header
+    header = [
+        "Observation id",
+        "Observation date",
+        "Description",
+        "Observation type",
+        "Source",
+        "Total length",
+        "FPS",
+    ]
+
+    # independent variables
+    if cfg.INDEPENDENT_VARIABLES in observation:
+        for variable in observation[cfg.INDEPENDENT_VARIABLES]:
+            header.append(variable)
+
+    header.extend(
+        [
+            "Subject",
+            "Behavior",
+            "Behavioral category",
+            "Modifiers",
+            "Behavior type",
+            "Time",
+            "Image index",  # add image index and image file path to header
+            "Image file path",
+            "Comment",
+        ]
+    )
+
+    """
+    header = ["Time"]
+    if observation[cfg.TYPE] == cfg.MEDIA:
+        header.extend(["Media file path", "Total length", "FPS"])
+    if observation[cfg.TYPE] == cfg.IMAGES:
+        header.extend(
+            [
+                "Image file path",
+                "Image index",
+            ]
+        )
+    if observation[cfg.TYPE] == cfg.LIVE:
+        header.extend(
+            [
+                "Total length",
+            ]
+        )
+
+    header.extend(["Subject", "Behavior", "Behavioral category"])
+
+
+    behavioral_category = project_functions.behavior_category(ethogram)
+
+    for x in range(1, max_modifiers + 1):
+        header.append(f"Modifier {x}")
+    header.extend(["Comment", "Status"])
+    """
+
+    behavioral_category = project_functions.behavior_category(ethogram)
+    rows.append(header)
+
+    duration1 = []  # in seconds
+    if observation[cfg.TYPE] == cfg.MEDIA:
+        try:
+            for mediaFile in observation[cfg.FILE][cfg.PLAYER1]:
+                duration1.append(observation[cfg.MEDIA_INFO][cfg.LENGTH][mediaFile])
+        except KeyError:
+            pass
+
+    for event in eventsWithStatus:
+        if (
+            (event[cfg.EVENT_SUBJECT_FIELD_IDX] in parameters[cfg.SELECTED_SUBJECTS])
+            or (event[cfg.EVENT_SUBJECT_FIELD_IDX] == "" and cfg.NO_FOCAL_SUBJECT in parameters[cfg.SELECTED_SUBJECTS])
+        ) and (event[cfg.EVENT_BEHAVIOR_FIELD_IDX] in parameters[cfg.SELECTED_BEHAVIORS]):
+
+            fields = []
+            fields.append(obsId)
+            fields.append(observation.get("date", "").replace("T", " "))
+            fields.append(util.eol2space(observation.get("description", "")))
+
+            if observation[cfg.TYPE] == cfg.MEDIA:
+                fields.append("Media file(s)")
+            elif observation[cfg.TYPE] == cfg.LIVE:
+                fields.append("Live observation")
+            elif observation[cfg.TYPE] == cfg.IMAGES:
+                fields.append("From directories of images")
+            else:
+                fields.append("")
+
+            # time
+            fields.append(util.intfloatstr(str(event[cfg.EVENT_TIME_FIELD_IDX])))
+
+            if observation[cfg.TYPE] == cfg.MEDIA:
+
+                time_ = event[cfg.EVENT_TIME_FIELD_IDX] - observation[cfg.TIME_OFFSET]
+                if time_ < 0:
+                    time_ = 0
+
+                if duration1:
+                    mediaFileIdx = [idx1 for idx1, x in enumerate(duration1) if time_ >= sum(duration1[0:idx1])][-1]
+                    fields.append(observation[cfg.FILE][cfg.PLAYER1][mediaFileIdx])
+                    fields.append(total_length)
+                    # FPS
+                    try:
+                        fields.append(
+                            observation[cfg.MEDIA_INFO][cfg.FPS][observation[cfg.FILE][cfg.PLAYER1][mediaFileIdx]]
+                        )  # fps
+                    except KeyError:
+                        fields.append(cfg.NA)
+                else:
+                    fields.append(cfg.NA)  # media file
+                    fields.append(cfg.NA)  # FPS
+
+            if observation[cfg.TYPE] == cfg.LIVE:
+                fields.append(total_length)  # total length
+
+            if observation[cfg.TYPE] == cfg.IMAGES:
+                fields.append(event[cfg.PJ_OBS_FIELDS[cfg.IMAGES][cfg.IMAGE_PATH]])  # image file path
+                fields.append(event[cfg.PJ_OBS_FIELDS[cfg.IMAGES][cfg.IMAGE_INDEX]])  # image file index
+
+            fields.append(event[cfg.PJ_OBS_FIELDS[observation[cfg.TYPE]][cfg.SUBJECT]])
+            fields.append(event[cfg.PJ_OBS_FIELDS[observation[cfg.TYPE]][cfg.BEHAVIOR_CODE]])
+
+            # behavioral category
+
+            try:
+                behav_category = behavioral_category[event[cfg.PJ_OBS_FIELDS[observation[cfg.TYPE]][cfg.BEHAVIOR_CODE]]]
+            except Exception:
+                behav_category = ""
+            fields.append(behav_category)
+
+            # modifiers
+            if max_modifiers:
+                modifiers = event[cfg.PJ_OBS_FIELDS[observation[cfg.TYPE]][cfg.MODIFIER]].split("|")
+                while len(modifiers) < max_modifiers:
+                    modifiers.append("")
+
+                for m in modifiers:
+                    fields.append(m)
+
+            # comment
+            fields.append(event[cfg.PJ_OBS_FIELDS[observation[cfg.TYPE]][cfg.COMMENT]].replace(os.linesep, " "))
+            # status
+            fields.append(event[-1])
+
+            rows.append(fields)
+
+    maxLen = max([len(r) for r in rows])
+    data = tablib.Dataset()
+
+    data.title = util.safe_xl_worksheet_title(obsId, output_format)
+
+    for row in rows:
+        data.append(util.complete(row, maxLen))
+
+    r, msg = dataset_write(data, file_name, output_format)
+
+    return r, msg
+
+
+def export_tabular_events_long_format(
+    parameters, obsId: str, observation: dict, ethogram: dict, file_name: str, output_format: str
+) -> tuple[bool, str]:
     """
     export events
 
@@ -376,6 +622,7 @@ def export_tabular_events(
 
     # write table header
     col = 0
+
     header = ["Time"]
     if observation[cfg.TYPE] == cfg.MEDIA:
         header.extend(["Media file path", "Total length", "FPS"])

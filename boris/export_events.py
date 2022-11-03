@@ -205,7 +205,6 @@ def export_tabular_events(self, mode: str = "tabular"):
             )
             if not ok:
                 return
-            """outputFormat = re.sub(".* \(\*\.", "", item)[:-1]"""
             outputFormat = cfg.FILE_NAME_SUFFIX[item]
 
             exportDir = QFileDialog().getExistingDirectory(
@@ -227,21 +226,21 @@ def export_tabular_events(self, mode: str = "tabular"):
                 cfg.HTML,
             ]
 
-            fileName, filter_ = QFileDialog().getSaveFileName(
+            file_name, filter_ = QFileDialog().getSaveFileName(
                 self, "Export events", "", ";;".join(extended_file_formats)
             )
-            if not fileName:
+            if not file_name:
                 return
 
             # outputFormat = file_formats[extended_file_formats.index(filter_)]
             outputFormat = cfg.FILE_NAME_SUFFIX[filter_]
-            if pl.Path(fileName).suffix != "." + outputFormat:
-                fileName = str(pl.Path(fileName)) + "." + outputFormat
+            if pl.Path(file_name).suffix != "." + outputFormat:
+                file_name = str(pl.Path(file_name)) + "." + outputFormat
                 # check if file with new extension already exists
-                if pl.Path(fileName).is_file():
+                if pl.Path(file_name).is_file():
                     if (
                         dialog.MessageDialog(
-                            cfg.programName, f"The file {fileName} already exists.", [cfg.CANCEL, cfg.OVERWRITE]
+                            cfg.programName, f"The file {file_name} already exists.", [cfg.CANCEL, cfg.OVERWRITE]
                         )
                         == cfg.CANCEL
                     ):
@@ -259,14 +258,14 @@ def export_tabular_events(self, mode: str = "tabular"):
     mem_command = ""  # remember user choice when file already exists
     for obsId in selectedObservations:
         if len(selectedObservations) > 1 or mode == "jwatcher":
-            fileName = f"{pl.Path(exportDir) / util.safeFileName(obsId)}.{outputFormat}"
+            file_name = f"{pl.Path(exportDir) / util.safeFileName(obsId)}.{outputFormat}"
             # check if file with new extension already exists
-            if mem_command != cfg.OVERWRITE_ALL and pl.Path(fileName).is_file():
+            if mem_command != cfg.OVERWRITE_ALL and pl.Path(file_name).is_file():
                 if mem_command == cfg.SKIP_ALL:
                     continue
                 mem_command = dialog.MessageDialog(
                     cfg.programName,
-                    f"The file {fileName} already exists.",
+                    f"The file {file_name} already exists.",
                     [cfg.OVERWRITE, cfg.OVERWRITE_ALL, cfg.SKIP, cfg.SKIP_ALL, cfg.CANCEL],
                 )
                 if mem_command == cfg.CANCEL:
@@ -280,7 +279,7 @@ def export_tabular_events(self, mode: str = "tabular"):
             export_function = export_observation.export_events_jwatcher
 
         r, msg = export_function(
-            parameters, obsId, self.pj[cfg.OBSERVATIONS][obsId], self.pj[cfg.ETHOGRAM], fileName, outputFormat
+            parameters, obsId, self.pj[cfg.OBSERVATIONS][obsId], self.pj[cfg.ETHOGRAM], file_name, outputFormat
         )
 
         if not r and msg:
@@ -348,7 +347,7 @@ def export_aggregated_events(self):
 
     if flag_group:
 
-        available_formats = (
+        file_formats = (
             cfg.TSV,
             cfg.CSV,
             cfg.ODS,
@@ -361,14 +360,11 @@ def export_aggregated_events(self):
             cfg.RDS,
         )
 
-        fileName, filter_ = QFileDialog().getSaveFileName(
-            self, "Export aggregated events", "", ";;".join(available_formats)
-        )
+        fileName, filter_ = QFileDialog().getSaveFileName(self, "Export aggregated events", "", ";;".join(file_formats))
 
         if not fileName:
             return
 
-        """outputFormat = file_formats[extended_file_formats.index(filter_)]"""
         outputFormat = cfg.FILE_NAME_SUFFIX[filter_]
         if pl.Path(fileName).suffix != "." + outputFormat:
             # check if file with new extension already exists
@@ -384,7 +380,7 @@ def export_aggregated_events(self):
 
     else:  # not grouping
 
-        available_formats = (
+        file_formats = (
             cfg.TSV,
             cfg.CSV,
             cfg.ODS,
@@ -396,12 +392,11 @@ def export_aggregated_events(self):
             cfg.PANDAS_DF,
             cfg.RDS,
         )
-        item, ok = QInputDialog.getItem(self, "Export events format", "Available formats", available_formats, 0, False)
+        item, ok = QInputDialog.getItem(self, "Export events format", "Available formats", file_formats, 0, False)
         if not ok:
             return
         # read the output format code
         outputFormat = cfg.FILE_NAME_SUFFIX[item]
-        """outputFormat = re.sub(".* \(\*\.", "", item)[:-1]"""
 
         exportDir = QFileDialog().getExistingDirectory(
             self, "Choose a directory to export events", os.path.expanduser("~"), options=QFileDialog.ShowDirsOnly
