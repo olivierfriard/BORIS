@@ -648,7 +648,7 @@ INIT_PARAM = {
     SAVE_FRAMES: DISK,
     MEMORY_FOR_FRAMES: DEFAULT_MEMORY_FOR_FRAMES,
     ADAPT_FAST_JUMP: ADAPT_FAST_JUMP_DEFAULT,
-    TIME_BUDGET_FORMAT: DEFAULT_TIME_BUDGET_FORMAT,
+    # TIME_BUDGET_FORMAT: DEFAULT_TIME_BUDGET_FORMAT,
     MPV_HWDEC: MPV_HWDEC_DEFAULT_VALUE,
 }
 
@@ -666,7 +666,8 @@ PANDAS_DF = "Pandas DataFrame (*.pkl)"
 RDS = "R dataframe (*.rds)"
 SQL = ("SQL dump file (*.sql)",)
 SDIS = "SDIS (*.sds)"
-TBS = "Timed Behavioral Sequences (*.tbs)"
+TBS = ("Timed Behavioral Sequences (*.tbs)",)
+TEXT_FILE = ("Text file",)
 
 FILE_NAME_SUFFIX = {
     TSV: "tsv",
@@ -682,4 +683,5 @@ FILE_NAME_SUFFIX = {
     SQL: "sql",
     SDIS: "sds",
     TBS: "tbs",
+    TEXT_FILE: "cli",
 }

@@ -251,26 +251,24 @@ def synthetic_binned_time_budget(self):
     results.resize(960, 640)
 
     if results.exec_() == cfg.SAVE_DATASET:
-        extended_file_formats = [
-            "Tab Separated Values (*.tsv)",
-            "Comma Separated Values (*.csv)",
-            "Open Document Spreadsheet ODS (*.ods)",
-            "Microsoft Excel Spreadsheet XLSX (*.xlsx)",
-            "Legacy Microsoft Excel Spreadsheet XLS (*.xls)",
-            "HTML (*.html)",
-            "Text file",  # tablib format: cli
+        file_formats = [
+            cfg.TSV,
+            cfg.CSV,
+            cfg.ODS,
+            cfg.XLSX,
+            cfg.XLS,
+            cfg.HTML,
+            cfg.TEXT_FILE,
         ]
-        file_formats = ["tsv", "csv", "ods", "xlsx", "xls", "html", "cli"]
 
         file_name, filter_ = QFileDialog().getSaveFileName(
-            self, "Synthetic time budget with time bin", "", ";;".join(extended_file_formats)
+            self, "Synthetic time budget with time bin", "", ";;".join(file_formats)
         )
         if not file_name:
             return
 
-        output_format = file_formats[extended_file_formats.index(filter_)]
-        if output_format != "cli" and pl.Path(file_name).suffix != "." + output_format:
-            file_name = str(pl.Path(file_name)) + "." + output_format
+        if filter_ != cfg.TEXT_FILE and pl.Path(file_name).suffix != "." + cfg.FILE_NAME_SUFFIX[filter_]:
+            file_name = str(pl.Path(file_name)) + "." + cfg.FILE_NAME_SUFFIX[filter_]
             if pl.Path(file_name).is_file():
                 if (
                     dialog.MessageDialog(
@@ -281,7 +279,7 @@ def synthetic_binned_time_budget(self):
                     return
 
         with open(file_name, "wb") as f:
-            if output_format in ["tsv", "csv", "html", "cli"]:
-                f.write(str.encode(data_report.export(output_format)))
-            if output_format in ["ods", "xlsx", "xls"]:
-                f.write(data_report.export(output_format))
+            if filter_ in (cfg.TSV, cfg.CSV, cfg.HTML, cfg.TEXT_FILE):
+                f.write(str.encode(data_report.export(cfg.FILE_NAME_SUFFIX[filter_])))
+            if filter_ in (cfg.ODS, cfg.XLSX, cfg.XLS):
+                f.write(data_report.export(cfg.FILE_NAME_SUFFIX[filter_]))
