@@ -1013,24 +1013,26 @@ def accurate_media_analysis(ffmpeg_bin: str, file_name: str) -> dict:
 
     duration, fps, hasVideo, hasAudio, bitrate = 0, 0, False, False, -1
     try:
-        error = p.communicate()[1].decode("utf-8")
+        """error = p.communicate()[1].decode("utf-8")"""
+        error = p.communicate()[1]
     except Exception:
         return {"error": "Error reading file"}
 
-    rows = error.split("\n")
+    """rows = error.split("\n")"""
+    rows = error.split(b"\n")
 
     # check if file found and if invalid data found
     for row in rows:
-        if "No such file or directory" in row:
+        if b"No such file or directory" in row:
             return {"error": "No such file or directory"}
-        if "Invalid data found when processing input" in row:
+        if b"Invalid data found when processing input" in row:
             return {"error": "This file does not seem to be a media file"}
 
     # video duration
     try:
         for row in rows:
-            if "Duration" in row:
-                duration = time2seconds(row.split("Duration: ")[1].split(",")[0].strip())
+            if b"Duration" in row:
+                duration = time2seconds(row.split(b"Duration: ")[1].split(b",")[0].strip().decode("utf-8"))
                 break
     except Exception:
         duration = 0
@@ -1038,8 +1040,8 @@ def accurate_media_analysis(ffmpeg_bin: str, file_name: str) -> dict:
     # bitrate
     try:
         for row in rows:
-            if "bitrate:" in row:
-                re_results = re.search("bitrate: (.{1,10}) kb", row, re.IGNORECASE)
+            if b"bitrate:" in row:
+                re_results = re.search(b"bitrate: (.{1,10}) kb", row, re.IGNORECASE)
                 if re_results:
                     bitrate = int(re_results.group(1).strip())
                 break
@@ -1049,36 +1051,34 @@ def accurate_media_analysis(ffmpeg_bin: str, file_name: str) -> dict:
     # fps
     fps = 0
     try:
-        for r in rows:
-            if " fps," in r:
-                re_results = re.search(", (.{1,10}) fps,", r, re.IGNORECASE)
+        for row in rows:
+            if b" fps," in row:
+                re_results = re.search(b", (.{1,10}) fps,", row, re.IGNORECASE)
                 if re_results:
-                    fps = dec(re_results.group(1).strip())
+                    fps = dec(re_results.group(1).strip().decode("utf-8"))
                     break
     except Exception:
         fps = 0
 
     # check for video stream
-    hasVideo = False
-    resolution = None
+    hasVideo, resolution = False, None
     try:
-        for r in rows:
-            if "Stream #" in r and "Video:" in r:
+        for row in rows:
+            if b"Stream #" in row and b"Video:" in row:
                 hasVideo = True
                 # get resolution \d{3,5}x\d{3,5}
-                re_results = re.search("\d{3,5}x\d{3,5}", r, re.IGNORECASE)
+                re_results = re.search(b"\d{3,5}x\d{3,5}", row, re.IGNORECASE)
                 if re_results:
-                    resolution = re_results.group(0)
+                    resolution = re_results.group(0).decode("utf-8")
                 break
     except Exception:
-        hasVideo = False
-        resolution = None
+        hasVideo, resolution = False, None
 
     # check for audio stream
     hasAudio = False
     try:
-        for r in rows:
-            if "Stream #" in r and "Audio:" in r:
+        for row in rows:
+            if b"Stream #" in row and b"Audio:" in row:
                 hasAudio = True
                 break
     except Exception:
