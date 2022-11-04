@@ -1158,6 +1158,8 @@ def initialize_new_media_observation(self):
 
         # add durations list
         self.dw_player[i].media_durations = []
+        self.dw_player[i].cumul_media_durations = [0]  # [idx for idx,x in enumerate(l) if l[idx-1]<pos<=x]
+
         # add fps list
         self.dw_player[i].fps = {}
 
@@ -1200,6 +1202,10 @@ def initialize_new_media_observation(self):
                     self.project_changed()
 
             self.dw_player[i].media_durations.append(int(mediaLength))
+            self.dw_player[i].cumul_media_durations.append(
+                self.dw_player[i].cumul_media_durations[-1] + int(mediaLength)
+            )
+
             self.dw_player[i].fps[mediaFile] = mediaFPS
 
             self.dw_player[i].player.playlist_append(media_full_path)

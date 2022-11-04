@@ -358,6 +358,7 @@ def export_tabular_events(
         [
             "Behavior type",
             "Time",
+            "Media file name",
             "Image index",  # add image index and image file path to header
             "Image file path",
             "Comment",
@@ -390,12 +391,6 @@ def export_tabular_events(
 
             if observation[cfg.TYPE] == cfg.MEDIA:
                 fields.append("Media file(s)")
-
-                """media_list = []
-                for player in sorted(list(observation[cfg.FILE].keys())):
-                    for media in observation[cfg.FILE][player]:
-                        media_list.append(media)
-                fields.append(";".join(media_list))"""
 
                 media_file_str, fps_str = "", ""
                 # number of players
@@ -466,6 +461,32 @@ def export_tabular_events(
 
             # time
             fields.append(util.intfloatstr(str(event[cfg.EVENT_TIME_FIELD_IDX])))
+
+            # check video file name containing the event
+            if observation[cfg.TYPE] == cfg.MEDIA:
+                cumul_media_durations = [0]
+                for media_file in observation[cfg.FILE]["1"]:
+                    media_duration = observation[cfg.MEDIA_INFO][cfg.LENGTH][media_file]
+                    cumul_media_durations.append(cumul_media_durations[-1] + media_duration)
+
+                player_idx_list = [
+                    idx
+                    for idx, x in enumerate(cumul_media_durations)
+                    if cumul_media_durations[idx - 1] < event[cfg.EVENT_TIME_FIELD_IDX] <= x
+                ]
+                if len(player_idx_list):
+                    player_idx = player_idx_list[0] - 1
+                    video_file_name = observation[cfg.FILE]["1"][player_idx]
+                else:
+                    player_idx = -1
+                    video_file_name = "Not found"
+
+                print(f"{player_idx=}  {video_file_name=}")
+
+            elif observation[cfg.TYPE] in (cfg.LIVE, cfg.IMAGES):
+                video_file_name = cfg.NA
+
+            fields.append(video_file_name)
 
             # image file path
             if observation[cfg.TYPE] == cfg.IMAGES:

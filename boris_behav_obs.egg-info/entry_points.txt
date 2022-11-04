@@ -1,0 +1,2 @@
+[console_scripts]
+boris = boris:main

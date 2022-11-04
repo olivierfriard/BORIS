@@ -3577,6 +3577,13 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         elif self.dw_player[n_player].player.playlist_count > 1:
 
+            # check if new time is before the end of last video
+            """
+            if new_time < self.dw_player[n_player].cumul_media_durations[-1]:
+                media_idx = self.dw_player[n_player].player.playlist_pos
+                print(f"{media_idx=}")
+            """
+
             if new_time < sum(self.dw_player[n_player].media_durations):
 
                 media_idx = self.dw_player[n_player].player.playlist_pos
@@ -3591,7 +3598,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     self.seek_mediaplayer(
                         new_time - sum(self.dw_player[n_player].media_durations[0:media_idx]), player=n_player
                     )
-                else:
+                else:  # out of current media
 
                     logging.debug(f"{n_player + 1} not correct media")
 
