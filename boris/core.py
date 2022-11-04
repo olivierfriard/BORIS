@@ -3579,6 +3579,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
             # check if new time is before the end of last video
             """
+            TODO: use cumul_media_durations
             if new_time < self.dw_player[n_player].cumul_media_durations[-1]:
                 media_idx = self.dw_player[n_player].player.playlist_pos
                 print(f"{media_idx=}")
