@@ -309,7 +309,10 @@ def export_tabular_events(
         str: error message
     """
 
-    total_length = f"{project_functions.observation_total_length(observation):.3f}"
+    total_length = project_functions.observation_total_length(observation)
+    total_length_str = (
+        f"{project_functions.observation_total_length(observation):.3f}" if total_length != -2 else cfg.NA
+    )
 
     eventsWithStatus = project_functions.events_start_stop(ethogram, observation[cfg.EVENTS])
 
@@ -387,7 +390,7 @@ def export_tabular_events(
             fields.append(observation.get("date", "").replace("T", " "))
             fields.append(util.eol2space(observation.get("description", "")))
             # total length
-            fields.append(total_length)
+            fields.append(total_length_str)
 
             if observation[cfg.TYPE] == cfg.MEDIA:
                 fields.append("Media file(s)")
@@ -460,7 +463,8 @@ def export_tabular_events(
             fields.append(event[-1])
 
             # time
-            fields.append(util.intfloatstr(str(event[cfg.EVENT_TIME_FIELD_IDX])))
+            # if event[cfg.EVENT_TIME_FIELD_IDX]
+            fields.append(util.convertTime(time_format=cfg.S, sec=event[cfg.EVENT_TIME_FIELD_IDX]))
 
             # check video file name containing the event
             if observation[cfg.TYPE] == cfg.MEDIA:
@@ -481,11 +485,8 @@ def export_tabular_events(
                     player_idx = -1
                     video_file_name = "Not found"
 
-                # print(f"{player_idx=}  {video_file_name=}")
-
             elif observation[cfg.TYPE] in (cfg.LIVE, cfg.IMAGES):
                 video_file_name = cfg.NA
-
             fields.append(video_file_name)
 
             # image file path
