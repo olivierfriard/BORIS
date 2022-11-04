@@ -481,7 +481,7 @@ def export_tabular_events(
                     player_idx = -1
                     video_file_name = "Not found"
 
-                print(f"{player_idx=}  {video_file_name=}")
+                # print(f"{player_idx=}  {video_file_name=}")
 
             elif observation[cfg.TYPE] in (cfg.LIVE, cfg.IMAGES):
                 video_file_name = cfg.NA

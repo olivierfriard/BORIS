@@ -1194,10 +1194,10 @@ def initialize_new_media_observation(self):
                             self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO][cfg.FPS] = {}
 
                     self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO][cfg.LENGTH][mediaFile] = r["duration"]
-                    self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO][cfg.FPS][mediaFile] = r["fps"]
+                    self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO][cfg.FPS][mediaFile] = r[cfg.FPS]
 
                     mediaLength = r["duration"] * 1000
-                    mediaFPS = r["fps"]
+                    mediaFPS = r[cfg.FPS]
 
                     self.project_changed()
 
