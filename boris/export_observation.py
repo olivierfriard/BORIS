@@ -44,7 +44,7 @@ from . import db_functions
 
 
 def export_events_jwatcher(
-    parameters: list, obsId: str, observation: list, ethogram: dict, file_name: str, output_format: str
+    parameters: dict, obsId: str, observation: list, ethogram: dict, file_name: str, output_format: str
 ) -> tuple:
     """
     export events jwatcher .dat format
@@ -291,7 +291,7 @@ def export_events_jwatcher(
 
 
 def export_tabular_events(
-    parameters, obsId: str, observation: dict, ethogram: dict, file_name: str, output_format: str
+    parameters: dict, obsId: str, observation: dict, ethogram: dict, file_name: str, output_format: str
 ) -> tuple:  # -> tuple[bool, str]:
     """
     export events for one observation (obsId)
@@ -308,19 +308,22 @@ def export_tabular_events(
         bool: result: True if OK else False
         str: error message
     """
+    print(parameters)
 
     total_length = project_functions.observation_total_length(observation)
-    total_length_str = (
-        f"{project_functions.observation_total_length(observation):.3f}" if total_length != -2 else cfg.NA
-    )
+    if total_length == -2:
+        total_length_str = cfg.NA
+    else:
+        total_length_str = f"{parameters[cfg.END_TIME] - parameters[cfg.START_TIME]:.3f}"
 
     eventsWithStatus = project_functions.events_start_stop(ethogram, observation[cfg.EVENTS])
 
     # check max number of modifiers
     max_modifiers = 0
     for event in eventsWithStatus:
-        if event[cfg.EVENT_MODIFIER_FIELD_IDX]:
-            max_modifiers = max(max_modifiers, len(event[cfg.EVENT_MODIFIER_FIELD_IDX].split("|")))
+        if parameters[cfg.START_TIME] <= event[cfg.EVENT_TIME_FIELD_IDX] <= parameters[cfg.END_TIME]:
+            if event[cfg.EVENT_MODIFIER_FIELD_IDX]:
+                max_modifiers = max(max_modifiers, len(event[cfg.EVENT_MODIFIER_FIELD_IDX].split("|")))
 
     # media file number
     mediaNb = 0
@@ -378,6 +381,8 @@ def export_tabular_events(
             pass
 
     for event in eventsWithStatus:
+        if not (parameters[cfg.START_TIME] <= event[cfg.EVENT_TIME_FIELD_IDX] <= parameters[cfg.END_TIME]):
+            continue
         if (
             (event[cfg.EVENT_SUBJECT_FIELD_IDX] in parameters[cfg.SELECTED_SUBJECTS])
             or (event[cfg.EVENT_SUBJECT_FIELD_IDX] == "" and cfg.NO_FOCAL_SUBJECT in parameters[cfg.SELECTED_SUBJECTS])

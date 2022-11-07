@@ -135,6 +135,11 @@ def export_tabular_events(self, mode: str = "tabular"):
             )
             return
 
+    # check if coded behaviors are defined in ethogram
+    if project_functions.check_coded_behaviors_in_obs_list(self.pj, selectedObservations):
+        return
+
+    """
     out = ""
     # check if coded behaviors are defined in ethogram
     ethogram_behavior_codes = {self.pj[cfg.ETHOGRAM][idx][cfg.BEHAVIOR_CODE] for idx in self.pj[cfg.ETHOGRAM]}
@@ -149,7 +154,14 @@ def export_tabular_events(self, mode: str = "tabular"):
             "The following behaviors are not defined in the ethogram: "
             f"<b>{', '.join(set(sorted(behaviors_not_defined)))}</b><br><br>"
         )
+    """
 
+    # check if state events are paired
+    not_ok, selectedObservations = project_functions.check_state_events(self.pj, selectedObservations)
+    if not_ok or not selectedObservations:
+        return
+
+    """
     # check if state events are paired
     # UNPAIRED observations must not be removed!
     not_paired_obs_list = []
@@ -173,10 +185,16 @@ def export_tabular_events(self, mode: str = "tabular"):
 
         if not self.results.exec_():
             return
+    """
+
+    max_obs_length, selectedObsTotalMediaLength = observation_operations.observation_length(
+        self.pj, selectedObservations
+    )
 
     parameters = select_subj_behav.choose_obs_subj_behav_category(
         self,
         selectedObservations,
+        maxTime=max_obs_length if len(selectedObservations) > 1 else selectedObsTotalMediaLength,
         flagShowIncludeModifiers=False,
         flagShowExcludeBehaviorsWoEvents=False,
     )
@@ -279,7 +297,9 @@ def export_tabular_events(self, mode: str = "tabular"):
 
 def export_aggregated_events(self):
     """
-    export aggregated events for the selected observations.
+    - select observations.
+    - select subjects and behaviors
+    - export events in aggregated format
 
     Formats can be SQL (sql), SDIS (sds) or Tabular format (tsv, csv, ods, xlsx, xls, html)
     """
@@ -477,12 +497,10 @@ def export_aggregated_events(self):
 
     tot_max_modifiers = 0
     for obs_id in selectedObservations:
-
-        d, max_modifiers = export_observation.export_aggregated_events(self.pj, parameters, obs_id)
-
+        _, max_modifiers = export_observation.export_aggregated_events(self.pj, parameters, obs_id)
         tot_max_modifiers = max(tot_max_modifiers, max_modifiers)
 
-    print(f"{tot_max_modifiers=}")
+    # print(f"{tot_max_modifiers=}")
 
     data_grouped_obs = tablib.Dataset()
     # sort by start time
@@ -492,9 +510,9 @@ def export_aggregated_events(self):
 
     mem_command = ""  # remember user choice when file already exists
     for obs_id in selectedObservations:
-        print(f"{obs_id=}")
+        # print(f"{obs_id=}")
         data, max_modifiers = export_observation.export_aggregated_events(self.pj, parameters, obs_id)
-        print(f"{max_modifiers=}")
+        # print(f"{max_modifiers=}")
 
         if (not flag_group) and (outputFormat not in ["sds", "tbs"]):
             fileName = f"{pl.Path(exportDir) / util.safeFileName(obs_id)}.{outputFormat}"
@@ -523,9 +541,7 @@ def export_aggregated_events(self):
                 QMessageBox.warning(
                     None, cfg.programName, msg, QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton
                 )
-            """data = tablib.Dataset()"""
 
-        print(list(data))
         if max_modifiers < tot_max_modifiers:
             for i in range(tot_max_modifiers - max_modifiers):
                 data.insert_col(
