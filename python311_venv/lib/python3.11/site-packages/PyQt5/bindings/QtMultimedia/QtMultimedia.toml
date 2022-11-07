@@ -1,6 +1,0 @@
-# Automatically generated configuration for PyQt5.QtMultimedia.
-
-sip-version = "6.6.2"
-sip-abi-version = "12.11"
-module-tags = ["Qt_5_15_0", "WS_X11"]
-module-disabled-features = []
