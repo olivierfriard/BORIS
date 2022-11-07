@@ -24,7 +24,7 @@ import tablib
 import logging
 import os
 import sys
-import datetime
+import datetime as dt
 import pathlib
 from io import StringIO
 import pandas as pd
@@ -86,7 +86,7 @@ def export_events_jwatcher(
         rows.append("#-----------------------------------------------------------")
         rows.append(f"# Name: {pathlib.Path(file_name_subject).name}")
         rows.append("# Format: Focal Data File 1.0")
-        rows.append(f"# Updated: {datetime.datetime.now().isoformat()}")
+        rows.append(f"# Updated: {dt.datetime.now().isoformat()}")
         rows.append("#-----------------------------------------------------------")
         rows.append("")
         rows.append(f"FocalMasterFile={pathlib.Path(file_name_subject).with_suffix('.fmf')}")
@@ -94,13 +94,13 @@ def export_events_jwatcher(
 
         rows.append(f"# Observation started: {observation['date']}")
         try:
-            start_time = datetime.datetime.strptime(observation["date"], "%Y-%m-%dT%H:%M:%S")
+            start_time = dt.datetime.strptime(observation["date"], "%Y-%m-%dT%H:%M:%S")
         except ValueError:
-            start_time = datetime.datetime(1970, 1, 1, 0, 0)
-        start_time_epoch = int((start_time - datetime.datetime(1970, 1, 1, 0, 0)).total_seconds() * 1000)
+            start_time = dt.datetime(1970, 1, 1, 0, 0)
+        start_time_epoch = int((start_time - dt.datetime(1970, 1, 1, 0, 0)).total_seconds() * 1000)
         rows.append(f"StartTime={start_time_epoch}")
 
-        stop_time = (start_time + datetime.timedelta(seconds=float(total_length))).isoformat()
+        stop_time = (start_time + dt.timedelta(seconds=float(total_length))).isoformat()
         stop_time_epoch = int(start_time_epoch + float(total_length) * 1000)
 
         rows.append(f"# Observation stopped: {stop_time}")
@@ -162,7 +162,7 @@ def export_events_jwatcher(
         rows.append("#-----------------------------------------------------------")
         rows.append(f"# Name: {pathlib.Path(file_name_subject).with_suffix('.fmf').name}")
         rows.append("# Format: Focal Master File 1.0")
-        rows.append(f"# Updated: {datetime.datetime.now().isoformat()}")
+        rows.append(f"# Updated: {dt.datetime.now().isoformat()}")
         rows.append("#-----------------------------------------------------------")
         for (behav, key) in all_observed_behaviors:
             rows.append(f"Behaviour.name.{key}={behav}")
@@ -205,7 +205,7 @@ def export_events_jwatcher(
         rows.append("#-----------------------------------------------------------")
         rows.append("# Name: {}".format(pathlib.Path(file_name_subject).with_suffix(".faf").name))
         rows.append("# Format: Focal Analysis Master File 1.0")
-        rows.append("# Updated: {}".format(datetime.datetime.now().isoformat()))
+        rows.append("# Updated: {}".format(dt.datetime.now().isoformat()))
         rows.append("#-----------------------------------------------------------")
         rows.append("FocalMasterFile={}".format(str(pathlib.Path(file_name_subject).with_suffix(".fmf"))))
         rows.append("")
@@ -294,7 +294,7 @@ def export_tabular_events(
     parameters, obsId: str, observation: dict, ethogram: dict, file_name: str, output_format: str
 ) -> tuple[bool, str]:
     """
-    export events
+    export events for one observation (obsId)
 
     Args:
         parameters (dict): subjects, behaviors
@@ -328,48 +328,47 @@ def export_tabular_events(
         for player in observation[cfg.FILE]:
             mediaNb += len(observation[cfg.FILE][player])
 
-    rows = []
+    rows: list = []
 
-    # write table header
-    header = [
-        "Observation id",
-        "Observation date",
-        "Description",
-        "Observation duration",
-        "Observation type",
-        "Source",
-        "FPS",
-    ]
+    # fields and type
+    fields_type: dict = {
+        "Observation id": str,
+        "Observation date": dt.datetime,
+        "Description": str,
+        "Observation duration": float,
+        "Observation type": str,
+        "Source": str,
+        "FPS": float,
+    }
 
     # independent variables
     if cfg.INDEPENDENT_VARIABLES in observation:
         for variable in observation[cfg.INDEPENDENT_VARIABLES]:
-            header.append(variable)
+            # TODO check variable type
+            fields_type[variable] = str
 
-    header.extend(
-        [
-            "Subject",
-            "Behavior",
-            "Behavioral category",
-        ]
-    )
+    fields_type.update({"Subject": str, "Behavior": str, "Behavioral category": str})
+
     # modifiers
     for idx in range(max_modifiers):
-        header.append(f"Modifier #{idx + 1}")
+        # TODO check modifier type
+        fields_type[f"Modifier #{idx + 1}"] = str
 
-    header.extend(
-        [
-            "Behavior type",
-            "Time",
-            "Media file name",
-            "Image index",  # add image index and image file path to header
-            "Image file path",
-            "Comment",
-        ]
+    fields_type.update(
+        {
+            "Behavior type": str,
+            "Time": float,
+            "Media file name": str,
+            "Image index": float,  # add image index and image file path to header
+            "Image file path": str,
+            "Comment": str,
+        }
     )
 
+    # add header
+    rows.append(list(fields_type.keys()))
+
     behavioral_category = project_functions.behavior_category(ethogram)
-    rows.append(header)
 
     duration1 = []  # in seconds
     if observation[cfg.TYPE] == cfg.MEDIA:
@@ -385,7 +384,7 @@ def export_tabular_events(
             or (event[cfg.EVENT_SUBJECT_FIELD_IDX] == "" and cfg.NO_FOCAL_SUBJECT in parameters[cfg.SELECTED_SUBJECTS])
         ) and (event[cfg.EVENT_BEHAVIOR_FIELD_IDX] in parameters[cfg.SELECTED_BEHAVIORS]):
 
-            fields = []
+            fields: list = []
             fields.append(obsId)
             fields.append(observation.get("date", "").replace("T", " "))
             fields.append(util.eol2space(observation.get("description", "")))
@@ -418,7 +417,7 @@ def export_tabular_events(
 
             elif observation[cfg.TYPE] == cfg.LIVE:
                 fields.append("Live observation")
-                fields.append("NA")
+                fields.append(cfg.NA)
                 fps_str = cfg.NA
 
             elif observation[cfg.TYPE] == cfg.IMAGES:
@@ -510,15 +509,15 @@ def export_tabular_events(
 
             rows.append(fields)
 
-    maxLen = max([len(r) for r in rows])
+    max_len = max([len(r) for r in rows])
     data = tablib.Dataset()
 
     data.title = util.safe_xl_worksheet_title(obsId, output_format)
 
     for row in rows:
-        data.append(util.complete(row, maxLen))
+        data.append(util.complete(row, max_len))
 
-    r, msg = dataset_write(data, file_name, output_format)
+    r, msg = dataset_write(data, file_name, output_format, dtype=fields_type)
 
     return r, msg
 
@@ -722,9 +721,9 @@ def export_tabular_events_long_format(
     return r, msg
 
 
-def dataset_write(dataset, file_name, output_format):
+def dataset_write(dataset: tablib.Dataset, file_name: str, output_format: str, dtype: dict = {}) -> tuple[bool, str]:
     """
-    write a tablib dataset to file in specified format
+    write a tablib dataset with aggregated events or tabular events to file in specified format (output_format)
 
     Args:
         dataset (tablib.dataset): dataset to write
@@ -743,10 +742,21 @@ def dataset_write(dataset, file_name, output_format):
         if output_format in ("pkl", "rds"):
 
             # build pandas dataframe from the tsv export of tablib dataset
+            date_type = []
+            for field_name in dtype:
+                if dtype[field_name] == dt.datetime:
+                    date_type.append(field_name)
+            # delete data type from dtype
+            for field_name in date_type:
+                del dtype[field_name]
             df = pd.read_csv(
                 StringIO(dataset.export("tsv")),
                 sep="\t",
-                dtype={
+                dtype=dtype,
+                parse_dates=date_type,
+            )
+
+            """ dtype={
                     "Observation id": str,
                     "Description": str,
                     "Start (s)": float,
@@ -759,8 +769,7 @@ def dataset_write(dataset, file_name, output_format):
                     "Image file path stop": str,
                     "Behavior type": str,
                 },
-                parse_dates=[1],
-            )
+            """
 
             if output_format == "pkl":
                 df.to_pickle(file_name)

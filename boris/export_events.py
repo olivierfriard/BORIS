@@ -20,10 +20,9 @@ This file is part of BORIS.
 
 """
 
-import datetime
+import datetime as dt
 import logging
 import os
-import re
 import tablib
 import pathlib as pl
 from decimal import Decimal as dec
@@ -186,26 +185,29 @@ def export_tabular_events(self, mode: str = "tabular"):
         return
 
     if mode == "tabular":
+        available_formats = (
+            cfg.TSV,
+            cfg.CSV,
+            cfg.ODS,
+            cfg.XLSX,
+            cfg.XLS,
+            cfg.HTML,
+            cfg.PANDAS_DF,
+            cfg.RDS,
+        )
         if len(selectedObservations) > 1:  # choose directory for exporting observations
 
             item, ok = QInputDialog.getItem(
                 self,
                 "Export events format",
                 "Available formats",
-                (
-                    cfg.TSV,
-                    cfg.CSV,
-                    cfg.ODS,
-                    cfg.XLSX,
-                    cfg.XLS,
-                    cfg.HTML,
-                ),
+                available_formats,
                 0,
                 False,
             )
             if not ok:
                 return
-            outputFormat = cfg.FILE_NAME_SUFFIX[item]
+            output_format = cfg.FILE_NAME_SUFFIX[item]
 
             exportDir = QFileDialog().getExistingDirectory(
                 self,
@@ -217,25 +219,14 @@ def export_tabular_events(self, mode: str = "tabular"):
                 return
 
         if len(selectedObservations) == 1:
-            extended_file_formats = [
-                cfg.TSV,
-                cfg.CSV,
-                cfg.ODS,
-                cfg.XLSX,
-                cfg.XLS,
-                cfg.HTML,
-            ]
 
-            file_name, filter_ = QFileDialog().getSaveFileName(
-                self, "Export events", "", ";;".join(extended_file_formats)
-            )
+            file_name, filter_ = QFileDialog().getSaveFileName(self, "Export events", "", ";;".join(available_formats))
             if not file_name:
                 return
 
-            # outputFormat = file_formats[extended_file_formats.index(filter_)]
-            outputFormat = cfg.FILE_NAME_SUFFIX[filter_]
-            if pl.Path(file_name).suffix != "." + outputFormat:
-                file_name = str(pl.Path(file_name)) + "." + outputFormat
+            output_format = cfg.FILE_NAME_SUFFIX[filter_]
+            if pl.Path(file_name).suffix != "." + output_format:
+                file_name = str(pl.Path(file_name)) + "." + output_format
                 # check if file with new extension already exists
                 if pl.Path(file_name).is_file():
                     if (
@@ -253,12 +244,12 @@ def export_tabular_events(self, mode: str = "tabular"):
         if not exportDir:
             return
 
-        outputFormat = "dat"
+        output_format = "dat"
 
     mem_command = ""  # remember user choice when file already exists
     for obsId in selectedObservations:
         if len(selectedObservations) > 1 or mode == "jwatcher":
-            file_name = f"{pl.Path(exportDir) / util.safeFileName(obsId)}.{outputFormat}"
+            file_name = f"{pl.Path(exportDir) / util.safeFileName(obsId)}.{output_format}"
             # check if file with new extension already exists
             if mem_command != cfg.OVERWRITE_ALL and pl.Path(file_name).is_file():
                 if mem_command == cfg.SKIP_ALL:
@@ -279,7 +270,7 @@ def export_tabular_events(self, mode: str = "tabular"):
             export_function = export_observation.export_events_jwatcher
 
         r, msg = export_function(
-            parameters, obsId, self.pj[cfg.OBSERVATIONS][obsId], self.pj[cfg.ETHOGRAM], file_name, outputFormat
+            parameters, obsId, self.pj[cfg.OBSERVATIONS][obsId], self.pj[cfg.ETHOGRAM], file_name, output_format
         )
 
         if not r and msg:
@@ -424,42 +415,43 @@ def export_aggregated_events(self):
 
         return
 
-    header = [
-        "Observation id",
-        "Observation date",
-        "Description",
-        "Observation type",
-        "Source",
-        "Total length",
-        "FPS",
-    ]
+    fields_type: dict = {
+        "Observation id": str,
+        "Observation date": dt.datetime,
+        "Description": str,
+        "Observation type": str,
+        "Source": str,
+        "Total length": float,
+        "FPS": float,
+    }
     if cfg.INDEPENDENT_VARIABLES in self.pj:
         for idx in util.sorted_keys(self.pj[cfg.INDEPENDENT_VARIABLES]):
-            header.append(self.pj[cfg.INDEPENDENT_VARIABLES][idx]["label"])
+            # TODO check variable type
+            fields_type[self.pj[cfg.INDEPENDENT_VARIABLES][idx]["label"]] = str
 
-    header.extend(
-        [
-            "Subject",
-            "Observation duration by subject by observation",
-            "Behavior",
-            "Behavioral category",
-            "Modifiers",
-            "Behavior type",
-            "Start (s)",
-            "Stop (s)",
-            "Duration (s)",
-            "Image index start",  # add image index and image file path to header
-            "Image index stop",
-            "Image file path start",
-            "Image file path stop",
-            "Comment start",
-            "Comment stop",
-        ]
+    fields_type.update(
+        {
+            "Subject": str,
+            "Observation duration by subject by observation": float,
+            "Behavior": str,
+            "Behavioral category": str,
+            "Modifiers": str,
+            "Behavior type": str,
+            "Start (s)": float,
+            "Stop (s)": float,
+            "Duration (s)": float,
+            "Image index start": float,  # add image index and image file path to header
+            "Image index stop": float,
+            "Image file path start": str,
+            "Image file path stop": str,
+            "Comment start": str,
+            "Comment stop": str,
+        }
     )
 
     data = tablib.Dataset()
     # sort by start time
-    start_idx = -9
+    start_idx = -9  # TODO: improve!
     stop_idx = -8
     obs_id_idx = 0
 
@@ -493,17 +485,20 @@ def export_aggregated_events(self):
                     continue
 
             data = tablib.Dataset(
-                *sorted(list(data), key=lambda x: (x[obs_id_idx], float(x[start_idx]))), headers=header
+                *sorted(list(data), key=lambda x: (x[obs_id_idx], float(x[start_idx]))),
+                headers=list(fields_type.keys()),
             )
             data.title = obs_id
-            r, msg = export_observation.dataset_write(data, fileName, outputFormat)
+            r, msg = export_observation.dataset_write(data, fileName, outputFormat, dtype=fields_type)
             if not r:
                 QMessageBox.warning(
                     None, cfg.programName, msg, QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton
                 )
             data = tablib.Dataset()
 
-    data = tablib.Dataset(*sorted(list(data), key=lambda x: (x[obs_id_idx], float(x[start_idx]))), headers=header)
+    data = tablib.Dataset(
+        *sorted(list(data), key=lambda x: (x[obs_id_idx], float(x[start_idx]))), headers=list(fields_type.keys())
+    )
     data.title = "Aggregated events"
 
     # TODO: finish
@@ -547,7 +542,7 @@ def export_aggregated_events(self):
 
     if outputFormat == "sds":  # SDIS format
         out = ("% SDIS file created by BORIS (www.boris.unito.it) " "at {}\nTimed <seconds>;\n").format(
-            util.datetime_iso8601(datetime.datetime.now())
+            util.datetime_iso8601(dt.datetime.now())
         )
         for obsId in selectedObservations:
             # observation id
@@ -582,7 +577,7 @@ def export_aggregated_events(self):
                     f.write(str.encode(out))
                 out = (
                     "% SDIS file created by BORIS (www.boris.unito.it) "
-                    f"at {util.datetime_iso8601(datetime.datetime.now())}\nTimed <seconds>;\n"
+                    f"at {util.datetime_iso8601(dt.datetime.now())}\nTimed <seconds>;\n"
                 )
 
         if flag_group:
@@ -591,7 +586,7 @@ def export_aggregated_events(self):
         return
 
     if flag_group:
-        r, msg = export_observation.dataset_write(data, fileName, outputFormat)
+        r, msg = export_observation.dataset_write(data, fileName, outputFormat, dtype=fields_type)
         if not r:
             QMessageBox.warning(None, cfg.programName, msg, QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
 
