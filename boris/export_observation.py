@@ -910,8 +910,6 @@ def export_aggregated_events(pj: dict, parameters: dict, obsId: str) -> tuple[ta
         if row["modifiers"]:
             max_modifiers = max(max_modifiers, row["modifiers"].count("|") + 1)
 
-    print(f"{max_modifiers=}")
-
     for subject in parameters[cfg.SELECTED_SUBJECTS]:
 
         # calculate observation duration by subject (by obs)
