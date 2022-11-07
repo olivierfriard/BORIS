@@ -475,6 +475,13 @@ def export_aggregated_events(self):
 
         return
 
+    tot_max_modifiers = 0
+    for obs_id in selectedObservations:
+        print(f"{obs_id=}")
+        d, max_modifiers = export_observation.export_aggregated_events(self.pj, parameters, obs_id)
+        print(f"{max_modifiers=}")
+        tot_max_modifiers = max(tot_max_modifiers, max_modifiers)
+
     data = tablib.Dataset()
     # sort by start time
     start_idx = -9  # TODO: improve!
@@ -482,13 +489,8 @@ def export_aggregated_events(self):
     obs_id_idx = 0
 
     mem_command = ""  # remember user choice when file already exists
-    tot_max_modifiers = 0
     for obs_id in selectedObservations:
-        print(f"{obs_id=}")
         d, max_modifiers = export_observation.export_aggregated_events(self.pj, parameters, obs_id)
-        print(f"{max_modifiers=}")
-        tot_max_modifiers = max(tot_max_modifiers, max_modifiers)
-        data.extend(d)
 
         if (not flag_group) and (outputFormat not in ["sds", "tbs"]):
             fileName = f"{pl.Path(exportDir) / util.safeFileName(obs_id)}.{outputFormat}"
@@ -506,18 +508,20 @@ def export_aggregated_events(self):
                 if mem_command in [cfg.SKIP, cfg.SKIP_ALL]:
                     continue
 
-            data = tablib.Dataset(
-                *sorted(list(data), key=lambda x: (x[obs_id_idx], float(x[start_idx]))),
+            data_single_obs = tablib.Dataset(
+                *sorted(list(d), key=lambda x: (x[obs_id_idx], float(x[start_idx]))),
                 headers=list(fields_type(max_modifiers).keys()),
             )
-            data.title = obs_id
+            data_single_obs.title = obs_id
 
-            r, msg = export_observation.dataset_write(data, fileName, outputFormat, dtype=fields_type)
+            r, msg = export_observation.dataset_write(data_single_obs, fileName, outputFormat, dtype=fields_type)
             if not r:
                 QMessageBox.warning(
                     None, cfg.programName, msg, QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton
                 )
-            data = tablib.Dataset()
+            """data = tablib.Dataset()"""
+
+        # data.extend(d)
 
     data = tablib.Dataset(
         *sorted(list(data), key=lambda x: (x[obs_id_idx], float(x[start_idx]))),
