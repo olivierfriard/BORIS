@@ -284,6 +284,66 @@ def export_aggregated_events(self):
     Formats can be SQL (sql), SDIS (sds) or Tabular format (tsv, csv, ods, xlsx, xls, html)
     """
 
+    def fields_type(max_modif_number: int) -> dict:
+
+        fields_type_dict: dict = {
+            "Observation id": str,
+            "Observation date": dt.datetime,
+            "Description": str,
+            "Observation type": str,
+            "Source": str,
+            "Total length": float,
+            "FPS": float,
+        }
+        if cfg.INDEPENDENT_VARIABLES in self.pj:
+            for idx in util.sorted_keys(self.pj[cfg.INDEPENDENT_VARIABLES]):
+                if self.pj[cfg.INDEPENDENT_VARIABLES][idx]["type"] == "timestamp":
+                    fields_type_dict[self.pj[cfg.INDEPENDENT_VARIABLES][idx]["label"]] = dt.datetime
+                elif self.pj[cfg.INDEPENDENT_VARIABLES][idx]["type"] == "numeric":
+                    fields_type_dict[self.pj[cfg.INDEPENDENT_VARIABLES][idx]["label"]] = float
+                else:
+                    fields_type_dict[self.pj[cfg.INDEPENDENT_VARIABLES][idx]["label"]] = str
+
+        fields_type_dict.update(
+            {
+                "Subject": str,
+                "Observation duration by subject by observation": float,
+                "Behavior": str,
+                "Behavioral category": str,
+            }
+        )
+
+        # max number of modifiers
+        """
+        max_modif_number = max(
+            [
+                len(self.pj[cfg.ETHOGRAM][idx][cfg.MODIFIERS])
+                for idx in self.pj[cfg.ETHOGRAM]
+                if self.pj[cfg.ETHOGRAM][idx][cfg.BEHAVIOR_CODE] in parameters[cfg.SELECTED_BEHAVIORS]
+            ]
+        )
+        """
+
+        for i in range(max_modif_number):
+            fields_type_dict[f"Modifier #{i + 1}"] = str
+
+        fields_type_dict.update(
+            {
+                "Behavior type": str,
+                "Start (s)": float,
+                "Stop (s)": float,
+                "Duration (s)": float,
+                "Image index start": float,  # add image index and image file path to header
+                "Image index stop": float,
+                "Image file path start": str,
+                "Image file path stop": str,
+                "Comment start": str,
+                "Comment stop": str,
+            }
+        )
+
+        return fields_type_dict
+
     _, selectedObservations = select_observations.select_observations(
         self.pj, cfg.MULTIPLE, "Select observations for exporting events"
     )
@@ -415,80 +475,43 @@ def export_aggregated_events(self):
 
         return
 
-    fields_type: dict = {
-        "Observation id": str,
-        "Observation date": dt.datetime,
-        "Description": str,
-        "Observation type": str,
-        "Source": str,
-        "Total length": float,
-        "FPS": float,
-    }
-    if cfg.INDEPENDENT_VARIABLES in self.pj:
-        for idx in util.sorted_keys(self.pj[cfg.INDEPENDENT_VARIABLES]):
-            # TODO check variable type
-            fields_type[self.pj[cfg.INDEPENDENT_VARIABLES][idx]["label"]] = str
-
-    fields_type.update(
-        {
-            "Subject": str,
-            "Observation duration by subject by observation": float,
-            "Behavior": str,
-            "Behavioral category": str,
-            "Modifiers": str,
-            "Behavior type": str,
-            "Start (s)": float,
-            "Stop (s)": float,
-            "Duration (s)": float,
-            "Image index start": float,  # add image index and image file path to header
-            "Image index stop": float,
-            "Image file path start": str,
-            "Image file path stop": str,
-            "Comment start": str,
-            "Comment stop": str,
-        }
-    )
-
     data = tablib.Dataset()
     # sort by start time
     start_idx = -9  # TODO: improve!
     stop_idx = -8
     obs_id_idx = 0
 
-    # TODO: check indep var type for dataframe output
-    """ to be finished
-    column_type = {"Observation id": "str", "Description": "str", "Comment start": "str", "Comment stop": "str"}
-    for idx_var in util.sorted_keys(pj[cfg.INDEPENDENT_VARIABLES]):
-        column_type[self.pj[cfg.INDEPENDENT_VARIABLES][idx_var]["label"]] = 
-        if self.pj[cfg.INDEPENDENT_VARIABLES][idx_var]["type"] == "timestamp":
-    """
-
     mem_command = ""  # remember user choice when file already exists
+    tot_max_modifiers = 0
     for obs_id in selectedObservations:
-        d = export_observation.export_aggregated_events(self.pj, parameters, obs_id)
+        print(f"{obs_id=}")
+        d, max_modifiers = export_observation.export_aggregated_events(self.pj, parameters, obs_id)
+        print(f"{max_modifiers=}")
+        tot_max_modifiers = max(tot_max_modifiers, max_modifiers)
         data.extend(d)
 
-        if not flag_group and outputFormat not in ["sds", "tbs"]:
+        if (not flag_group) and (outputFormat not in ["sds", "tbs"]):
             fileName = f"{pl.Path(exportDir) / util.safeFileName(obs_id)}.{outputFormat}"
             # check if file with new extension already exists
             if mem_command != cfg.OVERWRITE_ALL and pl.Path(fileName).is_file():
-                if mem_command == "Skip all":
+                if mem_command == cfg.SKIP_ALL:
                     continue
                 mem_command = dialog.MessageDialog(
                     cfg.programName,
                     f"The file {fileName} already exists.",
-                    [cfg.OVERWRITE, cfg.OVERWRITE_ALL, "Skip", "Skip all", cfg.CANCEL],
+                    [cfg.OVERWRITE, cfg.OVERWRITE_ALL, cfg.SKIP, cfg.SKIP_ALL, cfg.CANCEL],
                 )
                 if mem_command == cfg.CANCEL:
                     return
-                if mem_command in ["Skip", "Skip all"]:
+                if mem_command in [cfg.SKIP, cfg.SKIP_ALL]:
                     continue
 
             data = tablib.Dataset(
                 *sorted(list(data), key=lambda x: (x[obs_id_idx], float(x[start_idx]))),
-                headers=list(fields_type.keys()),
+                headers=list(fields_type(max_modifiers).keys()),
             )
             data.title = obs_id
+
             r, msg = export_observation.dataset_write(data, fileName, outputFormat, dtype=fields_type)
             if not r:
                 QMessageBox.warning(
@@ -497,7 +520,8 @@ def export_aggregated_events(self):
             data = tablib.Dataset()
 
     data = tablib.Dataset(
-        *sorted(list(data), key=lambda x: (x[obs_id_idx], float(x[start_idx]))), headers=list(fields_type.keys())
+        *sorted(list(data), key=lambda x: (x[obs_id_idx], float(x[start_idx]))),
+        headers=list(fields_type(tot_max_modifiers).keys()),
     )
     data.title = "Aggregated events"
 
@@ -826,16 +850,16 @@ def export_events_as_textgrid(self):
             mem_command != cfg.OVERWRITE_ALL
             and pl.Path(f"{pl.Path(exportDir) / util.safeFileName(obs_id)}.textGrid").is_file()
         ):
-            if mem_command == "Skip all":
+            if mem_command == cfg.SKIP_ALL:
                 continue
             mem_command = dialog.MessageDialog(
                 cfg.programName,
                 f"The file <b>{pl.Path(exportDir) / util.safeFileName(obs_id)}.textGrid</b> already exists.",
-                [cfg.OVERWRITE, cfg.OVERWRITE_ALL, "Skip", "Skip all", cfg.CANCEL],
+                [cfg.OVERWRITE, cfg.OVERWRITE_ALL, cfg.SKIP, cfg.SKIP_ALL, cfg.CANCEL],
             )
             if mem_command == cfg.CANCEL:
                 return
-            if mem_command in ["Skip", "Skip all"]:
+            if mem_command in [cfg.SKIP, cfg.SKIP_ALL]:
                 continue
 
         try:

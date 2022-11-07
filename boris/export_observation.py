@@ -351,7 +351,6 @@ def export_tabular_events(
 
     # modifiers
     for idx in range(max_modifiers):
-        # TODO check modifier type
         fields_type[f"Modifier #{idx + 1}"] = str
 
     fields_type.update(
@@ -749,27 +748,13 @@ def dataset_write(dataset: tablib.Dataset, file_name: str, output_format: str, d
             # delete data type from dtype
             for field_name in date_type:
                 del dtype[field_name]
+
             df = pd.read_csv(
                 StringIO(dataset.export("tsv")),
                 sep="\t",
                 dtype=dtype,
                 parse_dates=date_type,
             )
-
-            """ dtype={
-                    "Observation id": str,
-                    "Description": str,
-                    "Start (s)": float,
-                    "Stop (s)": float,
-                    "Comment start": str,
-                    "Comment stop": str,
-                    "Image index start": float,
-                    "Image index stop": float,
-                    "Image file path start": str,
-                    "Image file path stop": str,
-                    "Behavior type": str,
-                },
-            """
 
             if output_format == "pkl":
                 df.to_pickle(file_name)
@@ -798,7 +783,7 @@ def dataset_write(dataset: tablib.Dataset, file_name: str, output_format: str, d
         return False, str(sys.exc_info()[1])
 
 
-def export_aggregated_events(pj: dict, parameters: dict, obsId: str):
+def export_aggregated_events(pj: dict, parameters: dict, obsId: str) -> tuple[tablib.Dataset, int]:
     """
     export aggregated events of one observation
 
@@ -809,6 +794,7 @@ def export_aggregated_events(pj: dict, parameters: dict, obsId: str):
 
     Returns:
         tablib.Dataset:
+        int: naximum number of modifiers
 
     """
     logging.debug(f"function: export aggregated events {parameters} {obsId}")
@@ -910,6 +896,22 @@ def export_aggregated_events(pj: dict, parameters: dict, obsId: str):
 
     behavioral_category = project_functions.behavior_category(pj[cfg.ETHOGRAM])
 
+    """
+    # check max number of modifiers
+    max_modifiers = 0
+    for event in pj[cfg.OBSERVATIONS][obsId][cfg.EVENTS]:
+        if event[cfg.EVENT_MODIFIER_FIELD_IDX]:
+            max_modifiers = max(max_modifiers, len(event[cfg.EVENT_MODIFIER_FIELD_IDX].split("|")))
+    """
+
+    cursor.execute("SELECT DISTINCT modifiers FROM aggregated_events")
+    max_modifiers = 0
+    for row in cursor.fetchall():
+        if row["modifiers"]:
+            max_modifiers = max(max_modifiers, row["modifiers"].count("|") + 1)
+
+    print(f"{max_modifiers=}")
+
     for subject in parameters[cfg.SELECTED_SUBJECTS]:
 
         # calculate observation duration by subject (by obs)
@@ -979,7 +981,7 @@ def export_aggregated_events(pj: dict, parameters: dict, obsId: str):
                             obs_description,
                             observation_type,
                             media_file_str,
-                            f"{obs_length:.3f}" if obs_length not in (dec(-1), dec(-2)) else float("NaN"),
+                            f"{obs_length:.3f}" if obs_length not in (dec(-1), dec(-2)) else cfg.NA,
                             fps_str,
                         ]
                     )
@@ -1001,56 +1003,63 @@ def export_aggregated_events(pj: dict, parameters: dict, obsId: str):
                             else:
                                 row_data.append("")
 
+                    row_data.extend(
+                        [
+                            subject,
+                            duration_by_subject_by_obs,
+                            behavior,
+                            behavioral_category[behavior] if behavioral_category[behavior] else "Not defined",
+                        ]
+                    )
+
+                    # modifiers
+
+                    if max_modifiers:
+                        modifiers = row["modifiers"].split("|")
+                        while len(modifiers) < max_modifiers:
+                            modifiers.append("")
+                        for modifier in modifiers:
+                            row_data.append(modifier)
+
                     if row["type"] == cfg.POINT:
 
                         row_data.extend(
                             [
-                                subject,
-                                duration_by_subject_by_obs,
-                                behavior,
-                                behavioral_category[behavior] if behavioral_category[behavior] else "Not defined",
-                                row["modifiers"],
                                 cfg.POINT,
-                                f"{row['start']:.3f}" if row["start"] is not None else float("NaN"),  # start
-                                f"{row['stop']:.3f}" if row["stop"] is not None else float("NaN"),  # stop
-                                0,  # duration
-                                row["image_index_start"],
-                                row["image_index_stop"],
-                                row["image_path_start"],
-                                row["image_path_stop"],
-                                row["comment"],  # comment start
-                                "",  # comment stop
+                                f"{row['start']:.3f}" if row["start"] is not None else cfg.NA,  # start
+                                f"{row['stop']:.3f}" if row["stop"] is not None else cfg.NA,  # stop
+                                cfg.NA,  # duration
                             ]
                         )
-                        data.append(row_data)
 
                     if row["type"] == cfg.STATE:
 
                         row_data.extend(
                             [
-                                subject,
-                                duration_by_subject_by_obs,
-                                behavior,
-                                behavioral_category[behavior] if behavioral_category[behavior] else "Not defined",
-                                row["modifiers"],
                                 cfg.STATE,
-                                f"{row['start']:.3f}" if row["start"] is not None else float("NaN"),
-                                f"{row['stop']:.3f}" if row["stop"] is not None else float("NaN"),
+                                f"{row['start']:.3f}" if row["start"] is not None else cfg.NA,
+                                f"{row['stop']:.3f}" if row["stop"] is not None else cfg.NA,
                                 # duration
                                 f"{row['stop'] - row['start']:.3f}"
                                 if (row["stop"] is not None) and (row["start"] is not None)
-                                else float("NaN"),
-                                row["image_index_start"],
-                                row["image_index_stop"],
-                                row["image_path_start"],
-                                row["image_path_stop"],
-                                row["comment"],
-                                row["comment_stop"],
+                                else cfg.NA,
                             ]
                         )
-                        data.append(row_data)
 
-    return data
+                    row_data.extend(
+                        [
+                            row["image_index_start"],
+                            row["image_index_stop"],
+                            row["image_path_start"],
+                            row["image_path_stop"],
+                            row["comment"],
+                            row["comment_stop"] if (row["type"] == cfg.STATE) else "",
+                        ]
+                    )
+
+                    data.append(row_data)
+
+    return data, max_modifiers
 
 
 def events_to_behavioral_sequences(pj, obs_id: str, subj: str, parameters: dict, behav_seq_separator: str) -> str:
