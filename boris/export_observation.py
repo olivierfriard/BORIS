@@ -292,7 +292,7 @@ def export_events_jwatcher(
 
 def export_tabular_events(
     parameters, obsId: str, observation: dict, ethogram: dict, file_name: str, output_format: str
-) -> tuple[bool, str]:
+) -> tuple:  # -> tuple[bool, str]:
     """
     export events for one observation (obsId)
 
@@ -523,7 +523,7 @@ def export_tabular_events(
 
 def export_tabular_events_long_format(
     parameters, obsId: str, observation: dict, ethogram: dict, file_name: str, output_format: str
-) -> tuple[bool, str]:
+) -> tuple:  # -> tuple[bool, str]:
     """
     export events
 
@@ -720,7 +720,9 @@ def export_tabular_events_long_format(
     return r, msg
 
 
-def dataset_write(dataset: tablib.Dataset, file_name: str, output_format: str, dtype: dict = {}) -> tuple[bool, str]:
+def dataset_write(
+    dataset: tablib.Dataset, file_name: str, output_format: str, dtype: dict = {}
+) -> tuple:  # -> tuple[bool, str]:
     """
     write a tablib dataset with aggregated events or tabular events to file in specified format (output_format)
 
@@ -783,7 +785,7 @@ def dataset_write(dataset: tablib.Dataset, file_name: str, output_format: str, d
         return False, str(sys.exc_info()[1])
 
 
-def export_aggregated_events(pj: dict, parameters: dict, obsId: str) -> tuple[tablib.Dataset, int]:
+def export_aggregated_events(pj: dict, parameters: dict, obsId: str) -> tuple:  # -> tuple[tablib.Dataset, int]:
     """
     export aggregated events of one observation
 

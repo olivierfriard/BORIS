@@ -525,11 +525,12 @@ def export_aggregated_events(self):
                 )
             """data = tablib.Dataset()"""
 
+        print(list(data))
         if max_modifiers < tot_max_modifiers:
             for i in range(tot_max_modifiers - max_modifiers):
                 data.insert_col(
                     14,
-                    col=None,
+                    col=[""] * (len(list(data))),
                     header=f"Modif #{i}",
                 )
         data_grouped_obs.extend(data)
