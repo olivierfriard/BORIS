@@ -1066,7 +1066,7 @@ def observation_total_length(observation: dict) -> dec:
         observation (dict): observation dictionary
 
     Returns:
-        Decimal: total length in seconds
+        Decimal: total length in seconds (-2 if observation from pictures)
 
     """
 

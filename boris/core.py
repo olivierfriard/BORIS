@@ -2395,9 +2395,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         if "error" in r:
             QMessageBox.warning(self, cfg.programName, r.get("message", "Error on time budget bar plot"))
 
-    def load_project(self, project_path, project_changed, pj):
+    def load_project(self, project_path: str, project_changed, pj: dict):
         """
-        load specified project
+        load project from pj dict
 
         Args:
             project_path (str): path of project file

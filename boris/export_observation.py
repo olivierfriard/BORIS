@@ -311,7 +311,7 @@ def export_tabular_events(
     print(parameters)
 
     total_length = project_functions.observation_total_length(observation)
-    if total_length == -2:
+    if total_length == -2:  # obs from pictures
         total_length_str = cfg.NA
     else:
         total_length_str = f"{parameters[cfg.END_TIME] - parameters[cfg.START_TIME]:.3f}"
@@ -321,7 +321,11 @@ def export_tabular_events(
     # check max number of modifiers
     max_modifiers = 0
     for event in eventsWithStatus:
-        if parameters[cfg.START_TIME] <= event[cfg.EVENT_TIME_FIELD_IDX] <= parameters[cfg.END_TIME]:
+        if total_length != -2:  # obs not from pictures
+            if parameters[cfg.START_TIME] <= event[cfg.EVENT_TIME_FIELD_IDX] <= parameters[cfg.END_TIME]:
+                if event[cfg.EVENT_MODIFIER_FIELD_IDX]:
+                    max_modifiers = max(max_modifiers, len(event[cfg.EVENT_MODIFIER_FIELD_IDX].split("|")))
+        else:
             if event[cfg.EVENT_MODIFIER_FIELD_IDX]:
                 max_modifiers = max(max_modifiers, len(event[cfg.EVENT_MODIFIER_FIELD_IDX].split("|")))
 
@@ -381,7 +385,9 @@ def export_tabular_events(
             pass
 
     for event in eventsWithStatus:
-        if not (parameters[cfg.START_TIME] <= event[cfg.EVENT_TIME_FIELD_IDX] <= parameters[cfg.END_TIME]):
+        if (total_length != -2) and not (
+            parameters[cfg.START_TIME] <= event[cfg.EVENT_TIME_FIELD_IDX] <= parameters[cfg.END_TIME]
+        ):
             continue
         if (
             (event[cfg.EVENT_SUBJECT_FIELD_IDX] in parameters[cfg.SELECTED_SUBJECTS])

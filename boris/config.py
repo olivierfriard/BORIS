@@ -265,6 +265,13 @@ TW_EVENTS_FIELDS = {
     VIEWER_IMAGES: IMAGES_TW_EVENTS_FIELDS,
 }
 
+# create dictionaries
+TW_OBS_FIELD = {}
+for observation_type in TW_EVENTS_FIELDS:
+    TW_OBS_FIELD[observation_type] = {}
+    for idx, field in enumerate(TW_EVENTS_FIELDS[observation_type]):
+        TW_OBS_FIELD[observation_type][field] = idx
+
 
 # fields for project events list
 MEDIA_PJ_EVENTS_FIELDS = ("time", "subject", "code", "modifier", "comment")
@@ -280,18 +287,8 @@ PJ_EVENTS_FIELDS = {
     VIEWER_IMAGES: IMAGES_PJ_EVENTS_FIELDS,
 }
 
+# fields for independent variable definition
 tw_indVarFields = ["label", "description", "type", "default value", "possible values"]
-
-BEHAV_CODING_MAP_FIELDS = ["name", "Behavior codes"]
-
-EXCEL_FORBIDDEN_CHARACTERS = r"\/*[]:?"
-
-# create dictionaries
-TW_OBS_FIELD = {}
-for observation_type in TW_EVENTS_FIELDS:
-    TW_OBS_FIELD[observation_type] = {}
-    for idx, field in enumerate(TW_EVENTS_FIELDS[observation_type]):
-        TW_OBS_FIELD[observation_type][field] = idx
 
 
 PJ_OBS_FIELDS = {}
@@ -308,6 +305,12 @@ EVENT_COMMENT_FIELD_IDX = 4
 EVENT_STATUS_FIELD_IDX = 5
 # EVENT_IMAGEIDX_FIELD_IDX = 6
 EVENT_IMAGEPATH_FIELD_IDX = 7
+
+
+BEHAV_CODING_MAP_FIELDS = ["name", "Behavior codes"]
+
+# characters not allowed in Excel sheet name
+EXCEL_FORBIDDEN_CHARACTERS: str = r"\/*[]:?"
 
 
 # indexes of project window

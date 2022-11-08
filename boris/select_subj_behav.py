@@ -33,15 +33,15 @@ from . import utilities as util
 
 def choose_obs_subj_behav_category(
     self,
-    selected_observations,
+    selected_observations: list,
     min_time=0,
-    maxTime=dec("NaN"),  # default: do not show time interval selection
-    flagShowIncludeModifiers=True,
-    flagShowExcludeBehaviorsWoEvents=True,
-    by_category=False,
-    show_time=False,
-    show_time_bin_size=False,
-    window_title="Select subjects and behaviors",
+    maxTime: dec = dec("NaN"),  # default: do not show time interval selection
+    flagShowIncludeModifiers: bool = True,
+    flagShowExcludeBehaviorsWoEvents: bool = True,
+    by_category: bool = False,
+    show_time: bool = False,
+    show_time_bin_size: bool = False,
+    window_title: str = "Select subjects and behaviors",
 ):
     """
     show window for:
