@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'param_panel.ui'
+# Form implementation generated from reading ui file 'boris/param_panel.ui'
 #
 # Created by: PyQt5 UI code generator 5.15.4
 #
@@ -101,16 +101,17 @@ class Ui_Dialog(object):
         self.verticalLayout_3.addWidget(self.lb_time_interval)
         self.horizontalLayout_5 = QtWidgets.QHBoxLayout()
         self.horizontalLayout_5.setObjectName("horizontalLayout_5")
-        self.rb_full = QtWidgets.QRadioButton(self.frm_time)
-        self.rb_full.setChecked(True)
-        self.rb_full.setObjectName("rb_full")
-        self.horizontalLayout_5.addWidget(self.rb_full)
-        self.rb_interval = QtWidgets.QRadioButton(self.frm_time)
-        self.rb_interval.setObjectName("rb_interval")
-        self.horizontalLayout_5.addWidget(self.rb_interval)
-        self.rb_limit = QtWidgets.QRadioButton(self.frm_time)
-        self.rb_limit.setObjectName("rb_limit")
-        self.horizontalLayout_5.addWidget(self.rb_limit)
+        self.rb_observed_events = QtWidgets.QRadioButton(self.frm_time)
+        self.rb_observed_events.setObjectName("rb_observed_events")
+        self.horizontalLayout_5.addWidget(self.rb_observed_events)
+        self.rb_user_defined = QtWidgets.QRadioButton(self.frm_time)
+        self.rb_user_defined.setObjectName("rb_user_defined")
+        self.horizontalLayout_5.addWidget(self.rb_user_defined)
+        self.rb_media_duration = QtWidgets.QRadioButton(self.frm_time)
+        self.rb_media_duration.setCheckable(True)
+        self.rb_media_duration.setChecked(False)
+        self.rb_media_duration.setObjectName("rb_media_duration")
+        self.horizontalLayout_5.addWidget(self.rb_media_duration)
         spacerItem4 = QtWidgets.QSpacerItem(40, 20, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
         self.horizontalLayout_5.addItem(spacerItem4)
         self.verticalLayout_3.addLayout(self.horizontalLayout_5)
@@ -179,9 +180,9 @@ class Ui_Dialog(object):
         self.cbExcludeBehaviors.setText(_translate("Dialog", "Exclude behaviors without events"))
         self.lb_time_bin_size.setText(_translate("Dialog", "Time bin size (s)"))
         self.lb_time_interval.setText(_translate("Dialog", "Time interval"))
-        self.rb_full.setText(_translate("Dialog", "Full observation(s)"))
-        self.rb_interval.setText(_translate("Dialog", "Limit to time interval"))
-        self.rb_limit.setText(_translate("Dialog", "Limit to observed events"))
+        self.rb_observed_events.setText(_translate("Dialog", "Observed events"))
+        self.rb_user_defined.setText(_translate("Dialog", "User defined"))
+        self.rb_media_duration.setText(_translate("Dialog", "Media file(s) duration"))
         self.lbStartTime.setText(_translate("Dialog", "Start time"))
         self.lbEndTime.setText(_translate("Dialog", "End time"))
         self.pbCancel.setText(_translate("Dialog", "Cancel"))

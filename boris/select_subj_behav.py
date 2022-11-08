@@ -225,11 +225,11 @@ def choose_obs_subj_behav_category(
         )
         return {cfg.SELECTED_SUBJECTS: [], cfg.SELECTED_BEHAVIORS: []}
 
-    if paramPanelWindow.rb_full.isChecked():
+    if paramPanelWindow.rb_media_duration.isChecked():
         time_param = cfg.TIME_FULL_OBS
-    if paramPanelWindow.rb_limit.isChecked():
+    if paramPanelWindow.rb_observed_events.isChecked():
         time_param = cfg.TIME_EVENTS
-    if paramPanelWindow.rb_interval.isChecked():
+    if paramPanelWindow.rb_user_defined.isChecked():
         time_param = cfg.TIME_ARBITRARY_INTERVAL
 
     return {

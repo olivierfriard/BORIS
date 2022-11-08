@@ -45,7 +45,7 @@ from matplotlib.dates import (
 )
 
 from . import config as cfg
-from . import db_functions, project_functions
+from . import db_functions, project_functions, observation_operations
 from . import utilities as util
 
 
@@ -180,7 +180,7 @@ def create_behaviors_bar_plot(
         cursor.execute("UPDATE aggregated_events SET modifiers = ''")
 
         # time
-        obs_length = project_functions.observation_total_length(pj[cfg.OBSERVATIONS][obs_id])
+        obs_length = observation_operations.observation_total_length(pj[cfg.OBSERVATIONS][obs_id])
         if obs_length == -1:
             obs_length = 0
 
@@ -417,7 +417,7 @@ def create_events_plot(
         max_len = len(distinct_behav_modif)
 
         # time
-        obs_length = project_functions.observation_total_length(pj[cfg.OBSERVATIONS][obs_id])
+        obs_length = observation_operations.observation_total_length(pj[cfg.OBSERVATIONS][obs_id])
         if obs_length == -1:  # media length not available
             interval = cfg.TIME_EVENTS
 

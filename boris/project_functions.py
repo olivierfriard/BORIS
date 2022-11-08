@@ -738,8 +738,6 @@ def export_observations_list(pj: dict, selected_observations: list, file_name: s
     return True
 
 
-
-
 def set_media_paths_relative_to_project_dir(pj: dict, project_file_name: str) -> bool:
     """
     set path from media files and path of images directory relative to the project directory
@@ -1049,84 +1047,6 @@ def observed_interval(observation: dict) -> tuple:
             max(observation[cfg.EVENTS])[cfg.PJ_OBS_FIELDS[observation[cfg.TYPE]]["image index"]],
         )
         """
-
-
-def observation_total_length(observation: dict) -> dec:
-    """
-    Total observation length
-    tested
-
-    media: if media length not available return 0
-           if more media are queued, return sum of media length
-           if the last event is recorded after the length of media returns the last event time
-
-    live: return last event time
-
-    Args:
-        observation (dict): observation dictionary
-
-    Returns:
-        Decimal: total length in seconds (-2 if observation from pictures)
-
-    """
-
-    if observation[cfg.TYPE] == cfg.IMAGES:
-        if observation[cfg.EVENTS]:
-            try:
-                first_event = obs_length = min(observation[cfg.EVENTS])[cfg.TW_OBS_FIELD[cfg.IMAGES]["time"]]
-                last_event = obs_length = max(observation[cfg.EVENTS])[cfg.TW_OBS_FIELD[cfg.IMAGES]["time"]]
-                obs_length = last_event - first_event
-            except Exception:
-                logging.critical(f"Length of observation from images not available")
-                obs_length = dec(-2)
-        else:
-            obs_length = dec(0)
-        return obs_length
-
-    if observation[cfg.TYPE] == cfg.LIVE:
-        if observation[cfg.EVENTS]:
-            obs_length = max(observation[cfg.EVENTS])[cfg.EVENT_TIME_FIELD_IDX]
-        else:
-            obs_length = dec(0)
-        return obs_length
-
-    if observation[cfg.TYPE] == cfg.MEDIA:
-        media_max_total_length = dec(0)
-
-        media_total_length = {}
-
-        for nplayer in observation[cfg.FILE]:
-            if not observation[cfg.FILE][nplayer]:
-                continue
-
-            media_total_length[nplayer] = dec(0)
-            for mediaFile in observation[cfg.FILE][nplayer]:
-                mediaLength = 0
-                try:
-                    mediaLength = observation[cfg.MEDIA_INFO][cfg.LENGTH][mediaFile]
-                    media_total_length[nplayer] += dec(mediaLength)
-                except Exception:
-                    logging.critical(f"media length not found for {mediaFile}")
-                    mediaLength = -1
-                    media_total_length[nplayer] = -1
-                    break
-
-        if -1 in [media_total_length[x] for x in media_total_length]:
-            return dec(-1)
-
-        # totalMediaLength = max([total_media_length[x] for x in total_media_length])
-
-        media_max_total_length = max([media_total_length[x] for x in media_total_length])
-
-        if observation[cfg.EVENTS]:
-            if max(observation[cfg.EVENTS])[cfg.EVENT_TIME_FIELD_IDX] > media_max_total_length:
-                media_max_total_length = max(observation[cfg.EVENTS])[cfg.EVENT_TIME_FIELD_IDX]
-
-        return media_max_total_length
-
-    logging.critical("observation not LIVE nor MEDIA")
-
-    return dec(0)
 
 
 def events_start_stop(ethogram: dict, events: list) -> list:

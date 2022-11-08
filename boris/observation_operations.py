@@ -304,6 +304,127 @@ def remove_observations(self):
             self.project_changed()
 
 
+def coding_time(observations: dict, observations_list: list) -> tuple:
+    """
+    returns first even timestamp, last event timestamp and duration of observation
+    """
+    start_coding_list = []
+    end_coding_list = []
+    for obs_id in observations_list:
+        observation = observations[obs_id]
+        if observation[cfg.EVENTS]:
+            start_coding_list.append(observation[cfg.EVENTS][0])
+            end_coding_list.append(observation[cfg.EVENTS][-1])
+
+    if not start_coding_list:
+        start_coding = None
+    else:
+        if start_coding_list := [x for x in start_coding_list if not x.is_nan()]):
+            start_coding = min(start_coding_list)
+        else:
+            start_coding = dec("NaN")
+
+    if not end_coding_list:
+        end_coding = None
+    else:
+        if end_coding_list := [x for x in end_coding_list if not x.is_nan()]):
+            end_coding = min(end_coding_list)
+        else:
+            end_coding_list = dec("NaN")
+
+    if any((start_coding is None, end_coding is None)):
+        duration = None
+    elif any((start_coding.is_nan(), end_coding.is_nan())):
+        duration = dec("NaN")
+    else:
+        duration = end_coding - start_coding
+    
+    return start_coding, end_coding_list, duration
+
+
+
+def observation_total_length(observation: dict) -> dec:
+    """
+    Observation media duration (if any)
+
+    media observation: if media duration is not available returns 0
+                       if more media are queued, returns sum of media duration
+                       if the last event is recorded after the length of media returns the last event time
+
+    live observation: returns last event time
+
+    observation from pictures: returns last event
+                               if no events returns dec(0)
+                               if no time returns dec(-2)
+
+
+    Args:
+        observation (dict): observation dictionary
+
+    Returns:
+        Decimal: total length in seconds (-2 if observation from pictures)
+
+    """
+
+    if observation[cfg.TYPE] == cfg.IMAGES:
+        if observation[cfg.EVENTS]:
+            try:
+                first_event = obs_length = min(observation[cfg.EVENTS])[cfg.TW_OBS_FIELD[cfg.IMAGES]["time"]]
+                last_event = obs_length = max(observation[cfg.EVENTS])[cfg.TW_OBS_FIELD[cfg.IMAGES]["time"]]
+                obs_length = last_event - first_event
+            except Exception:
+                logging.critical(f"Length of observation from images not available")
+                obs_length = dec(-2)
+        else:
+            obs_length = dec(0)
+        return obs_length
+
+    if observation[cfg.TYPE] == cfg.LIVE:
+        if observation[cfg.EVENTS]:
+            obs_length = max(observation[cfg.EVENTS])[cfg.EVENT_TIME_FIELD_IDX]
+        else:
+            obs_length = dec(0)
+        return obs_length
+
+    if observation[cfg.TYPE] == cfg.MEDIA:
+        media_max_total_length = dec(0)
+
+        media_total_length = {}
+
+        for nplayer in observation[cfg.FILE]:
+            if not observation[cfg.FILE][nplayer]:
+                continue
+
+            media_total_length[nplayer] = dec(0)
+            for mediaFile in observation[cfg.FILE][nplayer]:
+                mediaLength = 0
+                try:
+                    mediaLength = observation[cfg.MEDIA_INFO][cfg.LENGTH][mediaFile]
+                    media_total_length[nplayer] += dec(mediaLength)
+                except Exception:
+                    logging.critical(f"media length not found for {mediaFile}")
+                    mediaLength = -1
+                    media_total_length[nplayer] = -1
+                    break
+
+        if -1 in [media_total_length[x] for x in media_total_length]:
+            return dec(-1)
+
+        # totalMediaLength = max([total_media_length[x] for x in total_media_length])
+
+        media_max_total_length = max([media_total_length[x] for x in media_total_length])
+
+        if observation[cfg.EVENTS]:
+            if max(observation[cfg.EVENTS])[cfg.EVENT_TIME_FIELD_IDX] > media_max_total_length:
+                media_max_total_length = max(observation[cfg.EVENTS])[cfg.EVENT_TIME_FIELD_IDX]
+
+        return media_max_total_length
+
+    logging.critical("observation not LIVE nor MEDIA")
+
+    return dec(0)
+
+
 def observation_length(pj: dict, selected_observations: list) -> tuple:
     """
     max length of selected observations
@@ -319,7 +440,7 @@ def observation_length(pj: dict, selected_observations: list) -> tuple:
     selectedObsTotalMediaLength = dec("0.0")
     max_obs_length = dec(0)
     for obs_id in selected_observations:
-        obs_length = project_functions.observation_total_length(pj[cfg.OBSERVATIONS][obs_id])
+        obs_length = observation_total_length(pj[cfg.OBSERVATIONS][obs_id])
         if obs_length == dec(-2):  # IMAGES OBS with time not available
             selectedObsTotalMediaLength = dec(-2)
             break

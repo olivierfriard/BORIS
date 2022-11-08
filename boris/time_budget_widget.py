@@ -469,7 +469,7 @@ def time_budget(self, mode: str, mode2: str = "list"):
         total_observation_time = 0
         for obsId in selectedObservations:
 
-            obs_length = project_functions.observation_total_length(self.pj[cfg.OBSERVATIONS][obsId])
+            obs_length = observation_operations.observation_total_length(self.pj[cfg.OBSERVATIONS][obsId])
 
             if obs_length == dec(-1):  # media length not available
                 parameters[cfg.TIME_INTERVAL] = cfg.TIME_EVENTS
@@ -837,7 +837,7 @@ def time_budget(self, mode: str, mode2: str = "list"):
                 self.pj, parameters[cfg.SELECTED_SUBJECTS], [obsId], parameters[cfg.SELECTED_BEHAVIORS]
             )
 
-            obs_length = project_functions.observation_total_length(self.pj[cfg.OBSERVATIONS][obsId])
+            obs_length = observation_operations.observation_total_length(self.pj[cfg.OBSERVATIONS][obsId])
 
             if obs_length == -1:
                 obs_length = 0

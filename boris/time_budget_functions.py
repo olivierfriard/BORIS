@@ -29,6 +29,7 @@ from . import config as cfg
 from . import db_functions
 from . import portion as I
 from . import project_functions
+from . import observation_operations
 
 
 def default_value(ethogram: dict, behav: str, param):
@@ -239,7 +240,7 @@ def synthetic_time_budget_bin(pj: dict, selected_observations: list, parameters_
     # select time interval
     for obs_id in selected_observations:
 
-        obs_length = project_functions.observation_total_length(pj[cfg.OBSERVATIONS][obs_id])
+        obs_length = observation_operations.observation_total_length(pj[cfg.OBSERVATIONS][obs_id])
 
         if obs_length == -1:
             obs_length = 0
@@ -481,7 +482,7 @@ def synthetic_time_budget(pj: dict, selected_observations: list, parameters_obs:
             cursor.execute("UPDATE aggregated_events SET modifiers = ''")
 
         # time
-        obs_length = project_functions.observation_total_length(pj[cfg.OBSERVATIONS][obs_id])
+        obs_length = observation_operations.observation_total_length(pj[cfg.OBSERVATIONS][obs_id])
 
         if obs_length == dec(-1):  # media length not available
             interval = cfg.TIME_EVENTS

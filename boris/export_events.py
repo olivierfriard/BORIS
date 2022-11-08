@@ -191,6 +191,9 @@ def export_tabular_events(self, mode: str = "tabular"):
         self.pj, selectedObservations
     )
 
+    print(f"{max_obs_length=}")
+    print(f"{selectedObsTotalMediaLength=}")
+
     parameters = select_subj_behav.choose_obs_subj_behav_category(
         self,
         selectedObservations,
@@ -730,7 +733,9 @@ def export_events_as_textgrid(self):
 
         flagUnpairedEventFound = False
 
-        total_media_duration = round(project_functions.observation_total_length(self.pj[cfg.OBSERVATIONS][obs_id]), 3)
+        total_media_duration = round(
+            observation_operations.observation_total_length(self.pj[cfg.OBSERVATIONS][obs_id]), 3
+        )
 
         cursor = db_functions.load_events_in_db(
             self.pj,
@@ -829,7 +834,9 @@ def export_events_as_textgrid(self):
                             rows[idx + 2]["occurence"] = rows[idx + 1]["occurence"]
 
             # check if last event ends at the end of media file
-            if rows[-1]["occurence"] < project_functions.observation_total_length(self.pj[cfg.OBSERVATIONS][obs_id]):
+            if rows[-1]["occurence"] < observation_operations.observation_total_length(
+                self.pj[cfg.OBSERVATIONS][obs_id]
+            ):
                 count += 1
                 out += interval_template.format(
                     count=count, name="null", xmin=rows[-1]["occurence"], xmax=total_media_duration

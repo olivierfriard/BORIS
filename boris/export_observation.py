@@ -40,6 +40,7 @@ from . import dialog
 from . import config as cfg
 from . import utilities as util
 from . import project_functions
+from . import observation_operations
 from . import db_functions
 
 
@@ -310,7 +311,7 @@ def export_tabular_events(
     """
     print(parameters)
 
-    total_length = project_functions.observation_total_length(observation)
+    total_length = observation_operations.observation_total_length(observation)
     if total_length == -2:  # obs from pictures
         total_length_str = cfg.NA
     else:
@@ -551,7 +552,7 @@ def export_tabular_events_long_format(
         str: error message
     """
 
-    total_length = f"{project_functions.observation_total_length(observation):.3f}"
+    total_length = f"{observation_operations.observation_total_length(observation):.3f}"
 
     eventsWithStatus = project_functions.events_start_stop(ethogram, observation[cfg.EVENTS])
 
@@ -822,7 +823,7 @@ def export_aggregated_events(pj: dict, parameters: dict, obsId: str) -> tuple:  
     # obs description
     obs_description = observation[cfg.DESCRIPTION]
 
-    obs_length = project_functions.observation_total_length(pj[cfg.OBSERVATIONS][obsId])
+    obs_length = observation_operations.observation_total_length(pj[cfg.OBSERVATIONS][obsId])
 
     if obs_length == dec(-1):  # media length not available
         interval = cfg.TIME_EVENTS

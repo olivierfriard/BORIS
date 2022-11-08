@@ -55,13 +55,15 @@ class Param_panel(QDialog, Ui_Dialog):
 
         self.lwBehaviors.itemClicked.connect(self.behavior_item_clicked)
 
-        self.rb_full.clicked.connect(lambda: self.rb_time(cfg.TIME_FULL_OBS))
-        self.rb_limit.clicked.connect(lambda: self.rb_time(cfg.TIME_EVENTS))
-        self.rb_interval.clicked.connect(lambda: self.rb_time(cfg.TIME_ARBITRARY_INTERVAL))
+        self.rb_observed_events.setChecked(True)
 
-    def rb_time(self, button):
+        self.rb_media_duration.clicked.connect(lambda: self.rb_time_interval_selection(cfg.TIME_FULL_OBS))
+        self.rb_observed_events.clicked.connect(lambda: self.rb_time_interval_selection(cfg.TIME_EVENTS))
+        self.rb_user_defined.clicked.connect(lambda: self.rb_time_interval_selection(cfg.TIME_ARBITRARY_INTERVAL))
+
+    def rb_time_interval_selection(self, button):
         """
-        time
+        select the time interval for operation
         """
         self.frm_time_interval.setEnabled(button == cfg.TIME_ARBITRARY_INTERVAL)
 
