@@ -40,7 +40,7 @@ from . import utilities as util
 from . import version
 
 
-def check_observation_exhaustivity(events: list, ethogram: list, state_events_list: list = []):
+def check_observation_exhaustivity(events: list, ethogram: list, state_events_list: list = []) -> float:
     """
     check if observation is continous
     if ethogram not empty state events list is determined else
@@ -52,19 +52,21 @@ def check_observation_exhaustivity(events: list, ethogram: list, state_events_li
         else:
             return sum([x.upper - x.lower for x in interval])
 
+    """
     def interval_number(interval):
         if interval.empty:
             return dec(0)
         else:
             return len(interval)
+    """
 
     if ethogram:
-        state_events_list = [
-            ethogram[x][cfg.BEHAVIOR_CODE] for x in ethogram if cfg.STATE in ethogram[x][cfg.TYPE].upper()
-        ]
+        state_events_list: tuple = tuple(
+            (ethogram[x][cfg.BEHAVIOR_CODE] for x in ethogram if cfg.STATE in ethogram[x][cfg.TYPE].upper())
+        )
 
-    events_interval = {}
-    mem_events_interval = {}
+    events_interval: dict = {}
+    mem_events_interval: dict = {}
 
     for event in events:
         if event[cfg.EVENT_SUBJECT_FIELD_IDX] not in events_interval:
@@ -93,11 +95,11 @@ def check_observation_exhaustivity(events: list, ethogram: list, state_events_li
             )
 
     if events:
+        # coding duration
         obs_theo_dur = max(events)[cfg.EVENT_TIME_FIELD_IDX] - min(events)[cfg.EVENT_TIME_FIELD_IDX]
     else:
         obs_theo_dur = dec("0")
 
-    count = 0
     total_duration = 0
     for subject in events_interval:
 
@@ -139,7 +141,7 @@ def behavior_category(ethogram: dict) -> dict:
     return behavioral_category
 
 
-def check_if_media_available(observation: dict, project_file_name: str) -> tuple:
+def check_if_media_available(observation: dict, project_file_name: str) -> Tuple[bool, str]:
     """
     check if media files available for media and images observations
 
@@ -174,7 +176,7 @@ def check_if_media_available(observation: dict, project_file_name: str) -> tuple
     return (False, "Observation type not found")
 
 
-def check_directories_availability(observation: dict, project_file_name: str):
+def check_directories_availability(observation: dict, project_file_name: str) -> Tuple[bool, str]:
     """
     check if directories are available
 
@@ -243,7 +245,9 @@ def check_coded_behaviors(pj: dict) -> set:
     return set(sorted(behaviors_not_defined))
 
 
-def check_state_events_obs(obsId: str, ethogram: dict, observation: dict, time_format: str = cfg.HHMMSS) -> tuple:
+def check_state_events_obs(
+    obsId: str, ethogram: dict, observation: dict, time_format: str = cfg.HHMMSS
+) -> Tuple[bool, str]:
     """
     check state events for the observation obsId
     check if behaviors in observation are defined in ethogram
@@ -490,7 +494,7 @@ def check_project_integrity(
     return out
 
 
-def create_subtitles(pj: dict, selected_observations: list, parameters: dict, export_dir: str) -> tuple:
+def create_subtitles(pj: dict, selected_observations: list, parameters: dict, export_dir: str) -> Tuple[bool, str]:
     """
     create subtitles for selected observations, subjects and behaviors
 
@@ -574,9 +578,7 @@ def create_subtitles(pj: dict, selected_observations: list, parameters: dict, ex
                         behavior=row["behavior"],
                         modifiers=modifiers_str,
                     )
-                """
-                file_name = str(pathlib.Path(pathlib.Path(export_dir) / util.safeFileName(obsId)).with suffix(".srt"))
-                """
+
                 file_name = f"{pl.Path(export_dir) / util.safeFileName(obsId)}.srt"
                 try:
                     with open(file_name, "w") as f:
@@ -642,9 +644,6 @@ def create_subtitles(pj: dict, selected_observations: list, parameters: dict, ex
                                 behavior=row["behavior"],
                                 modifiers=modifiers_str,
                             )
-                        """
-                        file_name = str(pathlib.Path(pathlib.Path(export_dir) / pathlib.Path(mediaFile).name).with suffix(".srt"))
-                        """
                         file_name = f"{pl.Path(export_dir) / pl.Path(mediaFile).name}.srt"
                         try:
                             with open(file_name, "w") as f:

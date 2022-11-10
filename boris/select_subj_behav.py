@@ -34,12 +34,12 @@ from . import utilities as util
 def choose_obs_subj_behav_category(
     self,
     selected_observations: list,
-    min_time=0,
-    maxTime: dec = dec("NaN"),  # default: do not show time interval selection
+    start_coding: dec = dec("NaN"),
+    end_coding: dec = dec("NaN"),
+    maxTime: dec = dec("NaN"),
     flagShowIncludeModifiers: bool = True,
     flagShowExcludeBehaviorsWoEvents: bool = True,
     by_category: bool = False,
-    show_time: bool = False,
     show_time_bin_size: bool = False,
     window_title: str = "Select subjects and behaviors",
 ):
@@ -51,6 +51,10 @@ def choose_obs_subj_behav_category(
     - inclusion/exclusion of modifiers
     - inclusion/exclusion of behaviors without events (flagShowExcludeBehaviorsWoEvents == True)
     - selection of time bin size (show_time_bin_size == True)
+
+    Args:
+        selected_observations (list): List of selected observations
+        ...
 
     Returns:
         dict: {"selected subjects": selectedSubjects,
@@ -65,7 +69,7 @@ def choose_obs_subj_behav_category(
     """
 
     paramPanelWindow = param_panel.Param_panel()
-    # paramPanelWindow.resize(600, 500)
+    paramPanelWindow.resize(400, 400)
     paramPanelWindow.setWindowTitle(window_title)
     paramPanelWindow.selectedObservations = selected_observations
     paramPanelWindow.pj = self.pj
@@ -80,16 +84,19 @@ def choose_obs_subj_behav_category(
         paramPanelWindow.cbIncludeModifiers.setVisible(False)
         paramPanelWindow.cbExcludeBehaviors.setVisible(False)
 
-    # hide max time
-    if maxTime.is_nan():
+    # hide time interval form
+    if start_coding.is_nan():
         paramPanelWindow.frm_time.setVisible(False)
     else:
         # start and end time
         paramPanelWindow.frm_time_interval.setEnabled(False)
         paramPanelWindow.start_time.set_format(self.timeFormat)
         paramPanelWindow.end_time.set_format(self.timeFormat)
-        paramPanelWindow.start_time.set_time(min_time)
-        paramPanelWindow.end_time.set_time(maxTime)
+        paramPanelWindow.start_time.set_time(start_coding)
+        paramPanelWindow.end_time.set_time(end_coding)
+
+    if maxTime is None or maxTime.is_nan():
+        paramPanelWindow.rb_media_duration.setVisible(False)
 
     if selected_observations:
         observedSubjects = project_functions.extract_observed_subjects(self.pj, selected_observations)

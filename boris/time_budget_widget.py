@@ -392,24 +392,24 @@ def time_budget(self, mode: str, mode2: str = "list"):
     """
 
     if mode2 == "current" and self.observationId:
-        selectedObservations = [self.observationId]
+        selected_observations = [self.observationId]
     if mode2 == "list":
-        _, selectedObservations = select_observations.select_observations(self.pj, mode=cfg.MULTIPLE, windows_title="")
+        _, selected_observations = select_observations.select_observations(self.pj, mode=cfg.MULTIPLE, windows_title="")
 
-        if not selectedObservations:
+        if not selected_observations:
             return
 
     # check if coded behaviors are defined in ethogram
-    if project_functions.check_coded_behaviors_in_obs_list(self.pj, selectedObservations):
+    if project_functions.check_coded_behaviors_in_obs_list(self.pj, selected_observations):
         return
 
     # check if state events are paired
-    not_ok, selected_observations = project_functions.check_state_events(self.pj, selectedObservations)
+    not_ok, selected_observations = project_functions.check_state_events(self.pj, selected_observations)
     if not_ok or not selected_observations:
         return
 
     flagGroup = False
-    if len(selectedObservations) > 1:
+    if len(selected_observations) > 1:
         flagGroup = (
             dialog.MessageDialog(
                 cfg.programName, "Group the selected observations in a single time budget analysis?", [cfg.YES, cfg.NO]
@@ -418,7 +418,7 @@ def time_budget(self, mode: str, mode2: str = "list"):
         )
 
     max_obs_length, selectedObsTotalMediaLength = observation_operations.observation_length(
-        self.pj, selectedObservations
+        self.pj, selected_observations
     )
     if max_obs_length == dec(-1):  # media length not available, user choose to not use events
         QMessageBox.warning(
@@ -430,12 +430,16 @@ def time_budget(self, mode: str, mode2: str = "list"):
         )
         return
 
-    logging.debug(f"max_obs_length: {max_obs_length}, selectedObsTotalMediaLength: {selectedObsTotalMediaLength}")
+    logging.debug(f"{max_obs_length=}, {selectedObsTotalMediaLength=}")
+
+    start_coding, end_coding, _ = observation_operations.coding_time(self.pj[cfg.OBSERVATIONS], selected_observations)
 
     parameters = select_subj_behav.choose_obs_subj_behav_category(
         self,
-        selectedObservations,
-        maxTime=max_obs_length if len(selectedObservations) > 1 else selectedObsTotalMediaLength,
+        selected_observations,
+        start_coding=start_coding,
+        end_coding=end_coding,
+        maxTime=max_obs_length if len(selected_observations) > 1 else selectedObsTotalMediaLength,
         by_category=(mode == "by_category"),
     )
 
@@ -456,18 +460,18 @@ def time_budget(self, mode: str, mode2: str = "list"):
         parameters[cfg.EXCLUDED_BEHAVIORS] = []
 
     # check if time_budget window must be used
-    if flagGroup or len(selectedObservations) == 1:
+    if flagGroup or len(selected_observations) == 1:
 
         cursor = db_functions.load_events_in_db(
             self.pj,
             parameters[cfg.SELECTED_SUBJECTS],
-            selectedObservations,
+            selected_observations,
             parameters[cfg.SELECTED_BEHAVIORS],
             time_interval=cfg.TIME_FULL_OBS,
         )
 
         total_observation_time = 0
-        for obsId in selectedObservations:
+        for obsId in selected_observations:
 
             obs_length = observation_operations.observation_total_length(self.pj[cfg.OBSERVATIONS][obsId])
 
@@ -579,7 +583,7 @@ def time_budget(self, mode: str, mode2: str = "list"):
             )
 
         out, categories = time_budget_functions.time_budget_analysis(
-            self.pj[cfg.ETHOGRAM], cursor, selectedObservations, parameters, by_category=(mode == "by_category")
+            self.pj[cfg.ETHOGRAM], cursor, selected_observations, parameters, by_category=(mode == "by_category")
         )
 
         # check excluded behaviors
@@ -602,12 +606,12 @@ def time_budget(self, mode: str, mode2: str = "list"):
 
         # observations list
         self.tb.label.setText("Selected observations")
-        for obs_id in selectedObservations:
+        for obs_id in selected_observations:
             # self.tb.lw.addItem(f"{obs_id}  {self.pj[OBSERVATIONS][obs_id]['date']}  {self.pj[OBSERVATIONS][obs_id]['description']}")
             self.tb.lw.addItem(obs_id)
 
         # media length
-        if len(selectedObservations) > 1:
+        if len(selected_observations) > 1:
             if total_observation_time:
                 if self.timeFormat == cfg.HHMMSS:
                     self.tb.lbTotalObservedTime.setText(
@@ -744,7 +748,7 @@ def time_budget(self, mode: str, mode2: str = "list"):
 
         self.tb.show()
 
-    if len(selectedObservations) > 1 and not flagGroup:
+    if len(selected_observations) > 1 and not flagGroup:
 
         output_format, ok = QInputDialog.getItem(
             self,
@@ -831,7 +835,7 @@ def time_budget(self, mode: str, mode2: str = "list"):
             fields = ["subject", "category", "number", "duration"]
 
         mem_command = ""
-        for obsId in selectedObservations:
+        for obsId in selected_observations:
 
             cursor = db_functions.load_events_in_db(
                 self.pj, parameters[cfg.SELECTED_SUBJECTS], [obsId], parameters[cfg.SELECTED_BEHAVIORS]

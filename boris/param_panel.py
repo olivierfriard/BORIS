@@ -159,7 +159,7 @@ class Param_panel(QDialog, Ui_Dialog):
         # FIX ME
         observedBehaviors = self.extract_observed_behaviors(self.selectedObservations, selectedSubjects)
 
-        logging.debug(f"observed behaviors: {observedBehaviors}")
+        logging.debug(f"{observedBehaviors=}")
 
         for idx in range(self.lwBehaviors.count()):
 

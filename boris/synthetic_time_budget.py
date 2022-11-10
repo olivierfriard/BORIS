@@ -73,11 +73,15 @@ def synthetic_time_budget(self):
         )
         return
 
-    logging.debug(f"max_obs_length: {max_obs_length}, selectedObsTotalMediaLength: {selectedObsTotalMediaLength}")
+    logging.debug(f"{max_obs_length=}, {selectedObsTotalMediaLength=}")
+
+    start_coding, end_coding, _ = observation_operations.coding_time(self.pj[cfg.OBSERVATIONS], selected_observations)
 
     synth_tb_param = select_subj_behav.choose_obs_subj_behav_category(
         self,
         selected_observations,
+        start_coding=start_coding,
+        end_coding=end_coding,
         maxTime=max_obs_length if len(selected_observations) > 1 else selectedObsTotalMediaLength,
         flagShowExcludeBehaviorsWoEvents=False,
         by_category=False,
@@ -203,9 +207,13 @@ def synthetic_binned_time_budget(self):
         )
         return
 
+    start_coding, end_coding, _ = observation_operations.coding_time(self.pj[cfg.OBSERVATIONS], selected_observations)
+
     synth_tb_param = select_subj_behav.choose_obs_subj_behav_category(
         self,
         selected_observations,
+        start_coding=start_coding,
+        end_coding=end_coding,
         maxTime=max_obs_length if len(selected_observations) > 1 else selectedObsTotalMediaLength,
         flagShowExcludeBehaviorsWoEvents=False,
         by_category=False,

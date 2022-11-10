@@ -111,14 +111,14 @@ def select_observations(pj: dict, mode: str, windows_title: str = "") -> tuple:
         if not ok:
             not_paired.append(obs)
 
-        # exaustivity
+        # exhaustivity
         if pj[cfg.OBSERVATIONS][obs][cfg.TYPE] in (cfg.MEDIA, cfg.LIVE):
             # check exhaustivity of observation
             exhaustivity = project_functions.check_observation_exhaustivity(
                 pj[cfg.OBSERVATIONS][obs][cfg.EVENTS], [], state_events_list
             )
         elif pj[cfg.OBSERVATIONS][obs][cfg.TYPE] == cfg.IMAGES:
-            # TODO: add exhaustivity for images observation
+            # TODO: add exhaustivity for images observation (number of coded images?)
             exhaustivity = ""
         data.append([obs, date, descr, subjectsList, observed_interval_str, str(exhaustivity), media] + indepvar)
 

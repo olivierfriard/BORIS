@@ -307,14 +307,24 @@ def remove_observations(self):
 def coding_time(observations: dict, observations_list: list) -> tuple:
     """
     returns first even timestamp, last event timestamp and duration of observation
+
+    Args:
+        observations (dict): observations of project
+        observations_list (list): list of selected observations
+
+    Returns:
+        decimal.Decimal: time of first coded event
+        decimal.Decimal: time of last coded event
+        decimal.Decimal: duration of coding
+
     """
     start_coding_list = []
     end_coding_list = []
     for obs_id in observations_list:
         observation = observations[obs_id]
         if observation[cfg.EVENTS]:
-            start_coding_list.append(observation[cfg.EVENTS][0])
-            end_coding_list.append(observation[cfg.EVENTS][-1])
+            start_coding_list.append(observation[cfg.EVENTS][0][cfg.EVENT_TIME_FIELD_IDX])
+            end_coding_list.append(observation[cfg.EVENTS][-1][cfg.EVENT_TIME_FIELD_IDX])
 
     if not start_coding_list:
         start_coding = None
@@ -330,16 +340,16 @@ def coding_time(observations: dict, observations_list: list) -> tuple:
         if end_coding_list := [x for x in end_coding_list if not x.is_nan()]:
             end_coding = min(end_coding_list)
         else:
-            end_coding_list = dec("NaN")
+            end_coding = dec("NaN")
 
     if any((start_coding is None, end_coding is None)):
-        duration = None
+        coding_duration = None
     elif any((start_coding.is_nan(), end_coding.is_nan())):
-        duration = dec("NaN")
+        coding_duration = dec("NaN")
     else:
-        duration = end_coding - start_coding
+        coding_duration = end_coding - start_coding
 
-    return start_coding, end_coding_list, duration
+    return start_coding, end_coding, coding_duration
 
 
 def observation_total_length(observation: dict) -> dec:
@@ -361,7 +371,7 @@ def observation_total_length(observation: dict) -> dec:
         observation (dict): observation dictionary
 
     Returns:
-        Decimal: total length in seconds (-2 if observation from pictures)
+        decimal.Decimal: total length in seconds (-2 if observation from pictures)
 
     """
 
@@ -433,8 +443,8 @@ def observation_length(pj: dict, selected_observations: list) -> tuple:
         selected_observations (list): list of selected observations
 
     Returns:
-        float: maximum media length for all observations
-        float: total media length for all observations
+        decimal.Decimal: maximum media length for all observations
+        decimal.Decimal: total media length for all observations
     """
     selectedObsTotalMediaLength = dec("0.0")
     max_obs_length = dec(0)

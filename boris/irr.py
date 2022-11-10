@@ -283,6 +283,8 @@ def irr_cohen_kappa(self):
     plot_parameters = select_subj_behav.choose_obs_subj_behav_category(
         self,
         selected_observations,
+        start_coding=dec("NaN"),
+        end_coding=dec("NaN"),
         flagShowIncludeModifiers=True,
         flagShowExcludeBehaviorsWoEvents=False,
     )
@@ -602,6 +604,8 @@ def needleman_wunch(self):
     plot_parameters = select_subj_behav.choose_obs_subj_behav_category(
         self,
         selected_observations,
+        start_coding=dec("NaN"),
+        end_coding=dec("NaN"),
         flagShowIncludeModifiers=True,
         flagShowExcludeBehaviorsWoEvents=False,
     )

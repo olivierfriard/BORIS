@@ -68,9 +68,13 @@ def export_events_as_behavioral_sequences(self, separated_subjects=False, timed=
     if not_ok or not selected_observations:
         return
 
+    start_coding, end_coding, _ = observation_operations.coding_time(self.pj[cfg.OBSERVATIONS], selected_observations)
+
     parameters = select_subj_behav.choose_obs_subj_behav_category(
         self,
         selected_observations,
+        start_coding=start_coding,
+        end_coding=end_coding,
         flagShowIncludeModifiers=True,
         flagShowExcludeBehaviorsWoEvents=False,
     )
@@ -113,16 +117,16 @@ def export_tabular_events(self, mode: str = "tabular"):
     """
 
     # ask user observations to analyze
-    _, selectedObservations = select_observations.select_observations(
+    _, selected_observations = select_observations.select_observations(
         self.pj, cfg.MULTIPLE, windows_title="Select observations for exporting events"
     )
 
-    if not selectedObservations:
+    if not selected_observations:
         return
 
     if mode == "jwatcher":
         # check if images observation in list
-        max_obs_length, _ = observation_operations.observation_length(self.pj, selectedObservations)
+        max_obs_length, _ = observation_operations.observation_length(self.pj, selected_observations)
 
         # exit with message if events do not have timestamp
         if max_obs_length.is_nan():
@@ -136,68 +140,26 @@ def export_tabular_events(self, mode: str = "tabular"):
             return
 
     # check if coded behaviors are defined in ethogram
-    if project_functions.check_coded_behaviors_in_obs_list(self.pj, selectedObservations):
+    if project_functions.check_coded_behaviors_in_obs_list(self.pj, selected_observations):
         return
 
-    """
-    out = ""
-    # check if coded behaviors are defined in ethogram
-    ethogram_behavior_codes = {self.pj[cfg.ETHOGRAM][idx][cfg.BEHAVIOR_CODE] for idx in self.pj[cfg.ETHOGRAM]}
-    behaviors_not_defined = []
-    out = ""  # will contain the output
-    for obs_id in selectedObservations:
-        for event in self.pj[cfg.OBSERVATIONS][obs_id][cfg.EVENTS]:
-            if event[cfg.EVENT_BEHAVIOR_FIELD_IDX] not in ethogram_behavior_codes:
-                behaviors_not_defined.append(event[cfg.EVENT_BEHAVIOR_FIELD_IDX])
-    if set(sorted(behaviors_not_defined)):
-        out += (
-            "The following behaviors are not defined in the ethogram: "
-            f"<b>{', '.join(set(sorted(behaviors_not_defined)))}</b><br><br>"
-        )
-    """
-
     # check if state events are paired
-    not_ok, selectedObservations = project_functions.check_state_events(self.pj, selectedObservations)
-    if not_ok or not selectedObservations:
+    not_ok, selected_observations = project_functions.check_state_events(self.pj, selected_observations)
+    if not_ok or not selected_observations:
         return
-
-    """
-    # check if state events are paired
-    # UNPAIRED observations must not be removed!
-    not_paired_obs_list = []
-    for obsId in selectedObservations:
-        r, msg = project_functions.check_state_events_obs(
-            obsId, self.pj[cfg.ETHOGRAM], self.pj[cfg.OBSERVATIONS][obsId], self.timeFormat
-        )
-
-        if not r:
-            out += f"Observation: <strong>{obsId}</strong><br>{msg}<br>"
-            not_paired_obs_list.append(obsId)
-
-    if out:
-        out = f"Some observations have UNPAIRED state events<br><br>{out}"
-        self.results = dialog.Results_dialog()
-        self.results.setWindowTitle(f"{cfg.programName} - Check selected observations")
-        self.results.ptText.setReadOnly(True)
-        self.results.ptText.appendHtml(out)
-        self.results.pbSave.setVisible(False)
-        self.results.pbCancel.setVisible(True)
-
-        if not self.results.exec_():
-            return
-    """
 
     max_obs_length, selectedObsTotalMediaLength = observation_operations.observation_length(
-        self.pj, selectedObservations
+        self.pj, selected_observations
     )
 
-    print(f"{max_obs_length=}")
-    print(f"{selectedObsTotalMediaLength=}")
+    start_coding, end_coding, _ = observation_operations.coding_time(self.pj[cfg.OBSERVATIONS], selected_observations)
 
     parameters = select_subj_behav.choose_obs_subj_behav_category(
         self,
-        selectedObservations,
-        maxTime=max_obs_length if len(selectedObservations) > 1 else selectedObsTotalMediaLength,
+        selected_observations,
+        start_coding=start_coding,
+        end_coding=end_coding,
+        maxTime=max_obs_length if len(selected_observations) > 1 else selectedObsTotalMediaLength,
         flagShowIncludeModifiers=False,
         flagShowExcludeBehaviorsWoEvents=False,
     )
@@ -216,7 +178,7 @@ def export_tabular_events(self, mode: str = "tabular"):
             cfg.PANDAS_DF,
             cfg.RDS,
         )
-        if len(selectedObservations) > 1:  # choose directory for exporting observations
+        if len(selected_observations) > 1:  # choose directory for exporting observations
 
             item, ok = QInputDialog.getItem(
                 self,
@@ -239,7 +201,7 @@ def export_tabular_events(self, mode: str = "tabular"):
             if not exportDir:
                 return
 
-        if len(selectedObservations) == 1:
+        if len(selected_observations) == 1:
 
             file_name, filter_ = QFileDialog().getSaveFileName(self, "Export events", "", ";;".join(available_formats))
             if not file_name:
@@ -268,8 +230,8 @@ def export_tabular_events(self, mode: str = "tabular"):
         output_format = "dat"
 
     mem_command = ""  # remember user choice when file already exists
-    for obsId in selectedObservations:
-        if len(selectedObservations) > 1 or mode == "jwatcher":
+    for obsId in selected_observations:
+        if len(selected_observations) > 1 or mode == "jwatcher":
             file_name = f"{pl.Path(exportDir) / util.safeFileName(obsId)}.{output_format}"
             # check if file with new extension already exists
             if mem_command != cfg.OVERWRITE_ALL and pl.Path(file_name).is_file():
@@ -367,26 +329,26 @@ def export_aggregated_events(self):
 
         return fields_type_dict
 
-    _, selectedObservations = select_observations.select_observations(
+    _, selected_observations = select_observations.select_observations(
         self.pj, cfg.MULTIPLE, "Select observations for exporting events"
     )
-    if not selectedObservations:
+    if not selected_observations:
         return
 
     # check if coded behaviors are defined in ethogram
-    if project_functions.check_coded_behaviors_in_obs_list(self.pj, selectedObservations):
+    if project_functions.check_coded_behaviors_in_obs_list(self.pj, selected_observations):
         return
 
     # check if state events are paired
-    not_ok, selectedObservations = project_functions.check_state_events(self.pj, selectedObservations)
-    if not_ok or not selectedObservations:
+    not_ok, selected_observations = project_functions.check_state_events(self.pj, selected_observations)
+    if not_ok or not selected_observations:
         return
 
     max_obs_length, selectedObsTotalMediaLength = observation_operations.observation_length(
-        self.pj, selectedObservations
+        self.pj, selected_observations
     )
 
-    logging.debug(f"max_obs_length:{max_obs_length}  selectedObsTotalMediaLength:{selectedObsTotalMediaLength}")
+    logging.debug(f"{max_obs_length=} {selectedObsTotalMediaLength=}")
 
     if max_obs_length == dec(-1):  # media length not available, user choose to not use events
         QMessageBox.warning(
@@ -398,10 +360,14 @@ def export_aggregated_events(self):
         )
         return
 
+    start_coding, end_coding, _ = observation_operations.coding_time(self.pj[cfg.OBSERVATIONS], selected_observations)
+
     parameters = select_subj_behav.choose_obs_subj_behav_category(
         self,
-        selectedObservations,
-        maxTime=max_obs_length if len(selectedObservations) > 1 else selectedObsTotalMediaLength,
+        selected_observations,
+        start_coding=start_coding,
+        end_coding=end_coding,
+        maxTime=max_obs_length if len(selected_observations) > 1 else selectedObsTotalMediaLength,
         flagShowIncludeModifiers=False,
         flagShowExcludeBehaviorsWoEvents=False,
     )
@@ -411,7 +377,7 @@ def export_aggregated_events(self):
 
     # check for grouping results
     flag_group = True
-    if len(selectedObservations) > 1:
+    if len(selected_observations) > 1:
         flag_group = (
             dialog.MessageDialog(
                 cfg.programName, "Group events from selected observations in one file?", [cfg.YES, cfg.NO]
@@ -480,7 +446,7 @@ def export_aggregated_events(self):
 
     if outputFormat == "sql":
         _, _, conn = db_functions.load_aggregated_events_in_db(
-            self.pj, parameters[cfg.SELECTED_SUBJECTS], selectedObservations, parameters[cfg.SELECTED_BEHAVIORS]
+            self.pj, parameters[cfg.SELECTED_SUBJECTS], selected_observations, parameters[cfg.SELECTED_BEHAVIORS]
         )
         try:
             with open(fileName, "w") as f:
@@ -499,7 +465,7 @@ def export_aggregated_events(self):
         return
 
     tot_max_modifiers = 0
-    for obs_id in selectedObservations:
+    for obs_id in selected_observations:
         _, max_modifiers = export_observation.export_aggregated_events(self.pj, parameters, obs_id)
         tot_max_modifiers = max(tot_max_modifiers, max_modifiers)
 
@@ -512,7 +478,7 @@ def export_aggregated_events(self):
     obs_id_idx = 0
 
     mem_command = ""  # remember user choice when file already exists
-    for obs_id in selectedObservations:
+    for obs_id in selected_observations:
         # print(f"{obs_id=}")
         data, max_modifiers = export_observation.export_aggregated_events(self.pj, parameters, obs_id)
         # print(f"{max_modifiers=}")
@@ -563,7 +529,7 @@ def export_aggregated_events(self):
     # TODO: finish
     if outputFormat == "tbs":  # Timed behavioral sequences
         out = ""
-        for obsId in selectedObservations:
+        for obsId in selected_observations:
             # observation id
             out += f"# {obsId}\n"
 
@@ -603,7 +569,7 @@ def export_aggregated_events(self):
         out = ("% SDIS file created by BORIS (www.boris.unito.it) " "at {}\nTimed <seconds>;\n").format(
             util.datetime_iso8601(dt.datetime.now())
         )
-        for obsId in selectedObservations:
+        for obsId in selected_observations:
             # observation id
             out += "\n<{}>\n".format(obsId)
 
@@ -682,14 +648,18 @@ def export_events_as_textgrid(self):
         )
         return
 
-    plot_parameters = select_subj_behav.choose_obs_subj_behav_category(
+    start_coding, end_coding, _ = observation_operations.coding_time(self.pj[cfg.OBSERVATIONS], selected_observations)
+
+    parameters = select_subj_behav.choose_obs_subj_behav_category(
         self,
         selected_observations,
+        start_coding=start_coding,
+        end_coding=end_coding,
         flagShowIncludeModifiers=False,
         flagShowExcludeBehaviorsWoEvents=False,
     )
 
-    if not plot_parameters[cfg.SELECTED_SUBJECTS] or not plot_parameters[cfg.SELECTED_BEHAVIORS]:
+    if not parameters[cfg.SELECTED_SUBJECTS] or not parameters[cfg.SELECTED_BEHAVIORS]:
         return
 
     exportDir = QFileDialog(self).getExistingDirectory(
@@ -731,17 +701,15 @@ def export_events_as_textgrid(self):
 
     for obs_id in selected_observations:
 
-        flagUnpairedEventFound = False
-
         total_media_duration = round(
             observation_operations.observation_total_length(self.pj[cfg.OBSERVATIONS][obs_id]), 3
         )
 
         cursor = db_functions.load_events_in_db(
             self.pj,
-            plot_parameters[cfg.SELECTED_SUBJECTS],
+            parameters[cfg.SELECTED_SUBJECTS],
             selected_observations,
-            plot_parameters[cfg.SELECTED_BEHAVIORS],
+            parameters[cfg.SELECTED_BEHAVIORS],
             time_interval=cfg.TIME_FULL_OBS,
         )
 
@@ -749,10 +717,10 @@ def export_events_as_textgrid(self):
             (
                 "SELECT COUNT(DISTINCT subject) FROM events "
                 "WHERE observation = ? AND subject IN ({}) AND type = 'STATE' ".format(
-                    ",".join(["?"] * len(plot_parameters[cfg.SELECTED_SUBJECTS]))
+                    ",".join(["?"] * len(parameters[cfg.SELECTED_SUBJECTS]))
                 )
             ),
-            [obs_id] + plot_parameters[cfg.SELECTED_SUBJECTS],
+            [obs_id] + parameters[cfg.SELECTED_SUBJECTS],
         )
 
         subjectsNum = int(list(cursor.fetchall())[0][0])
@@ -771,7 +739,7 @@ def export_events_as_textgrid(self):
         )
 
         subject_index = 0
-        for subject in plot_parameters[cfg.SELECTED_SUBJECTS]:
+        for subject in parameters[cfg.SELECTED_SUBJECTS]:
             if subject not in [x[cfg.EVENT_SUBJECT_FIELD_IDX] for x in self.pj[cfg.OBSERVATIONS][obs_id][cfg.EVENTS]]:
                 continue
 
@@ -904,15 +872,6 @@ def export_events_as_textgrid(self):
         try:
             with open(f"{pl.Path(exportDir) / util.safeFileName(obs_id)}.textGrid", "w") as f:
                 f.write(out)
-
-            if flagUnpairedEventFound:
-                QMessageBox.warning(
-                    self,
-                    cfg.programName,
-                    "Some state events are not paired. They were excluded from export",
-                    QMessageBox.Ok | QMessageBox.Default,
-                    QMessageBox.NoButton,
-                )
 
         except Exception:
             QMessageBox.critical(self, cfg.programName, "The file can not be saved")

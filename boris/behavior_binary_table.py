@@ -208,9 +208,13 @@ def behavior_binary_table(self):
         )
         return
 
+    start_coding, end_coding, _ = observation_operations.coding_time(self.pj[cfg.OBSERVATIONS], selected_observations)
+
     parameters = select_subj_behav.choose_obs_subj_behav_category(
         self,
         selected_observations,
+        start_coding=start_coding,
+        end_coding=end_coding,
         maxTime=max_obs_length,
         flagShowIncludeModifiers=True,
         flagShowExcludeBehaviorsWoEvents=True,

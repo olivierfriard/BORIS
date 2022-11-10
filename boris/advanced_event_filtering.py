@@ -332,7 +332,7 @@ def event_filtering(self):
     the python-intervals module is used to do operations on intervals (intersection, union)
     """
 
-    result, selected_observations = select_observations.select_observations(
+    _, selected_observations = select_observations.select_observations(
         self.pj, cfg.MULTIPLE, "Select observations for advanced event filtering"
     )
     if not selected_observations:
@@ -358,9 +358,13 @@ def event_filtering(self):
         )
         return
 
+    start_coding, end_coding, _ = observation_operations.coding_time(self.pj[cfg.OBSERVATIONS], selected_observations)
+
     parameters = select_subj_behav.choose_obs_subj_behav_category(
         self,
         selected_observations,
+        start_coding=start_coding,
+        end_coding=end_coding,
         maxTime=max_obs_length,
         flagShowIncludeModifiers=False,
         flagShowExcludeBehaviorsWoEvents=False,

@@ -78,6 +78,8 @@ def events_snapshots(self):
     parameters = select_subj_behav.choose_obs_subj_behav_category(
         self,
         selected_observations,
+        start_coding=dec("NaN"),
+        end_coding=dec("NaN"),
         flagShowIncludeModifiers=False,
         flagShowExcludeBehaviorsWoEvents=False,
     )
@@ -358,6 +360,8 @@ def extract_events(self):
     parameters = select_subj_behav.choose_obs_subj_behav_category(
         self,
         selected_observations,
+        start_coding=dec("NaN"),
+        end_coding=dec("NaN"),
         flagShowIncludeModifiers=False,
         flagShowExcludeBehaviorsWoEvents=False,
     )

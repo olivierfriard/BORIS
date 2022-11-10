@@ -2277,10 +2277,15 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 file_format = item.lower()
             else:
                 return
+        start_coding, end_coding, _ = observation_operations.coding_time(
+            self.pj[cfg.OBSERVATIONS], selected_observations
+        )
 
         parameters = select_subj_behav.choose_obs_subj_behav_category(
             self,
             selected_observations,
+            start_coding=start_coding,
+            end_coding=end_coding,
             maxTime=max_obs_length,
             flagShowExcludeBehaviorsWoEvents=True,
             by_category=False,
@@ -2357,9 +2362,15 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             )
             return
 
+        start_coding, end_coding, _ = observation_operations.coding_time(
+            self.pj[cfg.OBSERVATIONS], selected_observations
+        )
+
         parameters = select_subj_behav.choose_obs_subj_behav_category(
             self,
             selected_observations,
+            start_coding=start_coding,
+            end_coding=end_coding,
             maxTime=max_obs_length if len(selected_observations) > 1 else selectedObsTotalMediaLength,
             flagShowIncludeModifiers=False,
             flagShowExcludeBehaviorsWoEvents=True,
@@ -3166,7 +3177,19 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             )
             return
 
-        parameters = select_subj_behav.choose_obs_subj_behav_category(self, selected_observations, 0)
+        start_coding, end_coding, _ = observation_operations.coding_time(
+            self.pj[cfg.OBSERVATIONS], selected_observations
+        )
+
+        parameters = select_subj_behav.choose_obs_subj_behav_category(
+            self,
+            selected_observations,
+            start_coding=dec("NaN"),
+            end_coding=dec("NaN"),
+            maxTime=max_obs_length if len(selected_observations) > 1 else selectedObsTotalMediaLength,
+            flagShowIncludeModifiers=False,
+            flagShowExcludeBehaviorsWoEvents=False,
+        )
         if not parameters[cfg.SELECTED_SUBJECTS] or not parameters[cfg.SELECTED_BEHAVIORS]:
             return
         export_dir = QFileDialog().getExistingDirectory(
