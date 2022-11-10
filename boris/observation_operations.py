@@ -319,7 +319,7 @@ def coding_time(observations: dict, observations_list: list) -> tuple:
     if not start_coding_list:
         start_coding = None
     else:
-        if start_coding_list := [x for x in start_coding_list if not x.is_nan()]):
+        if start_coding_list := [x for x in start_coding_list if not x.is_nan()]:
             start_coding = min(start_coding_list)
         else:
             start_coding = dec("NaN")
@@ -327,7 +327,7 @@ def coding_time(observations: dict, observations_list: list) -> tuple:
     if not end_coding_list:
         end_coding = None
     else:
-        if end_coding_list := [x for x in end_coding_list if not x.is_nan()]):
+        if end_coding_list := [x for x in end_coding_list if not x.is_nan()]:
             end_coding = min(end_coding_list)
         else:
             end_coding_list = dec("NaN")
@@ -338,9 +338,8 @@ def coding_time(observations: dict, observations_list: list) -> tuple:
         duration = dec("NaN")
     else:
         duration = end_coding - start_coding
-    
-    return start_coding, end_coding_list, duration
 
+    return start_coding, end_coding_list, duration
 
 
 def observation_total_length(observation: dict) -> dec:
