@@ -27,7 +27,7 @@ import pathlib as pl
 import sys
 from decimal import Decimal as dec
 from shutil import copyfile
-from typing import List, Tuple
+from typing import List, Tuple, Dict
 
 import tablib
 from PyQt5.QtWidgets import QMessageBox
@@ -40,10 +40,18 @@ from . import utilities as util
 from . import version
 
 
-def check_observation_exhaustivity(events: list, ethogram: list, state_events_list: list = []) -> float:
+def check_observation_exhaustivity(
+    events: List[list],
+    # ethogram: list,
+    state_events_list: list = [],
+) -> float:
     """
     check if observation is continous
     if ethogram not empty state events list is determined else
+
+    Args:
+        events (List[list]): events
+        ethogram (list):
     """
 
     def interval_len(interval):
@@ -60,10 +68,12 @@ def check_observation_exhaustivity(events: list, ethogram: list, state_events_li
             return len(interval)
     """
 
+    """
     if ethogram:
         state_events_list: tuple = tuple(
             (ethogram[x][cfg.BEHAVIOR_CODE] for x in ethogram if cfg.STATE in ethogram[x][cfg.TYPE].upper())
         )
+    """
 
     events_interval: dict = {}
     mem_events_interval: dict = {}
@@ -121,7 +131,7 @@ def check_observation_exhaustivity(events: list, ethogram: list, state_events_li
     return round(exhausivity_percent, 1)
 
 
-def behavior_category(ethogram: dict) -> dict:
+def behavior_category(ethogram: dict) -> Dict[str, str]:
     """
     returns a dictionary containing the behavioral category of each behavior
 

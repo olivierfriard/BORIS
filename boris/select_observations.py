@@ -115,7 +115,7 @@ def select_observations(pj: dict, mode: str, windows_title: str = "") -> tuple:
         if pj[cfg.OBSERVATIONS][obs][cfg.TYPE] in (cfg.MEDIA, cfg.LIVE):
             # check exhaustivity of observation
             exhaustivity = project_functions.check_observation_exhaustivity(
-                pj[cfg.OBSERVATIONS][obs][cfg.EVENTS], [], state_events_list
+                pj[cfg.OBSERVATIONS][obs][cfg.EVENTS], state_events_list
             )
         elif pj[cfg.OBSERVATIONS][obs][cfg.TYPE] == cfg.IMAGES:
             # TODO: add exhaustivity for images observation (number of coded images?)
