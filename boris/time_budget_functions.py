@@ -39,8 +39,6 @@ def default_value(ethogram: dict, behav: str, param):
     default_value_ = 0.0
     behav_type = project_functions.event_type(behav, ethogram)
 
-    print(f"{behav_type=}")
-
     if behav_type == "POINT EVENT" and param in (
         "duration",
         "duration mean",
