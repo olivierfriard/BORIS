@@ -102,8 +102,8 @@ __version__ = version.__version__
 __version_date__ = version.__version_date__
 
 # check minimal version of python
-if util.versiontuple(platform.python_version()) < util.versiontuple("3.6"):
-    msg = f"BORIS requires Python 3.6+! You are using Python v. {platform.python_version()}\n"
+if util.versiontuple(platform.python_version()) < util.versiontuple("3.8"):
+    msg = f"BORIS requires Python 3.8+! You are using Python v. {platform.python_version()}\n"
     logging.critical(msg)
     # append to boris.log file
     with open(pl.Path("~").expanduser() / "boris.log", "a") as f_out:

@@ -952,14 +952,6 @@ def time_budget(self, mode: str, mode2: str = "list"):
                         element["duration"] if element["duration"] != "NA" else 0
                     )
 
-            # compact format
-            """ 2022-11-03 removed time budget long format
-            if (
-                self.config_param.get(cfg.TIME_BUDGET_FORMAT, cfg.DEFAULT_TIME_BUDGET_FORMAT)
-                == cfg.COMPACT_TIME_BUDGET_FORMAT
-            ):
-            """
-
             rows = []
             col1 = []
             # observation id
@@ -970,7 +962,7 @@ def time_budget(self, mode: str, mode2: str = "list"):
 
             indep_var_label = []
             indep_var_values = []
-            for idx, v in self.pj.get(cfg.INDEPENDENT_VARIABLES, {}).items():
+            for _, v in self.pj.get(cfg.INDEPENDENT_VARIABLES, {}).items():
                 indep_var_label.append(v["label"])
 
                 if (
@@ -978,6 +970,8 @@ def time_budget(self, mode: str, mode2: str = "list"):
                     and v["label"] in self.pj[cfg.OBSERVATIONS][obsId][cfg.INDEPENDENT_VARIABLES]
                 ):
                     indep_var_values.append(self.pj[cfg.OBSERVATIONS][obsId][cfg.INDEPENDENT_VARIABLES][v["label"]])
+                else:
+                    indep_var_values.append("")
 
             header.extend(indep_var_label)
             col1.extend(indep_var_values)
@@ -1033,92 +1027,6 @@ def time_budget(self, mode: str, mode2: str = "list"):
                             values.append(categories[subject][category]["duration"])
 
                         rows.append(col1 + values)
-
-            # long format
-            """ 2022-11-03 removed time budget long format
-            if (
-                self.config_param.get(cfg.TIME_BUDGET_FORMAT, cfg.DEFAULT_TIME_BUDGET_FORMAT)
-                == cfg.LONG_TIME_BUDGET_FORMAT
-            ):
-
-                rows = []
-                # observation id
-                rows.append(["Observation id", obsId])
-                rows.append([""])
-
-                labels = ["Independent variables"]
-                values = [""]
-                if cfg.INDEPENDENT_VARIABLES in self.pj and self.pj[cfg.INDEPENDENT_VARIABLES]:
-                    for idx in self.pj[cfg.INDEPENDENT_VARIABLES]:
-                        labels.append(self.pj[cfg.INDEPENDENT_VARIABLES][idx]["label"])
-
-                        if (
-                            cfg.INDEPENDENT_VARIABLES in self.pj[cfg.OBSERVATIONS][obsId]
-                            and self.pj[cfg.INDEPENDENT_VARIABLES][idx]["label"]
-                            in self.pj[cfg.OBSERVATIONS][obsId][cfg.INDEPENDENT_VARIABLES]
-                        ):
-                            values.append(
-                                self.pj[cfg.OBSERVATIONS][obsId][cfg.INDEPENDENT_VARIABLES][
-                                    self.pj[cfg.INDEPENDENT_VARIABLES][idx]["label"]
-                                ]
-                            )
-
-                rows.append(labels)
-                rows.append(values)
-                rows.append([""])
-
-                rows.append(["Analysis from", f"{min_time:0.3f}", "to", f"{max_time:0.3f}"])
-                rows.append(["Total length (s)", f"{max_time - min_time:0.3f}"])
-                rows.append([""])
-                rows.append(["Time budget"])
-
-                if mode == "by_behavior":
-
-                    rows.append(tb_fields)
-
-                    for row in out:
-                        values = []
-                        for field in fields:
-                            values.append(str(row[field]).replace(" ()", ""))
-                        # % of total time
-                        if row["duration"] in [0, cfg.NA]:
-                            values.append(row["duration"])
-                        elif row["duration"] not in ["-", cfg.UNPAIRED] and selectedObsTotalMediaLength:
-                            tot_time = float(max_time - min_time)
-                            # substract duration of excluded behaviors from total time for each subject
-                            if (
-                                row["subject"] in excl_behaviors_total_time
-                                and row["behavior"] not in parameters[cfg.EXCLUDED_BEHAVIORS]
-                            ):
-                                tot_time -= excl_behaviors_total_time[row["subject"]]
-                            values.append(round(row["duration"] / tot_time * 100, 1) if tot_time > 0 else "-")
-                        else:
-                            values.append("-")
-
-                        rows.append(values)
-
-                if mode == "by_category":
-                    rows.append(tb_fields)
-
-                    for subject in categories:
-
-                        for category in categories[subject]:
-                            values = []
-                            values.append(subject)
-                            if category == "":
-                                values.append("No category")
-                            else:
-                                values.append(category)
-
-                            values.append(categories[subject][category]["number"])
-                            try:
-                                values.append(f"{categories[subject][category]['duration']:0.3f}")
-                            except Exception:
-                                values.append(categories[subject][category]["duration"])
-
-                            rows.append(values)
-
-            """
 
             data = tablib.Dataset()
             data.title = obsId

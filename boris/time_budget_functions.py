@@ -22,7 +22,7 @@ Copyright 2012-2022 Olivier Friard
 import math
 import statistics
 from decimal import Decimal as dec
-
+from typing import Tuple
 import tablib
 
 from . import config as cfg
@@ -665,7 +665,7 @@ def synthetic_time_budget(pj: dict, selected_observations: list, parameters_obs:
 
 def time_budget_analysis(
     ethogram: dict, cursor, selected_observations: list, parameters: dict, by_category: bool = False
-) -> tuple:
+) -> Tuple[list, dict]:
     """
     extract number of occurrences, total duration, mean ...
     if start_time = 0 and end_time = 0 all events are extracted
