@@ -1017,13 +1017,13 @@ def time_budget_analysis(
                     category = ""
 
                 if category in categories[subject]:
-                    if behav["duration"] not in ["-", cfg.NA] and categories[subject][category]["duration"] not in [
+                    if behav["duration"] not in ("-", cfg.NA) and categories[subject][category]["duration"] not in (
                         "-",
                         cfg.NA,
-                    ]:
+                    ):
                         categories[subject][category]["duration"] += behav["duration"]
                     else:
-                        categories[subject][category]["duration"] = "-"
+                        categories[subject][category]["duration"] = cfg.NA
                     categories[subject][category]["number"] += behav["number"]
                 else:
                     categories[subject][category] = {"duration": behav["duration"], "number": behav["number"]}
