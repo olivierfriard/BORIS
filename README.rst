@@ -61,7 +61,7 @@ following BibTex entry
     issn = {2041-210X},
     url = {http://dx.doi.org/10.1111/2041-210X.12584},
     doi = {10.1111/2041-210X.12584},
-    pages = {n/a--n/a},
+    pages = {1324--1330},
     keywords = {behavioural analysis, behaviour coding, coding scheme, ethology, observational data, ttime-budget},
     year = {2016},
     }
