@@ -919,6 +919,7 @@ def time_budget_analysis(
                     )
 
                     rows = list(cursor.fetchall())
+
                     if not len(rows):
                         if not parameters[cfg.EXCLUDE_BEHAVIORS]:  # include behaviors without events
                             out.append(
@@ -963,11 +964,13 @@ def time_budget_analysis(
 
                             # inter event if same observation
                             if idx % 2 and idx != len(rows) - 1 and row[1] == rows[idx + 1][1]:
-                                if (
+                                if (row[0] is not None and rows[idx + 1][0] is not None) and (
                                     parameters["start time"] <= row[0] <= parameters["end time"]
                                     and parameters["start time"] <= rows[idx + 1][0] <= parameters["end time"]
                                 ):
                                     all_event_interdurations.append(float(rows[idx + 1][0]) - float(row[0]))
+                                else:
+                                    all_event_interdurations.append(float("NaN"))
 
                         if [x for x in all_event_durations if math.isnan(x)] or not len(all_event_durations):
                             duration_mean = cfg.NA

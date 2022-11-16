@@ -36,10 +36,11 @@ def choose_obs_subj_behav_category(
     selected_observations: list,
     start_coding: dec = dec("NaN"),
     end_coding: dec = dec("NaN"),
-    maxTime: dec = dec("NaN"),
+    maxTime: dec = None,
     flagShowIncludeModifiers: bool = True,
     flagShowExcludeBehaviorsWoEvents: bool = True,
     by_category: bool = False,
+    n_observations: int = 1,
     show_time_bin_size: bool = False,
     window_title: str = "Select subjects and behaviors",
 ):
@@ -84,19 +85,37 @@ def choose_obs_subj_behav_category(
         paramPanelWindow.cbIncludeModifiers.setVisible(False)
         paramPanelWindow.cbExcludeBehaviors.setVisible(False)
 
+    paramPanelWindow.media_duration = maxTime
+    paramPanelWindow.start_coding = start_coding
+    paramPanelWindow.end_coding = end_coding
+
+    paramPanelWindow.start_time.set_format(self.timeFormat)
+    paramPanelWindow.end_time.set_format(self.timeFormat)
+
+    if n_observations > 1:
+        paramPanelWindow.frm_time_interval.setVisible(False)
+    else:
+        if start_coding.is_nan():
+            paramPanelWindow.frm_time.setVisible(False)
+        else:
+            paramPanelWindow.frm_time_interval.setEnabled(False)
+            paramPanelWindow.start_time.set_time(start_coding)
+            paramPanelWindow.end_time.set_time(end_coding)
+
+    """
     # hide time interval form
     if start_coding.is_nan():
         paramPanelWindow.frm_time.setVisible(False)
     else:
         # start and end time
-        paramPanelWindow.frm_time_interval.setEnabled(False)
-        paramPanelWindow.start_time.set_format(self.timeFormat)
-        paramPanelWindow.end_time.set_format(self.timeFormat)
         paramPanelWindow.start_time.set_time(start_coding)
         paramPanelWindow.end_time.set_time(end_coding)
+    """
 
+    """
     if maxTime is None or maxTime.is_nan():
         paramPanelWindow.rb_media_duration.setVisible(False)
+    """
 
     if selected_observations:
         observedSubjects = project_functions.extract_observed_subjects(self.pj, selected_observations)

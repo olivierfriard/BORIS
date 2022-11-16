@@ -434,6 +434,39 @@ def observation_total_length(observation: dict) -> dec:
     return dec(0)
 
 
+def media_duration(observations: dict, selected_observations: list) -> tuple:
+    """
+    media duration of selected observations
+
+    Args:
+        observations (dict): observations dict
+        selected_observations (list): list of selected observations
+
+    Returns:
+        decimal.Decimal: maximum media duration for all observations
+        decimal.Decimal: total media duration for all observations
+    """
+    max_media_duration_all_obs = dec("0.0")
+    total_media_duration_all_obs = dec("0.0")
+    for obs_id in selected_observations:
+        if observations[obs_id][cfg.TYPE] != cfg.MEDIA:
+            return None, None
+        total_media_duration = dec(0)
+
+        nplayer = "1"  # check only player 1 as it must contain the longest media file
+        for media_file in observations[obs_id][cfg.FILE][nplayer]:
+            try:
+                media_duration = observations[obs_id][cfg.MEDIA_INFO][cfg.LENGTH][media_file]
+                total_media_duration += dec(media_duration)
+            except Exception:
+                logging.critical(f"media length not found for {media_file}")
+                return None, None
+        total_media_duration_all_obs += total_media_duration
+        max_media_duration_all_obs = max(max_media_duration_all_obs, total_media_duration)
+
+    return max_media_duration_all_obs, total_media_duration_all_obs
+
+
 def observation_length(pj: dict, selected_observations: list) -> tuple:
     """
     max length of selected observations

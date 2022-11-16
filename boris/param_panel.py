@@ -36,6 +36,8 @@ class Param_panel(QDialog, Ui_Dialog):
         super().__init__()
         self.setupUi(self)
 
+        self.media_duration = None
+
         # insert duration widget for time offset
         self.start_time = duration_widget.Duration_widget(0)
         self.horizontalLayout.insertWidget(1, self.start_time)
@@ -65,7 +67,24 @@ class Param_panel(QDialog, Ui_Dialog):
         """
         select the time interval for operation
         """
-        self.frm_time_interval.setEnabled(button == cfg.TIME_ARBITRARY_INTERVAL)
+        if button == cfg.TIME_ARBITRARY_INTERVAL:
+            self.frm_time_interval.setEnabled(True)
+            self.frm_time_interval.setVisible(True)
+
+        elif button == cfg.TIME_EVENTS and len(self.selectedObservations) == 1:
+            self.start_time.set_time(self.start_coding)
+            self.end_time.set_time(self.end_coding)
+            self.frm_time_interval.setEnabled(False)
+            self.frm_time_interval.setVisible(True)
+
+        elif button == cfg.TIME_FULL_OBS and len(self.selectedObservations) == 1 and self.media_duration is not None:
+            self.start_time.set_time(0)
+            self.end_time.set_time(self.media_duration)
+            self.frm_time_interval.setEnabled(False)
+            self.frm_time_interval.setVisible(True)
+
+        else:
+            self.frm_time_interval.setVisible(False)
 
     def subjects_button_clicked(self, command):
         for idx in range(self.lwSubjects.count()):
@@ -156,7 +175,7 @@ class Param_panel(QDialog, Ui_Dialog):
             if cb and cb.isChecked():
                 selectedSubjects.append(cb.text())
 
-        # FIX ME
+        # FIXME
         observedBehaviors = self.extract_observed_behaviors(self.selectedObservations, selectedSubjects)
 
         logging.debug(f"{observedBehaviors=}")

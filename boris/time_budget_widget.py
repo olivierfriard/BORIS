@@ -408,7 +408,7 @@ def time_budget(self, mode: str, mode2: str = "list"):
     if not_ok or not selected_observations:
         return
 
-    flagGroup = False
+    flagGroup: bool = False
     if len(selected_observations) > 1:
         flagGroup = (
             dialog.MessageDialog(
@@ -417,20 +417,11 @@ def time_budget(self, mode: str, mode2: str = "list"):
             == cfg.YES
         )
 
-    max_obs_length, selectedObsTotalMediaLength = observation_operations.observation_length(
-        self.pj, selected_observations
+    max_media_duration_all_obs, total_media_duration_all_obs = observation_operations.media_duration(
+        self.pj[cfg.OBSERVATIONS], selected_observations
     )
-    if max_obs_length == dec(-1):  # media length not available, user choose to not use events
-        QMessageBox.warning(
-            None,
-            cfg.programName,
-            ("The duration of one or more observation is not available"),
-            QMessageBox.Ok | QMessageBox.Default,
-            QMessageBox.NoButton,
-        )
-        return
 
-    logging.debug(f"{max_obs_length=}, {selectedObsTotalMediaLength=}")
+    logging.debug(f"{max_media_duration_all_obs=}, {total_media_duration_all_obs=}")
 
     start_coding, end_coding, _ = observation_operations.coding_time(self.pj[cfg.OBSERVATIONS], selected_observations)
 
@@ -439,15 +430,16 @@ def time_budget(self, mode: str, mode2: str = "list"):
         selected_observations,
         start_coding=start_coding,
         end_coding=end_coding,
-        maxTime=max_obs_length if len(selected_observations) > 1 else selectedObsTotalMediaLength,
+        maxTime=max_media_duration_all_obs,
         by_category=(mode == "by_category"),
+        n_observations=len(selected_observations),
     )
 
     if not parameters[cfg.SELECTED_SUBJECTS] or not parameters[cfg.SELECTED_BEHAVIORS]:
         return
 
     # ask for excluding behaviors durations from total time
-    if not max_obs_length.is_nan():
+    if not start_coding.is_nan():
         cancel_pressed, parameters[cfg.EXCLUDED_BEHAVIORS] = self.filter_behaviors(
             title="Select behaviors to exclude",
             text=("The duration of the selected behaviors will " "be subtracted from the total time"),
@@ -685,7 +677,7 @@ def time_budget(self, mode: str, mode2: str = "list"):
                 # % of total time
                 if row["duration"] in [0, cfg.NA]:
                     item = QTableWidgetItem(str(row["duration"]))
-                elif row["duration"] not in ["-", cfg.UNPAIRED] and selectedObsTotalMediaLength:
+                elif row["duration"] not in ["-", cfg.UNPAIRED] and not start_coding.is_nan():
                     tot_time = float(total_observation_time)
                     # substract time of excluded behaviors from the total for the subject
                     if (
@@ -987,7 +979,7 @@ def time_budget(self, mode: str, mode2: str = "list"):
                     # % of total time
                     if row["duration"] in [0, cfg.NA]:
                         values.append(row["duration"])
-                    elif row["duration"] not in ["-", cfg.UNPAIRED] and selectedObsTotalMediaLength:
+                    elif row["duration"] not in ["-", cfg.UNPAIRED] and not start_coding.is_nan():
                         tot_time = float(max_time - min_time)
                         # substract duration of excluded behaviors from total time for each subject
                         if (
