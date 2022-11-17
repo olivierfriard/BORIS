@@ -59,24 +59,6 @@ def synthetic_time_budget(self):
     if not_ok or not selected_observations:
         return
 
-    """
-    max_obs_length, selectedObsTotalMediaLength = observation_operations.observation_length(
-        self.pj, selected_observations
-    )
-
-    if max_obs_length == dec(-1):  # media length not available, user choose to not use events
-        QMessageBox.warning(
-            None,
-            cfg.programName,
-            ("The duration of one or more observation is not available"),
-            QMessageBox.Ok | QMessageBox.Default,
-            QMessageBox.NoButton,
-        )
-        return
-
-    logging.debug(f"{max_obs_length=}, {selectedObsTotalMediaLength=}")
-    """
-
     max_media_duration_all_obs, total_media_duration_all_obs = observation_operations.media_duration(
         self.pj[cfg.OBSERVATIONS], selected_observations
     )
@@ -187,24 +169,6 @@ def synthetic_binned_time_budget(self):
     not_ok, selected_observations = project_functions.check_state_events(self.pj, selected_observations)
     if not_ok or not selected_observations:
         return
-
-    """
-    max_obs_length, selectedObsTotalMediaLength = observation_operations.observation_length(
-        self.pj, selected_observations
-    )
-
-    if max_obs_length == dec(-1):  # media length not available, user choose to not use events
-        QMessageBox.warning(
-            None,
-            cfg.programName,
-            ("The duration of one or more observation is not available"),
-            QMessageBox.Ok | QMessageBox.Default,
-            QMessageBox.NoButton,
-        )
-        return
-
-    logging.debug(f"max_obs_length: {max_obs_length}, selectedObsTotalMediaLength: {selectedObsTotalMediaLength}")
-    """
 
     max_media_duration_all_obs, total_media_duration_all_obs = observation_operations.media_duration(
         self.pj[cfg.OBSERVATIONS], selected_observations

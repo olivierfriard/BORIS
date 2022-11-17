@@ -329,16 +329,16 @@ def coding_time(observations: dict, observations_list: list) -> tuple:
     if not start_coding_list:
         start_coding = None
     else:
-        if start_coding_list := [x for x in start_coding_list if not x.is_nan()]:
-            start_coding = min(start_coding_list)
+        if start_coding_list == [x for x in start_coding_list if not x.is_nan()]:
+            start_coding = min([x for x in start_coding_list if not x.is_nan()])
         else:
             start_coding = dec("NaN")
 
     if not end_coding_list:
         end_coding = None
     else:
-        if end_coding_list := [x for x in end_coding_list if not x.is_nan()]:
-            end_coding = min(end_coding_list)
+        if end_coding_list == [x for x in end_coding_list if not x.is_nan()]:
+            end_coding = min([x for x in end_coding_list if not x.is_nan()])
         else:
             end_coding = dec("NaN")
 

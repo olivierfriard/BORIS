@@ -329,7 +329,7 @@ class Advanced_event_filtering_dialog(QDialog):
 def event_filtering(self):
     """
     advanced event filtering
-    the python-intervals module is used to do operations on intervals (intersection, union)
+    the portion module is used to do operations on intervals (intersection, union)
     """
 
     _, selected_observations = select_observations.select_observations(
@@ -342,13 +342,9 @@ def event_filtering(self):
     if not_ok or not selected_observations:
         return
 
-    # observations length
-    max_obs_length, _ = observation_operations.observation_length(self.pj, selected_observations)
-    if max_obs_length == dec(-1):  # media length not available, user choose to not use events
-        return
-
+    start_coding, end_coding, _ = observation_operations.coding_time(self.pj[cfg.OBSERVATIONS], selected_observations)
     # exit with message if events do not have timestamp
-    if max_obs_length.is_nan():
+    if start_coding.is_nan():
         QMessageBox.critical(
             None,
             cfg.programName,
@@ -358,17 +354,20 @@ def event_filtering(self):
         )
         return
 
-    start_coding, end_coding, _ = observation_operations.coding_time(self.pj[cfg.OBSERVATIONS], selected_observations)
+    max_media_duration_all_obs, _ = observation_operations.media_duration(
+        self.pj[cfg.OBSERVATIONS], selected_observations
+    )
 
     parameters = select_subj_behav.choose_obs_subj_behav_category(
         self,
         selected_observations,
         start_coding=start_coding,
         end_coding=end_coding,
-        maxTime=max_obs_length,
+        maxTime=max_media_duration_all_obs,
         flagShowIncludeModifiers=False,
         flagShowExcludeBehaviorsWoEvents=False,
         by_category=False,
+        n_observations=len(selected_observations),
     )
 
     if not parameters[cfg.SELECTED_SUBJECTS] or not parameters[cfg.SELECTED_BEHAVIORS]:

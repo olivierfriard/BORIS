@@ -280,20 +280,12 @@ def irr_cohen_kappa(self):
     if not_ok or not selected_observations:
         return
 
-    plot_parameters = select_subj_behav.choose_obs_subj_behav_category(
-        self,
-        selected_observations,
-        start_coding=dec("NaN"),
-        end_coding=dec("NaN"),
-        flagShowIncludeModifiers=True,
-        flagShowExcludeBehaviorsWoEvents=False,
-    )
+    start_coding, end_coding, _ = observation_operations.coding_time(self.pj[cfg.OBSERVATIONS], selected_observations)
 
-    max_obs_length, selectedObsTotalMediaLength = observation_operations.observation_length(
-        self.pj, selected_observations
-    )
+    print(f"{start_coding=}")
+
     # exit with message if events do not have timestamp
-    if max_obs_length.is_nan():
+    if start_coding.is_nan():
         QMessageBox.critical(
             None,
             cfg.programName,
@@ -302,6 +294,15 @@ def irr_cohen_kappa(self):
             QMessageBox.NoButton,
         )
         return
+
+    plot_parameters = select_subj_behav.choose_obs_subj_behav_category(
+        self,
+        selected_observations,
+        start_coding=dec("NaN"),
+        end_coding=dec("NaN"),
+        flagShowIncludeModifiers=True,
+        flagShowExcludeBehaviorsWoEvents=False,
+    )
 
     if not plot_parameters[cfg.SELECTED_SUBJECTS] or not plot_parameters[cfg.SELECTED_BEHAVIORS]:
         return
@@ -586,12 +587,10 @@ def needleman_wunch(self):
     if not_ok or not selected_observations:
         return
 
-    max_obs_length, selectedObsTotalMediaLength = observation_operations.observation_length(
-        self.pj, selected_observations
-    )
+    start_coding, end_coding, _ = observation_operations.coding_time(self.pj[cfg.OBSERVATIONS], selected_observations)
 
     # exit with message if events do not have timestamp
-    if max_obs_length.is_nan():
+    if start_coding.is_nan():
         QMessageBox.critical(
             None,
             cfg.programName,
