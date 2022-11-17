@@ -29,7 +29,7 @@ from . import config as cfg
 from . import select_subj_behav
 from . import dialog
 from . import select_observations
-from . import project_functions
+from . import project_functions, observation_operations
 
 from PyQt5.QtWidgets import QMessageBox
 
@@ -60,6 +60,27 @@ def get_latency(self):
     )
 
     if not selected_observations:
+        return
+
+    # check if coded behaviors are defined in ethogram
+    if project_functions.check_coded_behaviors_in_obs_list(self.pj, selected_observations):
+        return
+
+    # check if state events are paired
+    not_ok, selected_observations = project_functions.check_state_events(self.pj, selected_observations)
+    if not_ok or not selected_observations:
+        return
+
+    start_coding, end_coding, _ = observation_operations.coding_time(self.pj[cfg.OBSERVATIONS], selected_observations)
+    # exit with message if events do not have timestamp
+    if start_coding.is_nan():
+        QMessageBox.critical(
+            None,
+            cfg.programName,
+            ("This function is not available for observations with events that do not have timestamp"),
+            QMessageBox.Ok | QMessageBox.Default,
+            QMessageBox.NoButton,
+        )
         return
 
     parameters = select_subj_behav.choose_obs_subj_behav_category(

@@ -441,7 +441,7 @@ def time_budget(self, mode: str, mode2: str = "list"):
     # ask for excluding behaviors durations from total time
     if not start_coding.is_nan():
         cancel_pressed, parameters[cfg.EXCLUDED_BEHAVIORS] = self.filter_behaviors(
-            title="Select behaviors to exclude",
+            title="Select behaviors to exclude from the total time",
             text=("The duration of the selected behaviors will " "be subtracted from the total time"),
             table="",
             behavior_type=[cfg.STATE_EVENT],
@@ -675,9 +675,9 @@ def time_budget(self, mode: str, mode2: str = "list"):
                     column += 1
 
                 # % of total time
-                if row["duration"] in [0, cfg.NA]:
+                if row["duration"] in (0, cfg.NA):
                     item = QTableWidgetItem(str(row["duration"]))
-                elif row["duration"] not in ["-", cfg.UNPAIRED] and not start_coding.is_nan():
+                elif row["duration"] not in ("-", cfg.UNPAIRED) and not start_coding.is_nan():
                     tot_time = float(total_observation_time)
                     # substract time of excluded behaviors from the total for the subject
                     if (
@@ -685,7 +685,7 @@ def time_budget(self, mode: str, mode2: str = "list"):
                         and row["behavior"] not in parameters[cfg.EXCLUDED_BEHAVIORS]
                     ):
                         tot_time -= excl_behaviors_total_time[row["subject"]]
-                    item = QTableWidgetItem(f"{row['duration'] / tot_time * 100:.1f}" if tot_time > 0 else "-")
+                    item = QTableWidgetItem(f"{row['duration'] / tot_time * 100:.1f}" if tot_time > 0 else cfg.NA)
 
                 else:
                     item = QTableWidgetItem("-")
@@ -740,7 +740,7 @@ def time_budget(self, mode: str, mode2: str = "list"):
 
         self.tb.show()
 
-    if len(selected_observations) > 1 and not flagGroup:
+    if not flagGroup and len(selected_observations) > 1:
 
         output_format, ok = QInputDialog.getItem(
             self,
@@ -948,7 +948,7 @@ def time_budget(self, mode: str, mode2: str = "list"):
             col1 = []
             # observation id
             col1.append(obsId)
-            col1.append(self.pj[cfg.OBSERVATIONS][obsId].get("date", ""))
+            col1.append(self.pj[cfg.OBSERVATIONS][obsId].get("date", "").replace("T", ""))
             col1.append(util.eol2space(self.pj[cfg.OBSERVATIONS][obsId].get(cfg.DESCRIPTION, "")))
             header = ["Observation id", "Observation date", "Description"]
 
@@ -964,7 +964,10 @@ def time_budget(self, mode: str, mode2: str = "list"):
             col1.extend(indep_var_values)
 
             # interval analysis
-            col1.extend([f"{min_time:0.3f}", f"{max_time:0.3f}", f"{max_time - min_time:0.3f}"])
+            if dec(min_time).is_nan():  # check if observation has timestamp
+                col1.extend([cfg.NA, cfg.NA, cfg.NA])
+            else:
+                col1.extend([f"{min_time:0.3f}", f"{max_time:0.3f}", f"{max_time - min_time:0.3f}"])
             header.extend(["Time budget start", "Time budget stop", "Time budget duration"])
 
             if mode == "by_behavior":
@@ -977,9 +980,9 @@ def time_budget(self, mode: str, mode2: str = "list"):
                     for field in fields:
                         values.append(str(row[field]).replace(" ()", ""))
                     # % of total time
-                    if row["duration"] in [0, cfg.NA]:
+                    if row["duration"] in (0, cfg.NA):
                         values.append(row["duration"])
-                    elif row["duration"] not in ["-", cfg.UNPAIRED] and not start_coding.is_nan():
+                    elif row["duration"] not in ("-", cfg.UNPAIRED) and not start_coding.is_nan():
                         tot_time = float(max_time - min_time)
                         # substract duration of excluded behaviors from total time for each subject
                         if (
@@ -988,7 +991,7 @@ def time_budget(self, mode: str, mode2: str = "list"):
                         ):
                             tot_time -= excl_behaviors_total_time[row["subject"]]
                         # % of tot time
-                        values.append(round(row["duration"] / tot_time * 100, 1) if tot_time > 0 else "-")
+                        values.append(round(row["duration"] / tot_time * 100, 1) if tot_time > 0 else cfg.NA)
                     else:
                         values.append("-")
 

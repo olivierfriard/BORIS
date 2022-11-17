@@ -59,6 +59,7 @@ def synthetic_time_budget(self):
     if not_ok or not selected_observations:
         return
 
+    """
     max_obs_length, selectedObsTotalMediaLength = observation_operations.observation_length(
         self.pj, selected_observations
     )
@@ -74,6 +75,13 @@ def synthetic_time_budget(self):
         return
 
     logging.debug(f"{max_obs_length=}, {selectedObsTotalMediaLength=}")
+    """
+
+    max_media_duration_all_obs, total_media_duration_all_obs = observation_operations.media_duration(
+        self.pj[cfg.OBSERVATIONS], selected_observations
+    )
+
+    logging.debug(f"{max_media_duration_all_obs=}, {total_media_duration_all_obs=}")
 
     start_coding, end_coding, _ = observation_operations.coding_time(self.pj[cfg.OBSERVATIONS], selected_observations)
 
@@ -82,23 +90,23 @@ def synthetic_time_budget(self):
         selected_observations,
         start_coding=start_coding,
         end_coding=end_coding,
-        maxTime=max_obs_length if len(selected_observations) > 1 else selectedObsTotalMediaLength,
+        maxTime=max_media_duration_all_obs,
         flagShowExcludeBehaviorsWoEvents=False,
         by_category=False,
+        n_observations=len(selected_observations),
     )
 
     if not synth_tb_param[cfg.SELECTED_SUBJECTS] or not synth_tb_param[cfg.SELECTED_BEHAVIORS]:
         return
 
     # ask for excluding behaviors durations from total time
-    if not max_obs_length.is_nan():
+    if not start_coding.is_nan():
         cancel_pressed, synth_tb_param[cfg.EXCLUDED_BEHAVIORS] = self.filter_behaviors(
             title="Select behaviors to exclude from the total time",
             text=("The duration of the selected behaviors will " "be subtracted from the total time"),
             table="",
             behavior_type=[cfg.STATE_EVENT],
         )
-
         if cancel_pressed:
             return
     else:
@@ -180,6 +188,7 @@ def synthetic_binned_time_budget(self):
     if not_ok or not selected_observations:
         return
 
+    """
     max_obs_length, selectedObsTotalMediaLength = observation_operations.observation_length(
         self.pj, selected_observations
     )
@@ -195,9 +204,18 @@ def synthetic_binned_time_budget(self):
         return
 
     logging.debug(f"max_obs_length: {max_obs_length}, selectedObsTotalMediaLength: {selectedObsTotalMediaLength}")
+    """
+
+    max_media_duration_all_obs, total_media_duration_all_obs = observation_operations.media_duration(
+        self.pj[cfg.OBSERVATIONS], selected_observations
+    )
+
+    logging.debug(f"{max_media_duration_all_obs=}, {total_media_duration_all_obs=}")
+
+    start_coding, end_coding, _ = observation_operations.coding_time(self.pj[cfg.OBSERVATIONS], selected_observations)
 
     # exit with message if events do not have timestamp
-    if max_obs_length.is_nan():
+    if start_coding.is_nan():
         QMessageBox.critical(
             None,
             cfg.programName,
@@ -207,16 +225,15 @@ def synthetic_binned_time_budget(self):
         )
         return
 
-    start_coding, end_coding, _ = observation_operations.coding_time(self.pj[cfg.OBSERVATIONS], selected_observations)
-
     synth_tb_param = select_subj_behav.choose_obs_subj_behav_category(
         self,
         selected_observations,
         start_coding=start_coding,
         end_coding=end_coding,
-        maxTime=max_obs_length if len(selected_observations) > 1 else selectedObsTotalMediaLength,
+        maxTime=max_media_duration_all_obs,
         flagShowExcludeBehaviorsWoEvents=False,
         by_category=False,
+        n_observations=len(selected_observations),
         show_time_bin_size=True,
     )
 
@@ -224,17 +241,14 @@ def synthetic_binned_time_budget(self):
         return
 
     # ask for excluding behaviors durations from total time
-    if not max_obs_length.is_nan():
-        cancel_pressed, synth_tb_param[cfg.EXCLUDED_BEHAVIORS] = self.filter_behaviors(
-            title="Select behaviors to exclude",
-            text=("The duration of the selected behaviors will " "be subtracted from the total time"),
-            table="",
-            behavior_type=[cfg.STATE_EVENT],
-        )
-        if cancel_pressed:
-            return
-    else:
-        synth_tb_param[cfg.EXCLUDED_BEHAVIORS] = []
+    cancel_pressed, synth_tb_param[cfg.EXCLUDED_BEHAVIORS] = self.filter_behaviors(
+        title="Select behaviors to exclude",
+        text=("The duration of the selected behaviors will " "be subtracted from the total time"),
+        table="",
+        behavior_type=[cfg.STATE_EVENT],
+    )
+    if cancel_pressed:
+        return
 
     ok, data_report = time_budget_functions.synthetic_time_budget_bin(self.pj, selected_observations, synth_tb_param)
 

@@ -603,10 +603,10 @@ def synthetic_time_budget(pj: dict, selected_observations: list, parameters_obs:
 
                     if obs_length == dec(-2):  # images obs without time
 
-                        behaviors[subject][behavior_modifiers_str]["duration"] = dec("NaN")
-                        behaviors[subject][behavior_modifiers_str]["duration mean"] = dec("NaN")
-                        behaviors[subject][behavior_modifiers_str]["duration stdev"] = dec("NaN")
-                        behaviors[subject][behavior_modifiers_str]["proportion of time"] = dec("NaN")
+                        behaviors[subject][behavior_modifiers_str]["duration"] = cfg.NA
+                        behaviors[subject][behavior_modifiers_str]["duration mean"] = cfg.NA
+                        behaviors[subject][behavior_modifiers_str]["duration stdev"] = cfg.NA
+                        behaviors[subject][behavior_modifiers_str]["proportion of time"] = cfg.NA
 
                     else:
 
@@ -645,7 +645,7 @@ def synthetic_time_budget(pj: dict, selected_observations: list, parameters_obs:
                                 )
 
         if obs_length == dec(-2):
-            columns = [obs_id, "NaN"]
+            columns = [obs_id, cfg.NA]
         else:
             columns = [obs_id, f"{max_time - min_time:0.3f}"]
         for subj in selected_subjects:
@@ -699,12 +699,18 @@ def time_budget_analysis(
 
                         if cfg.STATE in project_functions.event_type(behavior, ethogram):
 
+                            # check if observation from pictures
+                            if parameters["start time"] == dec("0.000") and parameters["end time"] == dec("0.000"):
+                                duration = cfg.NA
+                            else:
+                                duration = 0.000
+
                             out.append(
                                 {
                                     "subject": subject,
                                     "behavior": behavior,
                                     "modifiers": "",
-                                    "duration": 0.0,
+                                    "duration": duration,
                                     "duration_mean": cfg.NA,
                                     "duration_stdev": cfg.NA,
                                     "number": "0",
@@ -744,11 +750,50 @@ def time_budget_analysis(
 
                         rows = cursor.fetchall()
 
+                        if len(selected_observations) == 1:
+                            new_rows = []
+                            for occurence, observation in rows:
+                                if occurence is not None:
+                                    new_occurence = max(float(parameters["start time"]), occurence)
+                                    new_occurence = min(new_occurence, float(parameters["end time"]))
+                                else:
+                                    new_occurence = float("NaN")
+                                new_rows.append([new_occurence, observation])
+                            rows = list(new_rows)
+
+                        # include behaviors without events
+                        if len(rows) == 0:
+                            if not parameters[cfg.EXCLUDE_BEHAVIORS]:
+                                out.append(
+                                    {
+                                        "subject": subject,
+                                        "behavior": behavior,
+                                        "modifiers": "",
+                                        "duration": cfg.NA,
+                                        "duration_mean": cfg.NA,
+                                        "duration_stdev": cfg.NA,
+                                        "number": 0,
+                                        "inter_duration_mean": cfg.NA,
+                                        "inter_duration_stdev": cfg.NA,
+                                    }
+                                )
+                            continue
+
                         # inter events duration
                         all_event_interdurations = []
                         for idx, row in enumerate(rows):
                             if idx and row[1] == rows[idx - 1][1]:
                                 all_event_interdurations.append(float(row[0]) - float(rows[idx - 1][0]))
+
+                        if [x for x in all_event_interdurations if math.isnan(x)] or len(all_event_interdurations) == 0:
+                            inter_duration_mean = cfg.NA
+                            inter_duration_stdev = cfg.NA
+                        else:
+                            inter_duration_mean = round(statistics.mean(all_event_interdurations), 3)
+                            if len(all_event_interdurations) > 1:
+                                inter_duration_stdev = round(statistics.stdev(all_event_interdurations), 3)
+                            else:
+                                inter_duration_stdev = cfg.NA
 
                         out_cat.append(
                             {
@@ -759,12 +804,8 @@ def time_budget_analysis(
                                 "duration_mean": cfg.NA,
                                 "duration_stdev": cfg.NA,
                                 "number": len(rows),
-                                "inter_duration_mean": round(statistics.mean(all_event_interdurations), 3)
-                                if len(all_event_interdurations)
-                                else cfg.NA,
-                                "inter_duration_stdev": round(statistics.stdev(all_event_interdurations), 3)
-                                if len(all_event_interdurations) > 1
-                                else cfg.NA,
+                                "inter_duration_mean": inter_duration_mean,
+                                "inter_duration_stdev": inter_duration_stdev,
                             }
                         )
 
@@ -783,6 +824,30 @@ def time_budget_analysis(
                         )
 
                         rows = list(cursor.fetchall())
+
+                        if len(rows) == 0:
+
+                            if not parameters[cfg.EXCLUDE_BEHAVIORS]:  # include behaviors without events
+                                # check if observation from pictures
+                                if parameters["start time"] == dec("0.000") and parameters["end time"] == dec("0.000"):
+                                    duration = cfg.NA
+                                else:
+                                    duration = 0.000
+                                out.append(
+                                    {
+                                        "subject": subject,
+                                        "behavior": behavior,
+                                        "modifiers": modifier[0],
+                                        "duration": duration,
+                                        "duration_mean": cfg.NA,
+                                        "duration_stdev": cfg.NA,
+                                        "number": 0,
+                                        "inter_duration_mean": cfg.NA,
+                                        "inter_duration_stdev": cfg.NA,
+                                    }
+                                )
+                            continue
+
                         if len(rows) % 2:
                             out.append(
                                 {
@@ -802,37 +867,60 @@ def time_budget_analysis(
                             for idx, row in enumerate(rows):
                                 # event
                                 if idx % 2 == 0:
-                                    new_init, new_end = float(row[0]), float(rows[idx + 1][0])
-
-                                    all_event_durations.append(new_end - new_init)
+                                    if row[0] is not None and rows[idx + 1][0] is not None:
+                                        new_init, new_end = float(row[0]), float(rows[idx + 1][0])
+                                        all_event_durations.append(new_end - new_init)
+                                    else:
+                                        all_event_durations.append(float("NaN"))
 
                                 # inter event if same observation
                                 if idx % 2 and idx != len(rows) - 1 and row[1] == rows[idx + 1][1]:
-                                    if (
+                                    if (row[0] is not None and rows[idx + 1][0] is not None) and (
                                         parameters["start time"] <= row[0] <= parameters["end time"]
                                         and parameters["start time"] <= rows[idx + 1][0] <= parameters["end time"]
                                     ):
                                         all_event_interdurations.append(float(rows[idx + 1][0]) - float(row[0]))
+                                    else:
+                                        all_event_interdurations.append(float("NaN"))
+
+                            # events
+                            if [x for x in all_event_durations if math.isnan(x)]:
+                                total_duration = cfg.NA
+                            else:
+                                total_duration = round(sum(all_event_durations), 3)
+                            if [x for x in all_event_durations if math.isnan(x)] or len(all_event_durations) == 0:
+                                duration_mean = cfg.NA
+                                duration_stdev = cfg.NA
+                            else:
+                                duration_mean = round(statistics.mean(all_event_durations), 3)
+                                if len(all_event_durations) > 1:
+                                    duration_stdev = round(statistics.stdev(all_event_durations), 3)
+                                else:
+                                    duration_stdev = cfg.NA
+                            # interduration
+                            if [x for x in all_event_interdurations if math.isnan(x)] or len(
+                                all_event_interdurations
+                            ) == 0:
+                                inter_duration_mean = cfg.NA
+                                inter_duration_stdev = cfg.NA
+                            else:
+                                inter_duration_mean = round(statistics.mean(all_event_interdurations), 3)
+                                if len(all_event_interdurations) > 1:
+                                    inter_duration_stdev = round(statistics.stdev(all_event_interdurations), 3)
+                                else:
+                                    inter_duration_stdev = cfg.NA
 
                             out_cat.append(
                                 {
                                     "subject": subject,
                                     "behavior": behavior,
                                     "modifiers": modifier[0],
-                                    "duration": round(sum(all_event_durations), 3),
-                                    "duration_mean": round(statistics.mean(all_event_durations), 3)
-                                    if len(all_event_durations)
-                                    else cfg.NA,
-                                    "duration_stdev": round(statistics.stdev(all_event_durations), 3)
-                                    if len(all_event_durations) > 1
-                                    else cfg.NA,
+                                    "duration": total_duration,
+                                    "duration_mean": duration_mean,
+                                    "duration_stdev": duration_stdev,
                                     "number": len(all_event_durations),
-                                    "inter_duration_mean": round(statistics.mean(all_event_interdurations), 3)
-                                    if len(all_event_interdurations)
-                                    else cfg.NA,
-                                    "inter_duration_stdev": round(statistics.stdev(all_event_interdurations), 3)
-                                    if len(all_event_interdurations) > 1
-                                    else cfg.NA,
+                                    "inter_duration_mean": inter_duration_mean,
+                                    "inter_duration_stdev": inter_duration_stdev,
                                 }
                             )
 
@@ -862,7 +950,7 @@ def time_budget_analysis(
                         rows = list(new_rows)
 
                     # include behaviors without events
-                    if not len(rows):
+                    if len(rows) == 0:
                         if not parameters[cfg.EXCLUDE_BEHAVIORS]:
                             out.append(
                                 {
@@ -885,10 +973,15 @@ def time_budget_analysis(
                         if idx and row[1] == rows[idx - 1][1]:
                             all_event_interdurations.append(float(row[0]) - float(rows[idx - 1][0]))
 
-                    try:
-                        inter_duration_stdev = round(statistics.stdev(all_event_interdurations), 3)
-                    except ValueError:
-                        inter_duration_stdev = float("NaN")
+                    if [x for x in all_event_interdurations if math.isnan(x)] or len(all_event_interdurations) == 0:
+                        inter_duration_mean = cfg.NA
+                        inter_duration_stdev = cfg.NA
+                    else:
+                        inter_duration_mean = round(statistics.mean(all_event_interdurations), 3)
+                        if len(all_event_interdurations) > 1:
+                            inter_duration_stdev = round(statistics.stdev(all_event_interdurations), 3)
+                        else:
+                            inter_duration_stdev = cfg.NA
 
                     out_cat.append(
                         {
@@ -899,12 +992,8 @@ def time_budget_analysis(
                             "duration_mean": cfg.NA,
                             "duration_stdev": cfg.NA,
                             "number": len(rows),
-                            "inter_duration_mean": round(statistics.mean(all_event_interdurations), 3)
-                            if len(all_event_interdurations)
-                            else cfg.NA,
-                            "inter_duration_stdev": inter_duration_stdev
-                            if len(all_event_interdurations) > 1
-                            else cfg.NA,
+                            "inter_duration_mean": inter_duration_mean,
+                            "inter_duration_stdev": inter_duration_stdev,
                         }
                     )
 
@@ -920,14 +1009,19 @@ def time_budget_analysis(
 
                     rows = list(cursor.fetchall())
 
-                    if not len(rows):
+                    if len(rows) == 0:
                         if not parameters[cfg.EXCLUDE_BEHAVIORS]:  # include behaviors without events
+                            # check if observation from pictures
+                            if parameters["start time"] == dec("0.000") and parameters["end time"] == dec("0.000"):
+                                duration = cfg.NA
+                            else:
+                                duration = 0.000
                             out.append(
                                 {
                                     "subject": subject,
                                     "behavior": behavior,
                                     "modifiers": "",
-                                    "duration": 0.0,
+                                    "duration": duration,
                                     "duration_mean": cfg.NA,
                                     "duration_stdev": cfg.NA,
                                     "number": 0,
@@ -972,7 +1066,12 @@ def time_budget_analysis(
                                 else:
                                     all_event_interdurations.append(float("NaN"))
 
-                        if [x for x in all_event_durations if math.isnan(x)] or not len(all_event_durations):
+                        # events
+                        if [x for x in all_event_durations if math.isnan(x)]:
+                            total_duration = cfg.NA
+                        else:
+                            total_duration = round(sum(all_event_durations), 3)
+                        if [x for x in all_event_durations if math.isnan(x)] or len(all_event_durations) == 0:
                             duration_mean = cfg.NA
                             duration_stdev = cfg.NA
                         else:
@@ -981,7 +1080,8 @@ def time_budget_analysis(
                                 duration_stdev = round(statistics.stdev(all_event_durations), 3)
                             else:
                                 duration_stdev = cfg.NA
-                        if [x for x in all_event_interdurations if math.isnan(x)] or not len(all_event_interdurations):
+                        # interduration
+                        if [x for x in all_event_interdurations if math.isnan(x)] or len(all_event_interdurations) == 0:
                             inter_duration_mean = cfg.NA
                             inter_duration_stdev = cfg.NA
                         else:
@@ -990,12 +1090,13 @@ def time_budget_analysis(
                                 inter_duration_stdev = round(statistics.stdev(all_event_interdurations), 3)
                             else:
                                 inter_duration_stdev = cfg.NA
+
                         out_cat.append(
                             {
                                 "subject": subject,
                                 "behavior": behavior,
                                 "modifiers": "",
-                                "duration": round(sum(all_event_durations), 3),
+                                "duration": total_duration,
                                 "duration_mean": duration_mean,
                                 "duration_stdev": duration_stdev,
                                 "number": len(all_event_durations),
