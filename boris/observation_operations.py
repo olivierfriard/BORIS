@@ -24,6 +24,8 @@ import os
 import logging
 import time
 import tempfile
+import subprocess
+import sys
 from decimal import Decimal as dec
 import pathlib as pl
 import datetime
@@ -1376,6 +1378,18 @@ def initialize_new_media_observation(self):
             # self.dw_player[i].player.loadfile(media_full_path)
             # self.dw_player[i].player.pause = True
 
+        # check if BORIS is running on a Windows VM
+        if sys.platform.startswith("win"):
+            p = subprocess.Popen(
+                ["WMIC", "BIOS", "GET", "SERIALNUMBER"],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                shell=True,
+            )
+            out, error = p.communicate()
+            print(f"{out=}")
+            print(f"{error=}")
+
         self.dw_player[i].player.hwdec = self.config_param.get(
             cfg.MPV_HWDEC, cfg.MPV_HWDEC_DEFAULT_VALUE
         )  # "auto" or "auto-safe" crash in Windows VM
@@ -1575,11 +1589,9 @@ def initialize_new_media_observation(self):
                     QMessageBox.critical(
                         self,
                         cfg.programName,
-                        "Impossible to plot data from file {}:\n{}".format(
-                            os.path.basename(
-                                self.pj[cfg.OBSERVATIONS][self.observationId][cfg.PLOT_DATA][idx]["file_path"]
-                            ),
-                            w2.error_msg,
+                        (
+                            f"Impossible to plot data from file "
+                            f"{os.path.basename(self.pj[cfg.OBSERVATIONS][self.observationId][cfg.PLOT_DATA][idx]['file_path'])}:\n{w2.error_msg}"
                         ),
                     )
                     del w2
