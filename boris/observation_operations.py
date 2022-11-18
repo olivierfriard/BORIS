@@ -1391,10 +1391,9 @@ def initialize_new_media_observation(self):
                 shell=True,
             )
             out, _ = p.communicate()
-
             flag_vm = b"SerialNumber  \r\r\n0 " in out
+            logging.debug(f"Running on Windows VM: {flag_vm}")
 
-        print(f"{flag_vm=}")
         if not flag_vm:
             self.dw_player[i].player.hwdec = self.config_param.get(
                 cfg.MPV_HWDEC, cfg.MPV_HWDEC_DEFAULT_VALUE
