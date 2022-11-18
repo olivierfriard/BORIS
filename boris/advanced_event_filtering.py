@@ -277,21 +277,20 @@ class Advanced_event_filtering_dialog(QDialog):
         save results
         """
 
-        extended_file_formats = [
-            "Tab Separated Values (*.tsv)",
-            "Comma Separated Values (*.csv)",
-            "Open Document Spreadsheet ODS (*.ods)",
-            "Microsoft Excel Spreadsheet XLSX (*.xlsx)",
-            "Legacy Microsoft Excel Spreadsheet XLS (*.xls)",
-            "HTML (*.html)",
+        file_formats = [
+            cfg.TSV,
+            cfg.CSV,
+            cfg.ODS,
+            cfg.XLSX,
+            cfg.XLS,
+            cfg.HTML,
         ]
-        file_formats = ["tsv", "csv", "ods", "xlsx", "xls", "html"]
 
-        file_name, filter_ = QFileDialog().getSaveFileName(None, "Save results", "", ";;".join(extended_file_formats))
+        file_name, filter_ = QFileDialog().getSaveFileName(None, "Save results", "", ";;".join(file_formats))
         if not file_name:
             return
 
-        output_format = file_formats[extended_file_formats.index(filter_)]
+        output_format = cfg.FILE_NAME_SUFFIX[filter_]
 
         if pathlib.Path(file_name).suffix != "." + output_format:
             file_name = str(pathlib.Path(file_name)) + "." + output_format
@@ -314,12 +313,10 @@ class Advanced_event_filtering_dialog(QDialog):
         [tablib_dataset.append(x) for x in self.out]
 
         try:
-            if output_format in ["csv", "tsv", "html"]:
-                with open(file_name, "wb") as f:
+            with open(file_name, "wb") as f:
+                if filter_ in (cfg.TSV, cfg.CSV, cfg.HTML):
                     f.write(str.encode(tablib_dataset.export(output_format)))
-
-            if output_format in ["ods", "xlsx", "xls"]:
-                with open(file_name, "wb") as f:
+                if filter_ in (cfg.ODS, cfg.XLSX, cfg.XLS):
                     f.write(tablib_dataset.export(output_format))
 
         except Exception:
@@ -370,6 +367,8 @@ def event_filtering(self):
         n_observations=len(selected_observations),
     )
 
+    print(f"{parameters=}")
+
     if not parameters[cfg.SELECTED_SUBJECTS] or not parameters[cfg.SELECTED_BEHAVIORS]:
         QMessageBox.warning(None, cfg.programName, "Select subject(s) and behavior(s) to analyze")
         return
@@ -380,21 +379,28 @@ def event_filtering(self):
 
     cursor = db_connector.cursor()
 
+    if parameters[cfg.TIME_INTERVAL] == cfg.TIME_EVENTS:
+        cursor.execute("SELECT MIN(start), MAX(stop) FROM aggregated_events")
+        min_time, max_time = cursor.fetchone()
+
     # create intervals from DB
     cursor.execute("SELECT observation, subject, behavior, start, stop FROM aggregated_events")
+
     events = {}
     for row in cursor.fetchall():
 
         obs, subj, behav, start, stop = row
         # check if start and stop are in selected time interval
-        if stop < parameters[cfg.START_TIME]:
+        if stop < min_time:
             continue
-        if start > parameters[cfg.END_TIME]:
+        if start > max_time:
             continue
-        if start < parameters[cfg.START_TIME]:
+        """
+        if start < min_time:
             start = float(parameters[cfg.START_TIME])
         if stop > parameters[cfg.END_TIME]:
             stop = float(parameters[cfg.END_TIME])
+        """
 
         if obs not in events:
             events[obs] = {}
@@ -408,6 +414,8 @@ def event_filtering(self):
         else:
             # append to existing interval
             events[obs][f"{subj}|{behav}"] = events[obs][f"{subj}|{behav}"] | interval_func([start, stop])
+
+    print(f"{events=}")
 
     w = Advanced_event_filtering_dialog(events)
     w.exec_()

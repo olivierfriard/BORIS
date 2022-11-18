@@ -62,24 +62,23 @@ def export_observations_list_clicked(self):
     if not resultStr or not selected_observations:
         return
 
-    extended_file_formats = [
-        "Tab Separated Values (*.tsv)",
-        "Comma Separated Values (*.csv)",
-        "Open Document Spreadsheet ODS (*.ods)",
-        "Microsoft Excel Spreadsheet XLSX (*.xlsx)",
-        "Legacy Microsoft Excel Spreadsheet XLS (*.xls)",
-        "HTML (*.html)",
+    file_formats = [
+        cfg.TSV,
+        cfg.CSV,
+        cfg.ODS,
+        cfg.XLSX,
+        cfg.XLS,
+        cfg.HTML,
     ]
-    file_formats = ["tsv", "csv", "ods", "xlsx", "xls", "html"]
 
     file_name, filter_ = QFileDialog().getSaveFileName(
-        self, "Export list of selected observations", "", ";;".join(extended_file_formats)
+        self, "Export list of selected observations", "", ";;".join(file_formats)
     )
 
     if not file_name:
         return
 
-    output_format = file_formats[extended_file_formats.index(filter_)]
+    output_format = cfg.FILE_NAME_SUFFIX[filter_]
     if pl.Path(file_name).suffix != "." + output_format:
         file_name = str(pl.Path(file_name)) + "." + output_format
         # check if file name with extension already exists
@@ -1380,6 +1379,9 @@ def initialize_new_media_observation(self):
         self.dw_player[i].player.hwdec = self.config_param.get(
             cfg.MPV_HWDEC, cfg.MPV_HWDEC_DEFAULT_VALUE
         )  # "auto" or "auto-safe" crash in Windows VM
+        # FIXME: detect if windows VM with WMIC COMPUTERSYSTEM GET MANUFACTURER
+        # see https://superuser.com/questions/1128339/how-can-i-detect-if-im-within-a-vm-or-not
+
         self.dw_player[i].player.playlist_pos = 0
         self.dw_player[i].player.wait_until_playing()
         self.dw_player[i].player.pause = True

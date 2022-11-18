@@ -188,11 +188,16 @@ def behavior_binary_table(self):
     if not selected_observations:
         return
 
+    # check if coded behaviors are defined in ethogram
+    if project_functions.check_coded_behaviors_in_obs_list(self.pj, selected_observations):
+        return
+
     # check if state events are paired
     not_ok, selected_observations = project_functions.check_state_events(self.pj, selected_observations)
     if not_ok or not selected_observations:
         return
 
+    """
     max_obs_length, _ = observation_operations.observation_length(self.pj, selected_observations)
     if max_obs_length == dec(-1):  # media length not available, user choose to not use events
         return
@@ -207,6 +212,11 @@ def behavior_binary_table(self):
             QMessageBox.NoButton,
         )
         return
+    """
+
+    max_media_duration_all_obs, _ = observation_operations.media_duration(
+        self.pj[cfg.OBSERVATIONS], selected_observations
+    )
 
     start_coding, end_coding, _ = observation_operations.coding_time(self.pj[cfg.OBSERVATIONS], selected_observations)
 
@@ -215,10 +225,11 @@ def behavior_binary_table(self):
         selected_observations,
         start_coding=start_coding,
         end_coding=end_coding,
-        maxTime=max_obs_length,
+        maxTime=max_media_duration_all_obs,
         flagShowIncludeModifiers=True,
         flagShowExcludeBehaviorsWoEvents=True,
         by_category=False,
+        n_observations=len(selected_observations),
     )
 
     if not parameters[cfg.SELECTED_SUBJECTS] or not parameters[cfg.SELECTED_BEHAVIORS]:
@@ -238,22 +249,15 @@ def behavior_binary_table(self):
         return
 
     # save results
-    if len(selected_observations) == 1:
-        extended_file_formats = [
-            "Tab Separated Values (*.tsv)",
-            "Comma Separated Values (*.csv)",
-            "Open Document Spreadsheet ODS (*.ods)",
-            "Microsoft Excel Spreadsheet XLSX (*.xlsx)",
-            "Legacy Microsoft Excel Spreadsheet XLS (*.xls)",
-            "HTML (*.html)",
-        ]
-        file_formats = ["tsv", "csv", "ods", "xlsx", "xls", "html"]
+    file_formats = [cfg.TSV, cfg.CSV, cfg.ODS, cfg.XLSX, cfg.XLS, cfg.HTML]
 
-        file_name, filter_ = QFileDialog().getSaveFileName(None, "Save results", "", ";;".join(extended_file_formats))
+    if len(selected_observations) == 1:
+
+        file_name, filter_ = QFileDialog().getSaveFileName(None, "Save results", "", ";;".join(file_formats))
         if not file_name:
             return
 
-        output_format = file_formats[extended_file_formats.index(filter_)]
+        output_format = cfg.FILE_NAME_SUFFIX[filter_]
 
         if pathlib.Path(file_name).suffix != "." + output_format:
             file_name = str(pathlib.Path(file_name)) + "." + output_format
@@ -267,19 +271,12 @@ def behavior_binary_table(self):
                 ):
                     return
     else:
-        items = (
-            "Tab Separated Values (*.tsv)",
-            "Comma separated values (*.csv)",
-            "Open Document Spreadsheet (*.ods)",
-            "Microsoft Excel Spreadsheet XLSX (*.xlsx)",
-            "Legacy Microsoft Excel Spreadsheet XLS (*.xls)",
-            "HTML (*.html)",
-        )
 
-        item, ok = QInputDialog.getItem(None, "Save results", "Available formats", items, 0, False)
+        item, ok = QInputDialog.getItem(None, "Save results", "Available formats", file_formats, 0, False)
         if not ok:
             return
         output_format = re.sub(".* \(\*\.", "", item)[:-1]
+        print(f"{output_format=}")
 
         export_dir = QFileDialog().getExistingDirectory(
             None, "Choose a directory to save results", os.path.expanduser("~"), options=QFileDialog.ShowDirsOnly

@@ -3108,7 +3108,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         if "scan sampling" in self.pb_live_obs.text():
             self.pb_live_obs.setText("Stop live observation")
-            self.liveTimer.start(100)
+            self.liveTimer.start(50)
             return
 
         if self.liveObservationStarted:
@@ -3143,7 +3143,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             # set to now
             self.liveStartTime.start()
             # start timer
-            self.liveTimer.start(100)
+            self.liveTimer.start(50)
 
         self.liveObservationStarted = not self.liveObservationStarted
 

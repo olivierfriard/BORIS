@@ -436,6 +436,7 @@ def time_budget(self, mode: str, mode2: str = "list"):
     )
 
     if not parameters[cfg.SELECTED_SUBJECTS] or not parameters[cfg.SELECTED_BEHAVIORS]:
+        QMessageBox.warning(None, cfg.programName, "Select subject(s) and behavior(s) to analyze")
         return
 
     # ask for excluding behaviors durations from total time
