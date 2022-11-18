@@ -1156,6 +1156,7 @@ def close_observation(self):
 
     if self.playerType == cfg.LIVE:
         self.liveTimer.stop()
+        self.pb_live_obs.setEnabled(False)
         self.w_live.setVisible(False)
         self.liveObservationStarted = False
         self.liveStartTime = None
@@ -1254,6 +1255,7 @@ def initialize_new_media_observation(self):
     self.playerType = cfg.MEDIA
     self.fps = 0
 
+    self.pb_live_obs.setEnabled(False)
     self.w_live.setVisible(False)
     self.w_obs_info.setVisible(True)
 
@@ -1639,7 +1641,9 @@ def initialize_new_live_observation(self):
     for dw in [self.dwEthogram, self.dwSubjects, self.dwEvents]:
         dw.setVisible(True)
 
-    self.w_live.setVisible(True)  # button start
+    # button start enabled
+    self.pb_live_obs.setEnabled(True)
+    self.w_live.setVisible(True)
     self.w_obs_info.setVisible(True)
 
     menu_options.update_menu(self)
@@ -1679,7 +1683,9 @@ def initialize_new_images_observation(self):
 
     for dw in [self.dwEthogram, self.dwSubjects, self.dwEvents]:
         dw.setVisible(True)
-    self.w_live.setVisible(False)  # button start
+    # disable start live button
+    self.pb_live_obs.setEnabled(False)
+    self.w_live.setVisible(False)
 
     # check if directories are available
     ok, msg = project_functions.check_directories_availability(
@@ -1744,8 +1750,6 @@ def initialize_new_images_observation(self):
 
     self.image_idx = 0
     self.image_time_ref = None
-
-    # self.w_live.setVisible(True)
 
     self.setDockOptions(QMainWindow.AnimatedDocks | QMainWindow.AllowNestedDocks)
     self.dw_player = []

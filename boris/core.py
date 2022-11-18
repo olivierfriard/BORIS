@@ -3101,10 +3101,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
     def start_live_observation(self):
         """
-        activate the live observation mode (without media file)
+        activate the live observation mode
         """
 
-        logging.debug(f"start live observation, self.liveObservationStarted: {self.liveObservationStarted}")
+        logging.debug(f"start live observation, {self.liveObservationStarted=}")
 
         if "scan sampling" in self.pb_live_obs.text():
             self.pb_live_obs.setText("Stop live observation")
@@ -3114,8 +3114,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         if self.liveObservationStarted:
             # stop live obs
             self.pb_live_obs.setText("Start live observation")
-            self.liveStartTime = None
+
             self.liveTimer.stop()
+
+            self.liveStartTime = None
 
             if self.timeFormat == cfg.HHMMSS:
                 if self.pj[cfg.OBSERVATIONS][self.observationId].get(cfg.START_FROM_CURRENT_TIME, False):
@@ -5142,7 +5144,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         button 'play' activated
         """
 
-        if self.observationId and self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE] in [cfg.MEDIA]:
+        if self.observationId and self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE] == cfg.MEDIA:
             if not self.is_playing():
                 self.play_video()
             else:
