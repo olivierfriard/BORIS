@@ -1379,6 +1379,10 @@ def initialize_new_media_observation(self):
             # self.dw_player[i].player.pause = True
 
         # check if BORIS is running on a Windows VM
+        # FIXME: detect if windows VM with WMIC COMPUTERSYSTEM GET MANUFACTURER
+        # see https://superuser.com/questions/1128339/how-can-i-detect-if-im-within-a-vm-or-not
+
+        flag_vm = False
         if sys.platform.startswith("win"):
             p = subprocess.Popen(
                 ["WMIC", "BIOS", "GET", "SERIALNUMBER"],
@@ -1386,15 +1390,17 @@ def initialize_new_media_observation(self):
                 stderr=subprocess.PIPE,
                 shell=True,
             )
-            out, error = p.communicate()
-            print(f"{out=}")
-            print(f"{error=}")
+            out, _ = p.communicate()
 
-        self.dw_player[i].player.hwdec = self.config_param.get(
-            cfg.MPV_HWDEC, cfg.MPV_HWDEC_DEFAULT_VALUE
-        )  # "auto" or "auto-safe" crash in Windows VM
-        # FIXME: detect if windows VM with WMIC COMPUTERSYSTEM GET MANUFACTURER
-        # see https://superuser.com/questions/1128339/how-can-i-detect-if-im-within-a-vm-or-not
+            flag_vm = b"SerialNumber  \r\r\n0 " in out
+
+        print(f"{flag_vm=}")
+        if not flag_vm:
+            self.dw_player[i].player.hwdec = self.config_param.get(
+                cfg.MPV_HWDEC, cfg.MPV_HWDEC_DEFAULT_VALUE
+            )  # "auto" or "auto-safe" crash in Windows VM
+        else:
+            self.dw_player[i].player.hwdec = "no"
 
         self.dw_player[i].player.playlist_pos = 0
         self.dw_player[i].player.wait_until_playing()
