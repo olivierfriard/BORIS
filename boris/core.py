@@ -3159,17 +3159,31 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         if not selected_observations:
             return
 
+        # remove observations that are not from media file or live
+        selected_observations = [
+            obs_id
+            for obs_id in selected_observations
+            if self.pj[cfg.OBSERVATIONS][obs_id][cfg.TYPE] in (cfg.LIVE, cfg.MEDIA)
+        ]
+
+        if not selected_observations:
+            QMessageBox.warning(None, cfg.programName, "This function requires observations from media file(s)")
+            return
+
         # check if state events are paired
         not_ok, selected_observations = project_functions.check_state_events(self.pj, selected_observations)
         if not_ok or not selected_observations:
             return
 
-        max_obs_length, selectedObsTotalMediaLength = observation_operations.observation_length(
-            self.pj, selected_observations
+        max_media_duration_all_obs, _ = observation_operations.media_duration(
+            self.pj[cfg.OBSERVATIONS], selected_observations
         )
 
-        # exit with message if events do not have timestamp
-        if max_obs_length.is_nan():
+        start_coding, end_coding, _ = observation_operations.coding_time(
+            self.pj[cfg.OBSERVATIONS], selected_observations
+        )
+
+        if start_coding.is_nan():
             QMessageBox.critical(
                 None,
                 cfg.programName,
@@ -3179,21 +3193,20 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             )
             return
 
-        start_coding, end_coding, _ = observation_operations.coding_time(
-            self.pj[cfg.OBSERVATIONS], selected_observations
-        )
-
         parameters = select_subj_behav.choose_obs_subj_behav_category(
             self,
             selected_observations,
-            start_coding=dec("NaN"),
-            end_coding=dec("NaN"),
-            maxTime=max_obs_length if len(selected_observations) > 1 else selectedObsTotalMediaLength,
+            start_coding=start_coding,
+            end_coding=end_coding,
+            maxTime=max_media_duration_all_obs,
             flagShowIncludeModifiers=False,
             flagShowExcludeBehaviorsWoEvents=False,
+            n_observations=len(selected_observations),
         )
         if not parameters[cfg.SELECTED_SUBJECTS] or not parameters[cfg.SELECTED_BEHAVIORS]:
+            QMessageBox.warning(None, cfg.programName, "Select subject(s) and behavior(s) to include in subtitles")
             return
+
         export_dir = QFileDialog().getExistingDirectory(
             self,
             "Choose a directory to save subtitles",

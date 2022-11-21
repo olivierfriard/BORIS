@@ -56,11 +56,11 @@ def default_value(ethogram: dict, behav: str, param):
     return default_value_
 
 
-def init_behav_modif(ethogram, selected_subjects, distinct_behav_modif, parameters):
+def init_behav_modif(ethogram: dict, selected_subjects: list, distinct_behav_modif: list, parameters: dict) -> dict:
     """
     initialize dictionary with subject, behaviors and modifiers
     """
-    behaviors = {}
+    behaviors: dict = {}
     for subj in selected_subjects:
         behaviors[subj] = {}
         for behav_modif in distinct_behav_modif:
@@ -77,11 +77,11 @@ def init_behav_modif(ethogram, selected_subjects, distinct_behav_modif, paramete
     return behaviors
 
 
-def init_behav_modif_bin(ethogram, selected_subjects, distinct_behav_modif, parameters):
+def init_behav_modif_bin(ethogram: dict, selected_subjects: list, distinct_behav_modif: list, parameters: dict) -> dict:
     """
     initialize dictionary with subject, behaviors and modifiers
     """
-    behaviors = {}
+    behaviors: dict = {}
     for subj in selected_subjects:
         behaviors[subj] = {}
         for behav_modif in distinct_behav_modif:
@@ -333,7 +333,6 @@ def synthetic_time_budget_bin(pj: dict, selected_observations: list, parameters_
                     if behav_type == "STATE EVENT":
                         dur = interval_len(interval_intersec)
                         behaviors[subject][behav]["duration"] = f"{dur:.3f}"
-                        """mean = interval_mean(interval_intersec)"""
                         behaviors[subject][behav]["duration mean"] = f"{interval_mean(interval_intersec):.3f}"
                         behaviors[subject][behav]["duration stdev"] = interval_std_dev(interval_intersec)
 
@@ -348,12 +347,6 @@ def synthetic_time_budget_bin(pj: dict, selected_observations: list, parameters_
                         behaviors[subject][behav]["duration mean"] = cfg.NA
                         behaviors[subject][behav]["duration stdev"] = cfg.NA
                         behaviors[subject][behav]["proportion of time"] = cfg.NA
-
-                    '''behaviors[subject][behav]["duration"] = f"{dur:.3f}"'''
-                    """behaviors[subject][behav]["number"] = nocc"""
-                    '''behaviors[subject][behav]["duration mean"] = f"{mean:.3f}"'''
-                    """behaviors[subject][behav]["duration stdev"] = interval_std_dev(interval_intersec)"""
-                    '''behaviors[subject][behav]["proportion of time"] = f"{proportion:.3f}"'''
 
             columns = [obs_id, f"{max_time - min_time:.3f}", f"{time_bin_start:.3f}-{time_bin_end:.3f}"]
             for subject in selected_subjects:

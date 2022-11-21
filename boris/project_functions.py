@@ -519,7 +519,9 @@ def create_subtitles(pj: dict, selected_observations: list, parameters: dict, ex
         str: error message
     """
 
-    def subject_color(subject):
+    print(f"{parameters=}")
+
+    def subject_color(subject: str) -> Tuple[str, str]:
         """
         subject color
 
@@ -534,86 +536,122 @@ def create_subtitles(pj: dict, selected_observations: list, parameters: dict, ex
             return "", ""
         else:
             return (
-                """<font color="{}">""".format(
-                    cfg.subtitlesColors[
-                        parameters[cfg.SELECTED_SUBJECTS].index(row["subject"]) % len(cfg.subtitlesColors)
-                    ]
-                ),
+                f"""<font color="{cfg.subtitlesColors[
+                        parameters[cfg.SELECTED_SUBJECTS].index(row['subject']) % len(cfg.subtitlesColors)
+                    ]}">""",
                 "</font>",
             )
 
-    try:
-        ok, msg, db_connector = db_functions.load_aggregated_events_in_db(
-            pj, parameters[cfg.SELECTED_SUBJECTS], selected_observations, parameters[cfg.SELECTED_BEHAVIORS]
-        )
-        if not ok:
-            return False, msg
+    ok, msg, db_connector = db_functions.load_aggregated_events_in_db(
+        pj, parameters[cfg.SELECTED_SUBJECTS], selected_observations, parameters[cfg.SELECTED_BEHAVIORS]
+    )
+    if not ok:
+        return False, msg
 
-        cursor = db_connector.cursor()
-        flag_ok = True
-        msg = ""
-        for obsId in selected_observations:
-            if pj[cfg.OBSERVATIONS][obsId][cfg.TYPE] in [cfg.LIVE]:
-                out = ""
+    cursor = db_connector.cursor()
+    flag_ok = True
+    msg = ""
+    mem_command = ""
+    for obs_id in selected_observations:
+        if pj[cfg.OBSERVATIONS][obs_id][cfg.TYPE] == cfg.LIVE:
+            out = ""
+            if parameters["time"] in ("limit to events", "full obs"):
                 cursor.execute(
                     (
                         "SELECT subject, behavior, start, stop, type, modifiers FROM aggregated_events "
-                        "WHERE observation = ? AND subject in ({}) "
+                        "WHERE observation = ? "
+                        "AND subject in ({}) "
                         "AND behavior in ({}) "
                         "ORDER BY start"
                     ).format(
                         ",".join(["?"] * len(parameters[cfg.SELECTED_SUBJECTS])),
                         ",".join(["?"] * len(parameters[cfg.SELECTED_BEHAVIORS])),
                     ),
-                    [obsId] + parameters[cfg.SELECTED_SUBJECTS] + parameters[cfg.SELECTED_BEHAVIORS],
+                    [
+                        obs_id,
+                    ]
+                    + parameters[cfg.SELECTED_SUBJECTS]
+                    + parameters[cfg.SELECTED_BEHAVIORS],
                 )
 
-                for idx, row in enumerate(cursor.fetchall()):
-                    col1, col2 = subject_color(row["subject"])
-                    if parameters["include modifiers"]:
-                        modifiers_str = "\n{}".format(row["modifiers"].replace("|", ", "))
-                    else:
-                        modifiers_str = ""
-                    out += (
-                        "{idx}\n" "{start} --> {stop}\n" "{col1}{subject}: {behavior}" "{modifiers}" "{col2}\n\n"
+            else:  # 'time interval'
+                cursor.execute(
+                    (
+                        "SELECT subject, behavior, start, stop, type, modifiers FROM aggregated_events "
+                        "WHERE observation = ? "
+                        "AND (start BETWEEN ? AND ?) "
+                        "AND subject in ({}) "
+                        "AND behavior in ({}) "
+                        "ORDER BY start"
                     ).format(
-                        idx=idx + 1,
-                        start=util.seconds2time(row["start"]).replace(".", ","),
-                        stop=util.seconds2time(
-                            row["stop"] if row["type"] == cfg.STATE else row["stop"] + cfg.POINT_EVENT_ST_DURATION
-                        ).replace(".", ","),
-                        col1=col1,
-                        col2=col2,
-                        subject=row["subject"],
-                        behavior=row["behavior"],
-                        modifiers=modifiers_str,
-                    )
+                        ",".join(["?"] * len(parameters[cfg.SELECTED_SUBJECTS])),
+                        ",".join(["?"] * len(parameters[cfg.SELECTED_BEHAVIORS])),
+                    ),
+                    [obs_id, float(parameters[cfg.START_TIME]), float(parameters[cfg.END_TIME])]
+                    + parameters[cfg.SELECTED_SUBJECTS]
+                    + parameters[cfg.SELECTED_BEHAVIORS],
+                )
 
-                file_name = f"{pl.Path(export_dir) / util.safeFileName(obsId)}.srt"
-                try:
-                    with open(file_name, "w") as f:
-                        f.write(out)
-                except Exception:
-                    flag_ok = False
-                    msg += "observation: {}\ngave the following error:\n{}\n".format(obsId, str(sys.exc_info()[1]))
+            for idx, row in enumerate(cursor.fetchall()):
+                col1, col2 = subject_color(row["subject"])
+                if parameters["include modifiers"]:
+                    modifiers_str = f"\n{row['modifiers'].replace('|', ', ')}"
+                else:
+                    modifiers_str = ""
+                out += (
+                    "{idx}\n" "{start} --> {stop}\n" "{col1}{subject}: {behavior}" "{modifiers}" "{col2}\n\n"
+                ).format(
+                    idx=idx + 1,
+                    start=util.seconds2time(row["start"]).replace(".", ","),
+                    stop=util.seconds2time(
+                        row["stop"] if row["type"] == cfg.STATE else row["stop"] + cfg.POINT_EVENT_ST_DURATION
+                    ).replace(".", ","),
+                    col1=col1,
+                    col2=col2,
+                    subject=row["subject"],
+                    behavior=row["behavior"],
+                    modifiers=modifiers_str,
+                )
 
-            elif pj[cfg.OBSERVATIONS][obsId][cfg.TYPE] in [cfg.MEDIA]:
+            file_name = pl.Path(export_dir) / pl.Path(util.safeFileName(obs_id)).with_suffix(".srt")
 
-                for nplayer in cfg.ALL_PLAYERS:
-                    if not pj[cfg.OBSERVATIONS][obsId][cfg.FILE][nplayer]:
-                        continue
-                    init = 0
-                    for mediaFile in pj[cfg.OBSERVATIONS][obsId][cfg.FILE][nplayer]:
-                        try:
-                            end = init + pj[cfg.OBSERVATIONS][obsId][cfg.MEDIA_INFO][cfg.LENGTH][mediaFile]
-                        except KeyError:
-                            return False, f"The length for media file {mediaFile} is not available"
-                        out = ""
+            if mem_command not in (cfg.OVERWRITE_ALL, cfg.SKIP_ALL) and file_name.is_file():
+                mem_command = dialog.MessageDialog(
+                    cfg.programName,
+                    f"The file {file_name} already exists.",
+                    [cfg.OVERWRITE, cfg.OVERWRITE_ALL, cfg.SKIP, cfg.SKIP_ALL, cfg.CANCEL],
+                )
+                if mem_command == cfg.CANCEL:
+                    return False, ""
+                if mem_command in (cfg.SKIP, cfg.SKIP_ALL):
+                    continue
 
+            try:
+                with file_name.open("w", encoding="utf-8") as f_out:
+                    f_out.write(out)
+            except Exception:
+                flag_ok = False
+                msg += f"observation: {obs_id}\ngave the following error:\n{str(sys.exc_info()[1])}\n"
+
+        if pj[cfg.OBSERVATIONS][obs_id][cfg.TYPE] == cfg.MEDIA:
+
+            for nplayer in cfg.ALL_PLAYERS:
+                if not pj[cfg.OBSERVATIONS][obs_id][cfg.FILE][nplayer]:
+                    continue
+                init = 0
+                for media_file in pj[cfg.OBSERVATIONS][obs_id][cfg.FILE][nplayer]:
+                    try:
+                        end = init + pj[cfg.OBSERVATIONS][obs_id][cfg.MEDIA_INFO][cfg.LENGTH][media_file]
+                    except KeyError:
+                        return False, f"The length for media file {media_file} is not available"
+                    out = ""
+
+                    if parameters["time"] in ("limit to events", "full obs"):
                         cursor.execute(
                             (
-                                "SELECT subject, behavior, type, start, stop, modifiers FROM aggregated_events "
-                                "WHERE observation = ? AND start BETWEEN ? and ? "
+                                "SELECT subject, behavior, start, stop, type, modifiers FROM aggregated_events "
+                                "WHERE observation = ? "
+                                "AND (start BETWEEN ? AND ?) "
                                 "AND subject in ({}) "
                                 "AND behavior in ({}) "
                                 "ORDER BY start"
@@ -621,52 +659,79 @@ def create_subtitles(pj: dict, selected_observations: list, parameters: dict, ex
                                 ",".join(["?"] * len(parameters[cfg.SELECTED_SUBJECTS])),
                                 ",".join(["?"] * len(parameters[cfg.SELECTED_BEHAVIORS])),
                             ),
-                            [obsId, init, end] + parameters[cfg.SELECTED_SUBJECTS] + parameters[cfg.SELECTED_BEHAVIORS],
+                            [
+                                obs_id,
+                                init,
+                                end,
+                            ]
+                            + parameters[cfg.SELECTED_SUBJECTS]
+                            + parameters[cfg.SELECTED_BEHAVIORS],
                         )
 
-                        for idx, row in enumerate(cursor.fetchall()):
-                            col1, col2 = subject_color(row["subject"])
-                            if parameters["include modifiers"]:
-                                modifiers_str = "\n{}".format(row["modifiers"].replace("|", ", "))
-                            else:
-                                modifiers_str = ""
+                    else:
 
-                            out += (
-                                "{idx}\n"
-                                "{start} --> {stop}\n"
-                                "{col1}{subject}: {behavior}"
-                                "{modifiers}"
-                                "{col2}\n\n"
+                        cursor.execute(
+                            (
+                                "SELECT subject, behavior, type, start, stop, modifiers FROM aggregated_events "
+                                "WHERE observation = ? "
+                                "AND (start BETWEEN ? AND ?) "
+                                "AND (start BETWEEN ? AND ?) "
+                                "AND subject in ({}) "
+                                "AND behavior in ({}) "
+                                "ORDER BY start"
                             ).format(
-                                idx=idx + 1,
-                                start=util.seconds2time(row["start"] - init).replace(".", ","),
-                                stop=util.seconds2time(
-                                    (
-                                        row["stop"]
-                                        if row["type"] == cfg.STATE
-                                        else row["stop"] + cfg.POINT_EVENT_ST_DURATION
-                                    )
-                                    - init
-                                ).replace(".", ","),
-                                col1=col1,
-                                col2=col2,
-                                subject=row["subject"],
-                                behavior=row["behavior"],
-                                modifiers=modifiers_str,
-                            )
-                        file_name = f"{pl.Path(export_dir) / pl.Path(mediaFile).name}.srt"
-                        try:
-                            with open(file_name, "w") as f:
-                                f.write(out)
-                        except Exception:
-                            flag_ok = False
-                            msg += f"observation: {obsId}\ngave the following error:\n{sys.exc_info()[1]}\n"
+                                ",".join(["?"] * len(parameters[cfg.SELECTED_SUBJECTS])),
+                                ",".join(["?"] * len(parameters[cfg.SELECTED_BEHAVIORS])),
+                            ),
+                            [obs_id, init, end, float(parameters[cfg.START_TIME]), float(parameters[cfg.END_TIME])]
+                            + parameters[cfg.SELECTED_SUBJECTS]
+                            + parameters[cfg.SELECTED_BEHAVIORS],
+                        )
 
-                        init = end
+                    for idx, row in enumerate(cursor.fetchall()):
+                        col1, col2 = subject_color(row["subject"])
+                        if parameters["include modifiers"]:
+                            modifiers_str = f"\n{row['modifiers'].replace('|', ', ')}"
+                        else:
+                            modifiers_str = ""
 
-        return flag_ok, msg
-    except Exception:
-        return False, str(sys.exc_info()[1])
+                        out += (
+                            "{idx}\n" "{start} --> {stop}\n" "{col1}{subject}: {behavior}" "{modifiers}" "{col2}\n\n"
+                        ).format(
+                            idx=idx + 1,
+                            start=util.seconds2time(row["start"] - init).replace(".", ","),
+                            stop=util.seconds2time(
+                                (row["stop"] if row["type"] == cfg.STATE else row["stop"] + cfg.POINT_EVENT_ST_DURATION)
+                                - init
+                            ).replace(".", ","),
+                            col1=col1,
+                            col2=col2,
+                            subject=row["subject"],
+                            behavior=row["behavior"],
+                            modifiers=modifiers_str,
+                        )
+                    file_name = pl.Path(export_dir) / pl.Path(pl.Path(media_file).stem).with_suffix(".srt")
+
+                    if mem_command not in (cfg.OVERWRITE_ALL, cfg.SKIP_ALL) and file_name.is_file():
+                        mem_command = dialog.MessageDialog(
+                            cfg.programName,
+                            f"The file {file_name} already exists.",
+                            [cfg.OVERWRITE, cfg.OVERWRITE_ALL, cfg.SKIP, cfg.SKIP_ALL, cfg.CANCEL],
+                        )
+                        if mem_command == cfg.CANCEL:
+                            return False, ""
+                        if mem_command in (cfg.SKIP, cfg.SKIP_ALL):
+                            continue
+                    try:
+                        with file_name.open("w", encoding="utf-8") as f_out:
+                            f_out.write(out)
+                    except Exception:
+                        flag_ok = False
+                        msg += f"observation: {obs_id}\ngave the following error:\n{sys.exc_info()[1]}\n"
+
+                    init = end
+
+    return flag_ok, msg
 
 
 def export_observations_list(pj: dict, selected_observations: list, file_name: str, output_format: str) -> bool:
