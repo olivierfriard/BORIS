@@ -188,7 +188,7 @@ class timeBudgetResults(QWidget):
 
         # add obs date
         if self.lw.count() == 1:
-            col1.append(self.pj[cfg.OBSERVATIONS][self.lw.item(0).text()].get("date", ""))
+            col1.append(self.pj[cfg.OBSERVATIONS][self.lw.item(0).text()].get("date", "").replace("T", " "))
         else:
             # TODO: check if date is the same for all selected obs
             col1.append("NA, observations grouped")
@@ -945,16 +945,16 @@ def time_budget(self, mode: str, mode2: str = "list"):
                         element["duration"] if element["duration"] != "NA" else 0
                     )
 
-            rows = []
-            col1 = []
+            rows: list = []
+            col1: list = []
             # observation id
             col1.append(obsId)
             col1.append(self.pj[cfg.OBSERVATIONS][obsId].get("date", "").replace("T", ""))
             col1.append(util.eol2space(self.pj[cfg.OBSERVATIONS][obsId].get(cfg.DESCRIPTION, "")))
             header = ["Observation id", "Observation date", "Description"]
 
-            indep_var_label = []
-            indep_var_values = []
+            indep_var_label: list = []
+            indep_var_values: list = []
             for _, v in self.pj.get(cfg.INDEPENDENT_VARIABLES, {}).items():
                 indep_var_label.append(v["label"])
                 indep_var_values.append(
