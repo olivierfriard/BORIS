@@ -1378,8 +1378,8 @@ def initialize_new_media_observation(self):
             # self.dw_player[i].player.loadfile(media_full_path)
             # self.dw_player[i].player.pause = True
 
-        # check if BORIS is running on a Windows VM
-        # detect if windows VM with WMIC COMPUTERSYSTEM GET MANUFACTURER
+        # check if BORIS is running on a Windows VM with WMIC COMPUTERSYSTEM GET SERIALNUMBER
+        # because "auto" or "auto-safe" crash in Windows VM
         # see https://superuser.com/questions/1128339/how-can-i-detect-if-im-within-a-vm-or-not
 
         flag_vm = False
@@ -1395,9 +1395,7 @@ def initialize_new_media_observation(self):
             logging.debug(f"Running on Windows VM: {flag_vm}")
 
         if not flag_vm:
-            self.dw_player[i].player.hwdec = self.config_param.get(
-                cfg.MPV_HWDEC, cfg.MPV_HWDEC_DEFAULT_VALUE
-            )  # "auto" or "auto-safe" crash in Windows VM
+            self.dw_player[i].player.hwdec = self.config_param.get(cfg.MPV_HWDEC, cfg.MPV_HWDEC_DEFAULT_VALUE)
         else:
             self.dw_player[i].player.hwdec = "no"
 

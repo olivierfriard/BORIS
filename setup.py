@@ -35,7 +35,6 @@ setup(
     packages=["boris"],  # same as name
     install_requires=[
         "exifread>=3.0.0",
-        "pillow>=9.1.1",
         "numpy>=1.21",
         "matplotlib>=3.3.3",
         "pandas>=1.3.5",
