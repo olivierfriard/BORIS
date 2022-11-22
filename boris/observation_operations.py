@@ -1379,7 +1379,7 @@ def initialize_new_media_observation(self):
             # self.dw_player[i].player.pause = True
 
         # check if BORIS is running on a Windows VM
-        # FIXME: detect if windows VM with WMIC COMPUTERSYSTEM GET MANUFACTURER
+        # detect if windows VM with WMIC COMPUTERSYSTEM GET MANUFACTURER
         # see https://superuser.com/questions/1128339/how-can-i-detect-if-im-within-a-vm-or-not
 
         flag_vm = False
