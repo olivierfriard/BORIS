@@ -275,8 +275,8 @@ def behavior_binary_table(self):
         item, ok = QInputDialog.getItem(None, "Save results", "Available formats", file_formats, 0, False)
         if not ok:
             return
-        output_format = re.sub(".* \(\*\.", "", item)[:-1]
-        print(f"{output_format=}")
+        """output_format = re.sub(".* \(\*\.", "", item)[:-1]"""
+        output_format = cfg.FILE_NAME_SUFFIX[item]
 
         export_dir = QFileDialog().getExistingDirectory(
             None, "Choose a directory to save results", os.path.expanduser("~"), options=QFileDialog.ShowDirsOnly

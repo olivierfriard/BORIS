@@ -282,8 +282,6 @@ def irr_cohen_kappa(self):
 
     start_coding, end_coding, _ = observation_operations.coding_time(self.pj[cfg.OBSERVATIONS], selected_observations)
 
-    print(f"{start_coding=}")
-
     # exit with message if events do not have timestamp
     if start_coding.is_nan():
         QMessageBox.critical(

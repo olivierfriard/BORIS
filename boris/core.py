@@ -3104,8 +3104,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         activate the live observation mode
         """
 
-        logging.debug(f"start live observation, {self.liveObservationStarted=}")
-
         if "scan sampling" in self.pb_live_obs.text():
             self.pb_live_obs.setText("Stop live observation")
             self.liveTimer.start(50)
@@ -3620,7 +3618,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             TODO: use cumul_media_durations
             if new_time < self.dw_player[n_player].cumul_media_durations[-1]:
                 media_idx = self.dw_player[n_player].player.playlist_pos
-                print(f"{media_idx=}")
             """
 
             if new_time < sum(self.dw_player[n_player].media_durations):
@@ -4114,8 +4111,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         # index of current subject
         # subject_idx = self.subject_name_index[self.currentSubject] if self.currentSubject else ""
-
-        # print(f"{self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS]=}")
 
         if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE] in (cfg.LIVE, cfg.MEDIA):
             position = mem_time

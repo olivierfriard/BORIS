@@ -348,8 +348,6 @@ def export_aggregated_events(self):
         self.pj, selected_observations
     )
 
-    logging.debug(f"{max_obs_length=} {selectedObsTotalMediaLength=}")
-
     if max_obs_length == dec(-1):  # media length not available, user choose to not use events
         QMessageBox.warning(
             None,
