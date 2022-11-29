@@ -47,6 +47,7 @@ from PyQt5.QtWidgets import (
 from . import config as cfg
 from . import dialog, duration_widget, plot_data_module, project_functions
 from . import utilities as util
+from . import gui_utilities
 from .observation_ui import Ui_Form
 
 
@@ -122,10 +123,6 @@ class Observation(QDialog, Ui_Form):
         # observation type
         self.rb_media_files.toggled.connect(self.obs_type_changed)
         self.rb_live.toggled.connect(self.obs_type_changed)
-
-        # DISABLE observation from images
-        # self.rb_images.setEnabled(False)
-
         self.rb_images.toggled.connect(self.obs_type_changed)
 
         menu_items = [
@@ -155,9 +152,6 @@ class Observation(QDialog, Ui_Form):
         menu_data.triggered.connect(lambda x: self.add_data_file(mode=x.statusTip()))
         self.add_button_menu(data_menu_items, menu_data)
         self.pb_add_data_file.setMenu(menu_data)
-
-        # self.pb_add_data_file.clicked.connect(lambda: self.add_data_file(flag_path=True))
-        # self.pb_add_data_file_wo_path.clicked.connect(lambda: self.add_data_file(flag_path=False))
 
         self.pb_remove_data_file.clicked.connect(self.remove_data_file)
         self.pb_view_data_head.clicked.connect(self.view_data_file_head)
@@ -194,6 +188,9 @@ class Observation(QDialog, Ui_Form):
 
         self.tabWidget.setCurrentIndex(0)
 
+        # geometry
+        gui_utilities.restore_geometry(self, "new observation", (800, 650))
+
     def use_media_file_name_as_obsid(self) -> None:
         """
         set observation id with the media file name value (without path)
@@ -228,7 +225,6 @@ class Observation(QDialog, Ui_Form):
     def obs_type_changed(self) -> None:
         """
         change stacked widget page in base at the observation type
-
         """
 
         for idx, rb in enumerate([self.rb_media_files, self.rb_live, self.rb_images]):

@@ -53,6 +53,7 @@ from . import observation
 from . import utilities as util
 from . import plot_data_module
 from . import player_dock_widget
+from . import gui_utilities
 
 
 def export_observations_list_clicked(self):
@@ -565,12 +566,13 @@ def new_observation(self, mode=cfg.NEW, obsId=""):
         if (self.ffmpeg_cache_dir and pl.Path(self.ffmpeg_cache_dir).is_dir())
         else tempfile.gettempdir(),
         project_path=self.projectFileName,
-        converters=self.pj[cfg.CONVERTERS] if cfg.CONVERTERS in self.pj else {},
+        converters=self.pj.get(cfg.CONVERTERS, {}),
         time_format=self.timeFormat,
     )
 
     observationWindow.pj = dict(self.pj)
     observationWindow.sw_observation_type.setCurrentIndex(0)  # no observation type
+    # observationWindow.sw_observation_type.setVisible(False)
     observationWindow.mode = mode
     observationWindow.mem_obs_id = obsId
     observationWindow.chunk_length = self.chunk_length
@@ -878,6 +880,9 @@ def new_observation(self, mode=cfg.NEW, obsId=""):
         #    observationWindow.cbCloseCurrentBehaviorsBetweenVideo.setChecked(self.pj[OBSERVATIONS][obsId][CLOSE_BEHAVIORS_BETWEEN_VIDEOS])
 
     rv = observationWindow.exec_()
+
+    # save geometry
+    gui_utilities.save_geometry(observationWindow, "new observation")
 
     if rv:
 
