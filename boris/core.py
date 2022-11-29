@@ -217,7 +217,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     currentSubject: str = ""  # contains the current subject of observation
     detailedObs: dict = {}
     coding_map_window_geometry = 0
-    project_window_geometry = 0  # memorize size of project window
 
     # FFmpeg
     memx, memy, mem_player = -1, -1, -1
@@ -2679,10 +2678,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         # pass copy of self.pj
         newProjectWindow.pj = dict(self.pj)
 
-        if self.project_window_geometry:
-            newProjectWindow.restoreGeometry(self.project_window_geometry)
-        else:
-            newProjectWindow.resize(800, 400)
+        gui_utilities.restore_geometry(newProjectWindow, "project window", (800, 400))
 
         newProjectWindow.setWindowTitle(f"{mode} project")
         newProjectWindow.tabProject.setCurrentIndex(0)  # project information
@@ -2848,7 +2844,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
             menu_options.update_menu(self)
 
-        self.project_window_geometry = newProjectWindow.saveGeometry()
+        gui_utilities.save_geometry(newProjectWindow, "project window")
 
         del newProjectWindow
 
@@ -4383,7 +4379,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         """
 
         event = dict(self.pj[cfg.ETHOGRAM][behavior_idx])
-        # check if coding map
+        # check if coding map for modifiers
         if "coding map" in self.pj[cfg.ETHOGRAM][behavior_idx] and self.pj[cfg.ETHOGRAM][behavior_idx]["coding map"]:
 
             # pause if media and media playing
@@ -4399,15 +4395,15 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             )
 
             self.codingMapWindow.resize(cfg.CODING_MAP_RESIZE_W, cfg.CODING_MAP_RESIZE_H)
-            if self.coding_map_window_geometry:
-                self.codingMapWindow.restoreGeometry(self.coding_map_window_geometry)
+
+            gui_utilities.restore_geometry(self.codingMapWindow, "coding map window", (600, 400))
 
             if self.codingMapWindow.exec_():
                 event["from map"] = self.codingMapWindow.getCodes()
             else:
                 event["from map"] = ""
 
-            self.coding_map_window_geometry = self.codingMapWindow.saveGeometry()
+            gui_utilities.save_geometry(self.codingMapWindow, "coding map window")
 
             # restart media
             if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE] in [cfg.MEDIA]:
