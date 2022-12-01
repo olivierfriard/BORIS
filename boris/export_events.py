@@ -23,6 +23,7 @@ This file is part of BORIS.
 import datetime as dt
 import logging
 import os
+import sys
 import tablib
 import pathlib as pl
 from decimal import Decimal as dec
@@ -108,9 +109,10 @@ def export_events_as_behavioral_sequences(self, separated_subjects=False, timed=
             )
 
 
-def export_tabular_events(self, mode: str = "tabular"):
+def export_tabular_events(self, mode: str = "tabular") -> None:
     """
-    export events from selected observations in various formats: TSV, CSV, ODS, XLSX, XLS, HTML
+    * select observations
+    * export events from the selected observations in various formats: TSV, CSV, ODS, XLSX, XLS, HTML
 
     Args:
         mode (str): export mode: must be ["tabular", "jwatcher"]
@@ -148,8 +150,13 @@ def export_tabular_events(self, mode: str = "tabular"):
     if not_ok or not selected_observations:
         return
 
+    """
     max_obs_length, selectedObsTotalMediaLength = observation_operations.observation_length(
         self.pj, selected_observations
+    )
+    """
+    max_media_duration_all_obs, _ = observation_operations.media_duration(
+        self.pj[cfg.OBSERVATIONS], selected_observations
     )
 
     start_coding, end_coding, _ = observation_operations.coding_time(self.pj[cfg.OBSERVATIONS], selected_observations)
@@ -159,13 +166,16 @@ def export_tabular_events(self, mode: str = "tabular"):
         selected_observations,
         start_coding=start_coding,
         end_coding=end_coding,
-        maxTime=max_obs_length if len(selected_observations) > 1 else selectedObsTotalMediaLength,
+        maxTime=max_media_duration_all_obs,  # max_obs_length if len(selected_observations) > 1 else selectedObsTotalMediaLength,
         flagShowIncludeModifiers=False,
         flagShowExcludeBehaviorsWoEvents=False,
+        n_observations=len(selected_observations),
     )
 
     if not parameters[cfg.SELECTED_SUBJECTS] or not parameters[cfg.SELECTED_BEHAVIORS]:
         return
+
+    logging.debug(f"parameters: {parameters}")
 
     if mode == "tabular":
         available_formats = (
@@ -230,9 +240,9 @@ def export_tabular_events(self, mode: str = "tabular"):
         output_format = "dat"
 
     mem_command = ""  # remember user choice when file already exists
-    for obsId in selected_observations:
+    for obs_id in selected_observations:
         if len(selected_observations) > 1 or mode == "jwatcher":
-            file_name = f"{pl.Path(exportDir) / util.safeFileName(obsId)}.{output_format}"
+            file_name = f"{pl.Path(exportDir) / util.safeFileName(obs_id)}.{output_format}"
             # check if file with new extension already exists
             if mem_command != cfg.OVERWRITE_ALL and pl.Path(file_name).is_file():
                 if mem_command == cfg.SKIP_ALL:
@@ -253,7 +263,7 @@ def export_tabular_events(self, mode: str = "tabular"):
             export_function = export_observation.export_events_jwatcher
 
         r, msg = export_function(
-            parameters, obsId, self.pj[cfg.OBSERVATIONS][obsId], self.pj[cfg.ETHOGRAM], file_name, output_format
+            parameters, obs_id, self.pj[cfg.OBSERVATIONS][obs_id], self.pj[cfg.ETHOGRAM], file_name, output_format
         )
 
         if not r and msg:
@@ -344,6 +354,7 @@ def export_aggregated_events(self):
     if not_ok or not selected_observations:
         return
 
+    """
     max_obs_length, selectedObsTotalMediaLength = observation_operations.observation_length(
         self.pj, selected_observations
     )
@@ -357,6 +368,11 @@ def export_aggregated_events(self):
             QMessageBox.NoButton,
         )
         return
+    """
+
+    max_media_duration_all_obs, _ = observation_operations.media_duration(
+        self.pj[cfg.OBSERVATIONS], selected_observations
+    )
 
     start_coding, end_coding, _ = observation_operations.coding_time(self.pj[cfg.OBSERVATIONS], selected_observations)
 
@@ -365,9 +381,10 @@ def export_aggregated_events(self):
         selected_observations,
         start_coding=start_coding,
         end_coding=end_coding,
-        maxTime=max_obs_length if len(selected_observations) > 1 else selectedObsTotalMediaLength,
+        maxTime=max_media_duration_all_obs,  # max_obs_length if len(selected_observations) > 1 else selectedObsTotalMediaLength,
         flagShowIncludeModifiers=False,
         flagShowExcludeBehaviorsWoEvents=False,
+        n_observations=len(selected_observations),
     )
 
     if not parameters[cfg.SELECTED_SUBJECTS] or not parameters[cfg.SELECTED_BEHAVIORS]:
@@ -467,23 +484,46 @@ def export_aggregated_events(self):
         _, max_modifiers = export_observation.export_aggregated_events(self.pj, parameters, obs_id)
         tot_max_modifiers = max(tot_max_modifiers, max_modifiers)
 
-    # print(f"{tot_max_modifiers=}")
-
     data_grouped_obs = tablib.Dataset()
     # sort by start time
     start_idx = -9  # TODO: improve!
     stop_idx = -8
-    obs_id_idx = 0
 
     mem_command = ""  # remember user choice when file already exists
     for obs_id in selected_observations:
 
-        print("obs_id: {obs_id}")
+        logging.debug(f"Exporting aggregated events for obs Id: {obs_id}")
 
-        data, max_modifiers = export_observation.export_aggregated_events(self.pj, parameters, obs_id)
-        # print(f"{max_modifiers=}")
+        data_single_obs, max_modifiers = export_observation.export_aggregated_events(self.pj, parameters, obs_id)
 
-        if (not flag_group) and (outputFormat not in ["sds", "tbs"]):
+        try:
+            # order by start time
+            index = tuple(fields_type(max_modifiers).keys()).index("Start (s)")
+            if "NA" not in [x[index] for x in list(data_single_obs)]:
+                data_single_obs_sorted = tablib.Dataset(
+                    # *data.sort(col=index),
+                    *sorted(list(data_single_obs), key=lambda x: float(x[index])),
+                    headers=list(fields_type(max_modifiers).keys()),
+                )
+            else:
+                # order by image index
+                index = tuple(fields_type(max_modifiers).keys()).index("Image index start")
+                data_single_obs_sorted = tablib.Dataset(
+                    # *data.sort(col=index),
+                    *sorted(list(data_single_obs), key=lambda x: float(x[index])),
+                    headers=list(fields_type(max_modifiers).keys()),
+                )
+        except:
+            # if error no order
+            data_single_obs_sorted = tablib.Dataset(
+                # data.sort(col=0),  # Observation id
+                *list(data_single_obs),
+                headers=list(fields_type(max_modifiers).keys()),
+            )
+
+        data_single_obs_sorted.title = obs_id
+
+        if (not flag_group) and (outputFormat not in ("sds", "tbs")):
             fileName = f"{pl.Path(exportDir) / util.safeFileName(obs_id)}.{outputFormat}"
             # check if file with new extension already exists
             if mem_command != cfg.OVERWRITE_ALL and pl.Path(fileName).is_file():
@@ -496,35 +536,47 @@ def export_aggregated_events(self):
                 )
                 if mem_command == cfg.CANCEL:
                     return
-                if mem_command in [cfg.SKIP, cfg.SKIP_ALL]:
+                if mem_command in (cfg.SKIP, cfg.SKIP_ALL):
                     continue
 
-            data_single_obs = tablib.Dataset(
-                *sorted(list(data), key=lambda x: (x[obs_id_idx], float(x[start_idx]))),
-                headers=list(fields_type(max_modifiers).keys()),
-            )
-            data_single_obs.title = obs_id
+            """
+            if sys.version_info.minor >= 8:
+                print(f"{list(data_single_obs)=}")
+                print(f"{list(fields_type(max_modifiers).keys())=}")
+            """
 
-            r, msg = export_observation.dataset_write(data_single_obs, fileName, outputFormat, dtype=fields_type)
+            r, msg = export_observation.dataset_write(data_single_obs_sorted, fileName, outputFormat, dtype=fields_type)
             if not r:
                 QMessageBox.warning(
                     None, cfg.programName, msg, QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton
                 )
 
-        if max_modifiers < tot_max_modifiers:
+        if len(data_single_obs_sorted) and max_modifiers < tot_max_modifiers:
             for i in range(tot_max_modifiers - max_modifiers):
-                data.insert_col(
+                data_single_obs_sorted.insert_col(
                     14,
-                    col=[""] * (len(list(data))),
+                    col=[""] * (len(list(data_single_obs_sorted))),
                     header=f"Modif #{i}",
                 )
-        data_grouped_obs.extend(data)
+        data_grouped_obs.extend(data_single_obs_sorted)
 
-    data_grouped_obs_sorted = tablib.Dataset(
-        *sorted(list(data_grouped_obs), key=lambda x: (x[obs_id_idx], float(x[start_idx]))),
-        headers=list(fields_type(tot_max_modifiers).keys()),
-    )
-    data.title = "Aggregated events"
+    """
+    try:
+        # order by obs_id, start time
+        data_grouped_obs_sorted = tablib.Dataset(
+            *sorted(list(data_grouped_obs), key=lambda x: (x[obs_id_idx], float(x[start_idx]))),
+            headers=list(fields_type(tot_max_modifiers).keys()),
+        )
+    except:
+        # if error order by obs_id
+        data_grouped_obs_sorted = tablib.Dataset(
+            *sorted(list(data_grouped_obs), key=lambda x: x[obs_id_idx]),
+            headers=list(fields_type(tot_max_modifiers).keys()),
+        )
+    """
+    data_grouped_obs_all = tablib.Dataset(headers=list(fields_type(tot_max_modifiers).keys()))
+    data_grouped_obs_all.extend(data_grouped_obs)
+    data_grouped_obs_all.title = "Aggregated events"
 
     # TODO: finish
     if outputFormat == "tbs":  # Timed behavioral sequences
@@ -611,7 +663,7 @@ def export_aggregated_events(self):
         return
 
     if flag_group:
-        r, msg = export_observation.dataset_write(data_grouped_obs_sorted, fileName, outputFormat, dtype=fields_type)
+        r, msg = export_observation.dataset_write(data_grouped_obs_all, fileName, outputFormat, dtype=fields_type)
         if not r:
             QMessageBox.warning(None, cfg.programName, msg, QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
 

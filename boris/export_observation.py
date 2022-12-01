@@ -28,6 +28,7 @@ import datetime as dt
 import pathlib
 from io import StringIO
 import pandas as pd
+from typing import List, Tuple, Dict
 
 try:
     import pyreadr
@@ -46,7 +47,7 @@ from . import db_functions
 
 def export_events_jwatcher(
     parameters: dict, obsId: str, observation: list, ethogram: dict, file_name: str, output_format: str
-) -> tuple:
+) -> Tuple[bool, str]:
     """
     export events jwatcher .dat format
 
@@ -293,7 +294,7 @@ def export_events_jwatcher(
 
 def export_tabular_events(
     parameters: dict, obsId: str, observation: dict, ethogram: dict, file_name: str, output_format: str
-) -> tuple:  # -> tuple[bool, str]:
+) -> Tuple[bool, str]:
     """
     export events for one observation (obsId)
 
@@ -309,21 +310,66 @@ def export_tabular_events(
         bool: result: True if OK else False
         str: error message
     """
-    print(parameters)
+
+    logging.debug(f"obs id: {obsId}")
+
+    interval = parameters["time"]
+    start_time = parameters[cfg.START_TIME]
+    end_time = parameters[cfg.END_TIME]
 
     total_length = observation_operations.observation_total_length(observation)
+
+    logging.debug(f"total_length: {total_length}")
+
+    if total_length == dec(-1):  # media length not available
+        interval = cfg.TIME_EVENTS
+
+    if total_length == dec(-2):  # obs without timestamp
+        interval = cfg.TIME_EVENTS
+
+    if interval == cfg.TIME_FULL_OBS:
+        min_time = float(0)
+        max_time = float(total_length)
+        total_length_str = f"{max_time - min_time:.3f}"
+
+    if interval == cfg.TIME_EVENTS:
+        start_coding, end_coding, _ = observation_operations.coding_time({obsId: observation}, [obsId])
+        if start_coding.is_nan():
+            total_length_str = cfg.NA
+        else:
+            min_time = float(start_coding)
+            max_time = float(end_coding)
+            total_length_str = f"{max_time - min_time:.3f}"
+        """
+        try:
+            min_time = float(observation[cfg.EVENTS][0][0])
+        except Exception:
+            min_time = float(0)
+        try:
+            max_time = float(observation[cfg.EVENTS][-1][0])
+        except Exception:
+            max_time = float(total_length)
+        """
+
+    if interval == cfg.TIME_ARBITRARY_INTERVAL:
+        min_time = float(start_time)
+        max_time = float(end_time)
+        total_length_str = f"{max_time - min_time:.3f}"
+
+    """
     if total_length == -2:  # obs from pictures
         total_length_str = cfg.NA
     else:
         total_length_str = f"{parameters[cfg.END_TIME] - parameters[cfg.START_TIME]:.3f}"
+    """
 
     eventsWithStatus = project_functions.events_start_stop(ethogram, observation[cfg.EVENTS])
 
     # check max number of modifiers
     max_modifiers = 0
     for event in eventsWithStatus:
-        if total_length != -2:  # obs not from pictures
-            if parameters[cfg.START_TIME] <= event[cfg.EVENT_TIME_FIELD_IDX] <= parameters[cfg.END_TIME]:
+        if total_length != dec(-2):  # obs not from pictures
+            if min_time <= event[cfg.EVENT_TIME_FIELD_IDX] <= max_time:
                 if event[cfg.EVENT_MODIFIER_FIELD_IDX]:
                     max_modifiers = max(max_modifiers, len(event[cfg.EVENT_MODIFIER_FIELD_IDX].split("|")))
         else:
@@ -386,9 +432,7 @@ def export_tabular_events(
             pass
 
     for event in eventsWithStatus:
-        if (total_length != -2) and not (
-            parameters[cfg.START_TIME] <= event[cfg.EVENT_TIME_FIELD_IDX] <= parameters[cfg.END_TIME]
-        ):
+        if (total_length != dec(-2)) and not (min_time <= event[cfg.EVENT_TIME_FIELD_IDX] <= max_time):
             continue
         if (
             (event[cfg.EVENT_SUBJECT_FIELD_IDX] in parameters[cfg.SELECTED_SUBJECTS])
@@ -797,7 +841,7 @@ def dataset_write(
         return False, str(sys.exc_info()[1])
 
 
-def export_aggregated_events(pj: dict, parameters: dict, obsId: str) -> tuple:  # -> tuple[tablib.Dataset, int]:
+def export_aggregated_events(pj: dict, parameters: dict, obsId: str) -> Tuple[tablib.Dataset, int]:
     """
     export aggregated events of one observation
 
@@ -864,7 +908,19 @@ def export_aggregated_events(pj: dict, parameters: dict, obsId: str) -> tuple:  
     logging.debug(f"min_time: {min_time}  max_time: {max_time}")
 
     # adapt start and stop to the selected time interval
-    if obs_length != dec(-2):
+    if obs_length != dec(-2):  # obs with timestamp
+
+        cursor.execute(
+            "DELETE FROM aggregated_events WHERE observation = ? AND (start < ? AND stop < ?) OR (start > ? AND stop > ?)",
+            (
+                obsId,
+                min_time,
+                min_time,
+                max_time,
+                max_time,
+            ),
+        )
+
         cursor.execute(
             "UPDATE aggregated_events SET start = ? WHERE observation = ? AND start < ? AND stop BETWEEN ? AND ?",
             (
@@ -897,17 +953,6 @@ def export_aggregated_events(pj: dict, parameters: dict, obsId: str) -> tuple:  
             ),
         )
 
-        cursor.execute(
-            "DELETE FROM aggregated_events WHERE observation = ? AND (start < ? AND stop < ?) OR (start > ? AND stop > ?)",
-            (
-                obsId,
-                min_time,
-                min_time,
-                max_time,
-                max_time,
-            ),
-        )
-
     behavioral_category = project_functions.behavior_category(pj[cfg.ETHOGRAM])
 
     """
@@ -927,9 +972,7 @@ def export_aggregated_events(pj: dict, parameters: dict, obsId: str) -> tuple:  
     for subject in parameters[cfg.SELECTED_SUBJECTS]:
 
         # calculate observation duration by subject (by obs)
-        cursor.execute(
-            ("SELECT SUM(stop - start) AS duration " "FROM aggregated_events " "WHERE subject = ? "), (subject,)
-        )
+        cursor.execute(("SELECT SUM(stop - start) AS duration FROM aggregated_events WHERE subject = ? "), (subject,))
         duration_by_subject_by_obs = cursor.fetchone()["duration"]
         if duration_by_subject_by_obs is not None:
             duration_by_subject_by_obs = round(duration_by_subject_by_obs, 3)

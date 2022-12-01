@@ -29,6 +29,7 @@ import sys
 from decimal import Decimal as dec
 import pathlib as pl
 import datetime
+from typing import List, Tuple, Dict
 from PyQt5.QtWidgets import (
     QMessageBox,
     QFileDialog,
@@ -306,7 +307,7 @@ def remove_observations(self):
             self.project_changed()
 
 
-def coding_time(observations: dict, observations_list: list) -> tuple:
+def coding_time(observations: dict, observations_list: list) -> Tuple[dec, dec, dec]:
     """
     returns first even timestamp, last event timestamp and duration of observation
 
@@ -325,6 +326,13 @@ def coding_time(observations: dict, observations_list: list) -> tuple:
     for obs_id in observations_list:
         observation = observations[obs_id]
         if observation[cfg.EVENTS]:
+            # check if events contain a NA timestamp
+            if [
+                event[cfg.EVENT_TIME_FIELD_IDX]
+                for event in observation[cfg.EVENTS]
+                if event[cfg.EVENT_TIME_FIELD_IDX].is_nan()
+            ]:
+                return dec("NaN"), dec("NaN"), dec("NaN")
             start_coding_list.append(observation[cfg.EVENTS][0][cfg.EVENT_TIME_FIELD_IDX])
             end_coding_list.append(observation[cfg.EVENTS][-1][cfg.EVENT_TIME_FIELD_IDX])
 
@@ -436,7 +444,7 @@ def observation_total_length(observation: dict) -> dec:
     return dec(0)
 
 
-def media_duration(observations: dict, selected_observations: list) -> tuple:
+def media_duration(observations: dict, selected_observations: list) -> Tuple[dec, dec]:
     """
     media duration of selected observations
 
@@ -445,8 +453,8 @@ def media_duration(observations: dict, selected_observations: list) -> tuple:
         selected_observations (list): list of selected observations
 
     Returns:
-        decimal.Decimal: maximum media duration for all observations
-        decimal.Decimal: total media duration for all observations
+        decimal.Decimal: maximum media duration for all observations, None if observation not from media
+        decimal.Decimal: total media duration for all observations, None if observation not from media
     """
     max_media_duration_all_obs = dec("0.0")
     total_media_duration_all_obs = dec("0.0")
