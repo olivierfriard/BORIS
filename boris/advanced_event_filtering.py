@@ -367,8 +367,6 @@ def event_filtering(self):
         n_observations=len(selected_observations),
     )
 
-    print(f"{parameters=}")
-
     if not parameters[cfg.SELECTED_SUBJECTS] or not parameters[cfg.SELECTED_BEHAVIORS]:
         QMessageBox.warning(None, cfg.programName, "Select subject(s) and behavior(s) to analyze")
         return
@@ -414,8 +412,6 @@ def event_filtering(self):
         else:
             # append to existing interval
             events[obs][f"{subj}|{behav}"] = events[obs][f"{subj}|{behav}"] | interval_func([start, stop])
-
-    print(f"{events=}")
 
     w = Advanced_event_filtering_dialog(events)
     w.exec_()

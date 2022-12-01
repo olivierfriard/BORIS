@@ -421,7 +421,9 @@ def time_budget(self, mode: str, mode2: str = "list"):
         self.pj[cfg.OBSERVATIONS], selected_observations
     )
 
-    logging.debug(f"{max_media_duration_all_obs=}, {total_media_duration_all_obs=}")
+    logging.debug(
+        f"max_media_duration_all_obs: {max_media_duration_all_obs}, total_media_duration_all_obs={total_media_duration_all_obs}"
+    )
 
     start_coding, end_coding, _ = observation_operations.coding_time(self.pj[cfg.OBSERVATIONS], selected_observations)
 

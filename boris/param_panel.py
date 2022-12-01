@@ -169,21 +169,18 @@ class Param_panel(QDialog, Ui_Dialog):
         return list(set(observed_behaviors))
 
     def cb_changed(self):
-        selectedSubjects = []
+        selected_subjects: list = []
         for idx in range(self.lwSubjects.count()):
             cb = self.lwSubjects.itemWidget(self.lwSubjects.item(idx))
             if cb and cb.isChecked():
-                selectedSubjects.append(cb.text())
+                selected_subjects.append(cb.text())
 
-        # FIXME
-        observedBehaviors = self.extract_observed_behaviors(self.selectedObservations, selectedSubjects)
-
-        logging.debug(f"{observedBehaviors=}")
+        observed_behaviors = self.extract_observed_behaviors(self.selectedObservations, selected_subjects)
 
         for idx in range(self.lwBehaviors.count()):
 
             if self.lwBehaviors.item(idx).data(33) != "category":
-                if self.lwBehaviors.item(idx).text() in observedBehaviors:
+                if self.lwBehaviors.item(idx).text() in observed_behaviors:
                     self.lwBehaviors.item(idx).setCheckState(Qt.Checked)
                 else:
                     self.lwBehaviors.item(idx).setCheckState(Qt.Unchecked)

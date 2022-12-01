@@ -519,8 +519,6 @@ def create_subtitles(pj: dict, selected_observations: list, parameters: dict, ex
         str: error message
     """
 
-    print(f"{parameters=}")
-
     def subject_color(subject: str) -> Tuple[str, str]:
         """
         subject color

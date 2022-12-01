@@ -38,7 +38,7 @@ from . import (
 )
 
 
-def synthetic_time_budget(self):
+def synthetic_time_budget(self) -> None:
     """
     Synthetic time budget
     """
@@ -59,11 +59,9 @@ def synthetic_time_budget(self):
     if not_ok or not selected_observations:
         return
 
-    max_media_duration_all_obs, total_media_duration_all_obs = observation_operations.media_duration(
+    max_media_duration_all_obs, _ = observation_operations.media_duration(
         self.pj[cfg.OBSERVATIONS], selected_observations
     )
-
-    logging.debug(f"{max_media_duration_all_obs=}, {total_media_duration_all_obs=}")
 
     start_coding, end_coding, _ = observation_operations.coding_time(self.pj[cfg.OBSERVATIONS], selected_observations)
 
@@ -149,7 +147,7 @@ def synthetic_time_budget(self):
                 f.write(data_report.export(output_format))
 
 
-def synthetic_binned_time_budget(self):
+def synthetic_binned_time_budget(self) -> None:
     """
     Synthetic time budget with time bin
     """
@@ -173,8 +171,6 @@ def synthetic_binned_time_budget(self):
     max_media_duration_all_obs, total_media_duration_all_obs = observation_operations.media_duration(
         self.pj[cfg.OBSERVATIONS], selected_observations
     )
-
-    logging.debug(f"{max_media_duration_all_obs=}, {total_media_duration_all_obs=}")
 
     start_coding, end_coding, _ = observation_operations.coding_time(self.pj[cfg.OBSERVATIONS], selected_observations)
 
