@@ -2288,6 +2288,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             maxTime=max_obs_length,
             flagShowExcludeBehaviorsWoEvents=True,
             by_category=False,
+            n_observations=len(selected_observations),
         )
 
         if not parameters[cfg.SELECTED_SUBJECTS] or not parameters[cfg.SELECTED_BEHAVIORS]:
@@ -2373,6 +2374,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             maxTime=max_obs_length if len(selected_observations) > 1 else selectedObsTotalMediaLength,
             flagShowIncludeModifiers=False,
             flagShowExcludeBehaviorsWoEvents=True,
+            n_observations=len(selected_observations),
         )
 
         if not parameters[cfg.SELECTED_SUBJECTS] or not parameters[cfg.SELECTED_BEHAVIORS]:

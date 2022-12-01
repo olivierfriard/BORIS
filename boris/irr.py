@@ -300,6 +300,7 @@ def irr_cohen_kappa(self):
         end_coding=dec("NaN"),
         flagShowIncludeModifiers=True,
         flagShowExcludeBehaviorsWoEvents=False,
+        n_observations=len(selected_observations),
     )
 
     if not plot_parameters[cfg.SELECTED_SUBJECTS] or not plot_parameters[cfg.SELECTED_BEHAVIORS]:
@@ -605,6 +606,7 @@ def needleman_wunch(self):
         end_coding=dec("NaN"),
         flagShowIncludeModifiers=True,
         flagShowExcludeBehaviorsWoEvents=False,
+        n_observations=len(selected_observations),
     )
 
     if not plot_parameters[cfg.SELECTED_SUBJECTS] or not plot_parameters[cfg.SELECTED_BEHAVIORS]:

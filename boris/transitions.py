@@ -174,18 +174,19 @@ def transitions_matrix(self, mode):
     * frequencies_after_behaviors
     """
     # ask user observations to analyze
-    _, selectedObservations = select_observations.select_observations(
+    _, selected_observations = select_observations.select_observations(
         self.pj, cfg.MULTIPLE, windows_title="Select observations for transitions matrix"
     )
 
-    if not selectedObservations:
+    if not selected_observations:
         return
 
     plot_parameters = select_subj_behav.choose_obs_subj_behav_category(
         self,
-        selectedObservations,
+        selected_observations,
         flagShowIncludeModifiers=True,
         flagShowExcludeBehaviorsWoEvents=False,
+        n_observations=len(selected_observations),
     )
 
     if not plot_parameters[cfg.SELECTED_SUBJECTS] or not plot_parameters[cfg.SELECTED_BEHAVIORS]:
@@ -219,7 +220,7 @@ def transitions_matrix(self, mode):
         logging.debug(f"subjects: {subject}")
 
         strings_list = []
-        for obsId in selectedObservations:
+        for obsId in selected_observations:
             strings_list.append(
                 export_observation.events_to_behavioral_sequences(
                     self.pj, obsId, subject, plot_parameters, self.behav_seq_separator

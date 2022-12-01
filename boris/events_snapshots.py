@@ -82,6 +82,7 @@ def events_snapshots(self):
         end_coding=dec("NaN"),
         flagShowIncludeModifiers=False,
         flagShowExcludeBehaviorsWoEvents=False,
+        n_observations=len(selected_observations),
     )
 
     if not parameters[cfg.SELECTED_SUBJECTS] or not parameters[cfg.SELECTED_BEHAVIORS]:

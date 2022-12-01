@@ -78,6 +78,7 @@ def export_events_as_behavioral_sequences(self, separated_subjects=False, timed=
         end_coding=end_coding,
         flagShowIncludeModifiers=True,
         flagShowExcludeBehaviorsWoEvents=False,
+        n_observations=len(selected_observations),
     )
 
     if not parameters[cfg.SELECTED_SUBJECTS] or not parameters[cfg.SELECTED_BEHAVIORS]:
@@ -709,6 +710,7 @@ def export_events_as_textgrid(self):
         end_coding=end_coding,
         flagShowIncludeModifiers=False,
         flagShowExcludeBehaviorsWoEvents=False,
+        n_observations=len(selected_observations),
     )
 
     if not parameters[cfg.SELECTED_SUBJECTS] or not parameters[cfg.SELECTED_BEHAVIORS]:
