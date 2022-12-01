@@ -479,7 +479,9 @@ def export_aggregated_events(self):
 
     mem_command = ""  # remember user choice when file already exists
     for obs_id in selected_observations:
-        # print(f"{obs_id=}")
+
+        print("obs_id: {obs_id}")
+
         data, max_modifiers = export_observation.export_aggregated_events(self.pj, parameters, obs_id)
         # print(f"{max_modifiers=}")
 
