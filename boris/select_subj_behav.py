@@ -35,7 +35,7 @@ from typing import Optional
 def choose_obs_subj_behav_category(
     self,
     selected_observations: list,
-    start_coding: Optional[dec] = dec("NaN"),
+    start_coding: Optional[dec] = dec("NaN"),  #  Union[..., None]
     end_coding: Optional[dec] = dec("NaN"),
     maxTime: Optional[dec] = None,
     flagShowIncludeModifiers: bool = True,
