@@ -69,13 +69,23 @@ def export_events_as_behavioral_sequences(self, separated_subjects=False, timed=
     if not_ok or not selected_observations:
         return
 
-    start_coding, end_coding, _ = observation_operations.coding_time(self.pj[cfg.OBSERVATIONS], selected_observations)
+    if len(selected_observations) == 1:
+        max_media_duration_all_obs, _ = observation_operations.media_duration(
+            self.pj[cfg.OBSERVATIONS], selected_observations
+        )
+        start_coding, end_coding, _ = observation_operations.coding_time(
+            self.pj[cfg.OBSERVATIONS], selected_observations
+        )
+    else:
+        max_media_duration_all_obs = None
+        start_coding, end_coding = dec("NaN"), dec("NaN")
 
     parameters = select_subj_behav.choose_obs_subj_behav_category(
         self,
         selected_observations,
         start_coding=start_coding,
         end_coding=end_coding,
+        maxTime=max_media_duration_all_obs,
         flagShowIncludeModifiers=True,
         flagShowExcludeBehaviorsWoEvents=False,
         n_observations=len(selected_observations),
@@ -151,23 +161,23 @@ def export_tabular_events(self, mode: str = "tabular") -> None:
     if not_ok or not selected_observations:
         return
 
-    """
-    max_obs_length, selectedObsTotalMediaLength = observation_operations.observation_length(
-        self.pj, selected_observations
-    )
-    """
-    max_media_duration_all_obs, _ = observation_operations.media_duration(
-        self.pj[cfg.OBSERVATIONS], selected_observations
-    )
-
-    start_coding, end_coding, _ = observation_operations.coding_time(self.pj[cfg.OBSERVATIONS], selected_observations)
+    if len(selected_observations) == 1:
+        max_media_duration_all_obs, _ = observation_operations.media_duration(
+            self.pj[cfg.OBSERVATIONS], selected_observations
+        )
+        start_coding, end_coding, _ = observation_operations.coding_time(
+            self.pj[cfg.OBSERVATIONS], selected_observations
+        )
+    else:
+        max_media_duration_all_obs = None
+        start_coding, end_coding = dec("NaN"), dec("NaN")
 
     parameters = select_subj_behav.choose_obs_subj_behav_category(
         self,
         selected_observations,
         start_coding=start_coding,
         end_coding=end_coding,
-        maxTime=max_media_duration_all_obs,  # max_obs_length if len(selected_observations) > 1 else selectedObsTotalMediaLength,
+        maxTime=max_media_duration_all_obs,
         flagShowIncludeModifiers=False,
         flagShowExcludeBehaviorsWoEvents=False,
         n_observations=len(selected_observations),
@@ -175,8 +185,6 @@ def export_tabular_events(self, mode: str = "tabular") -> None:
 
     if not parameters[cfg.SELECTED_SUBJECTS] or not parameters[cfg.SELECTED_BEHAVIORS]:
         return
-
-    logging.debug(f"parameters: {parameters}")
 
     if mode == "tabular":
         available_formats = (
@@ -259,13 +267,20 @@ def export_tabular_events(self, mode: str = "tabular") -> None:
                     continue
 
         if mode == "tabular":
-            export_function = export_observation.export_tabular_events
-        if mode == "jwatcher":
-            export_function = export_observation.export_events_jwatcher
+            r, msg = export_observation.export_tabular_events(
+                self.pj,
+                parameters,
+                obs_id,
+                self.pj[cfg.OBSERVATIONS][obs_id],
+                self.pj[cfg.ETHOGRAM],
+                file_name,
+                output_format,
+            )
 
-        r, msg = export_function(
-            parameters, obs_id, self.pj[cfg.OBSERVATIONS][obs_id], self.pj[cfg.ETHOGRAM], file_name, output_format
-        )
+        if mode == "jwatcher":
+            r, msg = export_observation.export_events_jwatcher(
+                parameters, obs_id, self.pj[cfg.OBSERVATIONS][obs_id], self.pj[cfg.ETHOGRAM], file_name, output_format
+            )
 
         if not r and msg:
             QMessageBox.critical(None, cfg.programName, msg, QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
@@ -355,34 +370,23 @@ def export_aggregated_events(self):
     if not_ok or not selected_observations:
         return
 
-    """
-    max_obs_length, selectedObsTotalMediaLength = observation_operations.observation_length(
-        self.pj, selected_observations
-    )
-
-    if max_obs_length == dec(-1):  # media length not available, user choose to not use events
-        QMessageBox.warning(
-            None,
-            cfg.programName,
-            ("The duration of one or more observation is not available"),
-            QMessageBox.Ok | QMessageBox.Default,
-            QMessageBox.NoButton,
+    if len(selected_observations) == 1:
+        max_media_duration_all_obs, _ = observation_operations.media_duration(
+            self.pj[cfg.OBSERVATIONS], selected_observations
         )
-        return
-    """
-
-    max_media_duration_all_obs, _ = observation_operations.media_duration(
-        self.pj[cfg.OBSERVATIONS], selected_observations
-    )
-
-    start_coding, end_coding, _ = observation_operations.coding_time(self.pj[cfg.OBSERVATIONS], selected_observations)
+        start_coding, end_coding, _ = observation_operations.coding_time(
+            self.pj[cfg.OBSERVATIONS], selected_observations
+        )
+    else:
+        max_media_duration_all_obs = None
+        start_coding, end_coding = dec("NaN"), dec("NaN")
 
     parameters = select_subj_behav.choose_obs_subj_behav_category(
         self,
         selected_observations,
         start_coding=start_coding,
         end_coding=end_coding,
-        maxTime=max_media_duration_all_obs,  # max_obs_length if len(selected_observations) > 1 else selectedObsTotalMediaLength,
+        maxTime=max_media_duration_all_obs,
         flagShowIncludeModifiers=False,
         flagShowExcludeBehaviorsWoEvents=False,
         n_observations=len(selected_observations),

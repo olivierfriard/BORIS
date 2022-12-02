@@ -25,6 +25,7 @@ import logging
 import os
 import sys
 import datetime as dt
+import math
 import pathlib
 from io import StringIO
 import pandas as pd
@@ -293,6 +294,273 @@ def export_events_jwatcher(
 
 
 def export_tabular_events(
+    pj: dict, parameters: dict, obsId: str, observation: dict, ethogram: dict, file_name: str, output_format: str
+) -> Tuple[bool, str]:
+    """
+    export events for one observation (obsId)
+
+    Args:
+        parameters (dict): subjects, behaviors
+        obsId (str): observation id
+        observation (dict): observation
+        ethogram (dict): ethogram of project
+        file_name (str): file name for exporting events
+        output_format (str): output for exporting events
+
+    Returns:
+        bool: result: True if OK else False
+        str: error message
+    """
+
+    logging.debug(f"function: export tabular events for {obsId}")
+    logging.debug(f"parameters: {parameters}")
+
+    interval = parameters["time"]
+
+    start_coding, end_coding, coding_duration = observation_operations.coding_time(pj[cfg.OBSERVATIONS], [obsId])
+    """
+    if start_coding is None and end_coding is None:  # no events
+        return data, 0
+    """
+
+    if interval == cfg.TIME_EVENTS:
+        min_time = start_coding
+        max_time = end_coding
+
+    if interval == cfg.TIME_FULL_OBS:
+
+        if observation[cfg.TYPE] == cfg.MEDIA:
+            max_media_duration, _ = observation_operations.media_duration(pj[cfg.OBSERVATIONS], [obsId])
+            min_time = dec("0")
+            max_time = max_media_duration
+            coding_duration = max_media_duration
+
+        if observation[cfg.TYPE] in (cfg.LIVE, cfg.IMAGES):
+            min_time = start_coding
+            max_time = end_coding
+
+    if interval == cfg.TIME_ARBITRARY_INTERVAL:
+        min_time = parameters[cfg.START_TIME]
+        max_time = parameters[cfg.END_TIME]
+
+    logging.debug(f"min_time: {min_time}  max_time: {max_time}")
+
+    eventsWithStatus = project_functions.events_start_stop(ethogram, observation[cfg.EVENTS])
+
+    # check max number of modifiers
+    max_modifiers = 0
+    for event in eventsWithStatus:
+        if not math.isnan(min_time) and not math.isnan(max_time):  # obs not from pictures
+            if min_time <= event[cfg.EVENT_TIME_FIELD_IDX] <= max_time:
+                if event[cfg.EVENT_MODIFIER_FIELD_IDX]:
+                    max_modifiers = max(max_modifiers, len(event[cfg.EVENT_MODIFIER_FIELD_IDX].split("|")))
+        else:
+            if event[cfg.EVENT_MODIFIER_FIELD_IDX]:
+                max_modifiers = max(max_modifiers, len(event[cfg.EVENT_MODIFIER_FIELD_IDX].split("|")))
+
+    # media file number
+    mediaNb = 0
+    if observation[cfg.TYPE] == cfg.MEDIA:
+        for player in observation[cfg.FILE]:
+            mediaNb += len(observation[cfg.FILE][player])
+
+    rows: list = []
+
+    # fields and type
+    fields_type: dict = {
+        "Observation id": str,
+        "Observation date": dt.datetime,
+        "Description": str,
+        "Observation duration": float,
+        "Observation type": str,
+        "Source": str,
+        "FPS": float,
+    }
+
+    # independent variables
+    if cfg.INDEPENDENT_VARIABLES in observation:
+        for variable in observation[cfg.INDEPENDENT_VARIABLES]:
+            # TODO check variable type
+            fields_type[variable] = str
+
+    fields_type.update({"Subject": str, "Behavior": str, "Behavioral category": str})
+
+    # modifiers
+    for idx in range(max_modifiers):
+        fields_type[f"Modifier #{idx + 1}"] = str
+
+    fields_type.update(
+        {
+            "Behavior type": str,
+            "Time": float,
+            "Media file name": str,
+            "Image index": float,  # add image index and image file path to header
+            "Image file path": str,
+            "Comment": str,
+        }
+    )
+
+    # add header
+    rows.append(list(fields_type.keys()))
+
+    behavioral_category = project_functions.behavior_category(ethogram)
+
+    duration1 = []  # in seconds
+    if observation[cfg.TYPE] == cfg.MEDIA:
+        try:
+            for mediaFile in observation[cfg.FILE][cfg.PLAYER1]:
+                duration1.append(observation[cfg.MEDIA_INFO][cfg.LENGTH][mediaFile])
+        except KeyError:
+            pass
+
+    for event in eventsWithStatus:
+        if (not math.isnan(min_time)) and not (min_time <= event[cfg.EVENT_TIME_FIELD_IDX] <= max_time):
+            continue
+        if (
+            (event[cfg.EVENT_SUBJECT_FIELD_IDX] in parameters[cfg.SELECTED_SUBJECTS])
+            or (event[cfg.EVENT_SUBJECT_FIELD_IDX] == "" and cfg.NO_FOCAL_SUBJECT in parameters[cfg.SELECTED_SUBJECTS])
+        ) and (event[cfg.EVENT_BEHAVIOR_FIELD_IDX] in parameters[cfg.SELECTED_BEHAVIORS]):
+
+            fields: list = []
+            fields.append(obsId)
+            fields.append(observation.get("date", "").replace("T", " "))
+            fields.append(util.eol2space(observation.get("description", "")))
+            # total length
+            fields.append(coding_duration if not coding_duration.is_nan() else cfg.NA)
+
+            if observation[cfg.TYPE] == cfg.MEDIA:
+                fields.append("Media file(s)")
+
+                media_file_str, fps_str = "", ""
+                # number of players
+                n_players = len([x for x in observation[cfg.FILE] if observation[cfg.FILE][x]])
+                for player in observation[cfg.FILE]:
+                    if observation[cfg.FILE][player]:
+                        if media_file_str:
+                            media_file_str += " "
+                        if fps_str:
+                            fps_str += " "
+                        if n_players > 1:
+                            media_file_str += f"player #{player}: "
+                            fps_str += f"player #{player}: "
+                        media_list, fps_list = [], []
+                        for media_file in observation[cfg.FILE][player]:
+                            media_list.append(media_file)
+                            fps_list.append(f"{observation[cfg.MEDIA_INFO][cfg.FPS].get(media_file, cfg.NA):.3f}")
+                        media_file_str += ";".join(media_list)
+                        fps_str += ";".join(fps_list)
+
+                fields.append(media_file_str)
+
+            elif observation[cfg.TYPE] == cfg.LIVE:
+                fields.append("Live observation")
+                fields.append(cfg.NA)
+                fps_str = cfg.NA
+
+            elif observation[cfg.TYPE] == cfg.IMAGES:
+                fields.append("From directories of images")
+                dir_list = []
+                for dir in observation[cfg.DIRECTORIES_LIST]:
+                    dir_list.append(dir)
+                fields.append(";".join(dir_list))
+                fps_str = cfg.NA
+
+            else:
+                fields.append("")
+
+            # FPS
+            fields.append(fps_str)
+
+            # indep var
+            if cfg.INDEPENDENT_VARIABLES in observation:
+                for variable in observation[cfg.INDEPENDENT_VARIABLES]:
+                    fields.append(observation[cfg.INDEPENDENT_VARIABLES][variable])
+
+            fields.append(event[cfg.PJ_OBS_FIELDS[observation[cfg.TYPE]][cfg.SUBJECT]])
+            fields.append(event[cfg.PJ_OBS_FIELDS[observation[cfg.TYPE]][cfg.BEHAVIOR_CODE]])
+
+            # behavioral category
+            try:
+                behav_category = behavioral_category[event[cfg.PJ_OBS_FIELDS[observation[cfg.TYPE]][cfg.BEHAVIOR_CODE]]]
+            except Exception:
+                behav_category = ""
+            fields.append(behav_category)
+
+            # modifiers
+            if max_modifiers:
+                modifiers = event[cfg.PJ_OBS_FIELDS[observation[cfg.TYPE]][cfg.MODIFIER]].split("|")
+                while len(modifiers) < max_modifiers:
+                    modifiers.append("")
+
+                for m in modifiers:
+                    fields.append(m)
+
+            # status (START/STOP)
+            fields.append(event[-1])
+
+            # time
+            # if event[cfg.EVENT_TIME_FIELD_IDX]
+            fields.append(util.convertTime(time_format=cfg.S, sec=event[cfg.EVENT_TIME_FIELD_IDX]))
+
+            # check video file name containing the event
+            if observation[cfg.TYPE] == cfg.MEDIA:
+                cumul_media_durations = [0]
+                for media_file in observation[cfg.FILE]["1"]:
+                    media_duration = observation[cfg.MEDIA_INFO][cfg.LENGTH][media_file]
+                    cumul_media_durations.append(cumul_media_durations[-1] + media_duration)
+
+                player_idx_list = [
+                    idx
+                    for idx, x in enumerate(cumul_media_durations)
+                    if cumul_media_durations[idx - 1] < event[cfg.EVENT_TIME_FIELD_IDX] <= x
+                ]
+                if len(player_idx_list):
+                    player_idx = player_idx_list[0] - 1
+                    video_file_name = observation[cfg.FILE]["1"][player_idx]
+                else:
+                    player_idx = -1
+                    video_file_name = "Not found"
+
+            elif observation[cfg.TYPE] in (cfg.LIVE, cfg.IMAGES):
+                video_file_name = cfg.NA
+            fields.append(video_file_name)
+
+            # image file path
+            if observation[cfg.TYPE] == cfg.IMAGES:
+                fields.append(event[cfg.PJ_OBS_FIELDS[cfg.IMAGES][cfg.IMAGE_PATH]])  # image file path
+            elif observation[cfg.TYPE] in (cfg.LIVE, cfg.MEDIA):
+                fields.append(cfg.NA)
+            else:
+                fields.append("")
+
+            # image file index
+            if observation[cfg.TYPE] == cfg.IMAGES:
+                fields.append(event[cfg.PJ_OBS_FIELDS[cfg.IMAGES][cfg.IMAGE_INDEX]])  # image file index
+            elif observation[cfg.TYPE] in (cfg.LIVE, cfg.MEDIA):
+                fields.append(cfg.NA)
+            else:
+                fields.append("")
+
+            # comment
+            fields.append(event[cfg.PJ_OBS_FIELDS[observation[cfg.TYPE]][cfg.COMMENT]].replace(os.linesep, " "))
+
+            rows.append(fields)
+
+    max_len = max([len(r) for r in rows])
+    data = tablib.Dataset()
+
+    data.title = util.safe_xl_worksheet_title(obsId, output_format)
+
+    for row in rows:
+        data.append(util.complete(row, max_len))
+
+    r, msg = dataset_write(data, file_name, output_format, dtype=fields_type)
+
+    return r, msg
+
+
+'''
+def export_tabular_events_old(
     parameters: dict, obsId: str, observation: dict, ethogram: dict, file_name: str, output_format: str
 ) -> Tuple[bool, str]:
     """
@@ -311,7 +579,7 @@ def export_tabular_events(
         str: error message
     """
 
-    logging.debug(f"obs id: {obsId}")
+    logging.debug(f"function: export tabular events for {obsId} parameters: {parameters} ")
 
     interval = parameters["time"]
     start_time = parameters[cfg.START_TIME]
@@ -575,8 +843,9 @@ def export_tabular_events(
     r, msg = dataset_write(data, file_name, output_format, dtype=fields_type)
 
     return r, msg
+'''
 
-
+'''
 def export_tabular_events_long_format(
     parameters, obsId: str, observation: dict, ethogram: dict, file_name: str, output_format: str
 ) -> tuple:  # -> tuple[bool, str]:
@@ -775,6 +1044,8 @@ def export_tabular_events_long_format(
 
     return r, msg
 
+'''
+
 
 def dataset_write(
     dataset: tablib.Dataset, file_name: str, output_format: str, dtype: dict = {}
@@ -852,63 +1123,59 @@ def export_aggregated_events(pj: dict, parameters: dict, obsId: str) -> Tuple[ta
 
     Returns:
         tablib.Dataset:
-        int: naximum number of modifiers
+        int: Maximum number of modifiers
 
     """
-    logging.debug(f"function: export aggregated events {parameters} {obsId}")
+    logging.debug(f"function: export aggregated events {obsId} parameters: {parameters} ")
 
+    observation = pj[cfg.OBSERVATIONS][obsId]
     interval = parameters["time"]
-    start_time = parameters[cfg.START_TIME]
-    end_time = parameters[cfg.END_TIME]
 
     data = tablib.Dataset()
-    observation = pj[cfg.OBSERVATIONS][obsId]
+
+    start_coding, end_coding, coding_duration = observation_operations.coding_time(pj[cfg.OBSERVATIONS], [obsId])
+    if start_coding is None and end_coding is None:  # no events
+        return data, 0
+
+    if interval == cfg.TIME_EVENTS:
+        min_time = float(start_coding)
+        max_time = float(end_coding)
+
+    if interval == cfg.TIME_FULL_OBS:
+        if observation[cfg.TYPE] == cfg.MEDIA:
+            max_media_duration, _ = observation_operations.media_duration(pj[cfg.OBSERVATIONS], [obsId])
+            min_time = float(0)
+            max_time = float(max_media_duration)
+            coding_duration = max_media_duration
+        if observation[cfg.TYPE] in (cfg.LIVE, cfg.IMAGES):
+            min_time = float(start_coding)
+            max_time = float(end_coding)
+
+    if interval == cfg.TIME_ARBITRARY_INTERVAL:
+        min_time = float(parameters[cfg.START_TIME])
+        max_time = float(parameters[cfg.END_TIME])
+
+    logging.debug(f"min_time: {min_time}  max_time: {max_time}")
 
     # obs description
     obs_description = observation[cfg.DESCRIPTION]
 
+    """
     obs_length = observation_operations.observation_total_length(pj[cfg.OBSERVATIONS][obsId])
-
-    if obs_length == dec(-1):  # media length not available
-        interval = cfg.TIME_EVENTS
-
-    if obs_length == dec(-2):  # obs without timestamp
-        interval = cfg.TIME_EVENTS
-
     logging.debug(f"obs_length: {obs_length}")
+    """
 
     _, _, connector = db_functions.load_aggregated_events_in_db(
         pj, parameters[cfg.SELECTED_SUBJECTS], [obsId], parameters[cfg.SELECTED_BEHAVIORS]
     )
     if connector is None:
         logging.critical(f"error when loading aggregated events in DB")
-        return data
+        return data, 0
 
-    # time
     cursor = connector.cursor()
 
-    if interval == cfg.TIME_FULL_OBS:
-        min_time = float(0)
-        max_time = float(obs_length)
-
-    if interval == cfg.TIME_EVENTS:
-        try:
-            min_time = float(pj[cfg.OBSERVATIONS][obsId][cfg.EVENTS][0][0])
-        except Exception:
-            min_time = float(0)
-        try:
-            max_time = float(pj[cfg.OBSERVATIONS][obsId][cfg.EVENTS][-1][0])
-        except Exception:
-            max_time = float(obs_length)
-
-    if interval == cfg.TIME_ARBITRARY_INTERVAL:
-        min_time = float(start_time)
-        max_time = float(end_time)
-
-    logging.debug(f"min_time: {min_time}  max_time: {max_time}")
-
     # adapt start and stop to the selected time interval
-    if obs_length != dec(-2):  # obs with timestamp
+    if not math.isnan(min_time) and not math.isnan(max_time):  # obs with timestamp
 
         cursor.execute(
             "DELETE FROM aggregated_events WHERE observation = ? AND (start < ? AND stop < ?) OR (start > ? AND stop > ?)",
@@ -954,14 +1221,6 @@ def export_aggregated_events(pj: dict, parameters: dict, obsId: str) -> Tuple[ta
         )
 
     behavioral_category = project_functions.behavior_category(pj[cfg.ETHOGRAM])
-
-    """
-    # check max number of modifiers
-    max_modifiers = 0
-    for event in pj[cfg.OBSERVATIONS][obsId][cfg.EVENTS]:
-        if event[cfg.EVENT_MODIFIER_FIELD_IDX]:
-            max_modifiers = max(max_modifiers, len(event[cfg.EVENT_MODIFIER_FIELD_IDX].split("|")))
-    """
 
     cursor.execute("SELECT DISTINCT modifiers FROM aggregated_events")
     max_modifiers = 0
@@ -1036,7 +1295,7 @@ def export_aggregated_events(pj: dict, parameters: dict, obsId: str) -> Tuple[ta
                             obs_description,
                             observation_type,
                             media_file_str,
-                            f"{obs_length:.3f}" if obs_length not in (dec(-1), dec(-2)) else cfg.NA,
+                            f"{coding_duration:.3f}" if not coding_duration.is_nan() else cfg.NA,
                             fps_str,
                         ]
                     )
@@ -1068,7 +1327,6 @@ def export_aggregated_events(pj: dict, parameters: dict, obsId: str) -> Tuple[ta
                     )
 
                     # modifiers
-
                     if max_modifiers:
                         modifiers = row["modifiers"].split("|")
                         while len(modifiers) < max_modifiers:
@@ -1077,7 +1335,6 @@ def export_aggregated_events(pj: dict, parameters: dict, obsId: str) -> Tuple[ta
                             row_data.append(modifier)
 
                     if row["type"] == cfg.POINT:
-
                         row_data.extend(
                             [
                                 cfg.POINT,
@@ -1088,7 +1345,6 @@ def export_aggregated_events(pj: dict, parameters: dict, obsId: str) -> Tuple[ta
                         )
 
                     if row["type"] == cfg.STATE:
-
                         row_data.extend(
                             [
                                 cfg.STATE,

@@ -29,7 +29,9 @@ import sys
 from decimal import Decimal as dec
 import pathlib as pl
 import datetime
-from typing import List, Tuple, Dict
+from typing import List, Tuple, Dict, Optional
+
+
 from PyQt5.QtWidgets import (
     QMessageBox,
     QFileDialog,
@@ -307,7 +309,7 @@ def remove_observations(self):
             self.project_changed()
 
 
-def coding_time(observations: dict, observations_list: list) -> Tuple[dec, dec, dec]:
+def coding_time(observations: dict, observations_list: list) -> Tuple[Optional[dec], Optional[dec], Optional[dec]]:
     """
     returns first even timestamp, last event timestamp and duration of observation
 
@@ -316,9 +318,9 @@ def coding_time(observations: dict, observations_list: list) -> Tuple[dec, dec, 
         observations_list (list): list of selected observations
 
     Returns:
-        decimal.Decimal: time of first coded event
-        decimal.Decimal: time of last coded event
-        decimal.Decimal: duration of coding
+        decimal.Decimal: time of first coded event, None if no event, dec(NaN) if no timestamp
+        decimal.Decimal: time of last coded event, None if no event, dec(NaN) if no timestamp
+        decimal.Decimal: duration of coding, None if no event, dec(NaN) if no timestamp
 
     """
     start_coding_list = []
@@ -444,9 +446,9 @@ def observation_total_length(observation: dict) -> dec:
     return dec(0)
 
 
-def media_duration(observations: dict, selected_observations: list) -> Tuple[dec, dec]:
+def media_duration(observations: dict, selected_observations: list) -> Tuple[Optional[dec], Optional[dec]]:
     """
-    media duration of selected observations
+    maximum media duration and total media duration of selected observations
 
     Args:
         observations (dict): observations dict

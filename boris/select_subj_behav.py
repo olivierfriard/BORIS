@@ -29,14 +29,15 @@ from decimal import Decimal as dec
 from . import config as cfg
 from . import gui_utilities, param_panel, project_functions
 from . import utilities as util
+from typing import Optional
 
 
 def choose_obs_subj_behav_category(
     self,
     selected_observations: list,
-    start_coding: dec = dec("NaN"),
-    end_coding: dec = dec("NaN"),
-    maxTime: dec = None,
+    start_coding: Optional[dec] = dec("NaN"),
+    end_coding: Optional[dec] = dec("NaN"),
+    maxTime: Optional[dec] = None,
     flagShowIncludeModifiers: bool = True,
     flagShowExcludeBehaviorsWoEvents: bool = True,
     by_category: bool = False,
@@ -95,27 +96,14 @@ def choose_obs_subj_behav_category(
     if n_observations > 1:
         paramPanelWindow.frm_time_interval.setVisible(False)
     else:
-        if start_coding.is_nan():
-            paramPanelWindow.frm_time.setVisible(False)
+        if (start_coding is None) or (start_coding.is_nan()):
+            paramPanelWindow.frm_time_interval.setVisible(False)
+            paramPanelWindow.rb_user_defined.setVisible(False)
+            paramPanelWindow.rb_media_duration.setVisible(False)
         else:
             paramPanelWindow.frm_time_interval.setEnabled(False)
             paramPanelWindow.start_time.set_time(start_coding)
             paramPanelWindow.end_time.set_time(end_coding)
-
-    """
-    # hide time interval form
-    if start_coding.is_nan():
-        paramPanelWindow.frm_time.setVisible(False)
-    else:
-        # start and end time
-        paramPanelWindow.start_time.set_time(start_coding)
-        paramPanelWindow.end_time.set_time(end_coding)
-    """
-
-    """
-    if maxTime is None or maxTime.is_nan():
-        paramPanelWindow.rb_media_duration.setVisible(False)
-    """
 
     if selected_observations:
         observedSubjects = project_functions.extract_observed_subjects(self.pj, selected_observations)
