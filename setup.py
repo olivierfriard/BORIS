@@ -54,6 +54,7 @@ setup(
             "preferences.ui",
             "project.ui",
             "portion/*.py",
+            "icons/logo_eye.ico",
         ],
         "": ["README.TXT", "LICENSE.TXT"],
     },
