@@ -24,7 +24,7 @@ Copyright 2012-2022 Olivier Friard
 
 import logging
 import os
-import pathlib
+import pathlib as pl
 import subprocess
 from decimal import Decimal as dec
 
@@ -419,12 +419,8 @@ def extract_events(self):
         '-{globalStop}{extension}" '
     )
     """
-    ffmpeg_extract_command = (
-        '"{ffmpeg_bin}" -ss {start} -i "{input_}" -y -t {duration} {codecs} '
-        ' "{dir_}{sep}{obs_id}_{player}_{subject}_{behavior}_{globalStart}'
-        '-{globalStop}{extension}" '
-    )
-
+    ffmpeg_extract_command = '"{ffmpeg_bin}" -ss {start} -i "{input_}" -y -t {duration} {codecs} '
+    mem_command = ""
     for obs_id in selected_observations:
 
         for nplayer in self.pj[cfg.OBSERVATIONS][obs_id][cfg.FILE]:
@@ -456,89 +452,90 @@ def extract_events(self):
                             idx1 for idx1, x in enumerate(duration1) if row["occurence"] >= sum(duration1[0:idx1])
                         ][-1]
 
-                        # check if media has video
-                        try:
-                            if self.pj[cfg.OBSERVATIONS][obs_id][cfg.MEDIA_INFO][cfg.HAS_VIDEO][
-                                self.pj[cfg.OBSERVATIONS][obs_id][cfg.FILE][nplayer][mediaFileIdx]
-                            ]:
-                                codecs = "-acodec copy -vcodec copy"
-                                # extract extension from video file
-                                extension = pathlib.Path(
+                        if "VIDEO" in items_to_extract.upper():
+                            # check if media has video
+                            has_video = False
+                            try:
+                                has_video = self.pj[cfg.OBSERVATIONS][obs_id][cfg.MEDIA_INFO][cfg.HAS_VIDEO][
                                     self.pj[cfg.OBSERVATIONS][obs_id][cfg.FILE][nplayer][mediaFileIdx]
-                                ).suffix
-                                if not extension:
-                                    extension = ".mp4"
+                                ]
+                            except:
+                                has_video = False
+                            if not has_video:
+                                if (
+                                    dialog.MessageDialog(
+                                        cfg.programName,
+                                        f"The media file {self.pj[cfg.OBSERVATIONS][obs_id][cfg.FILE][nplayer][mediaFileIdx]} does not have a video stream",
+                                        ["Continue", "Abort"],
+                                    )
+                                    == "Abort"
+                                ):
+                                    return
+                                else:
+                                    continue
+
+                            new_extension = ".mp4"
+                            if items_to_extract == "Only video":
+                                codecs = "-an"
                             else:
-                                codecs = "-vn"
-                                extension = ".wav"
+                                codecs = ""
 
-                                logging.debug(
-                                    f"Media {self.pj[cfg.OBSERVATIONS][obs_id][cfg.FILE][nplayer][mediaFileIdx]} does not have video"
-                                )
+                        if items_to_extract == "Only audio":
+                            # check if media has audio
+                            has_audio = False
+                            try:
+                                has_audio = self.pj[cfg.OBSERVATIONS][obs_id][cfg.MEDIA_INFO][cfg.HAS_AUDIO][
+                                    self.pj[cfg.OBSERVATIONS][obs_id][cfg.FILE][nplayer][mediaFileIdx]
+                                ]
+                            except:
+                                has_audio = False
+                            if not has_audio:
 
-                        except Exception:
+                                if (
+                                    dialog.MessageDialog(
+                                        cfg.programName,
+                                        f"The media file {self.pj[cfg.OBSERVATIONS][obs_id][cfg.FILE][nplayer][mediaFileIdx]} does not have an audio stream",
+                                        ["Continue", "Abort"],
+                                    )
+                                    == "Abort"
+                                ):
+                                    return
+                                else:
+                                    continue
 
-                            logging.debug(
-                                f"has_video not found for: {self.pj[cfg.OBSERVATIONS][obs_id][cfg.FILE][nplayer][mediaFileIdx]}"
-                            )
-
-                            continue
-
-                        globalStart = (
-                            dec("0.000") if row["occurence"] < timeOffset else round(row["occurence"] - timeOffset, 3)
-                        )
-                        start = round(
-                            row["occurence"]
-                            - timeOffset
-                            - util.float2decimal(sum(duration1[0:mediaFileIdx]))
-                            - self.pj[cfg.OBSERVATIONS][obs_id][cfg.TIME_OFFSET],
-                            3,
-                        )
-                        if start < timeOffset:
-                            start = dec("0.000")
+                            new_extension = ".wav"
+                            codecs = "-vn"
 
                         if cfg.POINT in behavior_state:
+
+                            globalStart = (
+                                dec("0.000")
+                                if row["occurence"] < timeOffset
+                                else round(row["occurence"] - timeOffset, 3)
+                            )
+                            start = round(
+                                row["occurence"]
+                                - (timeOffset if timeOffset else 1)  # if time offset not set default = 1 s
+                                - util.float2decimal(sum(duration1[0:mediaFileIdx]))
+                                - self.pj[cfg.OBSERVATIONS][obs_id][cfg.TIME_OFFSET],
+                                3,
+                            )
+                            if start < timeOffset:
+                                start = dec("0.000")
 
                             globalStop = round(row["occurence"] + timeOffset, 3)
 
                             stop = round(
                                 row["occurence"]
-                                + timeOffset
+                                + (timeOffset if timeOffset else 1)  # if time offset not set default = 1 s
                                 - util.float2decimal(sum(duration1[0:mediaFileIdx]))
                                 - self.pj[cfg.OBSERVATIONS][obs_id][cfg.TIME_OFFSET],
                                 3,
                             )
 
-                            ffmpeg_command = ffmpeg_extract_command.format(
-                                ffmpeg_bin=self.ffmpeg_bin,
-                                input_=project_functions.full_path(
-                                    self.pj[cfg.OBSERVATIONS][obs_id][cfg.FILE][nplayer][mediaFileIdx],
-                                    self.projectFileName,
-                                ),
-                                start=start,
-                                stop=stop,
-                                codecs=codecs,
-                                globalStart=globalStart,
-                                globalStop=globalStop,
-                                dir_=export_dir,
-                                sep=os.sep,
-                                obs_id=util.safeFileName(obs_id),
-                                player="PLAYER{}".format(nplayer),
-                                subject=util.safeFileName(subject),
-                                behavior=util.safeFileName(behavior),
-                                extension=extension,
-                            )
-
-                            logging.debug(f"ffmpeg command: {ffmpeg_command}")
-
-                            p = subprocess.Popen(
-                                ffmpeg_command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True
-                            )
-                            out, _ = p.communicate()
-
                         if cfg.STATE in behavior_state:
-                            if idx % 2 == 0:
 
+                            if idx % 2 == 0:
                                 # check if stop is on same media file
                                 if (
                                     mediaFileIdx
@@ -561,6 +558,21 @@ def extract_events(self):
                                     if response == "Abort":
                                         return
 
+                                globalStart = (
+                                    dec("0.000")
+                                    if row["occurence"] < timeOffset
+                                    else round(row["occurence"] - timeOffset, 3)
+                                )
+                                start = round(
+                                    row["occurence"]
+                                    - timeOffset
+                                    - util.float2decimal(sum(duration1[0:mediaFileIdx]))
+                                    - self.pj[cfg.OBSERVATIONS][obs_id][cfg.TIME_OFFSET],
+                                    3,
+                                )
+                                if start < timeOffset:
+                                    start = dec("0.000")
+
                                 globalStop = round(rows[idx + 1]["occurence"] + timeOffset, 3)
 
                                 stop = round(
@@ -580,30 +592,40 @@ def extract_events(self):
                                 ):
                                     continue
 
-                                ffmpeg_command = ffmpeg_extract_command.format(
-                                    ffmpeg_bin=self.ffmpeg_bin,
-                                    input_=project_functions.full_path(
-                                        self.pj[cfg.OBSERVATIONS][obs_id][cfg.FILE][nplayer][mediaFileIdx],
-                                        self.projectFileName,
-                                    ),
-                                    start=start,
-                                    duration=stop - start,
-                                    codecs="",
-                                    globalStart=globalStart,
-                                    globalStop=globalStop,
-                                    dir_=export_dir,
-                                    sep=os.sep,
-                                    obs_id=util.safeFileName(obs_id),
-                                    player=f"PLAYER{nplayer}",
-                                    subject=util.safeFileName(subject),
-                                    behavior=util.safeFileName(behavior),
-                                    extension=extension,
+                        new_file_name = pl.Path(export_dir) / pl.Path(
+                            f"{util.safeFileName(obs_id)}_PLAYER{nplayer}_{util.safeFileName(subject).replace(' ', '-')}_{util.safeFileName(behavior)}_{globalStart}-{globalStop}"
+                        ).with_suffix(new_extension)
+                        if new_file_name.is_file():
+                            if mem_command not in (cfg.OVERWRITE_ALL, cfg.SKIP_ALL):
+                                mem_command = dialog.MessageDialog(
+                                    cfg.programName,
+                                    f"The file <b>{new_file_name}</b> already exists.",
+                                    [cfg.OVERWRITE, cfg.OVERWRITE_ALL, cfg.SKIP, cfg.SKIP_ALL, cfg.CANCEL],
                                 )
+                            if mem_command == cfg.CANCEL:
+                                return
+                            if "SKIP" in mem_command.upper():
+                                continue
 
-                                logging.debug("ffmpeg command: {}".format(ffmpeg_command))
-                                p = subprocess.Popen(
-                                    ffmpeg_command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True
-                                )
-                                out, _ = p.communicate()
+                        ffmpeg_command = ffmpeg_extract_command.format(
+                            ffmpeg_bin=self.ffmpeg_bin,
+                            input_=project_functions.full_path(
+                                self.pj[cfg.OBSERVATIONS][obs_id][cfg.FILE][nplayer][mediaFileIdx],
+                                self.projectFileName,
+                            ),
+                            start=start,
+                            duration=stop - start,
+                            codecs=codecs,
+                        )
+
+                        logging.debug(f"ffmpeg command: {ffmpeg_command} '{new_file_name}'")
+
+                        p = subprocess.Popen(
+                            f"{ffmpeg_command} '{new_file_name}'",
+                            stdout=subprocess.PIPE,
+                            stderr=subprocess.PIPE,
+                            shell=True,
+                        )
+                        out, _ = p.communicate()
 
     self.statusbar.showMessage(f"Media sequence extracted in {export_dir}", 0)
