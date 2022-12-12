@@ -350,12 +350,17 @@ def extract_events(self):
         results.ptText.appendHtml(out)
         results.pbSave.setVisible(False)
         results.pbCancel.setVisible(True)
-        if not results.exec_():
+        if results.exec_():
+            # remove live observations
+            selected_observations = [x for x in selected_observations if x not in live_images_obs_list]
+            if not selected_observations:
+                return
+        else:
             return
 
-    # remove live observations
-    selected_observations = [x for x in selected_observations if x not in live_images_obs_list]
-    if not selected_observations:
+    # check if state events are paired
+    not_ok, selected_observations = project_functions.check_state_events(self.pj, selected_observations)
+    if not_ok or not selected_observations:
         return
 
     parameters = select_subj_behav.choose_obs_subj_behav_category(
@@ -368,11 +373,6 @@ def extract_events(self):
     )
 
     if not parameters[cfg.SELECTED_SUBJECTS] or not parameters[cfg.SELECTED_BEHAVIORS]:
-        return
-
-    # check if state events are paired
-    not_ok, selected_observations = project_functions.check_state_events(self.pj, selected_observations)
-    if not_ok or not selected_observations:
         return
 
     # Ask for time interval around the event
@@ -418,16 +418,16 @@ def extract_events(self):
         '-{globalStop}{extension}" '
     )
 
-    for obsId in selected_observations:
+    for obs_id in selected_observations:
 
-        for nplayer in self.pj[cfg.OBSERVATIONS][obsId][cfg.FILE]:
+        for nplayer in self.pj[cfg.OBSERVATIONS][obs_id][cfg.FILE]:
 
-            if not self.pj[cfg.OBSERVATIONS][obsId][cfg.FILE][nplayer]:
+            if not self.pj[cfg.OBSERVATIONS][obs_id][cfg.FILE][nplayer]:
                 continue
 
             duration1 = []  # in seconds
-            for mediaFile in self.pj[cfg.OBSERVATIONS][obsId][cfg.FILE][nplayer]:
-                duration1.append(self.pj[cfg.OBSERVATIONS][obsId][cfg.MEDIA_INFO][cfg.LENGTH][mediaFile])
+            for mediaFile in self.pj[cfg.OBSERVATIONS][obs_id][cfg.FILE][nplayer]:
+                duration1.append(self.pj[cfg.OBSERVATIONS][obs_id][cfg.MEDIA_INFO][cfg.LENGTH][mediaFile])
 
             for subject in parameters[cfg.SELECTED_SUBJECTS]:
 
@@ -435,7 +435,7 @@ def extract_events(self):
 
                     cursor.execute(
                         "SELECT occurence FROM events WHERE observation = ? AND subject = ? AND code = ?",
-                        (obsId, subject, behavior),
+                        (obs_id, subject, behavior),
                     )
                     rows = [{"occurence": util.float2decimal(r["occurence"])} for r in cursor.fetchall()]
 
@@ -451,13 +451,13 @@ def extract_events(self):
 
                         # check if media has video
                         try:
-                            if self.pj[cfg.OBSERVATIONS][obsId][cfg.MEDIA_INFO][cfg.HAS_VIDEO][
-                                self.pj[cfg.OBSERVATIONS][obsId][cfg.FILE][nplayer][mediaFileIdx]
+                            if self.pj[cfg.OBSERVATIONS][obs_id][cfg.MEDIA_INFO][cfg.HAS_VIDEO][
+                                self.pj[cfg.OBSERVATIONS][obs_id][cfg.FILE][nplayer][mediaFileIdx]
                             ]:
                                 codecs = "-acodec copy -vcodec copy"
                                 # extract extension from video file
                                 extension = pathlib.Path(
-                                    self.pj[cfg.OBSERVATIONS][obsId][cfg.FILE][nplayer][mediaFileIdx]
+                                    self.pj[cfg.OBSERVATIONS][obs_id][cfg.FILE][nplayer][mediaFileIdx]
                                 ).suffix
                                 if not extension:
                                     extension = ".mp4"
@@ -466,13 +466,13 @@ def extract_events(self):
                                 extension = ".wav"
 
                                 logging.debug(
-                                    f"Media {self.pj[cfg.OBSERVATIONS][obsId][cfg.FILE][nplayer][mediaFileIdx]} does not have video"
+                                    f"Media {self.pj[cfg.OBSERVATIONS][obs_id][cfg.FILE][nplayer][mediaFileIdx]} does not have video"
                                 )
 
                         except Exception:
 
                             logging.debug(
-                                f"has_video not found for: {self.pj[cfg.OBSERVATIONS][obsId][cfg.FILE][nplayer][mediaFileIdx]}"
+                                f"has_video not found for: {self.pj[cfg.OBSERVATIONS][obs_id][cfg.FILE][nplayer][mediaFileIdx]}"
                             )
 
                             continue
@@ -484,7 +484,7 @@ def extract_events(self):
                             row["occurence"]
                             - timeOffset
                             - util.float2decimal(sum(duration1[0:mediaFileIdx]))
-                            - self.pj[cfg.OBSERVATIONS][obsId][cfg.TIME_OFFSET],
+                            - self.pj[cfg.OBSERVATIONS][obs_id][cfg.TIME_OFFSET],
                             3,
                         )
                         if start < timeOffset:
@@ -498,14 +498,14 @@ def extract_events(self):
                                 row["occurence"]
                                 + timeOffset
                                 - util.float2decimal(sum(duration1[0:mediaFileIdx]))
-                                - self.pj[cfg.OBSERVATIONS][obsId][cfg.TIME_OFFSET],
+                                - self.pj[cfg.OBSERVATIONS][obs_id][cfg.TIME_OFFSET],
                                 3,
                             )
 
                             ffmpeg_command = ffmpeg_extract_command.format(
                                 ffmpeg_bin=self.ffmpeg_bin,
                                 input_=project_functions.full_path(
-                                    self.pj[cfg.OBSERVATIONS][obsId][cfg.FILE][nplayer][mediaFileIdx],
+                                    self.pj[cfg.OBSERVATIONS][obs_id][cfg.FILE][nplayer][mediaFileIdx],
                                     self.projectFileName,
                                 ),
                                 start=start,
@@ -515,7 +515,7 @@ def extract_events(self):
                                 globalStop=globalStop,
                                 dir_=exportDir,
                                 sep=os.sep,
-                                obsId=util.safeFileName(obsId),
+                                obsId=util.safeFileName(obs_id),
                                 player="PLAYER{}".format(nplayer),
                                 subject=util.safeFileName(subject),
                                 behavior=util.safeFileName(behavior),
@@ -559,15 +559,16 @@ def extract_events(self):
                                 stop = round(
                                     rows[idx + 1]["occurence"]
                                     + timeOffset
-                                    - util.float2decimal(sum(duration1[0:mediaFileIdx])),
+                                    - util.float2decimal(sum(duration1[0:mediaFileIdx]))
+                                    - self.pj[cfg.OBSERVATIONS][obs_id][cfg.TIME_OFFSET],
                                     3,
                                 )
 
                                 # check if start after length of media
                                 if (
                                     start
-                                    > self.pj[cfg.OBSERVATIONS][obsId][cfg.MEDIA_INFO][cfg.LENGTH][
-                                        self.pj[cfg.OBSERVATIONS][obsId][cfg.FILE][nplayer][mediaFileIdx]
+                                    > self.pj[cfg.OBSERVATIONS][obs_id][cfg.MEDIA_INFO][cfg.LENGTH][
+                                        self.pj[cfg.OBSERVATIONS][obs_id][cfg.FILE][nplayer][mediaFileIdx]
                                     ]
                                 ):
                                     continue
@@ -575,7 +576,7 @@ def extract_events(self):
                                 ffmpeg_command = ffmpeg_extract_command.format(
                                     ffmpeg_bin=self.ffmpeg_bin,
                                     input_=project_functions.full_path(
-                                        self.pj[cfg.OBSERVATIONS][obsId][cfg.FILE][nplayer][mediaFileIdx],
+                                        self.pj[cfg.OBSERVATIONS][obs_id][cfg.FILE][nplayer][mediaFileIdx],
                                         self.projectFileName,
                                     ),
                                     start=start,
@@ -585,7 +586,7 @@ def extract_events(self):
                                     globalStop=globalStop,
                                     dir_=exportDir,
                                     sep=os.sep,
-                                    obsId=util.safeFileName(obsId),
+                                    obsId=util.safeFileName(obs_id),
                                     player=f"PLAYER{nplayer}",
                                     subject=util.safeFileName(subject),
                                     behavior=util.safeFileName(behavior),
@@ -596,4 +597,4 @@ def extract_events(self):
                                 p = subprocess.Popen(
                                     ffmpeg_command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True
                                 )
-                                out, error = p.communicate()
+                                out, _ = p.communicate()

@@ -3,11 +3,11 @@ create_wheel:
 
 
 upload_pip_test:
-	python3 -m twine upload --repository testpypi dist/*
+	python3 -m twine upload --verbose --repository testpypi dist/*
 
 
 upload_pip:
-	python3 -m twine upload dist/*
+	python3 -m twine upload --verbose dist/*
 
 
 
