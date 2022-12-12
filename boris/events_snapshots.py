@@ -395,13 +395,13 @@ def extract_events(self):
     if not ok:
         return
 
-    exportDir = QFileDialog().getExistingDirectory(
+    export_dir = QFileDialog().getExistingDirectory(
         self,
         "Choose a directory to extract events",
         os.path.expanduser("~"),
         options=QFileDialog(self).ShowDirsOnly,
     )
-    if not exportDir:
+    if not export_dir:
         return
 
     cursor = db_functions.load_events_in_db(
@@ -412,9 +412,16 @@ def extract_events(self):
         time_interval=cfg.TIME_FULL_OBS,
     )
 
+    """
     ffmpeg_extract_command = (
         '"{ffmpeg_bin}" -i "{input_}" -y -ss {start} -to {stop} {codecs} '
         ' "{dir_}{sep}{obsId}_{player}_{subject}_{behavior}_{globalStart}'
+        '-{globalStop}{extension}" '
+    )
+    """
+    ffmpeg_extract_command = (
+        '"{ffmpeg_bin}" -ss {start} -i "{input_}" -y -t {duration} {codecs} '
+        ' "{dir_}{sep}{obs_id}_{player}_{subject}_{behavior}_{globalStart}'
         '-{globalStop}{extension}" '
     )
 
@@ -513,9 +520,9 @@ def extract_events(self):
                                 codecs=codecs,
                                 globalStart=globalStart,
                                 globalStop=globalStop,
-                                dir_=exportDir,
+                                dir_=export_dir,
                                 sep=os.sep,
-                                obsId=util.safeFileName(obs_id),
+                                obs_id=util.safeFileName(obs_id),
                                 player="PLAYER{}".format(nplayer),
                                 subject=util.safeFileName(subject),
                                 behavior=util.safeFileName(behavior),
@@ -580,13 +587,13 @@ def extract_events(self):
                                         self.projectFileName,
                                     ),
                                     start=start,
-                                    stop=stop,
-                                    codecs=codecs,
+                                    duration=stop - start,
+                                    codecs="",
                                     globalStart=globalStart,
                                     globalStop=globalStop,
-                                    dir_=exportDir,
+                                    dir_=export_dir,
                                     sep=os.sep,
-                                    obsId=util.safeFileName(obs_id),
+                                    obs_id=util.safeFileName(obs_id),
                                     player=f"PLAYER{nplayer}",
                                     subject=util.safeFileName(subject),
                                     behavior=util.safeFileName(behavior),
@@ -598,3 +605,5 @@ def extract_events(self):
                                     ffmpeg_command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True
                                 )
                                 out, _ = p.communicate()
+
+    self.statusbar.showMessage(f"Media sequence extracted in {export_dir}", 0)
