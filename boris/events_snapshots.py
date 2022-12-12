@@ -228,25 +228,6 @@ def events_snapshots(self):
                             )
 
                             vframes = 1 if not time_interval else int(mediafile_fps * time_interval * 2)
-                            ffmpeg_command = (
-                                f'"{self.ffmpeg_bin}" '
-                                f"-ss {start:.3f} "
-                                f'-i "{media_path}" '
-                                f"-vframes {vframes} "
-                                f'"{exportDir}{os.sep}'
-                                f"{util.safeFileName(obsId)}"
-                                f"_PLAYER{nplayer}"
-                                f"_{util.safeFileName(subject)}"
-                                f"_{util.safeFileName(behavior)}"
-                                f'_{start:.3f}_%08d.{self.frame_bitmap_format.lower()}"'
-                            )
-
-                            logging.debug(f"ffmpeg command: {ffmpeg_command}")
-
-                            p = subprocess.Popen(
-                                ffmpeg_command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True
-                            )
-                            out, error = p.communicate()
 
                         if cfg.STATE in behavior_state:
                             if idx % 2 == 0:
@@ -301,26 +282,28 @@ def events_snapshots(self):
                                     self.projectFileName,
                                 )
 
-                                extension = "png"
                                 vframes = int((stop - start) * mediafile_fps + time_interval * mediafile_fps * 2)
-                                ffmpeg_command = (
-                                    f'"{self.ffmpeg_bin}" -ss {start:.3f} '
-                                    f'-i "{media_path}" '
-                                    f"-vframes {vframes} "
-                                    f'"{exportDir}{os.sep}'
-                                    f"{util.safeFileName(obsId)}"
-                                    f"_PLAYER{nplayer}"
-                                    f"_{util.safeFileName(subject)}"
-                                    f"_{util.safeFileName(behavior)}"
-                                    f'_{start:.3f}_%08d.{self.frame_bitmap_format.lower()}"'
-                                )
 
-                                logging.debug(f"ffmpeg command: {ffmpeg_command}")
+                            else:
+                                continue
 
-                                p = subprocess.Popen(
-                                    ffmpeg_command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True
-                                )
-                                out, _ = p.communicate()
+                        ffmpeg_command = (
+                            f'"{self.ffmpeg_bin}" '
+                            f"-ss {start:.3f} "
+                            f'-i "{media_path}" '
+                            f"-vframes {vframes} "
+                            f'"{exportDir}{os.sep}'
+                            f"{util.safeFileName(obsId).replace(' ', '-')}"
+                            f"_PLAYER{nplayer}"
+                            f"_{util.safeFileName(subject).replace(' ', '-')}"
+                            f"_{util.safeFileName(behavior).replace(' ', '-')}"
+                            f'_{start:.3f}_%08d.{self.frame_bitmap_format.lower()}"'
+                        )
+
+                        logging.debug(f"ffmpeg command: {ffmpeg_command}")
+
+                        p = subprocess.Popen(ffmpeg_command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
+                        out, _ = p.communicate()
 
 
 def extract_events(self):
@@ -515,7 +498,7 @@ def extract_events(self):
                             )
                             start = round(
                                 row["occurence"]
-                                - (timeOffset if timeOffset else 1)  # if time offset not set default = 1 s
+                                - (timeOffset if timeOffset else 1)  # if time offset is not set default = 1 s
                                 - util.float2decimal(sum(duration1[0:mediaFileIdx]))
                                 - self.pj[cfg.OBSERVATIONS][obs_id][cfg.TIME_OFFSET],
                                 3,
@@ -527,7 +510,7 @@ def extract_events(self):
 
                             stop = round(
                                 row["occurence"]
-                                + (timeOffset if timeOffset else 1)  # if time offset not set default = 1 s
+                                + (timeOffset if timeOffset else 1)  # if time offset is not set default = 1 s
                                 - util.float2decimal(sum(duration1[0:mediaFileIdx]))
                                 - self.pj[cfg.OBSERVATIONS][obs_id][cfg.TIME_OFFSET],
                                 3,
@@ -592,8 +575,11 @@ def extract_events(self):
                                 ):
                                     continue
 
+                            else:
+                                continue
+
                         new_file_name = pl.Path(export_dir) / pl.Path(
-                            f"{util.safeFileName(obs_id)}_PLAYER{nplayer}_{util.safeFileName(subject).replace(' ', '-')}_{util.safeFileName(behavior)}_{globalStart}-{globalStop}"
+                            f"{util.safeFileName(obs_id).replace(' ', '-')}_PLAYER{nplayer}_{util.safeFileName(subject).replace(' ', '-')}_{util.safeFileName(behavior)}_{globalStart}-{globalStop}"
                         ).with_suffix(new_extension)
                         if new_file_name.is_file():
                             if mem_command not in (cfg.OVERWRITE_ALL, cfg.SKIP_ALL):
