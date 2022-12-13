@@ -38,7 +38,7 @@ from . import project_functions
 from . import dialog
 from . import db_functions
 
-from PyQt5.QtWidgets import QFileDialog, QMessageBox, QInputDialog
+from PyQt5.QtWidgets import QApplication, QFileDialog, QMessageBox, QInputDialog
 
 
 def export_events_as_behavioral_sequences(self, separated_subjects=False, timed=False):
@@ -757,17 +757,26 @@ def export_events_as_textgrid(self):
 
     point_template = "        points [{count}]:\n" "            number = {number}\n" '            mark = "{mark}"\n'
 
+    # widget for results
+    self.results = dialog.Results_dialog()
+    self.results.setWindowTitle(f"{cfg.programName} - Export events as Praat TextGrid")
+    self.results.show()
+
+    cursor = db_functions.load_events_in_db(
+        self.pj,
+        parameters[cfg.SELECTED_SUBJECTS],
+        selected_observations,
+        parameters[cfg.SELECTED_BEHAVIORS],
+    )
+
+    file_count: int = 0
+
     for obs_id in selected_observations:
+
+        next_obs: bool = False
 
         total_media_duration = round(
             observation_operations.observation_total_length(self.pj[cfg.OBSERVATIONS][obs_id]), 3
-        )
-
-        cursor = db_functions.load_events_in_db(
-            self.pj,
-            parameters[cfg.SELECTED_SUBJECTS],
-            selected_observations,
-            parameters[cfg.SELECTED_BEHAVIORS],
         )
 
         cursor.execute(
@@ -829,18 +838,21 @@ def export_events_as_textgrid(self):
                 out += interval_template.format(count=count, name="null", xmin=0.0, xmax=rows[0]["occurence"])
 
             for idx, row in enumerate(rows):
-                if idx % 2 == 0:
 
+                if idx % 2 == 0:
                     # check if events not interlacced
                     if row["code"] != rows[idx + 1]["code"]:
-                        QMessageBox.critical(
-                            None,
-                            cfg.programName,
-                            "The events are interlaced. It is not possible to produce the Praat TextGrid file",
-                            QMessageBox.Ok | QMessageBox.Default,
-                            QMessageBox.NoButton,
+
+                        self.results.ptText.appendHtml(
+                            (
+                                f"The events are interlaced for subject <b>{subject}</b> in the observation <b>{obs_id}</b>. "
+                                "It is not possible to create the Praat TextGrid file."
+                            )
                         )
-                        return
+                        QApplication.processEvents()
+
+                        next_obs = True
+                        break
 
                     count += 1
                     out += interval_template.format(
@@ -860,6 +872,9 @@ def export_events_as_textgrid(self):
                             count += 1
                         else:
                             rows[idx + 2]["occurence"] = rows[idx + 1]["occurence"]
+
+            if next_obs:
+                break
 
             # check if last event ends at the end of media file
             if rows[-1]["occurence"] < observation_operations.observation_total_length(
@@ -912,6 +927,9 @@ def export_events_as_textgrid(self):
                 intervalsMax=intervalsMax,
             )
 
+        if next_obs:
+            continue
+
         # check if file already exists
         if (
             mem_command != cfg.OVERWRITE_ALL
@@ -926,12 +944,22 @@ def export_events_as_textgrid(self):
             )
             if mem_command == cfg.CANCEL:
                 return
-            if mem_command in [cfg.SKIP, cfg.SKIP_ALL]:
+            if mem_command in (cfg.SKIP, cfg.SKIP_ALL):
                 continue
 
         try:
             with open(f"{pl.Path(exportDir) / util.safeFileName(obs_id)}.textGrid", "w") as f:
                 f.write(out)
-
+            file_count += 1
+            self.results.ptText.appendHtml(
+                f"File {pl.Path(exportDir) / util.safeFileName(obs_id)}.textGrid was created."
+            )
+            QApplication.processEvents()
         except Exception:
-            QMessageBox.critical(self, cfg.programName, "The file can not be saved")
+            self.results.ptText.appendHtml(
+                f"The file {pl.Path(exportDir) / util.safeFileName(obs_id)}.textGrid can not be created."
+            )
+            QApplication.processEvents()
+
+    self.results.ptText.appendHtml(f"Done.  {file_count} file(s) were created in {exportDir}.")
+    QApplication.processEvents()
