@@ -167,7 +167,7 @@ def load_events_in_db(
 
 def load_aggregated_events_in_db(
     pj: dict, selected_subjects: list, selected_observations: list, selected_behaviors: list
-) -> Tuple[bool, str, Optional[sqlite3.connector]]:
+) -> Tuple[bool, str, Optional[sqlite3.Connection]]:
     """
     populate a memory sqlite database with aggregated events from selected_observations, selected_subjects and selected_behaviors
 
