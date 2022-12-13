@@ -768,7 +768,6 @@ def export_events_as_textgrid(self):
             parameters[cfg.SELECTED_SUBJECTS],
             selected_observations,
             parameters[cfg.SELECTED_BEHAVIORS],
-            time_interval=cfg.TIME_FULL_OBS,
         )
 
         cursor.execute(
@@ -798,7 +797,10 @@ def export_events_as_textgrid(self):
 
         subject_index = 0
         for subject in parameters[cfg.SELECTED_SUBJECTS]:
-            if subject not in [x[cfg.EVENT_SUBJECT_FIELD_IDX] for x in self.pj[cfg.OBSERVATIONS][obs_id][cfg.EVENTS]]:
+            if subject not in [
+                x[cfg.EVENT_SUBJECT_FIELD_IDX] if x[cfg.EVENT_SUBJECT_FIELD_IDX] else cfg.NO_FOCAL_SUBJECT
+                for x in self.pj[cfg.OBSERVATIONS][obs_id][cfg.EVENTS]
+            ]:
                 continue
 
             intervalsMin, intervalsMax = 0, total_media_duration

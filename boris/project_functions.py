@@ -553,7 +553,7 @@ def create_subtitles(pj: dict, selected_observations: list, parameters: dict, ex
     for obs_id in selected_observations:
         if pj[cfg.OBSERVATIONS][obs_id][cfg.TYPE] == cfg.LIVE:
             out = ""
-            if parameters["time"] in ("limit to events", "full obs"):
+            if parameters["time"] in (cfg.TIME_EVENTS, cfg.TIME_FULL_OBS):
                 cursor.execute(
                     (
                         "SELECT subject, behavior, start, stop, type, modifiers FROM aggregated_events "
@@ -572,7 +572,7 @@ def create_subtitles(pj: dict, selected_observations: list, parameters: dict, ex
                     + parameters[cfg.SELECTED_BEHAVIORS],
                 )
 
-            else:  # 'time interval'
+            else:  # arbitrary 'time interval'
                 cursor.execute(
                     (
                         "SELECT subject, behavior, start, stop, type, modifiers FROM aggregated_events "
@@ -644,7 +644,7 @@ def create_subtitles(pj: dict, selected_observations: list, parameters: dict, ex
                         return False, f"The length for media file {media_file} is not available"
                     out = ""
 
-                    if parameters["time"] in ("limit to events", "full obs"):
+                    if parameters["time"] in (cfg.TIME_EVENTS, cfg.TIME_FULL_OBS):
                         cursor.execute(
                             (
                                 "SELECT subject, behavior, start, stop, type, modifiers FROM aggregated_events "
@@ -666,7 +666,7 @@ def create_subtitles(pj: dict, selected_observations: list, parameters: dict, ex
                             + parameters[cfg.SELECTED_BEHAVIORS],
                         )
 
-                    else:
+                    else:  # arbitrary 'time interval'
 
                         cursor.execute(
                             (
