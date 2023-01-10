@@ -24,16 +24,22 @@ programName: str = "BORIS"
 
 project_format_version = "7.0"
 
-VLC_MIN_VERSION = "2"
+# minimal project version for handling observations from images
+IMAGES_OBS_PROJECT_MIN_VERSION = (8, 6)
+
+IMAGE_EXTENSIONS = ("*.jpg", "*.png", "*.jpeg")
 
 CHECK_NEW_VERSION_DELAY = 15 * 24 * 60 * 60
 
 N_PLAYER = 8
 
+MAX_UNDO_QUEUE = 25
+
 NA = "NA"
 
-VLC_TIMER_OUT = 200
-SPECTRO_TIMER = 200
+CTRL_KEY = "Ctrl"
+
+SPECTRO_TIMER = 500
 
 function_keys = {
     16777264: "F1",
@@ -53,6 +59,7 @@ function_keys = {
 PROJECT_NAME = "project_name"
 PROJECT_DATE = "project_date"
 PROJECT_DESCRIPTION = "project_description"
+PROJECT_VERSION = "project_format_version"
 
 TIME_FORMAT = "time_format"
 
@@ -67,19 +74,34 @@ ETHOGRAM = "behaviors_conf"
 BEHAVIORAL_CATEGORIES = "behavioral_categories"
 CONVERTERS = "converters"
 
+OFFSET = "offset"
+
 OBSERVATION_TIME_INTERVAL = "observation time interval"
 
 SUBJECT_NAME = "name"
 
 TIME_BUDGET_FORMAT = "time_budget_format"
+"""
 COMPACT_TIME_BUDGET_FORMAT = "compact"
 LONG_TIME_BUDGET_FORMAT = "long"
 DEFAULT_TIME_BUDGET_FORMAT = LONG_TIME_BUDGET_FORMAT
+"""
 
 TIME_BIN_SIZE = "time bin size"
 
 CODING_MAP_RESIZE_W = 640
 CODING_MAP_RESIZE_H = 640
+
+# playerType
+LIVE = "LIVE"
+MEDIA = "MEDIA"
+IMAGES = "IMAGES"
+
+VIEWER_MEDIA = "VIEWER_MEDIA"
+VIEWER_LIVE = "VIEWER_LIVE"
+VIEWER_IMAGES = "VIEWER_IMAGES"
+
+VIEWERS = (VIEWER_MEDIA, VIEWER_LIVE, VIEWER_IMAGES)
 
 POINT_EVENT_PLOT_DURATION = 0.010
 POINT_EVENT_PLOT_COLOR = "black"
@@ -99,18 +121,25 @@ DISPLAY_SUBTITLES = "display_subtitles"
 YES = "Yes"
 NO = "No"
 CANCEL = "Cancel"
+APPEND = "Append"
+REPLACE = "Replace"
 REMOVE = "Remove"
 SAVE = "Save"
 DISCARD = "Discard"
 OK = "OK"
 OVERWRITE = "Overwrite"
 OVERWRITE_ALL = "Overwrite all"
+SKIP = "Skip"
+SKIP_ALL = "Skip all"
 
 NO_FOCAL_SUBJECT = "No focal subject"
 
 TYPE = "type"
 FILE = "file"
 DESCRIPTION = "description"
+DIRECTORIES_LIST = "directories_list"
+
+SAVE_DATASET = 32
 
 PLOT_DATA = "plot_data"
 
@@ -138,8 +167,25 @@ DATA_PLOT_FIELDS = {
 DATA_PLOT_STYLES = ["b-", "r-", "g-", "bo", "ro", "go"]
 
 BEHAVIOR_CODE = "code"
+SUBJECT = "subject"
+MODIFIER = "modifier"
+COMMENT = "comment"
 BEHAVIOR_KEY = "key"
 BEHAVIOR_CATEGORY = "category"
+
+FILE_PATH = "file_path"
+
+IMAGE_INDEX = "image index"
+IMAGE_PATH = "image path"
+
+ZOOM_LEVEL = "zoom level"
+DISPLAY_MEDIA_SUBTITLES = "display subtitles"
+OVERLAY = "video overlay"
+
+
+USE_EXIF_DATE = "use_exif_date"
+TIME_LAPSE = "time_lapse_delay"
+
 
 # fields for event configuration
 fields = {
@@ -206,43 +252,71 @@ BEHAVIOR_TYPES = [
 DEFAULT_BEHAVIOR_TYPE = "Point event"
 
 # fields for events table
-tw_events_fields = ["time", "subject", "code", "type", "modifier", "comment"]
+MEDIA_TW_EVENTS_FIELDS = ("time", "subject", "code", "type", "modifier", "comment")
+LIVE_TW_EVENTS_FIELDS = ("time", "subject", "code", "type", "modifier", "comment")
+IMAGES_TW_EVENTS_FIELDS = ("time", "subject", "code", "type", "modifier", "comment", "image index", "image path")
+
+TW_EVENTS_FIELDS = {
+    MEDIA: MEDIA_TW_EVENTS_FIELDS,
+    LIVE: LIVE_TW_EVENTS_FIELDS,
+    VIEWER_MEDIA: MEDIA_TW_EVENTS_FIELDS,
+    VIEWER_LIVE: LIVE_TW_EVENTS_FIELDS,
+    IMAGES: IMAGES_TW_EVENTS_FIELDS,
+    VIEWER_IMAGES: IMAGES_TW_EVENTS_FIELDS,
+}
+
+# create dictionaries
+TW_OBS_FIELD = {}
+for observation_type in TW_EVENTS_FIELDS:
+    TW_OBS_FIELD[observation_type] = {}
+    for idx, field in enumerate(TW_EVENTS_FIELDS[observation_type]):
+        TW_OBS_FIELD[observation_type][field] = idx
+
 
 # fields for project events list
-pj_events_fields = ["time", "subject", "code", "modifier", "comment"]
+MEDIA_PJ_EVENTS_FIELDS = ("time", "subject", "code", "modifier", "comment")
+LIVE_PJ_EVENTS_FIELDS = ("time", "subject", "code", "modifier", "comment")
+IMAGES_PJ_EVENTS_FIELDS = ("time", "subject", "code", "modifier", "comment", "image index", "image path")
 
+PJ_EVENTS_FIELDS = {
+    MEDIA: MEDIA_PJ_EVENTS_FIELDS,
+    VIEWER_MEDIA: MEDIA_PJ_EVENTS_FIELDS,
+    LIVE: LIVE_PJ_EVENTS_FIELDS,
+    VIEWER_LIVE: LIVE_PJ_EVENTS_FIELDS,
+    IMAGES: IMAGES_PJ_EVENTS_FIELDS,
+    VIEWER_IMAGES: IMAGES_PJ_EVENTS_FIELDS,
+}
+
+# fields for independent variable definition
 tw_indVarFields = ["label", "description", "type", "default value", "possible values"]
+
+
+PJ_OBS_FIELDS = {}
+for observation_type in PJ_EVENTS_FIELDS:
+    PJ_OBS_FIELDS[observation_type] = {}
+    for idx, field in enumerate(PJ_EVENTS_FIELDS[observation_type]):
+        PJ_OBS_FIELDS[observation_type][field] = idx
+
+EVENT_TIME_FIELD_IDX = 0
+EVENT_SUBJECT_FIELD_IDX = 1
+EVENT_BEHAVIOR_FIELD_IDX = 2
+EVENT_MODIFIER_FIELD_IDX = 3
+EVENT_COMMENT_FIELD_IDX = 4
+EVENT_STATUS_FIELD_IDX = 5
+# EVENT_IMAGEIDX_FIELD_IDX = 6
+EVENT_IMAGEPATH_FIELD_IDX = 7
+
 
 BEHAV_CODING_MAP_FIELDS = ["name", "Behavior codes"]
 
-EXCEL_FORBIDDEN_CHARACTERS = r"\/*[]:?"
+# characters not allowed in Excel sheet name
+EXCEL_FORBIDDEN_CHARACTERS: str = r"\/*[]:?"
 
-# create dictionaries
-tw_obs_fields, pj_obs_fields = {}, {}
 
-for idx, field in enumerate(tw_events_fields):
-    tw_obs_fields[field] = idx
+# indexes of project window
+MEDIA_TAB_IDX = 0
+LIVE_TAB_IDX = 1
 
-for idx, field in enumerate(pj_events_fields):
-    pj_obs_fields[field] = idx
-
-EVENT_TIME_FIELD_IDX = 0
-
-SUBJECT_EVENT_FIELD = 1  # to be removed after check
-EVENT_SUBJECT_FIELD_IDX = 1
-
-BEHAVIOR_EVENT_FIELD = 2  # to be removed after check
-EVENT_BEHAVIOR_FIELD_IDX = 2
-
-EVENT_MODIFIER_FIELD_IDX = 3
-
-EVENT_COMMENT_FIELD_IDX = 4
-
-SUBJECT_NAME_FIELD_IDX = 1
-
-LIVE = "LIVE"
-MEDIA = "MEDIA"
-VIEWER = "VIEWER"
 
 HHMMSS = "hh:mm:ss"
 HHMMSSZZZ = "hh:mm:ss.zzz"
@@ -258,9 +332,11 @@ LIST = "list"
 EDIT = "edit"
 OPEN = "open"
 VIEW = "view"
+OBS_START = "start"
 SELECT = "select"
 SINGLE = "single"
 MULTIPLE = "multiple"
+
 
 SELECT1 = "select1"
 
@@ -296,8 +372,12 @@ OBSERVATIONS = "observations"
 
 CLOSE_BEHAVIORS_BETWEEN_VIDEOS = "close_behaviors_between_videos"
 
-VLC = "vlc"
-FFMPEG = "ffmpeg"
+MPV_HWDEC_OPTIONS = ["auto", "auto-safe", "no"]
+MPV_HWDEC_DEFAULT_VALUE = "auto"
+MPV_HWDEC = "mpv_hwdec"
+
+VIDEO_VIEWER = 0
+PICTURE_VIEWER = 1
 
 SAVE_FRAMES = "save_frames"
 MEMORY_FOR_FRAMES = "memory_for_frames"
@@ -325,12 +405,18 @@ ALL_PLAYERS = [str(x + 1) for x in range(N_PLAYER)]
 VISUALIZE_SPECTROGRAM = "visualize_spectrogram"
 VISUALIZE_WAVEFORM = "visualize_waveform"
 
+# plot type
+WAVEFORM_PLOT = "waveform"
+SPECTROGRAM_PLOT = "spectrogram"
+EVENTS_PLOT = "plot_events"
+
+
 POINT_EVENT_ST_DURATION = 0.5
 
 VIDEO_TAB = 0
 FRAME_TAB = 1
 
-slider_maximum = 1000
+SLIDER_MAXIMUM = 1000
 
 FRAME_BITMAP_FORMAT_LIST = ["JPG", "PNG"]
 FRAME_DEFAULT_BITMAP_FORMAT = "JPG"
@@ -364,33 +450,18 @@ subtitlesColors = [
 ]
 
 CATEGORY_COLORS_LIST = [
-    "magenta",
-    "yellow",
-    "lime",
-    "darksalmon",
-    "purple",
-    "orange",
-    "maroon",
-    "silver",
-    "slateblue",
-    "hotpink",
-    "steelblue",
-    "darkgoldenrod",
-    "aqua",
-    "aquamarine",
-    "beige",
-    "bisque",
-    "black",
-    "blanchedalmond",
-    "blueviolet",
-    "brown",
-    "burlywood",
-    "cadetblue",
+    "#FF96CC",
+    "#96FF9C",
+    "#CCFFFE",
+    "#EEFF70",
+    "#FF4F64",
+    "#F8BF15",
+    "#3DC7AD",
 ]
 
 CODING_PAD_CONFIG = "coding pad configuration"
 CODING_PAD_GEOMETRY = "coding pad geometry"
-# NO_COLOR_CODING_PAD = "#777777"
+NO_COLOR_CODING_PAD = "#777777"
 
 SPECTROGRAM_COLOR_MAPS = ["viridis", "inferno", "plasma", "magma", "gray", "YlOrRd"]
 SPECTROGRAM_DEFAULT_COLOR_MAP = "viridis"
@@ -560,11 +631,11 @@ BEHAVIORS_PLOT_COLORS = [
 ]
 
 EMPTY_PROJECT = {
-    "time_format": HHMMSS,
-    "project_date": "",
-    "project_name": "",
-    "project_description": "",
-    "project_format_version": project_format_version,
+    TIME_FORMAT: HHMMSS,
+    PROJECT_DATE: "",
+    PROJECT_NAME: "",
+    PROJECT_DESCRIPTION: "",
+    PROJECT_VERSION: project_format_version,
     SUBJECTS: {},
     ETHOGRAM: {},
     OBSERVATIONS: {},
@@ -580,5 +651,40 @@ INIT_PARAM = {
     SAVE_FRAMES: DISK,
     MEMORY_FOR_FRAMES: DEFAULT_MEMORY_FOR_FRAMES,
     ADAPT_FAST_JUMP: ADAPT_FAST_JUMP_DEFAULT,
-    TIME_BUDGET_FORMAT: DEFAULT_TIME_BUDGET_FORMAT,
+    # TIME_BUDGET_FORMAT: DEFAULT_TIME_BUDGET_FORMAT,
+    MPV_HWDEC: MPV_HWDEC_DEFAULT_VALUE,
+}
+
+
+# Output format
+TSV = "Tab Separated Values (*.tsv)"
+CSV = "Comma Separated Values (*.csv)"
+ODS = "OpenDocument Spreadsheet ODS (*.ods)"
+ODS_WB = "OpenDocument Workbook (*.ods)"
+XLSX = "Microsoft Excel Spreadsheet XLSX (*.xlsx)"
+XLSX_WB = "Microsoft Excel Workbook (*.xlsx)"
+XLS = "Legacy Microsoft Excel Spreadsheet XLS (*.xls)"
+HTML = "HTML (*.html)"
+PANDAS_DF = "Pandas DataFrame (*.pkl)"
+RDS = "R dataframe (*.rds)"
+SQL = "SQL dump file (*.sql)"
+SDIS = "SDIS (*.sds)"
+TBS = "Timed Behavioral Sequences (*.tbs)"
+TEXT_FILE = "Text file"
+
+FILE_NAME_SUFFIX = {
+    TSV: "tsv",
+    CSV: "csv",
+    ODS: "ods",
+    ODS_WB: "ods",
+    XLSX: "xlsx",
+    XLSX_WB: "xlsx",
+    XLS: "xls",
+    HTML: "html",
+    PANDAS_DF: "pkl",
+    RDS: "rds",
+    SQL: "sql",
+    SDIS: "sds",
+    TBS: "tbs",
+    TEXT_FILE: "cli",
 }

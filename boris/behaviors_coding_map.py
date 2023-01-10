@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """
 BORIS
 Behavioral Observation Research Interactive Software
@@ -23,12 +22,25 @@ This file is part of BORIS.
 
 from PyQt5.QtGui import *
 from PyQt5.QtCore import *
-from PyQt5.QtWidgets import *
+from PyQt5.QtWidgets import (
+    QLabel,
+    QHBoxLayout,
+    QGraphicsView,
+    QGraphicsScene,
+    QWidget,
+    QVBoxLayout,
+    QLineEdit,
+    QPushButton,
+    QGraphicsPixmapItem,
+    QGraphicsPolygonItem,
+    QMessageBox,
+    QInputDialog,
+    QApplication,
+)
 
 import json
 import binascii
-import os
-from boris import config
+from . import config as cfg
 
 codeSeparator = ","
 penWidth = 0
@@ -36,17 +48,16 @@ penStyle = Qt.NoPen
 
 
 class BehaviorsCodingMapWindowClass(QWidget):
-
     class View(QGraphicsView):
 
         mousePress = pyqtSignal(QMouseEvent)
         mouseMove = pyqtSignal(QMouseEvent)
 
         def eventFilter(self, source, event):
-            if (event.type() == QEvent.MouseMove):
+            if event.type() == QEvent.MouseMove:
                 self.mouseMove.emit(event)
 
-            if (event.type() == QEvent.MouseButtonPress):
+            if event.type() == QEvent.MouseButtonPress:
                 self.mousePress.emit(event)
 
             return QWidget.eventFilter(self, source, event)
@@ -75,7 +86,7 @@ class BehaviorsCodingMapWindowClass(QWidget):
         self.codingMap = behaviors_coding_map
         self.idx = idx
 
-        self.setWindowTitle("Behaviors coding map: {}".format(self.codingMap["name"]))
+        self.setWindowTitle(f"Behaviors coding map: {self.codingMap['name']}")
         Vlayout = QVBoxLayout()
 
         self.view = self.View(self)
@@ -110,7 +121,7 @@ class BehaviorsCodingMapWindowClass(QWidget):
         """
         send event (if keypress) to main window
         """
-        if (event.type() == QEvent.KeyPress):
+        if event.type() == QEvent.KeyPress:
             self.keypressSignal.emit(event)
             return True
         else:
@@ -179,14 +190,51 @@ class BehaviorsCodingMapWindowClass(QWidget):
             self.polygonsList2.append([areaCode, polygon])
 
 
-if __name__ == '__main__':
+def show_behaviors_coding_map(self):
+    """
+    show a behavior coding map
+    """
+
+    if cfg.BEHAVIORS_CODING_MAP not in self.pj or not self.pj[cfg.BEHAVIORS_CODING_MAP]:
+        QMessageBox.warning(self, cfg.programName, "No behaviors coding map found in current project")
+        return
+
+    items = [x["name"] for x in self.pj[cfg.BEHAVIORS_CODING_MAP]]
+    if len(items) == 1:
+        coding_map_name = items[0]
+    else:
+        item, ok = QInputDialog.getItem(self, "Select a coding map", "list of coding maps", items, 0, False)
+        if ok and item:
+            coding_map_name = item
+        else:
+            return
+
+    if self.bcm_dict.get(coding_map_name, None) is not None:
+        # if coding_map_name in self.bcm_dict and :
+        self.bcm_dict[coding_map_name].show()
+    else:
+        self.bcm_dict[coding_map_name] = BehaviorsCodingMapWindowClass(
+            self.pj[cfg.BEHAVIORS_CODING_MAP][items.index(coding_map_name)], idx=items.index(coding_map_name)
+        )
+
+        self.bcm_dict[coding_map_name].clickSignal.connect(self.click_signal_from_behaviors_coding_map)
+
+        # self.bcm_dict[coding_map_name].close_signal.connect(self.close_behaviors_coding_map)
+
+        self.bcm_dict[coding_map_name].resize(cfg.CODING_MAP_RESIZE_W, cfg.CODING_MAP_RESIZE_W)
+        self.bcm_dict[coding_map_name].setWindowFlags(Qt.WindowStaysOnTopHint)
+        self.bcm_dict[coding_map_name].show()
+
+
+if __name__ == "__main__":
 
     import sys
+
     app = QApplication(sys.argv)
 
     if len(sys.argv) > 1:
         cm = json.loads(open(sys.argv[1]).read())
         codingMapWindow = BehaviorsCodingMapWindowClass(cm)
-        codingMapWindow.resize(config.CODING_MAP_RESIZE_W, config.CODING_MAP_RESIZE_H)
+        codingMapWindow.resize(cfg.CODING_MAP_RESIZE_W, cfg.CODING_MAP_RESIZE_H)
         codingMapWindow.show()
         sys.exit(app.exec_())

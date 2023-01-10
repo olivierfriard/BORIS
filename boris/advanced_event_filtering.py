@@ -19,22 +19,37 @@ Copyright 2012-2022 Olivier Friard
   MA 02110-1301, USA.
 """
 
-import os
+from decimal import Decimal as dec
 import pathlib
 import re
 import statistics
 import sys
 
-from boris import portion as Interval
 import tablib
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QIcon
-from PyQt5.QtWidgets import (QDialog, QFileDialog, QHBoxLayout, QLabel, QLineEdit, QListWidget, QMessageBox,
-                             QPushButton, QRadioButton, QSizePolicy, QSpacerItem, QTableWidget, QTableWidgetItem,
-                             QVBoxLayout)
+from PyQt5.QtWidgets import (
+    QDialog,
+    QFileDialog,
+    QHBoxLayout,
+    QLabel,
+    QLineEdit,
+    QListWidget,
+    QMessageBox,
+    QPushButton,
+    QRadioButton,
+    QSizePolicy,
+    QSpacerItem,
+    QTableWidget,
+    QTableWidgetItem,
+    QVBoxLayout,
+)
 
-from boris import (db_functions, dialog, project_functions, select_observations, utilities)
-from boris.config import *
+from . import config as cfg
+from . import db_functions, dialog, observation_operations
+from . import portion as Interval
+from . import project_functions, select_observations, select_subj_behav
+from . import utilities as util
 
 
 def icc(i: list):
@@ -161,7 +176,7 @@ class Advanced_event_filtering_dialog(QDialog):
         if self.lw1.currentItem() and self.lw2.currentItem():
             self.logic.insert(f'"{self.lw1.currentItem().text()}|{self.lw2.currentItem().text()}" ')
         else:
-            QMessageBox.warning(self, programName, "Select a subject and a behavior")
+            QMessageBox.warning(self, cfg.programName, "Select a subject and a behavior")
 
     def add_logic(self):
         """
@@ -177,7 +192,7 @@ class Advanced_event_filtering_dialog(QDialog):
             if text:
                 self.logic.insert(text)
         else:
-            QMessageBox.warning(self, programName, "Select a logical operator")
+            QMessageBox.warning(self, cfg.programName, "Select a logical operator")
 
     def filter(self):
         """
@@ -186,7 +201,7 @@ class Advanced_event_filtering_dialog(QDialog):
         if not self.logic.text():
             return
         if self.logic.text().count('"') % 2:
-            QMessageBox.warning(self, programName, f'Wrong number of double quotes (")')
+            QMessageBox.warning(self, cfg.programName, f'Wrong number of double quotes (")')
             return
 
         sb_list = re.findall('"([^"]*)"', self.logic.text())
@@ -208,8 +223,8 @@ class Advanced_event_filtering_dialog(QDialog):
             except KeyError:
                 self.out.append([obs_id, "subject / behavior not found", "NA", "NA", "NA"])
             except Exception:
-                # out += f"Error in {self.logic.text()}" + "\n"
-                error_type, error_file_name, error_lineno = utilities.error_info(sys.exc_info())
+
+                error_type, _, _ = util.error_info(sys.exc_info())
                 self.out.append([obs_id, f"Error in {self.logic.text()}: {error_type} ", "NA", "NA", "NA"])
                 flag_error = True
 
@@ -235,13 +250,15 @@ class Advanced_event_filtering_dialog(QDialog):
             self.out = []
             for obs_id in summary:
 
-                self.out.append([
-                    obs_id,
-                    str(len(summary[obs_id])),
-                    str(round(sum(summary[obs_id]), 3)),
-                    str(round(statistics.mean(summary[obs_id]), 3)),
-                    str(round(statistics.stdev(summary[obs_id]), 3)) if len(summary[obs_id]) > 1 else "NA"
-                ])
+                self.out.append(
+                    [
+                        obs_id,
+                        str(len(summary[obs_id])),
+                        str(round(sum(summary[obs_id]), 3)),
+                        str(round(statistics.mean(summary[obs_id]), 3)),
+                        str(round(statistics.stdev(summary[obs_id]), 3)) if len(summary[obs_id]) > 1 else "NA",
+                    ]
+                )
 
             self.lb_results.setText(f"Results ({len(summary)} observation{'s'*(len(summary) > 1)})")
             self.tw.setRowCount(len(summary))
@@ -260,132 +277,143 @@ class Advanced_event_filtering_dialog(QDialog):
         save results
         """
 
-        extended_file_formats = [
-            "Tab Separated Values (*.tsv)", "Comma Separated Values (*.csv)", "Open Document Spreadsheet ODS (*.ods)",
-            "Microsoft Excel Spreadsheet XLSX (*.xlsx)", "Legacy Microsoft Excel Spreadsheet XLS (*.xls)",
-            "HTML (*.html)"
+        file_formats = [
+            cfg.TSV,
+            cfg.CSV,
+            cfg.ODS,
+            cfg.XLSX,
+            cfg.XLS,
+            cfg.HTML,
         ]
-        file_formats = ["tsv", "csv", "ods", "xlsx", "xls", "html"]
 
-        file_name, filter_ = QFileDialog().getSaveFileName(None, "Save results", "", ";;".join(extended_file_formats))
+        file_name, filter_ = QFileDialog().getSaveFileName(None, "Save results", "", ";;".join(file_formats))
         if not file_name:
             return
 
-        output_format = file_formats[extended_file_formats.index(filter_)]
+        output_format = cfg.FILE_NAME_SUFFIX[filter_]
 
         if pathlib.Path(file_name).suffix != "." + output_format:
             file_name = str(pathlib.Path(file_name)) + "." + output_format
             # check if file with new extension already exists
             if pathlib.Path(file_name).is_file():
-                if dialog.MessageDialog(programName, f"The file {file_name} already exists.",
-                                        [CANCEL, OVERWRITE]) == CANCEL:
+                if (
+                    dialog.MessageDialog(
+                        cfg.programName, f"The file {file_name} already exists.", [cfg.CANCEL, cfg.OVERWRITE]
+                    )
+                    == cfg.CANCEL
+                ):
                     return
 
         if self.rb_details.isChecked():
             tablib_dataset = tablib.Dataset(headers=self.details_header)
         if self.rb_summary.isChecked():
             tablib_dataset = tablib.Dataset(headers=self.summary_header)
-        tablib_dataset.title = utilities.safe_xl_worksheet_title(self.logic.text(), output_format)
+        tablib_dataset.title = util.safe_xl_worksheet_title(self.logic.text(), output_format)
 
         [tablib_dataset.append(x) for x in self.out]
 
         try:
-            if output_format in ["csv", "tsv", "html"]:
-                with open(file_name, "wb") as f:
+            with open(file_name, "wb") as f:
+                if filter_ in (cfg.TSV, cfg.CSV, cfg.HTML):
                     f.write(str.encode(tablib_dataset.export(output_format)))
-
-            if output_format in ["ods", "xlsx", "xls"]:
-                with open(file_name, "wb") as f:
+                if filter_ in (cfg.ODS, cfg.XLSX, cfg.XLS):
                     f.write(tablib_dataset.export(output_format))
 
         except Exception:
-            QMessageBox.critical(self, programName, f"The file {file_name} can not be saved")
+            QMessageBox.critical(self, cfg.programName, f"The file {file_name} can not be saved")
 
 
-def event_filtering(pj: dict):
+def event_filtering(self):
     """
     advanced event filtering
-    the python-intervals module is used to do operations on intervals (intersection, union)
+    the portion module is used to do operations on intervals (intersection, union)
     """
 
-    result, selected_observations = select_observations.select_observations(
-        pj, MULTIPLE, "Select observations for advanced event filtering")
+    _, selected_observations = select_observations.select_observations(
+        self.pj, cfg.MULTIPLE, "Select observations for advanced event filtering"
+    )
     if not selected_observations:
         return
 
-    # check if state events are paired
-    out = ""
-    not_paired_obs_list = []
-    for obs_id in selected_observations:
-        r, msg = project_functions.check_state_events_obs(obs_id, pj[ETHOGRAM], pj[OBSERVATIONS][obs_id])
-
-        if not r:
-            out += f"Observation: <strong>{obs_id}</strong><br>{msg}<br>"
-            not_paired_obs_list.append(obs_id)
-
-    if out:
-        out = f"The observations with UNPAIRED state events will be removed from tha analysis<br><br>{out}"
-        results = dialog.Results_dialog()
-        results.setWindowTitle(f"{programName} - Check selected observations")
-        results.ptText.setReadOnly(True)
-        results.ptText.appendHtml(out)
-        results.pbSave.setVisible(False)
-        results.pbCancel.setVisible(True)
-
-        if not results.exec_():
-            return
-    selected_observations = [x for x in selected_observations if x not in not_paired_obs_list]
-    if not selected_observations:
+    not_ok, selected_observations = project_functions.check_state_events(self.pj, selected_observations)
+    if not_ok or not selected_observations:
         return
 
-    # observations length
-    max_obs_length, selectedObsTotalMediaLength = project_functions.observation_length(pj, selected_observations)
-    if max_obs_length == -1:  # media length not available, user choose to not use events
+    start_coding, end_coding, _ = observation_operations.coding_time(self.pj[cfg.OBSERVATIONS], selected_observations)
+    # exit with message if events do not have timestamp
+    if start_coding.is_nan():
+        QMessageBox.critical(
+            None,
+            cfg.programName,
+            ("This function is not available for observations with events that do not have a timestamp"),
+            QMessageBox.Ok | QMessageBox.Default,
+            QMessageBox.NoButton,
+        )
         return
 
-    parameters = dialog.choose_obs_subj_behav_category(pj,
-                                                       selected_observations,
-                                                       maxTime=max_obs_length,
-                                                       flagShowIncludeModifiers=False,
-                                                       flagShowExcludeBehaviorsWoEvents=False,
-                                                       by_category=False)
+    max_media_duration_all_obs, _ = observation_operations.media_duration(
+        self.pj[cfg.OBSERVATIONS], selected_observations
+    )
 
-    if not parameters[SELECTED_SUBJECTS] or not parameters[SELECTED_BEHAVIORS]:
-        QMessageBox.warning(None, programName, "Select subject(s) and behavior(s) to analyze")
+    parameters = select_subj_behav.choose_obs_subj_behav_category(
+        self,
+        selected_observations,
+        start_coding=start_coding,
+        end_coding=end_coding,
+        maxTime=max_media_duration_all_obs,
+        flagShowIncludeModifiers=False,
+        flagShowExcludeBehaviorsWoEvents=False,
+        by_category=False,
+        n_observations=len(selected_observations),
+    )
+    if parameters == {}:
         return
 
-    ok, msg, db_connector = db_functions.load_aggregated_events_in_db(pj, parameters[SELECTED_SUBJECTS],
-                                                                      selected_observations,
-                                                                      parameters[SELECTED_BEHAVIORS])
+    if not parameters[cfg.SELECTED_SUBJECTS] or not parameters[cfg.SELECTED_BEHAVIORS]:
+        QMessageBox.warning(None, cfg.programName, "Select subject(s) and behavior(s) to analyze")
+        return
+
+    _, _, db_connector = db_functions.load_aggregated_events_in_db(
+        self.pj, parameters[cfg.SELECTED_SUBJECTS], selected_observations, parameters[cfg.SELECTED_BEHAVIORS]
+    )
 
     cursor = db_connector.cursor()
 
+    if parameters[cfg.TIME_INTERVAL] == cfg.TIME_EVENTS:
+        cursor.execute("SELECT MIN(start), MAX(stop) FROM aggregated_events")
+        min_time, max_time = cursor.fetchone()
+
     # create intervals from DB
     cursor.execute("SELECT observation, subject, behavior, start, stop FROM aggregated_events")
+
     events = {}
     for row in cursor.fetchall():
-        for event in row:
-            obs, subj, behav, start, stop = row
-            # check if start and stop are in selected time interval
-            if stop < parameters[START_TIME]:
-                continue
-            if start > parameters[END_TIME]:
-                continue
-            if start < parameters[START_TIME]:
-                start = float(parameters[START_TIME])
-            if stop > parameters[END_TIME]:
-                stop = float(parameters[END_TIME])
 
-            if obs not in events:
-                events[obs] = {}
+        obs, subj, behav, start, stop = row
+        # check if start and stop are in selected time interval
+        if stop < min_time:
+            continue
+        if start > max_time:
+            continue
+        """
+        if start < min_time:
+            start = float(parameters[cfg.START_TIME])
+        if stop > parameters[cfg.END_TIME]:
+            stop = float(parameters[cfg.END_TIME])
+        """
 
-            # use function in base at event (state or point)
-            interval_func = icc if start == stop else ico
+        if obs not in events:
+            events[obs] = {}
 
-            if f"{subj}|{behav}" not in events[obs]:
-                events[obs][f"{subj}|{behav}"] = interval_func([start, stop])
-            else:
-                events[obs][f"{subj}|{behav}"] = events[obs][f"{subj}|{behav}"] | interval_func([start, stop])
+        # use function in base at event (state or point)
+        interval_func = icc if start == stop else ico
+
+        if f"{subj}|{behav}" not in events[obs]:
+            # create new interval
+            events[obs][f"{subj}|{behav}"] = interval_func([start, stop])
+        else:
+            # append to existing interval
+            events[obs][f"{subj}|{behav}"] = events[obs][f"{subj}|{behav}"] | interval_func([start, stop])
 
     w = Advanced_event_filtering_dialog(events)
     w.exec_()

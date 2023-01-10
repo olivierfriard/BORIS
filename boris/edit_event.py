@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """
 BORIS
 Behavioral Observation Research Interactive Software
@@ -21,31 +20,39 @@ This file is part of BORIS.
 
 """
 
-import logging
+from PyQt5.QtWidgets import (
+    QDialog,
+    QSpinBox,
+    QHBoxLayout,
+    QLabel,
+    QLineEdit,
+    QListWidget,
+    QMessageBox,
+    QPushButton,
+    QRadioButton,
+    QVBoxLayout,
+)
 
-from PyQt5.QtCore import *
-from PyQt5.QtGui import *
-from PyQt5.QtWidgets import *
-
-from boris import duration_widget
-from boris.config import HHMMSS, HHMMSSZZZ, S, programName
-from boris.edit_event_ui import Ui_Form
-from boris.utilities import seconds2time
+from . import config as cfg
+from . import duration_widget
+from .edit_event_ui import Ui_Form
 
 
 class DlgEditEvent(QDialog, Ui_Form):
-
-    def __init__(self,
-                 log_level,
-                 time_value=0,
-                 current_time=0,
-                 time_format=S,
-                 show_set_current_time=False,
-                 parent=None):
+    def __init__(
+        self,
+        observation_type: str,
+        time_value=0,
+        current_time=0,
+        time_format=cfg.S,
+        show_set_current_time=False,
+        parent=None,
+    ):
 
         super().__init__(parent)
         self.setupUi(self)
         self.time_value = time_value
+        self.observation_type = observation_type
 
         self.pb_set_to_current_time.setVisible(show_set_current_time)
         self.current_time = current_time
@@ -53,13 +60,22 @@ class DlgEditEvent(QDialog, Ui_Form):
         self.dsbTime.setVisible(False)
         self.teTime.setVisible(False)
 
-        self.time_widget = duration_widget.Duration_widget(self.time_value)
-        if time_format == S:
-            self.time_widget.set_format_s()
-        if time_format == HHMMSS:
-            self.time_widget.set_format_hhmmss()
+        if observation_type in (cfg.LIVE, cfg.MEDIA):
+            self.time_widget = duration_widget.Duration_widget(self.time_value)
+            if time_format == cfg.S:
+                self.time_widget.set_format_s()
+            if time_format == cfg.HHMMSS:
+                self.time_widget.set_format_hhmmss()
 
-        self.horizontalLayout_2.insertWidget(0, self.time_widget)
+            self.horizontalLayout_2.insertWidget(0, self.time_widget)
+
+        if observation_type == cfg.IMAGES:
+            self.label.setText("Image index")
+            self.pb_set_to_current_time.setText("Set to current image index")
+            self.img_idx_widget = QSpinBox()
+            self.img_idx_widget.setValue(self.time_value)
+
+            self.horizontalLayout_2.insertWidget(0, self.img_idx_widget)
 
         self.pb_set_to_current_time.clicked.connect(self.set_to_current_time)
         self.pbOK.clicked.connect(self.accept)
@@ -69,8 +85,11 @@ class DlgEditEvent(QDialog, Ui_Form):
         """
         set time to current media time
         """
+        if self.observation_type in (cfg.LIVE, cfg.MEDIA):
+            self.time_widget.set_time(float(self.current_time))
 
-        self.time_widget.set_time(float(self.current_time))
+        if self.observation_type in (cfg.IMAGES):
+            self.img_idx_widget.setValue(int(self.current_time))
 
 
 class EditSelectedEvents(QDialog):
@@ -139,25 +158,32 @@ class EditSelectedEvents(QDialog):
             self.newText.clear()
 
     def pbOK_clicked(self):
+        """
         if not self.rbSubject.isChecked() and not self.rbBehavior.isChecked() and not self.rbComment.isChecked():
-            QMessageBox.warning(None, programName, "You must select a field to be edited",
-                                QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
+            QMessageBox.warning(
+                None,
+                cfg.programName,
+                "You must select a field to be edited",
+                QMessageBox.Ok | QMessageBox.Default,
+                QMessageBox.NoButton,
+            )
             return
+        """
 
         if (self.rbSubject.isChecked() or self.rbBehavior.isChecked()) and self.newText.selectedItems() == []:
-            QMessageBox.warning(None, programName, "You must select a new value from the list",
-                                QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
+            QMessageBox.warning(
+                None,
+                cfg.programName,
+                "You must select a new value from the list",
+                QMessageBox.Ok | QMessageBox.Default,
+                QMessageBox.NoButton,
+            )
             return
 
         self.accept()
 
     def pbCancel_clicked(self):
+        """
+        Cancel editing
+        """
         self.reject()
-
-
-if __name__ == '__main__':
-    import sys
-    app = QApplication(sys.argv)
-    w = DlgEditEvent(None, time_value=3.141, current_time=0, time_format=S, show_set_current_time=True)
-    w.show()
-    sys.exit(app.exec_())

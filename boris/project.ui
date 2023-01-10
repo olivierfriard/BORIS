@@ -19,87 +19,132 @@
      <item>
       <widget class="QTabWidget" name="tabProject">
        <property name="currentIndex">
-        <number>6</number>
+        <number>2</number>
        </property>
        <widget class="QWidget" name="tabInformation">
         <attribute name="title">
          <string>Information</string>
         </attribute>
-        <layout class="QFormLayout" name="formLayout">
-         <item row="0" column="0" colspan="2">
-          <widget class="QLabel" name="label">
-           <property name="text">
-            <string>Project name</string>
-           </property>
-          </widget>
+        <layout class="QVBoxLayout" name="verticalLayout">
+         <item>
+          <layout class="QHBoxLayout" name="horizontalLayout_15">
+           <item>
+            <widget class="QLabel" name="label">
+             <property name="text">
+              <string>Project name</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QLineEdit" name="leProjectName"/>
+           </item>
+          </layout>
          </item>
-         <item row="1" column="1">
-          <widget class="QLineEdit" name="leProjectName"/>
-         </item>
-         <item row="2" column="0" colspan="2">
+         <item>
           <widget class="QLabel" name="lbProjectFilePath">
            <property name="text">
             <string>Project file path:</string>
            </property>
           </widget>
          </item>
-         <item row="3" column="0">
-          <widget class="QLabel" name="label_7">
-           <property name="text">
-            <string>Date</string>
-           </property>
-          </widget>
+         <item>
+          <layout class="QHBoxLayout" name="horizontalLayout_18">
+           <item>
+            <widget class="QLabel" name="label_7">
+             <property name="text">
+              <string>Project date and time</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QDateTimeEdit" name="dteDate">
+             <property name="displayFormat">
+              <string>yyyy-MM-dd hh:mm</string>
+             </property>
+             <property name="calendarPopup">
+              <bool>true</bool>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <spacer name="horizontalSpacer_10">
+             <property name="orientation">
+              <enum>Qt::Horizontal</enum>
+             </property>
+             <property name="sizeHint" stdset="0">
+              <size>
+               <width>40</width>
+               <height>20</height>
+              </size>
+             </property>
+            </spacer>
+           </item>
+          </layout>
          </item>
-         <item row="4" column="1">
-          <widget class="QDateTimeEdit" name="dteDate">
-           <property name="displayFormat">
-            <string>yyyy-MM-dd hh:mm</string>
-           </property>
-           <property name="calendarPopup">
-            <bool>true</bool>
-           </property>
-          </widget>
-         </item>
-         <item row="5" column="0" colspan="2">
+         <item>
           <widget class="QLabel" name="label_6">
            <property name="text">
-            <string>Description</string>
+            <string>Project description</string>
            </property>
            <property name="alignment">
             <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>
            </property>
           </widget>
          </item>
-         <item row="6" column="1">
+         <item>
           <widget class="QPlainTextEdit" name="teDescription"/>
          </item>
-         <item row="7" column="0" colspan="2">
-          <widget class="QLabel" name="lbTimeFormat">
-           <property name="text">
-            <string>Time format</string>
-           </property>
-          </widget>
+         <item>
+          <layout class="QHBoxLayout" name="horizontalLayout_19">
+           <item>
+            <widget class="QLabel" name="lbTimeFormat">
+             <property name="text">
+              <string>Project time format</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QRadioButton" name="rbSeconds">
+             <property name="text">
+              <string>seconds</string>
+             </property>
+             <property name="checked">
+              <bool>true</bool>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QRadioButton" name="rbHMS">
+             <property name="text">
+              <string>hh:mm:ss.mss</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <spacer name="horizontalSpacer_2">
+             <property name="orientation">
+              <enum>Qt::Horizontal</enum>
+             </property>
+             <property name="sizeHint" stdset="0">
+              <size>
+               <width>40</width>
+               <height>20</height>
+              </size>
+             </property>
+            </spacer>
+           </item>
+          </layout>
          </item>
-         <item row="8" column="1">
-          <widget class="QRadioButton" name="rbSeconds">
+         <item>
+          <widget class="QLabel" name="lb_project_format_version">
            <property name="text">
-            <string>seconds</string>
-           </property>
-           <property name="checked">
-            <bool>true</bool>
-           </property>
-          </widget>
-         </item>
-         <item row="9" column="1">
-          <widget class="QRadioButton" name="rbHMS">
-           <property name="text">
-            <string>hh:mm:ss.mss</string>
+            <string>Project format version:</string>
            </property>
           </widget>
          </item>
         </layout>
        </widget>
-       <widget class="QWidget" name="tabConfiguration">
+       <widget class="QWidget" name="tabEthogram">
         <attribute name="title">
          <string>Ethogram</string>
         </attribute>
@@ -182,30 +227,16 @@
              <item>
               <layout class="QVBoxLayout" name="verticalLayout_11">
                <item>
-                <widget class="QPushButton" name="pbAddBehavior">
+                <widget class="QPushButton" name="pb_behavior">
                  <property name="text">
-                  <string>Add behavior</string>
+                  <string>Behavior</string>
                  </property>
                 </widget>
                </item>
                <item>
-                <widget class="QPushButton" name="pbCloneBehavior">
+                <widget class="QPushButton" name="pb_import">
                  <property name="text">
-                  <string>Clone behavior</string>
-                 </property>
-                </widget>
-               </item>
-               <item>
-                <widget class="QPushButton" name="pbRemoveBehavior">
-                 <property name="text">
-                  <string>Remove behavior</string>
-                 </property>
-                </widget>
-               </item>
-               <item>
-                <widget class="QPushButton" name="pbRemoveAllBehaviors">
-                 <property name="text">
-                  <string>Remove all behaviors</string>
+                  <string>Import ethogram</string>
                  </property>
                 </widget>
                </item>
@@ -213,13 +244,6 @@
                 <widget class="QPushButton" name="pbBehaviorsCategories">
                  <property name="text">
                   <string>Behavioral categories</string>
-                 </property>
-                </widget>
-               </item>
-               <item>
-                <widget class="QPushButton" name="pb_convert_behav_keys_to_lower">
-                 <property name="text">
-                  <string>Convert keys to lower case</string>
                  </property>
                 </widget>
                </item>
@@ -237,48 +261,16 @@
                 </spacer>
                </item>
                <item>
-                <widget class="QPushButton" name="pbExclusionMatrix">
+                <widget class="QPushButton" name="pb_exclusion_matrix">
                  <property name="text">
                   <string>Exclusion matrix</string>
                  </property>
                 </widget>
                </item>
                <item>
-                <widget class="QPushButton" name="pbImportBehaviorsFromProject">
-                 <property name="text">
-                  <string>Import behaviors
-from a BORIS project</string>
-                 </property>
-                </widget>
-               </item>
-               <item>
-                <widget class="QPushButton" name="pbImportFromJWatcher">
-                 <property name="enabled">
-                  <bool>true</bool>
-                 </property>
-                 <property name="text">
-                  <string>Import from JWatcher</string>
-                 </property>
-                </widget>
-               </item>
-               <item>
-                <widget class="QPushButton" name="pbImportFromTextFile">
-                 <property name="text">
-                  <string>Import from text file</string>
-                 </property>
-                </widget>
-               </item>
-               <item>
-                <widget class="QPushButton" name="pb_import_behaviors_from_clipboard">
-                 <property name="text">
-                  <string>Import from clipboard</string>
-                 </property>
-                </widget>
-               </item>
-               <item>
                 <widget class="QPushButton" name="pbExportEthogram">
                  <property name="text">
-                  <string>Export Ethogram</string>
+                  <string>Export ethogram</string>
                  </property>
                 </widget>
                </item>
@@ -346,45 +338,16 @@ from a BORIS project</string>
              <item>
               <layout class="QVBoxLayout" name="verticalLayout_15">
                <item>
-                <widget class="QPushButton" name="pbAddSubject">
+                <widget class="QPushButton" name="pb_subjects">
                  <property name="text">
-                  <string>Add subject</string>
-                 </property>
-                </widget>
-               </item>
-               <item>
-                <widget class="QPushButton" name="pbRemoveSubject">
-                 <property name="text">
-                  <string>Remove subject</string>
-                 </property>
-                </widget>
-               </item>
-               <item>
-                <widget class="QPushButton" name="pb_remove_all_subjects">
-                 <property name="text">
-                  <string>Remove all subjects</string>
-                 </property>
-                </widget>
-               </item>
-               <item>
-                <widget class="QPushButton" name="pb_convert_subjects_key_to_lower">
-                 <property name="text">
-                  <string>Convert keys to lower case</string>
+                  <string>Subjects</string>
                  </property>
                 </widget>
                </item>
                <item>
                 <widget class="QPushButton" name="pbImportSubjectsFromProject">
                  <property name="text">
-                  <string>Import subjects
-from a BORIS project</string>
-                 </property>
-                </widget>
-               </item>
-               <item>
-                <widget class="QPushButton" name="pb_import_subjects_from_clipboard">
-                 <property name="text">
-                  <string>Import from clipboard</string>
+                  <string>Import subjects</string>
                  </property>
                 </widget>
                </item>
@@ -400,6 +363,13 @@ from a BORIS project</string>
                   </size>
                  </property>
                 </spacer>
+               </item>
+               <item>
+                <widget class="QPushButton" name="pb_export_subjects">
+                 <property name="text">
+                  <string>Export subjects</string>
+                 </property>
+                </widget>
                </item>
               </layout>
              </item>
@@ -730,69 +700,6 @@ from a BORIS project</string>
               </spacer>
              </item>
             </layout>
-           </item>
-          </layout>
-         </item>
-        </layout>
-       </widget>
-       <widget class="QWidget" name="tabObservations">
-        <attribute name="title">
-         <string>Observations</string>
-        </attribute>
-        <layout class="QVBoxLayout" name="verticalLayout_3">
-         <item>
-          <layout class="QVBoxLayout" name="verticalLayout">
-           <item>
-            <widget class="QTableWidget" name="twObservations">
-             <property name="autoScroll">
-              <bool>false</bool>
-             </property>
-             <property name="editTriggers">
-              <set>QAbstractItemView::NoEditTriggers</set>
-             </property>
-             <property name="dragDropOverwriteMode">
-              <bool>false</bool>
-             </property>
-             <property name="selectionMode">
-              <enum>QAbstractItemView::MultiSelection</enum>
-             </property>
-             <property name="selectionBehavior">
-              <enum>QAbstractItemView::SelectRows</enum>
-             </property>
-             <property name="textElideMode">
-              <enum>Qt::ElideRight</enum>
-             </property>
-             <property name="wordWrap">
-              <bool>true</bool>
-             </property>
-             <column>
-              <property name="text">
-               <string>id</string>
-              </property>
-             </column>
-             <column>
-              <property name="text">
-               <string>Date</string>
-              </property>
-             </column>
-             <column>
-              <property name="text">
-               <string>Description</string>
-              </property>
-             </column>
-             <column>
-              <property name="text">
-               <string>Media</string>
-              </property>
-             </column>
-            </widget>
-           </item>
-           <item>
-            <widget class="QPushButton" name="pbRemoveObservation">
-             <property name="text">
-              <string>Remove selected observations</string>
-             </property>
-            </widget>
            </item>
           </layout>
          </item>

@@ -3,20 +3,20 @@ BORIS
 Behavioral Observation Research Interactive Software
 Copyright 2012-2022 Olivier Friard
 
-This file is part of BORIS.
-
-  BORIS is free software; you can redistribute it and/or modify
+  This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
-  the Free Software Foundation; either version 3 of the License, or
-  any later version.
+  the Free Software Foundation; either version 2 of the License, or
+  (at your option) any later version.
 
-  BORIS is distributed in the hope that it will be useful,
+  This program is distributed in the hope that it will be useful,
   but WITHOUT ANY WARRANTY; without even the implied warranty of
   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
   GNU General Public License for more details.
 
   You should have received a copy of the GNU General Public License
-  along with this program; if not see <http://www.gnu.org/licenses/>.
+  along with this program; if not, write to the Free Software
+  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
+  MA 02110-1301, USA.
 """
 
 import pathlib as pl
@@ -26,7 +26,9 @@ from PyQt5.QtWidgets import QWidget
 
 
 def save_geometry(widget: QWidget, widget_name: str):
-    """save window geometry in ini file"""
+    """
+    save window geometry in ini file
+    """
 
     try:
         ini_file_path = pl.Path.home() / pl.Path(".boris")
@@ -38,7 +40,9 @@ def save_geometry(widget: QWidget, widget_name: str):
 
 
 def restore_geometry(widget: QWidget, widget_name: str, default_geometry):
-    """restore window geometry in ini file"""
+    """
+    restore window geometry in ini file
+    """
 
     try:
         ini_file_path = pl.Path.home() / pl.Path(".boris")

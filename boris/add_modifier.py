@@ -21,14 +21,17 @@ This file is part of BORIS.
 """
 
 import logging
+import json
 
-from PyQt5.QtCore import *
-from PyQt5.QtGui import *
-from PyQt5.QtWidgets import *
+from PyQt5.QtGui import QIcon
+from PyQt5.QtWidgets import QDialog, QWidget, QFileDialog, QMessageBox
+
 
 from . import dialog
 from .add_modifier_ui import Ui_Dialog
-from .config import *
+
+from . import config as cfg
+
 from .utilities import sorted_keys
 
 
@@ -69,7 +72,7 @@ class addModifierDialog(QDialog, Ui_Dialog):
 
         self.cbType.currentIndexChanged.connect(self.type_changed)
 
-        dummy_dict = eval(modifiers_str) if modifiers_str else {}
+        dummy_dict = json.loads(modifiers_str) if modifiers_str else {}
         modif_values = []
         for idx in sorted_keys(dummy_dict):
             modif_values.append(dummy_dict[idx])
@@ -86,9 +89,21 @@ class addModifierDialog(QDialog, Ui_Dialog):
 
         if self.tabWidgetModifiersSets.currentIndex() == -1:
             for w in [
-                    self.lbSetName, self.lbType, self.lbValues, self.leSetName, self.cbType, self.lwModifiers,
-                    self.pbMoveUp, self.pbMoveDown, self.pbRemoveModifier, self.pbRemoveSet, self.pbMoveSetLeft,
-                    self.pbMoveSetRight, self.pb_add_subjects, self.pb_load_file, self.pb_sort_modifiers
+                self.lbSetName,
+                self.lbType,
+                self.lbValues,
+                self.leSetName,
+                self.cbType,
+                self.lwModifiers,
+                self.pbMoveUp,
+                self.pbMoveDown,
+                self.pbRemoveModifier,
+                self.pbRemoveSet,
+                self.pbMoveSetLeft,
+                self.pbMoveSetRight,
+                self.pb_add_subjects,
+                self.pb_load_file,
+                self.pb_sort_modifiers,
             ]:
                 w.setVisible(False)
             for w in [self.leModifier, self.leCode, self.pbAddModifier, self.pbModifyModifier]:
@@ -100,9 +115,18 @@ class addModifierDialog(QDialog, Ui_Dialog):
     def pb_pushed(self, button):
 
         if self.leModifier.text():
-            if dialog.MessageDialog(programName, ("You are working on a behavior.<br>"
-                                                  "If you close the window it will be lost.<br>"
-                                                  "Do you want to change modifiers set"), ["Close", CANCEL]) == CANCEL:
+            if (
+                dialog.MessageDialog(
+                    cfg.programName,
+                    (
+                        "You are working on a behavior.<br>"
+                        "If you close the window it will be lost.<br>"
+                        "Do you want to change modifiers set"
+                    ),
+                    ["Close", cfg.CANCEL],
+                )
+                == cfg.CANCEL
+            ):
                 return
         if button == "ok":
             self.accept()
@@ -137,17 +161,22 @@ class addModifierDialog(QDialog, Ui_Dialog):
                     for line in f_in:
                         if line.strip():
 
-                            for c in CHAR_FORBIDDEN_IN_MODIFIERS:
+                            for c in cfg.CHAR_FORBIDDEN_IN_MODIFIERS:
                                 if c in line.strip():
-                                    QMessageBox.critical(self, programName,
-                                                         (f"The character <b>{c}</b> is not allowed.<br>"
-                                                          "The following characters are not allowed in modifiers:<br>"
-                                                          f"<b>{CHAR_FORBIDDEN_IN_MODIFIERS}</b>"))
+                                    QMessageBox.critical(
+                                        self,
+                                        cfg.programName,
+                                        (
+                                            f"The character <b>{c}</b> is not allowed.<br>"
+                                            "The following characters are not allowed in modifiers:<br>"
+                                            f"<b>{cfg.CHAR_FORBIDDEN_IN_MODIFIERS}</b>"
+                                        ),
+                                    )
                                     break
                             else:
 
                                 if line.strip() not in [
-                                        self.lwModifiers.item(x).text() for x in range(self.lwModifiers.count())
+                                    self.lwModifiers.item(x).text() for x in range(self.lwModifiers.count())
                                 ]:
 
                                     if self.itemPositionMem != -1:
@@ -159,7 +188,7 @@ class addModifierDialog(QDialog, Ui_Dialog):
                     self.lwModifiers.item(x).text() for x in range(self.lwModifiers.count())
                 ]
             except Exception:
-                QMessageBox.warning(self, programName, f"Error reading modifiers from file:<br>{file_name}")
+                QMessageBox.warning(self, cfg.programName, f"Error reading modifiers from file:<br>{file_name}")
                 logging.warning(f"Error reading modifiers from file<br>{file_name}")
 
     def sort_modifiers(self):
@@ -184,25 +213,38 @@ class addModifierDialog(QDialog, Ui_Dialog):
         set name changed
         """
         if not self.modifiers_sets_dict:
-            self.modifiers_sets_dict["0"] = {"name": "", "type": SINGLE_SELECTION, "values": []}
-        self.modifiers_sets_dict[str(
-            self.tabWidgetModifiersSets.currentIndex())]["name"] = self.leSetName.text().strip()
+            self.modifiers_sets_dict["0"] = {"name": "", "type": cfg.SINGLE_SELECTION, "values": []}
+        self.modifiers_sets_dict[str(self.tabWidgetModifiersSets.currentIndex())][
+            "name"
+        ] = self.leSetName.text().strip()
 
     def type_changed(self):
         """
         type changed
         """
         if not self.modifiers_sets_dict:
-            self.modifiers_sets_dict["0"] = {"name": "", "type": SINGLE_SELECTION, "values": []}
+            self.modifiers_sets_dict["0"] = {"name": "", "type": cfg.SINGLE_SELECTION, "values": []}
         self.modifiers_sets_dict[str(self.tabWidgetModifiersSets.currentIndex())]["type"] = self.cbType.currentIndex()
         # disable if modifier numeric or value from external data file
         for obj in [
-                self.lbValues, self.lwModifiers, self.leModifier, self.leCode, self.lbModifier, self.lbCode,
-                self.lbCodeHelp, self.pbMoveUp, self.pbMoveDown, self.pbRemoveModifier, self.pb_add_subjects,
-                self.pbAddModifier, self.pbModifyModifier, self.pb_load_file, self.pb_sort_modifiers
+            self.lbValues,
+            self.lwModifiers,
+            self.leModifier,
+            self.leCode,
+            self.lbModifier,
+            self.lbCode,
+            self.lbCodeHelp,
+            self.pbMoveUp,
+            self.pbMoveDown,
+            self.pbRemoveModifier,
+            self.pb_add_subjects,
+            self.pbAddModifier,
+            self.pbModifyModifier,
+            self.pb_load_file,
+            self.pb_sort_modifiers,
         ]:
-            obj.setEnabled(self.cbType.currentIndex() not in [NUMERIC_MODIFIER, EXTERNAL_DATA_MODIFIER])
-        if self.cbType.currentIndex() == EXTERNAL_DATA_MODIFIER:
+            obj.setEnabled(self.cbType.currentIndex() not in [cfg.NUMERIC_MODIFIER, cfg.EXTERNAL_DATA_MODIFIER])
+        if self.cbType.currentIndex() == cfg.EXTERNAL_DATA_MODIFIER:
             self.lbSetName.setText("Variable name")
         else:
             self.lbSetName.setText("Set name")
@@ -212,11 +254,13 @@ class addModifierDialog(QDialog, Ui_Dialog):
         move selected modifiers set left
         """
         if self.tabWidgetModifiersSets.currentIndex():
-            self.modifiers_sets_dict[str(self.tabWidgetModifiersSets.currentIndex() - 1)], self.modifiers_sets_dict[str(
-                self.tabWidgetModifiersSets.currentIndex())] = (
-                    dict(self.modifiers_sets_dict[str(self.tabWidgetModifiersSets.currentIndex())]),
-                    dict(self.modifiers_sets_dict[str(self.tabWidgetModifiersSets.currentIndex() - 1)]),
-                )
+            (
+                self.modifiers_sets_dict[str(self.tabWidgetModifiersSets.currentIndex() - 1)],
+                self.modifiers_sets_dict[str(self.tabWidgetModifiersSets.currentIndex())],
+            ) = (
+                dict(self.modifiers_sets_dict[str(self.tabWidgetModifiersSets.currentIndex())]),
+                dict(self.modifiers_sets_dict[str(self.tabWidgetModifiersSets.currentIndex() - 1)]),
+            )
             self.tabWidgetModifiersSets.setCurrentIndex(self.tabWidgetModifiersSets.currentIndex() - 1)
             self.tabMem = self.tabWidgetModifiersSets.currentIndex()
 
@@ -226,11 +270,13 @@ class addModifierDialog(QDialog, Ui_Dialog):
         """
         if self.tabWidgetModifiersSets.currentIndex() < self.tabWidgetModifiersSets.count() - 1:
 
-            self.modifiers_sets_dict[str(self.tabWidgetModifiersSets.currentIndex() + 1)], self.modifiers_sets_dict[str(
-                self.tabWidgetModifiersSets.currentIndex())] = (
-                    dict(self.modifiers_sets_dict[str(self.tabWidgetModifiersSets.currentIndex())]),
-                    dict(self.modifiers_sets_dict[str(self.tabWidgetModifiersSets.currentIndex() + 1)]),
-                )
+            (
+                self.modifiers_sets_dict[str(self.tabWidgetModifiersSets.currentIndex() + 1)],
+                self.modifiers_sets_dict[str(self.tabWidgetModifiersSets.currentIndex())],
+            ) = (
+                dict(self.modifiers_sets_dict[str(self.tabWidgetModifiersSets.currentIndex())]),
+                dict(self.modifiers_sets_dict[str(self.tabWidgetModifiersSets.currentIndex() + 1)]),
+            )
 
             self.tabWidgetModifiersSets.setCurrentIndex(self.tabWidgetModifiersSets.currentIndex() + 1)
             self.tabMem = self.tabWidgetModifiersSets.currentIndex()
@@ -270,8 +316,8 @@ class addModifierDialog(QDialog, Ui_Dialog):
         if self.tabWidgetModifiersSets.currentIndex() == -1:
             self.modifiers_sets_dict[str(len(self.modifiers_sets_dict))] = {
                 "name": "",
-                "type": SINGLE_SELECTION,
-                "values": []
+                "type": cfg.SINGLE_SELECTION,
+                "values": [],
             }
             self.tabWidgetModifiersSets.addTab(QWidget(), f"Set #{len(self.modifiers_sets_dict)}")
             self.tabWidgetModifiersSets.setCurrentIndex(self.tabWidgetModifiersSets.count() - 1)
@@ -279,9 +325,21 @@ class addModifierDialog(QDialog, Ui_Dialog):
 
             # set visible and available buttons and others elements
             for w in [
-                    self.lbSetName, self.lbType, self.lbValues, self.leSetName, self.cbType, self.lwModifiers,
-                    self.pbMoveUp, self.pbMoveDown, self.pbRemoveModifier, self.pbRemoveSet, self.pbMoveSetLeft,
-                    self.pbMoveSetRight, self.pb_add_subjects, self.pb_load_file, self.pb_sort_modifiers
+                self.lbSetName,
+                self.lbType,
+                self.lbValues,
+                self.leSetName,
+                self.cbType,
+                self.lwModifiers,
+                self.pbMoveUp,
+                self.pbMoveDown,
+                self.pbRemoveModifier,
+                self.pbRemoveSet,
+                self.pbMoveSetLeft,
+                self.pbMoveSetRight,
+                self.pb_add_subjects,
+                self.pb_load_file,
+                self.pb_sort_modifiers,
             ]:
                 w.setVisible(True)
             for w in [self.leModifier, self.leCode, self.pbAddModifier, self.pbModifyModifier]:
@@ -291,8 +349,8 @@ class addModifierDialog(QDialog, Ui_Dialog):
         if len(self.modifiers_sets_dict[str(self.tabWidgetModifiersSets.currentIndex())]):
             self.modifiers_sets_dict[str(len(self.modifiers_sets_dict))] = {
                 "name": "",
-                "type": SINGLE_SELECTION,
-                "values": []
+                "type": cfg.SINGLE_SELECTION,
+                "values": [],
             }
             self.tabWidgetModifiersSets.addTab(QWidget(), f"Set #{len(self.modifiers_sets_dict)}")
             self.tabWidgetModifiersSets.setCurrentIndex(self.tabWidgetModifiersSets.count() - 1)
@@ -300,8 +358,10 @@ class addModifierDialog(QDialog, Ui_Dialog):
 
         else:
             QMessageBox.information(
-                self, programName,
-                "It is not possible to add a modifiers' set while the current modifiers' set is empty.")
+                self,
+                cfg.programName,
+                "It is not possible to add a modifiers' set while the current modifiers' set is empty.",
+            )
 
     def removeSet(self):
         """
@@ -309,7 +369,10 @@ class addModifierDialog(QDialog, Ui_Dialog):
         """
 
         if self.tabWidgetModifiersSets.currentIndex() != -1:
-            if dialog.MessageDialog(programName, "Confirm deletion of this set of modifiers?", [YES, NO]) == YES:
+            if (
+                dialog.MessageDialog(cfg.programName, "Confirm deletion of this set of modifiers?", [cfg.YES, cfg.NO])
+                == cfg.YES
+            ):
                 index_to_delete = self.tabWidgetModifiersSets.currentIndex()
 
                 for k in range(index_to_delete, len(self.modifiers_sets_dict) - 1):
@@ -328,9 +391,18 @@ class addModifierDialog(QDialog, Ui_Dialog):
                 # set not visible and not available buttons and others elements
                 if self.tabWidgetModifiersSets.currentIndex() == -1:
                     for w in [
-                            self.lbSetName, self.lbType, self.lbValues, self.leSetName, self.cbType, self.lwModifiers,
-                            self.pbMoveUp, self.pbMoveDown, self.pbRemoveModifier, self.pbRemoveSet, self.pbMoveSetLeft,
-                            self.pbMoveSetRight
+                        self.lbSetName,
+                        self.lbType,
+                        self.lbValues,
+                        self.leSetName,
+                        self.cbType,
+                        self.lwModifiers,
+                        self.pbMoveUp,
+                        self.pbMoveDown,
+                        self.pbRemoveModifier,
+                        self.pbRemoveSet,
+                        self.pbMoveSetLeft,
+                        self.pbMoveSetRight,
                     ]:
                         w.setVisible(False)
                     for w in [self.leModifier, self.leCode, self.pbAddModifier, self.pbModifyModifier]:
@@ -339,9 +411,21 @@ class addModifierDialog(QDialog, Ui_Dialog):
                 if not len(self.modifiers_sets_dict):
                     # set invisible and unavailable buttons and others elements
                     for w in [
-                            self.lbSetName, self.lbType, self.lbValues, self.leSetName, self.cbType, self.lwModifiers,
-                            self.pbMoveUp, self.pbMoveDown, self.pbRemoveModifier, self.pbRemoveSet, self.pbMoveSetLeft,
-                            self.pbMoveSetRight, self.pb_add_subjects, self.pb_load_file, self.pb_sort_modifiers
+                        self.lbSetName,
+                        self.lbType,
+                        self.lbValues,
+                        self.leSetName,
+                        self.cbType,
+                        self.lwModifiers,
+                        self.pbMoveUp,
+                        self.pbMoveDown,
+                        self.pbRemoveModifier,
+                        self.pbRemoveSet,
+                        self.pbMoveSetLeft,
+                        self.pbMoveSetRight,
+                        self.pb_add_subjects,
+                        self.pb_load_file,
+                        self.pb_sort_modifiers,
                     ]:
                         w.setVisible(False)
                     for w in [self.leModifier, self.leCode, self.pbAddModifier, self.pbModifyModifier]:
@@ -349,7 +433,7 @@ class addModifierDialog(QDialog, Ui_Dialog):
                     return
 
         else:
-            QMessageBox.information(self, programName, "It is not possible to remove the last modifiers' set.")
+            QMessageBox.information(self, cfg.programName, "It is not possible to remove the last modifiers' set.")
 
     def modifyModifier(self):
         """
@@ -366,12 +450,13 @@ class addModifierDialog(QDialog, Ui_Dialog):
             self.leCode.setText(code)
 
             self.modifiers_sets_dict[str(self.tabWidgetModifiersSets.currentIndex())]["values"].remove(
-                self.lwModifiers.currentItem().text())
+                self.lwModifiers.currentItem().text()
+            )
 
             self.itemPositionMem = self.lwModifiers.currentRow()
             self.lwModifiers.takeItem(self.lwModifiers.currentRow())
         else:
-            QMessageBox.information(self, programName, "Select a modifier to modify from the modifiers set")
+            QMessageBox.information(self, cfg.programName, "Select a modifier to modify from the modifiers set")
 
     def removeModifier(self):
         """
@@ -389,37 +474,47 @@ class addModifierDialog(QDialog, Ui_Dialog):
         """
 
         txt = self.leModifier.text().strip()
-        for c in CHAR_FORBIDDEN_IN_MODIFIERS:
+        for c in cfg.CHAR_FORBIDDEN_IN_MODIFIERS:
             if c in txt:
-                QMessageBox.critical(self, programName, (f"The character <b>{c}</b> is not allowed.<br>"
-                                                         "The following characters are not allowed in modifiers:<br>"
-                                                         f"<b>{CHAR_FORBIDDEN_IN_MODIFIERS}</b>"))
+                QMessageBox.critical(
+                    self,
+                    cfg.programName,
+                    (
+                        f"The character <b>{c}</b> is not allowed.<br>"
+                        "The following characters are not allowed in modifiers:<br>"
+                        f"<b>{cfg.CHAR_FORBIDDEN_IN_MODIFIERS}</b>"
+                    ),
+                )
                 self.leModifier.setFocus()
                 return
 
         if txt:
 
             if txt in [self.lwModifiers.item(x).text() for x in range(self.lwModifiers.count())]:
-                QMessageBox.critical(self, programName, f"The modifier <b>{txt}</b> is already in the list")
+                QMessageBox.critical(self, cfg.programName, f"The modifier <b>{txt}</b> is already in the list")
                 return
 
             if not self.modifiers_sets_dict:
-                self.modifiers_sets_dict["0"] = {"name": "", "type": SINGLE_SELECTION, "values": []}
+                self.modifiers_sets_dict["0"] = {"name": "", "type": cfg.SINGLE_SELECTION, "values": []}
 
             if len(self.leCode.text().strip()) > 1:
-                if self.leCode.text().strip().upper() not in function_keys.values():
+                if self.leCode.text().strip().upper() not in cfg.function_keys.values():
                     QMessageBox.critical(
-                        self, programName,
-                        "The modifier key code can not exceed one key\nSelect one key or a function key (F1, F2 ... F12)"
+                        self,
+                        cfg.programName,
+                        "The modifier key code can not exceed one key\nSelect one key or a function key (F1, F2 ... F12)",
                     )
                     self.leCode.setFocus()
                     return
 
             if self.leCode.text().strip():
-                for c in CHAR_FORBIDDEN_IN_MODIFIERS:
+                for c in cfg.CHAR_FORBIDDEN_IN_MODIFIERS:
                     if c in self.leCode.text().strip():
-                        QMessageBox.critical(self, programName,
-                                             f"The modifier key code is not allowed {CHAR_FORBIDDEN_IN_MODIFIERS}!")
+                        QMessageBox.critical(
+                            self,
+                            cfg.programName,
+                            f"The modifier key code is not allowed {cfg.CHAR_FORBIDDEN_IN_MODIFIERS}!",
+                        )
                         self.leCode.setFocus()
                         return
 
@@ -427,15 +522,17 @@ class addModifierDialog(QDialog, Ui_Dialog):
                 if not self.modifiers_sets_dict:
                     self.modifiers_sets_dict[str(self.tabWidgetModifiersSets.currentIndex())] = {
                         "name": "",
-                        "type": SINGLE_SELECTION,
-                        "values": []
+                        "type": cfg.SINGLE_SELECTION,
+                        "values": [],
                     }
 
-                if "(" + self.leCode.text().strip() + ")" in " ".join(self.modifiers_sets_dict[str(
-                        self.tabWidgetModifiersSets.currentIndex())]["values"]):
+                if "(" + self.leCode.text().strip() + ")" in " ".join(
+                    self.modifiers_sets_dict[str(self.tabWidgetModifiersSets.currentIndex())]["values"]
+                ):
 
-                    QMessageBox.critical(self, programName,
-                                         f"The shortcut code <b>{self.leCode.text().strip()}</b> already exists!")
+                    QMessageBox.critical(
+                        self, cfg.programName, f"The shortcut code <b>{self.leCode.text().strip()}</b> already exists!"
+                    )
                     self.leCode.setFocus()
                     return
                 txt += f" ({self.leCode.text().strip()})"
@@ -452,7 +549,7 @@ class addModifierDialog(QDialog, Ui_Dialog):
             self.leCode.setText("")
 
         else:
-            QMessageBox.critical(self, programName, "No modifier to add!")
+            QMessageBox.critical(self, cfg.programName, "No modifier to add!")
             self.leModifier.setFocus()
 
     def tabWidgetModifiersSets_changed(self, tabIndex):
@@ -462,9 +559,18 @@ class addModifierDialog(QDialog, Ui_Dialog):
 
         # check if modifier field empty
         if self.leModifier.text() and tabIndex != self.tabMem:
-            if dialog.MessageDialog(programName, ("You are working on a behavior.<br>"
-                                                  "If you change the modifier's set it will be lost.<br>"
-                                                  "Do you want to change modifiers set"), [YES, NO]) == NO:
+            if (
+                dialog.MessageDialog(
+                    cfg.programName,
+                    (
+                        "You are working on a behavior.<br>"
+                        "If you change the modifier's set it will be lost.<br>"
+                        "Do you want to change modifiers set"
+                    ),
+                    [cfg.YES, cfg.NO],
+                )
+                == cfg.NO
+            ):
                 self.tabWidgetModifiersSets.setCurrentIndex(self.tabMem)
                 return
 
@@ -480,17 +586,19 @@ class addModifierDialog(QDialog, Ui_Dialog):
                 self.cbType.setCurrentIndex(self.modifiers_sets_dict[str(tabIndex)]["type"])
                 self.lwModifiers.addItems(self.modifiers_sets_dict[str(tabIndex)]["values"])
 
-    def getModifiers(self):
+    def getModifiers(self) -> str:
         """
         returns modifiers as string
         """
         keys_to_delete = []
         for idx in self.modifiers_sets_dict:
-            if self.modifiers_sets_dict[idx]["type"] in [SINGLE_SELECTION, MULTI_SELECTION
-                                                        ] and not self.modifiers_sets_dict[idx]["values"]:
+            if (
+                self.modifiers_sets_dict[idx]["type"] in [cfg.SINGLE_SELECTION, cfg.MULTI_SELECTION]
+                and not self.modifiers_sets_dict[idx]["values"]
+            ):
                 keys_to_delete.append(idx)
 
         for idx in keys_to_delete:
             del self.modifiers_sets_dict[idx]
 
-        return str(self.modifiers_sets_dict) if self.modifiers_sets_dict else ""
+        return json.dumps(self.modifiers_sets_dict) if self.modifiers_sets_dict else ""

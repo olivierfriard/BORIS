@@ -19,28 +19,41 @@ Copyright 2012-2022 Olivier Friard
   MA 02110-1301, USA.
 """
 
+import gzip
 import json
 import logging
 import os
-import pathlib
+import pathlib as pl
 import sys
 from decimal import Decimal as dec
 from shutil import copyfile
-import gzip
-from . import portion as I
+from typing import List, Tuple, Dict
 
+import tablib
+from PyQt5.QtWidgets import QMessageBox, QTableWidgetItem
+from PyQt5.QtCore import Qt
+
+from . import config as cfg
 from . import db_functions
 from . import dialog
-from . import select_observations
-import tablib
-from . import utilities
-from .config import *
+from . import portion as I
+from . import utilities as util
+from . import version
+from . import observation_operations
 
 
-def check_observation_exhaustivity(events: list, ethogram: list, state_events_list: list = []):
+def check_observation_exhaustivity(
+    events: List[list],
+    # ethogram: list,
+    state_events_list: list = [],
+) -> float:
     """
     check if observation is continous
     if ethogram not empty state events list is determined else
+
+    Args:
+        events (List[list]): events
+        ethogram (list):
     """
 
     def interval_len(interval):
@@ -49,57 +62,62 @@ def check_observation_exhaustivity(events: list, ethogram: list, state_events_li
         else:
             return sum([x.upper - x.lower for x in interval])
 
+    """
     def interval_number(interval):
         if interval.empty:
             return dec(0)
         else:
             return len(interval)
+    """
 
+    """
     if ethogram:
-        state_events_list = [ethogram[x][BEHAVIOR_CODE] for x in ethogram if STATE in ethogram[x][TYPE].upper()]
+        state_events_list: tuple = tuple(
+            (ethogram[x][cfg.BEHAVIOR_CODE] for x in ethogram if cfg.STATE in ethogram[x][cfg.TYPE].upper())
+        )
+    """
 
-    events_interval = {}
-    mem_events_interval = {}
+    events_interval: dict = {}
+    mem_events_interval: dict = {}
 
     for event in events:
-        if event[EVENT_SUBJECT_FIELD_IDX] not in events_interval:
-            events_interval[event[EVENT_SUBJECT_FIELD_IDX]] = {}
-            mem_events_interval[event[EVENT_SUBJECT_FIELD_IDX]] = {}
+        if event[cfg.EVENT_SUBJECT_FIELD_IDX] not in events_interval:
+            events_interval[event[cfg.EVENT_SUBJECT_FIELD_IDX]] = {}
+            mem_events_interval[event[cfg.EVENT_SUBJECT_FIELD_IDX]] = {}
 
-        if event[EVENT_BEHAVIOR_FIELD_IDX] not in events_interval[event[EVENT_SUBJECT_FIELD_IDX]]:
-            events_interval[event[EVENT_SUBJECT_FIELD_IDX]][event[EVENT_BEHAVIOR_FIELD_IDX]] = I.empty()
-            mem_events_interval[event[EVENT_SUBJECT_FIELD_IDX]][event[EVENT_BEHAVIOR_FIELD_IDX]] = []
+        if event[cfg.EVENT_BEHAVIOR_FIELD_IDX] not in events_interval[event[cfg.EVENT_SUBJECT_FIELD_IDX]]:
+            events_interval[event[cfg.EVENT_SUBJECT_FIELD_IDX]][event[cfg.EVENT_BEHAVIOR_FIELD_IDX]] = I.empty()
+            mem_events_interval[event[cfg.EVENT_SUBJECT_FIELD_IDX]][event[cfg.EVENT_BEHAVIOR_FIELD_IDX]] = []
 
-        if event[EVENT_BEHAVIOR_FIELD_IDX] in state_events_list:
-            mem_events_interval[event[EVENT_SUBJECT_FIELD_IDX]][event[EVENT_BEHAVIOR_FIELD_IDX]].append(
-                event[EVENT_TIME_FIELD_IDX])
-            if len(mem_events_interval[event[EVENT_SUBJECT_FIELD_IDX]][event[EVENT_BEHAVIOR_FIELD_IDX]]) == 2:
-                events_interval[event[EVENT_SUBJECT_FIELD_IDX]][event[EVENT_BEHAVIOR_FIELD_IDX]] |= \
-                        I.closedopen(mem_events_interval[event[EVENT_SUBJECT_FIELD_IDX]][event[EVENT_BEHAVIOR_FIELD_IDX]][0],
-                                    mem_events_interval[event[EVENT_SUBJECT_FIELD_IDX]][event[EVENT_BEHAVIOR_FIELD_IDX]][1])
-                mem_events_interval[event[EVENT_SUBJECT_FIELD_IDX]][event[EVENT_BEHAVIOR_FIELD_IDX]] = []
+        if event[cfg.EVENT_BEHAVIOR_FIELD_IDX] in state_events_list:
+            mem_events_interval[event[cfg.EVENT_SUBJECT_FIELD_IDX]][event[cfg.EVENT_BEHAVIOR_FIELD_IDX]].append(
+                event[cfg.EVENT_TIME_FIELD_IDX]
+            )
+            if len(mem_events_interval[event[cfg.EVENT_SUBJECT_FIELD_IDX]][event[cfg.EVENT_BEHAVIOR_FIELD_IDX]]) == 2:
+                events_interval[event[cfg.EVENT_SUBJECT_FIELD_IDX]][
+                    event[cfg.EVENT_BEHAVIOR_FIELD_IDX]
+                ] |= I.closedopen(
+                    mem_events_interval[event[cfg.EVENT_SUBJECT_FIELD_IDX]][event[cfg.EVENT_BEHAVIOR_FIELD_IDX]][0],
+                    mem_events_interval[event[cfg.EVENT_SUBJECT_FIELD_IDX]][event[cfg.EVENT_BEHAVIOR_FIELD_IDX]][1],
+                )
+                mem_events_interval[event[cfg.EVENT_SUBJECT_FIELD_IDX]][event[cfg.EVENT_BEHAVIOR_FIELD_IDX]] = []
         else:
-            events_interval[event[EVENT_SUBJECT_FIELD_IDX]][event[EVENT_BEHAVIOR_FIELD_IDX]] |= I.singleton(
-                event[EVENT_TIME_FIELD_IDX])
+            events_interval[event[cfg.EVENT_SUBJECT_FIELD_IDX]][event[cfg.EVENT_BEHAVIOR_FIELD_IDX]] |= I.singleton(
+                event[cfg.EVENT_TIME_FIELD_IDX]
+            )
 
     if events:
-        obs_theo_dur = max(events)[EVENT_TIME_FIELD_IDX] - min(events)[EVENT_TIME_FIELD_IDX]
+        # coding duration
+        obs_theo_dur = max(events)[cfg.EVENT_TIME_FIELD_IDX] - min(events)[cfg.EVENT_TIME_FIELD_IDX]
     else:
         obs_theo_dur = dec("0")
 
-    count = 0
     total_duration = 0
     for subject in events_interval:
-        '''
-        print("\n\nsubject", subject)
-        '''
 
         tot_behav_for_subject = I.empty()
         for behav in events_interval[subject]:
             tot_behav_for_subject |= events_interval[subject][behav]
-        '''
-        print(f"tot\n{tot_behav_for_subject}")
-        '''
 
         obs_real_dur = interval_len(tot_behav_for_subject)
 
@@ -107,12 +125,6 @@ def check_observation_exhaustivity(events: list, ethogram: list, state_events_li
             obs_real_dur = obs_theo_dur
 
         total_duration += obs_real_dur
-        '''
-        print(f"theo dur: {obs_theo_dur}  real: {obs_real_dur}  exhaustiv %: {obs_real_dur/obs_theo_dur}")
-        '''
-    '''
-    print(f"  {total_duration/(len(events_interval) * obs_theo_dur) } ")
-    '''
     if len(events_interval) and obs_theo_dur:
         exhausivity_percent = total_duration / (len(events_interval) * obs_theo_dur) * 100
     else:
@@ -121,7 +133,7 @@ def check_observation_exhaustivity(events: list, ethogram: list, state_events_li
     return round(exhausivity_percent, 1)
 
 
-def behavior_category(ethogram: dict) -> dict:
+def behavior_category(ethogram: dict) -> Dict[str, str]:
     """
     returns a dictionary containing the behavioral category of each behavior
 
@@ -134,38 +146,16 @@ def behavior_category(ethogram: dict) -> dict:
 
     behavioral_category = {}
     for idx in ethogram:
-        if BEHAVIOR_CATEGORY in ethogram[idx]:
-            behavioral_category[ethogram[idx][BEHAVIOR_CODE]] = ethogram[idx][BEHAVIOR_CATEGORY]
+        if cfg.BEHAVIOR_CATEGORY in ethogram[idx]:
+            behavioral_category[ethogram[idx][cfg.BEHAVIOR_CODE]] = ethogram[idx][cfg.BEHAVIOR_CATEGORY]
         else:
-            behavioral_category[ethogram[idx][BEHAVIOR_CODE]] = ""
+            behavioral_category[ethogram[idx][cfg.BEHAVIOR_CODE]] = ""
     return behavioral_category
 
 
-def check_coded_behaviors(pj: dict) -> set:
+def check_if_media_available(observation: dict, project_file_name: str) -> Tuple[bool, str]:
     """
-    check if behaviors coded in events are defined in ethogram
-
-    Args:
-        pj (dict): project dictionary
-
-    Returns:
-        set: behaviors present in observations that are not define in ethogram
-    """
-
-    # set of behaviors defined in ethogram
-    ethogram_behavior_codes = {pj[ETHOGRAM][idx][BEHAVIOR_CODE] for idx in pj[ETHOGRAM]}
-    behaviors_not_defined = []
-
-    for obs_id in pj[OBSERVATIONS]:
-        for event in pj[OBSERVATIONS][obs_id][EVENTS]:
-            if event[EVENT_BEHAVIOR_FIELD_IDX] not in ethogram_behavior_codes:
-                behaviors_not_defined.append(event[EVENT_BEHAVIOR_FIELD_IDX])
-    return set(sorted(behaviors_not_defined))
-
-
-def check_if_media_available(observation: dict, project_file_name: str) -> bool:
-    """
-    check if media files available
+    check if media files available for media and images observations
 
     Args:
         observation (dict): observation to be checked
@@ -175,20 +165,101 @@ def check_if_media_available(observation: dict, project_file_name: str) -> bool:
                else False
         str: error message
     """
-    if observation[TYPE] in [LIVE]:
-        return True, ""
+    if observation[cfg.TYPE] == cfg.LIVE:
+        return (True, "")
 
-    for nplayer in ALL_PLAYERS:
-        if nplayer in observation[FILE]:
-            if not isinstance(observation[FILE][nplayer], list):
-                return False, "error"
-            for media_file in observation[FILE][nplayer]:
-                if not media_full_path(media_file, project_file_name):
-                    return False, f"Media file <b>{media_file}</b> not found"
-    return True, ""
+    # TODO: check all files before returning False
+    if observation[cfg.TYPE] == cfg.IMAGES:
+        for img_dir in observation.get(cfg.DIRECTORIES_LIST, []):
+            if not full_path(img_dir, project_file_name):
+                return (False, f"The images directory <b>{img_dir}</b> was not found")
+        return (True, "")
+
+    if observation[cfg.TYPE] == cfg.MEDIA:
+        for nplayer in cfg.ALL_PLAYERS:
+            if nplayer in observation.get(cfg.FILE, {}):
+                if not isinstance(observation[cfg.FILE][nplayer], list):
+                    return (False, "error")
+                for media_file in observation[cfg.FILE][nplayer]:
+                    if not full_path(media_file, project_file_name):
+                        return (False, f"Media file <b>{media_file}</b> was not found")
+        return (True, "")
+
+    return (False, "Observation type not found")
 
 
-def check_state_events_obs(obsId: str, ethogram: dict, observation: dict, time_format: str = HHMMSS) -> tuple:
+def check_directories_availability(observation: dict, project_file_name: str) -> Tuple[bool, str]:
+    """
+    check if directories are available
+
+    Args:
+        observation (dict): observation to be checked
+
+    Returns:
+        bool: True if all directories were found or for live observation
+               else False
+        str: error message
+    """
+    if observation[cfg.TYPE] == cfg.LIVE:
+        return (True, "")
+
+    for dir_path in observation.get(cfg.DIRECTORIES_LIST, []):
+        if not full_path(dir_path, project_file_name):
+            return (False, f"Directory <b>{dir_path}</b> not found")
+
+    return (True, "")
+
+
+def check_coded_behaviors_in_obs_list(pj: dict, observations_list: list) -> bool:
+    """
+    check if coded behaviors in a list of observations are defined in the ethogram
+    """
+    out = ""
+    ethogram_behavior_codes = {pj[cfg.ETHOGRAM][idx][cfg.BEHAVIOR_CODE] for idx in pj[cfg.ETHOGRAM]}
+    behaviors_not_defined = []
+    out = ""  # will contain the output
+    for obs_id in observations_list:
+        for event in pj[cfg.OBSERVATIONS][obs_id][cfg.EVENTS]:
+            if event[cfg.EVENT_BEHAVIOR_FIELD_IDX] not in ethogram_behavior_codes:
+                behaviors_not_defined.append(event[cfg.EVENT_BEHAVIOR_FIELD_IDX])
+    if set(sorted(behaviors_not_defined)):
+        out += f"The following behaviors are not defined in the ethogram: <b>{', '.join(set(sorted(behaviors_not_defined)))}</b><br><br>"
+        results = dialog.Results_dialog()
+        results.setWindowTitle(f"{cfg.programName} - Check selected observations")
+        results.ptText.setReadOnly(True)
+        results.ptText.appendHtml(out)
+        results.pbSave.setVisible(False)
+        results.pbCancel.setVisible(True)
+        if not results.exec_():
+            return True
+    return False
+
+
+def check_coded_behaviors(pj: dict) -> set:
+    """
+    check if behaviors coded in events are defined in ethogram for all observations
+
+    Args:
+        pj (dict): project dictionary
+
+    Returns:
+        set: behaviors present in observations that are not define in ethogram
+    """
+
+    # set of behaviors defined in ethogram
+    ethogram_behavior_codes = {pj[cfg.ETHOGRAM][idx][cfg.BEHAVIOR_CODE] for idx in pj[cfg.ETHOGRAM]}
+    behaviors_not_defined = []
+
+    for obs_id in pj[cfg.OBSERVATIONS]:
+        for event in pj[cfg.OBSERVATIONS][obs_id][cfg.EVENTS]:
+            if event[cfg.EVENT_BEHAVIOR_FIELD_IDX] not in ethogram_behavior_codes:
+                behaviors_not_defined.append(event[cfg.EVENT_BEHAVIOR_FIELD_IDX])
+    return set(sorted(behaviors_not_defined))
+
+
+def check_state_events_obs(
+    obsId: str, ethogram: dict, observation: dict, time_format: str = cfg.HHMMSS
+) -> Tuple[bool, str]:
     """
     check state events for the observation obsId
     check if behaviors in observation are defined in ethogram
@@ -213,15 +284,15 @@ def check_state_events_obs(obsId: str, ethogram: dict, observation: dict, time_f
         return (True, "No behavior is defined as `State event`")
 
     flagStateEvent = False
-    subjects = [event[EVENT_SUBJECT_FIELD_IDX] for event in observation[EVENTS]]
-    ethogram_behaviors = {ethogram[idx][BEHAVIOR_CODE] for idx in ethogram}
+    subjects = [event[cfg.EVENT_SUBJECT_FIELD_IDX] for event in observation[cfg.EVENTS]]
+    ethogram_behaviors = {ethogram[idx][cfg.BEHAVIOR_CODE] for idx in ethogram}
 
     for subject in sorted(set(subjects)):
 
         behaviors = [
-            event[EVENT_BEHAVIOR_FIELD_IDX]
-            for event in observation[EVENTS]
-            if event[EVENT_SUBJECT_FIELD_IDX] == subject
+            event[cfg.EVENT_BEHAVIOR_FIELD_IDX]
+            for event in observation[cfg.EVENTS]
+            if event[cfg.EVENT_SUBJECT_FIELD_IDX] == subject
         ]
 
         for behavior in sorted(set(behaviors)):
@@ -229,40 +300,78 @@ def check_state_events_obs(obsId: str, ethogram: dict, observation: dict, time_f
                 # return (False, "The behaviour <b>{}</b> is not defined in the ethogram.<br>".format(behavior))
                 continue
             else:
-                if STATE in event_type(behavior, ethogram).upper():
+                if cfg.STATE in event_type(behavior, ethogram).upper():
                     flagStateEvent = True
                     lst, memTime = [], {}
                     for event in [
-                            event for event in observation[EVENTS]
-                            if event[EVENT_BEHAVIOR_FIELD_IDX] == behavior and event[EVENT_SUBJECT_FIELD_IDX] == subject
+                        event
+                        for event in observation[cfg.EVENTS]
+                        if event[cfg.EVENT_BEHAVIOR_FIELD_IDX] == behavior
+                        and event[cfg.EVENT_SUBJECT_FIELD_IDX] == subject
                     ]:
 
-                        behav_modif = [event[EVENT_BEHAVIOR_FIELD_IDX], event[EVENT_MODIFIER_FIELD_IDX]]
+                        behav_modif = [event[cfg.EVENT_BEHAVIOR_FIELD_IDX], event[cfg.EVENT_MODIFIER_FIELD_IDX]]
 
                         if behav_modif in lst:
                             lst.remove(behav_modif)
                             del memTime[str(behav_modif)]
                         else:
                             lst.append(behav_modif)
-                            memTime[str(behav_modif)] = event[EVENT_TIME_FIELD_IDX]
+                            memTime[str(behav_modif)] = event[cfg.EVENT_TIME_FIELD_IDX]
 
                     for event in lst:
-                        out += ('The behavior <b>{behavior}</b> {modifier} is not PAIRED for subject'
-                                ' "<b>{subject}</b>" at <b>{time}</b><br>').format(
-                                    behavior=behavior,
-                                    modifier=("(modifier " + event[1] + ") ") if event[1] else "",
-                                    subject=subject if subject else NO_FOCAL_SUBJECT,
-                                    time=memTime[str(event)]
-                                    if time_format == S else utilities.seconds2time(memTime[str(event)]),
-                                )
+                        out += (
+                            "The behavior <b>{behavior}</b> {modifier} is not PAIRED for subject"
+                            ' "<b>{subject}</b>" at <b>{time}</b><br>'
+                        ).format(
+                            behavior=behavior,
+                            modifier=("(modifier " + event[1] + ") ") if event[1] else "",
+                            subject=subject if subject else cfg.NO_FOCAL_SUBJECT,
+                            time=memTime[str(event)]
+                            if time_format == cfg.S
+                            else util.seconds2time(memTime[str(event)]),
+                        )
 
     return (False, out) if out else (True, "No problem detected")
 
 
-def check_project_integrity(pj: dict,
-                            time_format: str,
-                            project_file_name: str,
-                            media_file_available: bool = True) -> str:
+def check_state_events(pj: dict, observations_list: list) -> Tuple[bool, tuple]:
+    """
+    check if state events are paired in a list of observations
+    use check_state_events_obs function
+    """
+
+    out = ""
+    not_paired_obs_list = []
+    for obs_id in observations_list:
+        r, msg = check_state_events_obs(obs_id, pj[cfg.ETHOGRAM], pj[cfg.OBSERVATIONS][obs_id])
+
+        if not r:
+            out += f"Observation: <strong>{obs_id}</strong><br>{msg}<br>"
+            not_paired_obs_list.append(obs_id)
+
+    if out:
+        out = f"The observations with UNPAIRED state events will be removed from the analysis<br><br>{out}"
+        results = dialog.Results_dialog()
+        results.setWindowTitle(f"{cfg.programName} - Check selected observations")
+        results.ptText.setReadOnly(True)
+        results.ptText.appendHtml(out)
+        results.pbSave.setVisible(False)
+        results.pbCancel.setVisible(True)
+        if not results.exec_():
+            return True, []
+
+    # remove observations with unpaired state events
+    new_observations_list = [x for x in observations_list if x not in not_paired_obs_list]
+    if not new_observations_list:
+        QMessageBox.warning(None, cfg.programName, "The observation list is empty")
+
+    return False, new_observations_list  # no state events are unpaired
+
+
+def check_project_integrity(
+    pj: dict, time_format: str, project_file_name: str, media_file_available: bool = True
+) -> str:
     """
     check project integrity
     check if behaviors in observations are in ethogram
@@ -271,6 +380,7 @@ def check_project_integrity(pj: dict,
     check for leading and trailing spaces and special chars in modifiers
     check if media file are available
     check if media length available
+    check independent variables
 
     Args:
         pj (dict): BORIS project
@@ -283,75 +393,120 @@ def check_project_integrity(pj: dict,
     """
     out = ""
 
-    try:
-        # check if coded behaviors are defined in ethogram
-        r = check_coded_behaviors(pj)
-        if r:
-            out += f"The following behaviors are not defined in the ethogram: <b>{', '.join(r)}</b><br>"
+    # check if coded behaviors are defined in ethogram
+    r = check_coded_behaviors(pj)
+    if r:
+        out += f"The following behaviors are not defined in the ethogram: <b>{', '.join(r)}</b><br>"
 
-        # check for unpaired state events
-        for obs_id in pj[OBSERVATIONS]:
-            ok, msg = check_state_events_obs(obs_id, pj[ETHOGRAM], pj[OBSERVATIONS][obs_id], time_format)
+    # check for unpaired state events
+    for obs_id in pj[cfg.OBSERVATIONS]:
+        ok, msg = check_state_events_obs(obs_id, pj[cfg.ETHOGRAM], pj[cfg.OBSERVATIONS][obs_id], time_format)
+        if not ok:
+            out += "<br><br>" if out else ""
+            out += f"Observation: <b>{obs_id}</b><br>{msg}"
+
+    # check if behavior belong to category that is not in categories list
+    for idx in pj[cfg.ETHOGRAM]:
+        if cfg.BEHAVIOR_CATEGORY in pj[cfg.ETHOGRAM][idx]:
+            if pj[cfg.ETHOGRAM][idx][cfg.BEHAVIOR_CATEGORY]:
+                if pj[cfg.ETHOGRAM][idx][cfg.BEHAVIOR_CATEGORY] not in pj[cfg.BEHAVIORAL_CATEGORIES]:
+                    out += "<br><br>" if out else ""
+                    out += (
+                        f"The behavior <b>{pj[cfg.ETHOGRAM][idx][cfg.BEHAVIOR_CODE]}</b> belongs "
+                        f"to the behavioral category <b>{pj[cfg.ETHOGRAM][idx][cfg.BEHAVIOR_CATEGORY]}</b> "
+                        "that is no more in behavioral categories list."
+                    )
+
+    # check for leading/trailing spaces/special chars in modifiers defined in ethogram
+    for idx in pj[cfg.ETHOGRAM]:
+        for k in pj[cfg.ETHOGRAM][idx][cfg.MODIFIERS]:
+            for value in pj[cfg.ETHOGRAM][idx][cfg.MODIFIERS][k]["values"]:
+                modifier_code = value.split(" (")[0]
+                if modifier_code.strip() != modifier_code:
+                    out += "<br><br>" if out else ""
+                    out += (
+                        "The following <b>modifier</b> defined in ethogram "
+                        "has leading/trailing spaces or special chars: "
+                        f"<b>{util.replace_leading_trailing_chars(modifier_code.replace, ' ', '&#9608;')}</b>"
+                    )
+
+    # check if all media are available
+    if media_file_available:
+        for obs_id in pj[cfg.OBSERVATIONS]:
+            ok, msg = check_if_media_available(pj[cfg.OBSERVATIONS][obs_id], project_file_name)
             if not ok:
                 out += "<br><br>" if out else ""
                 out += f"Observation: <b>{obs_id}</b><br>{msg}"
 
-        # check if behavior belong to category that is not in categories list
-        for idx in pj[ETHOGRAM]:
-            if BEHAVIOR_CATEGORY in pj[ETHOGRAM][idx]:
-                if pj[ETHOGRAM][idx][BEHAVIOR_CATEGORY]:
-                    if pj[ETHOGRAM][idx][BEHAVIOR_CATEGORY] not in pj[BEHAVIORAL_CATEGORIES]:
-                        out += "<br><br>" if out else ""
-                        out += (f"The behavior <b>{pj[ETHOGRAM][idx][BEHAVIOR_CODE]}</b> belongs "
-                                f"to the behavioral category <b>{pj[ETHOGRAM][idx][BEHAVIOR_CATEGORY]}</b> "
-                                "that is no more in behavioral categories list.")
+    # check if media length available
+    for obs_id in pj[cfg.OBSERVATIONS]:
 
-        # check for leading/trailing spaces/special chars in modifiers defined in ethogram
-        for idx in pj[ETHOGRAM]:
-            for k in pj[ETHOGRAM][idx][MODIFIERS]:
-                for value in pj[ETHOGRAM][idx][MODIFIERS][k]["values"]:
-                    modifier_code = value.split(" (")[0]
-                    if modifier_code.strip() != modifier_code:
-                        out += "<br><br>" if out else ""
-                        out += ("The following <b>modifier</b> defined in ethogram "
-                                "has leading/trailing spaces or special chars: "
-                                f"<b>{modifier_code.replace(' ', '&#9608;')}</b>")
+        # TODO: add images observations
+        if pj[cfg.OBSERVATIONS][obs_id][cfg.TYPE] in [cfg.LIVE]:
+            continue
 
-        # check if all media are available
-        if media_file_available:
-            for obs_id in pj[OBSERVATIONS]:
-                ok, msg = check_if_media_available(pj[OBSERVATIONS][obs_id], project_file_name)
-                if not ok:
-                    out += "<br><br>" if out else ""
-                    out += f"Observation: <b>{obs_id}</b><br>{msg}"
-
-        # check if media length available
-        for obs_id in pj[OBSERVATIONS]:
-            if pj[OBSERVATIONS][obs_id][TYPE] in [LIVE]:
-                continue
-            for nplayer in ALL_PLAYERS:
-                if nplayer in pj[OBSERVATIONS][obs_id][FILE]:
-                    for media_file in pj[OBSERVATIONS][obs_id][FILE][nplayer]:
+        if pj[cfg.OBSERVATIONS][obs_id][cfg.TYPE] == cfg.MEDIA:
+            for nplayer in cfg.ALL_PLAYERS:
+                if nplayer in pj[cfg.OBSERVATIONS][obs_id][cfg.FILE]:
+                    for media_file in pj[cfg.OBSERVATIONS][obs_id][cfg.FILE][nplayer]:
                         try:
-                            pj[OBSERVATIONS][obs_id][MEDIA_INFO][LENGTH][media_file]
+                            pj[cfg.OBSERVATIONS][obs_id][cfg.MEDIA_INFO][cfg.LENGTH][media_file]
                         except KeyError:
                             out += "<br><br>" if out else ""
                             out += f"Observation: <b>{obs_id}</b><br>Length not available for media file <b>{media_file}</b>"
 
-        # check for leading/trailing spaces/special chars in observation id
-        for obs_id in pj[OBSERVATIONS]:
-            if obs_id != obs_id.strip():
-                out += "<br><br>" if out else ""
-                out += ("The following <b>observation id</b> "
-                        "has leading/trailing spaces or special chars: "
-                        f"<b>{obs_id}</b>")
+    # check for leading/trailing spaces/special chars in observation id
+    for obs_id in pj[cfg.OBSERVATIONS]:
+        if obs_id != obs_id.strip():
+            out += "<br><br>" if out else ""
+            out += (
+                "The following <b>observation id</b> "
+                "has leading/trailing spaces or special chars: "
+                f"<b>{util.replace_leading_trailing_chars(obs_id, ' ', '&#9608;')}</b>"
+            )
 
-        return out
-    except Exception:
-        return str(sys.exc_info()[1])
+    # check independent variables present in observations are defined
+    defined_var_label = [pj[cfg.INDEPENDENT_VARIABLES][idx]["label"] for idx in pj.get(cfg.INDEPENDENT_VARIABLES, {})]
+    not_defined: dict = {}
+    for obs_id in pj[cfg.OBSERVATIONS]:
+        if cfg.INDEPENDENT_VARIABLES not in pj[cfg.OBSERVATIONS][obs_id]:
+            continue
+        for var_label in pj[cfg.OBSERVATIONS][obs_id][cfg.INDEPENDENT_VARIABLES]:
+            if var_label not in defined_var_label:
+                if var_label not in not_defined:
+                    not_defined[var_label] = [obs_id]
+                else:
+                    not_defined[var_label].append(obs_id)
+    if not_defined:
+        out += "<br><br>" if out else ""
+        for var_label in not_defined:
+            out += f"The independent variable <b>{util.replace_leading_trailing_chars(var_label, ' ', '&#9608;')}</b> present in {len(not_defined[var_label])} observation(s) is not defined.<br>"
+
+    # check values of independent variables
+    defined_set_var_label: dict = dict(
+        [
+            (pj[cfg.INDEPENDENT_VARIABLES][idx]["label"], pj[cfg.INDEPENDENT_VARIABLES][idx]["possible values"])
+            for idx in pj.get(cfg.INDEPENDENT_VARIABLES, {})
+            if pj[cfg.INDEPENDENT_VARIABLES][idx]["type"] == "value from set"
+        ]
+    )
+
+    out += "<br><br>" if out else ""
+    for obs_id in pj[cfg.OBSERVATIONS]:
+        if cfg.INDEPENDENT_VARIABLES not in pj[cfg.OBSERVATIONS][obs_id]:
+            continue
+        for var_label in pj[cfg.OBSERVATIONS][obs_id][cfg.INDEPENDENT_VARIABLES]:
+            if var_label in defined_set_var_label:
+                if pj[cfg.OBSERVATIONS][obs_id][cfg.INDEPENDENT_VARIABLES][var_label] not in defined_set_var_label[
+                    var_label
+                ].split(","):
+
+                    out += f"{obs_id}: the <b>{pj[cfg.OBSERVATIONS][obs_id][cfg.INDEPENDENT_VARIABLES][var_label]}</b> value  is not allowed for {var_label} (choose between {defined_set_var_label[var_label]})<br>"
+
+    return out
 
 
-def create_subtitles(pj: dict, selected_observations: list, parameters: dict, export_dir: str) -> tuple:
+def create_subtitles(pj: dict, selected_observations: list, parameters: dict, export_dir: str) -> Tuple[bool, str]:
     """
     create subtitles for selected observations, subjects and behaviors
 
@@ -366,7 +521,7 @@ def create_subtitles(pj: dict, selected_observations: list, parameters: dict, ex
         str: error message
     """
 
-    def subject_color(subject):
+    def subject_color(subject: str) -> Tuple[str, str]:
         """
         subject color
 
@@ -377,133 +532,206 @@ def create_subtitles(pj: dict, selected_observations: list, parameters: dict, ex
             str: HTML tag for color font (beginning)
             str: HTML tag for color font (closing)
         """
-        if subject == NO_FOCAL_SUBJECT:
+        if subject == cfg.NO_FOCAL_SUBJECT:
             return "", ""
         else:
             return (
-                """<font color="{}">""".format(subtitlesColors[parameters["selected subjects"].index(row["subject"]) %
-                                                               len(subtitlesColors)]),
+                f"""<font color="{cfg.subtitlesColors[
+                        parameters[cfg.SELECTED_SUBJECTS].index(row['subject']) % len(cfg.subtitlesColors)
+                    ]}">""",
                 "</font>",
             )
 
-    try:
-        ok, msg, db_connector = db_functions.load_aggregated_events_in_db(pj, parameters["selected subjects"],
-                                                                          selected_observations,
-                                                                          parameters["selected behaviors"])
-        if not ok:
-            return False, msg
+    ok, msg, db_connector = db_functions.load_aggregated_events_in_db(
+        pj, parameters[cfg.SELECTED_SUBJECTS], selected_observations, parameters[cfg.SELECTED_BEHAVIORS]
+    )
+    if not ok:
+        return False, msg
 
-        cursor = db_connector.cursor()
-        flag_ok = True
-        msg = ""
-        for obsId in selected_observations:
-            if pj[OBSERVATIONS][obsId][TYPE] in [LIVE]:
-                out = ""
+    cursor = db_connector.cursor()
+    flag_ok = True
+    msg = ""
+    mem_command = ""
+    for obs_id in selected_observations:
+        if pj[cfg.OBSERVATIONS][obs_id][cfg.TYPE] == cfg.LIVE:
+            out = ""
+            if parameters["time"] in (cfg.TIME_EVENTS, cfg.TIME_FULL_OBS):
                 cursor.execute(
-                    ("SELECT subject, behavior, start, stop, type, modifiers FROM aggregated_events "
-                     "WHERE observation = ? AND subject in ({}) "
-                     "AND behavior in ({}) "
-                     "ORDER BY start").format(",".join(["?"] * len(parameters["selected subjects"])),
-                                              ",".join(["?"] * len(parameters["selected behaviors"]))),
-                    [obsId] + parameters["selected subjects"] + parameters["selected behaviors"],
+                    (
+                        "SELECT subject, behavior, start, stop, type, modifiers FROM aggregated_events "
+                        "WHERE observation = ? "
+                        "AND subject in ({}) "
+                        "AND behavior in ({}) "
+                        "ORDER BY start"
+                    ).format(
+                        ",".join(["?"] * len(parameters[cfg.SELECTED_SUBJECTS])),
+                        ",".join(["?"] * len(parameters[cfg.SELECTED_BEHAVIORS])),
+                    ),
+                    [
+                        obs_id,
+                    ]
+                    + parameters[cfg.SELECTED_SUBJECTS]
+                    + parameters[cfg.SELECTED_BEHAVIORS],
                 )
 
-                for idx, row in enumerate(cursor.fetchall()):
-                    col1, col2 = subject_color(row["subject"])
-                    if parameters["include modifiers"]:
-                        modifiers_str = "\n{}".format(row["modifiers"].replace("|", ", "))
-                    else:
-                        modifiers_str = ""
-                    out += ("{idx}\n"
-                            "{start} --> {stop}\n"
-                            "{col1}{subject}: {behavior}"
-                            "{modifiers}"
-                            "{col2}\n\n").format(
-                                idx=idx + 1,
-                                start=utilities.seconds2time(row["start"]).replace(".", ","),
-                                stop=utilities.seconds2time(row["stop"] if row["type"] == STATE else row["stop"] +
-                                                            POINT_EVENT_ST_DURATION).replace(".", ","),
-                                col1=col1,
-                                col2=col2,
-                                subject=row["subject"],
-                                behavior=row["behavior"],
-                                modifiers=modifiers_str,
-                            )
-                '''
-                file_name = str(pathlib.Path(pathlib.Path(export_dir) / utilities.safeFileName(obsId)).with suffix(".srt"))
-                '''
-                file_name = f"{pathlib.Path(export_dir) / utilities.safeFileName(obsId)}.srt"
-                try:
-                    with open(file_name, "w") as f:
-                        f.write(out)
-                except Exception:
-                    flag_ok = False
-                    msg += "observation: {}\ngave the following error:\n{}\n".format(obsId, str(sys.exc_info()[1]))
+            else:  # arbitrary 'time interval'
+                cursor.execute(
+                    (
+                        "SELECT subject, behavior, start, stop, type, modifiers FROM aggregated_events "
+                        "WHERE observation = ? "
+                        "AND (start BETWEEN ? AND ?) "
+                        "AND subject in ({}) "
+                        "AND behavior in ({}) "
+                        "ORDER BY start"
+                    ).format(
+                        ",".join(["?"] * len(parameters[cfg.SELECTED_SUBJECTS])),
+                        ",".join(["?"] * len(parameters[cfg.SELECTED_BEHAVIORS])),
+                    ),
+                    [obs_id, float(parameters[cfg.START_TIME]), float(parameters[cfg.END_TIME])]
+                    + parameters[cfg.SELECTED_SUBJECTS]
+                    + parameters[cfg.SELECTED_BEHAVIORS],
+                )
 
-            elif pj[OBSERVATIONS][obsId][TYPE] in [MEDIA]:
+            for idx, row in enumerate(cursor.fetchall()):
+                col1, col2 = subject_color(row["subject"])
+                if parameters["include modifiers"]:
+                    modifiers_str = f"\n{row['modifiers'].replace('|', ', ')}"
+                else:
+                    modifiers_str = ""
+                out += (
+                    "{idx}\n" "{start} --> {stop}\n" "{col1}{subject}: {behavior}" "{modifiers}" "{col2}\n\n"
+                ).format(
+                    idx=idx + 1,
+                    start=util.seconds2time(row["start"]).replace(".", ","),
+                    stop=util.seconds2time(
+                        row["stop"] if row["type"] == cfg.STATE else row["stop"] + cfg.POINT_EVENT_ST_DURATION
+                    ).replace(".", ","),
+                    col1=col1,
+                    col2=col2,
+                    subject=row["subject"],
+                    behavior=row["behavior"],
+                    modifiers=modifiers_str,
+                )
 
-                for nplayer in ALL_PLAYERS:
-                    if not pj[OBSERVATIONS][obsId][FILE][nplayer]:
-                        continue
-                    init = 0
-                    for mediaFile in pj[OBSERVATIONS][obsId][FILE][nplayer]:
-                        try:
-                            end = init + pj[OBSERVATIONS][obsId][MEDIA_INFO][LENGTH][mediaFile]
-                        except KeyError:
-                            return False, f"The length for media file {mediaFile} is not available"
-                        out = ""
+            file_name = pl.Path(export_dir) / pl.Path(util.safeFileName(obs_id)).with_suffix(".srt")
 
+            if mem_command not in (cfg.OVERWRITE_ALL, cfg.SKIP_ALL) and file_name.is_file():
+                mem_command = dialog.MessageDialog(
+                    cfg.programName,
+                    f"The file {file_name} already exists.",
+                    [cfg.OVERWRITE, cfg.OVERWRITE_ALL, cfg.SKIP, cfg.SKIP_ALL, cfg.CANCEL],
+                )
+                if mem_command == cfg.CANCEL:
+                    return False, ""
+                if mem_command in (cfg.SKIP, cfg.SKIP_ALL):
+                    continue
+
+            try:
+                with file_name.open("w", encoding="utf-8") as f_out:
+                    f_out.write(out)
+            except Exception:
+                flag_ok = False
+                msg += f"observation: {obs_id}\ngave the following error:\n{str(sys.exc_info()[1])}\n"
+
+        if pj[cfg.OBSERVATIONS][obs_id][cfg.TYPE] == cfg.MEDIA:
+
+            for nplayer in cfg.ALL_PLAYERS:
+                if not pj[cfg.OBSERVATIONS][obs_id][cfg.FILE][nplayer]:
+                    continue
+                init = 0
+                for media_file in pj[cfg.OBSERVATIONS][obs_id][cfg.FILE][nplayer]:
+                    try:
+                        end = init + pj[cfg.OBSERVATIONS][obs_id][cfg.MEDIA_INFO][cfg.LENGTH][media_file]
+                    except KeyError:
+                        return False, f"The length for media file {media_file} is not available"
+                    out = ""
+
+                    if parameters["time"] in (cfg.TIME_EVENTS, cfg.TIME_FULL_OBS):
                         cursor.execute(
-                            ("SELECT subject, behavior, type, start, stop, modifiers FROM aggregated_events "
-                             "WHERE observation = ? AND start BETWEEN ? and ? "
-                             "AND subject in ({}) "
-                             "AND behavior in ({}) "
-                             "ORDER BY start").format(
-                                 ",".join(["?"] * len(parameters["selected subjects"])),
-                                 ",".join(["?"] * len(parameters["selected behaviors"])),
-                             ),
-                            [obsId, init, end] + parameters["selected subjects"] + parameters["selected behaviors"],
+                            (
+                                "SELECT subject, behavior, start, stop, type, modifiers FROM aggregated_events "
+                                "WHERE observation = ? "
+                                "AND (start BETWEEN ? AND ?) "
+                                "AND subject in ({}) "
+                                "AND behavior in ({}) "
+                                "ORDER BY start"
+                            ).format(
+                                ",".join(["?"] * len(parameters[cfg.SELECTED_SUBJECTS])),
+                                ",".join(["?"] * len(parameters[cfg.SELECTED_BEHAVIORS])),
+                            ),
+                            [
+                                obs_id,
+                                init,
+                                end,
+                            ]
+                            + parameters[cfg.SELECTED_SUBJECTS]
+                            + parameters[cfg.SELECTED_BEHAVIORS],
                         )
 
-                        for idx, row in enumerate(cursor.fetchall()):
-                            col1, col2 = subject_color(row["subject"])
-                            if parameters["include modifiers"]:
-                                modifiers_str = "\n{}".format(row["modifiers"].replace("|", ", "))
-                            else:
-                                modifiers_str = ""
+                    else:  # arbitrary 'time interval'
 
-                            out += (
-                                "{idx}\n"
-                                "{start} --> {stop}\n"
-                                "{col1}{subject}: {behavior}"
-                                "{modifiers}"
-                                "{col2}\n\n").format(
-                                    idx=idx + 1,
-                                    start=utilities.seconds2time(row["start"] - init).replace(".", ","),
-                                    stop=utilities.seconds2time((row["stop"] if row["type"] == STATE else row["stop"] +
-                                                                 POINT_EVENT_ST_DURATION) - init).replace(".", ","),
-                                    col1=col1,
-                                    col2=col2,
-                                    subject=row["subject"],
-                                    behavior=row["behavior"],
-                                    modifiers=modifiers_str,
-                                )
-                        '''
-                        file_name = str(pathlib.Path(pathlib.Path(export_dir) / pathlib.Path(mediaFile).name).with suffix(".srt"))
-                        '''
-                        file_name = f"{pathlib.Path(export_dir) / pathlib.Path(mediaFile).name}.srt"
-                        try:
-                            with open(file_name, "w") as f:
-                                f.write(out)
-                        except Exception:
-                            flag_ok = False
-                            msg += f"observation: {obsId}\ngave the following error:\n{sys.exc_info()[1]}\n"
+                        cursor.execute(
+                            (
+                                "SELECT subject, behavior, type, start, stop, modifiers FROM aggregated_events "
+                                "WHERE observation = ? "
+                                "AND (start BETWEEN ? AND ?) "
+                                "AND (start BETWEEN ? AND ?) "
+                                "AND subject in ({}) "
+                                "AND behavior in ({}) "
+                                "ORDER BY start"
+                            ).format(
+                                ",".join(["?"] * len(parameters[cfg.SELECTED_SUBJECTS])),
+                                ",".join(["?"] * len(parameters[cfg.SELECTED_BEHAVIORS])),
+                            ),
+                            [obs_id, init, end, float(parameters[cfg.START_TIME]), float(parameters[cfg.END_TIME])]
+                            + parameters[cfg.SELECTED_SUBJECTS]
+                            + parameters[cfg.SELECTED_BEHAVIORS],
+                        )
 
-                        init = end
+                    for idx, row in enumerate(cursor.fetchall()):
+                        col1, col2 = subject_color(row["subject"])
+                        if parameters["include modifiers"]:
+                            modifiers_str = f"\n{row['modifiers'].replace('|', ', ')}"
+                        else:
+                            modifiers_str = ""
 
-        return flag_ok, msg
-    except Exception:
-        return False, str(sys.exc_info()[1])
+                        out += (
+                            "{idx}\n" "{start} --> {stop}\n" "{col1}{subject}: {behavior}" "{modifiers}" "{col2}\n\n"
+                        ).format(
+                            idx=idx + 1,
+                            start=util.seconds2time(row["start"] - init).replace(".", ","),
+                            stop=util.seconds2time(
+                                (row["stop"] if row["type"] == cfg.STATE else row["stop"] + cfg.POINT_EVENT_ST_DURATION)
+                                - init
+                            ).replace(".", ","),
+                            col1=col1,
+                            col2=col2,
+                            subject=row["subject"],
+                            behavior=row["behavior"],
+                            modifiers=modifiers_str,
+                        )
+                    file_name = pl.Path(export_dir) / pl.Path(pl.Path(media_file).stem).with_suffix(".srt")
+
+                    if mem_command not in (cfg.OVERWRITE_ALL, cfg.SKIP_ALL) and file_name.is_file():
+                        mem_command = dialog.MessageDialog(
+                            cfg.programName,
+                            f"The file {file_name} already exists.",
+                            [cfg.OVERWRITE, cfg.OVERWRITE_ALL, cfg.SKIP, cfg.SKIP_ALL, cfg.CANCEL],
+                        )
+                        if mem_command == cfg.CANCEL:
+                            return False, ""
+                        if mem_command in (cfg.SKIP, cfg.SKIP_ALL):
+                            continue
+                    try:
+                        with file_name.open("w", encoding="utf-8") as f_out:
+                            f_out.write(out)
+                    except Exception:
+                        flag_ok = False
+                        msg += f"observation: {obs_id}\ngave the following error:\n{sys.exc_info()[1]}\n"
+
+                    init = end
+
+    return flag_ok, msg
 
 
 def export_observations_list(pj: dict, selected_observations: list, file_name: str, output_format: str) -> bool:
@@ -524,41 +752,49 @@ def export_observations_list(pj: dict, selected_observations: list, file_name: s
     data.headers = ["Observation id", "Date", "Description", "Subjects", "Media files/Live observation"]
 
     indep_var_header = []
-    if INDEPENDENT_VARIABLES in pj:
-        for idx in utilities.sorted_keys(pj[INDEPENDENT_VARIABLES]):
-            indep_var_header.append(pj[INDEPENDENT_VARIABLES][idx]["label"])
+    if cfg.INDEPENDENT_VARIABLES in pj:
+        for idx in util.sorted_keys(pj[cfg.INDEPENDENT_VARIABLES]):
+            indep_var_header.append(pj[cfg.INDEPENDENT_VARIABLES][idx]["label"])
     data.headers.extend(indep_var_header)
 
     for obs_id in selected_observations:
 
-        subjects_list = sorted(list(set([x[EVENT_SUBJECT_FIELD_IDX] for x in pj[OBSERVATIONS][obs_id][EVENTS]])))
+        subjects_list = sorted(
+            list(set([x[cfg.EVENT_SUBJECT_FIELD_IDX] for x in pj[cfg.OBSERVATIONS][obs_id][cfg.EVENTS]]))
+        )
         if "" in subjects_list:
-            subjects_list = [NO_FOCAL_SUBJECT] + subjects_list
+            subjects_list = [cfg.NO_FOCAL_SUBJECT] + subjects_list
             subjects_list.remove("")
         subjects = ", ".join(subjects_list)
 
-        if pj[OBSERVATIONS][obs_id][TYPE] == LIVE:
+        if pj[cfg.OBSERVATIONS][obs_id][cfg.TYPE] == cfg.LIVE:
             media_files = ["Live observation"]
-        elif pj[OBSERVATIONS][obs_id][TYPE] == MEDIA:
+        elif pj[cfg.OBSERVATIONS][obs_id][cfg.TYPE] == cfg.MEDIA:
             media_files = []
-            if pj[OBSERVATIONS][obs_id][FILE]:
-                for player in sorted(pj[OBSERVATIONS][obs_id][FILE].keys()):
-                    for media in pj[OBSERVATIONS][obs_id][FILE][player]:
+            if pj[cfg.OBSERVATIONS][obs_id][cfg.FILE]:
+                for player in sorted(pj[cfg.OBSERVATIONS][obs_id][cfg.FILE].keys()):
+                    for media in pj[cfg.OBSERVATIONS][obs_id][cfg.FILE][player]:
                         media_files.append(f"#{player}: {media}")
 
         # independent variables
         indep_var = []
-        if INDEPENDENT_VARIABLES in pj[OBSERVATIONS][obs_id]:
+        if cfg.INDEPENDENT_VARIABLES in pj[cfg.OBSERVATIONS][obs_id]:
             for var_label in indep_var_header:
-                if var_label in pj[OBSERVATIONS][obs_id][INDEPENDENT_VARIABLES]:
-                    indep_var.append(pj[OBSERVATIONS][obs_id][INDEPENDENT_VARIABLES][var_label])
+                if var_label in pj[cfg.OBSERVATIONS][obs_id][cfg.INDEPENDENT_VARIABLES]:
+                    indep_var.append(pj[cfg.OBSERVATIONS][obs_id][cfg.INDEPENDENT_VARIABLES][var_label])
                 else:
                     indep_var.append("")
 
-        data.append([
-            obs_id, pj[OBSERVATIONS][obs_id]["date"], pj[OBSERVATIONS][obs_id]["description"], subjects, ", ".join(
-                media_files)
-        ] + indep_var)
+        data.append(
+            [
+                obs_id,
+                pj[cfg.OBSERVATIONS][obs_id]["date"],
+                pj[cfg.OBSERVATIONS][obs_id]["description"],
+                subjects,
+                ", ".join(media_files),
+            ]
+            + indep_var
+        )
 
     if output_format in ["tsv", "csv", "html"]:
         try:
@@ -576,64 +812,289 @@ def export_observations_list(pj: dict, selected_observations: list, file_name: s
     return True
 
 
-def remove_media_files_path(pj):
+def set_media_paths_relative_to_project_dir(pj: dict, project_file_name: str) -> bool:
     """
-    remove path from media files
+    set path from media files and path of images directory relative to the project directory
+
+    Args:
+        pj (dict): project
+        project_file_name (str): path of the project file
+
+    Returns:
+        bool: True if project changed else False
+    """
+
+    # chek if media and images dir are relative to project dir
+    for obs_id in pj[cfg.OBSERVATIONS]:
+        if pj[cfg.OBSERVATIONS][obs_id][cfg.TYPE] == cfg.IMAGES:
+            for img_dir in pj[cfg.OBSERVATIONS][obs_id][cfg.DIRECTORIES_LIST]:
+                try:
+                    pl.Path(img_dir).relative_to(pl.Path(project_file_name).parent)
+                except ValueError:
+                    if (
+                        pl.Path(img_dir).is_absolute()
+                        or not (pl.Path(project_file_name).parent / pl.Path(img_dir)).is_dir()
+                    ):
+
+                        QMessageBox.critical(
+                            None,
+                            cfg.programName,
+                            f"Observation <b>{obs_id}</b>:<br>the path of <b>{img_dir}</b> is not relative to <b>{project_file_name}</b>.",
+                        )
+                        return False
+
+        if pj[cfg.OBSERVATIONS][obs_id][cfg.TYPE] == cfg.MEDIA:
+            for n_player in cfg.ALL_PLAYERS:
+                if n_player in pj[cfg.OBSERVATIONS][obs_id][cfg.FILE]:
+                    for idx, media_file in enumerate(pj[cfg.OBSERVATIONS][obs_id][cfg.FILE][n_player]):
+                        try:
+                            pl.Path(media_file).relative_to(pl.Path(project_file_name).parent)
+                        except ValueError:
+
+                            if (
+                                pl.Path(media_file).is_absolute()
+                                or not (pl.Path(project_file_name).parent / pl.Path(media_file)).is_file()
+                            ):
+
+                                QMessageBox.critical(
+                                    None,
+                                    cfg.programName,
+                                    f"Observation <b>{obs_id}</b>:<br>the path of <b>{media_file}</b> is not relative to <b>{project_file_name}</b>",
+                                )
+                                return False
+
+    # set media path and image dir relative to project dir
+    flag_changed = False
+    for obs_id in pj[cfg.OBSERVATIONS]:
+
+        if pj[cfg.OBSERVATIONS][obs_id][cfg.TYPE] == cfg.IMAGES:
+            new_dir_list = []
+            for img_dir in pj[cfg.OBSERVATIONS][obs_id][cfg.DIRECTORIES_LIST]:
+                try:
+                    new_dir_list.append(str(pl.Path(img_dir).relative_to(pl.Path(project_file_name).parent)))
+                except ValueError:
+                    if (
+                        not pl.Path(img_dir).is_absolute()
+                        and (pl.Path(project_file_name).parent / pl.Path(img_dir)).is_dir()
+                    ):
+                        new_dir_list.append(img_dir)
+
+            if pj[cfg.OBSERVATIONS][obs_id][cfg.DIRECTORIES_LIST] != new_dir_list:
+                flag_changed = True
+            pj[cfg.OBSERVATIONS][obs_id][cfg.DIRECTORIES_LIST] = new_dir_list
+
+        if pj[cfg.OBSERVATIONS][obs_id][cfg.TYPE] == cfg.MEDIA:
+            for n_player in cfg.ALL_PLAYERS:
+                if n_player in pj[cfg.OBSERVATIONS][obs_id][cfg.FILE]:
+                    for idx, media_file in enumerate(pj[cfg.OBSERVATIONS][obs_id][cfg.FILE][n_player]):
+                        try:
+                            p = str(pl.Path(media_file).relative_to(pl.Path(project_file_name).parent))
+                        except ValueError:
+                            if (
+                                not pl.Path(media_file).is_absolute()
+                                and (pl.Path(project_file_name).parent / pl.Path(media_file)).is_file()
+                            ):
+                                p = media_file
+                        if p != media_file:
+                            flag_changed = True
+                            pj[cfg.OBSERVATIONS][obs_id][cfg.FILE][n_player][idx] = p
+                            if cfg.MEDIA_INFO in pj[cfg.OBSERVATIONS][obs_id]:
+                                for info in [cfg.LENGTH, cfg.HAS_AUDIO, cfg.HAS_VIDEO, cfg.FPS]:
+                                    if (
+                                        info in pj[cfg.OBSERVATIONS][obs_id][cfg.MEDIA_INFO]
+                                        and media_file in pj[cfg.OBSERVATIONS][obs_id][cfg.MEDIA_INFO][info]
+                                    ):
+                                        # add new file path
+                                        pj[cfg.OBSERVATIONS][obs_id][cfg.MEDIA_INFO][info][p] = pj[cfg.OBSERVATIONS][
+                                            obs_id
+                                        ][cfg.MEDIA_INFO][info][media_file]
+                                        # remove old path
+                                        del pj[cfg.OBSERVATIONS][obs_id][cfg.MEDIA_INFO][info][media_file]
+    return flag_changed
+
+
+def set_data_paths_relative_to_project_dir(pj: dict, project_file_name: str) -> bool:
+    """
+    set path from media files and path of images directory relative to the project directory
+
+        Args:
+        pj (dict): project
+        project_file_name (str): path of the project file
+
+    Returns:
+        bool: True if project changed else False
+    """
+    # chek if data paths are relative to project dir
+    for obs_id in pj[cfg.OBSERVATIONS]:
+        for _, v in pj[cfg.OBSERVATIONS][obs_id].get(cfg.PLOT_DATA, {}).items():
+            if cfg.FILE_PATH in v:
+                try:
+                    pl.Path(v[cfg.FILE_PATH]).relative_to(pl.Path(project_file_name).parent)
+                except ValueError:
+                    # check if file is in project dir
+                    if (
+                        pl.Path(v[cfg.FILE_PATH]).is_absolute()
+                        or not (pl.Path(project_file_name).parent / pl.Path(v[cfg.FILE_PATH])).is_file()
+                    ):
+                        QMessageBox.critical(
+                            None,
+                            cfg.programName,
+                            f"Observation <b>{obs_id}</b>:<br>the path of <b>{v[cfg.FILE_PATH]}</b> is not relative to <b>{project_file_name}</b>.",
+                        )
+                        return False
+
+    flag_changed = False
+    for obs_id in pj[cfg.OBSERVATIONS]:
+
+        if pj[cfg.OBSERVATIONS][obs_id][cfg.TYPE] != cfg.MEDIA:
+            continue
+        for idx, v in pj[cfg.OBSERVATIONS][obs_id].get(cfg.PLOT_DATA, {}).items():
+            if cfg.FILE_PATH in v:
+                try:
+                    p = str(pl.Path(v[cfg.FILE_PATH]).relative_to(pl.Path(project_file_name).parent))
+                except ValueError:
+                    # check if file is in project dir
+                    if (
+                        not pl.Path(v[cfg.FILE_PATH]).is_absolute()
+                        and (pl.Path(project_file_name).parent / pl.Path(v[cfg.FILE_PATH])).is_file()
+                    ):
+                        p = v[cfg.FILE_PATH]
+
+                if p != v[cfg.FILE_PATH]:
+                    pj[cfg.OBSERVATIONS][obs_id][cfg.PLOT_DATA][idx][cfg.FILE_PATH] = p
+                    flag_changed = True
+
+    return flag_changed
+
+
+def remove_data_files_path(pj: dict) -> None:
+    """
+    remove path from data files
+
+    Args:
+        pj (dict): project file
+
+    Returns:
+        None
+    """
+
+    for obs_id in pj[cfg.OBSERVATIONS]:
+
+        if pj[cfg.OBSERVATIONS][obs_id][cfg.TYPE] != cfg.MEDIA:
+            continue
+        if cfg.PLOT_DATA in pj[cfg.OBSERVATIONS][obs_id]:
+            for idx in pj[cfg.OBSERVATIONS][obs_id][cfg.PLOT_DATA]:
+                if "file_path" in pj[cfg.OBSERVATIONS][obs_id][cfg.PLOT_DATA][idx]:
+                    p = str(pl.Path(pj[cfg.OBSERVATIONS][obs_id][cfg.PLOT_DATA][idx]["file_path"]).name)
+                    if p != pj[cfg.OBSERVATIONS][obs_id][cfg.PLOT_DATA][idx]["file_path"]:
+                        pj[cfg.OBSERVATIONS][obs_id][cfg.PLOT_DATA][idx]["file_path"] = p
+
+
+def remove_media_files_path(pj: dict, project_file_name: str) -> bool:
+    """
+    remove path from media files and from images directory
     tested
 
     Args:
         pj (dict): project file
 
     Returns:
-        dict: project without media file paths
+        None
     """
 
-    for obs_id in pj[OBSERVATIONS]:
-        if pj[OBSERVATIONS][obs_id][TYPE] not in [MEDIA]:
-            continue
-        for n_player in ALL_PLAYERS:
-            if n_player in pj[OBSERVATIONS][obs_id][FILE]:
-                for idx, media_file in enumerate(pj[OBSERVATIONS][obs_id][FILE][n_player]):
-                    p = str(pathlib.Path(media_file).name)
-                    if p != media_file:
-                        pj[OBSERVATIONS][obs_id][FILE][n_player][idx] = p
-                        if MEDIA_INFO in pj[OBSERVATIONS][obs_id]:
-                            for info in [LENGTH, "hasAudio", "hasVideo", "fps"]:
-                                if (info in pj[OBSERVATIONS][obs_id][MEDIA_INFO] and
-                                        media_file in pj[OBSERVATIONS][obs_id][MEDIA_INFO][info]):
-                                    pj[OBSERVATIONS][obs_id][MEDIA_INFO][info][p] = pj[OBSERVATIONS][obs_id][
-                                        MEDIA_INFO][info][media_file]
-                                    del pj[OBSERVATIONS][obs_id][MEDIA_INFO][info][media_file]
+    file_not_found = []
+    # check if media and images dir
+    for obs_id in pj[cfg.OBSERVATIONS]:
 
-    return dict(pj)
+        if pj[cfg.OBSERVATIONS][obs_id][cfg.TYPE] == cfg.IMAGES:
+            for img_dir in pj[cfg.OBSERVATIONS][obs_id][cfg.DIRECTORIES_LIST]:
+                if full_path(pl.Path(img_dir).name, project_file_name) == "":
+                    file_not_found.append(img_dir)
+
+        if pj[cfg.OBSERVATIONS][obs_id][cfg.TYPE] == cfg.MEDIA:
+            for n_player in cfg.ALL_PLAYERS:
+                if n_player in pj[cfg.OBSERVATIONS][obs_id][cfg.FILE]:
+                    for idx, media_file in enumerate(pj[cfg.OBSERVATIONS][obs_id][cfg.FILE][n_player]):
+                        if full_path(pl.Path(media_file).name, project_file_name) == "":
+                            file_not_found.append(media_file)
+
+    file_not_found = set(file_not_found)
+    if file_not_found:
+        if (
+            dialog.MessageDialog(
+                cfg.programName,
+                (
+                    "Some media files / images directories will not be found after this operation:<br><br>"
+                    f"{',<br>'.join(file_not_found)}"
+                    "<br><br>Are you sure to continue?"
+                ),
+                [cfg.YES, cfg.NO],
+            )
+            == cfg.NO
+        ):
+            return False
+
+    flag_changed = False
+    for obs_id in pj[cfg.OBSERVATIONS]:
+
+        if pj[cfg.OBSERVATIONS][obs_id][cfg.TYPE] == cfg.IMAGES:
+            new_img_dir_list = []
+            for img_dir in pj[cfg.OBSERVATIONS][obs_id][cfg.DIRECTORIES_LIST]:
+                if img_dir != pl.Path(img_dir).name:
+                    flag_changed = True
+                new_img_dir_list.append(str(pl.Path(img_dir).name))
+            pj[cfg.OBSERVATIONS][obs_id][cfg.DIRECTORIES_LIST] = new_img_dir_list
+
+        if pj[cfg.OBSERVATIONS][obs_id][cfg.TYPE] == cfg.MEDIA:
+            for n_player in cfg.ALL_PLAYERS:
+                if n_player in pj[cfg.OBSERVATIONS][obs_id][cfg.FILE]:
+                    for idx, media_file in enumerate(pj[cfg.OBSERVATIONS][obs_id][cfg.FILE][n_player]):
+                        p = pl.Path(media_file).name
+                        if p != media_file:
+                            flag_changed = True
+                            pj[cfg.OBSERVATIONS][obs_id][cfg.FILE][n_player][idx] = p
+                            if cfg.MEDIA_INFO in pj[cfg.OBSERVATIONS][obs_id]:
+                                for info in [cfg.LENGTH, cfg.HAS_AUDIO, cfg.HAS_VIDEO, cfg.FPS]:
+                                    if (
+                                        info in pj[cfg.OBSERVATIONS][obs_id][cfg.MEDIA_INFO]
+                                        and media_file in pj[cfg.OBSERVATIONS][obs_id][cfg.MEDIA_INFO][info]
+                                    ):
+                                        # add new file path
+                                        pj[cfg.OBSERVATIONS][obs_id][cfg.MEDIA_INFO][info][p] = pj[cfg.OBSERVATIONS][
+                                            obs_id
+                                        ][cfg.MEDIA_INFO][info][media_file]
+                                        # remove old path
+                                        del pj[cfg.OBSERVATIONS][obs_id][cfg.MEDIA_INFO][info][media_file]
+
+    return flag_changed
 
 
-def media_full_path(media_file: str, project_file_name: str) -> str:
+def full_path(path: str, project_file_name: str) -> str:
     """
-    media full path
-    add path of BORIS project if media without path
+    returns the media/data full path or the images directory full path
+    add path of BORIS project if media/data with relative path
 
     Args:
-        media_file (str): media file path
+        path (str): file path or images directory path
         project_file_name (str): project file name
 
     Returns:
-        str: media full path
+        str: full path
     """
 
-    media_path = pathlib.Path(media_file)
-    if media_path.exists():
-        return str(media_path)
+    source_path = pl.Path(path)
+    if source_path.exists():
+        return str(source_path)
     else:
-        project_path = pathlib.Path(project_file_name)
-        p = project_path.parent / media_path.name
-        if p.exists():
-            return str(p)
+        # check relative path (to project path)
+        project_path = pl.Path(project_file_name)
+        if (project_path.parent / source_path).exists():
+            return str(project_path.parent / source_path)
         else:
             return ""
 
 
-def observed_interval(observation: dict):
+def observed_interval(observation: dict) -> tuple:
     """
     Observed interval for observation
 
@@ -641,130 +1102,31 @@ def observed_interval(observation: dict):
         observation (dict): observation dictionary
 
     Returns:
-        List of 2 Decimals: time of first observed event, time of last observed event
+        Tuple of 2 Decimals: time of first observed event, time of last observed event
     """
-    if observation[EVENTS]:
-        return (min(observation[EVENTS])[EVENT_TIME_FIELD_IDX], max(observation[EVENTS])[EVENT_TIME_FIELD_IDX])
-    else:
+    if not observation[cfg.EVENTS]:
         return (dec("0.0"), dec("0.0"))
+    if observation[cfg.TYPE] in (cfg.MEDIA, cfg.LIVE):
+        return (
+            min(observation[cfg.EVENTS])[cfg.PJ_OBS_FIELDS[observation[cfg.TYPE]]["time"]],
+            max(observation[cfg.EVENTS])[cfg.PJ_OBS_FIELDS[observation[cfg.TYPE]]["time"]],
+        )
+    if observation[cfg.TYPE] == cfg.IMAGES:
+        events = [x[cfg.PJ_OBS_FIELDS[observation[cfg.TYPE]]["image index"]] for x in observation[cfg.EVENTS]]
+
+        return (dec(min(events)), dec(max(events)))
+        """
+        return (
+            min(observation[cfg.EVENTS])[cfg.PJ_OBS_FIELDS[observation[cfg.TYPE]]["image index"]],
+            max(observation[cfg.EVENTS])[cfg.PJ_OBS_FIELDS[observation[cfg.TYPE]]["image index"]],
+        )
+        """
 
 
-def observation_total_length(observation: dict):
-    """
-    Total length of media file(s) for observation
-    tested
-
-    media: if media length not available return 0
-           if more media are queued, return sum of media length
-           if the last event is recorded after the length of media returns the last event time
-
-    live: return last event time
-
-    Args:
-        observation (dict): observation dictionary
-
-    Returns:
-        Decimal: total length in seconds
-
-    """
-
-    if observation[TYPE] == LIVE:
-        if observation[EVENTS]:
-            obs_length = max(observation[EVENTS])[EVENT_TIME_FIELD_IDX]
-        else:
-            obs_length = dec("0.0")
-        return obs_length
-
-    if observation[TYPE] == MEDIA:
-        media_max_total_length = dec("0.0")
-
-        media_total_length = {}
-
-        for nplayer in observation[FILE]:
-            if not observation[FILE][nplayer]:
-                continue
-
-            media_total_length[nplayer] = dec("0.0")
-            for mediaFile in observation[FILE][nplayer]:
-                mediaLength = 0
-                try:
-                    mediaLength = observation[MEDIA_INFO][LENGTH][mediaFile]
-                    media_total_length[nplayer] += dec(mediaLength)
-                except Exception:
-                    logging.critical(f"media length not found for {mediaFile}")
-                    mediaLength = -1
-                    media_total_length[nplayer] = -1
-                    break
-
-        if -1 in [media_total_length[x] for x in media_total_length]:
-            return dec("-1")
-
-        # totalMediaLength = max([total_media_length[x] for x in total_media_length])
-
-        media_max_total_length = max([media_total_length[x] for x in media_total_length])
-
-        if observation[EVENTS]:
-            if max(observation[EVENTS])[EVENT_TIME_FIELD_IDX] > media_max_total_length:
-                media_max_total_length = max(observation[EVENTS])[EVENT_TIME_FIELD_IDX]
-
-        return media_max_total_length
-
-    logging.critical("observation not LIVE nor MEDIA")
-
-    return dec("0.0")
-
-
-def observation_length(pj, selected_observations: list) -> tuple:
-    """
-    max length of selected observations
-    total media length
-
-    Args:
-        selected_observations (list): list of selected observations
-
-    Returns:
-        float: maximum media length for all observations
-        float: total media length for all observations
-    """
-    selectedObsTotalMediaLength = dec("0.0")
-    max_obs_length = 0
-    for obs_id in selected_observations:
-        obs_length = observation_total_length(pj[OBSERVATIONS][obs_id])
-        if obs_length in [dec("0"), dec("-1")]:
-            selectedObsTotalMediaLength = -1
-            break
-        max_obs_length = max(max_obs_length, obs_length)
-        selectedObsTotalMediaLength += obs_length
-
-    # an observation media length is not available
-    if selectedObsTotalMediaLength == -1:
-        # propose to user to use max event time
-        if dialog.MessageDialog(programName,
-                                (f"A media length is not available for the observation <b>{obs_id}</b>.<br>"
-                                 "Use last event time as media length?"), [YES, NO]) == YES:
-            maxTime = 0  # max length for all events all subjects
-            max_length = 0
-            for obs_id in selected_observations:
-                if pj[OBSERVATIONS][obs_id][EVENTS]:
-                    maxTime += max(pj[OBSERVATIONS][obs_id][EVENTS])[0]
-                    max_length = max(max_length, max(pj[OBSERVATIONS][obs_id][EVENTS])[0])
-
-            logging.debug(f"max time all events all subjects: {maxTime}")
-
-            max_obs_length = max_length
-            selectedObsTotalMediaLength = maxTime
-
-        else:
-            max_obs_length = -1
-            selectedObsTotalMediaLength = dec("-1")
-
-    return max_obs_length, selectedObsTotalMediaLength
-
-
-def events_start_stop(ethogram, events):
+def events_start_stop(ethogram: dict, events: list) -> list:
     """
     returns events with status (START/STOP or POINT)
-    take consideration of subject
+    Take consideration of subject
 
     Args:
         events (list): list of events
@@ -773,32 +1135,43 @@ def events_start_stop(ethogram, events):
         list: list of events with type (POINT or STATE)
     """
 
-    state_events_list = utilities.state_behavior_codes(ethogram)  # from utilities
+    state_events_list = util.state_behavior_codes(ethogram)
 
     events_flagged = []
-    for event in events:
+    for idx, event in enumerate(events):
+        """
         time, subject, code, modifier = (
-            event[EVENT_TIME_FIELD_IDX],
-            event[EVENT_SUBJECT_FIELD_IDX],
-            event[EVENT_BEHAVIOR_FIELD_IDX],
-            event[EVENT_MODIFIER_FIELD_IDX],
+            event[cfg.EVENT_TIME_FIELD_IDX],
+            event[cfg.EVENT_SUBJECT_FIELD_IDX],
+            event[cfg.EVENT_BEHAVIOR_FIELD_IDX],
+            event[cfg.EVENT_MODIFIER_FIELD_IDX],
         )
+        """
+
+        time, subject, code, modifier = event[: cfg.EVENT_MODIFIER_FIELD_IDX + 1]
+
         # check if code is state
         if code in state_events_list:
             # how many code before with same subject?
-            if (len([
-                    x[EVENT_BEHAVIOR_FIELD_IDX]
-                    for x in events
-                    if x[EVENT_BEHAVIOR_FIELD_IDX] == code and x[EVENT_TIME_FIELD_IDX] < time and
-                    x[EVENT_SUBJECT_FIELD_IDX] == subject and x[EVENT_MODIFIER_FIELD_IDX] == modifier
-            ]) % 2):  # test if odd
-                flag = STOP
+            if (
+                len(
+                    [
+                        x[cfg.EVENT_BEHAVIOR_FIELD_IDX]
+                        for idx1, x in enumerate(events)
+                        if x[cfg.EVENT_BEHAVIOR_FIELD_IDX] == code and idx1 < idx
+                        # and x[cfg.EVENT_TIME_FIELD_IDX] < time
+                        and x[cfg.EVENT_SUBJECT_FIELD_IDX] == subject and x[cfg.EVENT_MODIFIER_FIELD_IDX] == modifier
+                    ]
+                )
+                % 2
+            ):  # test if odd
+                flag = cfg.STOP
             else:
-                flag = START
+                flag = cfg.START
         else:
-            flag = POINT
+            flag = cfg.POINT
 
-        events_flagged.append(event + [flag])
+        events_flagged.append(tuple(event) + (flag,))
 
     return events_flagged
 
@@ -813,9 +1186,9 @@ def extract_observed_subjects(pj: dict, selected_observations: list) -> list:
     observed_subjects = []
 
     # extract events from selected observations
-    for events in [pj[OBSERVATIONS][x][EVENTS] for x in pj[OBSERVATIONS] if x in selected_observations]:
+    for events in [pj[cfg.OBSERVATIONS][x][cfg.EVENTS] for x in pj[cfg.OBSERVATIONS] if x in selected_observations]:
         for event in events:
-            observed_subjects.append(event[EVENT_SUBJECT_FIELD_IDX])
+            observed_subjects.append(event[cfg.EVENT_SUBJECT_FIELD_IDX])
 
     # remove duplicate
     return list(set(observed_subjects))
@@ -862,7 +1235,7 @@ def open_project_json(projectFileName: str) -> tuple:
         return projectFileName, projectChanged, {f"error": f"Error on file {projectFileName}: {sys.exc_info()[1]}"}, msg
 
     # transform time to decimal
-    pj = utilities.convert_time_to_decimal(pj)
+    pj = util.convert_time_to_decimal(pj)
 
     # add coding_map key to old project files
     if "coding_map" not in pj:
@@ -870,169 +1243,189 @@ def open_project_json(projectFileName: str) -> tuple:
         projectChanged = True
 
     # add subject description
-    if "project_format_version" in pj:
-        for idx in [x for x in pj[SUBJECTS]]:
-            if "description" not in pj[SUBJECTS][idx]:
-                pj[SUBJECTS][idx]["description"] = ""
+    if cfg.PROJECT_VERSION in pj:
+        for idx in [x for x in pj[cfg.SUBJECTS]]:
+            if "description" not in pj[cfg.SUBJECTS][idx]:
+                pj[cfg.SUBJECTS][idx]["description"] = ""
                 projectChanged = True
 
     # check if project file version is newer than current BORIS project file version
-    if "project_format_version" in pj and dec(pj["project_format_version"]) > dec(project_format_version):
+    if cfg.PROJECT_VERSION in pj and util.versiontuple(pj[cfg.PROJECT_VERSION]) > util.versiontuple(
+        version.__version__
+    ):
         return (
             projectFileName,
             projectChanged,
             {
-                "error": ("This project file was created with a more recent version of BORIS.<br>"
-                          f"You must update BORIS to <b>v. >= {pj['project_format_version']}</b> to open this project")
+                "error": (
+                    "This project file was created with a more recent version of BORIS.<br>"
+                    f"You must update BORIS to <b>v. >= {pj[cfg.PROJECT_VERSION]}</b> to open this project"
+                )
             },
             msg,
         )
 
     # check if old version  v. 0 *.obs
-    if "project_format_version" not in pj:
+    if cfg.PROJECT_VERSION not in pj:
 
         # convert VIDEO, AUDIO -> MEDIA
-        pj["project_format_version"] = project_format_version
+        pj[cfg.PROJECT_VERSION] = cfg.project_format_version
         projectChanged = True
 
-        for obs in [x for x in pj[OBSERVATIONS]]:
+        for obs in [x for x in pj[cfg.OBSERVATIONS]]:
 
             # remove 'replace audio' key
-            if "replace audio" in pj[OBSERVATIONS][obs]:
-                del pj[OBSERVATIONS][obs]["replace audio"]
+            if "replace audio" in pj[cfg.OBSERVATIONS][obs]:
+                del pj[cfg.OBSERVATIONS][obs]["replace audio"]
 
-            if pj[OBSERVATIONS][obs][TYPE] in ["VIDEO", "AUDIO"]:
-                pj[OBSERVATIONS][obs][TYPE] = MEDIA
+            if pj[cfg.OBSERVATIONS][obs][cfg.TYPE] in ["VIDEO", "AUDIO"]:
+                pj[cfg.OBSERVATIONS][obs][cfg.TYPE] = cfg.MEDIA
 
             # convert old media list in new one
-            if len(pj[OBSERVATIONS][obs][FILE]):
-                d1 = {PLAYER1: [pj[OBSERVATIONS][obs][FILE][0]]}
+            if len(pj[cfg.OBSERVATIONS][obs][cfg.FILE]):
+                d1 = {cfg.PLAYER1: [pj[cfg.OBSERVATIONS][obs][cfg.FILE][0]]}
 
-            if len(pj[OBSERVATIONS][obs][FILE]) == 2:
-                d1[PLAYER2] = [pj[OBSERVATIONS][obs][FILE][1]]
+            if len(pj[cfg.OBSERVATIONS][obs][cfg.FILE]) == 2:
+                d1[cfg.PLAYER2] = [pj[cfg.OBSERVATIONS][obs][cfg.FILE][1]]
 
-            pj[OBSERVATIONS][obs][FILE] = d1
+            pj[cfg.OBSERVATIONS][obs][cfg.FILE] = d1
 
         # convert VIDEO, AUDIO -> MEDIA
-        for idx in [x for x in pj[SUBJECTS]]:
-            key, name = pj[SUBJECTS][idx]
-            pj[SUBJECTS][idx] = {"key": key, "name": name, "description": ""}
+        for idx in [x for x in pj[cfg.SUBJECTS]]:
+            key, name = pj[cfg.SUBJECTS][idx]
+            pj[cfg.SUBJECTS][idx] = {"key": key, "name": name, "description": ""}
 
         msg = (
-            f"The project file was converted to the new format (v. {project_format_version}) in use with your version of BORIS.<br>"
-            "Choose a new file name for saving it.")
+            f"The project file was converted to the new format (v. {cfg.project_format_version}) in use with your version of BORIS.<br>"
+            "Choose a new file name for saving it."
+        )
         projectFileName = ""
 
     # update modifiers to JSON format
 
     # check if project format version < 4 (modifiers were str)
     project_lowerthan4 = False
-    if "project_format_version" in pj and utilities.versiontuple(
-            pj["project_format_version"]) < utilities.versiontuple("4.0"):
-        for idx in pj[ETHOGRAM]:
-            if pj[ETHOGRAM][idx]["modifiers"]:
-                if isinstance(pj[ETHOGRAM][idx]["modifiers"], str):
+    if cfg.PROJECT_VERSION in pj and util.versiontuple(pj[cfg.PROJECT_VERSION]) < util.versiontuple("4.0"):
+        for idx in pj[cfg.ETHOGRAM]:
+            if pj[cfg.ETHOGRAM][idx]["modifiers"]:
+                if isinstance(pj[cfg.ETHOGRAM][idx]["modifiers"], str):
                     project_lowerthan4 = True
-                    modif_set_list = pj[ETHOGRAM][idx]["modifiers"].split("|")
+                    modif_set_list = pj[cfg.ETHOGRAM][idx]["modifiers"].split("|")
                     modif_set_dict = {}
                     for modif_set in modif_set_list:
                         modif_set_dict[str(len(modif_set_dict))] = {
                             "name": "",
-                            "type": SINGLE_SELECTION,
-                            "values": modif_set.split(",")
+                            "type": cfg.SINGLE_SELECTION,
+                            "values": modif_set.split(","),
                         }
-                    pj[ETHOGRAM][idx]["modifiers"] = dict(modif_set_dict)
+                    pj[cfg.ETHOGRAM][idx]["modifiers"] = dict(modif_set_dict)
             else:
-                pj[ETHOGRAM][idx]["modifiers"] = {}
+                pj[cfg.ETHOGRAM][idx]["modifiers"] = {}
 
         if not project_lowerthan4:
-            msg = "The project version was updated from {} to {}".format(pj["project_format_version"],
-                                                                         project_format_version)
-            pj["project_format_version"] = project_format_version
+            msg = "The project version was updated from {} to {}".format(
+                pj[cfg.PROJECT_VERSION], cfg.project_format_version
+            )
+            pj[cfg.PROJECT_VERSION] = cfg.project_format_version
             projectChanged = True
 
     # add category key if not found
-    for idx in pj[ETHOGRAM]:
-        if "category" not in pj[ETHOGRAM][idx]:
-            pj[ETHOGRAM][idx]["category"] = ""
+    for idx in pj[cfg.ETHOGRAM]:
+        if "category" not in pj[cfg.ETHOGRAM][idx]:
+            pj[cfg.ETHOGRAM][idx]["category"] = ""
 
     # if one file is present in player #1 -> set "media_info" key with value of media_file_info
-    for obs in pj[OBSERVATIONS]:
-        if pj[OBSERVATIONS][obs][TYPE] in [MEDIA] and MEDIA_INFO not in pj[OBSERVATIONS][obs]:
-            pj[OBSERVATIONS][obs][MEDIA_INFO] = {LENGTH: {}, "fps": {}, "hasVideo": {}, "hasAudio": {}}
-            for player in [PLAYER1, PLAYER2]:
+    for obs in pj[cfg.OBSERVATIONS]:
+        if pj[cfg.OBSERVATIONS][obs][cfg.TYPE] in [cfg.MEDIA] and cfg.MEDIA_INFO not in pj[cfg.OBSERVATIONS][obs]:
+            pj[cfg.OBSERVATIONS][obs][cfg.MEDIA_INFO] = {
+                cfg.LENGTH: {},
+                cfg.FPS: {},
+                cfg.HAS_VIDEO: {},
+                cfg.HAS_AUDIO: {},
+            }
+            for player in [cfg.PLAYER1, cfg.PLAYER2]:
                 # fix bug Anne Maijer 2017-07-17
-                if pj[OBSERVATIONS][obs][FILE] == []:
-                    pj[OBSERVATIONS][obs][FILE] = {"1": [], "2": []}
+                if pj[cfg.OBSERVATIONS][obs][cfg.FILE] == []:
+                    pj[cfg.OBSERVATIONS][obs][cfg.FILE] = {"1": [], "2": []}
 
-                for media_file_path in pj[OBSERVATIONS][obs]["file"][player]:
+                for media_file_path in pj[cfg.OBSERVATIONS][obs]["file"][player]:
                     # FIX: ffmpeg path
-                    ret, ffmpeg_path = utilities.check_ffmpeg_path()
+                    ret, msg = util.check_ffmpeg_path()
                     if not ret:
                         return projectFileName, projectChanged, {"error": "FFmpeg path not found"}, ""
                     else:
-                        ffmpeg_bin = ffmpeg_path
+                        ffmpeg_bin = msg
 
-                    r = utilities.accurate_media_analysis(ffmpeg_bin, media_file_path)
+                    r = util.accurate_media_analysis(ffmpeg_bin, media_file_path)
 
                     if "duration" in r and r["duration"]:
-                        pj[OBSERVATIONS][obs][MEDIA_INFO][LENGTH][media_file_path] = float(r["duration"])
-                        pj[OBSERVATIONS][obs][MEDIA_INFO][FPS][media_file_path] = float(r["fps"])
-                        pj[OBSERVATIONS][obs][MEDIA_INFO]["hasVideo"][media_file_path] = r["has_video"]
-                        pj[OBSERVATIONS][obs][MEDIA_INFO]["hasAudio"][media_file_path] = r["has_audio"]
+                        pj[cfg.OBSERVATIONS][obs][cfg.MEDIA_INFO][cfg.LENGTH][media_file_path] = float(r["duration"])
+                        pj[cfg.OBSERVATIONS][obs][cfg.MEDIA_INFO][cfg.FPS][media_file_path] = float(r["fps"])
+                        pj[cfg.OBSERVATIONS][obs][cfg.MEDIA_INFO][cfg.HAS_VIDEO][media_file_path] = r["has_video"]
+                        pj[cfg.OBSERVATIONS][obs][cfg.MEDIA_INFO][cfg.HAS_AUDIO][media_file_path] = r["has_audio"]
                         project_updated, projectChanged = True, True
                     else:  # file path not found
-                        if ("media_file_info" in pj[OBSERVATIONS][obs] and
-                                len(pj[OBSERVATIONS][obs]["media_file_info"]) == 1 and
-                                len(pj[OBSERVATIONS][obs][FILE][PLAYER1]) == 1 and
-                                len(pj[OBSERVATIONS][obs][FILE][PLAYER2]) == 0):
-                            media_md5_key = list(pj[OBSERVATIONS][obs]["media_file_info"].keys())[0]
+                        if (
+                            cfg.MEDIA_FILE_INFO in pj[cfg.OBSERVATIONS][obs]
+                            and len(pj[cfg.OBSERVATIONS][obs][cfg.MEDIA_FILE_INFO]) == 1
+                            and len(pj[cfg.OBSERVATIONS][obs][cfg.FILE][cfg.PLAYER1]) == 1
+                            and len(pj[cfg.OBSERVATIONS][obs][cfg.FILE][cfg.PLAYER2]) == 0
+                        ):
+                            media_md5_key = list(pj[cfg.OBSERVATIONS][obs][cfg.MEDIA_FILE_INFO].keys())[0]
                             # duration
-                            pj[OBSERVATIONS][obs][MEDIA_INFO] = {
-                                LENGTH: {
-                                    media_file_path:
-                                        pj[OBSERVATIONS][obs]["media_file_info"][media_md5_key]["video_length"] / 1000
+                            pj[cfg.OBSERVATIONS][obs][cfg.MEDIA_INFO] = {
+                                cfg.LENGTH: {
+                                    media_file_path: pj[cfg.OBSERVATIONS][obs][cfg.MEDIA_FILE_INFO][media_md5_key][
+                                        "video_length"
+                                    ]
+                                    / 1000
                                 }
                             }
                             projectChanged = True
 
                             # FPS
-                            if "nframe" in pj[OBSERVATIONS][obs]["media_file_info"][media_md5_key]:
-                                pj[OBSERVATIONS][obs][MEDIA_INFO][FPS] = {
-                                    media_file_path:
-                                        pj[OBSERVATIONS][obs]["media_file_info"][media_md5_key]["nframe"] /
-                                        (pj[OBSERVATIONS][obs]["media_file_info"][media_md5_key]["video_length"] / 1000)
+                            if "nframe" in pj[cfg.OBSERVATIONS][obs][cfg.MEDIA_FILE_INFO][media_md5_key]:
+                                pj[cfg.OBSERVATIONS][obs][cfg.MEDIA_INFO][cfg.FPS] = {
+                                    media_file_path: pj[cfg.OBSERVATIONS][obs][cfg.MEDIA_FILE_INFO][media_md5_key][
+                                        "nframe"
+                                    ]
+                                    / (
+                                        pj[cfg.OBSERVATIONS][obs][cfg.MEDIA_FILE_INFO][media_md5_key]["video_length"]
+                                        / 1000
+                                    )
                                 }
                             else:
-                                pj[OBSERVATIONS][obs][MEDIA_INFO][FPS] = {media_file_path: 0}
+                                pj[cfg.OBSERVATIONS][obs][cfg.MEDIA_INFO][cfg.FPS] = {media_file_path: 0}
 
     # update project to v.7 for time offset second player
     project_lowerthan7 = False
-    for obs in pj[OBSERVATIONS]:
-        if "time offset second player" in pj[OBSERVATIONS][obs]:
-            if MEDIA_INFO not in pj[OBSERVATIONS][obs]:
-                pj[OBSERVATIONS][obs][MEDIA_INFO] = {}
-            if "offset" not in pj[OBSERVATIONS][obs][MEDIA_INFO]:
-                pj[OBSERVATIONS][obs][MEDIA_INFO]["offset"] = {}
-            for player in pj[OBSERVATIONS][obs][FILE]:
-                pj[OBSERVATIONS][obs][MEDIA_INFO]["offset"][player] = 0.0
-            if pj[OBSERVATIONS][obs]["time offset second player"]:
-                pj[OBSERVATIONS][obs][MEDIA_INFO]["offset"]["2"] = float(
-                    pj[OBSERVATIONS][obs]["time offset second player"])
+    for obs in pj[cfg.OBSERVATIONS]:
+        if "time offset second player" in pj[cfg.OBSERVATIONS][obs]:
+            if cfg.MEDIA_INFO not in pj[cfg.OBSERVATIONS][obs]:
+                pj[cfg.OBSERVATIONS][obs][cfg.MEDIA_INFO] = {}
+            if cfg.OFFSET not in pj[cfg.OBSERVATIONS][obs][cfg.MEDIA_INFO]:
+                pj[cfg.OBSERVATIONS][obs][cfg.MEDIA_INFO][cfg.OFFSET] = {}
+            for player in pj[cfg.OBSERVATIONS][obs][cfg.FILE]:
+                pj[cfg.OBSERVATIONS][obs][cfg.MEDIA_INFO][cfg.OFFSET][player] = 0.0
+            if pj[cfg.OBSERVATIONS][obs]["time offset second player"]:
+                pj[cfg.OBSERVATIONS][obs][cfg.MEDIA_INFO][cfg.OFFSET]["2"] = float(
+                    pj[cfg.OBSERVATIONS][obs]["time offset second player"]
+                )
 
-            del pj[OBSERVATIONS][obs]["time offset second player"]
+            del pj[cfg.OBSERVATIONS][obs]["time offset second player"]
             project_lowerthan7 = True
 
             msg = (
-                f"The project file was converted to the new format (v. {project_format_version}) in use with your version of BORIS.<br>"
+                f"The project file was converted to the new format (v. {cfg.project_format_version}) in use with your version of BORIS.<br>"
                 f"Please note that this new version will NOT be compatible with previous BORIS versions "
-                f"(&lt; v. {project_format_version}).<br>")
+                f"(&lt; v. {cfg.project_format_version}).<br>"
+            )
 
             projectChanged = True
 
     if project_lowerthan7:
 
-        msg = (f"The project was updated to the current project version ({project_format_version}).")
+        msg = f"The project was updated to the current project version ({cfg.project_format_version})."
 
         try:
             old_project_file_name = projectFileName.replace(".boris", f".v{pj['project_format_version']}.boris")
@@ -1041,7 +1434,7 @@ def open_project_json(projectFileName: str) -> tuple:
         except Exception:
             pass
 
-        pj["project_format_version"] = project_format_version
+        pj[cfg.PROJECT_VERSION] = cfg.project_format_version
 
     return projectFileName, projectChanged, pj, msg
 
@@ -1059,12 +1452,12 @@ def event_type(code: str, ethogram: dict) -> str:
     """
 
     for idx in ethogram:
-        if ethogram[idx][BEHAVIOR_CODE] == code:
-            return ethogram[idx][TYPE].upper()
+        if ethogram[idx][cfg.BEHAVIOR_CODE] == code:
+            return ethogram[idx][cfg.TYPE].upper()
     return None
 
 
-def fix_unpaired_state_events(obsId, ethogram, observation, fix_at_time):
+def fix_unpaired_state_events(ethogram: dict, observation: dict, fix_at_time: dec) -> list:
     """
     fix unpaired state events in observation
 
@@ -1081,42 +1474,136 @@ def fix_unpaired_state_events(obsId, ethogram, observation, fix_at_time):
     out = ""
     closing_events_to_add = []
     flagStateEvent = False
-    subjects = [event[EVENT_SUBJECT_FIELD_IDX] for event in observation[EVENTS]]
-    ethogram_behaviors = {ethogram[idx][BEHAVIOR_CODE] for idx in ethogram}
+    subjects = [event[cfg.EVENT_SUBJECT_FIELD_IDX] for event in observation[cfg.EVENTS]]
+    ethogram_behaviors = {ethogram[idx][cfg.BEHAVIOR_CODE] for idx in ethogram}
 
     for subject in sorted(set(subjects)):
 
         behaviors = [
-            event[EVENT_BEHAVIOR_FIELD_IDX]
-            for event in observation[EVENTS]
-            if event[EVENT_SUBJECT_FIELD_IDX] == subject
+            event[cfg.EVENT_BEHAVIOR_FIELD_IDX]
+            for event in observation[cfg.EVENTS]
+            if event[cfg.EVENT_SUBJECT_FIELD_IDX] == subject
         ]
 
         for behavior in sorted(set(behaviors)):
-            if (behavior in ethogram_behaviors) and (STATE in event_type(behavior, ethogram).upper()):
+            if (behavior in ethogram_behaviors) and (cfg.STATE in event_type(behavior, ethogram).upper()):
 
-                flagStateEvent = True
                 lst, memTime = [], {}
                 for event in [
-                        event for event in observation[EVENTS]
-                        if event[EVENT_BEHAVIOR_FIELD_IDX] == behavior and event[EVENT_SUBJECT_FIELD_IDX] == subject
+                    event
+                    for event in observation[cfg.EVENTS]
+                    if event[cfg.EVENT_BEHAVIOR_FIELD_IDX] == behavior and event[cfg.EVENT_SUBJECT_FIELD_IDX] == subject
                 ]:
 
-                    behav_modif = [event[EVENT_BEHAVIOR_FIELD_IDX], event[EVENT_MODIFIER_FIELD_IDX]]
+                    behav_modif = [event[cfg.EVENT_BEHAVIOR_FIELD_IDX], event[cfg.EVENT_MODIFIER_FIELD_IDX]]
 
                     if behav_modif in lst:
                         lst.remove(behav_modif)
                         del memTime[str(behav_modif)]
                     else:
                         lst.append(behav_modif)
-                        memTime[str(behav_modif)] = event[EVENT_TIME_FIELD_IDX]
+                        memTime[str(behav_modif)] = event[cfg.EVENT_TIME_FIELD_IDX]
 
                 for event in lst:
 
                     last_event_time = max([fix_at_time] + [x[0] for x in closing_events_to_add])
 
-                    closing_events_to_add.append([last_event_time + dec("0.001"), subject, behavior, event[1],
-                                                  ""]  # modifiers  # comment
-                                                )
+                    closing_events_to_add.append(
+                        [last_event_time + dec("0.001"), subject, behavior, event[1], ""]  # modifiers  # comment
+                    )
 
     return closing_events_to_add
+
+
+def has_audio(observation: dict, media_file_path: str) -> bool:
+    """
+    check if media file has audio
+    """
+    if cfg.HAS_AUDIO in observation[cfg.MEDIA_INFO]:
+        if media_file_path in observation[cfg.MEDIA_INFO][cfg.HAS_AUDIO]:
+            if observation[cfg.MEDIA_INFO][cfg.HAS_AUDIO][media_file_path]:
+                return True
+    return False
+
+
+def explore_project(self) -> None:
+    """
+    search various elements (subjects, behaviors, modifiers, comments) in all observations
+    """
+
+    def double_click_explore_project(obs_id, event_idx):
+        """
+        manage double-click on tablewidget of explore project results
+        """
+        observation_operations.load_observation(self, obs_id, cfg.VIEW)
+        self.twEvents.selectRow(event_idx - 1)
+        self.twEvents.scrollToItem(self.twEvents.item(event_idx - 1, 0))
+
+    elements_list = ("Subject", "Behavior", "Modifier", "Comment")
+    elements = []
+    for element in elements_list:
+        elements.append(("le", element))
+    elements.append(("cb", "Case sensitive", False))
+
+    explore_dlg = dialog.Input_dialog(
+        label_caption="Search in all observations", elements_list=elements, title="Explore project"
+    )
+    explore_dlg.pbOK.setText("Find")
+    if not explore_dlg.exec_():
+        return
+
+    nb_fields: int = 0
+    results: list = []
+    for element in elements_list:
+        nb_fields += explore_dlg.elements[element].text() != ""
+
+    for obs_id in sorted(self.pj[cfg.OBSERVATIONS]):
+        for event_idx, event in enumerate(self.pj[cfg.OBSERVATIONS][obs_id][cfg.EVENTS]):
+            nb_results = 0
+            for text, idx in (
+                (explore_dlg.elements["Subject"].text(), cfg.EVENT_SUBJECT_FIELD_IDX),
+                (explore_dlg.elements["Behavior"].text(), cfg.EVENT_BEHAVIOR_FIELD_IDX),
+                (explore_dlg.elements["Modifier"].text(), cfg.EVENT_MODIFIER_FIELD_IDX),
+                (explore_dlg.elements["Comment"].text(), cfg.EVENT_COMMENT_FIELD_IDX),
+            ):
+                if text:
+                    if any(
+                        (
+                            (explore_dlg.elements["Case sensitive"].isChecked() and text in event[idx]),
+                            (
+                                not explore_dlg.elements["Case sensitive"].isChecked()
+                                and text.upper() in event[idx].upper()
+                            ),
+                        )
+                    ):
+                        nb_results += 1
+
+            if nb_results == nb_fields:
+                results.append((obs_id, event_idx + 1))
+
+    if results:
+        self.results_dialog = dialog.View_explore_project_results()
+        self.results_dialog.setWindowTitle("Explore project results")
+        self.results_dialog.setWindowFlags(Qt.WindowStaysOnTopHint)
+        self.results_dialog.double_click_signal.connect(double_click_explore_project)
+        txt = f"<b>{len(results)}</b> events"
+        txt2 = ""
+        for element in elements_list:
+            if explore_dlg.elements[element].text():
+                txt2 += f"<b>{explore_dlg.elements[element].text()}</b> in {element}<br>"
+        if txt2:
+            txt += " for<br>"
+        self.results_dialog.lb.setText(txt + txt2)
+        self.results_dialog.tw.setColumnCount(2)
+        self.results_dialog.tw.setRowCount(len(results))
+        self.results_dialog.tw.setHorizontalHeaderLabels(["Observation id", "row index"])
+
+        for row, result in enumerate(results):
+            for i in range(0, 2):
+                self.results_dialog.tw.setItem(row, i, QTableWidgetItem(str(result[i])))
+                self.results_dialog.tw.item(row, i).setFlags(Qt.ItemIsSelectable | Qt.ItemIsEnabled)
+
+        self.results_dialog.show()
+
+    else:
+        QMessageBox.information(self, cfg.programName, "No events found")

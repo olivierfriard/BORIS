@@ -22,22 +22,25 @@ Copyright 2012-2022 Olivier Friard
 import os
 import pathlib
 import re
-import sys
-from decimal import Decimal as dc
+from decimal import Decimal as dec
 
 import tablib
 from PyQt5.QtCore import Qt
-from PyQt5.QtWidgets import (QFileDialog, QInputDialog, QMessageBox)
+from PyQt5.QtWidgets import QFileDialog, QInputDialog, QMessageBox
 
-from boris import dialog
-from boris import project_functions
-from boris import select_observations
-from boris import utilities
-from boris.config import *
+from . import observation_operations
+
+from . import dialog
+from . import project_functions
+from . import select_observations
+from . import utilities as util
+from . import config as cfg
+from . import select_subj_behav
 
 
-def create_behavior_binary_table(pj: dict, selected_observations: list, parameters_obs: dict,
-                                 time_interval: float) -> dict:
+def create_behavior_binary_table(
+    pj: dict, selected_observations: list, parameters_obs: dict, time_interval: float
+) -> dict:
     """
     create behavior binary table
 
@@ -55,83 +58,95 @@ def create_behavior_binary_table(pj: dict, selected_observations: list, paramete
     results_df = {}
 
     state_behavior_codes = [
-        x for x in utilities.state_behavior_codes(pj[ETHOGRAM]) if x in parameters_obs[SELECTED_BEHAVIORS]
+        x for x in util.state_behavior_codes(pj[cfg.ETHOGRAM]) if x in parameters_obs[cfg.SELECTED_BEHAVIORS]
     ]
     point_behavior_codes = [
-        x for x in utilities.point_behavior_codes(pj[ETHOGRAM]) if x in parameters_obs[SELECTED_BEHAVIORS]
+        x for x in util.point_behavior_codes(pj[cfg.ETHOGRAM]) if x in parameters_obs[cfg.SELECTED_BEHAVIORS]
     ]
     if not state_behavior_codes and not point_behavior_codes:
-        return {"error": True, "msg": "No state events selected"}
+        return {"error": True, "msg": "No events selected"}
 
     for obs_id in selected_observations:
 
-        start_time = parameters_obs[START_TIME]
-        end_time = parameters_obs[END_TIME]
+        start_time = parameters_obs[cfg.START_TIME]
+        end_time = parameters_obs[cfg.END_TIME]
 
         # check observation interval
-        if parameters_obs["time"] == TIME_FULL_OBS:
-            max_obs_length, _ = project_functions.observation_length(pj, [obs_id])
-            start_time = dc("0.000")
-            end_time = dc(max_obs_length)
+        if parameters_obs["time"] == cfg.TIME_FULL_OBS:
+            max_obs_length, _ = observation_operations.observation_length(pj, [obs_id])
+            start_time = dec("0.000")
+            end_time = dec(max_obs_length)
 
-        if parameters_obs["time"] == TIME_EVENTS:
+        if parameters_obs["time"] == cfg.TIME_EVENTS:
 
             try:
-                start_time = dc(pj[OBSERVATIONS][obs_id][EVENTS][0][0])
+                start_time = dec(pj[cfg.OBSERVATIONS][obs_id][cfg.EVENTS][0][0])
             except Exception:
-                start_time = dc("0.000")
+                start_time = dec("0.000")
             try:
-                end_time = dc(pj[OBSERVATIONS][obs_id][EVENTS][-1][0])
+                end_time = dec(pj[cfg.OBSERVATIONS][obs_id][cfg.EVENTS][-1][0])
             except Exception:
-                max_obs_length, _ = project_functions.observation_length(pj, [obs_id])
-                end_time = dc(max_obs_length)
+                max_obs_length, _ = observation_operations.observation_length(pj, [obs_id])
+                end_time = dec(max_obs_length)
 
         if obs_id not in results_df:
             results_df[obs_id] = {}
 
-        for subject in parameters_obs[SELECTED_SUBJECTS]:
+        for subject in parameters_obs[cfg.SELECTED_SUBJECTS]:
 
             # extract tuple (behavior, modifier)
-            behav_modif_list = [(idx[2], idx[3]) for idx in pj[OBSERVATIONS][obs_id][EVENTS] if idx[1] == (
-                subject if subject != NO_FOCAL_SUBJECT else "") and idx[2] in parameters_obs[SELECTED_BEHAVIORS]]
+            behav_modif_list = [
+                (idx[2], idx[3])
+                for idx in pj[cfg.OBSERVATIONS][obs_id][cfg.EVENTS]
+                if idx[1] == (subject if subject != cfg.NO_FOCAL_SUBJECT else "")
+                and idx[2] in parameters_obs[cfg.SELECTED_BEHAVIORS]
+            ]
 
             # extract observed subjects NOT USED at the moment
-            observed_subjects = [event[EVENT_SUBJECT_FIELD_IDX] for event in pj[OBSERVATIONS][obs_id][EVENTS]]
+            observed_subjects = [
+                event[cfg.EVENT_SUBJECT_FIELD_IDX] for event in pj[cfg.OBSERVATIONS][obs_id][cfg.EVENTS]
+            ]
 
             # add selected behavior if not found in (behavior, modifier)
-            if not parameters_obs[EXCLUDE_BEHAVIORS]:
-                #for behav in state_behavior_codes:
-                for behav in parameters_obs[SELECTED_BEHAVIORS]:
+            if not parameters_obs[cfg.EXCLUDE_BEHAVIORS]:
+                # for behav in state_behavior_codes:
+                for behav in parameters_obs[cfg.SELECTED_BEHAVIORS]:
                     if behav not in [x[0] for x in behav_modif_list]:
                         behav_modif_list.append((behav, ""))
 
             behav_modif_set = set(behav_modif_list)
             observed_behav = [(x[0], x[1]) for x in sorted(behav_modif_set)]
-            if parameters_obs[INCLUDE_MODIFIERS]:
+            if parameters_obs[cfg.INCLUDE_MODIFIERS]:
                 results_df[obs_id][subject] = tablib.Dataset(
-                    headers=["time"] + [f"{x[0]}" + f" ({x[1]})" * (x[1] != "") for x in sorted(behav_modif_set)])
+                    headers=["time"] + [f"{x[0]}" + f" ({x[1]})" * (x[1] != "") for x in sorted(behav_modif_set)]
+                )
             else:
                 results_df[obs_id][subject] = tablib.Dataset(headers=["time"] + [x[0] for x in sorted(behav_modif_set)])
 
-            if subject == NO_FOCAL_SUBJECT:
-                sel_subject_dict = {"": {SUBJECT_NAME: ""}}
+            if subject == cfg.NO_FOCAL_SUBJECT:
+                sel_subject_dict = {"": {cfg.SUBJECT_NAME: ""}}
             else:
-                sel_subject_dict = dict([
-                    (idx, pj[SUBJECTS][idx]) for idx in pj[SUBJECTS] if pj[SUBJECTS][idx][SUBJECT_NAME] == subject
-                ])
+                sel_subject_dict = dict(
+                    [
+                        (idx, pj[cfg.SUBJECTS][idx])
+                        for idx in pj[cfg.SUBJECTS]
+                        if pj[cfg.SUBJECTS][idx][cfg.SUBJECT_NAME] == subject
+                    ]
+                )
 
             row_idx = 0
             t = start_time
             while t <= end_time:
 
                 # state events
-                current_states = utilities.get_current_states_modifiers_by_subject_2(
-                    state_behavior_codes, pj[OBSERVATIONS][obs_id][EVENTS], sel_subject_dict, t)
+                current_states = util.get_current_states_modifiers_by_subject_2(
+                    state_behavior_codes, pj[cfg.OBSERVATIONS][obs_id][cfg.EVENTS], sel_subject_dict, t
+                )
 
                 # point events
-                current_point = utilities.get_current_points_by_subject(point_behavior_codes,
-                                                                        pj[OBSERVATIONS][obs_id][EVENTS],
-                                                                        sel_subject_dict, t, time_interval)
+                current_point = util.get_current_points_by_subject(
+                    point_behavior_codes, pj[cfg.OBSERVATIONS][obs_id][cfg.EVENTS], sel_subject_dict, t, time_interval
+                )
 
                 cols = [float(t)]  # time
 
@@ -150,105 +165,123 @@ def create_behavior_binary_table(pj: dict, selected_observations: list, paramete
     return results_df
 
 
-def behavior_binary_table(pj: dict):
+def behavior_binary_table(self):
     """
     ask user for parameters for behavior binary table
     call create_behavior_binary_table
     """
 
+    QMessageBox.warning(
+        None,
+        cfg.programName,
+        (
+            "Depending of the length of your observations "
+            "the execution of this function may be very long.<br>"
+            "The program interface may freeze, be patient. <br>"
+        ),
+    )
+
     _, selected_observations = select_observations.select_observations(
-        pj, MULTIPLE, "Select observations for the behavior binary table")
+        self.pj, cfg.MULTIPLE, "Select observations for the behavior binary table"
+    )
 
     if not selected_observations:
         return
+
+    # check if coded behaviors are defined in ethogram
+    if project_functions.check_coded_behaviors_in_obs_list(self.pj, selected_observations):
+        return
+
     # check if state events are paired
-    out = ""
-    not_paired_obs_list = []
-    for obs_id in selected_observations:
-        r, msg = project_functions.check_state_events_obs(obs_id, pj[ETHOGRAM], pj[OBSERVATIONS][obs_id])
-
-        if not r:
-            out += f"Observation: <strong>{obs_id}</strong><br>{msg}<br>"
-            not_paired_obs_list.append(obs_id)
-
-    if out:
-        out = f"The observations with UNPAIRED state events will be removed from the analysis<br><br>{out}"
-        results = dialog.Results_dialog()
-        results.setWindowTitle(f"{programName} - Check selected observations")
-        results.ptText.setReadOnly(True)
-        results.ptText.appendHtml(out)
-        results.pbSave.setVisible(False)
-        results.pbCancel.setVisible(True)
-
-        if not results.exec_():
-            return
-    selected_observations = [x for x in selected_observations if x not in not_paired_obs_list]
-    if not selected_observations:
+    not_ok, selected_observations = project_functions.check_state_events(self.pj, selected_observations)
+    if not_ok or not selected_observations:
         return
 
-    max_obs_length, _ = project_functions.observation_length(pj, selected_observations)
-    if max_obs_length == -1:  # media length not available, user choose to not use events
+    """
+    max_obs_length, _ = observation_operations.observation_length(self.pj, selected_observations)
+    if max_obs_length == dec(-1):  # media length not available, user choose to not use events
         return
 
-    parameters = dialog.choose_obs_subj_behav_category(pj,
-                                                       selected_observations,
-                                                       maxTime=max_obs_length,
-                                                       flagShowIncludeModifiers=True,
-                                                       flagShowExcludeBehaviorsWoEvents=True,
-                                                       by_category=False)
+    # exit with message if events do not have timestamp
+    if max_obs_length.is_nan():
+        QMessageBox.critical(
+            None,
+            cfg.programName,
+            ("This function is not available for observations with events that do not have timestamp"),
+            QMessageBox.Ok | QMessageBox.Default,
+            QMessageBox.NoButton,
+        )
+        return
+    """
 
-    if not parameters[SELECTED_SUBJECTS] or not parameters[SELECTED_BEHAVIORS]:
-        QMessageBox.warning(None, programName, "Select subject(s) and behavior(s) to analyze")
+    max_media_duration_all_obs, _ = observation_operations.media_duration(
+        self.pj[cfg.OBSERVATIONS], selected_observations
+    )
+
+    start_coding, end_coding, _ = observation_operations.coding_time(self.pj[cfg.OBSERVATIONS], selected_observations)
+
+    parameters = select_subj_behav.choose_obs_subj_behav_category(
+        self,
+        selected_observations,
+        start_coding=start_coding,
+        end_coding=end_coding,
+        maxTime=max_media_duration_all_obs,
+        flagShowIncludeModifiers=True,
+        flagShowExcludeBehaviorsWoEvents=True,
+        by_category=False,
+        n_observations=len(selected_observations),
+    )
+    if parameters == {}:
+        return
+    if not parameters[cfg.SELECTED_SUBJECTS] or not parameters[cfg.SELECTED_BEHAVIORS]:
+        QMessageBox.warning(None, cfg.programName, "Select subject(s) and behavior(s) to analyze")
         return
 
     # ask for time interval
     i, ok = QInputDialog.getDouble(None, "Behavior binary table", "Time interval (in seconds):", 1.0, 0.001, 86400, 3)
     if not ok:
         return
-    time_interval = utilities.float2decimal(i)
+    time_interval = util.float2decimal(i)
 
-    results_df = create_behavior_binary_table(pj, selected_observations, parameters, time_interval)
+    results_df = create_behavior_binary_table(self.pj, selected_observations, parameters, time_interval)
 
     if "error" in results_df:
-        QMessageBox.warning(None, programName, results_df["msg"])
+        QMessageBox.warning(None, cfg.programName, results_df["msg"])
         return
 
     # save results
-    if len(selected_observations) == 1:
-        extended_file_formats = [
-            "Tab Separated Values (*.tsv)", "Comma Separated Values (*.csv)", "Open Document Spreadsheet ODS (*.ods)",
-            "Microsoft Excel Spreadsheet XLSX (*.xlsx)", "Legacy Microsoft Excel Spreadsheet XLS (*.xls)",
-            "HTML (*.html)"
-        ]
-        file_formats = ["tsv", "csv", "ods", "xlsx", "xls", "html"]
+    file_formats = [cfg.TSV, cfg.CSV, cfg.ODS, cfg.XLSX, cfg.XLS, cfg.HTML]
 
-        file_name, filter_ = QFileDialog().getSaveFileName(None, "Save results", "", ";;".join(extended_file_formats))
+    if len(selected_observations) == 1:
+
+        file_name, filter_ = QFileDialog().getSaveFileName(None, "Save results", "", ";;".join(file_formats))
         if not file_name:
             return
 
-        output_format = file_formats[extended_file_formats.index(filter_)]
+        output_format = cfg.FILE_NAME_SUFFIX[filter_]
 
         if pathlib.Path(file_name).suffix != "." + output_format:
             file_name = str(pathlib.Path(file_name)) + "." + output_format
             # check if file with new extension already exists
             if pathlib.Path(file_name).is_file():
-                if dialog.MessageDialog(programName, f"The file {file_name} already exists.",
-                                        [CANCEL, OVERWRITE]) == CANCEL:
+                if (
+                    dialog.MessageDialog(
+                        cfg.programName, f"The file {file_name} already exists.", [cfg.CANCEL, cfg.OVERWRITE]
+                    )
+                    == cfg.CANCEL
+                ):
                     return
     else:
-        items = ("Tab Separated Values (*.tsv)", "Comma separated values (*.csv)", "Open Document Spreadsheet (*.ods)",
-                 "Microsoft Excel Spreadsheet XLSX (*.xlsx)", "Legacy Microsoft Excel Spreadsheet XLS (*.xls)",
-                 "HTML (*.html)")
 
-        item, ok = QInputDialog.getItem(None, "Save results", "Available formats", items, 0, False)
+        item, ok = QInputDialog.getItem(None, "Save results", "Available formats", file_formats, 0, False)
         if not ok:
             return
-        output_format = re.sub(".* \(\*\.", "", item)[:-1]
+        """output_format = re.sub(".* \(\*\.", "", item)[:-1]"""
+        output_format = cfg.FILE_NAME_SUFFIX[item]
 
-        export_dir = QFileDialog().getExistingDirectory(None,
-                                                        "Choose a directory to save results",
-                                                        os.path.expanduser("~"),
-                                                        options=QFileDialog.ShowDirsOnly)
+        export_dir = QFileDialog().getExistingDirectory(
+            None, "Choose a directory to save results", os.path.expanduser("~"), options=QFileDialog.ShowDirsOnly
+        )
         if not export_dir:
             return
 
@@ -258,37 +291,32 @@ def behavior_binary_table(pj: dict):
         for subject in results_df[obs_id]:
 
             if len(selected_observations) > 1:
-                file_name_with_subject = str(
-                    pathlib.Path(export_dir) / utilities.safeFileName(obs_id + "_" + subject)) + "." + output_format
+                file_name_with_subject = (
+                    str(pathlib.Path(export_dir) / util.safeFileName(obs_id + "_" + subject)) + "." + output_format
+                )
             else:
-                file_name_with_subject = str(os.path.splitext(file_name)[0] +
-                                             utilities.safeFileName("_" + subject)) + "." + output_format
+                file_name_with_subject = (
+                    str(os.path.splitext(file_name)[0] + util.safeFileName("_" + subject)) + "." + output_format
+                )
 
             # check if file with new extension already exists
-            if mem_command != OVERWRITE_ALL and pathlib.Path(file_name_with_subject).is_file():
+            if mem_command != cfg.OVERWRITE_ALL and pathlib.Path(file_name_with_subject).is_file():
                 if mem_command == "Skip all":
                     continue
-                mem_command = dialog.MessageDialog(programName, f"The file {file_name_with_subject} already exists.",
-                                                   [OVERWRITE, OVERWRITE_ALL, "Skip", "Skip all", CANCEL])
-                if mem_command == CANCEL:
+                mem_command = dialog.MessageDialog(
+                    cfg.programName,
+                    f"The file {file_name_with_subject} already exists.",
+                    [cfg.OVERWRITE, cfg.OVERWRITE_ALL, "Skip", "Skip all", cfg.CANCEL],
+                )
+                if mem_command == cfg.CANCEL:
                     return
                 if mem_command in ["Skip", "Skip all"]:
                     continue
 
-            try:
-                if output_format in ["csv", "tsv", "html"]:
-                    with open(file_name_with_subject, "wb") as f:
-                        f.write(str.encode(results_df[obs_id][subject].export(output_format)))
+            if output_format in ["csv", "tsv", "html"]:
+                with open(file_name_with_subject, "wb") as f:
+                    f.write(str.encode(results_df[obs_id][subject].export(output_format)))
 
-                if output_format in ["ods", "xlsx", "xls"]:
-                    with open(file_name_with_subject, "wb") as f:
-                        f.write(results_df[obs_id][subject].export(output_format))
-
-            except Exception:
-
-                error_type, error_file_name, error_lineno = utilities.error_info(sys.exc_info())
-                logging.critical(
-                    f"Error in behavior binary table function: {error_type} {error_file_name} {error_lineno}")
-
-                QMessageBox.critical(None, programName, f"Error saving file: {error_type}")
-                return
+            if output_format in ["ods", "xlsx", "xls"]:
+                with open(file_name_with_subject, "wb") as f:
+                    f.write(results_df[obs_id][subject].export(output_format))
