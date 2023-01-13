@@ -1,7 +1,7 @@
 """
 BORIS
 Behavioral Observation Research Interactive Software
-Copyright 2012-2022 Olivier Friard
+Copyright 2012-2023 Olivier Friard
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -1158,7 +1158,9 @@ def export_aggregated_events(pj: dict, parameters: dict, obsId: str) -> Tuple[ta
     logging.debug(f"min_time: {min_time}  max_time: {max_time}")
 
     # obs description
-    obs_description = observation[cfg.DESCRIPTION]
+    print(observation[cfg.DESCRIPTION])
+    obs_description = observation[cfg.DESCRIPTION].replace("\n", " ")
+    print(obs_description)
 
     """
     obs_length = observation_operations.observation_total_length(pj[cfg.OBSERVATIONS][obsId])
@@ -1264,20 +1266,38 @@ def export_aggregated_events(pj: dict, parameters: dict, obsId: str) -> Tuple[ta
 
                     if observation[cfg.TYPE] == cfg.MEDIA:
                         observation_type = "Media file"
-                        media_file_str = ""
-                        fps_str = ""
+
+                        media_file_str, fps_str, media_durations_str = "", "", ""
                         for player in observation[cfg.FILE]:
+                            media_file_lst, fps_lst, media_durations_lst = [], [], []
                             if observation[cfg.FILE][player]:
-                                media_file_str += f"player #{player}: "
-                                fps_str += f"player #{player}: "
+                                # media_file_str += f"player #{player}: "
+                                # fps_str += f"player #{player}: "
+
                                 for media_file in observation[cfg.FILE][player]:
-                                    media_file_str += f"{media_file}; "
-                                    fps_str += f"{observation[cfg.MEDIA_INFO][cfg.FPS].get(media_file, cfg.NA):.3f}; "
+                                    media_file_lst.append(media_file)
+                                    # media_file_str += f"{media_file}; "
+                                    fps_lst.append(
+                                        f"{observation[cfg.MEDIA_INFO][cfg.FPS].get(media_file, cfg.NA):.3f}"
+                                    )
+                                    # fps_str += f"{observation[cfg.MEDIA_INFO][cfg.FPS].get(media_file, cfg.NA):.3f}; "
+                                    media_durations_lst.append(
+                                        f"{observation[cfg.MEDIA_INFO][cfg.LENGTH].get(media_file, cfg.NA):.3f}"
+                                    )
+                                    # media_durations_str += (f"{observation[cfg.MEDIA_INFO][cfg.LENGTH].get(media_file, cfg.NA):.3f}; ")
+                                if player > "1":
+                                    media_file_str += "|"
+                                    fps_str += "|"
+                                    media_durations_str += "|"
+                                media_file_str += f"player #{player}:" + ";".join(media_file_lst)
+                                fps_str += ";".join(fps_lst)
+                                media_durations_str += ";".join(media_durations_lst)
 
                     if observation[cfg.TYPE] == cfg.LIVE:
                         observation_type = "Live observation"
                         media_file_str = cfg.NA
                         fps_str = cfg.NA
+                        media_durations_str = cfg.NA
 
                     if observation[cfg.TYPE] == cfg.IMAGES:
                         observation_type = "From pictures"
@@ -1285,6 +1305,8 @@ def export_aggregated_events(pj: dict, parameters: dict, obsId: str) -> Tuple[ta
                         for dir in observation[cfg.DIRECTORIES_LIST]:
                             media_file_str += f"{dir}; "
                         fps_str = cfg.NA
+                        # TODO: number of pictures in each directory
+                        media_durations_str = cfg.NA
 
                     row_data = []
 
@@ -1296,6 +1318,7 @@ def export_aggregated_events(pj: dict, parameters: dict, obsId: str) -> Tuple[ta
                             observation_type,
                             media_file_str,
                             f"{coding_duration:.3f}" if not coding_duration.is_nan() else cfg.NA,
+                            media_durations_str,
                             fps_str,
                         ]
                     )

@@ -1,7 +1,7 @@
 """
 BORIS
 Behavioral Observation Research Interactive Software
-Copyright 2012-2022 Olivier Friard
+Copyright 2012-2023 Olivier Friard
 
 This file is part of BORIS.
 
@@ -23,13 +23,23 @@ This file is part of BORIS.
 import binascii
 
 from PyQt5.QtCore import pyqtSignal, QPoint, Qt
-from PyQt5.QtGui import (QPen, QPixmap, QBrush, QMouseEvent, QPolygonF, QColor)
-from PyQt5.QtWidgets import (QDialog, QGraphicsView, QGraphicsScene, QLineEdit, QVBoxLayout, QHBoxLayout, QSpacerItem,
-                             QSizePolicy, QPushButton, QGraphicsPixmapItem, QGraphicsPolygonItem)
+from PyQt5.QtGui import QPen, QPixmap, QBrush, QMouseEvent, QPolygonF, QColor
+from PyQt5.QtWidgets import (
+    QDialog,
+    QGraphicsView,
+    QGraphicsScene,
+    QLineEdit,
+    QVBoxLayout,
+    QHBoxLayout,
+    QSpacerItem,
+    QSizePolicy,
+    QPushButton,
+    QGraphicsPixmapItem,
+    QGraphicsPolygonItem,
+)
 
 
 class ModifiersCodingMapWindowClass(QDialog):
-
     class View(QGraphicsView):
 
         mousePress = pyqtSignal(QMouseEvent)

@@ -1,7 +1,7 @@
 """
 BORIS
 Behavioral Observation Research Interactive Software
-Copyright 2012-2022 Olivier Friard
+Copyright 2012-2023 Olivier Friard
 
 This file is part of BORIS.
 
@@ -61,10 +61,12 @@ def find_local_libvlc():
 
         libvlccore_path = pathlib.Path("")
         if sys.argv[0].endswith("start_boris.py"):
-            libvlccore_path = pathlib.Path(
-                sys.argv[0]).resolve().parent / "boris" / "misc" / "VLC" / "lib" / "libvlccore.dylib"
-            vlc_dll_path = pathlib.Path(
-                sys.argv[0]).resolve().parent / "boris" / "misc" / "VLC" / "lib" / "libvlc.dylib"
+            libvlccore_path = (
+                pathlib.Path(sys.argv[0]).resolve().parent / "boris" / "misc" / "VLC" / "lib" / "libvlccore.dylib"
+            )
+            vlc_dll_path = (
+                pathlib.Path(sys.argv[0]).resolve().parent / "boris" / "misc" / "VLC" / "lib" / "libvlc.dylib"
+            )
             plugin_path = pathlib.Path(sys.argv[0]).resolve().parent / "boris" / "misc" / "VLC" / "plugins"
 
         if sys.argv[0].endswith("__main__.py"):

@@ -1,7 +1,7 @@
 """
 BORIS
 Behavioral Observation Research Interactive Software
-Copyright 2012-2022 Olivier Friard
+Copyright 2012-2023 Olivier Friard
 
 This file is part of BORIS.
 
@@ -21,20 +21,32 @@ This file is part of BORIS.
 """
 
 import logging
-from PyQt5.QtWidgets import (QDialog, QVBoxLayout, QHBoxLayout, QPushButton, QLabel, QTableWidget, QSpacerItem,
-                             QAbstractItemView, QSizePolicy)
+from PyQt5.QtWidgets import (
+    QDialog,
+    QVBoxLayout,
+    QHBoxLayout,
+    QPushButton,
+    QLabel,
+    QTableWidget,
+    QSpacerItem,
+    QAbstractItemView,
+    QSizePolicy,
+)
 
 
 class ExclusionMatrix(QDialog):
-
     def __init__(self):
         super().__init__()
 
         hbox = QVBoxLayout(self)
 
         self.label = QLabel()
-        self.label.setText(("Check if behaviors are mutually exclusive.\n"
-                            "The Point events (displayed on blue background) cannot be excluded)"))
+        self.label.setText(
+            (
+                "Check if behaviors are mutually exclusive.\n"
+                "The Point events (displayed on blue background) cannot be excluded)"
+            )
+        )
         hbox.addWidget(self.label)
 
         self.twExclusions = QTableWidget()
@@ -128,6 +140,7 @@ class ExclusionMatrix(QDialog):
                     try:
                         if f"{c_name}|{r_name}" in self.checkboxes:
                             self.checkboxes[f"{c_name}|{r_name}"].setChecked(
-                                self.checkboxes[f"{r_name}|{c_name}"].isChecked())
+                                self.checkboxes[f"{r_name}|{c_name}"].isChecked()
+                            )
                     except Exception:
                         logging.warning(f"Error during checking/unchecking for {r_name}/{c_name} in exclusion matrix")

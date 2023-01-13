@@ -1,7 +1,7 @@
 """
 BORIS
 Behavioral Observation Research Interactive Software
-Copyright 2012-2022 Olivier Friard
+Copyright 2012-2023 Olivier Friard
 
 This file is part of BORIS.
 
@@ -308,8 +308,9 @@ def export_aggregated_events(self):
             "Description": str,
             "Observation type": str,
             "Source": str,
-            "Total length": float,
-            "FPS": float,
+            "Total duration": float,
+            "Media duration (s)": float,
+            "FPS (frame/s)": float,
         }
         if cfg.INDEPENDENT_VARIABLES in self.pj:
             for idx in util.sorted_keys(self.pj[cfg.INDEPENDENT_VARIABLES]):

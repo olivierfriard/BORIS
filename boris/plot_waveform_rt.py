@@ -1,7 +1,7 @@
 """
 BORIS
 Behavioral Observation Research Interactive Software
-Copyright 2012-2022 Olivier Friard
+Copyright 2012-2023 Olivier Friard
 
 
   This program is free software; you can redistribute it and/or modify
@@ -27,7 +27,7 @@ import matplotlib
 
 matplotlib.use("Qt5Agg")
 import numpy as np
-from PyQt5.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, QPushButton, QLabel)
+from PyQt5.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QPushButton, QLabel
 from PyQt5.QtCore import pyqtSignal, QEvent
 from PyQt5 import Qt
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
@@ -62,9 +62,11 @@ class Plot_waveform_RT(QWidget):
         hlayout1 = QHBoxLayout()
         hlayout1.addWidget(QLabel("Time interval"))
         hlayout1.addWidget(
-            QPushButton("+", self, clicked=lambda: self.time_interval_changed(1), focusPolicy=Qt.Qt.NoFocus))
+            QPushButton("+", self, clicked=lambda: self.time_interval_changed(1), focusPolicy=Qt.Qt.NoFocus)
+        )
         hlayout1.addWidget(
-            QPushButton("-", self, clicked=lambda: self.time_interval_changed(-1), focusPolicy=Qt.Qt.NoFocus))
+            QPushButton("-", self, clicked=lambda: self.time_interval_changed(-1), focusPolicy=Qt.Qt.NoFocus)
+        )
         layout.addLayout(hlayout1)
 
         self.setLayout(layout)
@@ -75,7 +77,7 @@ class Plot_waveform_RT(QWidget):
         """
         send event (if keypress) to main window
         """
-        if (event.type() == QEvent.KeyPress):
+        if event.type() == QEvent.KeyPress:
             self.sendEvent.emit(event)
             return True
         else:
@@ -139,7 +141,7 @@ class Plot_waveform_RT(QWidget):
 
         if action == -1 and self.interval <= 5:
             return
-        self.interval += (5 * action)
+        self.interval += 5 * action
         self.plot_waveform(current_time=self.time_mem, force_plot=True)
 
     def plot_waveform(self, current_time: float, force_plot: bool = False):
@@ -161,10 +163,12 @@ class Plot_waveform_RT(QWidget):
         # start
         if current_time <= self.interval / 2:
 
-            time_ = np.linspace(0,
-                                len(self.sound_info[:int((self.interval) * self.frame_rate)]) / self.frame_rate,
-                                num=len(self.sound_info[:int((self.interval) * self.frame_rate)]))
-            self.ax.plot(time_, self.sound_info[:int((self.interval) * self.frame_rate)])
+            time_ = np.linspace(
+                0,
+                len(self.sound_info[: int((self.interval) * self.frame_rate)]) / self.frame_rate,
+                num=len(self.sound_info[: int((self.interval) * self.frame_rate)]),
+            )
+            self.ax.plot(time_, self.sound_info[: int((self.interval) * self.frame_rate)])
 
             self.ax.set_xlim(current_time - self.interval / 2, current_time + self.interval / 2)
 
@@ -185,7 +189,8 @@ class Plot_waveform_RT(QWidget):
 
             self.ax.xaxis.set_major_locator(mticker.FixedLocator(self.ax.get_xticks().tolist()))
             self.ax.set_xticklabels(
-                [str(round(w + self.media_length - self.interval, 1)) for w in self.ax.get_xticks()])
+                [str(round(w + self.media_length - self.interval, 1)) for w in self.ax.get_xticks()]
+            )
 
             # cursor
             self.ax.axvline(x=lim1 + self.interval / 2, color=self.cursor_color, linestyle="-")
@@ -196,17 +201,19 @@ class Plot_waveform_RT(QWidget):
             start = (current_time - self.interval / 2) * self.frame_rate
             end = (current_time + self.interval / 2) * self.frame_rate
 
-            time_ = np.linspace(0,
-                                len(self.sound_info[int(round(start, 0)):int(round(end, 0))]) / self.frame_rate,
-                                num=len(self.sound_info[int(round(start, 0)):int(round(end, 0))]))
+            time_ = np.linspace(
+                0,
+                len(self.sound_info[int(round(start, 0)) : int(round(end, 0))]) / self.frame_rate,
+                num=len(self.sound_info[int(round(start, 0)) : int(round(end, 0))]),
+            )
 
-            self.ax.plot(time_, self.sound_info[int(round(start, 0)):int(round(end, 0))])
+            self.ax.plot(time_, self.sound_info[int(round(start, 0)) : int(round(end, 0))])
 
             self.ax.xaxis.set_major_locator(mticker.FixedLocator(self.ax.get_xticks().tolist()))
             self.ax.set_xticklabels([str(round(current_time + w - self.interval / 2, 1)) for w in self.ax.get_xticks()])
 
             # cursor
             self.ax.axvline(x=self.interval / 2, color=self.cursor_color, linestyle="-")
-        '''self.figure.subplots_adjust(wspace=0, hspace=0)'''
+        """self.figure.subplots_adjust(wspace=0, hspace=0)"""
 
         self.canvas.draw()

@@ -2,7 +2,7 @@
 """
 BORIS
 Behavioral Observation Research Interactive Software
-Copyright 2012-2022 Olivier Friard
+Copyright 2012-2023 Olivier Friard
 
 This file is part of BORIS.
 
@@ -24,16 +24,28 @@ This file is part of BORIS.
 import logging
 
 from PyQt5.QtCore import pyqtSignal
-#from PyQt5.QtGui import *
-from PyQt5.QtWidgets import (QApplication, QWidget, QRadioButton, QLabel, QHBoxLayout, QVBoxLayout, QLineEdit,
-                             QPlainTextEdit, QCheckBox, QPushButton, QFileDialog, QMessageBox)
+
+# from PyQt5.QtGui import *
+from PyQt5.QtWidgets import (
+    QApplication,
+    QWidget,
+    QRadioButton,
+    QLabel,
+    QHBoxLayout,
+    QVBoxLayout,
+    QLineEdit,
+    QPlainTextEdit,
+    QCheckBox,
+    QPushButton,
+    QFileDialog,
+    QMessageBox,
+)
 from boris import dialog
 from boris.config import YES, NO, CANCEL, programName
 
 
 class wgMeasurement(QWidget):
-    """
-    """
+    """ """
 
     closeSignal, clearSignal = pyqtSignal(), pyqtSignal()
     flagSaved = True
@@ -116,8 +128,10 @@ class wgMeasurement(QWidget):
     def pbClose_clicked(self):
         if not self.flagSaved:
             response = dialog.MessageDialog(
-                programName, "The current results are not saved. Do you want to save results before closing?",
-                [YES, NO, CANCEL])
+                programName,
+                "The current results are not saved. Do you want to save results before closing?",
+                [YES, NO, CANCEL],
+            )
             if response == YES:
                 self.pbSave_clicked()
             if response == CANCEL:
@@ -129,8 +143,9 @@ class wgMeasurement(QWidget):
         save results
         """
         if self.pte.toPlainText():
-            fileName, _ = QFileDialog().getSaveFileName(self, "Save measurement results", "",
-                                                        "Text files (*.txt);;All files (*)")
+            fileName, _ = QFileDialog().getSaveFileName(
+                self, "Save measurement results", "", "Text files (*.txt);;All files (*)"
+            )
             if fileName:
                 with open(fileName, "w") as f:
                     f.write(self.pte.toPlainText())
@@ -139,9 +154,10 @@ class wgMeasurement(QWidget):
             QMessageBox.information(self, programName, "There are no results to save")
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
 
     import sys
+
     app = QApplication(sys.argv)
     w = wgMeasurement(logging.getLogger().getEffectiveLevel())
     w.show()

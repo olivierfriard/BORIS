@@ -1,7 +1,7 @@
 """
 BORIS
 Behavioral Observation Research Interactive Software
-Copyright 2012-2022 Olivier Friard
+Copyright 2012-2023 Olivier Friard
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -47,10 +47,12 @@ class SubjectsPad(QWidget):
         for i in reversed(range(self.grid.count())):
             self.grid.itemAt(i).widget().setParent(None)
 
-        subjects_list = [["", self.pj[cfg.SUBJECTS][x]["name"]]
-                         for x in util.sorted_keys(self.pj[cfg.SUBJECTS])
-                         if self.pj[cfg.SUBJECTS][x]["name"] in self.filtered_subjects]
-        dim = int(len(subjects_list)**0.5 + 0.999)
+        subjects_list = [
+            ["", self.pj[cfg.SUBJECTS][x]["name"]]
+            for x in util.sorted_keys(self.pj[cfg.SUBJECTS])
+            if self.pj[cfg.SUBJECTS][x]["name"] in self.filtered_subjects
+        ]
+        dim = int(len(subjects_list) ** 0.5 + 0.999)
 
         c = 0
         for i in range(1, dim + 1):
@@ -70,8 +72,11 @@ class SubjectsPad(QWidget):
             widget.pushButton.setText(subject)
             color = "cyan"
             widget.pushButton.setStyleSheet(
-                ("background-color: {}; border-radius: 0px; min-width: 50px; max-width: 200px;"
-                 " min-height:50px; max-height:200px; font-weight: bold;").format(color))
+                (
+                    "background-color: {}; border-radius: 0px; min-width: 50px; max-width: 200px;"
+                    " min-height:50px; max-height:200px; font-weight: bold;"
+                ).format(color)
+            )
             widget.pushButton.clicked.connect(lambda: self.click(subject))
 
     def click(self, subject):
@@ -81,7 +86,7 @@ class SubjectsPad(QWidget):
         """
         send event (if keypress) to main window
         """
-        if (event.type() == QEvent.KeyPress):
+        if event.type() == QEvent.KeyPress:
             self.sendEventSignal.emit(event)
             return True
         else:
@@ -95,7 +100,6 @@ class SubjectsPad(QWidget):
 
 
 class Button(QWidget):
-
     def __init__(self, parent=None):
         super(Button, self).__init__(parent)
         self.pushButton = QPushButton()

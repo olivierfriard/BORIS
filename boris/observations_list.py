@@ -1,7 +1,7 @@
 """
 BORIS
 Behavioral Observation Research Interactive Software
-Copyright 2012-2022 Olivier Friard
+Copyright 2012-2023 Olivier Friard
 
 
   This program is free software; you can redistribute it and/or modify
@@ -22,8 +22,20 @@ Copyright 2012-2022 Olivier Friard
 """
 
 from PyQt5.QtGui import QColor
-from PyQt5.QtWidgets import (QTableWidgetItem, QLabel, QLineEdit, QTableWidget, QAbstractItemView, QComboBox,
-                             QGridLayout, QHBoxLayout, QSpacerItem, QPushButton, QDialog, QSizePolicy)
+from PyQt5.QtWidgets import (
+    QTableWidgetItem,
+    QLabel,
+    QLineEdit,
+    QTableWidget,
+    QAbstractItemView,
+    QComboBox,
+    QGridLayout,
+    QHBoxLayout,
+    QSpacerItem,
+    QPushButton,
+    QDialog,
+    QSizePolicy,
+)
 
 from . import config as cfg
 from . import dialog
@@ -33,7 +45,6 @@ commands_index = {"Start": 2, "Edit": 3, "View": 4}
 
 
 class MyTableWidgetItem(QTableWidgetItem):
-
     def __init__(self, text, sortKey):
         QTableWidgetItem.__init__(self, text, QTableWidgetItem.UserType)
         self.sortKey = sortKey
@@ -44,7 +55,6 @@ class MyTableWidgetItem(QTableWidgetItem):
 
 
 class observationsList_widget(QDialog):
-
     def __init__(self, data: list, header: list, column_type: list, not_paired: list = [], parent=None):
 
         super(observationsList_widget, self).__init__(parent)
@@ -69,7 +79,8 @@ class observationsList_widget(QDialog):
 
         self.cbLogic = QComboBox(self)
         self.cbLogic.addItems(
-            ["contains", "does not contain", "=", "!=", ">", "<", ">=", "<=", "between (use and to separate terms)"])
+            ["contains", "does not contain", "=", "!=", ">", "<", ">=", "<=", "between (use and to separate terms)"]
+        )
         self.cbLogic.currentIndexChanged.connect(self.view_filter)
 
         self.label = QLabel(self)
@@ -144,8 +155,9 @@ class observationsList_widget(QDialog):
             self.done(2)
             return
 
-        response = dialog.MessageDialog(cfg.programName, "What do you want to do with this observation?",
-                                        list(commands_index.keys()) + [cfg.CANCEL])
+        response = dialog.MessageDialog(
+            cfg.programName, "What do you want to do with this observation?", list(commands_index.keys()) + [cfg.CANCEL]
+        )
         if response == cfg.CANCEL:
             return
         else:
