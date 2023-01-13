@@ -350,6 +350,7 @@ def export_aggregated_events(self):
                 "Start (s)": float,
                 "Stop (s)": float,
                 "Duration (s)": float,
+                "Media file name": str,
                 "Image index start": float,  # add image index and image file path to header
                 "Image index stop": float,
                 "Image file path start": str,

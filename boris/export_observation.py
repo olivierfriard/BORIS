@@ -504,21 +504,10 @@ def export_tabular_events(
 
             # check video file name containing the event
             if observation[cfg.TYPE] == cfg.MEDIA:
-                cumul_media_durations = [0]
-                for media_file in observation[cfg.FILE]["1"]:
-                    media_duration = observation[cfg.MEDIA_INFO][cfg.LENGTH][media_file]
-                    cumul_media_durations.append(cumul_media_durations[-1] + media_duration)
-
-                player_idx_list = [
-                    idx
-                    for idx, x in enumerate(cumul_media_durations)
-                    if cumul_media_durations[idx - 1] < event[cfg.EVENT_TIME_FIELD_IDX] <= x
-                ]
-                if len(player_idx_list):
-                    player_idx = player_idx_list[0] - 1
-                    video_file_name = observation[cfg.FILE]["1"][player_idx]
-                else:
-                    player_idx = -1
+                video_file_name = observation_operations.event2media_file_name(
+                    observation, event[cfg.EVENT_TIME_FIELD_IDX]
+                )
+                if video_file_name is None:
                     video_file_name = "Not found"
 
             elif observation[cfg.TYPE] in (cfg.LIVE, cfg.IMAGES):
@@ -1262,8 +1251,14 @@ def export_aggregated_events(pj: dict, parameters: dict, obsId: str) -> Tuple[ta
 
                 for row in cursor.fetchall():
 
+                    media_file_name = cfg.NA
+
                     if observation[cfg.TYPE] == cfg.MEDIA:
                         observation_type = "Media file"
+
+                        media_file_name = observation_operations.event2media_file_name(observation, row["start"])
+                        if media_file_name is None:
+                            media_file_name = "Not found"
 
                         media_file_str, fps_str, media_durations_str = "", "", ""
                         for player in observation[cfg.FILE]:
@@ -1362,6 +1357,7 @@ def export_aggregated_events(pj: dict, parameters: dict, obsId: str) -> Tuple[ta
                                 f"{row['start']:.3f}" if row["start"] is not None else cfg.NA,  # start
                                 f"{row['stop']:.3f}" if row["stop"] is not None else cfg.NA,  # stop
                                 cfg.NA,  # duration
+                                media_file_name,  # Media file name
                             ]
                         )
 
@@ -1375,6 +1371,7 @@ def export_aggregated_events(pj: dict, parameters: dict, obsId: str) -> Tuple[ta
                                 f"{row['stop'] - row['start']:.3f}"
                                 if (row["stop"] is not None) and (row["start"] is not None)
                                 else cfg.NA,
+                                media_file_name,  # Media file name
                             ]
                         )
 

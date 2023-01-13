@@ -1838,3 +1838,29 @@ def initialize_new_images_observation(self):
     self.w_obs_info.setVisible(True)
 
     self.get_events_current_row()
+
+
+def event2media_file_name(observation: dict, timestamp: dec) -> Optional[str]:
+    """
+    returns the media file name correstiong to the event (start time in case of state event)
+
+    Returns:
+        str: name of media file containing the event
+    """
+
+    cumul_media_durations = [0]
+    for media_file in observation[cfg.FILE]["1"]:
+        media_duration = observation[cfg.MEDIA_INFO][cfg.LENGTH][media_file]
+        cumul_media_durations.append(cumul_media_durations[-1] + media_duration)
+
+    player_idx_list = [
+        idx for idx, x in enumerate(cumul_media_durations) if cumul_media_durations[idx - 1] < timestamp <= x
+    ]
+    if len(player_idx_list):
+        player_idx = player_idx_list[0] - 1
+        video_file_name = observation[cfg.FILE]["1"][player_idx]
+    else:
+        player_idx = -1
+        video_file_name = None
+
+    return video_file_name
