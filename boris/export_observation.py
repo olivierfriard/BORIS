@@ -1158,9 +1158,7 @@ def export_aggregated_events(pj: dict, parameters: dict, obsId: str) -> Tuple[ta
     logging.debug(f"min_time: {min_time}  max_time: {max_time}")
 
     # obs description
-    print(observation[cfg.DESCRIPTION])
     obs_description = observation[cfg.DESCRIPTION].replace("\n", " ")
-    print(obs_description)
 
     """
     obs_length = observation_operations.observation_total_length(pj[cfg.OBSERVATIONS][obsId])
