@@ -424,7 +424,7 @@ def export_tabular_events(
             fields: list = []
             fields.append(obsId)
             fields.append(observation.get("date", "").replace("T", " "))
-            fields.append(util.eol2space(observation.get("description", "")))
+            fields.append(util.eol2space(observation.get(cfg.DESCRIPTION, "")))
             # total length
             fields.append(coding_duration if not coding_duration.is_nan() else cfg.NA)
 
@@ -1147,7 +1147,7 @@ def export_aggregated_events(pj: dict, parameters: dict, obsId: str) -> Tuple[ta
     logging.debug(f"min_time: {min_time}  max_time: {max_time}")
 
     # obs description
-    obs_description = observation[cfg.DESCRIPTION].replace("\n", " ")
+    obs_description = util.eol2space(observation[cfg.DESCRIPTION])
 
     """
     obs_length = observation_operations.observation_total_length(pj[cfg.OBSERVATIONS][obsId])
@@ -1264,20 +1264,14 @@ def export_aggregated_events(pj: dict, parameters: dict, obsId: str) -> Tuple[ta
                         for player in observation[cfg.FILE]:
                             media_file_lst, fps_lst, media_durations_lst = [], [], []
                             if observation[cfg.FILE][player]:
-                                # media_file_str += f"player #{player}: "
-                                # fps_str += f"player #{player}: "
-
                                 for media_file in observation[cfg.FILE][player]:
                                     media_file_lst.append(media_file)
-                                    # media_file_str += f"{media_file}; "
                                     fps_lst.append(
                                         f"{observation[cfg.MEDIA_INFO][cfg.FPS].get(media_file, cfg.NA):.3f}"
                                     )
-                                    # fps_str += f"{observation[cfg.MEDIA_INFO][cfg.FPS].get(media_file, cfg.NA):.3f}; "
                                     media_durations_lst.append(
                                         f"{observation[cfg.MEDIA_INFO][cfg.LENGTH].get(media_file, cfg.NA):.3f}"
                                     )
-                                    # media_durations_str += (f"{observation[cfg.MEDIA_INFO][cfg.LENGTH].get(media_file, cfg.NA):.3f}; ")
                                 if player > "1":
                                     media_file_str += "|"
                                     fps_str += "|"
