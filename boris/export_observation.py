@@ -374,6 +374,7 @@ def export_tabular_events(
         "Observation duration": float,
         "Observation type": str,
         "Source": str,
+        "Media duration (s)": str,
         "FPS": float,
     }
 
@@ -431,9 +432,28 @@ def export_tabular_events(
             if observation[cfg.TYPE] == cfg.MEDIA:
                 fields.append("Media file(s)")
 
-                media_file_str, fps_str = "", ""
+                media_file_str, fps_str, media_durations_str = "", "", ""
+                for player in observation[cfg.FILE]:
+                    media_file_lst, fps_lst, media_durations_lst = [], [], []
+                    if observation[cfg.FILE][player]:
+                        for media_file in observation[cfg.FILE][player]:
+                            media_file_lst.append(media_file)
+                            fps_lst.append(f"{observation[cfg.MEDIA_INFO][cfg.FPS].get(media_file, cfg.NA):.3f}")
+                            media_durations_lst.append(
+                                f"{observation[cfg.MEDIA_INFO][cfg.LENGTH].get(media_file, cfg.NA):.3f}"
+                            )
+                        if player > "1":
+                            media_file_str += "|"
+                            fps_str += "|"
+                            media_durations_str += "|"
+                        media_file_str += f"player #{player}:" + ";".join(media_file_lst)
+                        fps_str += ";".join(fps_lst)
+                        media_durations_str += ";".join(media_durations_lst)
+
+                """
                 # number of players
                 n_players = len([x for x in observation[cfg.FILE] if observation[cfg.FILE][x]])
+                media_file_str, fps_str = "", ""
                 for player in observation[cfg.FILE]:
                     if observation[cfg.FILE][player]:
                         if media_file_str:
@@ -449,12 +469,14 @@ def export_tabular_events(
                             fps_list.append(f"{observation[cfg.MEDIA_INFO][cfg.FPS].get(media_file, cfg.NA):.3f}")
                         media_file_str += ";".join(media_list)
                         fps_str += ";".join(fps_list)
+                """
 
                 fields.append(media_file_str)
 
             elif observation[cfg.TYPE] == cfg.LIVE:
                 fields.append("Live observation")
                 fields.append(cfg.NA)
+                media_durations_str = cfg.NA
                 fps_str = cfg.NA
 
             elif observation[cfg.TYPE] == cfg.IMAGES:
@@ -463,10 +485,14 @@ def export_tabular_events(
                 for dir in observation[cfg.DIRECTORIES_LIST]:
                     dir_list.append(dir)
                 fields.append(";".join(dir_list))
+                media_durations_str = cfg.NA
                 fps_str = cfg.NA
 
             else:
                 fields.append("")
+
+            # media duration
+            fields.append(media_durations_str)
 
             # FPS
             fields.append(fps_str)
@@ -1261,6 +1287,7 @@ def export_aggregated_events(pj: dict, parameters: dict, obsId: str) -> Tuple[ta
                             media_file_name = "Not found"
 
                         media_file_str, fps_str, media_durations_str = "", "", ""
+
                         for player in observation[cfg.FILE]:
                             media_file_lst, fps_lst, media_durations_lst = [], [], []
                             if observation[cfg.FILE][player]:
