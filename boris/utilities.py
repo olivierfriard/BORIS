@@ -23,6 +23,7 @@ from cmath import isnan
 import csv
 import datetime
 import hashlib
+import json
 import logging
 import math
 import os
@@ -995,6 +996,66 @@ def check_ffmpeg_path():
             return False, "FFmpeg is not available"
 
 
+def ffprobe_media_analysis(ffmpeg_bin: str, file_name: str) -> dict:
+    """
+    analyse video parameters with ffprobe (if available)
+
+    Args:
+        ffmpeg_bin (str): ffmpeg path
+        file_name (str): path of media file
+
+    Returns:
+        dict
+    """
+    # ffprobe -v quiet -print_format json -show_format -show_streams /tmp/ramdisk/video1.mp4
+    ffprobe_bin = ffmpeg_bin.replace("ffmpeg", "ffprobe")
+
+    command = f'"{ffprobe_bin}" -v quiet -print_format json -show_format -show_streams "{file_name}"'
+    print(command)
+    p = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
+    out, error = p.communicate()
+
+    try:
+        hasVideo, hasAudio, bitrate, resolution, fps, sample_rate, duration, frames_number = (
+            False,
+            False,
+            None,
+            None,
+            0,
+            None,
+            0,
+            None,
+        )
+        video_param = json.loads(out.decode("utf-8"))
+        for stream in video_param["streams"]:
+            if stream["codec_type"] == "video":
+                hasVideo = True
+                bitrate = int(stream["bit_rate"])
+                resolution = f"{stream['width']}x{stream['height']}"
+                fps = stream["avg_frame_rate"]
+                duration = float(stream["duration"])
+                frames_number = int(stream["nb_frames"])
+            if stream["codec_type"] == "audio":
+                hasAudio = True
+                sample_rate = float(stream["sample_rate"])
+                duration = stream["duration"]
+
+        return {
+            "frames_number": frames_number,
+            "duration_ms": duration * 1000,
+            "duration": duration,
+            "fps": fps,
+            "has_video": hasVideo,
+            "has_audio": hasAudio,
+            "bitrate": bitrate,
+            "resolution": resolution,
+            "sample_rate": sample_rate,
+        }
+
+    except Exception:
+        return {}
+
+
 def accurate_media_analysis(ffmpeg_bin: str, file_name: str) -> dict:
     """
     analyse frame rate and video duration with ffmpeg
@@ -1009,96 +1070,97 @@ def accurate_media_analysis(ffmpeg_bin: str, file_name: str) -> dict:
 
     """
 
-    command = f'"{ffmpeg_bin}" -i "{file_name}" > {"NUL" if sys.platform.startswith("win") else "/dev/null"}'
+    ffprobe_results = ffprobe_media_analysis(ffmpeg_bin, file_name)
+    if ffprobe_results == {}:
 
-    p = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
+        command = f'"{ffmpeg_bin}" -i "{file_name}" > {"NUL" if sys.platform.startswith("win") else "/dev/null"}'
 
-    duration, fps, hasVideo, hasAudio, bitrate = 0, 0, False, False, -1
-    try:
-        """error = p.communicate()[1].decode("utf-8")"""
-        error = p.communicate()[1]
-    except Exception:
-        return {"error": "Error reading file"}
+        p = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
 
-    """rows = error.split("\n")"""
-    rows = error.split(b"\n")
+        duration, fps, hasVideo, hasAudio, bitrate = 0, 0, False, False, -1
+        try:
+            error = p.communicate()[1]
+        except Exception:
+            return {"error": "Error reading file"}
 
-    # check if file found and if invalid data found
-    for row in rows:
-        if b"No such file or directory" in row:
-            return {"error": "No such file or directory"}
-        if b"Invalid data found when processing input" in row:
+        rows = error.split(b"\n")
+
+        # check if file found and if invalid data found
+        for row in rows:
+            if b"No such file or directory" in row:
+                return {"error": "No such file or directory"}
+            if b"Invalid data found when processing input" in row:
+                return {"error": "This file does not seem to be a media file"}
+
+        # video duration
+        try:
+            for row in rows:
+                if b"Duration" in row:
+                    duration = time2seconds(row.split(b"Duration: ")[1].split(b",")[0].strip().decode("utf-8"))
+                    break
+        except Exception:
+            duration = 0
+
+        # bitrate
+        try:
+            for row in rows:
+                if b"bitrate:" in row:
+                    re_results = re.search(b"bitrate: (.{1,10}) kb", row, re.IGNORECASE)
+                    if re_results:
+                        bitrate = int(re_results.group(1).strip())
+                    break
+        except Exception:
+            bitrate = -1
+
+        # fps
+        fps = 0
+        try:
+            for row in rows:
+                if b" fps," in row:
+                    re_results = re.search(b", (.{1,10}) fps,", row, re.IGNORECASE)
+                    if re_results:
+                        fps = dec(re_results.group(1).strip().decode("utf-8"))
+                        break
+        except Exception:
+            fps = 0
+
+        # check for video stream
+        hasVideo, resolution = False, None
+        try:
+            for row in rows:
+                if b"Stream #" in row and b"Video:" in row:
+                    hasVideo = True
+                    # get resolution \d{3,5}x\d{3,5}
+                    re_results = re.search(b"\d{3,5}x\d{3,5}", row, re.IGNORECASE)
+                    if re_results:
+                        resolution = re_results.group(0).decode("utf-8")
+                    break
+        except Exception:
+            hasVideo, resolution = False, None
+
+        # check for audio stream
+        hasAudio = False
+        try:
+            for row in rows:
+                if b"Stream #" in row and b"Audio:" in row:
+                    hasAudio = True
+                    break
+        except Exception:
+            hasAudio = False
+
+        if not hasVideo and not hasAudio:
             return {"error": "This file does not seem to be a media file"}
 
-    # video duration
-    try:
-        for row in rows:
-            if b"Duration" in row:
-                duration = time2seconds(row.split(b"Duration: ")[1].split(b",")[0].strip().decode("utf-8"))
-                break
-    except Exception:
-        duration = 0
-
-    # bitrate
-    try:
-        for row in rows:
-            if b"bitrate:" in row:
-                re_results = re.search(b"bitrate: (.{1,10}) kb", row, re.IGNORECASE)
-                if re_results:
-                    bitrate = int(re_results.group(1).strip())
-                break
-    except Exception:
-        bitrate = -1
-
-    # fps
-    fps = 0
-    try:
-        for row in rows:
-            if b" fps," in row:
-                re_results = re.search(b", (.{1,10}) fps,", row, re.IGNORECASE)
-                if re_results:
-                    fps = dec(re_results.group(1).strip().decode("utf-8"))
-                    break
-    except Exception:
-        fps = 0
-
-    # check for video stream
-    hasVideo, resolution = False, None
-    try:
-        for row in rows:
-            if b"Stream #" in row and b"Video:" in row:
-                hasVideo = True
-                # get resolution \d{3,5}x\d{3,5}
-                re_results = re.search(b"\d{3,5}x\d{3,5}", row, re.IGNORECASE)
-                if re_results:
-                    resolution = re_results.group(0).decode("utf-8")
-                break
-    except Exception:
-        hasVideo, resolution = False, None
-
-    # check for audio stream
-    hasAudio = False
-    try:
-        for row in rows:
-            if b"Stream #" in row and b"Audio:" in row:
-                hasAudio = True
-                break
-    except Exception:
-        hasAudio = False
-
-    if not hasVideo and not hasAudio:
-        return {"error": "This file does not seem to be a media file"}
-
-    return {
-        "frames_number": int(fps * duration),
-        "duration_ms": duration * 1000,
-        "duration": duration,
-        "fps": fps,
-        "has_video": hasVideo,
-        "has_audio": hasAudio,
-        "bitrate": bitrate,
-        "resolution": resolution,
-    }
+        return {
+            "frames_number": int(fps * duration),
+            "duration_ms": duration * 1000,
+            "duration": duration,
+            "fps": fps,
+            "has_video": hasVideo,
+            "has_audio": hasAudio,
+            "bitrate": bitrate,
+            "resolution": resolution,
+        }
 
 
 def behavior_color(colors_list: list, idx: int, default_color: str = "darkgray"):
