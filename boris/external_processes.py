@@ -1,5 +1,5 @@
 import os
-
+import tempfile
 
 from PyQt5.QtWidgets import QFileDialog, QMessageBox, QInputDialog
 from PyQt5.QtCore import (
@@ -105,8 +105,6 @@ def ffmpeg_process(self, action: str):
             file_list_lst.append(f"file '{file_name}'")
         # file_list = "/tmp/1.txt"
 
-        import tempfile
-
         with tempfile.NamedTemporaryFile() as tmp:
             file_list = tmp.name
         with open(file_list, "w") as f_out:
@@ -122,7 +120,7 @@ def ffmpeg_process(self, action: str):
         rotation_idx = rotation_items.index(rotation) + 1
 
     # check if processed files already exist
-    if action in ["reencode_resize", "rotate"]:
+    if action in ("reencode_resize", "rotate"):
         files_list = []
         for file_name in fileNames:
             if action == "reencode_resize":
@@ -158,7 +156,6 @@ def ffmpeg_process(self, action: str):
     if action == "merge":
         # ffmpeg -f concat -safe 0 -i join_video.txt -c copy output_demuxer.mp4
         args = ["-f", "concat", "-safe", "0", "-i", file_list, "-c", "copy", output_file_name]
-        print([self.ffmpeg_bin, args, output_file_name])
         self.processes.append([QProcess(self), [self.ffmpeg_bin, args, output_file_name]])
         self.processes[-1][0].setProcessChannelMode(QProcess.MergedChannels)
         self.processes[-1][0].readyReadStandardOutput.connect(lambda: readStdOutput(len(self.processes)))
