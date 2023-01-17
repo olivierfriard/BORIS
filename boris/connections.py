@@ -47,6 +47,7 @@ from . import (
     video_equalizer,
     video_operations,
     project_functions,
+    external_processes,
 )
 
 from . import state_events as state_events
@@ -192,8 +193,9 @@ def connections(self):
     self.actionAdd_image_overlay_on_video.triggered.connect(lambda: image_overlay.add_image_overlay(self))
     self.actionRemove_image_overlay.triggered.connect(lambda: image_overlay.remove_image_overlay(self))
 
-    self.actionRecode_resize_video.triggered.connect(lambda: self.ffmpeg_process("reencode_resize"))
-    self.actionRotate_video.triggered.connect(lambda: self.ffmpeg_process("rotate"))
+    self.actionRecode_resize_video.triggered.connect(lambda: external_processes.ffmpeg_process(self, "reencode_resize"))
+    self.actionRotate_video.triggered.connect(lambda: external_processes.ffmpeg_process(self, "rotate"))
+    self.actionMerge_media_files.triggered.connect(lambda: external_processes.ffmpeg_process(self, "merge"))
     self.actionMedia_file_information_2.triggered.connect(lambda: media_file.get_info(self))
 
     self.actionCreate_transitions_flow_diagram.triggered.connect(transitions.transitions_dot_script)

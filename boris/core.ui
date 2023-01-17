@@ -152,7 +152,7 @@
      <x>0</x>
      <y>0</y>
      <width>2165</width>
-     <height>23</height>
+     <height>22</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuHelp">
@@ -364,6 +364,14 @@
      <addaction name="action_create_behaviors_coding_map"/>
      <addaction name="action_create_modifiers_coding_map"/>
     </widget>
+    <widget class="QMenu" name="menuMedia_file">
+     <property name="title">
+      <string>Media file</string>
+     </property>
+     <addaction name="actionRecode_resize_video"/>
+     <addaction name="actionRotate_video"/>
+     <addaction name="actionMerge_media_files"/>
+    </widget>
     <addaction name="action_block_dockwidgets"/>
     <addaction name="actionPlot_events_in_real_time"/>
     <addaction name="actionShow_spectrogram"/>
@@ -375,10 +383,9 @@
     <addaction name="actionSubjects_pad"/>
     <addaction name="separator"/>
     <addaction name="menu_coding_map_creator"/>
-    <addaction name="actionRecode_resize_video"/>
-    <addaction name="actionRotate_video"/>
     <addaction name="actionMedia_file_information_2"/>
     <addaction name="menuTransitions_flow_diagram"/>
+    <addaction name="menuMedia_file"/>
    </widget>
    <addaction name="menuFile"/>
    <addaction name="menuObservations"/>
@@ -1517,6 +1524,11 @@
   <action name="actionPlot_current_time_budget">
    <property name="text">
     <string>Plot current time budget</string>
+   </property>
+  </action>
+  <action name="actionMerge_media_files">
+   <property name="text">
+    <string>Merge media files</string>
    </property>
   </action>
  </widget>
