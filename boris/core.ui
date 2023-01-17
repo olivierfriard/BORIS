@@ -368,10 +368,12 @@
      <property name="title">
       <string>Media file</string>
      </property>
+     <addaction name="actionMedia_file_information_2"/>
      <addaction name="actionRecode_resize_video"/>
      <addaction name="actionRotate_video"/>
      <addaction name="actionMerge_media_files"/>
     </widget>
+    <addaction name="menuMedia_file"/>
     <addaction name="action_block_dockwidgets"/>
     <addaction name="actionPlot_events_in_real_time"/>
     <addaction name="actionShow_spectrogram"/>
@@ -383,9 +385,7 @@
     <addaction name="actionSubjects_pad"/>
     <addaction name="separator"/>
     <addaction name="menu_coding_map_creator"/>
-    <addaction name="actionMedia_file_information_2"/>
     <addaction name="menuTransitions_flow_diagram"/>
-    <addaction name="menuMedia_file"/>
    </widget>
    <addaction name="menuFile"/>
    <addaction name="menuObservations"/>

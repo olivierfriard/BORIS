@@ -1,5 +1,29 @@
+"""
+BORIS
+Behavioral Observation Research Interactive Software
+Copyright 2012-2023 Olivier Friard
+
+This file is part of BORIS.
+
+  BORIS is free software; you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation; either version 3 of the License, or
+  any later version.
+
+  BORIS is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+
+  You should have received a copy of the GNU General Public License
+  along with this program; if not see <http://www.gnu.org/licenses/>.
+
+"""
+
+
 import os
 import tempfile
+import pathlib as pl
 
 from PyQt5.QtWidgets import QFileDialog, QMessageBox, QInputDialog
 from PyQt5.QtCore import (
@@ -19,7 +43,7 @@ def ffmpeg_process(self, action: str):
     Args:
         action (str): "reencode_resize, rotate, merge
     """
-    if action not in ["reencode_resize", "rotate", "merge"]:
+    if action not in ("reencode_resize", "rotate", "merge"):
         return
 
     def readStdOutput(idx):
@@ -54,7 +78,13 @@ def ffmpeg_process(self, action: str):
         QMessageBox.warning(self, cfg.programName, "BORIS is already doing some job.")
         return
 
-    fn = QFileDialog().getOpenFileNames(self, "Select one or more media files to process", "", "Media files (*)")
+    if action == "merge":
+        msg = "Select two or more media files to merge"
+        file_type = "Media files (*)"
+    else:
+        msg = f"Select one or more video files to {action.replace('_', ' and ')}"
+        file_type = "Video files (*)"
+    fn = QFileDialog().getOpenFileNames(self, msg, "", file_type)
     fileNames = fn[0] if type(fn) is tuple else fn
 
     if not fileNames:
@@ -97,14 +127,32 @@ def ffmpeg_process(self, action: str):
 
     if action == "merge":
         if len(fileNames) == 1:
-            QMessageBox.warning(self, cfg.programName, "Select more than one file")
+            QMessageBox.critical(self, cfg.programName, "Select more than one file")
             return
-        output_file_name, filter_ = QFileDialog().getSaveFileName(self, "Output file name", "", "*")
+
+        file_extensions = []  # check extension of 1st media file
         file_list_lst = []
         for file_name in fileNames:
             file_list_lst.append(f"file '{file_name}'")
-        # file_list = "/tmp/1.txt"
+            file_extensions.append(pl.Path(file_name).suffix)
+        if len(set(file_extensions)) > 1:
+            QMessageBox.critical(self, cfg.programName, "All media files must have the same format")
+            return
 
+        while True:
+            output_file_name, _ = QFileDialog().getSaveFileName(self, "Output file name", "", "*")
+            if output_file_name == "":
+                return
+            if pl.Path(output_file_name).suffix != file_extensions[0]:
+                QMessageBox.warning(
+                    self,
+                    cfg.programName,
+                    f"The extension of output file must be the same than the extension of input files (<b>{file_extensions[0]}</b>).<br>You selected a {pl.Path(output_file_name).suffix} file.",
+                )
+            else:
+                break
+
+        # temp file for list of media file to merge
         with tempfile.NamedTemporaryFile() as tmp:
             file_list = tmp.name
         with open(file_list, "w") as f_out:
@@ -155,7 +203,7 @@ def ffmpeg_process(self, action: str):
 
     if action == "merge":
         # ffmpeg -f concat -safe 0 -i join_video.txt -c copy output_demuxer.mp4
-        args = ["-f", "concat", "-safe", "0", "-i", file_list, "-c", "copy", output_file_name]
+        args = ["-y", "-f", "concat", "-safe", "0", "-i", file_list, "-c", "copy", output_file_name]
         self.processes.append([QProcess(self), [self.ffmpeg_bin, args, output_file_name]])
         self.processes[-1][0].setProcessChannelMode(QProcess.MergedChannels)
         self.processes[-1][0].readyReadStandardOutput.connect(lambda: readStdOutput(len(self.processes)))
