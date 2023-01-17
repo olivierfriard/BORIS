@@ -90,19 +90,22 @@ def get_info(self):
                         filePath=media_full_path, error=r["error"]
                     )
                 else:
+
                     ffmpeg_output += (
-                        "File path: {}<br>Duration: {}<br>Bitrate: {}k<br>"
-                        "FPS: {}<br>Has video: {}<br>Has audio: {}<br><br>"
-                    ).format(
-                        media_full_path,
-                        util.convertTime(self.timeFormat, r["duration"]),
-                        r["bitrate"],
-                        r["fps"],
-                        r["has_video"],
-                        r["has_audio"],
+                        f"File path: {media_full_path}<br>"
+                        f"Duration: {r['duration']} seconds ({util.convertTime(self.timeFormat, r['duration'])})<br>"
+                        f"Resolution: {r['resolution']}<br>"
+                        f"Number of frames: {r['frames_number']}<br>"
+                        f"Bitrate: {r['bitrate']} k<br>"
+                        f"FPS: {r['fps']}<br>"
+                        f"Has video: {r['has_video']}<br>"
+                        f"Has audio: {r['has_audio']}<br>"
+                        f"File size: {r.get('file size', 'NA')}<br>"
+                        f"Video codec: {r.get('video_codec', 'NA')}<br>"
+                        f"Audio codec: {r.get('audio_codec', 'NA')}<br>"
                     )
 
-                ffmpeg_output += f"Total duration: {util.convertTime(self.timeFormat, sum(self.dw_player[i].media_durations) / 1000)} (hh:mm:ss.sss)"
+                ffmpeg_output += f"Total duration: {sum(self.dw_player[i].media_durations) / 1000} ({util.convertTime(self.timeFormat, sum(self.dw_player[i].media_durations) / 1000)})"
 
             tot_output += mpv_output + ffmpeg_output + "<br><hr>"
 
@@ -127,11 +130,16 @@ def get_info(self):
                 self.results.ptText.appendHtml(
                     (
                         f"File path: {file_path}<br>"
-                        f"Duration: {util.convertTime(self.timeFormat, r['duration'])}<br>"
-                        f"Bitrate: {r['bitrate']}k<br>"
+                        f"Duration: {r['duration']} seconds ({util.convertTime(self.timeFormat, r['duration'])})<br>"
+                        f"Resolution: {r['resolution']}<br>"
+                        f"Number of frames: {r['frames_number']}<br>"
+                        f"Bitrate: {r['bitrate']} k<br>"
                         f"FPS: {r['fps']}<br>"
                         f"Has video: {r['has_video']}<br>"
-                        f"Has audio: {r['has_audio']}<br><br>"
+                        f"Has audio: {r['has_audio']}<br>"
+                        f"File size: {r.get('file size', 'NA')}<br>"
+                        f"Video codec: {r.get('video_codec', 'NA')}<br>"
+                        f"Audio codec: {r.get('audio_codec', 'NA')}<br>"
                     )
                 )
 

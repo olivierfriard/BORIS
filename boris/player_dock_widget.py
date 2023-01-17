@@ -30,7 +30,6 @@ import datetime as dt
 os.environ["PATH"] = os.path.dirname(__file__) + os.sep + "misc" + os.pathsep + os.environ["PATH"]
 
 try:
-    print("player")
     from . import mpv2 as mpv
 
     # check if MPV API v. 1

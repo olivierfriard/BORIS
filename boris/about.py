@@ -29,7 +29,6 @@ from . import config as cfg
 from . import utilities as util
 
 try:
-    print("about")
     from . import mpv2 as mpv
 
     # check if MPV API v. 1

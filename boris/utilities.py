@@ -1016,7 +1016,7 @@ def ffprobe_media_analysis(ffmpeg_bin: str, file_name: str) -> dict:
     out, error = p.communicate()
 
     try:
-        hasVideo, hasAudio, bitrate, resolution, fps, sample_rate, duration, frames_number = (
+        hasVideo, hasAudio, bitrate, resolution, fps, sample_rate, duration, frames_number, size = (
             False,
             False,
             None,
@@ -1024,21 +1024,30 @@ def ffprobe_media_analysis(ffmpeg_bin: str, file_name: str) -> dict:
             0,
             None,
             0,
+            None,
             None,
         )
+        audio_codec, video_codec = None, None
         video_param = json.loads(out.decode("utf-8"))
+        if "size" in video_param["format"]:
+            size = int(video_param["format"]["size"])
+
         for stream in video_param["streams"]:
+
             if stream["codec_type"] == "video":
                 hasVideo = True
-                bitrate = int(stream["bit_rate"])
+                bitrate = int(stream["bit_rate"]) / 1000
                 resolution = f"{stream['width']}x{stream['height']}"
-                fps = stream["avg_frame_rate"]
+                fps = float(stream["avg_frame_rate"].replace("/1", ""))
                 duration = float(stream["duration"])
                 frames_number = int(stream["nb_frames"])
+                video_codec = stream["codec_long_name"]
+
             if stream["codec_type"] == "audio":
                 hasAudio = True
                 sample_rate = float(stream["sample_rate"])
                 duration = stream["duration"]
+                audio_codec = stream["codec_long_name"]
 
         return {
             "frames_number": frames_number,
@@ -1050,9 +1059,13 @@ def ffprobe_media_analysis(ffmpeg_bin: str, file_name: str) -> dict:
             "bitrate": bitrate,
             "resolution": resolution,
             "sample_rate": sample_rate,
+            "file size": size,
+            "audio_codec": audio_codec,
+            "video_codec": video_codec,
         }
 
     except Exception:
+
         return {}
 
 
@@ -1071,8 +1084,11 @@ def accurate_media_analysis(ffmpeg_bin: str, file_name: str) -> dict:
     """
 
     ffprobe_results = ffprobe_media_analysis(ffmpeg_bin, file_name)
-    if ffprobe_results == {}:
 
+    if ffprobe_results:
+        return ffprobe_results
+    else:
+        # use ffmpeg
         command = f'"{ffmpeg_bin}" -i "{file_name}" > {"NUL" if sys.platform.startswith("win") else "/dev/null"}'
 
         p = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
