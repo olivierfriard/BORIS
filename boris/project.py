@@ -1183,7 +1183,7 @@ class projectDialog(QDialog, Ui_dlgProject):
 
     def clone_behavior(self):
         """
-        clone the selected configuration
+        clone the selected behavior
         """
 
         if not self.twBehaviors.rowCount():
@@ -1374,49 +1374,52 @@ class projectDialog(QDialog, Ui_dlgProject):
         remove all subjects.
         Verify if they are used in observations
         """
-        if self.twSubjects.rowCount():
 
-            if dialog.MessageDialog(cfg.programName, "Remove all subjects?", [cfg.YES, cfg.CANCEL]) == cfg.YES:
+        if not self.twSubjects.rowCount():
+            return
 
-                # delete ethogram rows without behavior code
-                for r in range(self.twSubjects.rowCount() - 1, -1, -1):
-                    if not self.twSubjects.item(r, 1).text():  # no name
-                        self.twSubjects.removeRow(r)
+        if dialog.MessageDialog(cfg.programName, "Remove all subjects?", [cfg.YES, cfg.CANCEL]) != cfg.YES:
+            return
 
-                # extract all subjects names to delete
-                namesToDelete = []
-                row_mem = {}
-                for r in range(self.twSubjects.rowCount() - 1, -1, -1):
-                    if self.twSubjects.item(r, 1).text():
-                        namesToDelete.append(self.twSubjects.item(r, 1).text())
-                        row_mem[self.twSubjects.item(r, 1).text()] = r
+        # delete ethogram rows without behavior code
+        for r in range(self.twSubjects.rowCount() - 1, -1, -1):
+            if not self.twSubjects.item(r, 1).text():  # no name
+                self.twSubjects.removeRow(r)
 
-                # extract all subjects name used in observations
-                namesInObs = []
-                for obs in self.pj[cfg.OBSERVATIONS]:
-                    events = self.pj[cfg.OBSERVATIONS][obs][cfg.EVENTS]
-                    for event in events:
-                        namesInObs.append(event[cfg.EVENT_SUBJECT_FIELD_IDX])
+        # extract all subjects names to delete
+        namesToDelete: list = []
+        row_mem: dict = {}
+        for r in range(self.twSubjects.rowCount() - 1, -1, -1):
+            if self.twSubjects.item(r, 1).text():
+                namesToDelete.append(self.twSubjects.item(r, 1).text())
+                row_mem[self.twSubjects.item(r, 1).text()] = r
 
-                flag_force = False
-                for nameToDelete in namesToDelete:
-                    # if name to delete used in obs ask confirmation
-                    if nameToDelete in namesInObs and not flag_force:
-                        response = dialog.MessageDialog(
-                            cfg.programName,
-                            f"The subject <b>{nameToDelete}</b> is used in observations!",
-                            ["Force removing of all subjects", cfg.REMOVE, cfg.CANCEL],
-                        )
-                        if response == "Force removing of all subjects":
-                            flag_force = True
-                            self.twSubjects.removeRow(row_mem[nameToDelete])
+        # extract all subjects name used in observations
+        namesInObs: list = []
+        for obs in self.pj[cfg.OBSERVATIONS]:
+            events = self.pj[cfg.OBSERVATIONS][obs][cfg.EVENTS]
+            for event in events:
+                namesInObs.append(event[cfg.EVENT_SUBJECT_FIELD_IDX])
 
-                        if response == cfg.REMOVE:
-                            self.twSubjects.removeRow(row_mem[nameToDelete])
-                    else:  # remove without asking
-                        self.twSubjects.removeRow(row_mem[nameToDelete])
+        flag_force: bool = False
+        for nameToDelete in namesToDelete:
+            # if name to delete used in obs ask confirmation
+            if nameToDelete in namesInObs and not flag_force:
+                response = dialog.MessageDialog(
+                    cfg.programName,
+                    f"The subject <b>{nameToDelete}</b> is used in observations!",
+                    ["Force removing of all subjects", cfg.REMOVE, cfg.CANCEL],
+                )
+                if response == "Force removing of all subjects":
+                    flag_force = True
+                    self.twSubjects.removeRow(row_mem[nameToDelete])
 
-                self.twSubjects_cellChanged(0, 0)
+                if response == cfg.REMOVE:
+                    self.twSubjects.removeRow(row_mem[nameToDelete])
+            else:  # remove without asking
+                self.twSubjects.removeRow(row_mem[nameToDelete])
+
+        self.twSubjects_cellChanged(0, 0)
 
     def twSubjects_cellChanged(self, row: int, column: int):
         """

@@ -749,18 +749,14 @@ class Observation(QDialog, Ui_Form):
 
         if self.rb_media_files.isChecked():  # observation based on media file(s)
             # check player number
-            players_list = []
-            players = {}  # for storing duration
+            players_list: list = []
+            players: dict = {}  # for storing duration
             for row in range(self.twVideo1.rowCount()):
-                players_list.append(int(self.twVideo1.cellWidget(row, 0).currentText()))
-                if int(self.twVideo1.cellWidget(row, 0).currentText()) not in players:
-                    players[int(self.twVideo1.cellWidget(row, 0).currentText())] = [
-                        util.time2seconds(self.twVideo1.item(row, 3).text())
-                    ]
-                else:
-                    players[int(self.twVideo1.cellWidget(row, 0).currentText())].append(
-                        util.time2seconds(self.twVideo1.item(row, 3).text())
-                    )
+                player_idx = int(self.twVideo1.cellWidget(row, 0).currentText())
+                players_list.append(player_idx)
+                if player_idx not in players:
+                    players[player_idx] = []
+                players[player_idx].append(util.time2seconds(self.twVideo1.item(row, 3).text()))
 
             # check if player #1 is used
             if not players_list or min(players_list) > 1:
@@ -779,6 +775,7 @@ class Observation(QDialog, Ui_Form):
                 return False
 
             # check if more media in player #1 and media in other players
+            """
             if len(players[1]) > 1 and set(players.keys()) != {1}:
                 QMessageBox.critical(
                     self,
@@ -789,6 +786,21 @@ class Observation(QDialog, Ui_Form):
                     ),
                 )
                 return False
+            """
+
+            # check if more media enqueued on many players
+            if len(set(players.keys())) > 1:  # many players used
+                if max([len(players[x]) for x in players]) > 1:
+                    QMessageBox.critical(
+                        self,
+                        cfg.programName,
+                        (
+                            "It is not possible to enqueue media files "
+                            "on more than one player.<br>"
+                            "You can use the <b>Merge media files</b> tool (see Tools > Media file > Merge media files"
+                        ),
+                    )
+                    return False
 
             # check that the longuest media is in player #1
             durations = []

@@ -29,9 +29,9 @@ from . import project_functions
 from PyQt5.QtWidgets import QFileDialog
 
 
-def get_info(self):
+def get_info(self) -> None:
     """
-    show info about media file (current media file if observation opened)
+    show info about media file (current media file if an observation is opened)
     """
 
     if self.observationId and self.playerType == cfg.MEDIA:
@@ -78,8 +78,7 @@ def get_info(self):
                 # "has_vout? {}<br>"
             )
 
-            # FFmpeg analysis
-            ffmpeg_output = "<br><b>FFmpeg analysis</b><br>"
+            # FFmpeg/FFprobe analysis
 
             for file_path in self.pj[cfg.OBSERVATIONS][self.observationId][cfg.FILE][str(i + 1)]:
                 media_full_path = project_functions.full_path(file_path, self.projectFileName)
@@ -90,9 +89,10 @@ def get_info(self):
                         filePath=media_full_path, error=r["error"]
                     )
                 else:
+                    ffmpeg_output = f"<br><b>{r['analysis_program'] } analysis</b><br>"
 
                     ffmpeg_output += (
-                        f"File path: {media_full_path}<br>"
+                        f"File path: <b>{media_full_path}</b><br><br>"
                         f"Duration: {r['duration']} seconds ({util.convertTime(self.timeFormat, r['duration'])})<br>"
                         f"Resolution: {r['resolution']}<br>"
                         f"Number of frames: {r['frames_number']}<br>"
@@ -122,14 +122,15 @@ def get_info(self):
         if file_path:
             self.results = dialog.Results_dialog()
             self.results.setWindowTitle(f"{cfg.programName} - Media file information")
-            self.results.ptText.appendHtml("<br><b>FFmpeg analysis</b><hr>")
+
             r = util.accurate_media_analysis(self.ffmpeg_bin, file_path)
             if "error" in r:
                 self.results.ptText.appendHtml(f"File path: {file_path}<br><br>{r['error']}<br><br>")
             else:
+                self.results.ptText.appendHtml(f"<br><b>{r['analysis_program'] } analysis</b><br>")
                 self.results.ptText.appendHtml(
                     (
-                        f"File path: {file_path}<br>"
+                        f"File path: <b>{file_path}</b><br><br>"
                         f"Duration: {r['duration']} seconds ({util.convertTime(self.timeFormat, r['duration'])})<br>"
                         f"Resolution: {r['resolution']}<br>"
                         f"Number of frames: {r['frames_number']}<br>"

@@ -1036,20 +1036,21 @@ def ffprobe_media_analysis(ffmpeg_bin: str, file_name: str) -> dict:
 
             if stream["codec_type"] == "video":
                 hasVideo = True
-                bitrate = int(stream["bit_rate"]) / 1000
+                bitrate = int(stream["bit_rate"] / 1000) if "bit_rate" in stream else None
                 resolution = f"{stream['width']}x{stream['height']}"
-                fps = float(stream["avg_frame_rate"].replace("/1", ""))
+                fps = float(stream["avg_frame_rate"].replace("/1", "")) if "avg_frame_rate" in stream else 0
                 duration = float(stream["duration"])
-                frames_number = int(stream["nb_frames"])
-                video_codec = stream["codec_long_name"]
+                frames_number = int(stream["nb_frames"]) if "nb_frames" in stream else None
+                video_codec = stream["codec_long_name"] if "codec_long_name" in stream else None
 
             if stream["codec_type"] == "audio":
                 hasAudio = True
                 sample_rate = float(stream["sample_rate"])
-                duration = stream["duration"]
+                duration = float(stream["duration"])
                 audio_codec = stream["codec_long_name"]
 
         return {
+            "analysis_program": "ffprobe",
             "frames_number": frames_number,
             "duration_ms": duration * 1000,
             "duration": duration,
@@ -1065,7 +1066,6 @@ def ffprobe_media_analysis(ffmpeg_bin: str, file_name: str) -> dict:
         }
 
     except Exception:
-
         return {}
 
 
@@ -1168,6 +1168,7 @@ def accurate_media_analysis(ffmpeg_bin: str, file_name: str) -> dict:
             return {"error": "This file does not seem to be a media file"}
 
         return {
+            "analysis_program": "ffmpeg",
             "frames_number": int(fps * duration),
             "duration_ms": duration * 1000,
             "duration": duration,
