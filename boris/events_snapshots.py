@@ -208,7 +208,7 @@ def events_snapshots(self):
                             if response == "Abort":
                                 return
 
-                        globalStart = (
+                        global_start = (
                             dec("0.000")
                             if row["occurence"] < time_interval
                             else round(row["occurence"] - time_interval, 3)
@@ -300,7 +300,8 @@ def events_snapshots(self):
                             f"_PLAYER{nplayer}"
                             f"_{util.safeFileName(subject).replace(' ', '-')}"
                             f"_{util.safeFileName(behavior).replace(' ', '-')}"
-                            f'_{start:.3f}_%08d.{self.frame_bitmap_format.lower()}"'
+                            f'_{global_start:.3f}_%08d.{self.frame_bitmap_format.lower()}"'
+                            # f'_{start:.3f}_%08d.{self.frame_bitmap_format.lower()}"'
                         )
 
                         logging.debug(f"ffmpeg command: {ffmpeg_command}")
