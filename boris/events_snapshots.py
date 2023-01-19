@@ -95,14 +95,19 @@ def events_snapshots(self):
         label_caption="Choose parameters",
         elements_list=[
             ("dsb", "Time interval around the events (in seconds)", 0.0, 86400, 1, 0, 3),
-            ("il", "Bitmap format", (("JPG", ""), ("PNG", ""))),
+            ("il", "Bitmap format", (("JPG - small size / low quality", ""), ("PNG - big size / high quality", ""))),
         ],
         title="Extract frames",
     )
     if not ib.exec_():
         return
     time_interval = util.float2decimal(ib.elements["Time interval around the events (in seconds)"].value())
-    frame_bitmap_format = ib.elements["Bitmap format"].currentText().lower()
+    if "JPG" in ib.elements["Bitmap format"].currentText():
+        frame_bitmap_format = "jpg"
+    elif "PNG" in ib.elements["Bitmap format"].currentText():
+        frame_bitmap_format = "png"
+    else:
+        return
 
     # directory for saving frames
     export_dir = QFileDialog().getExistingDirectory(
@@ -231,6 +236,8 @@ def events_snapshots(self):
                             )
 
                             vframes = 1 if not time_interval else int(mediafile_fps * time_interval * 2)
+                            if vframes == 0:
+                                vframes = 1
 
                         if cfg.STATE in behavior_state:
                             if idx % 2 == 0:
@@ -258,7 +265,7 @@ def events_snapshots(self):
                                     if response == "Abort":
                                         return
 
-                                globalStop = round(rows[idx + 1]["occurence"] + time_interval, 3)
+                                # globalStop = round(rows[idx + 1]["occurence"] + time_interval, 3)
 
                                 stop = round(
                                     rows[idx + 1]["occurence"]
@@ -286,6 +293,8 @@ def events_snapshots(self):
                                 )
 
                                 vframes = int((stop - start) * mediafile_fps + time_interval * mediafile_fps * 2)
+                                if vframes == 0:
+                                    vframes = 1
 
                             else:
                                 continue
