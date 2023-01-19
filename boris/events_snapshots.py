@@ -329,7 +329,7 @@ def extract_events(self):
             live_images_obs_list.append(obs_id)
 
     if live_images_obs_list:
-        out = "The following observations are live observations or observation from images and will be removed from analysis<br><br>"
+        out = "The following observations are live observations or observation from pictures and will be removed from analysis<br><br>"
         out += "<br>".join(live_images_obs_list)
         results = dialog.Results_dialog()
         results.setWindowTitle(cfg.programName)
@@ -409,8 +409,8 @@ def extract_events(self):
         '-{globalStop}{extension}" '
     )
     """
-    ffmpeg_extract_command = '"{ffmpeg_bin}" -ss {start} -i "{input_}" -y -t {duration} {codecs} '
-    mem_command = ""
+    ffmpeg_extract_command: str = '"{ffmpeg_bin}" -ss {start} -i "{input_}" -y -t {duration} {codecs} '
+    mem_command: str = ""
     for obs_id in selected_observations:
 
         for nplayer in self.pj[cfg.OBSERVATIONS][obs_id][cfg.FILE]:
@@ -586,8 +586,16 @@ def extract_events(self):
                                 continue
 
                         new_file_name = pl.Path(export_dir) / pl.Path(
-                            f"{util.safeFileName(obs_id).replace(' ', '-')}_PLAYER{nplayer}_{util.safeFileName(subject).replace(' ', '-')}_{util.safeFileName(behavior)}_{globalStart}-{globalStop}"
-                        ).with_suffix(new_extension)
+                            (
+                                f"{util.safeFileName(obs_id).replace(' ', '-')}_"
+                                f"PLAYER{nplayer}_"
+                                f"{util.safeFileName(subject).replace(' ', '-')}_"
+                                f"{util.safeFileName(behavior)}_"
+                                f"{globalStart}-{globalStop}"
+                                f"{new_extension}"
+                            )
+                        )  # .with_suffix(new_extension)
+
                         if new_file_name.is_file():
                             if mem_command not in (cfg.OVERWRITE_ALL, cfg.SKIP_ALL):
                                 mem_command = dialog.MessageDialog(
