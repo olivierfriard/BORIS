@@ -47,6 +47,7 @@ from PyQt5.QtWidgets import (
     QSizePolicy,
     QSpacerItem,
     QSpinBox,
+    QDoubleSpinBox,
     QTableView,
     QTableWidget,
     QVBoxLayout,
@@ -313,6 +314,12 @@ class Input_dialog(QDialog):
                 hbox.addWidget(self.elements[element[1]])
 
             if element[0] == "sb":  # spinbox
+                # 1 - Label
+                # 2 - minimum value
+                # 3 - maximum value
+                # 4 - step
+                # 5 - initial value
+
                 lb = QLabel(element[1])
                 hbox.addWidget(lb)
                 self.elements[element[1]] = QSpinBox()
@@ -321,7 +328,26 @@ class Input_dialog(QDialog):
                 self.elements[element[1]].setValue(element[5])
                 hbox.addWidget(self.elements[element[1]])
 
+            if element[0] == "dsb":  # doubleSpinbox
+                # 1 - Label
+                # 2 - minimum value
+                # 3 - maximum value
+                # 4 - step
+                # 5 - initial value
+                # 6 - number of decimas
+
+                lb = QLabel(element[1])
+                hbox.addWidget(lb)
+                self.elements[element[1]] = QDoubleSpinBox()
+                self.elements[element[1]].setRange(element[2], element[3])
+                self.elements[element[1]].setSingleStep(element[4])
+                self.elements[element[1]].setValue(element[5])
+                self.elements[element[1]].setDecimals(element[6])
+                hbox.addWidget(self.elements[element[1]])
+
             if element[0] == "il":  # items list
+                # 1 - Label
+                # 2 - Values (tuple of tuple: 0 - value; 1 - "", "selected")
                 lb = QLabel(element[1])
                 hbox.addWidget(lb)
                 self.elements[element[1]] = QComboBox()

@@ -91,27 +91,27 @@ def events_snapshots(self):
     if not parameters[cfg.SELECTED_SUBJECTS] or not parameters[cfg.SELECTED_BEHAVIORS]:
         return
 
-    # Ask for time interval around the event
-    while True:
-        text, ok = QInputDialog.getDouble(
-            self, "Time interval around the events", "Time (in seconds):", 0.0, 0.0, 86400, 1
-        )
-        if not ok:
-            return
-        try:
-            time_interval = util.float2decimal(text)
-            break
-        except Exception:
-            QMessageBox.warning(self, cfg.programName, f"<b>{text}</b> is not recognized as time")
+    ib = dialog.Input_dialog(
+        label_caption="Choose parameters",
+        elements_list=[
+            ("dsb", "Time interval around the events (in seconds)", 0.0, 86400, 1, 0, 3),
+            ("il", "Bitmap format", (("JPG", ""), ("PNG", ""))),
+        ],
+        title="Extract frames",
+    )
+    if not ib.exec_():
+        return
+    time_interval = util.float2decimal(ib.elements["Time interval around the events (in seconds)"].value())
+    frame_bitmap_format = ib.elements["Bitmap format"].currentText().lower()
 
     # directory for saving frames
-    exportDir = QFileDialog().getExistingDirectory(
+    export_dir = QFileDialog().getExistingDirectory(
         self,
         "Choose a directory to extract events",
         os.path.expanduser("~"),
         options=QFileDialog(self).ShowDirsOnly,
     )
-    if not exportDir:
+    if not export_dir:
         return
 
     cursor = db_functions.load_events_in_db(
@@ -122,15 +122,15 @@ def events_snapshots(self):
         time_interval=cfg.TIME_FULL_OBS,
     )
 
-    for obsId in selected_observations:
+    for obs_id in selected_observations:
 
-        for nplayer in self.pj[cfg.OBSERVATIONS][obsId][cfg.FILE]:
+        for nplayer in self.pj[cfg.OBSERVATIONS][obs_id][cfg.FILE]:
 
-            if not self.pj[cfg.OBSERVATIONS][obsId][cfg.FILE][nplayer]:
+            if not self.pj[cfg.OBSERVATIONS][obs_id][cfg.FILE][nplayer]:
                 continue
             duration1 = []  # in seconds
-            for mediaFile in self.pj[cfg.OBSERVATIONS][obsId][cfg.FILE][nplayer]:
-                duration1.append(self.pj[cfg.OBSERVATIONS][obsId][cfg.MEDIA_INFO][cfg.LENGTH][mediaFile])
+            for mediaFile in self.pj[cfg.OBSERVATIONS][obs_id][cfg.FILE][nplayer]:
+                duration1.append(self.pj[cfg.OBSERVATIONS][obs_id][cfg.MEDIA_INFO][cfg.LENGTH][mediaFile])
 
             for subject in parameters[cfg.SELECTED_SUBJECTS]:
 
@@ -138,7 +138,7 @@ def events_snapshots(self):
 
                     cursor.execute(
                         "SELECT occurence FROM events WHERE observation = ? AND subject = ? AND code = ?",
-                        (obsId, subject, behavior),
+                        (obs_id, subject, behavior),
                     )
                     rows = [{"occurence": util.float2decimal(r["occurence"])} for r in cursor.fetchall()]
 
@@ -153,22 +153,22 @@ def events_snapshots(self):
                         # check if media has video
                         flag_no_video = False
                         try:
-                            flag_no_video = not self.pj[cfg.OBSERVATIONS][obsId][cfg.MEDIA_INFO][cfg.HAS_VIDEO][
-                                self.pj[cfg.OBSERVATIONS][obsId][cfg.FILE][nplayer][mediaFileIdx]
+                            flag_no_video = not self.pj[cfg.OBSERVATIONS][obs_id][cfg.MEDIA_INFO][cfg.HAS_VIDEO][
+                                self.pj[cfg.OBSERVATIONS][obs_id][cfg.FILE][nplayer][mediaFileIdx]
                             ]
                         except Exception:
                             flag_no_video = True
 
                         if flag_no_video:
                             logging.debug(
-                                f"Media {self.pj[cfg.OBSERVATIONS][obsId][cfg.FILE][nplayer][mediaFileIdx]} does not have video"
+                                f"Media {self.pj[cfg.OBSERVATIONS][obs_id][cfg.FILE][nplayer][mediaFileIdx]} does not have video"
                             )
                             flag_no_video = True
                             response = dialog.MessageDialog(
                                 cfg.programName,
                                 (
                                     "The following media file does not have video.<br>"
-                                    f"{self.pj[cfg.OBSERVATIONS][obsId][cfg.FILE][nplayer][mediaFileIdx]}"
+                                    f"{self.pj[cfg.OBSERVATIONS][obs_id][cfg.FILE][nplayer][mediaFileIdx]}"
                                 ),
                                 [cfg.OK, "Abort"],
                             )
@@ -180,12 +180,12 @@ def events_snapshots(self):
                         # check FPS
                         mediafile_fps = 0
                         try:
-                            if self.pj[cfg.OBSERVATIONS][obsId][cfg.MEDIA_INFO][cfg.FPS][
-                                self.pj[cfg.OBSERVATIONS][obsId][cfg.FILE][nplayer][mediaFileIdx]
+                            if self.pj[cfg.OBSERVATIONS][obs_id][cfg.MEDIA_INFO][cfg.FPS][
+                                self.pj[cfg.OBSERVATIONS][obs_id][cfg.FILE][nplayer][mediaFileIdx]
                             ]:
                                 mediafile_fps = util.float2decimal(
-                                    self.pj[cfg.OBSERVATIONS][obsId][cfg.MEDIA_INFO][cfg.FPS][
-                                        self.pj[cfg.OBSERVATIONS][obsId][cfg.FILE][nplayer][mediaFileIdx]
+                                    self.pj[cfg.OBSERVATIONS][obs_id][cfg.MEDIA_INFO][cfg.FPS][
+                                        self.pj[cfg.OBSERVATIONS][obs_id][cfg.FILE][nplayer][mediaFileIdx]
                                     ]
                                 )
                         except Exception:
@@ -193,13 +193,13 @@ def events_snapshots(self):
 
                         if not mediafile_fps:
                             logging.debug(
-                                f"FPS not found for {self.pj[cfg.OBSERVATIONS][obsId][cfg.FILE][nplayer][mediaFileIdx]}"
+                                f"FPS not found for {self.pj[cfg.OBSERVATIONS][obs_id][cfg.FILE][nplayer][mediaFileIdx]}"
                             )
                             response = dialog.MessageDialog(
                                 cfg.programName,
                                 (
                                     "The FPS was not found for the following media file:<br>"
-                                    f"{self.pj[cfg.OBSERVATIONS][obsId][cfg.FILE][nplayer][mediaFileIdx]}"
+                                    f"{self.pj[cfg.OBSERVATIONS][obs_id][cfg.FILE][nplayer][mediaFileIdx]}"
                                 ),
                                 [cfg.OK, "Abort"],
                             )
@@ -217,7 +217,7 @@ def events_snapshots(self):
                             row["occurence"]
                             - time_interval
                             - util.float2decimal(sum(duration1[0:mediaFileIdx]))
-                            - self.pj[cfg.OBSERVATIONS][obsId][cfg.TIME_OFFSET],
+                            - self.pj[cfg.OBSERVATIONS][obs_id][cfg.TIME_OFFSET],
                             3,
                         )
                         if start < time_interval:
@@ -226,7 +226,7 @@ def events_snapshots(self):
                         if cfg.POINT in behavior_state:
 
                             media_path = project_functions.full_path(
-                                self.pj[cfg.OBSERVATIONS][obsId][cfg.FILE][nplayer][mediaFileIdx],
+                                self.pj[cfg.OBSERVATIONS][obs_id][cfg.FILE][nplayer][mediaFileIdx],
                                 self.projectFileName,
                             )
 
@@ -264,7 +264,7 @@ def events_snapshots(self):
                                     rows[idx + 1]["occurence"]
                                     + time_interval
                                     - util.float2decimal(sum(duration1[0:mediaFileIdx]))
-                                    - self.pj[cfg.OBSERVATIONS][obsId][cfg.TIME_OFFSET],
+                                    - self.pj[cfg.OBSERVATIONS][obs_id][cfg.TIME_OFFSET],
                                     3,
                                 )
 
@@ -272,8 +272,8 @@ def events_snapshots(self):
                                 try:
                                     if (
                                         start
-                                        > self.pj[cfg.OBSERVATIONS][obsId][cfg.MEDIA_INFO][cfg.LENGTH][
-                                            self.pj[cfg.OBSERVATIONS][obsId][cfg.FILE][nplayer][mediaFileIdx]
+                                        > self.pj[cfg.OBSERVATIONS][obs_id][cfg.MEDIA_INFO][cfg.LENGTH][
+                                            self.pj[cfg.OBSERVATIONS][obs_id][cfg.FILE][nplayer][mediaFileIdx]
                                         ]
                                     ):
                                         continue
@@ -281,7 +281,7 @@ def events_snapshots(self):
                                     continue
 
                                 media_path = project_functions.full_path(
-                                    self.pj[cfg.OBSERVATIONS][obsId][cfg.FILE][nplayer][mediaFileIdx],
+                                    self.pj[cfg.OBSERVATIONS][obs_id][cfg.FILE][nplayer][mediaFileIdx],
                                     self.projectFileName,
                                 )
 
@@ -295,19 +295,20 @@ def events_snapshots(self):
                             f"-ss {start:.3f} "
                             f'-i "{media_path}" '
                             f"-vframes {vframes} "
-                            f'"{exportDir}{os.sep}'
-                            f"{util.safeFileName(obsId).replace(' ', '-')}"
+                            f'"{export_dir}{os.sep}'
+                            f"{util.safeFileName(obs_id).replace(' ', '-')}"
                             f"_PLAYER{nplayer}"
                             f"_{util.safeFileName(subject).replace(' ', '-')}"
                             f"_{util.safeFileName(behavior).replace(' ', '-')}"
-                            f'_{global_start:.3f}_%08d.{self.frame_bitmap_format.lower()}"'
-                            # f'_{start:.3f}_%08d.{self.frame_bitmap_format.lower()}"'
+                            f'_{global_start:.3f}_%08d.{frame_bitmap_format}"'
                         )
 
                         logging.debug(f"ffmpeg command: {ffmpeg_command}")
 
                         p = subprocess.Popen(ffmpeg_command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
                         out, _ = p.communicate()
+
+    self.statusbar.showMessage(f"Frames extracted in {export_dir}", 0)
 
 
 def extract_events(self):
@@ -629,4 +630,4 @@ def extract_events(self):
                         )
                         out, _ = p.communicate()
 
-    self.statusbar.showMessage(f"Media sequence extracted in {export_dir}", 0)
+    self.statusbar.showMessage(f"Media sequences extracted in {export_dir}", 0)

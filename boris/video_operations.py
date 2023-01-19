@@ -73,9 +73,9 @@ def zoom_level(self):
     """
     display dialog for zoom level
     """
-    players_list = []
+    players_list: list = []
     for idx, dw in enumerate(self.dw_player):
-        zoom_levels = []
+        zoom_levels: list = []
         for choice in (2, 1, 0.5, 0.25):
             zoom_levels.append((str(choice), "selected" if log2(choice) == dw.player.video_zoom else ""))
         players_list.append(("il", f"Player #{idx + 1}", zoom_levels))
