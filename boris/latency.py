@@ -55,8 +55,8 @@ def get_latency(self):
 
     SUBJECT, BEHAVIOR, MODIFIERS = 0, 1, 2
 
-    _, selected_observations = select_observations.select_observations(
-        self.pj, cfg.SELECT1, windows_title="Select one observation for latency analysis"
+    _, selected_observations = select_observations.select_observations2(
+        self, cfg.SELECT1, windows_title="Select one observation for latency analysis"
     )
 
     if not selected_observations:

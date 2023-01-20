@@ -260,6 +260,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
     save_project_json_started = False
 
+    mem_hash_obs: int = 0
+
     def __init__(self, ffmpeg_bin, parent=None):
 
         super(MainWindow, self).__init__(parent)
@@ -2068,8 +2070,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         """
 
         if mode == "list":
-            _, selected_observations = select_observations.select_observations(
-                self.pj, cfg.MULTIPLE, windows_title="Select observations for plotting events"
+            _, selected_observations = select_observations.select_observations2(
+                self, cfg.MULTIPLE, windows_title="Select observations for plotting events"
             )
 
             if not selected_observations:
@@ -2165,8 +2167,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         """
         if mode == "list":
-            _, selected_observations = select_observations.select_observations(
-                self.pj, cfg.MULTIPLE, windows_title="Select observation(s) for time budget bar plot"
+            _, selected_observations = select_observations.select_observations2(
+                self, cfg.MULTIPLE, windows_title="Select observation(s) for time budget bar plot"
             )
 
             if not selected_observations:
@@ -3013,8 +3015,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         create subtitles for selected observations, subjects and behaviors
         """
 
-        _, selected_observations = select_observations.select_observations(
-            self.pj, cfg.MULTIPLE, windows_title="Select observations for creating subtitles"
+        _, selected_observations = select_observations.select_observations2(
+            self, cfg.MULTIPLE, windows_title="Select observations for creating subtitles"
         )
 
         if not selected_observations:
@@ -5163,9 +5165,15 @@ def main():
     if not options.nosplashscreen and (sys.platform != "darwin"):
         splash.finish(window)
 
-    sys.exit(app.exec_())
+    """sys.exit(app.exec_())"""
+    return_code = app.exec_()
+
+    del window
+
+    sys.exit(return_code)
 
 
+"""
 if __name__ == "__main__":
-
     main()
+"""

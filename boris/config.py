@@ -166,6 +166,7 @@ DATA_PLOT_FIELDS = {
 }
 DATA_PLOT_STYLES = ["b-", "r-", "g-", "bo", "ro", "go"]
 
+TIME = "time"
 BEHAVIOR_CODE = "code"
 SUBJECT = "subject"
 MODIFIER = "modifier"

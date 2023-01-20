@@ -174,8 +174,8 @@ def transitions_matrix(self, mode):
     * frequencies_after_behaviors
     """
     # ask user observations to analyze
-    _, selected_observations = select_observations.select_observations(
-        self.pj, cfg.MULTIPLE, windows_title="Select observations for transitions matrix"
+    _, selected_observations = select_observations.select_observations2(
+        self, cfg.MULTIPLE, windows_title="Select observations for transitions matrix"
     )
 
     if not selected_observations:

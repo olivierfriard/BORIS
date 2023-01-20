@@ -41,8 +41,8 @@ def events_snapshots(self):
     if observations are from media file and media files have video
     """
 
-    _, selected_observations = select_observations.select_observations(
-        self.pj, cfg.MULTIPLE, windows_title="Select observations for snapshots"
+    _, selected_observations = select_observations.select_observations2(
+        self, cfg.MULTIPLE, windows_title="Select observations for snapshots"
     )
     if not selected_observations:
         return
@@ -326,8 +326,8 @@ def extract_events(self):
     in case of point event, from -n to +n seconds are extracted (n is asked to user)
     """
 
-    _, selected_observations = select_observations.select_observations(
-        self.pj, cfg.MULTIPLE, windows_title="Select observations for extracting events"
+    _, selected_observations = select_observations.select_observations2(
+        self, cfg.MULTIPLE, windows_title="Select observations for extracting events"
     )
     if not selected_observations:
         return

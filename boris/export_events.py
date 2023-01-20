@@ -53,8 +53,8 @@ def export_events_as_behavioral_sequences(self, separated_subjects=False, timed=
     """
 
     # ask user for observations to analyze
-    _, selected_observations = select_observations.select_observations(
-        self.pj, cfg.MULTIPLE, "Select observations to export as behavioral sequences"
+    _, selected_observations = select_observations.select_observations2(
+        self, cfg.MULTIPLE, "Select observations to export as behavioral sequences"
     )
 
     if not selected_observations:
@@ -133,8 +133,8 @@ def export_tabular_events(self, mode: str = "tabular") -> None:
     """
 
     # ask user observations to analyze
-    _, selected_observations = select_observations.select_observations(
-        self.pj, cfg.MULTIPLE, windows_title="Select observations for exporting events"
+    _, selected_observations = select_observations.select_observations2(
+        self, cfg.MULTIPLE, windows_title="Select observations for exporting events"
     )
 
     if not selected_observations:
@@ -362,8 +362,8 @@ def export_aggregated_events(self):
 
         return fields_type_dict
 
-    _, selected_observations = select_observations.select_observations(
-        self.pj, cfg.MULTIPLE, "Select observations for exporting events"
+    _, selected_observations = select_observations.select_observations2(
+        self, cfg.MULTIPLE, "Select observations for exporting events"
     )
     if not selected_observations:
         return
@@ -689,7 +689,7 @@ def export_events_as_textgrid(self) -> None:
     * export state events of selected observations as Praat textgrid
     """
 
-    _, selected_observations = select_observations.select_observations(self.pj, mode=cfg.MULTIPLE, windows_title="")
+    _, selected_observations = select_observations.select_observations2(self, mode=cfg.MULTIPLE, windows_title="")
 
     if not selected_observations:
         return
@@ -1086,7 +1086,7 @@ def export_events_as_textgrid_old(self):
     export state events as Praat textgrid
     """
 
-    _, selected_observations = select_observations.select_observations(self.pj, mode=cfg.MULTIPLE, windows_title="")
+    _, selected_observations = select_observations.select_observations2(self, mode=cfg.MULTIPLE, windows_title="")
 
     if not selected_observations:
         return

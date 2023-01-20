@@ -329,8 +329,8 @@ def event_filtering(self):
     the portion module is used to do operations on intervals (intersection, union)
     """
 
-    _, selected_observations = select_observations.select_observations(
-        self.pj, cfg.MULTIPLE, "Select observations for advanced event filtering"
+    _, selected_observations = select_observations.select_observations2(
+        self, cfg.MULTIPLE, "Select observations for advanced event filtering"
     )
     if not selected_observations:
         return

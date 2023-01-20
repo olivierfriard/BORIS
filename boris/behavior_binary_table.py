@@ -181,8 +181,8 @@ def behavior_binary_table(self):
         ),
     )
 
-    _, selected_observations = select_observations.select_observations(
-        self.pj, cfg.MULTIPLE, "Select observations for the behavior binary table"
+    _, selected_observations = select_observations.select_observations2(
+        self, cfg.MULTIPLE, "Select observations for the behavior binary table"
     )
 
     if not selected_observations:

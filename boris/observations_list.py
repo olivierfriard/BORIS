@@ -39,7 +39,6 @@ from PyQt5.QtWidgets import (
 
 from . import config as cfg
 from . import dialog
-from . import utilities as util
 
 commands_index = {"Start": 2, "Edit": 3, "View": 4}
 

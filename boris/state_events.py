@@ -63,7 +63,7 @@ def check_state_events(self, mode: str = "all") -> None:
             return
 
         # ask user observations to analyze
-        _, selectedObservations = select_observations.select_observations(self.pj, mode=cfg.MULTIPLE, windows_title="")
+        _, selectedObservations = select_observations.select_observations2(self, mode=cfg.MULTIPLE, windows_title="")
         if not selectedObservations:
             return
 
@@ -132,7 +132,7 @@ def fix_unpaired_events(self):
 
     # selected observations
     else:
-        _, selected_observations = select_observations.select_observations(self.pj, mode=cfg.MULTIPLE, windows_title="")
+        _, selected_observations = select_observations.select_observations2(self, mode=cfg.MULTIPLE, windows_title="")
         if not selected_observations:
             return
 

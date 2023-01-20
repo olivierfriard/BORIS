@@ -261,8 +261,8 @@ def irr_cohen_kappa(self):
     """
 
     # ask user observations to analyze
-    _, selected_observations = select_observations.select_observations(
-        self.pj, mode=cfg.MULTIPLE, windows_title="Select observations for IRR Cohen Kappa"
+    _, selected_observations = select_observations.select_observations2(
+        self, mode=cfg.MULTIPLE, windows_title="Select observations for IRR Cohen Kappa"
     )
 
     if not selected_observations:
@@ -567,8 +567,8 @@ def needleman_wunch(self):
     """
 
     # ask user observations to analyze
-    _, selected_observations = select_observations.select_observations(
-        self.pj, mode=cfg.MULTIPLE, windows_title="Select observations for Needleman-Wunch identity"
+    _, selected_observations = select_observations.select_observations2(
+        self, mode=cfg.MULTIPLE, windows_title="Select observations for Needleman-Wunch identity"
     )
 
     if not selected_observations:

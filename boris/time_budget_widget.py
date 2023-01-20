@@ -398,7 +398,7 @@ def time_budget(self, mode: str, mode2: str = "list"):
             return
 
     if mode2 == "list":
-        _, selected_observations = select_observations.select_observations(self.pj, mode=cfg.MULTIPLE, windows_title="")
+        _, selected_observations = select_observations.select_observations2(self, mode=cfg.MULTIPLE, windows_title="")
 
         if not selected_observations:
             return

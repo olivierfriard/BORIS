@@ -43,8 +43,8 @@ def synthetic_time_budget(self) -> None:
     Synthetic time budget
     """
 
-    _, selected_observations = select_observations.select_observations(
-        self.pj, mode=cfg.MULTIPLE, windows_title="Select observations for synthetic time budget"
+    _, selected_observations = select_observations.select_observations2(
+        self, mode=cfg.MULTIPLE, windows_title="Select observations for synthetic time budget"
     )
 
     if not selected_observations:
@@ -156,8 +156,8 @@ def synthetic_binned_time_budget(self) -> None:
     Synthetic time budget with time bin
     """
 
-    _, selected_observations = select_observations.select_observations(
-        self.pj, mode=cfg.MULTIPLE, windows_title="Select observations for synthetic binned time budget"
+    _, selected_observations = select_observations.select_observations2(
+        self, mode=cfg.MULTIPLE, windows_title="Select observations for synthetic binned time budget"
     )
 
     if not selected_observations:

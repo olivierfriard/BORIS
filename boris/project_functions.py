@@ -44,11 +44,10 @@ from . import observation_operations
 
 def check_observation_exhaustivity(
     events: List[list],
-    # ethogram: list,
     state_events_list: list = [],
 ) -> float:
     """
-    check if observation is continous
+    calculate the observation exhaustivity
     if ethogram not empty state events list is determined else
 
     Args:
@@ -56,26 +55,11 @@ def check_observation_exhaustivity(
         ethogram (list):
     """
 
-    def interval_len(interval):
+    def interval_len(interval: I) -> dec:
         if interval.empty:
             return dec(0)
         else:
-            return sum([x.upper - x.lower for x in interval])
-
-    """
-    def interval_number(interval):
-        if interval.empty:
-            return dec(0)
-        else:
-            return len(interval)
-    """
-
-    """
-    if ethogram:
-        state_events_list: tuple = tuple(
-            (ethogram[x][cfg.BEHAVIOR_CODE] for x in ethogram if cfg.STATE in ethogram[x][cfg.TYPE].upper())
-        )
-    """
+            return dec(sum([x.upper - x.lower for x in interval]))
 
     events_interval: dict = {}
     mem_events_interval: dict = {}
@@ -125,12 +109,40 @@ def check_observation_exhaustivity(
             obs_real_dur = obs_theo_dur
 
         total_duration += obs_real_dur
+
     if len(events_interval) and obs_theo_dur:
         exhausivity_percent = total_duration / (len(events_interval) * obs_theo_dur) * 100
     else:
         exhausivity_percent = 0
 
     return round(exhausivity_percent, 1)
+
+
+def check_observation_exhaustivity_pictures(obs) -> float:
+    """
+    check exhaustivity of coding for observations from pictures
+    """
+    if obs[cfg.TYPE] != cfg.IMAGES:
+        return -1
+    tot_images_number = 0
+
+    for dir_path in obs.get(cfg.DIRECTORIES_LIST, []):
+        result = util.dir_images_number(dir_path)
+        tot_images_number += result.get("number of images", 0)
+
+    if not tot_images_number:
+        return "No pictures found"
+
+    """
+    print()
+    print(f"{obs[cfg.EVENTS]=}")
+    print(set([x[cfg.PJ_OBS_FIELDS[cfg.IMAGES][cfg.IMAGE_PATH]] for x in obs[cfg.EVENTS]]))
+    """
+
+    # list of paths of coded images
+    coded_images_number = len(set([x[cfg.PJ_OBS_FIELDS[cfg.IMAGES][cfg.IMAGE_PATH]] for x in obs[cfg.EVENTS]]))
+
+    return round(coded_images_number / tot_images_number * 100, 1)
 
 
 def behavior_category(ethogram: dict) -> Dict[str, str]:
@@ -1094,7 +1106,7 @@ def full_path(path: str, project_file_name: str) -> str:
             return ""
 
 
-def observed_interval(observation: dict) -> tuple:
+def observed_interval(observation: dict) -> Tuple[dec, dec]:
     """
     Observed interval for observation
 
@@ -1108,19 +1120,13 @@ def observed_interval(observation: dict) -> tuple:
         return (dec("0.0"), dec("0.0"))
     if observation[cfg.TYPE] in (cfg.MEDIA, cfg.LIVE):
         return (
-            min(observation[cfg.EVENTS])[cfg.PJ_OBS_FIELDS[observation[cfg.TYPE]]["time"]],
-            max(observation[cfg.EVENTS])[cfg.PJ_OBS_FIELDS[observation[cfg.TYPE]]["time"]],
+            min(observation[cfg.EVENTS])[cfg.PJ_OBS_FIELDS[observation[cfg.TYPE]][cfg.TIME]],
+            max(observation[cfg.EVENTS])[cfg.PJ_OBS_FIELDS[observation[cfg.TYPE]][cfg.TIME]],
         )
     if observation[cfg.TYPE] == cfg.IMAGES:
-        events = [x[cfg.PJ_OBS_FIELDS[observation[cfg.TYPE]]["image index"]] for x in observation[cfg.EVENTS]]
+        events = [x[cfg.PJ_OBS_FIELDS[observation[cfg.TYPE]][cfg.IMAGE_INDEX]] for x in observation[cfg.EVENTS]]
 
         return (dec(min(events)), dec(max(events)))
-        """
-        return (
-            min(observation[cfg.EVENTS])[cfg.PJ_OBS_FIELDS[observation[cfg.TYPE]]["image index"]],
-            max(observation[cfg.EVENTS])[cfg.PJ_OBS_FIELDS[observation[cfg.TYPE]]["image index"]],
-        )
-        """
 
 
 def events_start_stop(ethogram: dict, events: list) -> list:

@@ -65,7 +65,7 @@ def export_observations_list_clicked(self):
     export the list of observations
     """
 
-    resultStr, selected_observations = select_observations.select_observations(self.pj, cfg.MULTIPLE)
+    resultStr, selected_observations = select_observations.select_observations2(self, cfg.MULTIPLE)
     if not resultStr or not selected_observations:
         return
 
@@ -112,7 +112,7 @@ def observations_list(self):
     if self.playerType in cfg.VIEWERS:
         close_observation(self)
 
-    result, selected_obs = select_observations.select_observations(self.pj, cfg.SINGLE)
+    result, selected_obs = select_observations.select_observations2(self, cfg.SINGLE)
 
     if not selected_obs:
         return
@@ -132,7 +132,6 @@ def observations_list(self):
         QtTest.QTest.qWait(1000)
 
     if result == cfg.OPEN:
-        # select_observations.select_observations(self.pj, cfg.OPEN)
         load_observation(self, selected_obs[0], cfg.OBS_START)
 
     if result == cfg.VIEW:
@@ -176,9 +175,9 @@ def open_observation(self, mode: str) -> str:
             close_observation(self)
     selected_observations = []
     if mode == cfg.OBS_START:
-        _, selected_observations = select_observations.select_observations(self.pj, cfg.OPEN)
+        _, selected_observations = select_observations.select_observations2(self, cfg.OPEN)
     if mode == cfg.VIEW:
-        _, selected_observations = select_observations.select_observations(self.pj, cfg.VIEW)
+        _, selected_observations = select_observations.select_observations2(self, cfg.VIEW)
 
     if selected_observations:
         return load_observation(self, selected_observations[0], mode)
@@ -272,8 +271,8 @@ def edit_observation(self):
         else:
             close_observation(self)
 
-    _, selected_observations = select_observations.select_observations(
-        self.pj, cfg.EDIT, windows_title="Edit observation"
+    _, selected_observations = select_observations.select_observations2(
+        self, cfg.EDIT, windows_title="Edit observation"
     )
 
     if selected_observations:
@@ -285,8 +284,8 @@ def remove_observations(self):
     remove observations from project file
     """
 
-    _, selected_observations = select_observations.select_observations(
-        self.pj, cfg.MULTIPLE, windows_title="Remove observations"
+    _, selected_observations = select_observations.select_observations2(
+        self, cfg.MULTIPLE, windows_title="Remove observations"
     )
     if not selected_observations:
         return
