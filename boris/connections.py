@@ -40,6 +40,7 @@ from . import (
     media_file,
     observation_operations,
     preferences,
+    project_import_export,
     project_server,
     synthetic_time_budget,
     time_budget_widget,
@@ -66,6 +67,7 @@ def connections(self):
     self.actionCheck_project.triggered.connect(self.check_project_integrity)
     self.actionSave_project.triggered.connect(self.save_project_activated)
     self.actionSave_project_as.triggered.connect(self.save_project_as_activated)
+    self.actionExport_project.triggered.connect(lambda: project_import_export.export_project_as_pickle_object(self.pj))
     self.actionClose_project.triggered.connect(self.close_project)
 
     self.action_media_file_and_images_directories_relative_path.triggered.connect(

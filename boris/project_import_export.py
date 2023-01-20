@@ -25,15 +25,37 @@ import urllib
 import json
 import pathlib as pl
 import pandas as pd
+import tablib
+import pickle
 
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QColor, QFont
 from PyQt5.QtWidgets import QApplication, QFileDialog, QListWidgetItem, QMessageBox, QTableWidgetItem
-import tablib
+
 
 from . import config as cfg
 from . import dialog, param_panel, project_functions, export_observation
 from . import utilities as util
+
+
+def export_project_as_pickle_object(pj: dict) -> None:
+    """
+    export the project dictionary as a pickle file
+    """
+    file_name, _ = QFileDialog().getSaveFileName(None, "Export project as pickle file", "", "All files (*)")
+    if not file_name:
+        return
+    try:
+        with open(file_name, "wb") as f_out:
+            pickle.dump(pj, f_out)
+    except Exception:
+        QMessageBox.critical(
+            None,
+            cfg.programName,
+            f"Error during file saving.",
+            QMessageBox.Ok | QMessageBox.Default,
+            QMessageBox.NoButton,
+        )
 
 
 def export_ethogram(self):
@@ -268,13 +290,13 @@ def select_behaviors(
     return []
 
 
-def check_text_file_type(rows):
+def check_text_file_type(rows: list):
     """
     check text file
     returns separator and number of fields (if unique)
     """
     for separator in "\t,;":
-        cs = []
+        cs: list = []
         for row in rows:
             cs.append(row.count(separator))
         if len(set(cs)) == 1:

@@ -209,6 +209,7 @@
     <addaction name="actionEdit_project"/>
     <addaction name="actionSave_project"/>
     <addaction name="actionSave_project_as"/>
+    <addaction name="actionExport_project"/>
     <addaction name="actionClose_project"/>
     <addaction name="separator"/>
     <addaction name="actionCheck_project"/>
@@ -1529,6 +1530,11 @@
   <action name="actionMerge_media_files">
    <property name="text">
     <string>Merge media files</string>
+   </property>
+  </action>
+  <action name="actionExport_project">
+   <property name="text">
+    <string>Export project</string>
    </property>
   </action>
  </widget>
