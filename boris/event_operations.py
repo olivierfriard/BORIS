@@ -98,6 +98,14 @@ def add_event(self):
                     self.write_event(event, newTime)
                     break
 
+            self.update_realtime_plot(force_plot=True)
+            """
+            if hasattr(self, "plot_events"):
+                if not self.plot_events.visibleRegion().isEmpty():
+                    self.plot_events.events_list = self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS]
+                    self.plot_events.plot_events(float(self.getLaps()))
+            """
+
             """
             # update subjects table
             self.currentStates = util.get_current_states_modifiers_by_subject(
@@ -238,6 +246,8 @@ def undo_event_operation(self) -> None:
     # reload all events in tw
     self.load_tw_events(self.observationId)
 
+    self.update_realtime_plot(force_plot=True)
+
     if not len(self.undo_queue):
         self.actionUndo.setText("Undo")
         self.actionUndo.setEnabled(False)
@@ -315,6 +325,8 @@ def delete_all_events(self):
                 not in rows_to_delete
             ]
 
+        self.update_realtime_plot(force_plot=True)
+
         self.project_changed()
         self.load_tw_events(self.observationId)
 
@@ -381,6 +393,8 @@ def delete_selected_events(self):
                 ]
                 not in rows_to_delete
             ]
+
+        self.update_realtime_plot(force_plot=True)
 
         self.project_changed()
         self.load_tw_events(self.observationId)
@@ -568,6 +582,8 @@ def edit_selected_events(self):
 
             self.load_tw_events(self.observationId)
 
+            self.update_realtime_plot(force_plot=True)
+
 
 def edit_event(self):
     """
@@ -736,6 +752,8 @@ def edit_event(self):
                             flag_ok = True
                         break
 
+                self.update_realtime_plot(force_plot=True)
+
             # IMAGES
             if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE] in (cfg.IMAGES):
                 new_index = editWindow.img_idx_widget.value()
@@ -840,6 +858,8 @@ def edit_time_selected_events(self):
         )
         self.load_tw_events(self.observationId)
 
+        self.update_realtime_plot(force_plot=True)
+
 
 def copy_selected_events(self):
     """
@@ -914,3 +934,5 @@ def paste_clipboard_to_events(self):
         self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS]
     )
     self.load_tw_events(self.observationId)
+
+    self.update_realtime_plot(force_plot=True)

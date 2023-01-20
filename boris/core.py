@@ -882,14 +882,14 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             warning (bool): Display message if True
         """
 
-        if plot_type not in [cfg.WAVEFORM_PLOT, cfg.SPECTROGRAM_PLOT, cfg.EVENTS_PLOT]:
+        if plot_type not in (cfg.WAVEFORM_PLOT, cfg.SPECTROGRAM_PLOT, cfg.EVENTS_PLOT):
             logging.critical(f"Error on plot type: {plot_type}")
             return
 
-        if ((self.playerType == cfg.LIVE) or (self.playerType in cfg.VIEWERS)) and plot_type in [
+        if ((self.playerType == cfg.LIVE) or (self.playerType in cfg.VIEWERS)) and plot_type in (
             cfg.WAVEFORM_PLOT,
             cfg.SPECTROGRAM_PLOT,
-        ]:
+        ):
             QMessageBox.warning(
                 self,
                 cfg.programName,
@@ -1085,7 +1085,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             if hasattr(self, "plot_events"):
                 self.plot_events.show()
             else:
-                logging.debug("create plot events")
+                logging.debug("create real-time events plot widget")
 
                 self.plot_events = plot_events_rt.Plot_events_RT()
 
@@ -1116,8 +1116,20 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
                 self.plot_events.show()
 
-                # self.plot_timer_out()
-                self.plot_timer.start()
+                self.update_realtime_plot(force_plot=True)
+
+                if not self.dw_player[0].player.pause:
+                    self.plot_timer.start()
+
+    def update_realtime_plot(self, force_plot: bool = False):
+        """
+        update real-time events plot (if any)
+        """
+        if hasattr(self, "plot_events"):
+            if not self.plot_events.visibleRegion().isEmpty():
+                print("updated plot")
+                self.plot_events.events_list = self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS]
+                self.plot_events.plot_events(float(self.getLaps()), force_plot)
 
     def plot_timer_out(self):
         """
@@ -1134,11 +1146,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             return
         """
 
-        if hasattr(self, "plot_events"):
-
-            if not self.plot_events.visibleRegion().isEmpty():
-                self.plot_events.events_list = self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS]
-                self.plot_events.plot_events(float(self.getLaps()))
+        self.update_realtime_plot()
 
         if self.playerType == cfg.MEDIA:
 
