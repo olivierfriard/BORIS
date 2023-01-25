@@ -19,29 +19,34 @@ This file is part of BORIS.
   along with this program; if not see <http://www.gnu.org/licenses/>.
 
 
-Parse an OTX or OTB (compressed OTX) file and convert the ethogram, modifiers, subjects
+Parse an OTX/ODX or OTB (compressed OTX) file and convert the ethogram, modifiers, subjects
 and independent variables to BORIS format
+
 """
 
 import re
 import zipfile
+import pathlib as pl
 from xml.dom import minidom
-from . import config as cfg
+
+# from . import config as cfg
+import config as cfg
 
 
 def otx_to_boris(file_path: str) -> dict:
     """
-    convert otx/otb file in a BORIS project
+    convert otx/otb/odx file in a BORIS project
+
+    For ODX files ask to import observations
 
     Args:
-        file_path (str): path to otx/otb file
+        file_path (str): path to otx/otb/odx file
 
     Returns:
         dict: BORIS project
     """
 
-    # check file if compressed (otb)
-    if ".otb" in file_path:
+    if pl.Path(file_path).suffix == ".otb":
         with zipfile.ZipFile(file_path) as file_zip:
             files_list = file_zip.namelist()
             if files_list:
@@ -57,14 +62,14 @@ def otx_to_boris(file_path: str) -> dict:
             except:
                 return {"error": "parsing error"}
 
-    elif ".otx" in file_path:
+    elif pl.Path(file_path).suffix in (".odx", ".otx"):
         try:
             xmldoc = minidom.parse(file_path)
         except:
             return {"error": "parsing error"}
 
     else:
-        return {"error": "file must be .otb or .otx"}
+        return {"error": "The file must be in OTB, OTX or ODX format"}
 
     flag_long_key = False
 
@@ -90,11 +95,10 @@ def otx_to_boris(file_path: str) -> dict:
         except Exception:
             project_creation_date = ""
 
+    # modifiers
     modifiers = {}
     modifiers_set = {}
-
     itemlist = xmldoc.getElementsByTagName("CDS_MODIFIER")
-
     for item in itemlist:
         modif = minidom.parseString(item.toxml())
 
@@ -125,20 +129,17 @@ def otx_to_boris(file_path: str) -> dict:
                 flag_long_key = True
             modifiers[modif_id] = {"set_name": modif_code, "key": key, "description": description, "values": []}
 
-    connections = {}
+    connections: dict = {}
     itemlist = xmldoc.getElementsByTagName("CDS_CONNECTION")
-
     for item in itemlist:
         connections[item.attributes["CDS_ELEMENT_ID"].value] = item.attributes["CDS_MODIFIER_ID"].value
 
     # behaviors
-    behaviors = {}
-    behaviors_list = []
-    behav_category = []
-    mutually_exclusive_list = []
-
+    behaviors: dict = {}
+    behaviors_list: list = []
+    behav_category: list = []
+    mutually_exclusive_list: list = []
     itemlist = xmldoc.getElementsByTagName("CDS_BEHAVIOR")
-
     for item in itemlist:
         behav = minidom.parseString(item.toxml())
 
@@ -154,6 +155,11 @@ def otx_to_boris(file_path: str) -> dict:
             key = re.sub("<[^>]*>", "", behav.getElementsByTagName("CDS_ELE_START_KEYCODE")[0].toxml())
         except:
             key = ""
+
+        try:
+            stop_key = re.sub("<[^>]*>", "", behav.getElementsByTagName("CDS_ELE_STOP_KEYCODE")[0].toxml())
+        except:
+            stop_key = ""
 
         try:
             parent_name = re.sub("<[^>]*>", "", behav.getElementsByTagName("CDS_ELE_PARENT_NAME")[0].toxml())
@@ -173,7 +179,10 @@ def otx_to_boris(file_path: str) -> dict:
         else:
             modifiers_ = ""
 
-        if parent_name:
+        if parent_name:  # behavior
+
+            if (not key or len(key) > 1) and stop_key:
+                key = stop_key
 
             if len(key) > 1:
                 key = ""
@@ -188,16 +197,18 @@ def otx_to_boris(file_path: str) -> dict:
                 "category": parent_name,
             }
             behaviors_list.append(behav_code)
-        else:
+
+        else:  #  behavioral category
+
             behav_category.append(behav_code)
 
-    behaviors_boris = {}
+    behaviors_boris: dict = {}
     for k in behaviors:
         behaviors_boris[k] = {
             "code": behaviors[k]["code"],
             "type": "State event",
             "key": behaviors[k]["key"],
-            "description": behaviors[k]["key"],
+            "description": behaviors[k]["description"],
             "category": behaviors[k]["category"],
             "excluded": "",
             "coding map": "",
@@ -239,7 +250,6 @@ def otx_to_boris(file_path: str) -> dict:
     # independent variables
     variables = {}
     itemlist = xmldoc.getElementsByTagName("VL_VARIABLE")
-
     for item in itemlist:
 
         variable = minidom.parseString(item.toxml())
@@ -286,6 +296,79 @@ def otx_to_boris(file_path: str) -> dict:
             "possible values": variables[k]["predefined_values"] if "predefined_values" in variables[k] else "",
         }
 
+    observations = xmldoc.getElementsByTagName("OBS_OBSERVATION")
+
+    print(f"{len(observations)=}")
+    print()
+
+    for OBS_OBSERVATION in observations:
+        # OBS_OBSERVATION = minidom.parseString(OBS_OBSERVATION.toxml())
+
+        obs_id = OBS_OBSERVATION.getAttribute("NAME")
+
+        print(f"{obs_id=}")
+
+        OBS_EVENT_LOGS = OBS_OBSERVATION.getElementsByTagName("OBS_EVENT_LOGS")[0]
+
+        # print(f"{OBS_EVENT_LOGS=}")
+
+        for OBS_EVENT_LOG in OBS_EVENT_LOGS.getElementsByTagName("OBS_EVENT_LOG"):
+
+            CREATION_DATETIME = OBS_EVENT_LOG.getAttribute("CREATION_DATETIME")
+
+            CREATION_DATETIME = CREATION_DATETIME.replace(" ", "T").split(".")[0]
+
+            print(f"{CREATION_DATETIME=}")  # ex: 2022-05-18 10:04:09.474512
+
+            osb_template = {
+                "file": {},
+                "type": "LIVE",
+                "date": CREATION_DATETIME,
+                "description": "",
+                "time offset": 0,
+                "events": [],
+                "observation time interval": [0, 0],
+                "independent_variables": {},
+                "visualize_spectrogram": False,
+                "visualize_waveform": False,
+                "close_behaviors_between_videos": False,
+                "scan_sampling_time": 0,
+                "start_from_current_time": False,
+                "start_from_current_epoch_time": False,
+            }
+
+            for event in OBS_EVENT_LOG.getElementsByTagName("OBS_EVENT"):
+
+                OBS_EVENT_TIMESTAMP = event.getElementsByTagName("OBS_EVENT_TIMESTAMP")[0].childNodes[0].data
+                try:
+                    OBS_EVENT_SUBJECT = event.getElementsByTagName("OBS_EVENT_SUBJECT")[0].getAttribute("NAME")
+                except Exception:
+                    OBS_EVENT_SUBJECT = ""
+
+                OBS_EVENT_BEHAVIOR = event.getElementsByTagName("OBS_EVENT_BEHAVIOR")[0].getAttribute("NAME")
+
+                OBS_EVENT_BEHAVIOR_MODIFIER = (
+                    event.getElementsByTagName("OBS_EVENT_BEHAVIOR")[0]
+                    .getElementsByTagName("OBS_EVENT_BEHAVIOR_MODIFIER")[0]
+                    .childNodes[0]
+                    .data
+                )
+
+                try:
+                    OBS_EVENT_COMMENT = event.getElementsByTagName("OBS_EVENT_COMMENT")[0].childNodes[0].data
+                except Exception:
+                    OBS_EVENT_COMMENT = ""
+
+                print(f"{OBS_EVENT_TIMESTAMP=}")
+                print(f"{OBS_EVENT_SUBJECT=}")
+                print(f"{OBS_EVENT_BEHAVIOR=}")
+                print(f"{OBS_EVENT_BEHAVIOR_MODIFIER=}")
+                print(f"{OBS_EVENT_COMMENT=}")
+
+                print(80 * "-")
+
+        print(80 * "=")
+
     # create empty project from template
     project = dict(cfg.EMPTY_PROJECT)
 
@@ -301,3 +384,12 @@ def otx_to_boris(file_path: str) -> dict:
         project["msg"] = "The keys longer than one char were deleted"
 
     return project
+
+
+if __name__ == "__main__":
+    import sys
+    import pprint
+
+    otx_to_boris(sys.argv[1])
+
+    # pprint.pprint(otx_to_boris(sys.argv[1]))

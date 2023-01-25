@@ -1093,7 +1093,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 self.plot_events.setWindowFlags(self.plot_events.windowFlags() & ~Qt.WindowMinimizeButtonHint)
 
                 self.plot_events.groupby = "behaviors"
-                self.plot_events.interval = 60  # time interval
+                self.plot_events.interval = 60  # time interval for x axe
                 self.plot_events.cursor_color = "red"
                 self.plot_events.observation_type = self.playerType
 
