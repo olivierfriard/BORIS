@@ -857,8 +857,10 @@ def seconds2time(sec: dec) -> str:
     if math.isnan(sec):
         return "NA"
 
+    print(f"{sec=}")
+
     if sec > 1_600_000_000:  # epoch time
-        t = datetime.datetime.fromtimestamp(sec)
+        t = datetime.datetime.fromtimestamp(float(sec))
         return f"{t:%Y-%m-%d %H:%M:%S}.{t.microsecond / 1000:03.0f}"
 
     neg_sign = "-" * (sec < 0)

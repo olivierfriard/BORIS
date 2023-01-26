@@ -24,6 +24,8 @@ and independent variables to BORIS format
 
 """
 
+import datetime as dt
+from decimal import Decimal as dec
 import re
 import zipfile
 import pathlib as pl
@@ -298,6 +300,10 @@ def otx_to_boris(file_path: str) -> dict:
             "possible values": variables[k]["predefined_values"] if "predefined_values" in variables[k] else "",
         }
 
+    # create empty project from template
+    project = dict(cfg.EMPTY_PROJECT)
+    project[cfg.OBSERVATIONS] = {}
+
     observations = xmldoc.getElementsByTagName("OBS_OBSERVATION")
 
     print(f"{len(observations)=}")
@@ -307,8 +313,25 @@ def otx_to_boris(file_path: str) -> dict:
         # OBS_OBSERVATION = minidom.parseString(OBS_OBSERVATION.toxml())
 
         obs_id = OBS_OBSERVATION.getAttribute("NAME")
-
         print(f"{obs_id=}")
+
+        project[cfg.OBSERVATIONS][obs_id] = dict(
+            {
+                "file": {},
+                "type": "LIVE",
+                "description": "",
+                "time offset": 0,
+                cfg.EVENTS: [],
+                "observation time interval": [0, 0],
+                "independent_variables": {},
+                "visualize_spectrogram": False,
+                "visualize_waveform": False,
+                "close_behaviors_between_videos": False,
+                "scan_sampling_time": 0,
+                "start_from_current_time": False,
+                "start_from_current_epoch_time": False,
+            }
+        )
 
         OBS_EVENT_LOGS = OBS_OBSERVATION.getElementsByTagName("OBS_EVENT_LOGS")[0]
 
@@ -322,26 +345,12 @@ def otx_to_boris(file_path: str) -> dict:
 
             print(f"{CREATION_DATETIME=}")  # ex: 2022-05-18 10:04:09.474512
 
-            osb_template = {
-                "file": {},
-                "type": "LIVE",
-                "date": CREATION_DATETIME,
-                "description": "",
-                "time offset": 0,
-                "events": [],
-                "observation time interval": [0, 0],
-                "independent_variables": {},
-                "visualize_spectrogram": False,
-                "visualize_waveform": False,
-                "close_behaviors_between_videos": False,
-                "scan_sampling_time": 0,
-                "start_from_current_time": False,
-                "start_from_current_epoch_time": False,
-            }
+            project[cfg.OBSERVATIONS][obs_id]["date"] = CREATION_DATETIME
 
             for event in OBS_EVENT_LOG.getElementsByTagName("OBS_EVENT"):
 
                 OBS_EVENT_TIMESTAMP = event.getElementsByTagName("OBS_EVENT_TIMESTAMP")[0].childNodes[0].data
+                timestamp_epoch = dec(dt.datetime.strptime(OBS_EVENT_TIMESTAMP, "%Y-%m-%d %H:%M:%S.%f").timestamp())
                 try:
                     OBS_EVENT_SUBJECT = event.getElementsByTagName("OBS_EVENT_SUBJECT")[0].getAttribute("NAME")
                 except Exception:
@@ -361,18 +370,25 @@ def otx_to_boris(file_path: str) -> dict:
                 except Exception:
                     OBS_EVENT_COMMENT = ""
 
-                print(f"{OBS_EVENT_TIMESTAMP=}")
+                print(f"{timestamp_epoch=}")
                 print(f"{OBS_EVENT_SUBJECT=}")
                 print(f"{OBS_EVENT_BEHAVIOR=}")
                 print(f"{OBS_EVENT_BEHAVIOR_MODIFIER=}")
                 print(f"{OBS_EVENT_COMMENT=}")
 
+                project[cfg.OBSERVATIONS][obs_id][cfg.EVENTS].append(
+                    [
+                        timestamp_epoch,
+                        OBS_EVENT_SUBJECT,
+                        OBS_EVENT_BEHAVIOR,
+                        OBS_EVENT_BEHAVIOR_MODIFIER,
+                        OBS_EVENT_COMMENT,
+                    ]
+                )
+
                 print(80 * "-")
 
         print(80 * "=")
-
-    # create empty project from template
-    project = dict(cfg.EMPTY_PROJECT)
 
     project[cfg.PROJECT_NAME] = project_name
     project[cfg.PROJECT_DATE] = project_creation_date.replace(" ", "T")
@@ -394,4 +410,4 @@ if __name__ == "__main__":
 
     otx_to_boris(sys.argv[1])
 
-    # pprint.pprint(otx_to_boris(sys.argv[1]))
+    pprint.pprint(otx_to_boris(sys.argv[1]))

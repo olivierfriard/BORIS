@@ -2414,7 +2414,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
     def import_project_from_observer_template(self):
         """
-        import a project from a Noldus Observer template
+        import a project from a Noldus Observer (OTX/OTB or ODX)
         """
         # check if current observation
         if self.observationId:
@@ -2443,7 +2443,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 return
 
         fn = QFileDialog().getOpenFileName(
-            self, "Import project from template", "", "Noldus Observer templates (*.otx *.otb);;All files (*)"
+            self,
+            "Import project from Noldus The Observer",
+            "",
+            "Noldus Observer files (*.otx *.otb *.odx);;All files (*)",
         )
         file_name = fn[0] if type(fn) is tuple else fn
 

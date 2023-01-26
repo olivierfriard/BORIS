@@ -332,16 +332,12 @@ def check_state_events_obs(
                             memTime[str(behav_modif)] = event[cfg.EVENT_TIME_FIELD_IDX]
 
                     for event in lst:
+                        print(f"{memTime[str(event)]=}")
                         out += (
-                            "The behavior <b>{behavior}</b> {modifier} is not PAIRED for subject"
-                            ' "<b>{subject}</b>" at <b>{time}</b><br>'
-                        ).format(
-                            behavior=behavior,
-                            modifier=("(modifier " + event[1] + ") ") if event[1] else "",
-                            subject=subject if subject else cfg.NO_FOCAL_SUBJECT,
-                            time=memTime[str(event)]
-                            if time_format == cfg.S
-                            else util.seconds2time(memTime[str(event)]),
+                            f"The behavior <b>{behavior}</b> "
+                            f"{('(modifier ' + event[1] + ') ') if event[1] else ''} is not PAIRED "
+                            f'for subject "<b>{subject if subject else cfg.NO_FOCAL_SUBJECT}</b>" at '
+                            f"<b>{memTime[str(event)] if time_format == cfg.S else util.seconds2time(memTime[str(event)])}</b><br>"
                         )
 
     return (False, out) if out else (True, "No problem detected")
