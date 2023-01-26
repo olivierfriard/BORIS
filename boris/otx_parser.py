@@ -29,8 +29,10 @@ import zipfile
 import pathlib as pl
 from xml.dom import minidom
 
-# from . import config as cfg
-import config as cfg
+try:
+    from . import config as cfg
+except:
+    import config as cfg
 
 
 def otx_to_boris(file_path: str) -> dict:
