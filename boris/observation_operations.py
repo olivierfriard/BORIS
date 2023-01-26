@@ -1238,7 +1238,7 @@ def close_observation(self):
     logging.info(f"Observation {self.playerType} closed")
 
 
-def initialize_new_media_observation(self):
+def initialize_new_media_observation(self) -> bool:
     """
     initialize new observation from media file(s)
     """

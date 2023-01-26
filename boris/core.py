@@ -1127,7 +1127,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         """
         if hasattr(self, "plot_events"):
             if not self.plot_events.visibleRegion().isEmpty():
-                print("updated plot")
                 self.plot_events.events_list = self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS]
                 self.plot_events.plot_events(float(self.getLaps()), force_plot)
 
