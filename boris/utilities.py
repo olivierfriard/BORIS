@@ -1011,7 +1011,9 @@ def ffprobe_media_analysis(ffmpeg_bin: str, file_name: str) -> dict:
     ffprobe_bin = ffmpeg_bin.replace("ffmpeg", "ffprobe")
 
     command = f'"{ffprobe_bin}" -v quiet -print_format json -show_format -show_streams "{file_name}"'
-    print(command)
+
+    # print(command)
+
     p = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
     out, error = p.communicate()
 

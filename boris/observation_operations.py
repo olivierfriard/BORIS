@@ -1521,7 +1521,7 @@ def initialize_new_media_observation(self):
         count = 0
         for idx in self.pj[cfg.OBSERVATIONS][self.observationId][cfg.PLOT_DATA]:
             if count == 0:
-
+                data_ok: bool = True
                 data_file_path = project_functions.full_path(
                     self.pj[cfg.OBSERVATIONS][self.observationId][cfg.PLOT_DATA][idx]["file_path"],
                     self.projectFileName,
@@ -1534,7 +1534,8 @@ def initialize_new_media_observation(self):
                             self.pj[cfg.OBSERVATIONS][self.observationId][cfg.PLOT_DATA][idx]["file_path"]
                         ),
                     )
-                    return False
+                    data_ok = False
+                    # return False
 
                 w1 = plot_data_module.Plot_data(
                     data_file_path,
@@ -1560,22 +1561,24 @@ def initialize_new_media_observation(self):
                         ),
                     )
                     del w1
-                    return False
+                    data_ok = False
+                    # return False
 
-                w1.setWindowFlags(Qt.WindowStaysOnTopHint)
-                w1.sendEvent.connect(self.signal_from_widget)  # keypress event
+                if data_ok:
+                    w1.setWindowFlags(Qt.WindowStaysOnTopHint)
+                    w1.sendEvent.connect(self.signal_from_widget)  # keypress event
 
-                w1.show()
+                    w1.show()
 
-                self.ext_data_timer_list.append(QTimer())
-                self.ext_data_timer_list[-1].setInterval(w1.time_out)
-                self.ext_data_timer_list[-1].timeout.connect(lambda: self.timer_plot_data_out(w1))
-                self.timer_plot_data_out(w1)
+                    self.ext_data_timer_list.append(QTimer())
+                    self.ext_data_timer_list[-1].setInterval(w1.time_out)
+                    self.ext_data_timer_list[-1].timeout.connect(lambda: self.timer_plot_data_out(w1))
+                    self.timer_plot_data_out(w1)
 
-                self.plot_data[count] = w1
+                    self.plot_data[count] = w1
 
             if count == 1:
-
+                data_ok: bool = True
                 data_file_path = project_functions.full_path(
                     self.pj[cfg.OBSERVATIONS][self.observationId][cfg.PLOT_DATA][idx]["file_path"],
                     self.projectFileName,
@@ -1588,7 +1591,8 @@ def initialize_new_media_observation(self):
                             self.pj[cfg.OBSERVATIONS][self.observationId][cfg.PLOT_DATA][idx]["file_path"]
                         ),
                     )
-                    return False
+                    data_ok = False
+                    # return False
 
                 w2 = plot_data_module.Plot_data(
                     data_file_path,
@@ -1614,18 +1618,20 @@ def initialize_new_media_observation(self):
                         ),
                     )
                     del w2
-                    return False
+                    data_ok = False
+                    # return False
 
-                w2.setWindowFlags(Qt.WindowStaysOnTopHint)
-                w2.sendEvent.connect(self.signal_from_widget)
+                if data_ok:
+                    w2.setWindowFlags(Qt.WindowStaysOnTopHint)
+                    w2.sendEvent.connect(self.signal_from_widget)
 
-                w2.show()
-                self.ext_data_timer_list.append(QTimer())
-                self.ext_data_timer_list[-1].setInterval(w2.time_out)
-                self.ext_data_timer_list[-1].timeout.connect(lambda: self.timer_plot_data_out(w2))
-                self.timer_plot_data_out(w2)
+                    w2.show()
+                    self.ext_data_timer_list.append(QTimer())
+                    self.ext_data_timer_list[-1].setInterval(w2.time_out)
+                    self.ext_data_timer_list[-1].timeout.connect(lambda: self.timer_plot_data_out(w2))
+                    self.timer_plot_data_out(w2)
 
-                self.plot_data[count] = w2
+                    self.plot_data[count] = w2
 
             count += 1
 

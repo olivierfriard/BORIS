@@ -47,7 +47,7 @@ class MyMplCanvas(FigureCanvas):
 
 
 class Plot_data(QWidget):
-    # class Plot_data(QDialog):
+
     send_fig = pyqtSignal(float)
 
     # send keypress event to mainwindow
@@ -111,8 +111,10 @@ class Plot_data(QWidget):
         self.plot_style = plot_style
         self.plot_title = plot_title
         try:
+
             self.time_offset = dec(time_offset)
         except Exception:
+            print(f"{time_offset=}")
             self.error_msg = f"The offset value {time_offset} is not a decimal value"
             return
 
