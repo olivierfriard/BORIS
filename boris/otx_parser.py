@@ -210,7 +210,7 @@ def otx_to_boris(file_path: str) -> dict:
     for k in behaviors:
         behaviors_boris[k] = {
             "code": behaviors[k]["code"],
-            "type": "State event",
+            "type": cfg.POINT_EVENT,
             "key": behaviors[k]["key"],
             "description": behaviors[k]["description"],
             "category": behaviors[k]["category"],
@@ -263,8 +263,18 @@ def otx_to_boris(file_path: str) -> dict:
         variable_id = re.sub("<[^>]*>", "", variable.getElementsByTagName("VL_ID")[0].toxml())
 
         variable_type = re.sub("<[^>]*>", "", variable.getElementsByTagName("VL_TYPE")[0].toxml())
-        if variable_type == "Double":
-            variable_type = "numeric"
+        if variable_type.upper() == "TEXT":
+            variable_type = cfg.TEXT
+        if variable_type.upper() == "DOUBLE":
+            variable_type = cfg.NUMERIC
+        if variable_type.upper() == "FILEREFERENCE":
+            variable_type = cfg.TEXT
+        if variable_type.upper() == "DURATION":
+            variable_type = cfg.TEXT
+        if variable_type.upper() == "TIMESTAMP":
+            variable_type = cfg.TIMESTAMP
+        if variable_type.upper() == "BOOLEAN":
+            variable_type = cfg.TEXT
 
         try:
             variable_description = re.sub("<[^>]*>", "", modif.getElementsByTagName("VL_DESCRIPTION")[0].toxml())
@@ -306,14 +316,16 @@ def otx_to_boris(file_path: str) -> dict:
 
     observations = xmldoc.getElementsByTagName("OBS_OBSERVATION")
 
+    """
     print(f"{len(observations)=}")
     print()
+    """
 
     for OBS_OBSERVATION in observations:
         # OBS_OBSERVATION = minidom.parseString(OBS_OBSERVATION.toxml())
 
         obs_id = OBS_OBSERVATION.getAttribute("NAME")
-        print(f"{obs_id=}")
+        """print(f"{obs_id=}")"""
 
         project[cfg.OBSERVATIONS][obs_id] = dict(
             {
@@ -343,14 +355,20 @@ def otx_to_boris(file_path: str) -> dict:
 
             CREATION_DATETIME = CREATION_DATETIME.replace(" ", "T").split(".")[0]
 
-            print(f"{CREATION_DATETIME=}")  # ex: 2022-05-18 10:04:09.474512
+            """print(f"{CREATION_DATETIME=}")  # ex: 2022-05-18 10:04:09.474512"""
 
             project[cfg.OBSERVATIONS][obs_id]["date"] = CREATION_DATETIME
 
             for event in OBS_EVENT_LOG.getElementsByTagName("OBS_EVENT"):
 
                 OBS_EVENT_TIMESTAMP = event.getElementsByTagName("OBS_EVENT_TIMESTAMP")[0].childNodes[0].data
-                timestamp_epoch = dec(dt.datetime.strptime(OBS_EVENT_TIMESTAMP, "%Y-%m-%d %H:%M:%S.%f").timestamp())
+
+                day_timestamp = dt.datetime.strptime(OBS_EVENT_TIMESTAMP.split(" ")[0], "%Y-%m-%d").timestamp()
+
+                full_timestamp = dt.datetime.strptime(OBS_EVENT_TIMESTAMP, "%Y-%m-%d %H:%M:%S.%f").timestamp()
+
+                timestamp = dec(str(round(full_timestamp - day_timestamp, 3)))
+
                 try:
                     OBS_EVENT_SUBJECT = event.getElementsByTagName("OBS_EVENT_SUBJECT")[0].getAttribute("NAME")
                 except Exception:
@@ -370,15 +388,17 @@ def otx_to_boris(file_path: str) -> dict:
                 except Exception:
                     OBS_EVENT_COMMENT = ""
 
-                print(f"{timestamp_epoch=}")
+                """
+                print(f"{timestamp=}")
                 print(f"{OBS_EVENT_SUBJECT=}")
                 print(f"{OBS_EVENT_BEHAVIOR=}")
                 print(f"{OBS_EVENT_BEHAVIOR_MODIFIER=}")
                 print(f"{OBS_EVENT_COMMENT=}")
+                """
 
                 project[cfg.OBSERVATIONS][obs_id][cfg.EVENTS].append(
                     [
-                        timestamp_epoch,
+                        timestamp,
                         OBS_EVENT_SUBJECT,
                         OBS_EVENT_BEHAVIOR,
                         OBS_EVENT_BEHAVIOR_MODIFIER,

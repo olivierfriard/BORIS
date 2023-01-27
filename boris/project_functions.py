@@ -133,12 +133,6 @@ def check_observation_exhaustivity_pictures(obs) -> float:
     if not tot_images_number:
         return "No pictures found"
 
-    """
-    print()
-    print(f"{obs[cfg.EVENTS]=}")
-    print(set([x[cfg.PJ_OBS_FIELDS[cfg.IMAGES][cfg.IMAGE_PATH]] for x in obs[cfg.EVENTS]]))
-    """
-
     # list of paths of coded images
     coded_images_number = len(set([x[cfg.PJ_OBS_FIELDS[cfg.IMAGES][cfg.IMAGE_PATH]] for x in obs[cfg.EVENTS]]))
 
@@ -332,7 +326,6 @@ def check_state_events_obs(
                             memTime[str(behav_modif)] = event[cfg.EVENT_TIME_FIELD_IDX]
 
                     for event in lst:
-                        print(f"{memTime[str(event)]=}")
                         out += (
                             f"The behavior <b>{behavior}</b> "
                             f"{('(modifier ' + event[1] + ') ') if event[1] else ''} is not PAIRED "
