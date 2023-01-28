@@ -134,6 +134,16 @@
           <widget class="QLineEdit" name="leSetName"/>
          </item>
          <item>
+          <widget class="QLabel" name="label">
+           <property name="text">
+            <string>Description</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QLineEdit" name="le_set_description"/>
+         </item>
+         <item>
           <widget class="QLabel" name="lbType">
            <property name="text">
             <string>Modifier type</string>

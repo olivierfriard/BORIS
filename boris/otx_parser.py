@@ -30,6 +30,7 @@ import re
 import zipfile
 import pathlib as pl
 from xml.dom import minidom
+import pprint
 
 try:
     from . import config as cfg
@@ -78,8 +79,7 @@ def otx_to_boris(file_path: str) -> dict:
     flag_long_key = False
 
     # metadata
-    itemlist = xmldoc.getElementsByTagName("MET_METADATA")
-    for item in itemlist:
+    for item in xmldoc.getElementsByTagName("MET_METADATA"):
         metadata = minidom.parseString(item.toxml())
         try:
             project_name = re.sub("<[^>]*>", "", metadata.getElementsByTagName("MET_PROJECT_NAME")[0].toxml())
@@ -100,7 +100,7 @@ def otx_to_boris(file_path: str) -> dict:
             project_creation_date = ""
 
     # modifiers
-    modifiers = {}
+    modifiers: dict = {}
     modifiers_set = {}
     itemlist = xmldoc.getElementsByTagName("CDS_MODIFIER")
     for item in itemlist:
@@ -112,7 +112,6 @@ def otx_to_boris(file_path: str) -> dict:
 
         try:
             modif_parent_id = re.sub("<[^>]*>", "", modif.getElementsByTagName("CDS_ELE_PARENT_ID")[0].toxml())
-
         except:
             modif_parent_id = ""
 
@@ -133,10 +132,19 @@ def otx_to_boris(file_path: str) -> dict:
                 flag_long_key = True
             modifiers[modif_id] = {"set_name": modif_code, "key": key, "description": description, "values": []}
 
+    print("modifiers")
+    pprint.pprint(modifiers)
+
+    # connect modifiers to behaviors
     connections: dict = {}
     itemlist = xmldoc.getElementsByTagName("CDS_CONNECTION")
     for item in itemlist:
-        connections[item.attributes["CDS_ELEMENT_ID"].value] = item.attributes["CDS_MODIFIER_ID"].value
+        if item.attributes["CDS_ELEMENT_ID"].value not in connections:
+            connections[item.attributes["CDS_ELEMENT_ID"].value] = []
+        connections[item.attributes["CDS_ELEMENT_ID"].value].append(item.attributes["CDS_MODIFIER_ID"].value)
+
+    print("connections")
+    pprint.pprint(connections)
 
     # behaviors
     behaviors: dict = {}
@@ -179,9 +187,11 @@ def otx_to_boris(file_path: str) -> dict:
             mutually_exclusive_list.append(behav_code)
 
         if behav_id in connections:
-            modifiers_ = modifiers[connections[behav_id]]["set_name"]
+
+            modifier_sets = [modifiers[modifier_set]["set_name"] for modifier_set in connections[behav_id]]
+            print(f"{modifier_sets=}")
         else:
-            modifiers_ = ""
+            modifier_sets = []
 
         if parent_name:  # behavior
 
@@ -197,7 +207,7 @@ def otx_to_boris(file_path: str) -> dict:
                 "code": behav_code,
                 "key": key,
                 "description": description,
-                "modifiers": modifiers_,
+                "modifiers": modifier_sets,
                 "category": parent_name,
             }
             behaviors_list.append(behav_code)
@@ -221,14 +231,19 @@ def otx_to_boris(file_path: str) -> dict:
         if behaviors[k]["code"] in mutually_exclusive_list:
             behaviors_boris[k]["excluded"] = ",".join([x for x in behaviors_list if x != behaviors[k]["code"]])
 
+        behaviors_boris[k]["modifiers"] = {}
         if behaviors[k]["modifiers"]:
             for modif_key in modifiers:
-                if modifiers[modif_key]["set_name"] == behaviors[k]["modifiers"]:
-                    behaviors_boris[k]["modifiers"] = {
-                        "0": {"name": behaviors[k]["modifiers"], "type": 0, "values": modifiers[modif_key]["values"]}
+                if modifiers[modif_key]["set_name"] in behaviors[k]["modifiers"]:
+                    new_index = str(len(behaviors_boris[k]["modifiers"]))
+                    behaviors_boris[k]["modifiers"][new_index] = {
+                        "name": modifiers[modif_key]["set_name"],
+                        "type": cfg.SINGLE_SELECTION,
+                        "values": modifiers[modif_key]["values"],
+                        "description": "descr",
                     }
-        else:
-            behaviors_boris[k]["modifiers"] = {}
+
+    pprint.pprint(behaviors_boris)
 
     # subjects
     subjects = {}
@@ -406,9 +421,9 @@ def otx_to_boris(file_path: str) -> dict:
                     ]
                 )
 
-                print(80 * "-")
+                # print(80 * "-")
 
-        print(80 * "=")
+        # print(80 * "=")
 
     project[cfg.PROJECT_NAME] = project_name
     project[cfg.PROJECT_DATE] = project_creation_date.replace(" ", "T")
@@ -430,4 +445,4 @@ if __name__ == "__main__":
 
     otx_to_boris(sys.argv[1])
 
-    pprint.pprint(otx_to_boris(sys.argv[1]))
+    # pprint.pprint(otx_to_boris(sys.argv[1]))

@@ -87,6 +87,8 @@ LONG_TIME_BUDGET_FORMAT = "long"
 DEFAULT_TIME_BUDGET_FORMAT = LONG_TIME_BUDGET_FORMAT
 """
 
+DESCRIPTION = "description"
+
 TIME_BIN_SIZE = "time bin size"
 
 CODING_MAP_RESIZE_W = 640
@@ -113,7 +115,7 @@ ADAPT_FAST_JUMP_DEFAULT = False
 
 subjects_config = ["key", "id"]
 
-subjectsFields = ["key", SUBJECT_NAME, "description"]
+subjectsFields = ["key", SUBJECT_NAME, DESCRIPTION]
 
 UNPAIRED = "UNPAIRED"
 DISPLAY_SUBTITLES = "display_subtitles"
@@ -136,7 +138,6 @@ NO_FOCAL_SUBJECT = "No focal subject"
 
 TYPE = "type"
 FILE = "file"
-DESCRIPTION = "description"
 DIRECTORIES_LIST = "directories_list"
 
 SAVE_DATASET = 32

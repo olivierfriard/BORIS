@@ -1378,7 +1378,7 @@
   </action>
   <action name="actionNoldus_Observer_template">
    <property name="text">
-    <string>Noldus Observer XT template</string>
+    <string>Noldus The Observer XT (OTX, OTB, ODX)</string>
    </property>
   </action>
   <action name="actionExplore_project">

@@ -62,6 +62,7 @@ def update_menu(self):
         self.actionEdit_project,
         self.actionSave_project,
         self.actionSave_project_as,
+        self.actionExport_project,
         self.actionCheck_project,
         self.actionClose_project,
         self.actionSend_project,

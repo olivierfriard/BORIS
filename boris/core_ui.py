@@ -920,7 +920,7 @@ class Ui_MainWindow(object):
         self.actionEdit_event_time.setText(_translate("MainWindow", "Shift time of selected event(s)"))
         self.actionCopy_events.setText(_translate("MainWindow", "Copy events"))
         self.actionPaste_events.setText(_translate("MainWindow", "Paste events"))
-        self.actionNoldus_Observer_template.setText(_translate("MainWindow", "Noldus Observer XT template"))
+        self.actionNoldus_Observer_template.setText(_translate("MainWindow", "Noldus The Observer XT (OTX, OTB, ODX)"))
         self.actionExplore_project.setText(_translate("MainWindow", "Explore project"))
         self.actionShow_the_sound_waveform.setText(_translate("MainWindow", "Show the sound waveform"))
         self.actionNeedleman_Wunsch.setText(_translate("MainWindow", "Needleman - Wunsch"))

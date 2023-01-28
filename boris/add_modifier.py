@@ -26,12 +26,9 @@ import json
 from PyQt5.QtGui import QIcon
 from PyQt5.QtWidgets import QDialog, QWidget, QFileDialog, QMessageBox
 
-
 from . import dialog
 from .add_modifier_ui import Ui_Dialog
-
 from . import config as cfg
-
 from .utilities import sorted_keys
 
 
@@ -69,6 +66,7 @@ class addModifierDialog(QDialog, Ui_Dialog):
         self.pbCancel.clicked.connect(lambda: self.pb_pushed("cancel"))
 
         self.leSetName.textChanged.connect(self.set_name_changed)
+        self.le_set_description.textChanged.connect(self.set_description_changed)
 
         self.cbType.currentIndexChanged.connect(self.type_changed)
 
@@ -213,17 +211,27 @@ class addModifierDialog(QDialog, Ui_Dialog):
         set name changed
         """
         if not self.modifiers_sets_dict:
-            self.modifiers_sets_dict["0"] = {"name": "", "type": cfg.SINGLE_SELECTION, "values": []}
+            self.modifiers_sets_dict["0"] = {"name": "", "description": "", "type": cfg.SINGLE_SELECTION, "values": []}
         self.modifiers_sets_dict[str(self.tabWidgetModifiersSets.currentIndex())][
             "name"
         ] = self.leSetName.text().strip()
+
+    def set_description_changed(self):
+        """
+        set name changed
+        """
+        if not self.modifiers_sets_dict:
+            self.modifiers_sets_dict["0"] = {"name": "", "description": "", "type": cfg.SINGLE_SELECTION, "values": []}
+        self.modifiers_sets_dict[str(self.tabWidgetModifiersSets.currentIndex())][
+            "description"
+        ] = self.le_set_description.text().strip()
 
     def type_changed(self):
         """
         type changed
         """
         if not self.modifiers_sets_dict:
-            self.modifiers_sets_dict["0"] = {"name": "", "type": cfg.SINGLE_SELECTION, "values": []}
+            self.modifiers_sets_dict["0"] = {"name": "", "description": "", "type": cfg.SINGLE_SELECTION, "values": []}
         self.modifiers_sets_dict[str(self.tabWidgetModifiersSets.currentIndex())]["type"] = self.cbType.currentIndex()
         # disable if modifier numeric or value from external data file
         for obj in [
@@ -316,6 +324,7 @@ class addModifierDialog(QDialog, Ui_Dialog):
         if self.tabWidgetModifiersSets.currentIndex() == -1:
             self.modifiers_sets_dict[str(len(self.modifiers_sets_dict))] = {
                 "name": "",
+                "description": "",
                 "type": cfg.SINGLE_SELECTION,
                 "values": [],
             }
@@ -329,6 +338,7 @@ class addModifierDialog(QDialog, Ui_Dialog):
                 self.lbType,
                 self.lbValues,
                 self.leSetName,
+                self.le_set_description,
                 self.cbType,
                 self.lwModifiers,
                 self.pbMoveUp,
@@ -349,6 +359,7 @@ class addModifierDialog(QDialog, Ui_Dialog):
         if len(self.modifiers_sets_dict[str(self.tabWidgetModifiersSets.currentIndex())]):
             self.modifiers_sets_dict[str(len(self.modifiers_sets_dict))] = {
                 "name": "",
+                "description": "",
                 "type": cfg.SINGLE_SELECTION,
                 "values": [],
             }
@@ -495,7 +506,12 @@ class addModifierDialog(QDialog, Ui_Dialog):
                 return
 
             if not self.modifiers_sets_dict:
-                self.modifiers_sets_dict["0"] = {"name": "", "type": cfg.SINGLE_SELECTION, "values": []}
+                self.modifiers_sets_dict["0"] = {
+                    "name": "",
+                    "description": "",
+                    "type": cfg.SINGLE_SELECTION,
+                    "values": [],
+                }
 
             if len(self.leCode.text().strip()) > 1:
                 if self.leCode.text().strip().upper() not in cfg.function_keys.values():
@@ -522,6 +538,7 @@ class addModifierDialog(QDialog, Ui_Dialog):
                 if not self.modifiers_sets_dict:
                     self.modifiers_sets_dict[str(self.tabWidgetModifiersSets.currentIndex())] = {
                         "name": "",
+                        "description": "",
                         "type": cfg.SINGLE_SELECTION,
                         "values": [],
                     }
@@ -583,6 +600,7 @@ class addModifierDialog(QDialog, Ui_Dialog):
 
             if tabIndex != -1:
                 self.leSetName.setText(self.modifiers_sets_dict[str(tabIndex)]["name"])
+                self.le_set_description.setText(self.modifiers_sets_dict[str(tabIndex)].get("description", ""))
                 self.cbType.setCurrentIndex(self.modifiers_sets_dict[str(tabIndex)]["type"])
                 self.lwModifiers.addItems(self.modifiers_sets_dict[str(tabIndex)]["values"])
 
@@ -593,7 +611,7 @@ class addModifierDialog(QDialog, Ui_Dialog):
         keys_to_delete = []
         for idx in self.modifiers_sets_dict:
             if (
-                self.modifiers_sets_dict[idx]["type"] in [cfg.SINGLE_SELECTION, cfg.MULTI_SELECTION]
+                self.modifiers_sets_dict[idx]["type"] in (cfg.SINGLE_SELECTION, cfg.MULTI_SELECTION)
                 and not self.modifiers_sets_dict[idx]["values"]
             ):
                 keys_to_delete.append(idx)
