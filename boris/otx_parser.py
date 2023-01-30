@@ -240,7 +240,7 @@ def otx_to_boris(file_path: str) -> dict:
                         "name": modifiers[modif_key]["set_name"],
                         "type": cfg.SINGLE_SELECTION,
                         "values": modifiers[modif_key]["values"],
-                        "description": "descr",
+                        "description": modifiers[modif_key]["description"],
                     }
 
     pprint.pprint(behaviors_boris)
