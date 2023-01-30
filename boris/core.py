@@ -2762,10 +2762,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         try:
             if projectFileName.endswith(".boris.gz"):
                 with gzip.open(projectFileName, mode="wt", encoding="utf-8") as f_out:
-                    f_out.write(json.dumps(self.pj, default=util.decimal_default))
+                    f_out.write(json.dumps(self.pj, default=util.decimal_default, indent=2))
             else:  # .boris and other extensions
                 with open(projectFileName, "w") as f_out:
-                    f_out.write(json.dumps(self.pj, default=util.decimal_default))
+                    f_out.write(json.dumps(self.pj, default=util.decimal_default, indent=2))
 
             self.projectChanged = False
             menu_options.update_windows_title(self)
