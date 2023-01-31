@@ -20,6 +20,9 @@ This file is part of BORIS.
 
 """
 
+"""
+Read and write the BORIS config file
+"""
 
 import pathlib as pl
 import logging
@@ -215,15 +218,6 @@ def read(self):
             self.ffmpeg_cache_dir = ""
         logging.debug(f"ffmpeg_cache_dir: {self.ffmpeg_cache_dir}")
 
-        self.ffmpeg_cache_dir_max_size = 0
-        try:
-            self.ffmpeg_cache_dir_max_size = int(settings.value("ffmpeg_cache_dir_max_size"))
-            if not self.ffmpeg_cache_dir_max_size:
-                self.ffmpeg_cache_dir_max_size = 0
-        except Exception:
-            self.ffmpeg_cache_dir_max_size = 0
-        logging.debug(f"ffmpeg_cache_dir_max_size: {self.ffmpeg_cache_dir_max_size}")
-
         try:
             self.frame_bitmap_format = settings.value("frame_bitmap_format")
             if not self.frame_bitmap_format:
@@ -366,13 +360,6 @@ def save(self, lastCheckForNewVersion=0):
 
     # FFmpeg
     settings.setValue("ffmpeg_cache_dir", self.ffmpeg_cache_dir)
-    settings.setValue("ffmpeg_cache_dir_max_size", self.ffmpeg_cache_dir_max_size)
-    """
-    # frame-by-frame
-    for value in [SAVE_FRAMES, MEMORY_FOR_FRAMES]:
-        settings.setValue(value, self.config_param[value])
-    """
-
     settings.setValue("frame_bitmap_format", self.frame_bitmap_format)
     # spectrogram
     settings.setValue("spectrogram_color_map", self.spectrogram_color_map)
@@ -384,6 +371,6 @@ def save(self, lastCheckForNewVersion=0):
 
     # recent projects
     logging.debug("save recent projects")
-    iniFilePath = str(pl.Path(os.path.expanduser("~")) / ".boris_recent_projects")
-    settings = QSettings(iniFilePath, QSettings.IniFormat)
+
+    settings = QSettings(str(pl.Path.home() / ".boris_recent_projects"), QSettings.IniFormat)
     settings.setValue("recent_projects", "|||".join(self.recent_projects))

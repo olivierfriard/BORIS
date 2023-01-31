@@ -136,19 +136,34 @@ def preferences(self):
     # pause before add event
     preferencesWindow.cb_pause_before_addevent.setChecked(self.pause_before_addevent)
     # MPV hwdec
-    preferencesWindow.cb_hwdec.setCurrentIndex(
-        cfg.MPV_HWDEC_OPTIONS.index(self.config_param.get(cfg.MPV_HWDEC, cfg.MPV_HWDEC_DEFAULT_VALUE))
-    )
-    """ 2022-11-03
-    preferencesWindow.cb_compact_time_budget.setChecked(
-        self.config_param.get(cfg.TIME_BUDGET_FORMAT, cfg.DEFAULT_TIME_BUDGET_FORMAT) == cfg.COMPACT_TIME_BUDGET_FORMAT
-    )
-    """
+    preferencesWindow.cb_hwdec.clear()
+    preferencesWindow.cb_hwdec.addItems(cfg.MPV_HWDEC_OPTIONS)
+    try:
+        preferencesWindow.cb_hwdec.setCurrentIndex(
+            cfg.MPV_HWDEC_OPTIONS.index(self.config_param.get(cfg.MPV_HWDEC, cfg.MPV_HWDEC_DEFAULT_VALUE))
+        )
+    except Exception:
+        preferencesWindow.cb_hwdec.setCurrentIndex(cfg.MPV_HWDEC_DEFAULT_VALUE)
+
+    # PROJET FILE INDENTATION
+    preferencesWindow.combo_project_file_indentation.clear()
+    preferencesWindow.combo_project_file_indentation.addItems(cfg.PROJECT_FILE_INDENTATION_COMBO_OPTIONS)
+    try:
+        preferencesWindow.combo_project_file_indentation.setCurrentIndex(
+            cfg.PROJECT_FILE_INDENTATION_OPTIONS.index(
+                self.config_param.get(cfg.PROJECT_FILE_INDENTATION, cfg.PROJECT_FILE_INDENTATION_DEFAULT_VALUE)
+            )
+        )
+    except Exception:
+        preferencesWindow.combo_project_file_indentation.setCurrentText(
+            cfg.PROJECT_FILE_INDENTATION_COMBO_OPTIONS[
+                cfg.PROJECT_FILE_INDENTATION_OPTIONS.index(cfg.PROJECT_FILE_INDENTATION_DEFAULT_VALUE)
+            ]
+        )
 
     # FFmpeg for frame by frame mode
     preferencesWindow.lbFFmpegPath.setText(f"FFmpeg path: {self.ffmpeg_bin}")
     preferencesWindow.leFFmpegCacheDir.setText(self.ffmpeg_cache_dir)
-    preferencesWindow.sbFFmpegCacheDirMaxSize.setValue(self.ffmpeg_cache_dir_max_size)
 
     # spectrogram
     preferencesWindow.cbSpectrogramColorMap.clear()
@@ -246,21 +261,16 @@ def preferences(self):
         # MPV hwdec
         self.config_param[cfg.MPV_HWDEC] = cfg.MPV_HWDEC_OPTIONS[preferencesWindow.cb_hwdec.currentIndex()]
 
+        # project file indentation
+        self.config_param[cfg.PROJECT_FILE_INDENTATION] = cfg.PROJECT_FILE_INDENTATION_OPTIONS[
+            preferencesWindow.combo_project_file_indentation.currentIndex()
+        ]
+
         if self.observationId:
             self.load_tw_events(self.observationId)
             self.display_statusbar_info(self.observationId)
 
-        # result
-
-        """
-        if preferencesWindow.cb_compact_time_budget.isChecked():
-            self.config_param[cfg.TIME_BUDGET_FORMAT] = cfg.COMPACT_TIME_BUDGET_FORMAT
-        else:
-            self.config_param[cfg.TIME_BUDGET_FORMAT] = cfg.DEFAULT_TIME_BUDGET_FORMAT
-        """
-
         self.ffmpeg_cache_dir = preferencesWindow.leFFmpegCacheDir.text()
-        self.ffmpeg_cache_dir_max_size = preferencesWindow.sbFFmpegCacheDirMaxSize.value()
 
         # spectrogram
         self.spectrogram_color_map = preferencesWindow.cbSpectrogramColorMap.currentText()

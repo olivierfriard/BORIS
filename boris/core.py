@@ -238,7 +238,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     # path for ffmpeg/ffmpeg.exe program
     ffmpeg_bin = ""
     ffmpeg_cache_dir = ""
-    ffmpeg_cache_dir_max_size = 0
 
     # dictionary for FPS storing
     fps = 0
@@ -2759,13 +2758,17 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         else:
             self.pj[cfg.PROJECT_VERSION] = cfg.project_format_version
 
+        # project file indentation
+        file_indentation = self.config_param.get(
+            cfg.PROJECT_FILE_INDENTATION, cfg.PROJECT_FILE_INDENTATION_DEFAULT_VALUE
+        )
         try:
             if projectFileName.endswith(".boris.gz"):
                 with gzip.open(projectFileName, mode="wt", encoding="utf-8") as f_out:
-                    f_out.write(json.dumps(self.pj, default=util.decimal_default, indent=2))
+                    f_out.write(json.dumps(self.pj, default=util.decimal_default, indent=file_indentation))
             else:  # .boris and other extensions
                 with open(projectFileName, "w") as f_out:
-                    f_out.write(json.dumps(self.pj, default=util.decimal_default, indent=2))
+                    f_out.write(json.dumps(self.pj, default=util.decimal_default, indent=file_indentation))
 
             self.projectChanged = False
             menu_options.update_windows_title(self)

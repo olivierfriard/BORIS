@@ -116,10 +116,8 @@ def export_ethogram(self):
                     modifiers_list.append(modifiers_dict[key]["name"])
 
             row.append(", ".join(modifiers_list))
-            # row.append(json.dumps(modifiers_dict))
         else:
             row.append("")
-            # row.append("")
 
         ethogram_data.append(row)
 
@@ -132,9 +130,14 @@ def export_ethogram(self):
         # behavioral categories
 
         pj[cfg.BEHAVIORAL_CATEGORIES] = list(self.pj[cfg.BEHAVIORAL_CATEGORIES])
+
+        # project file indentation
+        file_indentation = self.config_param.get(
+            cfg.PROJECT_FILE_INDENTATION, cfg.PROJECT_FILE_INDENTATION_DEFAULT_VALUE
+        )
         try:
             with open(file_name, "w") as f_out:
-                f_out.write(json.dumps(pj))
+                f_out.write(json.dumps(pj, indent=file_indentation))
         except Exception:
             QMessageBox.critical(
                 None,
