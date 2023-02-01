@@ -20,9 +20,9 @@ See http://www.boris.unito.it
  :target: https://pepy.tech/project/boris-behav-obs
 
 
-
-
-
+<h1 align="center">
+https://github.com/olivierfriard/BORIS/blob/master/boris/icons/splash.jpg?raw=true
+</h1>
 
 Documentation
 -------------------------------------
