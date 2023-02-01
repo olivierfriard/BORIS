@@ -33,13 +33,10 @@ See http://www.boris.unito.it
 Documentation
 -----------------------------------------------------------------------
 
-The official documentation is hosted here:
-http://boris.readthedocs.io/
 
-The documentation provides a good starting point for learning how to use BORIS.
+The documentation provides a good starting point for learning how to use BORIS: http://boris.readthedocs.io/
 
-Some video tutorials are available:
-https://www.youtube.com/channel/UCo-Jyvzawwp0bRMEor4aLVQ
+Some video tutorials are available: http://www.boris.unito.it/pages/video_tutorials.html
 
 
 
