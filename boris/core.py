@@ -3704,11 +3704,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             for idx in util.sorted_keys(self.pj[cfg.ETHOGRAM]):
                 if self.pj[cfg.ETHOGRAM][idx][cfg.BEHAVIOR_CODE] in behaviorsToShow:
                     self.twEthogram.setRowCount(self.twEthogram.rowCount() + 1)
-                    for col in sorted(cfg.behav_fields_in_mainwindow.keys()):
-                        field = cfg.behav_fields_in_mainwindow[col]
+                    for idx_col in cfg.ETHOGRAM_TABLE_COLUMNS:
+                        field = cfg.ETHOGRAM_TABLE_COLUMNS[idx_col]
                         self.twEthogram.setItem(
                             self.twEthogram.rowCount() - 1,
-                            col,
+                            idx_col,
                             QTableWidgetItem(str(self.pj[cfg.ETHOGRAM][idx][field])),
                         )
         if self.twEthogram.rowCount() < len(self.pj[cfg.ETHOGRAM].keys()):
