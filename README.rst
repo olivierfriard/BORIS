@@ -2,7 +2,7 @@
 Behavioral Observation Research Interactive Software (BORIS)
 ===============================================================
 
-.. image:: https://github.com/olivierfriard/BORIS/blob/master/boris/icons/splash.jpg?raw=true
+.. image:: https://github.com/olivierfriard/BORIS/blob/master/boris/icons/logo_boris.png?raw=true
  :target: https://www.boris.unito.it
 
 
