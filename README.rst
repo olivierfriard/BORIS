@@ -2,6 +2,10 @@
 Behavioral Observation Research Interactive Software (BORIS)
 ===============================================================
 
+.. image:: https://github.com/olivierfriard/BORIS/blob/master/boris/icons/splash.jpg?raw=true
+ :target: https://www.boris.unito.it
+
+
 BORIS is an easy-to-use event logging software for video/audio coding or live observations.
 
 BORIS is a free and open-source software available for GNU/Linux and Windows.
@@ -20,12 +24,9 @@ See http://www.boris.unito.it
  :target: https://pepy.tech/project/boris-behav-obs
 
 
-<h1 align="center">
-https://github.com/olivierfriard/BORIS/blob/master/boris/icons/splash.jpg?raw=true
-</h1>
 
 Documentation
--------------------------------------
+-----------------------------------------------------------------------
 
 The official documentation is hosted here:
 http://boris.readthedocs.io/
@@ -40,7 +41,7 @@ https://www.youtube.com/channel/UCo-Jyvzawwp0bRMEor4aLVQ
 
 
 Bug reports and feature requests
---------------------------------------
+-----------------------------------------------------------------------
 
 To search for bugs, report them or request a feature, please use the github tracker:
 https://github.com/olivierfriard/BORIS/issues
@@ -50,7 +51,7 @@ https://github.com/olivierfriard/BORIS/issues
 
 
 Citing BORIS
---------------------------------------
+-----------------------------------------------------------------------
 
 Please acknowledge and cite the use of this software and its authors when
 results are used in publications or published elsewhere. You can use the
@@ -79,7 +80,7 @@ following BibTex entry
 
 
 Licence
------------------------------
+-----------------------------------------------------------------------
 
 Distributed with a `GPL v.3 license <LICENSE.TXT>`_
 
