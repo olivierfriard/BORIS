@@ -19,7 +19,7 @@ setup(
         "Source code": "https://github.com/olivierfriard/BORIS",
         "Issues": "https://github.com/olivierfriard/BORIS/issues",
     },
-    python_requires=">=3.6",
+    python_requires=">=3.8",
     classifiers=[
         "Topic :: Scientific/Engineering",
         "Intended Audience :: Science/Research",
