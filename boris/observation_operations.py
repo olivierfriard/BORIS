@@ -1847,7 +1847,7 @@ def initialize_new_images_observation(self):
 
 def event2media_file_name(observation: dict, timestamp: dec) -> Optional[str]:
     """
-    returns the media file name correstiong to the event (start time in case of state event)
+    returns the media file name corresponding to the event (start time in case of state event)
 
     Returns:
         str: name of media file containing the event
@@ -1858,14 +1858,55 @@ def event2media_file_name(observation: dict, timestamp: dec) -> Optional[str]:
         media_duration = observation[cfg.MEDIA_INFO][cfg.LENGTH][media_file]
         cumul_media_durations.append(cumul_media_durations[-1] + media_duration)
 
+    cumul_media_durations.remove(0)
+
+    # test if timestamp is at end of last media
+    if timestamp == cumul_media_durations[-1]:
+        player_idx = len(observation[cfg.FILE]["1"]) - 1
+    else:
+
+        player_idx = -1
+        for idx, value in enumerate(cumul_media_durations):
+            start = 0 if idx == 0 else cumul_media_durations[idx - 1]
+            """
+            if idx == 0:
+                start = 0
+            else:
+                start = cumul_media_durations[idx - 1]
+            """
+            if start <= timestamp < value:
+                player_idx = idx
+                break
+
+    if player_idx != -1:
+        video_file_name = observation[cfg.FILE]["1"][player_idx]
+    else:
+        video_file_name = None
+
+    """
     player_idx_list = [
-        idx for idx, x in enumerate(cumul_media_durations) if cumul_media_durations[idx - 1] < timestamp <= x
+        idx for idx, x in enumerate(cumul_media_durations) if cumul_media_durations[idx - 1] <= timestamp < x
     ]
+
+    try:
+        print(f"{player_idx_list=}")
+    except:
+        pass
+
     if len(player_idx_list):
         player_idx = player_idx_list[0] - 1
+
+        try:
+            print(f"{player_idx=}")
+        except:
+            pass
+
         video_file_name = observation[cfg.FILE]["1"][player_idx]
     else:
         player_idx = -1
         video_file_name = None
+
+    print()
+    """
 
     return video_file_name
