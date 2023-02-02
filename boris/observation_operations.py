@@ -1864,16 +1864,9 @@ def event2media_file_name(observation: dict, timestamp: dec) -> Optional[str]:
     if timestamp == cumul_media_durations[-1]:
         player_idx = len(observation[cfg.FILE]["1"]) - 1
     else:
-
         player_idx = -1
         for idx, value in enumerate(cumul_media_durations):
             start = 0 if idx == 0 else cumul_media_durations[idx - 1]
-            """
-            if idx == 0:
-                start = 0
-            else:
-                start = cumul_media_durations[idx - 1]
-            """
             if start <= timestamp < value:
                 player_idx = idx
                 break
