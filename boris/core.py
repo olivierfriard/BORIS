@@ -904,13 +904,13 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
                 # check if first media in player #1 has audio
                 for media in self.pj[cfg.OBSERVATIONS][self.observationId][cfg.FILE][cfg.PLAYER1]:
-                    media_file_path = project_functions.full_path(media, self.projectFileName)
+                    # media_file_path = project_functions.full_path(media, self.projectFileName)
 
-                    if not project_functions.has_audio(self.pj[cfg.OBSERVATIONS][self.observationId], media_file_path):
+                    if not project_functions.has_audio(self.pj[cfg.OBSERVATIONS][self.observationId], media):
                         QMessageBox.critical(
                             self,
                             cfg.programName,
-                            f"The media file {media_file_path} does not have an audio track",
+                            f"The media file {media} does not have an audio track. Plotting the spectrogram will not be possible.",
                         )
                         return
                     break
@@ -1000,13 +1000,13 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
                 # check if first media in player #1 has audio
                 for media in self.pj[cfg.OBSERVATIONS][self.observationId][cfg.FILE][cfg.PLAYER1]:
-                    media_file_path = project_functions.full_path(media, self.projectFileName)
+                    # media_file_path = project_functions.full_path(media, self.projectFileName)
 
-                    if not project_functions.has_audio(self.pj[cfg.OBSERVATIONS][self.observationId], media_file_path):
+                    if not project_functions.has_audio(self.pj[cfg.OBSERVATIONS][self.observationId], media):
                         QMessageBox.critical(
                             self,
                             cfg.programName,
-                            f"The media file {media_file_path} does not have an audio track",
+                            f"The media file {media} does not have an audio track. Plotting the waveform will not be possible.",
                         )
                         return
                     break

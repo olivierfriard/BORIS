@@ -123,9 +123,9 @@
          <item>
           <layout class="QHBoxLayout" name="horizontalLayout_9">
            <item>
-            <widget class="QLabel" name="lb_hwdec_2">
+            <widget class="QLabel" name="lb_project_file_indent">
              <property name="text">
-              <string>MPV player hardware video decoding</string>
+              <string>Project file indentation type</string>
              </property>
             </widget>
            </item>
