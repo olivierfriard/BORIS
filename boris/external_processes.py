@@ -54,13 +54,17 @@ def ffmpeg_process(self, action: str):
                 f"Done: {self.processes_widget.number_of_files - len(self.processes)} of {self.processes_widget.number_of_files}"
             )
         )
+
+        std_out = self.processes[idx - 1][0].readAllStandardOutput().data().decode("utf-8")
+
         self.processes_widget.lwi.clear()
         self.processes_widget.lwi.addItems(
             [
                 self.processes[idx - 1][1][2],
-                self.processes[idx - 1][0].readAllStandardOutput().data().decode("utf-8"),
+                std_out,
             ]
         )
+        print(std_out)
 
     def qprocess_finished(idx):
         """
@@ -71,6 +75,7 @@ def ffmpeg_process(self, action: str):
         if self.processes:
             self.processes[-1][0].start(self.processes[-1][1][0], self.processes[-1][1][1])
         else:
+
             self.processes_widget.hide()
             del self.processes_widget
 
@@ -232,7 +237,7 @@ def ffmpeg_process(self, action: str):
                 # check bitrate
                 r = util.accurate_media_analysis(self.ffmpeg_bin, file_name)
                 if "error" not in r and r["bitrate"] != -1:
-                    video_quality = r["bitrate"]
+                    video_quality = r["bitrate"] if r["bitrate"] is not None else 2000
                 else:
                     video_quality = 2000
 
@@ -265,6 +270,9 @@ def ffmpeg_process(self, action: str):
                     ]
 
             self.processes.append([QProcess(self), [self.ffmpeg_bin, args, file_name]])
+
+            print(args)
+
             self.processes[-1][0].setProcessChannelMode(QProcess.MergedChannels)
             self.processes[-1][0].readyReadStandardOutput.connect(lambda: readStdOutput(len(self.processes)))
             self.processes[-1][0].readyReadStandardError.connect(lambda: readStdOutput(len(self.processes)))
