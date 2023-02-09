@@ -776,7 +776,8 @@ def edit_event(self):
 
                         time_ = dec("NaN")
                         if (
-                            self.pj[cfg.OBSERVATIONS][self.observationId].get(cfg.USE_EXIF_DATE, False)
+                            self.playerType != cfg.VIEWER_IMAGES
+                            and self.pj[cfg.OBSERVATIONS][self.observationId].get(cfg.USE_EXIF_DATE, False)
                             and self.extract_exif_DateTimeOriginal(self.images_list[new_index]) != -1
                         ):
                             time_ = (
