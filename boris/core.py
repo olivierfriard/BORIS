@@ -3563,6 +3563,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             return
 
         cumulative_time_pos = self.getLaps()
+        frame_idx = self.dw_player[0].player.estimated_frame_number
 
         if value is None:
             current_media_time_pos = 0
@@ -3571,7 +3572,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         """
         CRITICAL:root:Traceback (most recent call last):
-        File "/home/olivier/projects/BORIS/boris/core.py", line 4086, in timer_out2
+        File "core.py", line 4086, in timer_out2
             current_media_frame = round(value * self.dw_player[0].player.container_fps) + 1
         IndexError: list index out of range
 
@@ -3595,6 +3596,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.get_events_current_row()
 
         ct0 = cumulative_time_pos
+
+        # print(self.dw_player[0].player.estimated_frame_number)
+        # print(self.dw_player[0].player.frames)
 
         if self.dw_player[0].player.time_pos is not None:
 
@@ -3666,7 +3670,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
             msg += (
                 f"Media position: <b>{util.convertTime(self.timeFormat, current_media_time_pos)}</b> / "
-                f"{util.convertTime(self.timeFormat, current_media_duration)} frame: <b>{current_media_frame}</b>"
+                f"{util.convertTime(self.timeFormat, current_media_duration)} frame: <b>{current_media_frame}</b> from MPV: {frame_idx}"
             )
 
             # with time offset
