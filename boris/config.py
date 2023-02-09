@@ -256,7 +256,7 @@ BEHAVIOR_TYPES = [
 DEFAULT_BEHAVIOR_TYPE = "Point event"
 
 # fields for events table
-MEDIA_TW_EVENTS_FIELDS = ("time", "image index", "subject", "code", "type", "modifier", "comment")
+MEDIA_TW_EVENTS_FIELDS = ("time", "subject", "code", "type", "modifier", "comment", "image index")
 LIVE_TW_EVENTS_FIELDS = ("time", "subject", "code", "type", "modifier", "comment")
 IMAGES_TW_EVENTS_FIELDS = ("time", "subject", "code", "type", "modifier", "comment", "image index", "image path")
 
@@ -278,7 +278,7 @@ for observation_type in TW_EVENTS_FIELDS:
 
 
 # fields for project events list
-MEDIA_PJ_EVENTS_FIELDS = ("time", "subject", "code", "modifier", "comment")
+MEDIA_PJ_EVENTS_FIELDS = ("time", "subject", "code", "modifier", "comment", "image index")
 LIVE_PJ_EVENTS_FIELDS = ("time", "subject", "code", "modifier", "comment")
 IMAGES_PJ_EVENTS_FIELDS = ("time", "subject", "code", "modifier", "comment", "image index", "image path")
 

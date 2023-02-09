@@ -37,7 +37,7 @@ import time
 import urllib.error
 import urllib.parse
 import urllib.request
-from typing import Union
+from typing import Union, Optional, List, Tuple, Dict
 
 from decimal import Decimal as dec
 from decimal import ROUND_DOWN
@@ -1791,6 +1791,17 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         return QMainWindow.eventFilter(self, source, event)
     '''
 
+    def read_event_field(self, event: list, player_type: str, field_type: str) -> Union[str, None, int, dec]:
+        """
+        return value of field for event or NA if not available
+        """
+        if field_type not in cfg.PJ_EVENTS_FIELDS[player_type]:
+            return None
+        if cfg.PJ_OBS_FIELDS[player_type][field_type] < len(event):
+            return event[cfg.PJ_OBS_FIELDS[player_type][field_type]]
+        else:
+            return cfg.NA
+
     def load_tw_events(self, obs_id):
         """
         load events in table widget and update START/STOP
@@ -1835,11 +1846,13 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
                 if field_type in cfg.PJ_EVENTS_FIELDS[self.playerType]:
 
-                    field = event[cfg.PJ_OBS_FIELDS[self.playerType][field_type]]
+                    # field = event[cfg.PJ_OBS_FIELDS[self.playerType][field_type]]
+                    field = self.read_event_field(event, self.playerType, field_type)
                     if field_type == "time":
                         field = str(util.convertTime(self.timeFormat, field))
                     if field_type == cfg.IMAGE_INDEX:
-                        field = str(round(field))
+                        # field = str(round(field))
+                        field = str(field)
 
                     self.twEvents.setItem(row, cfg.TW_OBS_FIELD[self.playerType][field_type], QTableWidgetItem(field))
 
