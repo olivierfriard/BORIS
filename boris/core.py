@@ -3299,6 +3299,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 event[cfg.IMAGE_INDEX] = self.image_idx + 1
                 event[cfg.IMAGE_PATH] = self.images_list[self.image_idx]
 
+            # MEDIA
+            if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE] == cfg.MEDIA:
+                event[cfg.FRAME_INDEX] = self.dw_player[0].player.estimated_frame_number + 1
+
             self.write_event(event, self.getLaps())
 
     def actionUser_guide_triggered(self):
@@ -3336,6 +3340,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE] == cfg.IMAGES:
                 event[cfg.IMAGE_INDEX] = self.image_idx + 1
                 event[cfg.IMAGE_PATH] = self.images_list[self.image_idx]
+
+            # MEDIA
+            if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE] == cfg.MEDIA:
+                event[cfg.FRAME_INDEX] = self.dw_player[0].player.estimated_frame_number + 1
 
             self.write_event(event, self.getLaps())
 
@@ -3563,6 +3571,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             return
 
         cumulative_time_pos = self.getLaps()
+        # get frame index
         frame_idx = self.dw_player[0].player.estimated_frame_number
 
         if value is None:
@@ -3874,6 +3883,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             image_idx = event.get(cfg.IMAGE_INDEX, "")
             image_path = event.get(cfg.IMAGE_PATH, "")
 
+        if self.playerType in (cfg.MEDIA, cfg.VIEWER_MEDIA):
+            frame_idx = event.get(cfg.FRAME_INDEX, "")
+
         # check if a same event is already in events list (time, subject, code)
 
         if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE] in (cfg.MEDIA, cfg.LIVE):
@@ -4100,7 +4112,19 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         # add event to pj
         if editing_event:  # modifying event
 
-            if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE] in (cfg.MEDIA, cfg.LIVE):
+            if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE] == cfg.MEDIA:
+                self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS][event["row"]] = [
+                    mem_time,
+                    subject,
+                    event[cfg.BEHAVIOR_CODE],
+                    modifier_str,
+                    comment,
+                    frame_idx,
+                ]
+                # order by image index ASC
+                self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS].sort()
+
+            elif self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE] == cfg.LIVE:
                 self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS][event["row"]] = [
                     mem_time,
                     subject,
@@ -4136,7 +4160,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 """
                 bisect.insort(
                     self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS],
-                    [mem_time, subject, event[cfg.BEHAVIOR_CODE], modifier_str, comment],
+                    [mem_time, subject, event[cfg.BEHAVIOR_CODE], modifier_str, comment, frame_idx],
                 )
 
             elif self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE] == cfg.IMAGES:
@@ -4491,6 +4515,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         # get time
         memLaps = None
+        frame_idx = None
         if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE] == cfg.LIVE:
             if self.pj[cfg.OBSERVATIONS][self.observationId].get(cfg.SCAN_SAMPLING_TIME, 0):
                 if self.timeFormat == cfg.HHMMSS:
@@ -4507,6 +4532,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE] in (cfg.MEDIA, cfg.IMAGES):
             memLaps = self.getLaps()
+            if self.playerType == cfg.MEDIA:
+                frame_idx = self.dw_player[0].player.estimated_frame_number + 1
 
         if memLaps is None:
             return
@@ -4618,6 +4645,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 if self.playerType == cfg.IMAGES:
                     event[cfg.IMAGE_PATH] = self.images_list[self.image_idx]
                     event[cfg.IMAGE_INDEX] = self.image_idx + 1
+
+                if self.playerType == cfg.MEDIA:
+                    event[cfg.FRAME_INDEX] = self.dw_player[0].player.estimated_frame_number + 1
 
                 self.write_event(event, memLaps)
 

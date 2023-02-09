@@ -179,6 +179,7 @@ FILE_PATH = "file_path"
 
 IMAGE_INDEX = "image index"
 IMAGE_PATH = "image path"
+FRAME_INDEX = "frame index"
 
 ZOOM_LEVEL = "zoom level"
 DISPLAY_MEDIA_SUBTITLES = "display subtitles"
