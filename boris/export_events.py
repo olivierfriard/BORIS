@@ -493,6 +493,7 @@ def export_aggregated_events(self):
 
         return
 
+    # compute the maximum number of modifiers
     tot_max_modifiers = 0
     for obs_id in selected_observations:
         _, max_modifiers = export_observation.export_aggregated_events(self.pj, parameters, obs_id)

@@ -904,13 +904,13 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
                 # check if first media in player #1 has audio
                 for media in self.pj[cfg.OBSERVATIONS][self.observationId][cfg.FILE][cfg.PLAYER1]:
-                    media_file_path = project_functions.full_path(media, self.projectFileName)
+                    # media_file_path = project_functions.full_path(media, self.projectFileName)
 
-                    if not project_functions.has_audio(self.pj[cfg.OBSERVATIONS][self.observationId], media_file_path):
+                    if not project_functions.has_audio(self.pj[cfg.OBSERVATIONS][self.observationId], media):
                         QMessageBox.critical(
                             self,
                             cfg.programName,
-                            f"The media file {media_file_path} does not have an audio track",
+                            f"The media file {media} does not have an audio track. Plotting the spectrogram will not be possible.",
                         )
                         return
                     break
@@ -1000,13 +1000,13 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
                 # check if first media in player #1 has audio
                 for media in self.pj[cfg.OBSERVATIONS][self.observationId][cfg.FILE][cfg.PLAYER1]:
-                    media_file_path = project_functions.full_path(media, self.projectFileName)
+                    # media_file_path = project_functions.full_path(media, self.projectFileName)
 
-                    if not project_functions.has_audio(self.pj[cfg.OBSERVATIONS][self.observationId], media_file_path):
+                    if not project_functions.has_audio(self.pj[cfg.OBSERVATIONS][self.observationId], media):
                         QMessageBox.critical(
                             self,
                             cfg.programName,
-                            f"The media file {media_file_path} does not have an audio track",
+                            f"The media file {media} does not have an audio track. Plotting the waveform will not be possible.",
                         )
                         return
                     break
@@ -3704,11 +3704,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             for idx in util.sorted_keys(self.pj[cfg.ETHOGRAM]):
                 if self.pj[cfg.ETHOGRAM][idx][cfg.BEHAVIOR_CODE] in behaviorsToShow:
                     self.twEthogram.setRowCount(self.twEthogram.rowCount() + 1)
-                    for col in sorted(cfg.behav_fields_in_mainwindow.keys()):
-                        field = cfg.behav_fields_in_mainwindow[col]
+                    for idx_col in cfg.ETHOGRAM_TABLE_COLUMNS:
+                        field = cfg.ETHOGRAM_TABLE_COLUMNS[idx_col]
                         self.twEthogram.setItem(
                             self.twEthogram.rowCount() - 1,
-                            col,
+                            idx_col,
                             QTableWidgetItem(str(self.pj[cfg.ETHOGRAM][idx][field])),
                         )
         if self.twEthogram.rowCount() < len(self.pj[cfg.ETHOGRAM].keys()):

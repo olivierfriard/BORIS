@@ -37,6 +37,7 @@ import wave
 from decimal import Decimal as dec
 from decimal import getcontext, ROUND_DOWN
 from shutil import copyfile
+from typing import Union
 
 import numpy as np
 from PyQt5.QtGui import qRgb
@@ -996,6 +997,25 @@ def check_ffmpeg_path():
             return False, "FFmpeg is not available"
 
 
+def smart_size_format(n: Union[float, int, str, None]) -> str:
+    """
+    format with kb, Mb or Gb in base of value
+    """
+    if n is None:
+        return cfg.NA
+    if str(n) == "NA":
+        return cfg.NA
+    if math.isnan(n):
+        return cfg.NA
+    if n < 1_000:
+        return f"{n:,.1f} b"
+    if n < 1_000_000:
+        return f"{n / 1_000:,.1f} Kb"
+    if n < 1_000_000_000:
+        return f"{n / 1_000_000:,.1f} Mb"
+    return f"{n / 1_000_000_000:,.1f} Gb"
+
+
 def ffprobe_media_analysis(ffmpeg_bin: str, file_name: str) -> dict:
     """
     analyse video parameters with ffprobe (if available)
@@ -1010,26 +1030,30 @@ def ffprobe_media_analysis(ffmpeg_bin: str, file_name: str) -> dict:
     # ffprobe -v quiet -print_format json -show_format -show_streams /tmp/ramdisk/video1.mp4
     ffprobe_bin = ffmpeg_bin.replace("ffmpeg", "ffprobe")
 
-    command = f'"{ffprobe_bin}" -v quiet -print_format json -show_format -show_streams "{file_name}"'
+    command = f'"{ffprobe_bin}" -hide_banner -v error -print_format json -show_format -show_streams "{file_name}"'
 
     # print(command)
 
     p = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
     out, error = p.communicate()
+    if error:
+        return {"error": error.decode("utf-8")}
 
     try:
-        hasVideo, hasAudio, bitrate, resolution, fps, sample_rate, duration, frames_number, size = (
-            False,
-            False,
-            None,
-            None,
-            0,
-            None,
-            0,
-            None,
-            None,
-        )
-        audio_codec, video_codec = None, None
+        hasVideo = False
+        hasAudio = False
+        bitrate = None
+        video_bitrate = None
+        audio_bitrate = []
+        resolution = None
+        fps = 0
+        sample_rate = None
+        duration = 0
+        frames_number = None
+        size = None
+        audio_codec = None
+        video_codec = None
+
         video_param = json.loads(out.decode("utf-8"))
         if "size" in video_param["format"]:
             size = int(video_param["format"]["size"])
@@ -1038,9 +1062,18 @@ def ffprobe_media_analysis(ffmpeg_bin: str, file_name: str) -> dict:
 
             if stream["codec_type"] == "video":
                 hasVideo = True
-                bitrate = int(stream["bit_rate"] / 1000) if "bit_rate" in stream else None
+                video_bitrate = int(stream["bit_rate"]) if "bit_rate" in stream else None
                 resolution = f"{stream['width']}x{stream['height']}"
-                fps = float(stream["avg_frame_rate"].replace("/1", "")) if "avg_frame_rate" in stream else 0
+
+                if "avg_frame_rate" in stream:
+                    if stream["avg_frame_rate"] == "0/0":
+                        fps = 0
+                    else:
+                        try:
+                            fps = eval(stream["avg_frame_rate"])
+                        except Exception:
+                            fps = 0
+
                 duration = float(stream["duration"])
                 frames_number = int(stream["nb_frames"]) if "nb_frames" in stream else None
                 video_codec = stream["codec_long_name"] if "codec_long_name" in stream else None
@@ -1050,6 +1083,16 @@ def ffprobe_media_analysis(ffmpeg_bin: str, file_name: str) -> dict:
                 sample_rate = float(stream["sample_rate"])
                 duration = float(stream["duration"])
                 audio_codec = stream["codec_long_name"]
+                audio_bitrate.append(int(stream.get("bit_rate", 0)))
+
+        # check bit rate
+        if "bit_rate" in video_param["format"]:
+            all_bitrate = int(video_param["format"]["bit_rate"])
+        else:
+            all_bitrate = None
+
+        if video_bitrate is None and all_bitrate is not None:
+            video_bitrate = all_bitrate - sum(audio_bitrate)
 
         return {
             "analysis_program": "ffprobe",
@@ -1059,7 +1102,7 @@ def ffprobe_media_analysis(ffmpeg_bin: str, file_name: str) -> dict:
             "fps": fps,
             "has_video": hasVideo,
             "has_audio": hasAudio,
-            "bitrate": bitrate,
+            "bitrate": video_bitrate,
             "resolution": resolution,
             "sample_rate": sample_rate,
             "file size": size,
@@ -1067,8 +1110,8 @@ def ffprobe_media_analysis(ffmpeg_bin: str, file_name: str) -> dict:
             "video_codec": video_codec,
         }
 
-    except Exception:
-        return {}
+    except Exception as e:
+        return {"error": str(e)}
 
 
 def accurate_media_analysis(ffmpeg_bin: str, file_name: str) -> dict:
@@ -1087,19 +1130,21 @@ def accurate_media_analysis(ffmpeg_bin: str, file_name: str) -> dict:
 
     ffprobe_results = ffprobe_media_analysis(ffmpeg_bin, file_name)
 
-    if ffprobe_results:
+    if ("error" not in ffprobe_results) and (ffprobe_results["bitrate"] is not None):
         return ffprobe_results
     else:
         # use ffmpeg
-        command = f'"{ffmpeg_bin}" -i "{file_name}" > {"NUL" if sys.platform.startswith("win") else "/dev/null"}'
+        command = (
+            f'"{ffmpeg_bin}" -hide_banner -i "{file_name}" > {"NUL" if sys.platform.startswith("win") else "/dev/null"}'
+        )
 
         p = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
 
-        duration, fps, hasVideo, hasAudio, bitrate = 0, 0, False, False, -1
+        duration, fps, hasVideo, hasAudio, bitrate = 0, 0, False, False, None
         try:
-            error = p.communicate()[1]
-        except Exception:
-            return {"error": "Error reading file"}
+            _, error = p.communicate()
+        except Exception as e:
+            return {"error": str(e)}
 
         rows = error.split(b"\n")
 
@@ -1125,10 +1170,10 @@ def accurate_media_analysis(ffmpeg_bin: str, file_name: str) -> dict:
                 if b"bitrate:" in row:
                     re_results = re.search(b"bitrate: (.{1,10}) kb", row, re.IGNORECASE)
                     if re_results:
-                        bitrate = int(re_results.group(1).strip())
+                        bitrate = int(re_results.group(1).strip()) * 1000
                     break
         except Exception:
-            bitrate = -1
+            bitrate = None
 
         # fps
         fps = 0

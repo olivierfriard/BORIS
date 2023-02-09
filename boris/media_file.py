@@ -34,9 +34,34 @@ def get_info(self) -> None:
     show info about media file (current media file if an observation is opened)
     """
 
+    def media_analysis_str(ffmpeg_bin, media_full_path):
+
+        r = util.accurate_media_analysis(ffmpeg_bin, media_full_path)
+        print(r)
+        if "error" in r:
+            ffmpeg_output = f"File path: {media_full_path}<br><br>{r['error']}<br><br>"
+        else:
+            ffmpeg_output = f"<br><b>{r['analysis_program'] } analysis</b><br>"
+
+            ffmpeg_output += (
+                f"File path: <b>{media_full_path}</b><br><br>"
+                f"Duration: {r['duration']} seconds ({util.convertTime(self.timeFormat, r['duration'])})<br>"
+                f"Resolution: {r['resolution']}<br>"
+                f"Number of frames: {r['frames_number']}<br>"
+                f"Bitrate: {util.smart_size_format(r['bitrate'])}   <br>"
+                f"FPS: {r['fps']}<br>"
+                f"Has video: {r['has_video']}<br>"
+                f"Has audio: {r['has_audio']}<br>"
+                f"File size: {util.smart_size_format(r.get('file size', cfg.NA))}<br>"
+                f"Video codec: {r.get('video_codec', cfg.NA)}<br>"
+                f"Audio codec: {r.get('audio_codec', cfg.NA)}<br>"
+            )
+
+        return ffmpeg_output
+
     if self.observationId and self.playerType == cfg.MEDIA:
 
-        tot_output = ""
+        tot_output: str = ""
 
         for i, dw in enumerate(self.dw_player):
             if not (
@@ -44,19 +69,6 @@ def get_info(self) -> None:
                 and self.pj[cfg.OBSERVATIONS][self.observationId][cfg.FILE][str(i + 1)]
             ):
                 continue
-
-            logging.info(f"Video format: {dw.player.video_format}")
-            logging.info(f"number of media in media list: {dw.player.playlist_count}")
-            logging.info(f"Current time position: {dw.player.time_pos}  duration: {dw.player.duration}")
-
-            logging.info(f"FPS: {dw.player.container_fps}")
-
-            # logging.info("Rate: {}".format(player.mediaplayer.get_rate()))
-            logging.info(f"Video size: {dw.player.width}x{dw.player.height}  ratio: ")
-
-            logging.info(f"Aspect ratio: {round(dw.player.width / dw.player.height, 3)}")
-            # logging.info("is seekable? {0}".format(player.mediaplayer.is_seekable()))
-            # logging.info("has_vout? {0}".format(player.mediaplayer.has_vout()))
 
             mpv_output = (
                 "<b>MPV information</b><br>"
@@ -79,69 +91,27 @@ def get_info(self) -> None:
             )
 
             # FFmpeg/FFprobe analysis
-
+            ffmpeg_output: str = ""
             for file_path in self.pj[cfg.OBSERVATIONS][self.observationId][cfg.FILE][str(i + 1)]:
                 media_full_path = project_functions.full_path(file_path, self.projectFileName)
-                r = util.accurate_media_analysis(self.ffmpeg_bin, media_full_path)
-                nframes = r["frames_number"]
-                if "error" in r:
-                    ffmpeg_output += "File path: {filePath}<br><br>{error}<br><br>".format(
-                        filePath=media_full_path, error=r["error"]
-                    )
-                else:
-                    ffmpeg_output = f"<br><b>{r['analysis_program'] } analysis</b><br>"
+                ffmpeg_output += media_analysis_str(self.ffmpeg_bin, media_full_path)
 
-                    ffmpeg_output += (
-                        f"File path: <b>{media_full_path}</b><br><br>"
-                        f"Duration: {r['duration']} seconds ({util.convertTime(self.timeFormat, r['duration'])})<br>"
-                        f"Resolution: {r['resolution']}<br>"
-                        f"Number of frames: {r['frames_number']}<br>"
-                        f"Bitrate: {r['bitrate']} k<br>"
-                        f"FPS: {r['fps']}<br>"
-                        f"Has video: {r['has_video']}<br>"
-                        f"Has audio: {r['has_audio']}<br>"
-                        f"File size: {r.get('file size', 'NA')}<br>"
-                        f"Video codec: {r.get('video_codec', 'NA')}<br>"
-                        f"Audio codec: {r.get('audio_codec', 'NA')}<br>"
-                    )
-
-                ffmpeg_output += f"Total duration: {sum(self.dw_player[i].media_durations) / 1000} ({util.convertTime(self.timeFormat, sum(self.dw_player[i].media_durations) / 1000)})"
+            ffmpeg_output += f"<br>Total duration: {sum(self.dw_player[i].media_durations) / 1000} ({util.convertTime(self.timeFormat, sum(self.dw_player[i].media_durations) / 1000)})"
 
             tot_output += mpv_output + ffmpeg_output + "<br><hr>"
 
-        self.results = dialog.Results_dialog()
-        self.results.setWindowTitle(cfg.programName + " - Media file information")
-        self.results.ptText.appendHtml(tot_output)
-        self.results.show()
-
     else:  # no open observation
 
-        fn = QFileDialog().getOpenFileName(self, "Select a media file", "", "Media files (*)")
-        file_path = fn[0] if type(fn) is tuple else fn
+        fn = QFileDialog().getOpenFileNames(self, "Select a media file", "", "Media files (*)")
+        file_paths = fn[0] if type(fn) is tuple else fn
+        if not file_paths:
+            return
 
-        if file_path:
-            self.results = dialog.Results_dialog()
-            self.results.setWindowTitle(f"{cfg.programName} - Media file information")
+        tot_output: str = ""
+        for file_path in file_paths:
+            tot_output += media_analysis_str(self.ffmpeg_bin, file_path)
 
-            r = util.accurate_media_analysis(self.ffmpeg_bin, file_path)
-            if "error" in r:
-                self.results.ptText.appendHtml(f"File path: {file_path}<br><br>{r['error']}<br><br>")
-            else:
-                self.results.ptText.appendHtml(f"<br><b>{r['analysis_program'] } analysis</b><br>")
-                self.results.ptText.appendHtml(
-                    (
-                        f"File path: <b>{file_path}</b><br><br>"
-                        f"Duration: {r['duration']} seconds ({util.convertTime(self.timeFormat, r['duration'])})<br>"
-                        f"Resolution: {r['resolution']}<br>"
-                        f"Number of frames: {r['frames_number']}<br>"
-                        f"Bitrate: {r['bitrate']} k<br>"
-                        f"FPS: {r['fps']}<br>"
-                        f"Has video: {r['has_video']}<br>"
-                        f"Has audio: {r['has_audio']}<br>"
-                        f"File size: {r.get('file size', 'NA')}<br>"
-                        f"Video codec: {r.get('video_codec', 'NA')}<br>"
-                        f"Audio codec: {r.get('audio_codec', 'NA')}<br>"
-                    )
-                )
-
-            self.results.show()
+    self.results = dialog.Results_dialog()
+    self.results.setWindowTitle(cfg.programName + " - Media file information")
+    self.results.ptText.appendHtml(tot_output)
+    self.results.show()

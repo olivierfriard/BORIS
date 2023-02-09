@@ -22,20 +22,20 @@ This file is part of BORIS.
 
 programName: str = "BORIS"
 
-project_format_version = "7.0"
+project_format_version: str = "7.0"
 
 # minimal project version for handling observations from images
-IMAGES_OBS_PROJECT_MIN_VERSION = (8, 6)
+IMAGES_OBS_PROJECT_MIN_VERSION: tuple = (8, 6)
 
-IMAGE_EXTENSIONS = ("*.jpg", "*.png", "*.jpeg")
+IMAGE_EXTENSIONS: tuple = ("*.jpg", "*.png", "*.jpeg")
 
-CHECK_NEW_VERSION_DELAY = 15 * 24 * 60 * 60
+CHECK_NEW_VERSION_DELAY: int = 15 * 24 * 60 * 60
 
-N_PLAYER = 8
+N_PLAYER: int = 8
 
-MAX_UNDO_QUEUE = 25
+MAX_UNDO_QUEUE: int = 25
 
-NA = "NA"
+NA: str = "NA"
 
 CTRL_KEY = "Ctrl"
 
@@ -113,7 +113,6 @@ CHAR_FORBIDDEN_IN_MODIFIERS = "(|),`~"
 ADAPT_FAST_JUMP = "adapt_fast_jump"
 ADAPT_FAST_JUMP_DEFAULT = False
 
-subjects_config = ["key", "id"]
 
 subjectsFields = ["key", SUBJECT_NAME, DESCRIPTION]
 
@@ -191,6 +190,7 @@ TIME_LAPSE = "time_lapse_delay"
 
 
 # fields for event configuration
+"""
 fields = {
     "type": 0,
     "key": 1,
@@ -200,8 +200,9 @@ fields = {
     "excluded": 5,
     "coding map": 6,
 }
+"""
 
-behav_fields_in_mainwindow = {
+ETHOGRAM_TABLE_COLUMNS: dict = {
     0: "key",
     1: "code",
     2: "type",
@@ -212,8 +213,7 @@ behav_fields_in_mainwindow = {
 }
 
 # fields in ethogram table from project window
-# behavioursFields = {'type': 0, 'key': 1, 'code': 2, 'description': 3, 'modifiers': 4, 'excluded': 5, 'coding map': 6}
-behavioursFields = {
+behavioursFields: dict = {
     "type": 0,
     "key": 1,
     "code": 2,
@@ -223,7 +223,7 @@ behavioursFields = {
     "excluded": 6,
     "coding map": 7,
 }
-
+"""
 ETHOGRAM_FIELDS = [
     "type",
     "key",
@@ -234,7 +234,8 @@ ETHOGRAM_FIELDS = [
     "excluded",
     "coding map",
 ]
-ETHOGRAM_EDITABLE_FIELDS = ["key", "code", "description"]
+"""
+ETHOGRAM_EDITABLE_FIELDS: tuple = ("key", "code", "description")
 
 PROJECT_BEHAVIORS_KEY_FIELD_IDX = 1
 PROJECT_BEHAVIORS_CODE_FIELD_IDX = 2
