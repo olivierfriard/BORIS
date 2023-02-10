@@ -279,9 +279,9 @@ for observation_type in TW_EVENTS_FIELDS:
 
 
 # fields for project events list
-MEDIA_PJ_EVENTS_FIELDS = ("time", "subject", "code", "modifier", "comment", "image index")
-LIVE_PJ_EVENTS_FIELDS = ("time", "subject", "code", "modifier", "comment")
-IMAGES_PJ_EVENTS_FIELDS = ("time", "subject", "code", "modifier", "comment", "image index", "image path")
+MEDIA_PJ_EVENTS_FIELDS = (TIME, "subject", "code", "modifier", "comment", "image index")
+LIVE_PJ_EVENTS_FIELDS = (TIME, "subject", "code", "modifier", "comment")
+IMAGES_PJ_EVENTS_FIELDS = (TIME, "subject", "code", "modifier", "comment", "image index", "image path")
 
 PJ_EVENTS_FIELDS = {
     MEDIA: MEDIA_PJ_EVENTS_FIELDS,
@@ -309,7 +309,7 @@ EVENT_MODIFIER_FIELD_IDX = 3
 EVENT_COMMENT_FIELD_IDX = 4
 EVENT_STATUS_FIELD_IDX = 5
 # EVENT_IMAGEIDX_FIELD_IDX = 6
-EVENT_IMAGEPATH_FIELD_IDX = 7
+# EVENT_IMAGEPATH_FIELD_IDX = 7
 
 
 BEHAV_CODING_MAP_FIELDS = ["name", "Behavior codes"]
