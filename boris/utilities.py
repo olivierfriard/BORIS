@@ -72,7 +72,6 @@ def pil2pixmap(im) -> QPixmap:
     see https://stackoverflow.com/questions/34697559/pil-image-to-qpixmap-conversion-issue
     """
 
-    # print(im.mode)
     if im.mode == "RGB":
         r, g, b = im.split()
         im = Image.merge("RGB", (b, g, r))
@@ -1266,7 +1265,7 @@ def all_behaviors(ethogram: dict) -> list:
 
 def dir_images_number(dir_path_str: str) -> dict:
     """
-    return number of images in dir_path (*.jpg, *.jpeg, *.png)
+    return number of images in dir_path (see cfg.IMAGE_EXTENSIONS)
     """
 
     dir_path = pl.Path(dir_path_str)

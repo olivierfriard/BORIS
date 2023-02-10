@@ -1785,6 +1785,8 @@ def initialize_new_images_observation(self):
                 )
             )
 
+    print(self.images_list)
+
     # logging.debug(self.images_list)
 
     self.image_idx = 0
