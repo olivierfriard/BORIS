@@ -1802,6 +1802,15 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         else:
             return cfg.NA
 
+    def read_tw_event_field(self, row_idx: int, player_type: str, field_type: str) -> Union[str, None, int, dec]:
+        """
+        return value of field for event in TW or NA if not available
+        """
+        if field_type not in cfg.TW_EVENTS_FIELDS[player_type]:
+            return None
+
+        return self.twEvents.item(row_idx, cfg.TW_OBS_FIELD[player_type][field_type]).text()
+
     def load_tw_events(self, obs_id):
         """
         load events in table widget and update START/STOP
@@ -3818,34 +3827,24 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         """
 
         if self.pj[cfg.OBSERVATIONS][obs_id][cfg.TYPE] in (cfg.MEDIA, cfg.LIVE):
-            return (time, subject, code) in [
-                (x[cfg.EVENT_TIME_FIELD_IDX], x[cfg.EVENT_SUBJECT_FIELD_IDX], x[cfg.EVENT_BEHAVIOR_FIELD_IDX])
-                for x in self.pj[cfg.OBSERVATIONS][obs_id][cfg.EVENTS]
-            ]
-
-        if self.pj[cfg.OBSERVATIONS][obs_id][cfg.TYPE] == cfg.IMAGES:
-            """
-            print((time, subject, code))
-            print(self.pj[cfg.OBSERVATIONS][obs_id][cfg.EVENTS])
-            print(
-                [
-                    (
-                        x[cfg.PJ_OBS_FIELDS[self.pj[cfg.OBSERVATIONS][obs_id][cfg.TYPE]]["image index"]],
-                        x[cfg.EVENT_SUBJECT_FIELD_IDX],
-                        x[cfg.EVENT_BEHAVIOR_FIELD_IDX],
-                    )
-                    for x in self.pj[cfg.OBSERVATIONS][obs_id][cfg.EVENTS]
-                ]
-            )
-            """
-            return (time, subject, code) in [
+            return (time, subject, code) in (
                 (
-                    x[cfg.PJ_OBS_FIELDS[self.pj[cfg.OBSERVATIONS][obs_id][cfg.TYPE]][cfg.IMAGE_INDEX]],
-                    x[cfg.EVENT_SUBJECT_FIELD_IDX],
-                    x[cfg.EVENT_BEHAVIOR_FIELD_IDX],
+                    x[cfg.PJ_OBS_FIELDS[self.pj[cfg.OBSERVATIONS][obs_id][cfg.TYPE]][cfg.TIME]],
+                    x[cfg.PJ_OBS_FIELDS[self.pj[cfg.OBSERVATIONS][obs_id][cfg.TYPE]][cfg.SUBJECT]],
+                    x[cfg.PJ_OBS_FIELDS[self.pj[cfg.OBSERVATIONS][obs_id][cfg.TYPE]][cfg.BEHAVIOR_CODE]],
                 )
                 for x in self.pj[cfg.OBSERVATIONS][obs_id][cfg.EVENTS]
-            ]
+            )
+
+        if self.pj[cfg.OBSERVATIONS][obs_id][cfg.TYPE] == cfg.IMAGES:
+            return (time, subject, code) in (
+                (
+                    x[cfg.PJ_OBS_FIELDS[self.pj[cfg.OBSERVATIONS][obs_id][cfg.TYPE]][cfg.IMAGE_INDEX]],
+                    x[cfg.PJ_OBS_FIELDS[self.pj[cfg.OBSERVATIONS][obs_id][cfg.TYPE]][cfg.SUBJECT]],
+                    x[cfg.PJ_OBS_FIELDS[self.pj[cfg.OBSERVATIONS][obs_id][cfg.TYPE]][cfg.BEHAVIOR_CODE]],
+                )
+                for x in self.pj[cfg.OBSERVATIONS][obs_id][cfg.EVENTS]
+            )
 
     def write_event(self, event: dict, mem_time: dec) -> int:
         """
@@ -4058,7 +4057,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         if not editing_event:
             if self.currentSubject:
-                csj = []
+                csj: list = []
                 for idx in current_states:
                     if (
                         idx in self.pj[cfg.SUBJECTS]
@@ -4076,11 +4075,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             logging.debug(f"csj {csj}")
 
             if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE] in (cfg.LIVE, cfg.MEDIA):
-                check_index = cfg.EVENT_TIME_FIELD_IDX
+                check_index = cfg.PJ_OBS_FIELDS[self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE]][cfg.TIME]
             if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE] == cfg.IMAGES:
-                check_index = cfg.PJ_OBS_FIELDS[cfg.IMAGES]["image index"]
+                check_index = cfg.PJ_OBS_FIELDS[cfg.IMAGES][cfg.IMAGE_INDEX]
 
-            cm = {}  # modifiers for current behaviors
+            cm: dict = {}  # modifiers for current behaviors
             for cs in csj:
                 for ev in self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS]:
 

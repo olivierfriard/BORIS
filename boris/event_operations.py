@@ -25,6 +25,8 @@ import logging
 from decimal import Decimal as dec
 from decimal import InvalidOperation
 from decimal import ROUND_DOWN
+from typing import Union, Optional, List, Tuple, Dict
+
 from . import config as cfg
 from . import utilities as util
 from . import dialog
@@ -354,11 +356,11 @@ def delete_selected_events(self):
             for row in set([item.row() for item in self.twEvents.selectedIndexes()]):
                 rows_to_delete.append(
                     [
-                        util.time2seconds(self.twEvents.item(row, cfg.EVENT_TIME_FIELD_IDX).text())
+                        util.time2seconds(self.read_tw_event_field(row, self.playerType, cfg.TIME))
                         if self.timeFormat == cfg.HHMMSS
-                        else dec(self.twEvents.item(row, cfg.EVENT_TIME_FIELD_IDX).text()),
-                        self.twEvents.item(row, cfg.EVENT_SUBJECT_FIELD_IDX).text(),
-                        self.twEvents.item(row, cfg.EVENT_BEHAVIOR_FIELD_IDX).text(),
+                        else dec(self.read_tw_event_field(row, self.playerType, cfg.TIME)),
+                        self.read_tw_event_field(row, self.playerType, cfg.SUBJECT),
+                        self.read_tw_event_field(row, self.playerType, cfg.BEHAVIOR_CODE),
                     ]
                 )
 
@@ -366,9 +368,9 @@ def delete_selected_events(self):
                 event
                 for event in self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS]
                 if [
-                    event[cfg.PJ_OBS_FIELDS[self.playerType]["time"]],
-                    event[cfg.PJ_OBS_FIELDS[self.playerType][cfg.SUBJECT]],
-                    event[cfg.PJ_OBS_FIELDS[self.playerType][cfg.BEHAVIOR_CODE]],
+                    self.read_event_field(event, self.playerType, cfg.TIME),
+                    self.read_event_field(event, self.playerType, cfg.SUBJECT),
+                    self.read_event_field(event, self.playerType, cfg.BEHAVIOR_CODE),
                 ]
                 not in rows_to_delete
             ]
@@ -377,9 +379,9 @@ def delete_selected_events(self):
             for row in set([item.row() for item in self.twEvents.selectedIndexes()]):
                 rows_to_delete.append(
                     [
-                        self.twEvents.item(row, cfg.TW_OBS_FIELD[self.playerType][cfg.SUBJECT]).text(),
-                        self.twEvents.item(row, cfg.TW_OBS_FIELD[self.playerType][cfg.BEHAVIOR_CODE]).text(),
-                        int(self.twEvents.item(row, cfg.TW_OBS_FIELD[self.playerType][cfg.IMAGE_INDEX]).text()),
+                        self.read_tw_event_field(row, self.playerType, cfg.SUBJECT),
+                        self.read_tw_event_field(row, self.playerType, cfg.BEHAVIOR_CODE),
+                        int(self.read_tw_event_field(row, self.playerType, cfg.IMAGE_INDEX)),
                     ]
                 )
 
@@ -387,9 +389,9 @@ def delete_selected_events(self):
                 event
                 for event in self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS]
                 if [
-                    event[cfg.PJ_OBS_FIELDS[self.playerType][cfg.SUBJECT]],
-                    event[cfg.PJ_OBS_FIELDS[self.playerType][cfg.BEHAVIOR_CODE]],
-                    event[cfg.PJ_OBS_FIELDS[self.playerType][cfg.IMAGE_INDEX]],
+                    self.read_event_field(event, self.playerType, cfg.SUBJECT),
+                    self.read_event_field(event, self.playerType, cfg.BEHAVIOR_CODE),
+                    self.read_event_field(event, self.playerType, cfg.IMAGE_INDEX),
                 ]
                 not in rows_to_delete
             ]
@@ -500,11 +502,11 @@ def edit_selected_events(self):
             for row in twEvents_rows_to_edit:
                 tsb_to_edit.append(
                     [
-                        util.time2seconds(self.twEvents.item(row, cfg.EVENT_TIME_FIELD_IDX).text())
+                        util.time2seconds(self.read_tw_event_field(row, self.playerType, cfg.TIME))
                         if self.timeFormat == cfg.HHMMSS
-                        else dec(self.twEvents.item(row, cfg.EVENT_TIME_FIELD_IDX).text()),
-                        self.twEvents.item(row, cfg.EVENT_SUBJECT_FIELD_IDX).text(),
-                        self.twEvents.item(row, cfg.EVENT_BEHAVIOR_FIELD_IDX).text(),
+                        else dec(self.read_tw_event_field(row, self.playerType, cfg.TIME)),
+                        self.read_tw_event_field(row, self.playerType, cfg.SUBJECT),
+                        self.read_tw_event_field(row, self.playerType, cfg.BEHAVIOR_CODE),
                     ]
                 )
 
@@ -513,10 +515,11 @@ def edit_selected_events(self):
             mem_event_idx = []
             for idx, event in enumerate(self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS]):
                 if [
-                    event[cfg.EVENT_TIME_FIELD_IDX],
-                    event[cfg.EVENT_SUBJECT_FIELD_IDX],
-                    event[cfg.EVENT_BEHAVIOR_FIELD_IDX],
+                    self.read_event_field(event, self.playerType, cfg.TIME),
+                    self.read_event_field(event, self.playerType, cfg.SUBJECT),
+                    self.read_event_field(event, self.playerType, cfg.BEHAVIOR_CODE),
                 ] in tsb_to_edit:
+
                     new_event = list(event)
                     if dialogWindow.rbSubject.isChecked():
                         new_event[cfg.EVENT_SUBJECT_FIELD_IDX] = dialogWindow.newText.selectedItems()[0].text()
@@ -602,38 +605,38 @@ def edit_event(self):
 
     if self.playerType in (cfg.MEDIA, cfg.LIVE, cfg.VIEWER_MEDIA, cfg.VIEWER_LIVE):
         tsb_to_edit = [
-            util.time2seconds(self.twEvents.item(twEvents_row, cfg.EVENT_TIME_FIELD_IDX).text())
+            util.time2seconds(self.read_tw_event_field(twEvents_row, self.playerType, cfg.TIME))
             if self.timeFormat == cfg.HHMMSS
-            else dec(self.twEvents.item(twEvents_row, cfg.EVENT_TIME_FIELD_IDX).text()),
-            self.twEvents.item(twEvents_row, cfg.EVENT_SUBJECT_FIELD_IDX).text(),
-            self.twEvents.item(twEvents_row, cfg.EVENT_BEHAVIOR_FIELD_IDX).text(),
+            else dec(self.read_tw_event_field(twEvents_row, self.playerType, cfg.TIME)),
+            self.read_tw_event_field(twEvents_row, self.playerType, cfg.SUBJECT),
+            self.read_tw_event_field(twEvents_row, self.playerType, cfg.BEHAVIOR_CODE),
         ]
 
         row = [
             idx
             for idx, event in enumerate(self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS])
             if [
-                event[cfg.EVENT_TIME_FIELD_IDX],
-                event[cfg.EVENT_SUBJECT_FIELD_IDX],
-                event[cfg.EVENT_BEHAVIOR_FIELD_IDX],
+                self.read_event_field(event, self.playerType, cfg.TIME),
+                self.read_event_field(event, self.playerType, cfg.SUBJECT),
+                self.read_event_field(event, self.playerType, cfg.BEHAVIOR_CODE),
             ]
             == tsb_to_edit
         ][0]
 
     if self.playerType in (cfg.IMAGES, cfg.VIEWER_IMAGES):
         tsb_to_edit = [
-            self.twEvents.item(twEvents_row, cfg.TW_OBS_FIELD[self.playerType][cfg.SUBJECT]).text(),
-            self.twEvents.item(twEvents_row, cfg.TW_OBS_FIELD[self.playerType][cfg.BEHAVIOR_CODE]).text(),
-            int(self.twEvents.item(twEvents_row, cfg.TW_OBS_FIELD[self.playerType][cfg.IMAGE_INDEX]).text()),
+            self.read_tw_event_field(twEvents_row, self.playerType, cfg.SUBJECT),
+            self.read_tw_event_field(twEvents_row, self.playerType, cfg.BEHAVIOR_CODE),
+            int(self.read_tw_event_field(twEvents_row, self.playerType, cfg.IMAGE_INDEX)),
         ]
 
         row = [
             idx
             for idx, event in enumerate(self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS])
             if [
-                event[cfg.PJ_OBS_FIELDS[self.playerType][cfg.SUBJECT]],
-                event[cfg.PJ_OBS_FIELDS[self.playerType][cfg.BEHAVIOR_CODE]],
-                event[cfg.PJ_OBS_FIELDS[self.playerType][cfg.IMAGE_INDEX]],
+                self.read_event_field(event, self.playerType, cfg.SUBJECT),
+                self.read_event_field(event, self.playerType, cfg.BEHAVIOR_CODE),
+                self.read_event_field(event, self.playerType, cfg.IMAGE_INDEX),
             ]
             == tsb_to_edit
         ][0]
