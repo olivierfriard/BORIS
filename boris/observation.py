@@ -240,7 +240,7 @@ class Observation(QDialog, Ui_Form):
         if not result.get("number of images", 0):
             response = dialog.MessageDialog(
                 cfg.programName,
-                "The directory does not contain images (*.jpg, *.jpeg, *.png)",
+                f"The directory does not contain images ({','.join(cfg.IMAGE_EXTENSIONS)})",
                 ["Cancel", "Add directory"],
             )
             if response == "Cancel":
