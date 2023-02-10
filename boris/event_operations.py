@@ -838,23 +838,23 @@ def edit_time_selected_events(self):
         for row in twEvents_rows_to_shift:
             tsb_to_shift.append(
                 [
-                    util.time2seconds(self.twEvents.item(row, cfg.EVENT_TIME_FIELD_IDX).text())
+                    util.time2seconds(self.read_tw_event_field(row, self.playerType, cfg.TIME))
                     if self.timeFormat == cfg.HHMMSS
-                    else dec(self.twEvents.item(row, cfg.EVENT_TIME_FIELD_IDX).text()),
-                    self.twEvents.item(row, cfg.EVENT_SUBJECT_FIELD_IDX).text(),
-                    self.twEvents.item(row, cfg.EVENT_BEHAVIOR_FIELD_IDX).text(),
+                    else dec(self.read_tw_event_field(row, self.playerType, cfg.TIME)),
+                    self.read_tw_event_field(row, self.playerType, cfg.SUBJECT),
+                    self.read_tw_event_field(row, self.playerType, cfg.BEHAVIOR_CODE),
                 ]
             )
 
         for idx, event in enumerate(self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS]):
             if [
-                event[cfg.EVENT_TIME_FIELD_IDX],
-                event[cfg.EVENT_SUBJECT_FIELD_IDX],
-                event[cfg.EVENT_BEHAVIOR_FIELD_IDX],
+                self.read_event_field(event, self.playerType, cfg.TIME),
+                self.read_event_field(event, self.playerType, cfg.SUBJECT),
+                self.read_event_field(event, self.playerType, cfg.BEHAVIOR_CODE),
             ] in tsb_to_shift:
-                self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS][idx][cfg.EVENT_TIME_FIELD_IDX] += dec(
-                    f"{d:.3f}"
-                )
+                self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS][idx][
+                    cfg.PJ_OBS_FIELDS[self.playerType][cfg.TIME]
+                ] += dec(f"{d:.3f}")
                 self.project_changed()
 
         self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS] = sorted(
