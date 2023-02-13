@@ -282,50 +282,17 @@ def delete_all_events(self):
         # fill the undo list
         fill_events_undo_list(self, "Undo 'Delete all events'")
 
-        rows_to_delete = []
-        if self.playerType in (cfg.MEDIA, cfg.VIEWER_MEDIA, cfg.LIVE, cfg.VIEWER_LIVE):
-            for row in range(self.twEvents.rowCount()):
-                rows_to_delete.append(
-                    [
-                        util.time2seconds(self.twEvents.item(row, cfg.TW_OBS_FIELD[self.playerType][cfg.TIME]).text())
-                        if self.timeFormat == cfg.HHMMSS
-                        else dec(self.twEvents.item(row, cfg.TW_OBS_FIELD[self.playerType][cfg.TIME]).text()),
-                        self.twEvents.item(row, cfg.TW_OBS_FIELD[self.playerType][cfg.SUBJECT]).text(),
-                        self.twEvents.item(row, cfg.TW_OBS_FIELD[self.playerType][cfg.BEHAVIOR_CODE]).text(),
-                    ]
-                )
+        rows_to_delete: list = []
+        for row in range(self.twEvents.rowCount()):
+            rows_to_delete.append(
+                self.twEvents.item(row, cfg.TW_OBS_FIELD[self.playerType][cfg.TIME]).data(Qt.UserRole)
+            )
 
-            self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS] = [
-                event
-                for event in self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS]
-                if [
-                    event[cfg.PJ_OBS_FIELDS[self.playerType][cfg.TIME]],
-                    event[cfg.PJ_OBS_FIELDS[self.playerType][cfg.SUBJECT]],
-                    event[cfg.PJ_OBS_FIELDS[self.playerType][cfg.BEHAVIOR_CODE]],
-                ]
-                not in rows_to_delete
-            ]
-
-        if self.playerType in (cfg.IMAGES, cfg.VIEWER_IMAGES):
-            for row in range(self.twEvents.rowCount()):
-                rows_to_delete.append(
-                    [
-                        self.twEvents.item(row, cfg.TW_OBS_FIELD[self.playerType][cfg.SUBJECT]).text(),
-                        self.twEvents.item(row, cfg.TW_OBS_FIELD[self.playerType][cfg.BEHAVIOR_CODE]).text(),
-                        int(self.twEvents.item(row, cfg.TW_OBS_FIELD[self.playerType][cfg.IMAGE_INDEX]).text()),
-                    ]
-                )
-
-            self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS] = [
-                event
-                for event in self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS]
-                if [
-                    event[cfg.PJ_OBS_FIELDS[self.playerType][cfg.SUBJECT]],
-                    event[cfg.PJ_OBS_FIELDS[self.playerType][cfg.BEHAVIOR_CODE]],
-                    event[cfg.PJ_OBS_FIELDS[self.playerType][cfg.IMAGE_INDEX]],
-                ]
-                not in rows_to_delete
-            ]
+        self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS] = [
+            event
+            for event_idx, event in enumerate(self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS])
+            if event_idx not in rows_to_delete
+        ]
 
         self.update_realtime_plot(force_plot=True)
 
@@ -351,50 +318,17 @@ def delete_selected_events(self):
         # fill the undo list
         fill_events_undo_list(self, "Undo 'Delete selected events'")
 
-        rows_to_delete = []
-        if self.playerType in (cfg.MEDIA, cfg.VIEWER_MEDIA, cfg.LIVE, cfg.VIEWER_LIVE):
-            for row in set([item.row() for item in self.twEvents.selectedIndexes()]):
-                rows_to_delete.append(
-                    [
-                        util.time2seconds(self.read_tw_event_field(row, self.playerType, cfg.TIME))
-                        if self.timeFormat == cfg.HHMMSS
-                        else dec(self.read_tw_event_field(row, self.playerType, cfg.TIME)),
-                        self.read_tw_event_field(row, self.playerType, cfg.SUBJECT),
-                        self.read_tw_event_field(row, self.playerType, cfg.BEHAVIOR_CODE),
-                    ]
-                )
+        rows_to_delete: list = []
+        for row in set([item.row() for item in self.twEvents.selectedIndexes()]):
+            rows_to_delete.append(
+                self.twEvents.item(row, cfg.TW_OBS_FIELD[self.playerType][cfg.TIME]).data(Qt.UserRole)
+            )
 
-            self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS] = [
-                event
-                for event in self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS]
-                if [
-                    self.read_event_field(event, self.playerType, cfg.TIME),
-                    self.read_event_field(event, self.playerType, cfg.SUBJECT),
-                    self.read_event_field(event, self.playerType, cfg.BEHAVIOR_CODE),
-                ]
-                not in rows_to_delete
-            ]
-
-        if self.playerType in (cfg.IMAGES, cfg.VIEWER_IMAGES):
-            for row in set([item.row() for item in self.twEvents.selectedIndexes()]):
-                rows_to_delete.append(
-                    [
-                        self.read_tw_event_field(row, self.playerType, cfg.SUBJECT),
-                        self.read_tw_event_field(row, self.playerType, cfg.BEHAVIOR_CODE),
-                        int(self.read_tw_event_field(row, self.playerType, cfg.IMAGE_INDEX)),
-                    ]
-                )
-
-            self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS] = [
-                event
-                for event in self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS]
-                if [
-                    self.read_event_field(event, self.playerType, cfg.SUBJECT),
-                    self.read_event_field(event, self.playerType, cfg.BEHAVIOR_CODE),
-                    self.read_event_field(event, self.playerType, cfg.IMAGE_INDEX),
-                ]
-                not in rows_to_delete
-            ]
+        self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS] = [
+            event
+            for event_idx, event in enumerate(self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS])
+            if event_idx not in rows_to_delete
+        ]
 
         self.update_realtime_plot(force_plot=True)
 
@@ -425,50 +359,48 @@ def select_events_between_activated(self):
                 return None
         return timeSeconds
 
-    if self.twEvents.rowCount():
-        text, ok = QInputDialog.getText(
-            self,
-            "Select events in time interval",
-            "Interval: (example: 12.5-14.7 or 02:45.780-03:15.120)",
-            QLineEdit.Normal,
-            "",
-        )
-
-        if ok and text != "":
-
-            if "-" not in text:
-                QMessageBox.critical(
-                    self, cfg.programName, "Use minus sign (-) to separate initial value from final value"
-                )
-                return
-
-            while " " in text:
-                text = text.replace(" ", "")
-
-            from_, to_ = text.split("-")[0:2]
-            from_sec = parseTime(from_)
-            if not from_sec:
-                QMessageBox.critical(self, cfg.programName, f"Time value not recognized: {from_}")
-                return
-            to_sec = parseTime(to_)
-            if not to_sec:
-                QMessageBox.critical(self, cfg.programName, f"Time value not recognized: {to_}")
-                return
-            if to_sec < from_sec:
-                QMessageBox.critical(self, cfg.programName, "The initial time is greater than the final time")
-                return
-            self.twEvents.clearSelection()
-            self.twEvents.setSelectionMode(QAbstractItemView.MultiSelection)
-            for r in range(0, self.twEvents.rowCount()):
-                if ":" in self.twEvents.item(r, 0).text():
-                    time = util.time2seconds(self.twEvents.item(r, 0).text())
-                else:
-                    time = dec(self.twEvents.item(r, 0).text())
-                if from_sec <= time <= to_sec:
-                    self.twEvents.selectRow(r)
-
-    else:
+    if not self.twEvents.rowCount():
         QMessageBox.warning(self, cfg.programName, "There are no events to select")
+        return
+
+    text, ok = QInputDialog.getText(
+        self,
+        "Select events in time interval",
+        "Interval: (example: 12.5-14.7 or 02:45.780-03:15.120)",
+        QLineEdit.Normal,
+        "",
+    )
+
+    if ok and text != "":
+
+        if "-" not in text:
+            QMessageBox.critical(self, cfg.programName, "Use minus sign (-) to separate initial value from final value")
+            return
+
+        while " " in text:
+            text = text.replace(" ", "")
+
+        from_, to_ = text.split("-")[0:2]
+        from_sec = parseTime(from_)
+        if not from_sec:
+            QMessageBox.critical(self, cfg.programName, f"Time value not recognized: {from_}")
+            return
+        to_sec = parseTime(to_)
+        if not to_sec:
+            QMessageBox.critical(self, cfg.programName, f"Time value not recognized: {to_}")
+            return
+        if to_sec < from_sec:
+            QMessageBox.critical(self, cfg.programName, "The initial time is greater than the final time")
+            return
+        self.twEvents.clearSelection()
+        self.twEvents.setSelectionMode(QAbstractItemView.MultiSelection)
+        for r in range(self.twEvents.rowCount()):
+            if ":" in self.twEvents.item(r, cfg.TW_EVENTS_FIELDS[self.playerType][cfg.TIME]).text():
+                time = util.time2seconds(self.twEvents.item(r, cfg.TW_EVENTS_FIELDS[self.playerType][cfg.TIME]).text())
+            else:
+                time = dec(self.twEvents.item(r, cfg.TW_EVENTS_FIELDS[self.playerType][cfg.TIME]).text())
+            if from_sec <= time <= to_sec:
+                self.twEvents.selectRow(r)
 
 
 def edit_selected_events(self):

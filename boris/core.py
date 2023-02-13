@@ -3420,7 +3420,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         if (
             ct
-            >= self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS][-1][cfg.TW_OBS_FIELD[self.playerType]["time"]]
+            >= self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS][-1][
+                cfg.TW_OBS_FIELD[self.playerType][cfg.TIME]
+            ]
         ):
             self.events_current_row = len(self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS])
         else:
@@ -3429,7 +3431,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 for idx, x in enumerate(self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS][:-1])
                 if x[0] <= ct
                 and self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS][idx + 1][
-                    cfg.TW_OBS_FIELD[self.playerType]["time"]
+                    cfg.TW_OBS_FIELD[self.playerType][cfg.TIME]
                 ]
                 > ct
             ]

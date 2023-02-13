@@ -122,9 +122,9 @@ def fix_unpaired_events(self):
                 self.load_tw_events(self.observationId)
                 item = self.twEvents.item(
                     [
-                        i
-                        for i, t in enumerate(self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS])
-                        if t[0] == fix_at_time
+                        event_idx
+                        for event_idx, event in enumerate(self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS])
+                        if event[cfg.TIME] == fix_at_time
                     ][0],
                     0,
                 )
@@ -137,8 +137,7 @@ def fix_unpaired_events(self):
             return
 
         # check if state events are paired
-        out = ""
-        not_paired_obs_list = []
+        out: str = ""
         for obs_id in selected_observations:
             r, msg = project_functions.check_state_events_obs(
                 obs_id, self.pj[cfg.ETHOGRAM], self.pj[cfg.OBSERVATIONS][obs_id]
