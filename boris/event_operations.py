@@ -287,9 +287,9 @@ def delete_all_events(self):
             for row in range(self.twEvents.rowCount()):
                 rows_to_delete.append(
                     [
-                        util.time2seconds(self.twEvents.item(row, cfg.TW_OBS_FIELD[self.playerType]["time"]).text())
+                        util.time2seconds(self.twEvents.item(row, cfg.TW_OBS_FIELD[self.playerType][cfg.TIME]).text())
                         if self.timeFormat == cfg.HHMMSS
-                        else dec(self.twEvents.item(row, cfg.TW_OBS_FIELD[self.playerType]["time"]).text()),
+                        else dec(self.twEvents.item(row, cfg.TW_OBS_FIELD[self.playerType][cfg.TIME]).text()),
                         self.twEvents.item(row, cfg.TW_OBS_FIELD[self.playerType][cfg.SUBJECT]).text(),
                         self.twEvents.item(row, cfg.TW_OBS_FIELD[self.playerType][cfg.BEHAVIOR_CODE]).text(),
                     ]
@@ -299,7 +299,7 @@ def delete_all_events(self):
                 event
                 for event in self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS]
                 if [
-                    event[cfg.PJ_OBS_FIELDS[self.playerType]["time"]],
+                    event[cfg.PJ_OBS_FIELDS[self.playerType][cfg.TIME]],
                     event[cfg.PJ_OBS_FIELDS[self.playerType][cfg.SUBJECT]],
                     event[cfg.PJ_OBS_FIELDS[self.playerType][cfg.BEHAVIOR_CODE]],
                 ]
@@ -498,8 +498,12 @@ def edit_selected_events(self):
             # fill the undo list
             fill_events_undo_list(self, "Undo 'Edit selected event(s)'")
 
-            tsb_to_edit = []
+            tsb_to_edit: list = []
             for row in twEvents_rows_to_edit:
+                tsb_to_edit.append(
+                    self.twEvents.item(row, cfg.TW_OBS_FIELD[self.playerType][cfg.TIME]).data(Qt.UserRole)
+                )
+                """
                 tsb_to_edit.append(
                     [
                         util.time2seconds(self.read_tw_event_field(row, self.playerType, cfg.TIME))
@@ -509,16 +513,20 @@ def edit_selected_events(self):
                         self.read_tw_event_field(row, self.playerType, cfg.BEHAVIOR_CODE),
                     ]
                 )
+                """
 
             behavior_codes = []
             modifiers_mem = []
             mem_event_idx = []
             for idx, event in enumerate(self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS]):
+                """
                 if [
                     self.read_event_field(event, self.playerType, cfg.TIME),
                     self.read_event_field(event, self.playerType, cfg.SUBJECT),
                     self.read_event_field(event, self.playerType, cfg.BEHAVIOR_CODE),
                 ] in tsb_to_edit:
+                """
+                if idx in tsb_to_edit:
 
                     new_event = list(event)
                     if dialogWindow.rbSubject.isChecked():
@@ -603,6 +611,9 @@ def edit_event(self):
 
     twEvents_row = self.twEvents.selectedItems()[0].row()
 
+    pj_event_idx = self.twEvents.item(twEvents_row, cfg.TW_OBS_FIELD[self.playerType][cfg.TIME]).data(Qt.UserRole)
+
+    """
     if self.playerType in (cfg.MEDIA, cfg.LIVE, cfg.VIEWER_MEDIA, cfg.VIEWER_LIVE):
         tsb_to_edit = [
             util.time2seconds(self.read_tw_event_field(twEvents_row, self.playerType, cfg.TIME))
@@ -640,14 +651,15 @@ def edit_event(self):
             ]
             == tsb_to_edit
         ][0]
+    """
 
     if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE] in (cfg.IMAGES):
-        value = self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS][row][
+        value = self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS][pj_event_idx][
             cfg.PJ_OBS_FIELDS[self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE]][cfg.IMAGE_INDEX]
         ]
     elif self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE] in (cfg.LIVE, cfg.MEDIA):
-        value = self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS][row][
-            cfg.PJ_OBS_FIELDS[self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE]]["time"]
+        value = self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS][pj_event_idx][
+            cfg.PJ_OBS_FIELDS[self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE]][cfg.TIME]
         ]
     else:
         QMessageBox.warning(
@@ -675,10 +687,13 @@ def edit_event(self):
 
     editWindow.cobSubject.addItems(sortedSubjects)
 
-    if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS][row][cfg.EVENT_SUBJECT_FIELD_IDX] in sortedSubjects:
+    if (
+        self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS][pj_event_idx][cfg.EVENT_SUBJECT_FIELD_IDX]
+        in sortedSubjects
+    ):
         editWindow.cobSubject.setCurrentIndex(
             sortedSubjects.index(
-                self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS][row][cfg.EVENT_SUBJECT_FIELD_IDX]
+                self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS][pj_event_idx][cfg.EVENT_SUBJECT_FIELD_IDX]
             )
         )
     else:
@@ -686,7 +701,7 @@ def edit_event(self):
             self,
             cfg.programName,
             (
-                f"The subject <b>{self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS][row][cfg.EVENT_SUBJECT_FIELD_IDX]}</b> "
+                f"The subject <b>{self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS][pj_event_idx][cfg.EVENT_SUBJECT_FIELD_IDX]}</b> "
                 "does not exist more in the subject's list"
             ),
         )
@@ -696,16 +711,19 @@ def edit_event(self):
     editWindow.cobCode.addItems(sortedCodes)
 
     # check if selected code is in code's list (no modification of codes)
-    if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS][row][cfg.EVENT_BEHAVIOR_FIELD_IDX] in sortedCodes:
+    if (
+        self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS][pj_event_idx][cfg.EVENT_BEHAVIOR_FIELD_IDX]
+        in sortedCodes
+    ):
         editWindow.cobCode.setCurrentIndex(
             sortedCodes.index(
-                self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS][row][cfg.EVENT_BEHAVIOR_FIELD_IDX]
+                self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS][pj_event_idx][cfg.EVENT_BEHAVIOR_FIELD_IDX]
             )
         )
     else:
         logging.warning(
             (
-                f"The behaviour {self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS][row][cfg.EVENT_BEHAVIOR_FIELD_IDX]} "
+                f"The behaviour {self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS][pj_event_idx][cfg.EVENT_BEHAVIOR_FIELD_IDX]} "
                 "does not exist more in the ethogram"
             )
         )
@@ -713,19 +731,19 @@ def edit_event(self):
             self,
             cfg.programName,
             (
-                f"The behaviour <b>{self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS][row][cfg.EVENT_BEHAVIOR_FIELD_IDX]}</b> "
+                f"The behaviour <b>{self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS][pj_event_idx][cfg.EVENT_BEHAVIOR_FIELD_IDX]}</b> "
                 "does not exist more in the ethogram"
             ),
         )
         editWindow.cobCode.setCurrentIndex(0)
 
     logging.debug(
-        f"original modifiers: {self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS][row][cfg.EVENT_MODIFIER_FIELD_IDX]}"
+        f"original modifiers: {self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS][pj_event_idx][cfg.EVENT_MODIFIER_FIELD_IDX]}"
     )
 
     # comment
     editWindow.leComment.setPlainText(
-        self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS][row][cfg.EVENT_COMMENT_FIELD_IDX]
+        self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS][pj_event_idx][cfg.EVENT_COMMENT_FIELD_IDX]
     )
 
     flag_ok = False  # for looping until event is OK or Cancel pressed
@@ -743,10 +761,10 @@ def edit_event(self):
                         event = self.full_event(key)
                         event[cfg.SUBJECT] = editWindow.cobSubject.currentText()
                         event[cfg.COMMENT] = editWindow.leComment.toPlainText()
-                        event["row"] = row
-                        event["original_modifiers"] = self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS][row][
-                            cfg.PJ_OBS_FIELDS[self.playerType][cfg.MODIFIER]
-                        ]
+                        event["row"] = pj_event_idx
+                        event["original_modifiers"] = self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS][
+                            pj_event_idx
+                        ][cfg.PJ_OBS_FIELDS[self.playerType][cfg.MODIFIER]]
 
                         r = self.write_event(event, new_time)
                         if r == 1:  # same event already present
@@ -766,10 +784,10 @@ def edit_event(self):
                         event = self.full_event(key)
                         event[cfg.SUBJECT] = editWindow.cobSubject.currentText()
                         event[cfg.COMMENT] = editWindow.leComment.toPlainText()
-                        event["row"] = row
-                        event["original_modifiers"] = self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS][row][
-                            cfg.PJ_OBS_FIELDS[self.playerType][cfg.MODIFIER]
-                        ]
+                        event["row"] = pj_event_idx
+                        event["original_modifiers"] = self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS][
+                            pj_event_idx
+                        ][cfg.PJ_OBS_FIELDS[self.playerType][cfg.MODIFIER]]
 
                         try:
                             event[cfg.IMAGE_PATH] = self.images_list[new_index]
@@ -834,6 +852,19 @@ def edit_time_selected_events(self):
         ):
             return
 
+        # fill the undo list
+        fill_events_undo_list(self, "Undo 'Edit time'")
+
+        for tw_event_idx in twEvents_rows_to_shift:
+            pj_event_idx = self.twEvents.item(tw_event_idx, cfg.TW_OBS_FIELD[self.playerType][cfg.TIME]).data(
+                Qt.UserRole
+            )
+            self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS][pj_event_idx][
+                cfg.PJ_OBS_FIELDS[self.playerType][cfg.TIME]
+            ] += dec(f"{d:.3f}")
+            self.project_changed()
+
+        """
         tsb_to_shift = []
         for row in twEvents_rows_to_shift:
             tsb_to_shift.append(
@@ -856,6 +887,7 @@ def edit_time_selected_events(self):
                     cfg.PJ_OBS_FIELDS[self.playerType][cfg.TIME]
                 ] += dec(f"{d:.3f}")
                 self.project_changed()
+        """
 
         self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS] = sorted(
             self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS]

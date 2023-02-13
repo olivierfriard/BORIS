@@ -1834,7 +1834,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.twEvents.setRowCount(0)
         row = 0
 
-        for event in self.pj[cfg.OBSERVATIONS][obs_id][cfg.EVENTS]:
+        for event_idx, event in enumerate(self.pj[cfg.OBSERVATIONS][obs_id][cfg.EVENTS]):
 
             if (
                 self.filtered_behaviors
@@ -1855,12 +1855,17 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
                 if field_type in cfg.PJ_EVENTS_FIELDS[self.playerType]:
 
-                    # field = event[cfg.PJ_OBS_FIELDS[self.playerType][field_type]]
                     field = self.read_event_field(event, self.playerType, field_type)
-                    if field_type == "time":
-                        field = str(util.convertTime(self.timeFormat, field))
+                    if field_type == cfg.TIME:
+                        """field = str(util.convertTime(self.timeFormat, field))"""
+                        item = QTableWidgetItem(str(util.convertTime(self.timeFormat, field)))
+
+                        # add index in project events
+                        item.setData(Qt.UserRole, event_idx)
+                        self.twEvents.setItem(row, cfg.TW_OBS_FIELD[self.playerType][field_type], item)
+                        continue
+
                     if field_type == cfg.IMAGE_INDEX:
-                        # field = str(round(field))
                         field = str(field)
 
                     self.twEvents.setItem(row, cfg.TW_OBS_FIELD[self.playerType][field_type], QTableWidgetItem(field))
