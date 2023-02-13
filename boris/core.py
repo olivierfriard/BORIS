@@ -4720,7 +4720,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         fields_list = []
 
         if self.find_dialog.cbSubject.isChecked():
-            fields_list.append(cfg.EVENT_SUBJECT_FIELD_IDX)
+            fields_list.append(cfg.TW_OBS_FIELD[self.playerType][cfg.SUBJECT])
 
         if self.find_dialog.cbBehavior.isChecked():
             fields_list.append(cfg.EVENT_BEHAVIOR_FIELD_IDX)
