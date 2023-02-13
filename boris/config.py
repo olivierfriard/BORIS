@@ -27,7 +27,7 @@ project_format_version: str = "7.0"
 # minimal project version for handling observations from images
 IMAGES_OBS_PROJECT_MIN_VERSION: tuple = (8, 6)
 
-IMAGE_EXTENSIONS: tuple = ("*.jpg", "*.png", "*.jpeg", "*.tiff", "*.tif", "*.webp")
+IMAGE_EXTENSIONS: tuple = ("*.jpg", "*.png", "*.jpeg", "*.tiff", "*.tif", "*.webp", "*.bmp")
 
 CHECK_NEW_VERSION_DELAY: int = 15 * 24 * 60 * 60
 
