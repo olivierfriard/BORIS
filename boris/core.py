@@ -4718,10 +4718,13 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         self.find_dialog.lb_message.setText("")
         fields_list = []
+
         if self.find_dialog.cbSubject.isChecked():
             fields_list.append(cfg.EVENT_SUBJECT_FIELD_IDX)
+
         if self.find_dialog.cbBehavior.isChecked():
             fields_list.append(cfg.EVENT_BEHAVIOR_FIELD_IDX)
+
         if self.find_dialog.cbModifier.isChecked():
             # fields_list.append(cfg.EVENT_MODIFIER_FIELD_IDX )
             fields_list.append(4)
@@ -4734,6 +4737,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         if not self.find_dialog.findText.text():
             self.find_dialog.lb_message.setText('<font color="red">Nothing to search!</font>')
             return
+        """for event_idx, event in enumerate(self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS]):"""
         for event_idx in range(self.twEvents.rowCount()):
             if event_idx <= self.find_dialog.currentIdx:
                 continue
