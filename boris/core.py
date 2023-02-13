@@ -4727,7 +4727,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             fields_list.append(4)
 
         if self.find_dialog.cbComment.isChecked():
-            """fields_list.append(EVENT_COMMENT_FIELD_IDX)"""
             fields_list.append(5)
         if not fields_list:
             self.find_dialog.lb_message.setText('<font color="red">No fields selected!</font>')
@@ -4735,31 +4734,15 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         if not self.find_dialog.findText.text():
             self.find_dialog.lb_message.setText('<font color="red">Nothing to search!</font>')
             return
-        """for event_idx, event in enumerate(self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS]):"""
         for event_idx in range(self.twEvents.rowCount()):
             if event_idx <= self.find_dialog.currentIdx:
                 continue
-
-            # find only in filtered events
-            """
-            if self.filtered_subjects:
-                if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS][event_idx][EVENT_SUBJECT_FIELD_IDX] not in self.filtered_subjects:
-                    continue
-            if self.filtered_behaviors:
-                if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS][event_idx][EVENT_BEHAVIOR_FIELD_IDX] not in self.filtered_behaviors:
-                    continue
-            """
 
             if (not self.find_dialog.cbFindInSelectedEvents.isChecked()) or (
                 self.find_dialog.cbFindInSelectedEvents.isChecked() and event_idx in self.find_dialog.rowsToFind
             ):
 
                 for idx in fields_list:
-                    """
-                    if (self.find_dialog.cb_case_sensitive.isChecked() and self.find_dialog.findText.text() in event[idx]) \
-                       or (not self.find_dialog.cb_case_sensitive.isChecked() and
-                           self.find_dialog.findText.text().upper() in event[idx].upper()):
-                    """
                     if (
                         self.find_dialog.cb_case_sensitive.isChecked()
                         and self.find_dialog.findText.text() in self.twEvents.item(event_idx, idx).text()
