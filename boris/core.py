@@ -4677,15 +4677,14 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             fields_list.append(cfg.TW_OBS_FIELD[self.playerType][cfg.SUBJECT])
 
         if self.find_dialog.cbBehavior.isChecked():
-            fields_list.append(cfg.EVENT_BEHAVIOR_FIELD_IDX)
+            fields_list.append(cfg.TW_OBS_FIELD[self.playerType][cfg.BEHAVIOR_CODE])
 
         if self.find_dialog.cbModifier.isChecked():
-            # fields_list.append(cfg.EVENT_MODIFIER_FIELD_IDX )
-            fields_list.append(4)
+            fields_list.append(cfg.TW_OBS_FIELD[self.playerType][cfg.MODIFIER])
 
         if self.find_dialog.cbComment.isChecked():
-            """fields_list.append(EVENT_COMMENT_FIELD_IDX)"""
-            fields_list.append(5)
+            fields_list.append(cfg.TW_OBS_FIELD[self.playerType][cfg.COMMENT])
+
         if not fields_list:
             self.find_dialog.lb_message.setText('<font color="red">No fields selected!</font>')
             return
