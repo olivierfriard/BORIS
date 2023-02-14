@@ -1855,17 +1855,18 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
                 if field_type in cfg.PJ_EVENTS_FIELDS[self.playerType]:
 
+                    print(f"{field_type=}")
+
                     field = self.read_event_field(event, self.playerType, field_type)
                     if field_type == cfg.TIME:
-                        """field = str(util.convertTime(self.timeFormat, field))"""
                         item = QTableWidgetItem(str(util.convertTime(self.timeFormat, field)))
 
-                        # add index in project events
+                        # add index of project events
                         item.setData(Qt.UserRole, event_idx)
                         self.twEvents.setItem(row, cfg.TW_OBS_FIELD[self.playerType][field_type], item)
                         continue
 
-                    if field_type == cfg.IMAGE_INDEX:
+                    if field_type in (cfg.IMAGE_INDEX, cfg.FRAME_INDEX):
                         field = str(field)
 
                     self.twEvents.setItem(row, cfg.TW_OBS_FIELD[self.playerType][field_type], QTableWidgetItem(field))
@@ -4118,6 +4119,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         # add event to pj
         if editing_event:  # modifying event
 
+            print(f"{frame_idx=}")
+
             if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE] == cfg.MEDIA:
                 self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS][event["row"]] = [
                     mem_time,
@@ -4155,6 +4158,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS].sort(
                     key=lambda x: x[cfg.PJ_OBS_FIELDS[self.playerType][cfg.IMAGE_INDEX]]
                 )
+
+            # print(f'{self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS][event["row"]]=}')
 
         else:  # add event
             if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE] in (cfg.MEDIA, cfg.LIVE):

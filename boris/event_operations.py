@@ -545,46 +545,6 @@ def edit_event(self):
 
     pj_event_idx = self.twEvents.item(twEvents_row, cfg.TW_OBS_FIELD[self.playerType][cfg.TIME]).data(Qt.UserRole)
 
-    """
-    if self.playerType in (cfg.MEDIA, cfg.LIVE, cfg.VIEWER_MEDIA, cfg.VIEWER_LIVE):
-        tsb_to_edit = [
-            util.time2seconds(self.read_tw_event_field(twEvents_row, self.playerType, cfg.TIME))
-            if self.timeFormat == cfg.HHMMSS
-            else dec(self.read_tw_event_field(twEvents_row, self.playerType, cfg.TIME)),
-            self.read_tw_event_field(twEvents_row, self.playerType, cfg.SUBJECT),
-            self.read_tw_event_field(twEvents_row, self.playerType, cfg.BEHAVIOR_CODE),
-        ]
-
-        row = [
-            idx
-            for idx, event in enumerate(self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS])
-            if [
-                self.read_event_field(event, self.playerType, cfg.TIME),
-                self.read_event_field(event, self.playerType, cfg.SUBJECT),
-                self.read_event_field(event, self.playerType, cfg.BEHAVIOR_CODE),
-            ]
-            == tsb_to_edit
-        ][0]
-
-    if self.playerType in (cfg.IMAGES, cfg.VIEWER_IMAGES):
-        tsb_to_edit = [
-            self.read_tw_event_field(twEvents_row, self.playerType, cfg.SUBJECT),
-            self.read_tw_event_field(twEvents_row, self.playerType, cfg.BEHAVIOR_CODE),
-            int(self.read_tw_event_field(twEvents_row, self.playerType, cfg.IMAGE_INDEX)),
-        ]
-
-        row = [
-            idx
-            for idx, event in enumerate(self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS])
-            if [
-                self.read_event_field(event, self.playerType, cfg.SUBJECT),
-                self.read_event_field(event, self.playerType, cfg.BEHAVIOR_CODE),
-                self.read_event_field(event, self.playerType, cfg.IMAGE_INDEX),
-            ]
-            == tsb_to_edit
-        ][0]
-    """
-
     if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE] in (cfg.IMAGES):
         value = self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS][pj_event_idx][
             cfg.PJ_OBS_FIELDS[self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE]][cfg.IMAGE_INDEX]
@@ -673,6 +633,15 @@ def edit_event(self):
         f"original modifiers: {self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS][pj_event_idx][cfg.EVENT_MODIFIER_FIELD_IDX]}"
     )
 
+    # frame index
+    frame_idx = self.read_event_field(
+        self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS][pj_event_idx],
+        self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE],
+        cfg.FRAME_INDEX,
+    )
+    # print(f"{frame_idx=}  {type(frame_idx)}")
+    editWindow.sb_frame_idx.setValue(0 if frame_idx == cfg.NA else frame_idx)
+
     # comment
     editWindow.leComment.setPlainText(
         self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS][pj_event_idx][cfg.EVENT_COMMENT_FIELD_IDX]
@@ -693,6 +662,13 @@ def edit_event(self):
                         event = self.full_event(key)
                         event[cfg.SUBJECT] = editWindow.cobSubject.currentText()
                         event[cfg.COMMENT] = editWindow.leComment.toPlainText()
+
+                        if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE] == cfg.MEDIA:
+                            if editWindow.sb_frame_idx.value():
+                                event[cfg.FRAME_INDEX] = editWindow.sb_frame_idx.value()
+                            else:
+                                event[cfg.FRAME_INDEX] = cfg.NA
+
                         event["row"] = pj_event_idx
                         event["original_modifiers"] = self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS][
                             pj_event_idx
