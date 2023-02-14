@@ -639,7 +639,6 @@ def edit_event(self):
         self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE],
         cfg.FRAME_INDEX,
     )
-    # print(f"{frame_idx=}  {type(frame_idx)}")
     editWindow.sb_frame_idx.setValue(0 if frame_idx == cfg.NA else frame_idx)
 
     # comment
@@ -880,3 +879,15 @@ def paste_clipboard_to_events(self):
     self.load_tw_events(self.observationId)
 
     self.update_realtime_plot(force_plot=True)
+
+
+def read_event_field(event: list, player_type: str, field_type: str) -> Union[str, None, int, dec]:
+    """
+    return value of field for event or NA if not available
+    """
+    if field_type not in cfg.PJ_EVENTS_FIELDS[player_type]:
+        return None
+    if cfg.PJ_OBS_FIELDS[player_type][field_type] < len(event):
+        return event[cfg.PJ_OBS_FIELDS[player_type][field_type]]
+    else:
+        return cfg.NA

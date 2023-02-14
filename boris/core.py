@@ -1855,8 +1855,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
                 if field_type in cfg.PJ_EVENTS_FIELDS[self.playerType]:
 
-                    print(f"{field_type=}")
-
                     field = self.read_event_field(event, self.playerType, field_type)
                     if field_type == cfg.TIME:
                         item = QTableWidgetItem(str(util.convertTime(self.timeFormat, field)))
