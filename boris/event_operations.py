@@ -125,7 +125,7 @@ def add_event(self):
 
         # IMAGES
         if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE] == cfg.IMAGES:
-            new_index = editWindow.img_idx_widget.value()
+            new_index = editWindow.sb_image_idx.value()
 
             for idx in self.pj[cfg.ETHOGRAM]:
                 if self.pj[cfg.ETHOGRAM][idx][cfg.BEHAVIOR_CODE] == editWindow.cobCode.currentText():
@@ -136,20 +136,29 @@ def add_event(self):
                     if editWindow.leComment.toPlainText():
                         event[cfg.COMMENT] = editWindow.leComment.toPlainText()
 
-                    event[cfg.IMAGE_PATH] = self.images_list[new_index]
+                    if self.playerType != cfg.VIEWER_IMAGES:
+                        event[cfg.IMAGE_PATH] = self.images_list[new_index]
+                    else:
+                        event[cfg.IMAGE_PATH] = ""
+
                     event[cfg.IMAGE_INDEX] = new_index
 
                     time_ = dec("NaN")
-                    if (
-                        self.pj[cfg.OBSERVATIONS][self.observationId].get(cfg.USE_EXIF_DATE, False)
-                        and self.extract_exif_DateTimeOriginal(self.images_list[new_index]) != -1
-                    ):
-                        time_ = self.extract_exif_DateTimeOriginal(self.images_list[new_index]) - self.image_time_ref
+                    if self.pj[cfg.OBSERVATIONS][self.observationId].get(cfg.USE_EXIF_DATE, False):
+                        if self.playerType != cfg.VIEWER_IMAGES:
+                            if self.extract_exif_DateTimeOriginal(self.images_list[new_index]) != -1:
+                                time_ = (
+                                    self.extract_exif_DateTimeOriginal(self.images_list[new_index])
+                                    - self.image_time_ref
+                                )
 
                     elif self.pj[cfg.OBSERVATIONS][self.observationId].get(cfg.TIME_LAPSE, 0):
                         time_ = new_index * self.pj[cfg.OBSERVATIONS][self.observationId].get(cfg.TIME_LAPSE, 0)
 
+                    print(f"{time_=}")
+
                     self.write_event(event, dec(time_).quantize(dec("0.001"), rounding=ROUND_DOWN))
+
                     break
 
     if self.pause_before_addevent:
