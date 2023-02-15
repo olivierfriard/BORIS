@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>413</width>
-    <height>408</height>
+    <height>488</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -25,23 +25,6 @@
      </item>
      <item>
       <layout class="QHBoxLayout" name="horizontalLayout_2">
-       <item>
-        <widget class="QTimeEdit" name="teTime">
-         <property name="displayFormat">
-          <string>hh:mm:ss.zzz</string>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="QDoubleSpinBox" name="dsbTime">
-         <property name="decimals">
-          <number>3</number>
-         </property>
-         <property name="maximum">
-          <double>9999999.000000000000000</double>
-         </property>
-        </widget>
-       </item>
        <item>
         <widget class="QPushButton" name="pb_set_to_current_time">
          <property name="text">
@@ -63,6 +46,37 @@
         </spacer>
        </item>
       </layout>
+     </item>
+    </layout>
+   </item>
+   <item>
+    <layout class="QHBoxLayout" name="horizontalLayout_7">
+     <item>
+      <widget class="QLabel" name="lb_image_idx">
+       <property name="text">
+        <string>Image index</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QSpinBox" name="sb_image_idx">
+       <property name="maximum">
+        <number>10000000</number>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <spacer name="horizontalSpacer_6">
+       <property name="orientation">
+        <enum>Qt::Horizontal</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>40</width>
+         <height>20</height>
+        </size>
+       </property>
+      </spacer>
      </item>
     </layout>
    </item>

@@ -1774,22 +1774,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             if self.dw_player[id_].zoomed:
                 self.dw_player[id_].mediaplayer.video_set_crop_geometry(f"{right}x{bottom}+{left}+{top}")
 
-    ''' 2019-12-12
-    def eventFilter(self, source, event):
-        """
-        send event from widget to mainwindow
-        """
-
-        #logging.debug("event filter {}".format(event.type()))
-
-
-        if event.type() == QtCore.QEvent.KeyPress:
-            key = event.key()
-            if key in [Qt.Key_Up, Qt.Key_Down, Qt.Key_Left, Qt.Key_Right, Qt.Key_PageDown, Qt.Key_PageUp]:
-                self.keyPressEvent(event)
-
-        return QMainWindow.eventFilter(self, source, event)
     '''
+    moved in event_operations module
 
     def read_event_field(self, event: list, player_type: str, field_type: str) -> Union[str, None, int, dec]:
         """
@@ -1801,6 +1787,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             return event[cfg.PJ_OBS_FIELDS[player_type][field_type]]
         else:
             return cfg.NA
+    '''
 
     def read_tw_event_field(self, row_idx: int, player_type: str, field_type: str) -> Union[str, None, int, dec]:
         """
@@ -1855,7 +1842,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
                 if field_type in cfg.PJ_EVENTS_FIELDS[self.playerType]:
 
-                    field = self.read_event_field(event, self.playerType, field_type)
+                    field = event_operations.read_event_field(event, self.playerType, field_type)
                     if field_type == cfg.TIME:
                         item = QTableWidgetItem(str(util.convertTime(self.timeFormat, field)))
 
@@ -4116,8 +4103,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         # add event to pj
         if editing_event:  # modifying event
-
-            print(f"{frame_idx=}")
 
             if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE] == cfg.MEDIA:
                 self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS][event["row"]] = [

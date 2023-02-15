@@ -5,7 +5,7 @@ widget to edit duration > 24 h or < 0
 https://stackoverflow.com/questions/44380202/creating-a-custom-widget-in-pyqt5
 """
 
-import decimal as dec
+from decimal import Decimal as dec
 
 from PyQt5.QtWidgets import (
     QWidget,
@@ -44,7 +44,7 @@ class Widget_hhmmss(QWidget):
         self.hours = QSpinBox()
         self.hours.setValue(0)
         self.hours.setMinimum(0)
-        self.hours.setMaximum(1000)
+        self.hours.setMaximum(2**31 - 1)
         self.hours.valueChanged.connect(self.update_time_value)
         lay.addWidget(self.hours)
         lay.addWidget(QLabel(":"))
@@ -154,7 +154,7 @@ class Duration_widget(QWidget):
 
         super().__init__()
 
-        self.time_value = dec.Decimal(time_value).quantize(dec.Decimal(".001"))
+        self.time_value = dec(time_value).quantize(dec(".001"))
 
         lay = QHBoxLayout(self)
         lay.setSpacing(0)
@@ -236,8 +236,8 @@ class Duration_widget(QWidget):
         if time_format in [cfg.S]:
             self.set_format_s()
 
-    def get_time(self) -> dec.Decimal:
+    def get_time(self) -> dec:
         """
         return time displayed by widget in seconds
         """
-        return dec.Decimal(self.time_value).quantize(dec.Decimal(".001"))
+        return dec(self.time_value).quantize(dec(".001"))

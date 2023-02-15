@@ -1121,7 +1121,6 @@ def observed_interval(observation: dict) -> Tuple[dec, dec]:
 def events_start_stop(ethogram: dict, events: list) -> list:
     """
     returns events with status (START/STOP or POINT)
-    Take consideration of subject
 
     Args:
         events (list): list of events

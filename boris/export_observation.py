@@ -348,6 +348,8 @@ def export_tabular_events(
 
     eventsWithStatus = project_functions.events_start_stop(ethogram, observation[cfg.EVENTS])
 
+    print(f"{eventsWithStatus=}")
+
     # check max number of modifiers
     max_modifiers = 0
     for event in eventsWithStatus:
