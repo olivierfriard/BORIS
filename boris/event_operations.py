@@ -652,6 +652,8 @@ def edit_event(self):
         cfg.FRAME_INDEX,
     )
     editWindow.sb_frame_idx.setValue(0 if frame_idx in (cfg.NA, None) else frame_idx)
+    if frame_idx in (cfg.NA, None):
+        editWindow.cb_set_frame_idx_na.setChecked(True)
 
     # comment
     editWindow.leComment.setPlainText(

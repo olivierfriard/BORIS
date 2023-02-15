@@ -171,7 +171,7 @@ class Duration_widget(QWidget):
 
         lay.addWidget(self.Stack)
 
-        self.format_hhmmss = QRadioButton(cfg.HHMMSS)
+        self.format_hhmmss = QRadioButton("HH:MM:SS:MS")
         self.format_hhmmss.setChecked(True)
         self.format_hhmmss.clicked.connect(self.set_format_hhmmss)
         lay.addWidget(self.format_hhmmss)
