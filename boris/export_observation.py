@@ -319,10 +319,6 @@ def export_tabular_events(
     interval = parameters["time"]
 
     start_coding, end_coding, coding_duration = observation_operations.coding_time(pj[cfg.OBSERVATIONS], [obs_id])
-    """
-    if start_coding is None and end_coding is None:  # no events
-        return data, 0
-    """
 
     if interval == cfg.TIME_EVENTS:
         min_time = start_coding
@@ -346,13 +342,11 @@ def export_tabular_events(
 
     logging.debug(f"min_time: {min_time}  max_time: {max_time}")
 
-    eventsWithStatus = project_functions.events_start_stop(ethogram, observation[cfg.EVENTS])
-
-    print(f"{eventsWithStatus=}")
+    events_with_status = project_functions.events_start_stop(ethogram, observation[cfg.EVENTS], observation[cfg.TYPE])
 
     # check max number of modifiers
     max_modifiers = 0
-    for event in eventsWithStatus:
+    for event in events_with_status:
         if not math.isnan(min_time) and not math.isnan(max_time):  # obs not from pictures
             if min_time <= event[cfg.EVENT_TIME_FIELD_IDX] <= max_time:
                 if event[cfg.EVENT_MODIFIER_FIELD_IDX]:
@@ -417,7 +411,7 @@ def export_tabular_events(
         except KeyError:
             pass
 
-    for event in eventsWithStatus:
+    for event in events_with_status:
         if (not math.isnan(min_time)) and not (min_time <= event[cfg.EVENT_TIME_FIELD_IDX] <= max_time):
             continue
         if (
@@ -525,11 +519,9 @@ def export_tabular_events(
                     fields.append(m)
 
             # status (START/STOP)
-            # FIXME: Noooo!!!
             fields.append(event[-1])
 
             # time
-            # if event[cfg.EVENT_TIME_FIELD_IDX]
             fields.append(util.convertTime(time_format=cfg.S, sec=event[cfg.EVENT_TIME_FIELD_IDX]))
 
             # check video file name containing the event
@@ -946,10 +938,12 @@ def events_to_behavioral_sequences(pj, obs_id: str, subj: str, parameters: dict,
         str: behavioral string for selected subject in selected observation
     """
 
-    out = ""
-    current_states = []
+    out: str = ""
+    current_states: list = []
     # add status (POINT, START, STOP) to event
-    events_with_status = project_functions.events_start_stop(pj[cfg.ETHOGRAM], pj[cfg.OBSERVATIONS][obs_id][cfg.EVENTS])
+    events_with_status = project_functions.events_start_stop(
+        pj[cfg.ETHOGRAM], pj[cfg.OBSERVATIONS][obs_id][cfg.EVENTS], pj[cfg.OBSERVATIONS][obs_id][cfg.TYPE]
+    )
 
     for event in events_with_status:
         # check if event in selected behaviors
@@ -1035,7 +1029,9 @@ def events_to_behavioral_sequences_all_subj(
 
     out = ""
     current_states = {i: [] for i in subjects_list}
-    events_with_status = project_functions.events_start_stop(pj[cfg.ETHOGRAM], pj[cfg.OBSERVATIONS][obs_id][cfg.EVENTS])
+    events_with_status = project_functions.events_start_stop(
+        pj[cfg.ETHOGRAM], pj[cfg.OBSERVATIONS][obs_id][cfg.EVENTS], pj[cfg.OBSERVATIONS][obs_id][cfg.TYPE]
+    )
 
     for event in events_with_status:
         # check if event in selected behaviors
@@ -1120,9 +1116,7 @@ def events_to_timed_behavioral_sequences(
         str: behavioral string for selected subject in selected observation
     """
 
-    out = ""
-    current_states = []
-    # events_with_status = project_functions.events_start_stop(pj[ETHOGRAM], pj[cfg.OBSERVATIONS][obs_id][cfg.EVENTS])
+    out: str = ""
 
     state_behaviors_codes = util.state_behavior_codes(pj[cfg.ETHOGRAM])
     delta = dec(str(round(precision, 3)))

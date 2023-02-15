@@ -394,7 +394,7 @@ def get_current_states_modifiers_by_subject(
     Returns:
         dict: current states by subject. dict of list
     """
-    current_states = {}
+    current_states: dict = {}
     if time.is_nan():
         for idx in subjects:
             current_states[idx] = []
