@@ -667,6 +667,8 @@ INIT_PARAM = {
     PROJECT_FILE_INDENTATION: PROJECT_FILE_INDENTATION_DEFAULT_VALUE,
 }
 
+SDIS_EXT = "sds"
+TBS_EXT = "tbs"
 
 # Output format
 TSV = "Tab Separated Values (*.tsv)"
@@ -696,7 +698,7 @@ FILE_NAME_SUFFIX = {
     PANDAS_DF: "pkl",
     RDS: "rds",
     SQL: "sql",
-    SDIS: "sds",
-    TBS: "tbs",
+    SDIS: SDIS_EXT,
+    TBS: TBS_EXT,
     TEXT_FILE: "cli",
 }

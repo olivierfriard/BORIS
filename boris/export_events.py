@@ -424,6 +424,7 @@ def export_aggregated_events(self):
             cfg.XLS,
             cfg.HTML,
             cfg.SDIS,
+            cfg.TBS,
             cfg.SQL,
             cfg.PANDAS_DF,
             cfg.RDS,
@@ -500,11 +501,10 @@ def export_aggregated_events(self):
         tot_max_modifiers = max(tot_max_modifiers, max_modifiers)
 
     data_grouped_obs = tablib.Dataset()
-    # sort by start time
-    start_idx = -9  # TODO: improve!
-    stop_idx = -8
 
-    mem_command = ""  # remember user choice when file already exists
+    mem_command: str = ""  # remember user choice when file already exists
+    header = list(fields_type(tot_max_modifiers).keys())
+
     for obs_id in selected_observations:
 
         logging.debug(f"Exporting aggregated events for obs Id: {obs_id}")
@@ -513,8 +513,8 @@ def export_aggregated_events(self):
 
         try:
             # order by start time
-            index = tuple(fields_type(max_modifiers).keys()).index("Start (s)")
-            if "NA" not in [x[index] for x in list(data_single_obs)]:
+            index = header.index("Start (s)")
+            if cfg.NA not in [x[index] for x in list(data_single_obs)]:
                 data_single_obs_sorted = tablib.Dataset(
                     # *data.sort(col=index),
                     *sorted(list(data_single_obs), key=lambda x: float(x[index])),
@@ -522,13 +522,13 @@ def export_aggregated_events(self):
                 )
             else:
                 # order by image index
-                index = tuple(fields_type(max_modifiers).keys()).index("Image index start")
+                index = header.index("Image index start")
                 data_single_obs_sorted = tablib.Dataset(
                     # *data.sort(col=index),
                     *sorted(list(data_single_obs), key=lambda x: float(x[index])),
                     headers=list(fields_type(max_modifiers).keys()),
                 )
-        except:
+        except Exception:
             # if error no order
             data_single_obs_sorted = tablib.Dataset(
                 # data.sort(col=0),  # Observation id
@@ -538,7 +538,7 @@ def export_aggregated_events(self):
 
         data_single_obs_sorted.title = obs_id
 
-        if (not flag_group) and (outputFormat not in ("sds", "tbs")):
+        if (not flag_group) and (outputFormat not in (cfg.SDIS_EXT, "tbs")):
             fileName = f"{pl.Path(exportDir) / util.safeFileName(obs_id)}.{outputFormat}"
             # check if file with new extension already exists
             if mem_command != cfg.OVERWRITE_ALL and pl.Path(fileName).is_file():
@@ -575,42 +575,28 @@ def export_aggregated_events(self):
                 )
         data_grouped_obs.extend(data_single_obs_sorted)
 
-    """
-    try:
-        # order by obs_id, start time
-        data_grouped_obs_sorted = tablib.Dataset(
-            *sorted(list(data_grouped_obs), key=lambda x: (x[obs_id_idx], float(x[start_idx]))),
-            headers=list(fields_type(tot_max_modifiers).keys()),
-        )
-    except:
-        # if error order by obs_id
-        data_grouped_obs_sorted = tablib.Dataset(
-            *sorted(list(data_grouped_obs), key=lambda x: x[obs_id_idx]),
-            headers=list(fields_type(tot_max_modifiers).keys()),
-        )
-    """
     data_grouped_obs_all = tablib.Dataset(headers=list(fields_type(tot_max_modifiers).keys()))
     data_grouped_obs_all.extend(data_grouped_obs)
     data_grouped_obs_all.title = "Aggregated events"
 
-    # TODO: finish
-    if outputFormat == "tbs":  # Timed behavioral sequences
-        out = ""
-        for obsId in selected_observations:
-            # observation id
-            out += f"# {obsId}\n"
+    start_idx = header.index("Start (s)")
+    stop_idx = header.index("Stop (s)")
 
-            for event in list(data):
-                if event[0] == obsId:
-                    behavior = event[-8]
+    if outputFormat == cfg.TBS_EXT:  # Timed behavioral sequences
+        out: str = ""
+        for obs_id in selected_observations:
+            # observation id
+            out += f"# {obs_id}\n"
+
+            for event in list(data_grouped_obs_all):
+                if event[0] == obs_id:
+                    behavior = event[header.index("Behavior")]
+                    subject = event[header.index("Subject")]
                     # replace various char by _
-                    for char in [" ", "-", "/"]:
+                    for char in (" ", "-", "/"):
                         behavior = behavior.replace(char, "_")
-                    subject = event[-9]
-                    # replace various char by _
-                    for char in [" ", "-", "/"]:
                         subject = subject.replace(char, "_")
-                    event_start = f"{float(event[start_idx]):.3f}"  # start event (from end for independent variables)
+                    event_start = f"{float(event[start_idx]):.3f}"  # start event
                     if not event[stop_idx]:  # stop event (from end)
                         event_stop = f"{float(event[start_idx]) + 0.001:.3f}"
                     else:
@@ -622,7 +608,7 @@ def export_aggregated_events(self):
             out += "\n"
 
             if not flag_group:
-                fileName = f"{pl.Path(exportDir) / util.safeFileName(obsId)}.{outputFormat}"
+                fileName = f"{pl.Path(exportDir) / util.safeFileName(obs_id)}.{outputFormat}"
                 with open(fileName, "wb") as f:
                     f.write(str.encode(out))
                 out = ""
@@ -632,39 +618,34 @@ def export_aggregated_events(self):
                 f.write(str.encode(out))
         return
 
-    if outputFormat == "sds":  # SDIS format
-        out = ("% SDIS file created by BORIS (www.boris.unito.it) " "at {}\nTimed <seconds>;\n").format(
-            util.datetime_iso8601(dt.datetime.now())
+    if outputFormat == cfg.SDIS_EXT:  # SDIS format
+        out: str = (
+            "% SDIS file created by BORIS (www.boris.unito.it) "
+            f"at {util.datetime_iso8601(dt.datetime.now())}\nTimed <seconds>;\n"
         )
-        for obsId in selected_observations:
+        for obs_id in selected_observations:
             # observation id
-            out += "\n<{}>\n".format(obsId)
+            out += "\n<{}>\n".format(obs_id)
 
-            for event in list(data):
-                if event[0] == obsId:
-                    behavior = event[-8]
+            for event in list(data_grouped_obs_all):
+                if event[0] == obs_id:
+                    behavior = event[header.index("Behavior")]
+                    subject = event[header.index("Subject")]
                     # replace various char by _
-                    for char in [" ", "-", "/"]:
+                    for char in (" ", "-", "/"):
                         behavior = behavior.replace(char, "_")
-                    subject = event[-9]
-                    # replace various char by _
-                    for char in [" ", "-", "/"]:
                         subject = subject.replace(char, "_")
-                    event_start = "{0:.3f}".format(
-                        float(event[start_idx])
-                    )  # start event (from end for independent variables)
+
+                    event_start = f"{float(event[start_idx]):.3f}"  # start event
                     if not event[stop_idx]:  # stop event (from end)
-                        event_stop = "{0:.3f}".format(float(event[start_idx]) + 0.001)
+                        event_stop = f"{float(event[start_idx]) + 0.001:.3f}"
                     else:
-                        event_stop = "{0:.3f}".format(float(event[stop_idx]))
+                        event_stop = f"{float(event[stop_idx]):.3f}"
                     out += f"{subject}_{behavior},{event_start}-{event_stop} "
 
             out += "/\n\n"
             if not flag_group:
-                """
-                fileName = str(pathlib.Path(pathlib.Path(exportDir) / safeFileName(obsId)).with suffix("." + outputFormat))
-                """
-                fileName = f"{pl.Path(exportDir) / util.safeFileName(obsId)}.{outputFormat}"
+                fileName = f"{pl.Path(exportDir) / util.safeFileName(obs_id)}.{outputFormat}"
                 with open(fileName, "wb") as f:
                     f.write(str.encode(out))
                 out = (
