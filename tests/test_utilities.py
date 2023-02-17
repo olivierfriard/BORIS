@@ -574,16 +574,16 @@ class Test_url2path(object):
 class Test_versiontuple(object):
     def test_1(self):
         r = utilities.versiontuple("1.2.3")
-        assert r == (1, 2, 3)
+        assert r == ("00000001", "00000002", "00000003")
 
     def test_2(self):
         r = utilities.versiontuple("1.2")
-        assert r == (1, 2)
+        assert r == ("00000001", "00000002")
 
     def test_3(self):
         r = utilities.versiontuple("1")
-        assert r == (1,)
+        assert r == ("00000001",)
 
     def test_4(self):
         r = utilities.versiontuple("")
-        assert r == ()
+        assert r == ("00000000",)
