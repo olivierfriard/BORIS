@@ -265,6 +265,7 @@ def txt2np_array(file_name: str, columns_str: str, substract_first_value: str, c
             dialect = snif.sniff(buff)
             has_header = snif.has_header(buff)
     except Exception:
+        raise
         return False, f"{sys.exc_info()[1]}", np.array([])
 
     try:
@@ -275,6 +276,7 @@ def txt2np_array(file_name: str, columns_str: str, substract_first_value: str, c
         print(data)
 
     except Exception:
+        raise
         return False, f"{sys.exc_info()[1]}", np.array([])
 
     # check if first value must be substracted
