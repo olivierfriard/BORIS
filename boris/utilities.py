@@ -567,7 +567,6 @@ def check_txt_file(file_name: str) -> dict:
         with open(file_name, "r") as f:
             reader = csv.reader(f, dialect="dialect")
             for row in reader:
-
                 if not row:
                     continue
                 if len(row) not in rows_len:
