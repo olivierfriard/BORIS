@@ -37,7 +37,7 @@ import wave
 from decimal import Decimal as dec
 from decimal import getcontext, ROUND_DOWN
 from shutil import copyfile
-from typing import Union
+from typing import Union, Optional, List, Tuple, Dict
 
 import numpy as np
 from PyQt5.QtGui import qRgb
@@ -206,7 +206,9 @@ def file_content_md5(file_name: str) -> str:
         return ""
 
 
-def txt2np_array(file_name: str, columns_str: str, substract_first_value: str, converters=None, column_converter=None):
+def txt2np_array(
+    file_name: str, columns_str: str, substract_first_value: str, converters=None, column_converter=None
+) -> Tuple[bool, str, np.array]:
     """
     read a txt file (tsv or csv) and return np array with passed columns
 
@@ -260,23 +262,28 @@ def txt2np_array(file_name: str, columns_str: str, substract_first_value: str, c
     # snif txt file
     try:
         with open(file_name) as csvfile:
-            buff = csvfile.read(1024)
+            buff = csvfile.read(4096)
             snif = csv.Sniffer()
             dialect = snif.sniff(buff)
-            has_header = snif.has_header(buff)
+            """has_header = snif.has_header(buff)"""
+        # count number of header rows
+        header_rows_nb = 0
+        csv.register_dialect("dialect", dialect)
+        with open(file_name, "r") as f:
+            reader = csv.reader(f, dialect="dialect")
+            for row in reader:
+                if sum([isinstance(intfloatstr(x), str) for x in row]) == len(row):
+                    header_rows_nb += 1
+
     except Exception:
-        raise
         return False, f"{sys.exc_info()[1]}", np.array([])
 
     try:
         data = np.loadtxt(
-            file_name, delimiter=dialect.delimiter, usecols=columns, skiprows=has_header, converters=np_converters
+            file_name, delimiter=dialect.delimiter, usecols=columns, skiprows=header_rows_nb, converters=np_converters
         )
 
-        print(data)
-
     except Exception:
-        raise
         return False, f"{sys.exc_info()[1]}", np.array([])
 
     # check if first value must be substracted
@@ -559,7 +566,7 @@ def check_txt_file(file_name: str) -> dict:
     try:
         # snif txt file
         with open(file_name) as csvfile:
-            buff = csvfile.read(1024)
+            buff = csvfile.read(4096)
             snif = csv.Sniffer()
             dialect = snif.sniff(buff)
             has_header = snif.has_header(buff)
