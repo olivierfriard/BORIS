@@ -135,6 +135,8 @@ class Plot_data(QWidget):
             column_converter=column_converter,
         )
 
+        print(error_msg)
+
         if not result:
             self.error_msg = error_msg
             return

@@ -397,10 +397,10 @@ class Observation(QDialog, Ui_Form):
 
             self.test = plot_data_module.Plot_data(
                 data_file_path,
-                time_interval,     # time interval
-                time_offset,       # time offset
-                plot_color,        # plot style
-                plot_title,        # plot title
+                time_interval,  # time interval
+                time_offset,  # time offset
+                plot_color,  # plot style
+                plot_title,  # plot title
                 variable_name,
                 columns_to_plot,
                 substract_first_value,
@@ -446,9 +446,7 @@ class Observation(QDialog, Ui_Form):
             QMessageBox.critical(
                 self,
                 cfg.programName,
-                (
-                    "It is not possible to add a data file with a relative path if the project is not already saved"
-                ),
+                ("It is not possible to add a data file with a relative path if the project is not already saved"),
             )
             return
 
@@ -470,110 +468,109 @@ class Observation(QDialog, Ui_Form):
         fn = fd.getOpenFileName(self, "Add data file", "", "All files (*)")
         file_name = fn[0] if type(fn) is tuple else fn
 
-        if file_name:
+        if not file_name:
+            return
 
-            columns_to_plot = "1,2"  # columns to plot by default
+        columns_to_plot = "1,2"  # columns to plot by default
 
-            # check data file
-            r = util.check_txt_file(file_name)  # check_txt_file defined in utilities
+        # check data file
+        r = util.check_txt_file(file_name)  # check_txt_file defined in utilities
 
-            if "error" in r:
-                QMessageBox.critical(self, cfg.programName, r["error"])
-                return
+        if "error" in r:
+            QMessageBox.critical(self, cfg.programName, r["error"])
+            return
 
-            if not r["homogeneous"]:  # not all rows have 2 columns
-                QMessageBox.critical(self, cfg.programName, "This file does not contain a constant number of columns")
-                return
+        if not r["homogeneous"]:  # not all rows have 2 columns
+            QMessageBox.critical(self, cfg.programName, "This file does not contain a constant number of columns")
+            return
 
-            header = util.return_file_header(file_name, row_number=10)
+        header = util.return_file_header(file_name, row_number=10)
 
-            if not header:
-                return  # problem with header
+        if not header:
+            return  # problem with header
 
-            w = dialog.View_data_head()
-            w.setWindowTitle(f"Data file: {pl.Path(file_name).name}")
-            """w.setWindowFlags(Qt.WindowStaysOnTopHint)"""
+        w = dialog.View_data_head()
+        w.setWindowTitle(f"Data file: {pl.Path(file_name).name}")
+        """w.setWindowFlags(Qt.WindowStaysOnTopHint)"""
 
-            w.tw.setColumnCount(r["fields number"])
-            w.tw.setRowCount(len(header))
+        w.tw.setColumnCount(r["fields number"])
+        w.tw.setRowCount(len(header))
 
-            for row in range(len(header)):
-                for col, v in enumerate(header[row].split(r["separator"])):
-                    item = QTableWidgetItem(v)
-                    item.setFlags(Qt.ItemIsEnabled)
-                    w.tw.setItem(row, col, item)
+        for row in range(len(header)):
+            for col, v in enumerate(header[row].split(r["separator"])):
+                item = QTableWidgetItem(v)
+                item.setFlags(Qt.ItemIsEnabled)
+                w.tw.setItem(row, col, item)
 
-            while True:
-                flag_ok = True
-                if w.exec_():
-                    columns_to_plot = w.le.text().replace(" ", "")
-                    for col in columns_to_plot.split(","):
-                        try:
-                            col_idx = int(col)
-                        except ValueError:
-                            QMessageBox.critical(
-                                self, cfg.programName, f"<b>{col}</b> does not seem to be a column index"
-                            )
-                            flag_ok = False
-                            break
-                        if col_idx <= 0 or col_idx > r["fields number"]:
-                            QMessageBox.critical(self, cfg.programName, f"<b>{col}</b> is not a valid column index")
-                            flag_ok = False
-                            break
-                    if flag_ok:
+        while True:
+            flag_ok = True
+            if w.exec_():
+                columns_to_plot = w.le.text().replace(" ", "")
+                for col in columns_to_plot.split(","):
+                    try:
+                        col_idx = int(col)
+                    except ValueError:
+                        QMessageBox.critical(self, cfg.programName, f"<b>{col}</b> does not seem to be a column index")
+                        flag_ok = False
                         break
-                else:
-                    return
-
+                    if col_idx <= 0 or col_idx > r["fields number"]:
+                        QMessageBox.critical(self, cfg.programName, f"<b>{col}</b> is not a valid column index")
+                        flag_ok = False
+                        break
+                if flag_ok:
+                    break
             else:
                 return
 
-            self.tw_data_files.setRowCount(self.tw_data_files.rowCount() + 1)
+        else:
+            return
 
-            if " rel " in mode:
+        self.tw_data_files.setRowCount(self.tw_data_files.rowCount() + 1)
 
-                try:
-                    file_path = str(pl.Path(file_name).relative_to(pl.Path(self.project_path).parent))
-                except ValueError:
-                    QMessageBox.critical(
-                        self,
-                        cfg.programName,
-                        f"The directory <b>{pl.Path(file_name).parent}</b> is not contained in <b>{pl.Path(self.project_path).parent}</b>.",
-                    )
-                    return
+        if " rel " in mode:
 
-            else:  # save absolute path
-                file_path = file_name
+            try:
+                file_path = str(pl.Path(file_name).relative_to(pl.Path(self.project_path).parent))
+            except ValueError:
+                QMessageBox.critical(
+                    self,
+                    cfg.programName,
+                    f"The directory <b>{pl.Path(file_name).parent}</b> is not contained in <b>{pl.Path(self.project_path).parent}</b>.",
+                )
+                return
 
-            for col_idx, value in zip(
-                [
-                    cfg.PLOT_DATA_FILEPATH_IDX,
-                    cfg.PLOT_DATA_COLUMNS_IDX,
-                    cfg.PLOT_DATA_PLOTTITLE_IDX,
-                    cfg.PLOT_DATA_VARIABLENAME_IDX,
-                    cfg.PLOT_DATA_CONVERTERS_IDX,
-                    cfg.PLOT_DATA_TIMEINTERVAL_IDX,
-                    cfg.PLOT_DATA_TIMEOFFSET_IDX,
-                ],
-                [file_path, columns_to_plot, "", "", "", "60", "0"],
-            ):
-                item = QTableWidgetItem(value)
-                if col_idx == cfg.PLOT_DATA_CONVERTERS_IDX:
-                    item.setFlags(Qt.ItemIsEnabled)
-                    item.setBackground(QColor(230, 230, 230))
-                self.tw_data_files.setItem(self.tw_data_files.rowCount() - 1, col_idx, item)
+        else:  # save absolute path
+            file_path = file_name
 
-            # substract first value
-            combobox = QComboBox()
-            combobox.addItems(["True", "False"])
-            self.tw_data_files.setCellWidget(
-                self.tw_data_files.rowCount() - 1, cfg.PLOT_DATA_SUBSTRACT1STVALUE_IDX, combobox
-            )
+        for col_idx, value in zip(
+            [
+                cfg.PLOT_DATA_FILEPATH_IDX,
+                cfg.PLOT_DATA_COLUMNS_IDX,
+                cfg.PLOT_DATA_PLOTTITLE_IDX,
+                cfg.PLOT_DATA_VARIABLENAME_IDX,
+                cfg.PLOT_DATA_CONVERTERS_IDX,
+                cfg.PLOT_DATA_TIMEINTERVAL_IDX,
+                cfg.PLOT_DATA_TIMEOFFSET_IDX,
+            ],
+            [file_path, columns_to_plot, "", "", "", "60", "0"],
+        ):
+            item = QTableWidgetItem(value)
+            if col_idx == cfg.PLOT_DATA_CONVERTERS_IDX:
+                item.setFlags(Qt.ItemIsEnabled)
+                item.setBackground(QColor(230, 230, 230))
+            self.tw_data_files.setItem(self.tw_data_files.rowCount() - 1, col_idx, item)
 
-            # plot line color
-            combobox = QComboBox()
-            combobox.addItems(cfg.DATA_PLOT_STYLES)
-            self.tw_data_files.setCellWidget(self.tw_data_files.rowCount() - 1, cfg.PLOT_DATA_PLOTCOLOR_IDX, combobox)
+        # substract first value
+        combobox = QComboBox()
+        combobox.addItems(["True", "False"])
+        self.tw_data_files.setCellWidget(
+            self.tw_data_files.rowCount() - 1, cfg.PLOT_DATA_SUBSTRACT1STVALUE_IDX, combobox
+        )
+
+        # plot line color
+        combobox = QComboBox()
+        combobox.addItems(cfg.DATA_PLOT_STYLES)
+        self.tw_data_files.setCellWidget(self.tw_data_files.rowCount() - 1, cfg.PLOT_DATA_PLOTCOLOR_IDX, combobox)
 
     def view_data_file_head(self):
         """
