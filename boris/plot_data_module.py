@@ -133,14 +133,16 @@ class Plot_data(QWidget):
             substract_first_value,
             converters=converters,
             column_converter=column_converter,
-        )  # txt2np_array defined in utilities.py
+        )
 
         if not result:
             self.error_msg = error_msg
             return
 
+        """
         logging.debug("data[50]: {}".format(data[:50]))
         logging.debug("shape: {}".format(data.shape))
+        """
 
         if data.shape == (0,):
             self.error_msg = "Empty input file"
@@ -150,7 +152,7 @@ class Plot_data(QWidget):
         data = data[data[:, 0].argsort()]
 
         # unique
-        u, idx = np.unique(data[:, 0], return_index=True)
+        _, idx = np.unique(data[:, 0], return_index=True)
         data = data[idx]
 
         # time
@@ -241,7 +243,7 @@ class Plot_data(QWidget):
         if min_time_step < 0.2:
             self.time_out = 200
         else:
-            self.time_out = min_time_step * 1000
+            self.time_out = round(min_time_step * 1000)
 
     def eventFilter(self, receiver, event):
         """

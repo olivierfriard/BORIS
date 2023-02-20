@@ -271,6 +271,9 @@ def txt2np_array(file_name: str, columns_str: str, substract_first_value: str, c
         data = np.loadtxt(
             file_name, delimiter=dialect.delimiter, usecols=columns, skiprows=has_header, converters=np_converters
         )
+
+        print(data)
+
     except Exception:
         return False, f"{sys.exc_info()[1]}", np.array([])
 

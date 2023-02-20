@@ -397,10 +397,10 @@ class Observation(QDialog, Ui_Form):
 
             self.test = plot_data_module.Plot_data(
                 data_file_path,
-                time_interval,  # time interval
-                time_offset,  # time offset
-                plot_color,  # plot style
-                plot_title,  # plot title
+                time_interval,     # time interval
+                time_offset,       # time offset
+                plot_color,        # plot style
+                plot_title,        # plot title
                 variable_name,
                 columns_to_plot,
                 substract_first_value,
@@ -419,16 +419,15 @@ class Observation(QDialog, Ui_Form):
             self.test.update_plot(0)
             # update button text
             self.pb_plot_data.setText("Close plot")
-
         else:
             QMessageBox.warning(self, cfg.programName, "Select a data file")
 
-    def add_data_file(self, mode=True):
+    def add_data_file(self, mode: str):
         """
         user select a data file to be plotted synchronously with media file
 
         Args:
-            flag_path (bool): True to store path of data file else False
+            mode (str): statusTip() data abs path / data rel path
         """
 
         if mode.split("|")[0] not in (
@@ -448,7 +447,7 @@ class Observation(QDialog, Ui_Form):
                 self,
                 cfg.programName,
                 (
-                    "It is not possible to add a data file without path or with a relative path if the project is not already saved"
+                    "It is not possible to add a data file with a relative path if the project is not already saved"
                 ),
             )
             return
