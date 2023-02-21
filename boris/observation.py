@@ -475,33 +475,53 @@ class Observation(QDialog, Ui_Form):
         columns_to_plot = "1,2"  # columns to plot by default
 
         # check data file
-        r = util.check_txt_file(file_name)  # check_txt_file defined in utilities
+        file_parameters = util.check_txt_file(file_name)
 
-        if "error" in r:
-            QMessageBox.critical(self, cfg.programName, r["error"])
+        if "error" in file_parameters:
+            QMessageBox.critical(self, cfg.programName, f"Error on file {file_name}: {file_parameters['error']}")
             return
 
-        if not r["homogeneous"]:  # not all rows have 2 columns
+        if not file_parameters["homogeneous"]:  # the number of columns is not constant
             QMessageBox.critical(self, cfg.programName, "This file does not contain a constant number of columns")
             return
 
-        header = util.return_file_header(file_name, row_number=10)
+        """header = util.return_file_header(file_name, row_number=10)"""
+
+        header, footer = util.return_file_header_footer(
+            file_name, file_row_number=file_parameters["rows number"], row_number=5
+        )
 
         if not header:
-            return  # problem with header
+            QMessageBox.critical(self, cfg.programName, f"Error on file {pl.Path(file_name).name}")
+            return
 
         w = dialog.View_data_head()
         w.setWindowTitle(f"Data file: {pl.Path(file_name).name}")
         """w.setWindowFlags(Qt.WindowStaysOnTopHint)"""
 
-        w.tw.setColumnCount(r["fields number"])
-        w.tw.setRowCount(len(header))
+        w.tw.setColumnCount(file_parameters["fields number"])
 
+        w.tw.setColumnCount(file_parameters["fields number"])
+        if footer:
+            hf = header + [file_parameters["separator"].join(["..."] * file_parameters["fields number"])] + footer
+            w.tw.setRowCount(len(header) + len(footer) + 1)
+        else:
+            hf = header
+            w.tw.setRowCount(len(header))
+
+        for idx, row in enumerate(hf):
+            for col, v in enumerate(row.split(file_parameters["separator"])):
+                item = QTableWidgetItem(v)
+                item.setFlags(Qt.ItemIsEnabled)
+                w.tw.setItem(idx, col, item)
+
+        """
         for row in range(len(header)):
-            for col, v in enumerate(header[row].split(r["separator"])):
+            for col, v in enumerate(header[row].split(file_parameters["separator"])):
                 item = QTableWidgetItem(v)
                 item.setFlags(Qt.ItemIsEnabled)
                 w.tw.setItem(row, col, item)
+        """
 
         while True:
             flag_ok = True
@@ -514,7 +534,7 @@ class Observation(QDialog, Ui_Form):
                         QMessageBox.critical(self, cfg.programName, f"<b>{col}</b> does not seem to be a column index")
                         flag_ok = False
                         break
-                    if col_idx <= 0 or col_idx > r["fields number"]:
+                    if col_idx <= 0 or col_idx > file_parameters["fields number"]:
                         QMessageBox.critical(self, cfg.programName, f"<b>{col}</b> is not a valid column index")
                         flag_ok = False
                         break
@@ -575,7 +595,7 @@ class Observation(QDialog, Ui_Form):
 
     def view_data_file_head(self):
         """
-        view first parts of data file
+        view first and last rows of data file
         """
 
         if not self.tw_data_files.selectedIndexes() and self.tw_data_files.rowCount() != 1:
@@ -591,31 +611,44 @@ class Observation(QDialog, Ui_Form):
             columns_to_plot = self.tw_data_files.item(self.tw_data_files.selectedIndexes()[0].row(), 1).text()
 
         file_parameters = util.check_txt_file(data_file_path)
+
+        # print(f"{file_parameters=}")
+
         if "error" in file_parameters:
             QMessageBox.critical(self, cfg.programName, f"Error on file {data_file_path}: {file_parameters['error']}")
             return
-        header = util.return_file_header(data_file_path)
+        header, footer = util.return_file_header_footer(
+            data_file_path, file_row_number=file_parameters["rows number"], row_number=5
+        )
 
-        if header:
+        if not header:
+            QMessageBox.critical(self, cfg.programName, f"Error on file {pl.Path(data_file_path).name}")
+            return
 
-            w = dialog.View_data_head()
-            w.setWindowTitle(f"Data file: {pl.Path(data_file_path).name}")
-            w.label.setText("Index of columns to plot")
-            w.le.setEnabled(False)
-            w.le.setText(columns_to_plot)
-            w.pbCancel.setVisible(False)
+        w = dialog.View_data_head()
+        w.setWindowTitle(f"Data file: {pl.Path(data_file_path).name}")
+        w.pbOK.setText("Close")
+        w.label.setText("Index of columns to plot")
+        w.le.setEnabled(False)
+        w.le.setText(columns_to_plot)
+        w.pbCancel.setVisible(False)
 
-            w.tw.setColumnCount(file_parameters["fields number"])
+        w.tw.setColumnCount(file_parameters["fields number"])
+        if footer:
+            hf = header + [file_parameters["separator"].join(["..."] * file_parameters["fields number"])] + footer
+            w.tw.setRowCount(len(header) + len(footer) + 1)
+        else:
+            hf = header
             w.tw.setRowCount(len(header))
 
-            for row in range(len(header)):
-                for col, v in enumerate(header[row].split(file_parameters["separator"])):
-                    w.tw.setItem(row, col, QTableWidgetItem(v))
+        for idx, row in enumerate(hf):
+            for col, v in enumerate(row.split(file_parameters["separator"])):
+                """w.tw.setItem(idx, col, QTableWidgetItem(v))"""
+                item = QTableWidgetItem(v)
+                item.setFlags(Qt.ItemIsEnabled)
+                w.tw.setItem(idx, col, item)
 
-            w.exec_()
-
-        else:
-            QMessageBox.critical(self, cfg.programName, f"Error on file {data_file_path}")
+        w.exec_()
 
     def extract_wav(self):
         """

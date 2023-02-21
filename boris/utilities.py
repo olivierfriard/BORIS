@@ -117,7 +117,7 @@ def return_file_header(file_name: str, row_number: int = 5) -> list:
     Returns:
         list: first row_number row(s) of file_name
     """
-    header = []
+    header: list = []
     try:
         with open(file_name) as f_in:
             for _ in range(row_number):
@@ -125,6 +125,35 @@ def return_file_header(file_name: str, row_number: int = 5) -> list:
     except Exception:
         return []
     return header
+
+
+def return_file_header_footer(file_name: str, file_row_number: int = 0, row_number: int = 5) -> Tuple[list, list]:
+    """
+    return file header and footer
+
+    Args:
+        file_name (str): path of file
+        file_row_number (int): total rows number of file
+        row_number (int): number of rows to return
+
+    Returns:
+        list: first row_number row(s) of file_name
+    """
+    header: list = []
+    footer: list = []
+    try:
+        row_idx: int = 0
+        with open(file_name, "rt") as f_in:
+            for row in f_in:
+                if row_idx < row_number:
+                    header.append(row.strip())
+                if file_row_number > row_number * 2 and (row_idx >= file_row_number - row_number):
+                    footer.append(row.strip())
+                row_idx += 1
+
+    except Exception:
+        return [], []
+    return header, footer
 
 
 def bytes_to_str(b: bytes) -> str:
@@ -210,7 +239,7 @@ def txt2np_array(
     file_name: str, columns_str: str, substract_first_value: str, converters=None, column_converter=None
 ) -> Tuple[bool, str, np.array]:
     """
-    read a txt file (tsv or csv) and return np array with passed columns
+    read a txt file (tsv or csv) and return a np array with columns cited in columns_str
 
     Args:
         file_name (str): path of the file to load in numpy array
@@ -237,7 +266,7 @@ def txt2np_array(
         return False, f"Problem with columns {columns_str}", np.array([])
 
     # check converters
-    np_converters = {}
+    np_converters: dict = {}
     for column_idx in column_converter:
         if column_converter[column_idx] in converters:
 
@@ -569,31 +598,39 @@ def check_txt_file(file_name: str) -> dict:
             buff = csvfile.read(4096)
             snif = csv.Sniffer()
             dialect = snif.sniff(buff)
-            has_header = snif.has_header(buff)
+            """has_header = snif.has_header(buff)"""
 
         csv.register_dialect("dialect", dialect)
-        rows_len = []
+        rows_len: list = []
         with open(file_name, "r") as f:
             reader = csv.reader(f, dialect="dialect")
             for row in reader:
                 if not row:
                     continue
+                """
                 if len(row) not in rows_len:
                     rows_len.append(len(row))
                     if len(rows_len) > 1:
                         break
+                """
+                rows_len.append(len(row))
+
+        rows_number = len(rows_len)
+        rows_uniq_len = set(rows_len)
 
         # test if file empty
-        if not len(rows_len):
+        if not rows_uniq_len:
             return {"error": "The file is empty"}
 
-        if len(rows_len) == 1 and rows_len[0] >= 2:
-            return {"homogeneous": True, "fields number": rows_len[0], "separator": dialect.delimiter}
-
-        if len(rows_len) > 1:
-            return {"homogeneous": False}
+        if len(rows_uniq_len) == 1:
+            return {
+                "homogeneous": True,
+                "fields number": rows_len[0],
+                "separator": dialect.delimiter,
+                "rows number": rows_number,
+            }
         else:
-            return {"homogeneous": True, "fields number": rows_len[0], "separator": dialect.delimiter}
+            return {"homogeneous": False}
     except Exception:
         return {"error": str(sys.exc_info()[1])}
 

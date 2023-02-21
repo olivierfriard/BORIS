@@ -774,7 +774,7 @@ class Results_dialog(QDialog):
 
 class View_data_head(QDialog):
     """
-    widget for visualizing first rows of data file
+    widget for visualizing rows of data file
     """
 
     def __init__(self):
@@ -797,6 +797,8 @@ class View_data_head(QDialog):
         vbox.addWidget(self.le)
 
         hbox2 = QHBoxLayout()
+
+        hbox2.addItem(QSpacerItem(40, 20, QSizePolicy.Expanding, QSizePolicy.Minimum))
 
         self.pbCancel = QPushButton("Cancel", clicked=self.reject)
         hbox2.addWidget(self.pbCancel)
