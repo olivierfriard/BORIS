@@ -155,8 +155,6 @@ def add_event(self):
                     elif self.pj[cfg.OBSERVATIONS][self.observationId].get(cfg.TIME_LAPSE, 0):
                         time_ = new_index * self.pj[cfg.OBSERVATIONS][self.observationId].get(cfg.TIME_LAPSE, 0)
 
-                    print(f"{time_=}")
-
                     self.write_event(event, dec(time_).quantize(dec("0.001"), rounding=ROUND_DOWN))
 
                     break

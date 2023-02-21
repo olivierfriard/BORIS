@@ -3608,9 +3608,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         ct0 = cumulative_time_pos
 
-        # print(self.dw_player[0].player.estimated_frame_number)
-        # print(self.dw_player[0].player.frames)
-
         if self.dw_player[0].player.time_pos is not None:
 
             for n_player in range(1, len(self.dw_player)):
@@ -3681,7 +3678,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
             msg += (
                 f"Media position: <b>{util.convertTime(self.timeFormat, current_media_time_pos)}</b> / "
-                f"{util.convertTime(self.timeFormat, current_media_duration)} frame: <b>{current_media_frame}</b> from MPV: {frame_idx}"
+                f"{util.convertTime(self.timeFormat, current_media_duration)} frame: <b>{current_media_frame}</b>"
             )
 
             # with time offset
@@ -3698,6 +3695,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     f"<br>Total: <b>{util.convertTime(self.timeFormat,cumulative_time_pos)} / "
                     f"{util.convertTime(self.timeFormat, all_media_duration)}</b>"
                 )
+
+            # player rate
+            msg += f"<br>Play rate: <b>x{self.play_rate:.3f}</b>"
 
             self.lb_player_status.setText("Player paused" if self.dw_player[0].player.pause else "")
 

@@ -485,8 +485,6 @@ class Observation(QDialog, Ui_Form):
             QMessageBox.critical(self, cfg.programName, "This file does not contain a constant number of columns")
             return
 
-        """header = util.return_file_header(file_name, row_number=10)"""
-
         header, footer = util.return_file_header_footer(
             file_name, file_row_number=file_parameters["rows number"], row_number=5
         )
@@ -610,8 +608,6 @@ class Observation(QDialog, Ui_Form):
             columns_to_plot = self.tw_data_files.item(self.tw_data_files.selectedIndexes()[0].row(), 1).text()
 
         file_parameters = util.check_txt_file(data_file_path)
-
-        # print(f"{file_parameters=}")
 
         if "error" in file_parameters:
             QMessageBox.critical(self, cfg.programName, f"Error on file {data_file_path}: {file_parameters['error']}")

@@ -554,12 +554,6 @@ def export_aggregated_events(self):
                 if mem_command in (cfg.SKIP, cfg.SKIP_ALL):
                     continue
 
-            """
-            if sys.version_info.minor >= 8:
-                print(f"{list(data_single_obs)=}")
-                print(f"{list(fields_type(max_modifiers).keys())=}")
-            """
-
             r, msg = export_observation.dataset_write(data_single_obs_sorted, fileName, outputFormat, dtype=fields_type)
             if not r:
                 QMessageBox.warning(
@@ -817,11 +811,6 @@ def export_events_as_textgrid(self) -> None:
             min_time = float(parameters[cfg.START_TIME])
             max_time = float(parameters[cfg.END_TIME])
 
-        """
-        print(f"min_time: {min_time}")
-        print(f"max_time: {max_time}")
-        """
-
         # delete events outside time interval
         cursor.execute(
             "DELETE FROM aggregated_events WHERE observation = ? AND (start < ? AND stop < ?) OR (start > ? AND stop > ?)",
@@ -948,13 +937,6 @@ def export_events_as_textgrid(self) -> None:
                     break
 
                 count += 1
-
-                """
-                print(f'{row["start"]=}   {row["stop"]=}')
-                if idx + 1 < len(rows):
-                    print(f'{rows[idx + 1]["start"]=}')
-                print()
-                """
 
                 if (idx + 1 < len(rows)) and (
                     rows[idx + 1]["start"] - dec("0.001") <= row["stop"] < rows[idx + 1]["start"]
