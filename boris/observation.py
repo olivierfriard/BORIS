@@ -350,6 +350,7 @@ class Observation(QDialog, Ui_Form):
 
         if self.pb_plot_data.text() != "Show plot":
             self.test.close_plot()
+            self.text = None
             # update button text
             self.pb_plot_data.setText("Show plot")
             return
@@ -411,7 +412,7 @@ class Observation(QDialog, Ui_Form):
 
             if self.test.error_msg:
                 QMessageBox.critical(self, cfg.programName, f"Impossible to plot data:\n{self.test.error_msg}")
-                del self.test
+                self.test = None
                 return
 
             # self.test.setWindowFlags(self.test.windowFlags() | Qt.WindowStaysOnTopHint)
@@ -695,6 +696,7 @@ class Observation(QDialog, Ui_Form):
         """
         if self.test is not None:
             self.test.close_plot()
+            self.text = None
 
     def pbCancel_clicked(self):
         """
@@ -702,6 +704,7 @@ class Observation(QDialog, Ui_Form):
         """
         if self.test is not None:
             self.test.close_plot()
+            self.text = None
         self.reject()
 
     def check_parameters(self):
@@ -890,6 +893,7 @@ class Observation(QDialog, Ui_Form):
         if self.check_parameters():
             if self.test is not None:
                 self.test.close_plot()
+                self.text = None
             self.done(2)
 
     def pbSave_clicked(self):
@@ -900,6 +904,7 @@ class Observation(QDialog, Ui_Form):
             self.state = "accepted"
             if self.test is not None:
                 self.test.close_plot()
+                self.text = None
             self.accept()
         else:
             self.state = "refused"
