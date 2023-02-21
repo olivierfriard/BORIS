@@ -1084,7 +1084,7 @@ def ffprobe_media_analysis(ffmpeg_bin: str, file_name: str) -> dict:
     p = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
     out, error = p.communicate()
     if error:
-        return {"error": error.decode("utf-8")}
+        return {"error": f"{error}"}
 
     try:
         hasVideo = False
