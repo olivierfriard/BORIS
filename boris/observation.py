@@ -496,10 +496,9 @@ class Observation(QDialog, Ui_Form):
             return
 
         w = dialog.View_data_head()
-        w.setWindowTitle(f"Data file: {pl.Path(file_name).name}")
+        w.setWindowTitle(f"View data")
+        w.lb.setText(f"View first and last rows of <b>{pl.Path(file_name).name}</b> file")
         """w.setWindowFlags(Qt.WindowStaysOnTopHint)"""
-
-        w.tw.setColumnCount(file_parameters["fields number"])
 
         w.tw.setColumnCount(file_parameters["fields number"])
         if footer:
@@ -626,7 +625,8 @@ class Observation(QDialog, Ui_Form):
             return
 
         w = dialog.View_data_head()
-        w.setWindowTitle(f"Data file: {pl.Path(data_file_path).name}")
+        w.setWindowTitle(f"View data")
+        w.lb.setText(f"View first and last rows of <b>{pl.Path(data_file_path).name}</b> file")
         w.pbOK.setText("Close")
         w.label.setText("Index of columns to plot")
         w.le.setEnabled(False)
@@ -643,7 +643,6 @@ class Observation(QDialog, Ui_Form):
 
         for idx, row in enumerate(hf):
             for col, v in enumerate(row.split(file_parameters["separator"])):
-                """w.tw.setItem(idx, col, QTableWidgetItem(v))"""
                 item = QTableWidgetItem(v)
                 item.setFlags(Qt.ItemIsEnabled)
                 w.tw.setItem(idx, col, item)
