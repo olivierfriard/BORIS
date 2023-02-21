@@ -1798,6 +1798,23 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         return self.twEvents.item(row_idx, cfg.TW_OBS_FIELD[player_type][field_type]).text()
 
+    def configure_twevents_columns(self):
+        """
+        configure the visible columns of twEvent tablewidget
+        """
+        # cfg.MEDIA_TW_EVENTS_FIELDS = ("time", "subject", "code", "type", "modifier", "comment")
+
+        cfg.TW_EVENTS_FIELDS[cfg.MEDIA] = ("time", "subject", "code", "type", "modifier", "comment")
+
+        # create dictionaries
+        cfg.TW_OBS_FIELD = {}
+        for observation_type in cfg.TW_EVENTS_FIELDS:
+            cfg.TW_OBS_FIELD[observation_type] = {}
+            for idx, field in enumerate(cfg.TW_EVENTS_FIELDS[observation_type]):
+                cfg.TW_OBS_FIELD[observation_type][field] = idx
+
+        self.load_tw_events(self.observationId)
+
     def load_tw_events(self, obs_id):
         """
         load events in table widget and update START/STOP
@@ -1840,9 +1857,14 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
             for field_type in cfg.TW_EVENTS_FIELDS[self.playerType]:
 
+                print(f"{field_type=}")
+
                 if field_type in cfg.PJ_EVENTS_FIELDS[self.playerType]:
 
                     field = event_operations.read_event_field(event, self.playerType, field_type)
+
+                    print(f"{field=}")
+
                     if field_type == cfg.TIME:
                         item = QTableWidgetItem(str(util.convertTime(self.timeFormat, field)))
 

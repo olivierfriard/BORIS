@@ -1834,11 +1834,6 @@ def initialize_new_images_observation(self):
             self.saved_state = self.saveState()
             self.restoreState(self.saved_state)
 
-    """
-    self.twEvents.setColumnCount(len(cfg.IMAGES_TW_EVENTS_FIELDS))
-    self.twEvents.setHorizontalHeaderLabels(cfg.IMAGES_TW_EVENTS_FIELDS)
-    """
-
     self.extract_frame(self.dw_player[i])
     self.w_obs_info.setVisible(True)
 

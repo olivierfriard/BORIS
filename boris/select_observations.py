@@ -63,8 +63,6 @@ def select_observations2(self, mode: str, windows_title: str = "") -> Tuple[str,
     data: list = []
     not_paired: list = []
 
-    """print(f"{hash(str(self.pj[cfg.OBSERVATIONS]))=}")"""
-
     if hash(str(self.pj[cfg.OBSERVATIONS])) != self.mem_hash_obs:
 
         for obs in sorted(list(pj[cfg.OBSERVATIONS].keys())):
