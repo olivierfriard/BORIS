@@ -86,7 +86,8 @@ class DlgEditEvent(QDialog, Ui_Form):
             self.pb_set_to_current_time.setText("Set to current image index")
 
         self.pb_set_to_current_time.clicked.connect(self.set_to_current_time)
-        self.cb_set_frame_idx_na.stateChanged.connect(self.frame_idx_na)
+        self.cb_set_frame_idx_na.stateChanged
+        .connect(self.frame_idx_na)
         self.pbOK.clicked.connect(self.accept)
         self.pbCancel.clicked.connect(self.reject)
 
