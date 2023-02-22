@@ -350,6 +350,7 @@ class Observation(QDialog, Ui_Form):
 
         if self.pb_plot_data.text() != "Show plot":
             self.test.close_plot()
+            self.text = None
             # update button text
             self.pb_plot_data.setText("Show plot")
             return
@@ -411,7 +412,7 @@ class Observation(QDialog, Ui_Form):
 
             if self.test.error_msg:
                 QMessageBox.critical(self, cfg.programName, f"Impossible to plot data:\n{self.test.error_msg}")
-                del self.test
+                self.test = None
                 return
 
             # self.test.setWindowFlags(self.test.windowFlags() | Qt.WindowStaysOnTopHint)
@@ -419,16 +420,15 @@ class Observation(QDialog, Ui_Form):
             self.test.update_plot(0)
             # update button text
             self.pb_plot_data.setText("Close plot")
-
         else:
             QMessageBox.warning(self, cfg.programName, "Select a data file")
 
-    def add_data_file(self, mode=True):
+    def add_data_file(self, mode: str):
         """
         user select a data file to be plotted synchronously with media file
 
         Args:
-            flag_path (bool): True to store path of data file else False
+            mode (str): statusTip() data abs path / data rel path
         """
 
         if mode.split("|")[0] not in (
@@ -447,9 +447,7 @@ class Observation(QDialog, Ui_Form):
             QMessageBox.critical(
                 self,
                 cfg.programName,
-                (
-                    "It is not possible to add a data file without path or with a relative path if the project is not already saved"
-                ),
+                ("It is not possible to add a data file with a relative path if the project is not already saved"),
             )
             return
 
@@ -471,114 +469,130 @@ class Observation(QDialog, Ui_Form):
         fn = fd.getOpenFileName(self, "Add data file", "", "All files (*)")
         file_name = fn[0] if type(fn) is tuple else fn
 
-        if file_name:
+        if not file_name:
+            return
 
-            columns_to_plot = "1,2"  # columns to plot by default
+        columns_to_plot = "1,2"  # columns to plot by default
 
-            # check data file
-            r = util.check_txt_file(file_name)  # check_txt_file defined in utilities
+        # check data file
+        file_parameters = util.check_txt_file(file_name)
 
-            if "error" in r:
-                QMessageBox.critical(self, cfg.programName, r["error"])
-                return
+        if "error" in file_parameters:
+            QMessageBox.critical(self, cfg.programName, f"Error on file {file_name}: {file_parameters['error']}")
+            return
 
-            if not r["homogeneous"]:  # not all rows have 2 columns
-                QMessageBox.critical(self, cfg.programName, "This file does not contain a constant number of columns")
-                return
+        if not file_parameters["homogeneous"]:  # the number of columns is not constant
+            QMessageBox.critical(self, cfg.programName, "This file does not contain a constant number of columns")
+            return
 
-            header = util.return_file_header(file_name, row_number=10)
+        header, footer = util.return_file_header_footer(
+            file_name, file_row_number=file_parameters["rows number"], row_number=5
+        )
 
-            if not header:
-                return  # problem with header
+        if not header:
+            QMessageBox.critical(self, cfg.programName, f"Error on file {pl.Path(file_name).name}")
+            return
 
-            w = dialog.View_data_head()
-            w.setWindowTitle(f"Data file: {pl.Path(file_name).name}")
-            """w.setWindowFlags(Qt.WindowStaysOnTopHint)"""
+        w = dialog.View_data_head()
+        w.setWindowTitle(f"View data")
+        w.lb.setText(f"View first and last rows of <b>{pl.Path(file_name).name}</b> file")
+        """w.setWindowFlags(Qt.WindowStaysOnTopHint)"""
 
-            w.tw.setColumnCount(r["fields number"])
+        w.tw.setColumnCount(file_parameters["fields number"])
+        if footer:
+            hf = header + [file_parameters["separator"].join(["..."] * file_parameters["fields number"])] + footer
+            w.tw.setRowCount(len(header) + len(footer) + 1)
+        else:
+            hf = header
             w.tw.setRowCount(len(header))
 
-            for row in range(len(header)):
-                for col, v in enumerate(header[row].split(r["separator"])):
-                    item = QTableWidgetItem(v)
-                    item.setFlags(Qt.ItemIsEnabled)
-                    w.tw.setItem(row, col, item)
+        for idx, row in enumerate(hf):
+            for col, v in enumerate(row.split(file_parameters["separator"])):
+                item = QTableWidgetItem(v)
+                item.setFlags(Qt.ItemIsEnabled)
+                w.tw.setItem(idx, col, item)
 
-            while True:
-                flag_ok = True
-                if w.exec_():
-                    columns_to_plot = w.le.text().replace(" ", "")
-                    for col in columns_to_plot.split(","):
-                        try:
-                            col_idx = int(col)
-                        except ValueError:
-                            QMessageBox.critical(
-                                self, cfg.programName, f"<b>{col}</b> does not seem to be a column index"
-                            )
-                            flag_ok = False
-                            break
-                        if col_idx <= 0 or col_idx > r["fields number"]:
-                            QMessageBox.critical(self, cfg.programName, f"<b>{col}</b> is not a valid column index")
-                            flag_ok = False
-                            break
-                    if flag_ok:
+        """
+        for row in range(len(header)):
+            for col, v in enumerate(header[row].split(file_parameters["separator"])):
+                item = QTableWidgetItem(v)
+                item.setFlags(Qt.ItemIsEnabled)
+                w.tw.setItem(row, col, item)
+        """
+
+        while True:
+            flag_ok = True
+            if w.exec_():
+                columns_to_plot = w.le.text().replace(" ", "")
+                for col in columns_to_plot.split(","):
+                    try:
+                        col_idx = int(col)
+                    except ValueError:
+                        QMessageBox.critical(self, cfg.programName, f"<b>{col}</b> does not seem to be a column index")
+                        flag_ok = False
                         break
-                else:
-                    return
-
+                    if col_idx <= 0 or col_idx > file_parameters["fields number"]:
+                        QMessageBox.critical(self, cfg.programName, f"<b>{col}</b> is not a valid column index")
+                        flag_ok = False
+                        break
+                if flag_ok:
+                    break
             else:
                 return
 
-            self.tw_data_files.setRowCount(self.tw_data_files.rowCount() + 1)
+        else:
+            return
 
-            if " rel " in mode:
+        self.tw_data_files.setRowCount(self.tw_data_files.rowCount() + 1)
 
-                try:
-                    file_path = str(pl.Path(file_name).relative_to(pl.Path(self.project_path).parent))
-                except ValueError:
-                    QMessageBox.critical(
-                        self,
-                        cfg.programName,
-                        f"The directory <b>{pl.Path(file_name).parent}</b> is not contained in <b>{pl.Path(self.project_path).parent}</b>.",
-                    )
-                    return
+        if " rel " in mode:
 
-            else:  # save absolute path
-                file_path = file_name
+            try:
+                file_path = str(pl.Path(file_name).relative_to(pl.Path(self.project_path).parent))
+            except ValueError:
+                QMessageBox.critical(
+                    self,
+                    cfg.programName,
+                    f"The directory <b>{pl.Path(file_name).parent}</b> is not contained in <b>{pl.Path(self.project_path).parent}</b>.",
+                )
+                return
 
-            for col_idx, value in zip(
-                [
-                    cfg.PLOT_DATA_FILEPATH_IDX,
-                    cfg.PLOT_DATA_COLUMNS_IDX,
-                    cfg.PLOT_DATA_PLOTTITLE_IDX,
-                    cfg.PLOT_DATA_VARIABLENAME_IDX,
-                    cfg.PLOT_DATA_CONVERTERS_IDX,
-                    cfg.PLOT_DATA_TIMEINTERVAL_IDX,
-                    cfg.PLOT_DATA_TIMEOFFSET_IDX,
-                ],
-                [file_path, columns_to_plot, "", "", "", "60", "0"],
-            ):
-                item = QTableWidgetItem(value)
-                if col_idx == cfg.PLOT_DATA_CONVERTERS_IDX:
-                    item.setFlags(Qt.ItemIsEnabled)
-                    item.setBackground(QColor(230, 230, 230))
-                self.tw_data_files.setItem(self.tw_data_files.rowCount() - 1, col_idx, item)
+        else:  # save absolute path
+            file_path = file_name
 
-            # substract first value
-            combobox = QComboBox()
-            combobox.addItems(["True", "False"])
-            self.tw_data_files.setCellWidget(
-                self.tw_data_files.rowCount() - 1, cfg.PLOT_DATA_SUBSTRACT1STVALUE_IDX, combobox
-            )
+        for col_idx, value in zip(
+            [
+                cfg.PLOT_DATA_FILEPATH_IDX,
+                cfg.PLOT_DATA_COLUMNS_IDX,
+                cfg.PLOT_DATA_PLOTTITLE_IDX,
+                cfg.PLOT_DATA_VARIABLENAME_IDX,
+                cfg.PLOT_DATA_CONVERTERS_IDX,
+                cfg.PLOT_DATA_TIMEINTERVAL_IDX,
+                cfg.PLOT_DATA_TIMEOFFSET_IDX,
+            ],
+            [file_path, columns_to_plot, "", "", "", "60", "0"],
+        ):
+            item = QTableWidgetItem(value)
+            if col_idx == cfg.PLOT_DATA_CONVERTERS_IDX:
+                item.setFlags(Qt.ItemIsEnabled)
+                item.setBackground(QColor(230, 230, 230))
+            self.tw_data_files.setItem(self.tw_data_files.rowCount() - 1, col_idx, item)
 
-            # plot line color
-            combobox = QComboBox()
-            combobox.addItems(cfg.DATA_PLOT_STYLES)
-            self.tw_data_files.setCellWidget(self.tw_data_files.rowCount() - 1, cfg.PLOT_DATA_PLOTCOLOR_IDX, combobox)
+        # substract first value
+        combobox = QComboBox()
+        combobox.addItems(["True", "False"])
+        self.tw_data_files.setCellWidget(
+            self.tw_data_files.rowCount() - 1, cfg.PLOT_DATA_SUBSTRACT1STVALUE_IDX, combobox
+        )
+
+        # plot line color
+        combobox = QComboBox()
+        combobox.addItems(cfg.DATA_PLOT_STYLES)
+        self.tw_data_files.setCellWidget(self.tw_data_files.rowCount() - 1, cfg.PLOT_DATA_PLOTCOLOR_IDX, combobox)
 
     def view_data_file_head(self):
         """
-        view first parts of data file
+        view first and last rows of data file
         """
 
         if not self.tw_data_files.selectedIndexes() and self.tw_data_files.rowCount() != 1:
@@ -594,31 +608,42 @@ class Observation(QDialog, Ui_Form):
             columns_to_plot = self.tw_data_files.item(self.tw_data_files.selectedIndexes()[0].row(), 1).text()
 
         file_parameters = util.check_txt_file(data_file_path)
+
         if "error" in file_parameters:
             QMessageBox.critical(self, cfg.programName, f"Error on file {data_file_path}: {file_parameters['error']}")
             return
-        header = util.return_file_header(data_file_path)
+        header, footer = util.return_file_header_footer(
+            data_file_path, file_row_number=file_parameters["rows number"], row_number=5
+        )
 
-        if header:
+        if not header:
+            QMessageBox.critical(self, cfg.programName, f"Error on file {pl.Path(data_file_path).name}")
+            return
 
-            w = dialog.View_data_head()
-            w.setWindowTitle(f"Data file: {pl.Path(data_file_path).name}")
-            w.label.setText("Index of columns to plot")
-            w.le.setEnabled(False)
-            w.le.setText(columns_to_plot)
-            w.pbCancel.setVisible(False)
+        w = dialog.View_data_head()
+        w.setWindowTitle(f"View data")
+        w.lb.setText(f"View first and last rows of <b>{pl.Path(data_file_path).name}</b> file")
+        w.pbOK.setText("Close")
+        w.label.setText("Index of columns to plot")
+        w.le.setEnabled(False)
+        w.le.setText(columns_to_plot)
+        w.pbCancel.setVisible(False)
 
-            w.tw.setColumnCount(file_parameters["fields number"])
+        w.tw.setColumnCount(file_parameters["fields number"])
+        if footer:
+            hf = header + [file_parameters["separator"].join(["..."] * file_parameters["fields number"])] + footer
+            w.tw.setRowCount(len(header) + len(footer) + 1)
+        else:
+            hf = header
             w.tw.setRowCount(len(header))
 
-            for row in range(len(header)):
-                for col, v in enumerate(header[row].split(file_parameters["separator"])):
-                    w.tw.setItem(row, col, QTableWidgetItem(v))
+        for idx, row in enumerate(hf):
+            for col, v in enumerate(row.split(file_parameters["separator"])):
+                item = QTableWidgetItem(v)
+                item.setFlags(Qt.ItemIsEnabled)
+                w.tw.setItem(idx, col, item)
 
-            w.exec_()
-
-        else:
-            QMessageBox.critical(self, cfg.programName, f"Error on file {data_file_path}")
+        w.exec_()
 
     def extract_wav(self):
         """
@@ -699,6 +724,7 @@ class Observation(QDialog, Ui_Form):
         """
         if self.test is not None:
             self.test.close_plot()
+            self.text = None
 
     def pbCancel_clicked(self):
         """
@@ -706,6 +732,7 @@ class Observation(QDialog, Ui_Form):
         """
         if self.test is not None:
             self.test.close_plot()
+            self.text = None
         self.reject()
 
     def check_parameters(self):
@@ -894,6 +921,7 @@ class Observation(QDialog, Ui_Form):
         if self.check_parameters():
             if self.test is not None:
                 self.test.close_plot()
+                self.text = None
             self.done(2)
 
     def pbSave_clicked(self):
@@ -904,6 +932,7 @@ class Observation(QDialog, Ui_Form):
             self.state = "accepted"
             if self.test is not None:
                 self.test.close_plot()
+                self.text = None
             self.accept()
         else:
             self.state = "refused"

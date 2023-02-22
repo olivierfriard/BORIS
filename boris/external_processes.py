@@ -295,8 +295,6 @@ def ffmpeg_process(self, action: str):
 
             self.processes.append([QProcess(self), [self.ffmpeg_bin, args, file_name]])
 
-            # print(args)
-
             # self.processes[-1][0].setProcessChannelMode(QProcess.SeparateChannels)
 
             ## FFmpeg output the work in progress on stderr

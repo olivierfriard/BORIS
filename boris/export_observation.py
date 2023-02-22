@@ -44,6 +44,7 @@ from . import utilities as util
 from . import project_functions
 from . import observation_operations
 from . import db_functions
+from . import event_operations
 
 
 def export_events_jwatcher(
@@ -294,14 +295,14 @@ def export_events_jwatcher(
 
 
 def export_tabular_events(
-    pj: dict, parameters: dict, obsId: str, observation: dict, ethogram: dict, file_name: str, output_format: str
+    pj: dict, parameters: dict, obs_id: str, observation: dict, ethogram: dict, file_name: str, output_format: str
 ) -> Tuple[bool, str]:
     """
-    export events for one observation (obsId)
+    export events for one observation (obs_id)
 
     Args:
         parameters (dict): subjects, behaviors
-        obsId (str): observation id
+        obs_id (str): observation id
         observation (dict): observation
         ethogram (dict): ethogram of project
         file_name (str): file name for exporting events
@@ -312,16 +313,12 @@ def export_tabular_events(
         str: error message
     """
 
-    logging.debug(f"function: export tabular events for {obsId}")
+    logging.debug(f"function: export tabular events for {obs_id}")
     logging.debug(f"parameters: {parameters}")
 
     interval = parameters["time"]
 
-    start_coding, end_coding, coding_duration = observation_operations.coding_time(pj[cfg.OBSERVATIONS], [obsId])
-    """
-    if start_coding is None and end_coding is None:  # no events
-        return data, 0
-    """
+    start_coding, end_coding, coding_duration = observation_operations.coding_time(pj[cfg.OBSERVATIONS], [obs_id])
 
     if interval == cfg.TIME_EVENTS:
         min_time = start_coding
@@ -330,7 +327,7 @@ def export_tabular_events(
     if interval == cfg.TIME_FULL_OBS:
 
         if observation[cfg.TYPE] == cfg.MEDIA:
-            max_media_duration, _ = observation_operations.media_duration(pj[cfg.OBSERVATIONS], [obsId])
+            max_media_duration, _ = observation_operations.media_duration(pj[cfg.OBSERVATIONS], [obs_id])
             min_time = dec("0")
             max_time = max_media_duration
             coding_duration = max_media_duration
@@ -345,11 +342,11 @@ def export_tabular_events(
 
     logging.debug(f"min_time: {min_time}  max_time: {max_time}")
 
-    eventsWithStatus = project_functions.events_start_stop(ethogram, observation[cfg.EVENTS])
+    events_with_status = project_functions.events_start_stop(ethogram, observation[cfg.EVENTS], observation[cfg.TYPE])
 
     # check max number of modifiers
     max_modifiers = 0
-    for event in eventsWithStatus:
+    for event in events_with_status:
         if not math.isnan(min_time) and not math.isnan(max_time):  # obs not from pictures
             if min_time <= event[cfg.EVENT_TIME_FIELD_IDX] <= max_time:
                 if event[cfg.EVENT_MODIFIER_FIELD_IDX]:
@@ -414,7 +411,7 @@ def export_tabular_events(
         except KeyError:
             pass
 
-    for event in eventsWithStatus:
+    for event in events_with_status:
         if (not math.isnan(min_time)) and not (min_time <= event[cfg.EVENT_TIME_FIELD_IDX] <= max_time):
             continue
         if (
@@ -423,7 +420,7 @@ def export_tabular_events(
         ) and (event[cfg.EVENT_BEHAVIOR_FIELD_IDX] in parameters[cfg.SELECTED_BEHAVIORS]):
 
             fields: list = []
-            fields.append(obsId)
+            fields.append(obs_id)
             fields.append(observation.get("date", "").replace("T", " "))
             fields.append(util.eol2space(observation.get(cfg.DESCRIPTION, "")))
             # total length
@@ -525,7 +522,6 @@ def export_tabular_events(
             fields.append(event[-1])
 
             # time
-            # if event[cfg.EVENT_TIME_FIELD_IDX]
             fields.append(util.convertTime(time_format=cfg.S, sec=event[cfg.EVENT_TIME_FIELD_IDX]))
 
             # check video file name containing the event
@@ -540,303 +536,20 @@ def export_tabular_events(
                 video_file_name = cfg.NA
             fields.append(video_file_name)
 
-            # image file path
-            if observation[cfg.TYPE] == cfg.IMAGES:
-                fields.append(event[cfg.PJ_OBS_FIELDS[cfg.IMAGES][cfg.IMAGE_PATH]])  # image file path
-            elif observation[cfg.TYPE] in (cfg.LIVE, cfg.MEDIA):
-                fields.append(cfg.NA)
-            else:
-                fields.append("")
-
             # image file index
             if observation[cfg.TYPE] == cfg.IMAGES:
                 fields.append(event[cfg.PJ_OBS_FIELDS[cfg.IMAGES][cfg.IMAGE_INDEX]])  # image file index
-            elif observation[cfg.TYPE] in (cfg.LIVE, cfg.MEDIA):
-                fields.append(cfg.NA)
-            else:
-                fields.append("")
-
-            # comment
-            fields.append(event[cfg.PJ_OBS_FIELDS[observation[cfg.TYPE]][cfg.COMMENT]].replace(os.linesep, " "))
-
-            rows.append(fields)
-
-    max_len = max([len(r) for r in rows])
-    data = tablib.Dataset()
-
-    data.title = util.safe_xl_worksheet_title(obsId, output_format)
-
-    for row in rows:
-        data.append(util.complete(row, max_len))
-
-    r, msg = dataset_write(data, file_name, output_format, dtype=fields_type)
-
-    return r, msg
-
-
-'''
-def export_tabular_events_old(
-    parameters: dict, obsId: str, observation: dict, ethogram: dict, file_name: str, output_format: str
-) -> Tuple[bool, str]:
-    """
-    export events for one observation (obsId)
-
-    Args:
-        parameters (dict): subjects, behaviors
-        obsId (str): observation id
-        observation (dict): observation
-        ethogram (dict): ethogram of project
-        file_name (str): file name for exporting events
-        output_format (str): output for exporting events
-
-    Returns:
-        bool: result: True if OK else False
-        str: error message
-    """
-
-    logging.debug(f"function: export tabular events for {obsId} parameters: {parameters} ")
-
-    interval = parameters["time"]
-    start_time = parameters[cfg.START_TIME]
-    end_time = parameters[cfg.END_TIME]
-
-    total_length = observation_operations.observation_total_length(observation)
-
-    logging.debug(f"total_length: {total_length}")
-
-    if total_length == dec(-1):  # media length not available
-        interval = cfg.TIME_EVENTS
-
-    if total_length == dec(-2):  # obs without timestamp
-        interval = cfg.TIME_EVENTS
-
-    if interval == cfg.TIME_FULL_OBS:
-        min_time = float(0)
-        max_time = float(total_length)
-        total_length_str = f"{max_time - min_time:.3f}"
-
-    if interval == cfg.TIME_EVENTS:
-        start_coding, end_coding, _ = observation_operations.coding_time({obsId: observation}, [obsId])
-        if start_coding.is_nan():
-            total_length_str = cfg.NA
-        else:
-            min_time = float(start_coding)
-            max_time = float(end_coding)
-            total_length_str = f"{max_time - min_time:.3f}"
-        """
-        try:
-            min_time = float(observation[cfg.EVENTS][0][0])
-        except Exception:
-            min_time = float(0)
-        try:
-            max_time = float(observation[cfg.EVENTS][-1][0])
-        except Exception:
-            max_time = float(total_length)
-        """
-
-    if interval == cfg.TIME_ARBITRARY_INTERVAL:
-        min_time = float(start_time)
-        max_time = float(end_time)
-        total_length_str = f"{max_time - min_time:.3f}"
-
-    """
-    if total_length == -2:  # obs from pictures
-        total_length_str = cfg.NA
-    else:
-        total_length_str = f"{parameters[cfg.END_TIME] - parameters[cfg.START_TIME]:.3f}"
-    """
-
-    eventsWithStatus = project_functions.events_start_stop(ethogram, observation[cfg.EVENTS])
-
-    # check max number of modifiers
-    max_modifiers = 0
-    for event in eventsWithStatus:
-        if total_length != dec(-2):  # obs not from pictures
-            if min_time <= event[cfg.EVENT_TIME_FIELD_IDX] <= max_time:
-                if event[cfg.EVENT_MODIFIER_FIELD_IDX]:
-                    max_modifiers = max(max_modifiers, len(event[cfg.EVENT_MODIFIER_FIELD_IDX].split("|")))
-        else:
-            if event[cfg.EVENT_MODIFIER_FIELD_IDX]:
-                max_modifiers = max(max_modifiers, len(event[cfg.EVENT_MODIFIER_FIELD_IDX].split("|")))
-
-    # media file number
-    mediaNb = 0
-    if observation[cfg.TYPE] == cfg.MEDIA:
-        for player in observation[cfg.FILE]:
-            mediaNb += len(observation[cfg.FILE][player])
-
-    rows: list = []
-
-    # fields and type
-    fields_type: dict = {
-        "Observation id": str,
-        "Observation date": dt.datetime,
-        "Description": str,
-        "Observation duration": float,
-        "Observation type": str,
-        "Source": str,
-        "FPS": float,
-    }
-
-    # independent variables
-    if cfg.INDEPENDENT_VARIABLES in observation:
-        for variable in observation[cfg.INDEPENDENT_VARIABLES]:
-            # TODO check variable type
-            fields_type[variable] = str
-
-    fields_type.update({"Subject": str, "Behavior": str, "Behavioral category": str})
-
-    # modifiers
-    for idx in range(max_modifiers):
-        fields_type[f"Modifier #{idx + 1}"] = str
-
-    fields_type.update(
-        {
-            "Behavior type": str,
-            "Time": float,
-            "Media file name": str,
-            "Image index": float,  # add image index and image file path to header
-            "Image file path": str,
-            "Comment": str,
-        }
-    )
-
-    # add header
-    rows.append(list(fields_type.keys()))
-
-    behavioral_category = project_functions.behavior_category(ethogram)
-
-    duration1 = []  # in seconds
-    if observation[cfg.TYPE] == cfg.MEDIA:
-        try:
-            for mediaFile in observation[cfg.FILE][cfg.PLAYER1]:
-                duration1.append(observation[cfg.MEDIA_INFO][cfg.LENGTH][mediaFile])
-        except KeyError:
-            pass
-
-    for event in eventsWithStatus:
-        if (total_length != dec(-2)) and not (min_time <= event[cfg.EVENT_TIME_FIELD_IDX] <= max_time):
-            continue
-        if (
-            (event[cfg.EVENT_SUBJECT_FIELD_IDX] in parameters[cfg.SELECTED_SUBJECTS])
-            or (event[cfg.EVENT_SUBJECT_FIELD_IDX] == "" and cfg.NO_FOCAL_SUBJECT in parameters[cfg.SELECTED_SUBJECTS])
-        ) and (event[cfg.EVENT_BEHAVIOR_FIELD_IDX] in parameters[cfg.SELECTED_BEHAVIORS]):
-
-            fields: list = []
-            fields.append(obsId)
-            fields.append(observation.get("date", "").replace("T", " "))
-            fields.append(util.eol2space(observation.get("description", "")))
-            # total length
-            fields.append(total_length_str)
-
-            if observation[cfg.TYPE] == cfg.MEDIA:
-                fields.append("Media file(s)")
-
-                media_file_str, fps_str = "", ""
-                # number of players
-                n_players = len([x for x in observation[cfg.FILE] if observation[cfg.FILE][x]])
-                for player in observation[cfg.FILE]:
-                    if observation[cfg.FILE][player]:
-                        if media_file_str:
-                            media_file_str += " "
-                        if fps_str:
-                            fps_str += " "
-                        if n_players > 1:
-                            media_file_str += f"player #{player}: "
-                            fps_str += f"player #{player}: "
-                        media_list, fps_list = [], []
-                        for media_file in observation[cfg.FILE][player]:
-                            media_list.append(media_file)
-                            fps_list.append(f"{observation[cfg.MEDIA_INFO][cfg.FPS].get(media_file, cfg.NA):.3f}")
-                        media_file_str += ";".join(media_list)
-                        fps_str += ";".join(fps_list)
-
-                fields.append(media_file_str)
-
+            elif observation[cfg.TYPE] == cfg.MEDIA:
+                frame_idx = event_operations.read_event_field(event, cfg.MEDIA, cfg.FRAME_INDEX)
+                fields.append(frame_idx)  # frame index
             elif observation[cfg.TYPE] == cfg.LIVE:
-                fields.append("Live observation")
                 fields.append(cfg.NA)
-                fps_str = cfg.NA
-
-            elif observation[cfg.TYPE] == cfg.IMAGES:
-                fields.append("From directories of images")
-                dir_list = []
-                for dir in observation[cfg.DIRECTORIES_LIST]:
-                    dir_list.append(dir)
-                fields.append(";".join(dir_list))
-                fps_str = cfg.NA
-
             else:
                 fields.append("")
-
-            # FPS
-            fields.append(fps_str)
-
-            # indep var
-            if cfg.INDEPENDENT_VARIABLES in observation:
-                for variable in observation[cfg.INDEPENDENT_VARIABLES]:
-                    fields.append(observation[cfg.INDEPENDENT_VARIABLES][variable])
-
-            fields.append(event[cfg.PJ_OBS_FIELDS[observation[cfg.TYPE]][cfg.SUBJECT]])
-            fields.append(event[cfg.PJ_OBS_FIELDS[observation[cfg.TYPE]][cfg.BEHAVIOR_CODE]])
-
-            # behavioral category
-            try:
-                behav_category = behavioral_category[event[cfg.PJ_OBS_FIELDS[observation[cfg.TYPE]][cfg.BEHAVIOR_CODE]]]
-            except Exception:
-                behav_category = ""
-            fields.append(behav_category)
-
-            # modifiers
-            if max_modifiers:
-                modifiers = event[cfg.PJ_OBS_FIELDS[observation[cfg.TYPE]][cfg.MODIFIER]].split("|")
-                while len(modifiers) < max_modifiers:
-                    modifiers.append("")
-
-                for m in modifiers:
-                    fields.append(m)
-
-            # status (START/STOP)
-            fields.append(event[-1])
-
-            # time
-            # if event[cfg.EVENT_TIME_FIELD_IDX]
-            fields.append(util.convertTime(time_format=cfg.S, sec=event[cfg.EVENT_TIME_FIELD_IDX]))
-
-            # check video file name containing the event
-            if observation[cfg.TYPE] == cfg.MEDIA:
-                cumul_media_durations = [0]
-                for media_file in observation[cfg.FILE]["1"]:
-                    media_duration = observation[cfg.MEDIA_INFO][cfg.LENGTH][media_file]
-                    cumul_media_durations.append(cumul_media_durations[-1] + media_duration)
-
-                player_idx_list = [
-                    idx
-                    for idx, x in enumerate(cumul_media_durations)
-                    if cumul_media_durations[idx - 1] < event[cfg.EVENT_TIME_FIELD_IDX] <= x
-                ]
-                if len(player_idx_list):
-                    player_idx = player_idx_list[0] - 1
-                    video_file_name = observation[cfg.FILE]["1"][player_idx]
-                else:
-                    player_idx = -1
-                    video_file_name = "Not found"
-
-            elif observation[cfg.TYPE] in (cfg.LIVE, cfg.IMAGES):
-                video_file_name = cfg.NA
-            fields.append(video_file_name)
 
             # image file path
             if observation[cfg.TYPE] == cfg.IMAGES:
                 fields.append(event[cfg.PJ_OBS_FIELDS[cfg.IMAGES][cfg.IMAGE_PATH]])  # image file path
-            elif observation[cfg.TYPE] in (cfg.LIVE, cfg.MEDIA):
-                fields.append(cfg.NA)
-            else:
-                fields.append("")
-
-            # image file index
-            if observation[cfg.TYPE] == cfg.IMAGES:
-                fields.append(event[cfg.PJ_OBS_FIELDS[cfg.IMAGES][cfg.IMAGE_INDEX]])  # image file index
             elif observation[cfg.TYPE] in (cfg.LIVE, cfg.MEDIA):
                 fields.append(cfg.NA)
             else:
@@ -850,7 +563,7 @@ def export_tabular_events_old(
     max_len = max([len(r) for r in rows])
     data = tablib.Dataset()
 
-    data.title = util.safe_xl_worksheet_title(obsId, output_format)
+    data.title = util.safe_xl_worksheet_title(obs_id, output_format)
 
     for row in rows:
         data.append(util.complete(row, max_len))
@@ -858,208 +571,6 @@ def export_tabular_events_old(
     r, msg = dataset_write(data, file_name, output_format, dtype=fields_type)
 
     return r, msg
-'''
-
-'''
-def export_tabular_events_long_format(
-    parameters, obsId: str, observation: dict, ethogram: dict, file_name: str, output_format: str
-) -> tuple:  # -> tuple[bool, str]:
-    """
-    export events
-
-    Args:
-        parameters (dict): subjects, behaviors
-        obsId (str): observation id
-        observation (dict): observation
-        ethogram (dict): ethogram of project
-        file_name (str): file name for exporting events
-        output_format (str): output for exporting events
-
-    Returns:
-        bool: result: True if OK else False
-        str: error message
-    """
-
-    total_length = f"{observation_operations.observation_total_length(observation):.3f}"
-
-    eventsWithStatus = project_functions.events_start_stop(ethogram, observation[cfg.EVENTS])
-
-    # check max number of modifiers
-    max_modifiers = 0
-    for event in eventsWithStatus:
-        if event[cfg.EVENT_MODIFIER_FIELD_IDX]:
-            max_modifiers = max(max_modifiers, len(event[cfg.EVENT_MODIFIER_FIELD_IDX].split("|")))
-
-    # media file number
-    mediaNb = 0
-    if observation[cfg.TYPE] == cfg.MEDIA:
-        for player in observation[cfg.FILE]:
-            mediaNb += len(observation[cfg.FILE][player])
-
-    rows = []
-
-    # observation id
-    rows.append(["Observation id", obsId])
-    rows.append([""])
-
-    # media file name
-    if observation[cfg.TYPE] == cfg.MEDIA:
-        rows.append(["Media file(s)"])
-    elif observation[cfg.TYPE] == cfg.LIVE:
-        rows.append(["Live observation"])
-    elif observation[cfg.TYPE] == cfg.IMAGES:
-        rows.append(["From directories of images"])
-    else:
-        rows.append([""])
-    rows.append([""])
-
-    if observation[cfg.TYPE] == cfg.MEDIA:
-        for player in sorted(list(observation[cfg.FILE].keys())):
-            for media in observation[cfg.FILE][player]:
-                rows.append([f"Player #{player}", media])
-
-    if observation[cfg.TYPE] == cfg.IMAGES:
-        for dir in observation[cfg.DIRECTORIES_LIST]:
-            rows.append([f"Directory", dir])
-
-    rows.append([""])
-
-    # date
-    rows.append(["Observation date", observation.get("date", "").replace("T", " ")])
-    rows.append([""])
-
-    # description
-    rows.append(["Description", util.eol2space(observation.get("description", ""))])
-    rows.append([""])
-
-    # time offset
-    rows.append(["Time offset (s)", observation.get(cfg.TIME_OFFSET, 0)])
-    rows.append([""])
-
-    # independent variables
-    if cfg.INDEPENDENT_VARIABLES in observation:
-        rows.extend([["independent variables"], ["variable", "value"]])
-
-        for variable in observation[cfg.INDEPENDENT_VARIABLES]:
-            rows.append([variable, observation[cfg.INDEPENDENT_VARIABLES][variable]])
-
-    rows.append([""])
-
-    # write table header
-    col = 0
-
-    header = ["Time"]
-    if observation[cfg.TYPE] == cfg.MEDIA:
-        header.extend(["Media file path", "Total length", "FPS"])
-    if observation[cfg.TYPE] == cfg.IMAGES:
-        header.extend(
-            [
-                "Image file path",
-                "Image index",
-            ]
-        )
-    if observation[cfg.TYPE] == cfg.LIVE:
-        header.extend(
-            [
-                "Total length",
-            ]
-        )
-
-    header.extend(["Subject", "Behavior", "Behavioral category"])
-
-    behavioral_category = project_functions.behavior_category(ethogram)
-
-    for x in range(1, max_modifiers + 1):
-        header.append(f"Modifier {x}")
-    header.extend(["Comment", "Status"])
-
-    rows.append(header)
-
-    duration1 = []  # in seconds
-    if observation[cfg.TYPE] == cfg.MEDIA:
-        try:
-            for mediaFile in observation[cfg.FILE][cfg.PLAYER1]:
-                duration1.append(observation[cfg.MEDIA_INFO][cfg.LENGTH][mediaFile])
-        except KeyError:
-            pass
-
-    for event in eventsWithStatus:
-        if (
-            (event[cfg.EVENT_SUBJECT_FIELD_IDX] in parameters[cfg.SELECTED_SUBJECTS])
-            or (event[cfg.EVENT_SUBJECT_FIELD_IDX] == "" and cfg.NO_FOCAL_SUBJECT in parameters[cfg.SELECTED_SUBJECTS])
-        ) and (event[cfg.EVENT_BEHAVIOR_FIELD_IDX] in parameters[cfg.SELECTED_BEHAVIORS]):
-
-            fields = []
-            fields.append(util.intfloatstr(str(event[cfg.EVENT_TIME_FIELD_IDX])))
-
-            if observation[cfg.TYPE] == cfg.MEDIA:
-
-                time_ = event[cfg.EVENT_TIME_FIELD_IDX] - observation[cfg.TIME_OFFSET]
-                if time_ < 0:
-                    time_ = 0
-
-                if duration1:
-                    mediaFileIdx = [idx1 for idx1, x in enumerate(duration1) if time_ >= sum(duration1[0:idx1])][-1]
-                    fields.append(observation[cfg.FILE][cfg.PLAYER1][mediaFileIdx])
-                    fields.append(total_length)
-                    # FPS
-                    try:
-                        fields.append(
-                            observation[cfg.MEDIA_INFO][cfg.FPS][observation[cfg.FILE][cfg.PLAYER1][mediaFileIdx]]
-                        )  # fps
-                    except KeyError:
-                        fields.append(cfg.NA)
-                else:
-                    fields.append(cfg.NA)  # media file
-                    fields.append(cfg.NA)  # FPS
-
-            if observation[cfg.TYPE] == cfg.LIVE:
-                fields.append(total_length)  # total length
-
-            if observation[cfg.TYPE] == cfg.IMAGES:
-                fields.append(event[cfg.PJ_OBS_FIELDS[cfg.IMAGES][cfg.IMAGE_PATH]])  # image file path
-                fields.append(event[cfg.PJ_OBS_FIELDS[cfg.IMAGES][cfg.IMAGE_INDEX]])  # image file index
-
-            fields.append(event[cfg.PJ_OBS_FIELDS[observation[cfg.TYPE]][cfg.SUBJECT]])
-            fields.append(event[cfg.PJ_OBS_FIELDS[observation[cfg.TYPE]][cfg.BEHAVIOR_CODE]])
-
-            # behavioral category
-
-            try:
-                behav_category = behavioral_category[event[cfg.PJ_OBS_FIELDS[observation[cfg.TYPE]][cfg.BEHAVIOR_CODE]]]
-            except Exception:
-                behav_category = ""
-            fields.append(behav_category)
-
-            # modifiers
-            if max_modifiers:
-                modifiers = event[cfg.PJ_OBS_FIELDS[observation[cfg.TYPE]][cfg.MODIFIER]].split("|")
-                while len(modifiers) < max_modifiers:
-                    modifiers.append("")
-
-                for m in modifiers:
-                    fields.append(m)
-
-            # comment
-            fields.append(event[cfg.PJ_OBS_FIELDS[observation[cfg.TYPE]][cfg.COMMENT]].replace(os.linesep, " "))
-            # status
-            fields.append(event[-1])
-
-            rows.append(fields)
-
-    maxLen = max([len(r) for r in rows])
-    data = tablib.Dataset()
-
-    data.title = util.safe_xl_worksheet_title(obsId, output_format)
-
-    for row in rows:
-        data.append(util.complete(row, maxLen))
-
-    r, msg = dataset_write(data, file_name, output_format)
-
-    return r, msg
-
-'''
 
 
 def dataset_write(
@@ -1427,10 +938,12 @@ def events_to_behavioral_sequences(pj, obs_id: str, subj: str, parameters: dict,
         str: behavioral string for selected subject in selected observation
     """
 
-    out = ""
-    current_states = []
+    out: str = ""
+    current_states: list = []
     # add status (POINT, START, STOP) to event
-    events_with_status = project_functions.events_start_stop(pj[cfg.ETHOGRAM], pj[cfg.OBSERVATIONS][obs_id][cfg.EVENTS])
+    events_with_status = project_functions.events_start_stop(
+        pj[cfg.ETHOGRAM], pj[cfg.OBSERVATIONS][obs_id][cfg.EVENTS], pj[cfg.OBSERVATIONS][obs_id][cfg.TYPE]
+    )
 
     for event in events_with_status:
         # check if event in selected behaviors
@@ -1516,7 +1029,9 @@ def events_to_behavioral_sequences_all_subj(
 
     out = ""
     current_states = {i: [] for i in subjects_list}
-    events_with_status = project_functions.events_start_stop(pj[cfg.ETHOGRAM], pj[cfg.OBSERVATIONS][obs_id][cfg.EVENTS])
+    events_with_status = project_functions.events_start_stop(
+        pj[cfg.ETHOGRAM], pj[cfg.OBSERVATIONS][obs_id][cfg.EVENTS], pj[cfg.OBSERVATIONS][obs_id][cfg.TYPE]
+    )
 
     for event in events_with_status:
         # check if event in selected behaviors
@@ -1601,9 +1116,7 @@ def events_to_timed_behavioral_sequences(
         str: behavioral string for selected subject in selected observation
     """
 
-    out = ""
-    current_states = []
-    # events_with_status = project_functions.events_start_stop(pj[ETHOGRAM], pj[cfg.OBSERVATIONS][obs_id][cfg.EVENTS])
+    out: str = ""
 
     state_behaviors_codes = util.state_behavior_codes(pj[cfg.ETHOGRAM])
     delta = dec(str(round(precision, 3)))

@@ -109,6 +109,9 @@ def connections(self):
     self.actionFilter_events.triggered.connect(lambda: event_operations.filter_events(self))
     self.actionShow_all_events.triggered.connect(lambda: event_operations.show_all_events(self))
 
+    # twevent header
+    self.actionConfigure_twEvents_columns.triggered.connect(self.configure_twevents_columns)
+
     self.actionExport_observations_list.triggered.connect(
         lambda: observation_operations.export_observations_list_clicked(self)
     )
@@ -286,6 +289,11 @@ def connections(self):
 
     self.actionShowAllSubjects.triggered.connect(self.show_all_subjects)
     self.twSubjects.addAction(self.actionShowAllSubjects)
+
+    # actions for twEvents horizontal header menu
+    tw_headers = self.twEvents.horizontalHeader()
+    tw_headers.setContextMenuPolicy(Qt.ActionsContextMenu)
+    tw_headers.addAction(self.actionConfigure_twEvents_columns)
 
     # Actions for twEvents menu
     self.twEvents.setContextMenuPolicy(Qt.ActionsContextMenu)

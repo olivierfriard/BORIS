@@ -37,7 +37,7 @@ import time
 import urllib.error
 import urllib.parse
 import urllib.request
-from typing import Union
+from typing import Union, Optional, List, Tuple, Dict
 
 from decimal import Decimal as dec
 from decimal import ROUND_DOWN
@@ -1774,22 +1774,57 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             if self.dw_player[id_].zoomed:
                 self.dw_player[id_].mediaplayer.video_set_crop_geometry(f"{right}x{bottom}+{left}+{top}")
 
-    ''' 2019-12-12
-    def eventFilter(self, source, event):
-        """
-        send event from widget to mainwindow
-        """
-
-        #logging.debug("event filter {}".format(event.type()))
-
-
-        if event.type() == QtCore.QEvent.KeyPress:
-            key = event.key()
-            if key in [Qt.Key_Up, Qt.Key_Down, Qt.Key_Left, Qt.Key_Right, Qt.Key_PageDown, Qt.Key_PageUp]:
-                self.keyPressEvent(event)
-
-        return QMainWindow.eventFilter(self, source, event)
     '''
+    moved in event_operations module
+
+    def read_event_field(self, event: list, player_type: str, field_type: str) -> Union[str, None, int, dec]:
+        """
+        return value of field for event or NA if not available
+        """
+        if field_type not in cfg.PJ_EVENTS_FIELDS[player_type]:
+            return None
+        if cfg.PJ_OBS_FIELDS[player_type][field_type] < len(event):
+            return event[cfg.PJ_OBS_FIELDS[player_type][field_type]]
+        else:
+            return cfg.NA
+    '''
+
+    def read_tw_event_field(self, row_idx: int, player_type: str, field_type: str) -> Union[str, None, int, dec]:
+        """
+        return value of field for event in TW or NA if not available
+        """
+        if field_type not in cfg.TW_EVENTS_FIELDS[player_type]:
+            return None
+
+        return self.twEvents.item(row_idx, cfg.TW_OBS_FIELD[player_type][field_type]).text()
+
+    def configure_twevents_columns(self):
+        """
+        configure the visible columns of twEvent tablewidget
+        configuration for playerType is recorded in self.config_param[f"{self.playerType} tw fields"]
+        """
+
+        dlg = dialog.Input_dialog(
+            label_caption="Select the columns to show",
+            elements_list=[
+                (
+                    "cb",
+                    x,
+                    # default state
+                    x in self.config_param.get(f"{self.playerType} tw fields", cfg.TW_EVENTS_FIELDS[self.playerType]),
+                )
+                for x in cfg.TW_EVENTS_FIELDS[self.playerType]
+            ],
+            title="Select the column to show",
+        )
+        if not dlg.exec_():
+            return
+
+        self.config_param[f"{self.playerType} tw fields"] = tuple(
+            field for field in cfg.TW_EVENTS_FIELDS[self.playerType] if dlg.elements[field].isChecked()
+        )
+
+        self.load_tw_events(self.observationId)
 
     def load_tw_events(self, obs_id):
         """
@@ -1803,18 +1838,25 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         """
 
         logging.debug(f"begin load events from obs: {obs_id}")
+        self.twEvents.clear()
 
-        self.twEvents.setColumnCount(len(cfg.TW_EVENTS_FIELDS[self.pj[cfg.OBSERVATIONS][obs_id][cfg.TYPE]]))
-        self.twEvents.setHorizontalHeaderLabels(
-            [s.capitalize() for s in cfg.TW_EVENTS_FIELDS[self.pj[cfg.OBSERVATIONS][obs_id][cfg.TYPE]]]
-        )
+        self.twEvents.setColumnCount(len(cfg.TW_EVENTS_FIELDS[self.playerType]))
+        self.twEvents.setHorizontalHeaderLabels([s.capitalize() for s in cfg.TW_EVENTS_FIELDS[self.playerType]])
+
+        for idx, field in enumerate(cfg.TW_EVENTS_FIELDS[self.playerType]):
+            if field not in self.config_param.get(
+                f"{self.playerType} tw fields", cfg.TW_EVENTS_FIELDS[self.playerType]
+            ):
+                self.twEvents.horizontalHeader().hideSection(idx)
+            else:
+                self.twEvents.horizontalHeader().showSection(idx)
 
         self.twEvents.setRowCount(len(self.pj[cfg.OBSERVATIONS][obs_id][cfg.EVENTS]))
         if self.filtered_behaviors or self.filtered_subjects:
             self.twEvents.setRowCount(0)
         row = 0
 
-        for event in self.pj[cfg.OBSERVATIONS][obs_id][cfg.EVENTS]:
+        for event_idx, event in enumerate(self.pj[cfg.OBSERVATIONS][obs_id][cfg.EVENTS]):
 
             if (
                 self.filtered_behaviors
@@ -1835,11 +1877,20 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
                 if field_type in cfg.PJ_EVENTS_FIELDS[self.playerType]:
 
-                    field = event[cfg.PJ_OBS_FIELDS[self.playerType][field_type]]
-                    if field_type == "time":
-                        field = str(util.convertTime(self.timeFormat, field))
-                    if field_type == cfg.IMAGE_INDEX:
-                        field = str(round(field))
+                    field = event_operations.read_event_field(event, self.playerType, field_type)
+
+                    # print(f"{field_type=}: {field=}")
+
+                    if field_type == cfg.TIME:
+                        item = QTableWidgetItem(str(util.convertTime(self.timeFormat, field)))
+
+                        # add index of project events
+                        item.setData(Qt.UserRole, event_idx)
+                        self.twEvents.setItem(row, cfg.TW_OBS_FIELD[self.playerType][field_type], item)
+                        continue
+
+                    if field_type in (cfg.IMAGE_INDEX, cfg.FRAME_INDEX):
+                        field = str(field)
 
                     self.twEvents.setItem(row, cfg.TW_OBS_FIELD[self.playerType][field_type], QTableWidgetItem(field))
 
@@ -3286,6 +3337,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 event[cfg.IMAGE_INDEX] = self.image_idx + 1
                 event[cfg.IMAGE_PATH] = self.images_list[self.image_idx]
 
+            # MEDIA
+            if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE] == cfg.MEDIA:
+                event[cfg.FRAME_INDEX] = self.dw_player[0].player.estimated_frame_number + 1
+
             self.write_event(event, self.getLaps())
 
     def actionUser_guide_triggered(self):
@@ -3323,6 +3378,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE] == cfg.IMAGES:
                 event[cfg.IMAGE_INDEX] = self.image_idx + 1
                 event[cfg.IMAGE_PATH] = self.images_list[self.image_idx]
+
+            # MEDIA
+            if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE] == cfg.MEDIA:
+                event[cfg.FRAME_INDEX] = self.dw_player[0].player.estimated_frame_number + 1
 
             self.write_event(event, self.getLaps())
 
@@ -3385,7 +3444,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         if (
             ct
-            >= self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS][-1][cfg.TW_OBS_FIELD[self.playerType]["time"]]
+            >= self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS][-1][
+                cfg.TW_OBS_FIELD[self.playerType][cfg.TIME]
+            ]
         ):
             self.events_current_row = len(self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS])
         else:
@@ -3394,7 +3455,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 for idx, x in enumerate(self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS][:-1])
                 if x[0] <= ct
                 and self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS][idx + 1][
-                    cfg.TW_OBS_FIELD[self.playerType]["time"]
+                    cfg.TW_OBS_FIELD[self.playerType][cfg.TIME]
                 ]
                 > ct
             ]
@@ -3550,6 +3611,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             return
 
         cumulative_time_pos = self.getLaps()
+        # get frame index
+        frame_idx = self.dw_player[0].player.estimated_frame_number
 
         if value is None:
             current_media_time_pos = 0
@@ -3558,7 +3621,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         """
         CRITICAL:root:Traceback (most recent call last):
-        File "/home/olivier/projects/BORIS/boris/core.py", line 4086, in timer_out2
+        File "core.py", line 4086, in timer_out2
             current_media_frame = round(value * self.dw_player[0].player.container_fps) + 1
         IndexError: list index out of range
 
@@ -3670,6 +3733,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     f"<br>Total: <b>{util.convertTime(self.timeFormat,cumulative_time_pos)} / "
                     f"{util.convertTime(self.timeFormat, all_media_duration)}</b>"
                 )
+
+            # player rate
+            msg += f"<br>Play rate: <b>x{self.play_rate:.3f}</b>"
 
             self.lb_player_status.setText("Player paused" if self.dw_player[0].player.pause else "")
 
@@ -3792,34 +3858,24 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         """
 
         if self.pj[cfg.OBSERVATIONS][obs_id][cfg.TYPE] in (cfg.MEDIA, cfg.LIVE):
-            return (time, subject, code) in [
-                (x[cfg.EVENT_TIME_FIELD_IDX], x[cfg.EVENT_SUBJECT_FIELD_IDX], x[cfg.EVENT_BEHAVIOR_FIELD_IDX])
-                for x in self.pj[cfg.OBSERVATIONS][obs_id][cfg.EVENTS]
-            ]
-
-        if self.pj[cfg.OBSERVATIONS][obs_id][cfg.TYPE] == cfg.IMAGES:
-            """
-            print((time, subject, code))
-            print(self.pj[cfg.OBSERVATIONS][obs_id][cfg.EVENTS])
-            print(
-                [
-                    (
-                        x[cfg.PJ_OBS_FIELDS[self.pj[cfg.OBSERVATIONS][obs_id][cfg.TYPE]]["image index"]],
-                        x[cfg.EVENT_SUBJECT_FIELD_IDX],
-                        x[cfg.EVENT_BEHAVIOR_FIELD_IDX],
-                    )
-                    for x in self.pj[cfg.OBSERVATIONS][obs_id][cfg.EVENTS]
-                ]
-            )
-            """
-            return (time, subject, code) in [
+            return (time, subject, code) in (
                 (
-                    x[cfg.PJ_OBS_FIELDS[self.pj[cfg.OBSERVATIONS][obs_id][cfg.TYPE]][cfg.IMAGE_INDEX]],
-                    x[cfg.EVENT_SUBJECT_FIELD_IDX],
-                    x[cfg.EVENT_BEHAVIOR_FIELD_IDX],
+                    x[cfg.PJ_OBS_FIELDS[self.pj[cfg.OBSERVATIONS][obs_id][cfg.TYPE]][cfg.TIME]],
+                    x[cfg.PJ_OBS_FIELDS[self.pj[cfg.OBSERVATIONS][obs_id][cfg.TYPE]][cfg.SUBJECT]],
+                    x[cfg.PJ_OBS_FIELDS[self.pj[cfg.OBSERVATIONS][obs_id][cfg.TYPE]][cfg.BEHAVIOR_CODE]],
                 )
                 for x in self.pj[cfg.OBSERVATIONS][obs_id][cfg.EVENTS]
-            ]
+            )
+
+        if self.pj[cfg.OBSERVATIONS][obs_id][cfg.TYPE] == cfg.IMAGES:
+            return (time, subject, code) in (
+                (
+                    x[cfg.PJ_OBS_FIELDS[self.pj[cfg.OBSERVATIONS][obs_id][cfg.TYPE]][cfg.IMAGE_INDEX]],
+                    x[cfg.PJ_OBS_FIELDS[self.pj[cfg.OBSERVATIONS][obs_id][cfg.TYPE]][cfg.SUBJECT]],
+                    x[cfg.PJ_OBS_FIELDS[self.pj[cfg.OBSERVATIONS][obs_id][cfg.TYPE]][cfg.BEHAVIOR_CODE]],
+                )
+                for x in self.pj[cfg.OBSERVATIONS][obs_id][cfg.EVENTS]
+            )
 
     def write_event(self, event: dict, mem_time: dec) -> int:
         """
@@ -3856,6 +3912,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         if self.playerType in (cfg.IMAGES, cfg.VIEWER_IMAGES):
             image_idx = event.get(cfg.IMAGE_INDEX, "")
             image_path = event.get(cfg.IMAGE_PATH, "")
+
+        if self.playerType in (cfg.MEDIA, cfg.VIEWER_MEDIA):
+            frame_idx = event.get(cfg.FRAME_INDEX, "")
 
         # check if a same event is already in events list (time, subject, code)
 
@@ -4029,7 +4088,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         if not editing_event:
             if self.currentSubject:
-                csj = []
+                csj: list = []
                 for idx in current_states:
                     if (
                         idx in self.pj[cfg.SUBJECTS]
@@ -4047,11 +4106,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             logging.debug(f"csj {csj}")
 
             if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE] in (cfg.LIVE, cfg.MEDIA):
-                check_index = cfg.EVENT_TIME_FIELD_IDX
+                check_index = cfg.PJ_OBS_FIELDS[self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE]][cfg.TIME]
             if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE] == cfg.IMAGES:
-                check_index = cfg.PJ_OBS_FIELDS[cfg.IMAGES]["image index"]
+                check_index = cfg.PJ_OBS_FIELDS[cfg.IMAGES][cfg.IMAGE_INDEX]
 
-            cm = {}  # modifiers for current behaviors
+            cm: dict = {}  # modifiers for current behaviors
             for cs in csj:
                 for ev in self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS]:
 
@@ -4083,7 +4142,19 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         # add event to pj
         if editing_event:  # modifying event
 
-            if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE] in (cfg.MEDIA, cfg.LIVE):
+            if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE] == cfg.MEDIA:
+                self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS][event["row"]] = [
+                    mem_time,
+                    subject,
+                    event[cfg.BEHAVIOR_CODE],
+                    modifier_str,
+                    comment,
+                    frame_idx,
+                ]
+                # order by image index ASC
+                self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS].sort()
+
+            elif self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE] == cfg.LIVE:
                 self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS][event["row"]] = [
                     mem_time,
                     subject,
@@ -4109,6 +4180,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     key=lambda x: x[cfg.PJ_OBS_FIELDS[self.playerType][cfg.IMAGE_INDEX]]
                 )
 
+            # print(f'{self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS][event["row"]]=}')
+
         else:  # add event
             if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE] in (cfg.MEDIA, cfg.LIVE):
                 """
@@ -4119,7 +4192,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 """
                 bisect.insort(
                     self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS],
-                    [mem_time, subject, event[cfg.BEHAVIOR_CODE], modifier_str, comment],
+                    [mem_time, subject, event[cfg.BEHAVIOR_CODE], modifier_str, comment, frame_idx],
                 )
 
             elif self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE] == cfg.IMAGES:
@@ -4474,6 +4547,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         # get time
         memLaps = None
+        frame_idx = None
         if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE] == cfg.LIVE:
             if self.pj[cfg.OBSERVATIONS][self.observationId].get(cfg.SCAN_SAMPLING_TIME, 0):
                 if self.timeFormat == cfg.HHMMSS:
@@ -4490,6 +4564,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE] in (cfg.MEDIA, cfg.IMAGES):
             memLaps = self.getLaps()
+            if self.playerType == cfg.MEDIA:
+                frame_idx = self.dw_player[0].player.estimated_frame_number + 1
 
         if memLaps is None:
             return
@@ -4602,6 +4678,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     event[cfg.IMAGE_PATH] = self.images_list[self.image_idx]
                     event[cfg.IMAGE_INDEX] = self.image_idx + 1
 
+                if self.playerType == cfg.MEDIA:
+                    event[cfg.FRAME_INDEX] = self.dw_player[0].player.estimated_frame_number + 1
+
                 self.write_event(event, memLaps)
 
             elif count == 0:
@@ -4691,7 +4770,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         if not self.find_dialog.findText.text():
             self.find_dialog.lb_message.setText('<font color="red">Nothing to search!</font>')
             return
-
+        """for event_idx, event in enumerate(self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS]):"""
         for event_idx in range(self.twEvents.rowCount()):
             if event_idx <= self.find_dialog.currentIdx:
                 continue

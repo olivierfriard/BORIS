@@ -63,8 +63,6 @@ def select_observations2(self, mode: str, windows_title: str = "") -> Tuple[str,
     data: list = []
     not_paired: list = []
 
-    """print(f"{hash(str(self.pj[cfg.OBSERVATIONS]))=}")"""
-
     if hash(str(self.pj[cfg.OBSERVATIONS])) != self.mem_hash_obs:
 
         for obs in sorted(list(pj[cfg.OBSERVATIONS].keys())):
@@ -128,7 +126,6 @@ def select_observations2(self, mode: str, windows_title: str = "") -> Tuple[str,
                     pj[cfg.OBSERVATIONS][obs][cfg.EVENTS], state_events_list
                 )
             elif pj[cfg.OBSERVATIONS][obs][cfg.TYPE] == cfg.IMAGES:
-                # TODO: add exhaustivity for images observation (number of coded images?)
                 exhaustivity = project_functions.check_observation_exhaustivity_pictures(pj[cfg.OBSERVATIONS][obs])
 
             data.append([obs, date, descr, subjectsList, observed_interval_str, str(exhaustivity), media] + indepvar)
@@ -217,6 +214,7 @@ def select_observations2(self, mode: str, windows_title: str = "") -> Tuple[str,
     return resultStr, selected_observations
 
 
+'''
 def select_observations(pj: dict, mode: str, windows_title: str = "") -> Tuple[str, list]:
     """
     allow user to select observations
@@ -387,3 +385,4 @@ def select_observations(pj: dict, mode: str, windows_title: str = "") -> Tuple[s
         resultStr = cfg.VIEW
 
     return resultStr, selected_observations
+'''

@@ -26,6 +26,7 @@ import logging
 from typing import Optional, Tuple
 from . import config as cfg
 from . import project_functions
+from . import event_operations
 
 
 def load_events_in_db(
@@ -115,8 +116,8 @@ def load_events_in_db(
                             cursor.execute(
                                 (
                                     "INSERT INTO events "
-                                    "(observation, subject, code, type, modifiers, occurence, comment) "
-                                    "VALUES (?,?,?,?,?,?,?)"
+                                    "(observation, subject, code, type, modifiers, occurence, comment, image_index) "
+                                    "VALUES (?,?,?,?,?,?,?,?)"
                                 ),
                                 (
                                     obs_id,
@@ -132,6 +133,10 @@ def load_events_in_db(
                                     if not event[cfg.EVENT_TIME_FIELD_IDX].is_nan()
                                     else None,
                                     event[cfg.EVENT_COMMENT_FIELD_IDX],
+                                    # frame index or NA
+                                    event_operations.read_event_field(
+                                        event, pj[cfg.OBSERVATIONS][obs_id][cfg.TYPE], cfg.FRAME_INDEX
+                                    ),
                                 ),
                             )
 

@@ -1537,6 +1537,11 @@
     <string>Export project</string>
    </property>
   </action>
+  <action name="actionConfigure_twEvents_columns">
+   <property name="text">
+    <string>Configure columns</string>
+   </property>
+  </action>
  </widget>
  <resources/>
  <connections/>

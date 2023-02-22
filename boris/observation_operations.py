@@ -1834,11 +1834,6 @@ def initialize_new_images_observation(self):
             self.saved_state = self.saveState()
             self.restoreState(self.saved_state)
 
-    """
-    self.twEvents.setColumnCount(len(cfg.IMAGES_TW_EVENTS_FIELDS))
-    self.twEvents.setHorizontalHeaderLabels(cfg.IMAGES_TW_EVENTS_FIELDS)
-    """
-
     self.extract_frame(self.dw_player[i])
     self.w_obs_info.setVisible(True)
 
@@ -1875,31 +1870,5 @@ def event2media_file_name(observation: dict, timestamp: dec) -> Optional[str]:
         video_file_name = observation[cfg.FILE]["1"][player_idx]
     else:
         video_file_name = None
-
-    """
-    player_idx_list = [
-        idx for idx, x in enumerate(cumul_media_durations) if cumul_media_durations[idx - 1] <= timestamp < x
-    ]
-
-    try:
-        print(f"{player_idx_list=}")
-    except:
-        pass
-
-    if len(player_idx_list):
-        player_idx = player_idx_list[0] - 1
-
-        try:
-            print(f"{player_idx=}")
-        except:
-            pass
-
-        video_file_name = observation[cfg.FILE]["1"][player_idx]
-    else:
-        player_idx = -1
-        video_file_name = None
-
-    print()
-    """
 
     return video_file_name

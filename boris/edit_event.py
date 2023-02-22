@@ -20,6 +20,8 @@ This file is part of BORIS.
 
 """
 
+from decimal import Decimal as dec
+
 from PyQt5.QtWidgets import (
     QDialog,
     QSpinBox,
@@ -42,25 +44,31 @@ class DlgEditEvent(QDialog, Ui_Form):
     def __init__(
         self,
         observation_type: str,
-        time_value=0,
+        time_value: dec = dec(0),
+        image_idx=None,
         current_time=0,
-        time_format=cfg.S,
-        show_set_current_time=False,
+        time_format: str = cfg.S,
+        show_set_current_time: bool = False,
         parent=None,
     ):
 
         super().__init__(parent)
         self.setupUi(self)
         self.time_value = time_value
+        self.image_idx = image_idx
         self.observation_type = observation_type
 
         self.pb_set_to_current_time.setVisible(show_set_current_time)
         self.current_time = current_time
 
-        self.dsbTime.setVisible(False)
-        self.teTime.setVisible(False)
-
+        # hide image index
         if observation_type in (cfg.LIVE, cfg.MEDIA):
+            for w in (self.lb_image_idx, self.sb_image_idx, self.cb_set_time_na):
+                w.setVisible(False)
+
+        if (observation_type in (cfg.LIVE, cfg.MEDIA)) or (
+            observation_type == cfg.IMAGES and self.time_value != cfg.NA
+        ):
             self.time_widget = duration_widget.Duration_widget(self.time_value)
             if time_format == cfg.S:
                 self.time_widget.set_format_s()
@@ -70,14 +78,17 @@ class DlgEditEvent(QDialog, Ui_Form):
             self.horizontalLayout_2.insertWidget(0, self.time_widget)
 
         if observation_type == cfg.IMAGES:
-            self.label.setText("Image index")
-            self.pb_set_to_current_time.setText("Set to current image index")
-            self.img_idx_widget = QSpinBox()
-            self.img_idx_widget.setValue(self.time_value)
+            # hide frame index widgets
+            for w in (self.lb_frame_idx, self.sb_frame_idx, self.cb_set_frame_idx_na):
+                w.setVisible(False)
+            self.sb_image_idx.setValue(self.image_idx)
 
-            self.horizontalLayout_2.insertWidget(0, self.img_idx_widget)
+            self.pb_set_to_current_time.setText("Set to current image index")
 
         self.pb_set_to_current_time.clicked.connect(self.set_to_current_time)
+        self.cb_set_time_na.stateChanged.connect(self.time_na)
+
+        self.cb_set_frame_idx_na.stateChanged.connect(self.frame_idx_na)
         self.pbOK.clicked.connect(self.accept)
         self.pbCancel.clicked.connect(self.reject)
 
@@ -89,7 +100,22 @@ class DlgEditEvent(QDialog, Ui_Form):
             self.time_widget.set_time(float(self.current_time))
 
         if self.observation_type in (cfg.IMAGES):
-            self.img_idx_widget.setValue(int(self.current_time))
+            self.sb_image_idx.setValue(int(self.current_time))
+
+    def frame_idx_na(self):
+        """
+        set/unset frame index NA
+        """
+        self.lb_frame_idx.setEnabled(not self.cb_set_frame_idx_na.isChecked())
+        self.sb_frame_idx.setEnabled(not self.cb_set_frame_idx_na.isChecked())
+
+    def time_na(self):
+        """
+        set/unset time to NA
+        """
+
+        self.time_widget.setEnabled(not self.cb_set_time_na.isChecked())
+        self.pb_set_to_current_time.setEnabled(not self.cb_set_time_na.isChecked())
 
 
 class EditSelectedEvents(QDialog):

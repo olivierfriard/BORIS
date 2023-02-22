@@ -424,6 +424,7 @@ def export_aggregated_events(self):
             cfg.XLS,
             cfg.HTML,
             cfg.SDIS,
+            cfg.TBS,
             cfg.SQL,
             cfg.PANDAS_DF,
             cfg.RDS,
@@ -500,11 +501,10 @@ def export_aggregated_events(self):
         tot_max_modifiers = max(tot_max_modifiers, max_modifiers)
 
     data_grouped_obs = tablib.Dataset()
-    # sort by start time
-    start_idx = -9  # TODO: improve!
-    stop_idx = -8
 
-    mem_command = ""  # remember user choice when file already exists
+    mem_command: str = ""  # remember user choice when file already exists
+    header = list(fields_type(tot_max_modifiers).keys())
+
     for obs_id in selected_observations:
 
         logging.debug(f"Exporting aggregated events for obs Id: {obs_id}")
@@ -513,8 +513,8 @@ def export_aggregated_events(self):
 
         try:
             # order by start time
-            index = tuple(fields_type(max_modifiers).keys()).index("Start (s)")
-            if "NA" not in [x[index] for x in list(data_single_obs)]:
+            index = header.index("Start (s)")
+            if cfg.NA not in [x[index] for x in list(data_single_obs)]:
                 data_single_obs_sorted = tablib.Dataset(
                     # *data.sort(col=index),
                     *sorted(list(data_single_obs), key=lambda x: float(x[index])),
@@ -522,13 +522,13 @@ def export_aggregated_events(self):
                 )
             else:
                 # order by image index
-                index = tuple(fields_type(max_modifiers).keys()).index("Image index start")
+                index = header.index("Image index start")
                 data_single_obs_sorted = tablib.Dataset(
                     # *data.sort(col=index),
                     *sorted(list(data_single_obs), key=lambda x: float(x[index])),
                     headers=list(fields_type(max_modifiers).keys()),
                 )
-        except:
+        except Exception:
             # if error no order
             data_single_obs_sorted = tablib.Dataset(
                 # data.sort(col=0),  # Observation id
@@ -538,7 +538,7 @@ def export_aggregated_events(self):
 
         data_single_obs_sorted.title = obs_id
 
-        if (not flag_group) and (outputFormat not in ("sds", "tbs")):
+        if (not flag_group) and (outputFormat not in (cfg.SDIS_EXT, "tbs")):
             fileName = f"{pl.Path(exportDir) / util.safeFileName(obs_id)}.{outputFormat}"
             # check if file with new extension already exists
             if mem_command != cfg.OVERWRITE_ALL and pl.Path(fileName).is_file():
@@ -553,12 +553,6 @@ def export_aggregated_events(self):
                     return
                 if mem_command in (cfg.SKIP, cfg.SKIP_ALL):
                     continue
-
-            """
-            if sys.version_info.minor >= 8:
-                print(f"{list(data_single_obs)=}")
-                print(f"{list(fields_type(max_modifiers).keys())=}")
-            """
 
             r, msg = export_observation.dataset_write(data_single_obs_sorted, fileName, outputFormat, dtype=fields_type)
             if not r:
@@ -575,42 +569,28 @@ def export_aggregated_events(self):
                 )
         data_grouped_obs.extend(data_single_obs_sorted)
 
-    """
-    try:
-        # order by obs_id, start time
-        data_grouped_obs_sorted = tablib.Dataset(
-            *sorted(list(data_grouped_obs), key=lambda x: (x[obs_id_idx], float(x[start_idx]))),
-            headers=list(fields_type(tot_max_modifiers).keys()),
-        )
-    except:
-        # if error order by obs_id
-        data_grouped_obs_sorted = tablib.Dataset(
-            *sorted(list(data_grouped_obs), key=lambda x: x[obs_id_idx]),
-            headers=list(fields_type(tot_max_modifiers).keys()),
-        )
-    """
     data_grouped_obs_all = tablib.Dataset(headers=list(fields_type(tot_max_modifiers).keys()))
     data_grouped_obs_all.extend(data_grouped_obs)
     data_grouped_obs_all.title = "Aggregated events"
 
-    # TODO: finish
-    if outputFormat == "tbs":  # Timed behavioral sequences
-        out = ""
-        for obsId in selected_observations:
-            # observation id
-            out += f"# {obsId}\n"
+    start_idx = header.index("Start (s)")
+    stop_idx = header.index("Stop (s)")
 
-            for event in list(data):
-                if event[0] == obsId:
-                    behavior = event[-8]
+    if outputFormat == cfg.TBS_EXT:  # Timed behavioral sequences
+        out: str = ""
+        for obs_id in selected_observations:
+            # observation id
+            out += f"# {obs_id}\n"
+
+            for event in list(data_grouped_obs_all):
+                if event[0] == obs_id:
+                    behavior = event[header.index("Behavior")]
+                    subject = event[header.index("Subject")]
                     # replace various char by _
-                    for char in [" ", "-", "/"]:
+                    for char in (" ", "-", "/"):
                         behavior = behavior.replace(char, "_")
-                    subject = event[-9]
-                    # replace various char by _
-                    for char in [" ", "-", "/"]:
                         subject = subject.replace(char, "_")
-                    event_start = f"{float(event[start_idx]):.3f}"  # start event (from end for independent variables)
+                    event_start = f"{float(event[start_idx]):.3f}"  # start event
                     if not event[stop_idx]:  # stop event (from end)
                         event_stop = f"{float(event[start_idx]) + 0.001:.3f}"
                     else:
@@ -622,7 +602,7 @@ def export_aggregated_events(self):
             out += "\n"
 
             if not flag_group:
-                fileName = f"{pl.Path(exportDir) / util.safeFileName(obsId)}.{outputFormat}"
+                fileName = f"{pl.Path(exportDir) / util.safeFileName(obs_id)}.{outputFormat}"
                 with open(fileName, "wb") as f:
                     f.write(str.encode(out))
                 out = ""
@@ -632,39 +612,34 @@ def export_aggregated_events(self):
                 f.write(str.encode(out))
         return
 
-    if outputFormat == "sds":  # SDIS format
-        out = ("% SDIS file created by BORIS (www.boris.unito.it) " "at {}\nTimed <seconds>;\n").format(
-            util.datetime_iso8601(dt.datetime.now())
+    if outputFormat == cfg.SDIS_EXT:  # SDIS format
+        out: str = (
+            "% SDIS file created by BORIS (www.boris.unito.it) "
+            f"at {util.datetime_iso8601(dt.datetime.now())}\nTimed <seconds>;\n"
         )
-        for obsId in selected_observations:
+        for obs_id in selected_observations:
             # observation id
-            out += "\n<{}>\n".format(obsId)
+            out += "\n<{}>\n".format(obs_id)
 
-            for event in list(data):
-                if event[0] == obsId:
-                    behavior = event[-8]
+            for event in list(data_grouped_obs_all):
+                if event[0] == obs_id:
+                    behavior = event[header.index("Behavior")]
+                    subject = event[header.index("Subject")]
                     # replace various char by _
-                    for char in [" ", "-", "/"]:
+                    for char in (" ", "-", "/"):
                         behavior = behavior.replace(char, "_")
-                    subject = event[-9]
-                    # replace various char by _
-                    for char in [" ", "-", "/"]:
                         subject = subject.replace(char, "_")
-                    event_start = "{0:.3f}".format(
-                        float(event[start_idx])
-                    )  # start event (from end for independent variables)
+
+                    event_start = f"{float(event[start_idx]):.3f}"  # start event
                     if not event[stop_idx]:  # stop event (from end)
-                        event_stop = "{0:.3f}".format(float(event[start_idx]) + 0.001)
+                        event_stop = f"{float(event[start_idx]) + 0.001:.3f}"
                     else:
-                        event_stop = "{0:.3f}".format(float(event[stop_idx]))
+                        event_stop = f"{float(event[stop_idx]):.3f}"
                     out += f"{subject}_{behavior},{event_start}-{event_stop} "
 
             out += "/\n\n"
             if not flag_group:
-                """
-                fileName = str(pathlib.Path(pathlib.Path(exportDir) / safeFileName(obsId)).with suffix("." + outputFormat))
-                """
-                fileName = f"{pl.Path(exportDir) / util.safeFileName(obsId)}.{outputFormat}"
+                fileName = f"{pl.Path(exportDir) / util.safeFileName(obs_id)}.{outputFormat}"
                 with open(fileName, "wb") as f:
                     f.write(str.encode(out))
                 out = (
@@ -836,11 +811,6 @@ def export_events_as_textgrid(self) -> None:
             min_time = float(parameters[cfg.START_TIME])
             max_time = float(parameters[cfg.END_TIME])
 
-        """
-        print(f"min_time: {min_time}")
-        print(f"max_time: {max_time}")
-        """
-
         # delete events outside time interval
         cursor.execute(
             "DELETE FROM aggregated_events WHERE observation = ? AND (start < ? AND stop < ?) OR (start > ? AND stop > ?)",
@@ -968,13 +938,6 @@ def export_events_as_textgrid(self) -> None:
 
                 count += 1
 
-                """
-                print(f'{row["start"]=}   {row["stop"]=}')
-                if idx + 1 < len(rows):
-                    print(f'{rows[idx + 1]["start"]=}')
-                print()
-                """
-
                 if (idx + 1 < len(rows)) and (
                     rows[idx + 1]["start"] - dec("0.001") <= row["stop"] < rows[idx + 1]["start"]
                 ):
@@ -1079,298 +1042,4 @@ def export_events_as_textgrid(self) -> None:
             QApplication.processEvents()
 
     self.results.ptText.appendHtml(f"Done.  {file_count} file(s) were created in {export_dir}.")
-    QApplication.processEvents()
-
-
-def export_events_as_textgrid_old(self):
-    """
-    export state events as Praat textgrid
-    """
-
-    _, selected_observations = select_observations.select_observations2(self, mode=cfg.MULTIPLE, windows_title="")
-
-    if not selected_observations:
-        return
-
-    # check if coded behaviors are defined in ethogram
-    if project_functions.check_coded_behaviors_in_obs_list(self.pj, selected_observations):
-        return
-
-    # check if state events are paired
-    not_ok, selected_observations = project_functions.check_state_events(self.pj, selected_observations)
-    if not_ok or not selected_observations:
-        return
-
-    max_obs_length, _ = observation_operations.observation_length(self.pj, selected_observations)
-
-    # exit with message if events do not have timestamp
-    if max_obs_length.is_nan():
-        QMessageBox.critical(
-            None,
-            cfg.programName,
-            ("This function is not available for observations with events that do not have timestamp"),
-            QMessageBox.Ok | QMessageBox.Default,
-            QMessageBox.NoButton,
-        )
-        return
-
-    start_coding, end_coding, _ = observation_operations.coding_time(self.pj[cfg.OBSERVATIONS], selected_observations)
-
-    parameters = select_subj_behav.choose_obs_subj_behav_category(
-        self,
-        selected_observations,
-        start_coding=start_coding,
-        end_coding=end_coding,
-        flagShowIncludeModifiers=False,
-        flagShowExcludeBehaviorsWoEvents=False,
-        n_observations=len(selected_observations),
-    )
-    if parameters == {}:
-        return
-    if not parameters[cfg.SELECTED_SUBJECTS] or not parameters[cfg.SELECTED_BEHAVIORS]:
-        QMessageBox.warning(None, cfg.programName, "Select subject(s) and behavior(s) to export")
-        return
-
-    exportDir = QFileDialog(self).getExistingDirectory(
-        self, "Export events as Praat TextGrid", os.path.expanduser("~"), options=QFileDialog(self).ShowDirsOnly
-    )
-    if not exportDir:
-        return
-
-    mem_command = ""
-
-    # see https://www.fon.hum.uva.nl/praat/manual/TextGrid_file_formats.html
-
-    interval_subject_header = (
-        "    item [{subject_index}]:\n"
-        '        class = "IntervalTier"\n'
-        '        name = "{subject}"\n'
-        "        xmin = {intervalsMin}\n"
-        "        xmax = {intervalsMax}\n"
-        "        intervals: size = {intervalsSize}\n"
-    )
-
-    interval_template = (
-        "        intervals [{count}]:\n"
-        "            xmin = {xmin}\n"
-        "            xmax = {xmax}\n"
-        '            text = "{name}"\n'
-    )
-
-    point_subject_header = (
-        "    item [{subject_index}]:\n"
-        '        class = "TextTier"\n'
-        '        name = "{subject}"\n'
-        "        xmin = {intervalsMin}\n"
-        "        xmax = {intervalsMax}\n"
-        "        points: size = {intervalsSize}\n"
-    )
-
-    point_template = "        points [{count}]:\n" "            number = {number}\n" '            mark = "{mark}"\n'
-
-    # widget for results
-    self.results = dialog.Results_dialog()
-    self.results.setWindowTitle(f"{cfg.programName} - Export events as Praat TextGrid")
-    self.results.show()
-
-    cursor = db_functions.load_events_in_db(
-        self.pj,
-        parameters[cfg.SELECTED_SUBJECTS],
-        selected_observations,
-        parameters[cfg.SELECTED_BEHAVIORS],
-    )
-
-    file_count: int = 0
-
-    for obs_id in selected_observations:
-
-        next_obs: bool = False
-
-        total_media_duration = round(
-            observation_operations.observation_total_length(self.pj[cfg.OBSERVATIONS][obs_id]), 3
-        )
-
-        cursor.execute(
-            (
-                "SELECT COUNT(DISTINCT subject) FROM events "
-                "WHERE observation = ? AND subject IN ({}) AND type = 'STATE' ".format(
-                    ",".join(["?"] * len(parameters[cfg.SELECTED_SUBJECTS]))
-                )
-            ),
-            [obs_id] + parameters[cfg.SELECTED_SUBJECTS],
-        )
-
-        subjectsNum = int(list(cursor.fetchall())[0][0])
-
-        subjectsMin, subjectsMax = 0, total_media_duration
-
-        out = (
-            'File type = "ooTextFile"\n'
-            'Object class = "TextGrid"\n'
-            "\n"
-            f"xmin = {subjectsMin}\n"
-            f"xmax = {subjectsMax}\n"
-            "tiers? <exists>\n"
-            f"size = {subjectsNum}\n"
-            "item []:\n"
-        )
-
-        subject_index = 0
-        for subject in parameters[cfg.SELECTED_SUBJECTS]:
-            if subject not in [
-                x[cfg.EVENT_SUBJECT_FIELD_IDX] if x[cfg.EVENT_SUBJECT_FIELD_IDX] else cfg.NO_FOCAL_SUBJECT
-                for x in self.pj[cfg.OBSERVATIONS][obs_id][cfg.EVENTS]
-            ]:
-                continue
-
-            intervalsMin, intervalsMax = 0, total_media_duration
-
-            # STATE events
-            cursor.execute(
-                (
-                    "SELECT occurence, code FROM events "
-                    "WHERE observation = ? AND subject = ? AND type = 'STATE' ORDER BY occurence"
-                ),
-                (obs_id, subject),
-            )
-
-            rows = [{"occurence": util.float2decimal(r["occurence"]), "code": r["code"]} for r in cursor.fetchall()]
-            if not rows:
-                continue
-
-            out += interval_subject_header
-
-            count = 0
-
-            # check if 1st behavior starts at the beginning
-
-            if rows[0]["occurence"] > 0:
-                count += 1
-                out += interval_template.format(count=count, name="null", xmin=0.0, xmax=rows[0]["occurence"])
-
-            for idx, row in enumerate(rows):
-
-                if idx % 2 == 0:
-                    # check if events not interlacced
-                    if row["code"] != rows[idx + 1]["code"]:
-
-                        self.results.ptText.appendHtml(
-                            (
-                                f"The events are interlaced for subject <b>{subject}</b> in the observation <b>{obs_id}</b>. "
-                                "It is not possible to create the Praat TextGrid file."
-                            )
-                        )
-                        QApplication.processEvents()
-
-                        next_obs = True
-                        break
-
-                    count += 1
-                    out += interval_template.format(
-                        count=count, name=row["code"], xmin=row["occurence"], xmax=rows[idx + 1]["occurence"]
-                    )
-
-                    # check if difference is > 0.001
-                    if len(rows) > idx + 2:
-                        if rows[idx + 2]["occurence"] - rows[idx + 1]["occurence"] > 0.001:
-
-                            out += interval_template.format(
-                                count=count + 1,
-                                name="null",
-                                xmin=rows[idx + 1]["occurence"],
-                                xmax=rows[idx + 2]["occurence"],
-                            )
-                            count += 1
-                        else:
-                            rows[idx + 2]["occurence"] = rows[idx + 1]["occurence"]
-
-            if next_obs:
-                break
-
-            # check if last event ends at the end of media file
-            if rows[-1]["occurence"] < observation_operations.observation_total_length(
-                self.pj[cfg.OBSERVATIONS][obs_id]
-            ):
-                count += 1
-                out += interval_template.format(
-                    count=count, name="null", xmin=rows[-1]["occurence"], xmax=total_media_duration
-                )
-
-            # add info
-            subject_index += 1
-            out = out.format(
-                subject_index=subject_index,
-                subject=subject,
-                intervalsSize=count,
-                intervalsMin=intervalsMin,
-                intervalsMax=intervalsMax,
-            )
-
-            # POINT events
-            cursor.execute(
-                (
-                    "SELECT occurence, code FROM events "
-                    "WHERE observation = ? AND subject = ? AND type = 'POINT' ORDER BY occurence"
-                ),
-                (obs_id, subject),
-            )
-
-            rows = [{"occurence": util.float2decimal(r["occurence"]), "code": r["code"]} for r in cursor.fetchall()]
-            if not rows:
-                continue
-
-            out += point_subject_header
-
-            count = 0
-
-            for idx, row in enumerate(rows):
-
-                count += 1
-                out += point_template.format(count=count, mark=row["code"], number=row["occurence"])
-
-            # add info
-            subject_index += 1
-            out = out.format(
-                subject_index=subject_index,
-                subject=subject,
-                intervalsSize=count,
-                intervalsMin=intervalsMin,
-                intervalsMax=intervalsMax,
-            )
-
-        if next_obs:
-            continue
-
-        # check if file already exists
-        if (
-            mem_command != cfg.OVERWRITE_ALL
-            and pl.Path(f"{pl.Path(exportDir) / util.safeFileName(obs_id)}.textGrid").is_file()
-        ):
-            if mem_command == cfg.SKIP_ALL:
-                continue
-            mem_command = dialog.MessageDialog(
-                cfg.programName,
-                f"The file <b>{pl.Path(exportDir) / util.safeFileName(obs_id)}.textGrid</b> already exists.",
-                [cfg.OVERWRITE, cfg.OVERWRITE_ALL, cfg.SKIP, cfg.SKIP_ALL, cfg.CANCEL],
-            )
-            if mem_command == cfg.CANCEL:
-                return
-            if mem_command in (cfg.SKIP, cfg.SKIP_ALL):
-                continue
-
-        try:
-            with open(f"{pl.Path(exportDir) / util.safeFileName(obs_id)}.textGrid", "w") as f:
-                f.write(out)
-            file_count += 1
-            self.results.ptText.appendHtml(
-                f"File {pl.Path(exportDir) / util.safeFileName(obs_id)}.textGrid was created."
-            )
-            QApplication.processEvents()
-        except Exception:
-            self.results.ptText.appendHtml(
-                f"The file {pl.Path(exportDir) / util.safeFileName(obs_id)}.textGrid can not be created."
-            )
-            QApplication.processEvents()
-
-    self.results.ptText.appendHtml(f"Done.  {file_count} file(s) were created in {exportDir}.")
     QApplication.processEvents()

@@ -133,14 +133,16 @@ class Plot_data(QWidget):
             substract_first_value,
             converters=converters,
             column_converter=column_converter,
-        )  # txt2np_array defined in utilities.py
+        )
 
         if not result:
             self.error_msg = error_msg
             return
 
+        """
         logging.debug("data[50]: {}".format(data[:50]))
         logging.debug("shape: {}".format(data.shape))
+        """
 
         if data.shape == (0,):
             self.error_msg = "Empty input file"
@@ -150,7 +152,7 @@ class Plot_data(QWidget):
         data = data[data[:, 0].argsort()]
 
         # unique
-        u, idx = np.unique(data[:, 0], return_index=True)
+        _, idx = np.unique(data[:, 0], return_index=True)
         data = data[idx]
 
         # time
@@ -162,24 +164,29 @@ class Plot_data(QWidget):
         # check if time is linear
         diff = set(np.round(np.diff(data, axis=0)[:, 0], 4))
 
+        # check if only one time value is available
+        if not diff:
+            self.error_msg = "only one time value is present"
+            return
+
         if min(diff) == 0:
             self.error_msg = "more values for same time"
             return
 
-        logging.debug(f"diff: {diff}")
+        """logging.debug(f"diff: {diff}")"""
 
         min_time_step = min(diff)
 
-        logging.debug(f"min_time_step: {min_time_step}")
+        """logging.debug(f"min_time_step: {min_time_step}")"""
 
         # check if sampling rate is not constant
         if len(diff) != 1:
 
-            logging.debug("len diff != 1")
+            """logging.debug("len diff != 1")"""
 
             min_time_step = min(diff)
 
-            logging.debug(f"min_time_step: {min_time_step}")
+            """logging.debug(f"min_time_step: {min_time_step}")"""
 
             # increase value for low sampling rate (> 1 s)
             if min_time_step > 1:
@@ -189,7 +196,7 @@ class Plot_data(QWidget):
             data = np.array((x2, np.interp(x2, data[:, 0], data[:, 1]))).T
             del x2
 
-            logging.debug(f"data[:,0]: {data[:, 0]}")
+            """logging.debug(f"data[:,0]: {data[:, 0]}")"""
 
             # time
             min_time_value, max_time_value = min(data[:, 0]), max(data[:, 0])
@@ -204,9 +211,9 @@ class Plot_data(QWidget):
             data = data[0 :: int(round(0.04 / min_time_step, 2))]
             min_time_step = 0.04
 
-        logging.debug(f"new data after subsampling: {data[:50]}")
+        """logging.debug(f"new data after subsampling: {data[:50]}")"""
 
-        min_value, max_value = min(data[:, 1]), max(data[:, 1])
+        min_var_value, max_var_value = min(data[:, 1]), max(data[:, 1])
 
         max_frequency = 1 / min_time_step
 
@@ -241,7 +248,7 @@ class Plot_data(QWidget):
         if min_time_step < 0.2:
             self.time_out = 200
         else:
-            self.time_out = min_time_step * 1000
+            self.time_out = round(min_time_step * 1000)
 
     def eventFilter(self, receiver, event):
         """
@@ -282,8 +289,10 @@ class Plot_data(QWidget):
     # Slot receives data and plots it
     def plot(self, x, y, position_data, position_start, min_value, max_value, position_end):
 
+        """
         logging.debug(f"len x (plot): {len(x)}")
         logging.debug(f"len y (plot): {len(y)}")
+        """
 
         # print current value
         try:
@@ -296,21 +305,17 @@ class Plot_data(QWidget):
 
         try:
             self.myplot.axes.clear()
-
             self.myplot.axes.set_title(self.plot_title)
-
             self.myplot.axes.set_xlim(position_start, position_end)
-
             self.myplot.axes.set_ylabel(self.y_label, rotation=90, labelpad=10)
             self.myplot.axes.set_ylim((min_value, max_value))
-
             self.myplot.axes.plot(x, y, self.plot_style)
             self.myplot.axes.axvline(x=position_data, color="red", linestyle="-")
 
             self.myplot.draw()
         except:
-            logging.debug("error")
-            pass  # only for protection agains crash
+            logging.debug(f"error in plotting external data: {sys.exc_info()[1]}")
+            pass  # only for protection against crash
 
 
 class Plotter(QObject):

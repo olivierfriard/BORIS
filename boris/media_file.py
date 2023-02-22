@@ -37,7 +37,7 @@ def get_info(self) -> None:
     def media_analysis_str(ffmpeg_bin, media_full_path):
 
         r = util.accurate_media_analysis(ffmpeg_bin, media_full_path)
-        print(r)
+
         if "error" in r:
             ffmpeg_output = f"File path: {media_full_path}<br><br>{r['error']}<br><br>"
         else:

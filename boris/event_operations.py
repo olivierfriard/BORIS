@@ -25,6 +25,8 @@ import logging
 from decimal import Decimal as dec
 from decimal import InvalidOperation
 from decimal import ROUND_DOWN
+from typing import Union, Optional, List, Tuple, Dict
+
 from . import config as cfg
 from . import utilities as util
 from . import dialog
@@ -65,6 +67,7 @@ def add_event(self):
     editWindow = DlgEditEvent(
         observation_type=self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE],
         time_value=0,
+        image_idx=0,
         current_time=current_time,
         time_format=self.timeFormat,
         show_set_current_time=True,
@@ -122,7 +125,7 @@ def add_event(self):
 
         # IMAGES
         if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE] == cfg.IMAGES:
-            new_index = editWindow.img_idx_widget.value()
+            new_index = editWindow.sb_image_idx.value()
 
             for idx in self.pj[cfg.ETHOGRAM]:
                 if self.pj[cfg.ETHOGRAM][idx][cfg.BEHAVIOR_CODE] == editWindow.cobCode.currentText():
@@ -133,20 +136,27 @@ def add_event(self):
                     if editWindow.leComment.toPlainText():
                         event[cfg.COMMENT] = editWindow.leComment.toPlainText()
 
-                    event[cfg.IMAGE_PATH] = self.images_list[new_index]
+                    if self.playerType != cfg.VIEWER_IMAGES:
+                        event[cfg.IMAGE_PATH] = self.images_list[new_index]
+                    else:
+                        event[cfg.IMAGE_PATH] = ""
+
                     event[cfg.IMAGE_INDEX] = new_index
 
                     time_ = dec("NaN")
-                    if (
-                        self.pj[cfg.OBSERVATIONS][self.observationId].get(cfg.USE_EXIF_DATE, False)
-                        and self.extract_exif_DateTimeOriginal(self.images_list[new_index]) != -1
-                    ):
-                        time_ = self.extract_exif_DateTimeOriginal(self.images_list[new_index]) - self.image_time_ref
+                    if self.pj[cfg.OBSERVATIONS][self.observationId].get(cfg.USE_EXIF_DATE, False):
+                        if self.playerType != cfg.VIEWER_IMAGES:
+                            if self.extract_exif_DateTimeOriginal(self.images_list[new_index]) != -1:
+                                time_ = (
+                                    self.extract_exif_DateTimeOriginal(self.images_list[new_index])
+                                    - self.image_time_ref
+                                )
 
                     elif self.pj[cfg.OBSERVATIONS][self.observationId].get(cfg.TIME_LAPSE, 0):
                         time_ = new_index * self.pj[cfg.OBSERVATIONS][self.observationId].get(cfg.TIME_LAPSE, 0)
 
                     self.write_event(event, dec(time_).quantize(dec("0.001"), rounding=ROUND_DOWN))
+
                     break
 
     if self.pause_before_addevent:
@@ -280,50 +290,17 @@ def delete_all_events(self):
         # fill the undo list
         fill_events_undo_list(self, "Undo 'Delete all events'")
 
-        rows_to_delete = []
-        if self.playerType in (cfg.MEDIA, cfg.VIEWER_MEDIA, cfg.LIVE, cfg.VIEWER_LIVE):
-            for row in range(self.twEvents.rowCount()):
-                rows_to_delete.append(
-                    [
-                        util.time2seconds(self.twEvents.item(row, cfg.TW_OBS_FIELD[self.playerType]["time"]).text())
-                        if self.timeFormat == cfg.HHMMSS
-                        else dec(self.twEvents.item(row, cfg.TW_OBS_FIELD[self.playerType]["time"]).text()),
-                        self.twEvents.item(row, cfg.TW_OBS_FIELD[self.playerType][cfg.SUBJECT]).text(),
-                        self.twEvents.item(row, cfg.TW_OBS_FIELD[self.playerType][cfg.BEHAVIOR_CODE]).text(),
-                    ]
-                )
+        rows_to_delete: list = []
+        for row in range(self.twEvents.rowCount()):
+            rows_to_delete.append(
+                self.twEvents.item(row, cfg.TW_OBS_FIELD[self.playerType][cfg.TIME]).data(Qt.UserRole)
+            )
 
-            self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS] = [
-                event
-                for event in self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS]
-                if [
-                    event[cfg.PJ_OBS_FIELDS[self.playerType]["time"]],
-                    event[cfg.PJ_OBS_FIELDS[self.playerType][cfg.SUBJECT]],
-                    event[cfg.PJ_OBS_FIELDS[self.playerType][cfg.BEHAVIOR_CODE]],
-                ]
-                not in rows_to_delete
-            ]
-
-        if self.playerType in (cfg.IMAGES, cfg.VIEWER_IMAGES):
-            for row in range(self.twEvents.rowCount()):
-                rows_to_delete.append(
-                    [
-                        self.twEvents.item(row, cfg.TW_OBS_FIELD[self.playerType][cfg.SUBJECT]).text(),
-                        self.twEvents.item(row, cfg.TW_OBS_FIELD[self.playerType][cfg.BEHAVIOR_CODE]).text(),
-                        int(self.twEvents.item(row, cfg.TW_OBS_FIELD[self.playerType][cfg.IMAGE_INDEX]).text()),
-                    ]
-                )
-
-            self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS] = [
-                event
-                for event in self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS]
-                if [
-                    event[cfg.PJ_OBS_FIELDS[self.playerType][cfg.SUBJECT]],
-                    event[cfg.PJ_OBS_FIELDS[self.playerType][cfg.BEHAVIOR_CODE]],
-                    event[cfg.PJ_OBS_FIELDS[self.playerType][cfg.IMAGE_INDEX]],
-                ]
-                not in rows_to_delete
-            ]
+        self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS] = [
+            event
+            for event_idx, event in enumerate(self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS])
+            if event_idx not in rows_to_delete
+        ]
 
         self.update_realtime_plot(force_plot=True)
 
@@ -349,50 +326,17 @@ def delete_selected_events(self):
         # fill the undo list
         fill_events_undo_list(self, "Undo 'Delete selected events'")
 
-        rows_to_delete = []
-        if self.playerType in (cfg.MEDIA, cfg.VIEWER_MEDIA, cfg.LIVE, cfg.VIEWER_LIVE):
-            for row in set([item.row() for item in self.twEvents.selectedIndexes()]):
-                rows_to_delete.append(
-                    [
-                        util.time2seconds(self.twEvents.item(row, cfg.EVENT_TIME_FIELD_IDX).text())
-                        if self.timeFormat == cfg.HHMMSS
-                        else dec(self.twEvents.item(row, cfg.EVENT_TIME_FIELD_IDX).text()),
-                        self.twEvents.item(row, cfg.EVENT_SUBJECT_FIELD_IDX).text(),
-                        self.twEvents.item(row, cfg.EVENT_BEHAVIOR_FIELD_IDX).text(),
-                    ]
-                )
+        rows_to_delete: list = []
+        for row in set([item.row() for item in self.twEvents.selectedIndexes()]):
+            rows_to_delete.append(
+                self.twEvents.item(row, cfg.TW_OBS_FIELD[self.playerType][cfg.TIME]).data(Qt.UserRole)
+            )
 
-            self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS] = [
-                event
-                for event in self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS]
-                if [
-                    event[cfg.PJ_OBS_FIELDS[self.playerType]["time"]],
-                    event[cfg.PJ_OBS_FIELDS[self.playerType][cfg.SUBJECT]],
-                    event[cfg.PJ_OBS_FIELDS[self.playerType][cfg.BEHAVIOR_CODE]],
-                ]
-                not in rows_to_delete
-            ]
-
-        if self.playerType in (cfg.IMAGES, cfg.VIEWER_IMAGES):
-            for row in set([item.row() for item in self.twEvents.selectedIndexes()]):
-                rows_to_delete.append(
-                    [
-                        self.twEvents.item(row, cfg.TW_OBS_FIELD[self.playerType][cfg.SUBJECT]).text(),
-                        self.twEvents.item(row, cfg.TW_OBS_FIELD[self.playerType][cfg.BEHAVIOR_CODE]).text(),
-                        int(self.twEvents.item(row, cfg.TW_OBS_FIELD[self.playerType][cfg.IMAGE_INDEX]).text()),
-                    ]
-                )
-
-            self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS] = [
-                event
-                for event in self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS]
-                if [
-                    event[cfg.PJ_OBS_FIELDS[self.playerType][cfg.SUBJECT]],
-                    event[cfg.PJ_OBS_FIELDS[self.playerType][cfg.BEHAVIOR_CODE]],
-                    event[cfg.PJ_OBS_FIELDS[self.playerType][cfg.IMAGE_INDEX]],
-                ]
-                not in rows_to_delete
-            ]
+        self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS] = [
+            event
+            for event_idx, event in enumerate(self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS])
+            if event_idx not in rows_to_delete
+        ]
 
         self.update_realtime_plot(force_plot=True)
 
@@ -423,50 +367,48 @@ def select_events_between_activated(self):
                 return None
         return timeSeconds
 
-    if self.twEvents.rowCount():
-        text, ok = QInputDialog.getText(
-            self,
-            "Select events in time interval",
-            "Interval: (example: 12.5-14.7 or 02:45.780-03:15.120)",
-            QLineEdit.Normal,
-            "",
-        )
-
-        if ok and text != "":
-
-            if "-" not in text:
-                QMessageBox.critical(
-                    self, cfg.programName, "Use minus sign (-) to separate initial value from final value"
-                )
-                return
-
-            while " " in text:
-                text = text.replace(" ", "")
-
-            from_, to_ = text.split("-")[0:2]
-            from_sec = parseTime(from_)
-            if not from_sec:
-                QMessageBox.critical(self, cfg.programName, f"Time value not recognized: {from_}")
-                return
-            to_sec = parseTime(to_)
-            if not to_sec:
-                QMessageBox.critical(self, cfg.programName, f"Time value not recognized: {to_}")
-                return
-            if to_sec < from_sec:
-                QMessageBox.critical(self, cfg.programName, "The initial time is greater than the final time")
-                return
-            self.twEvents.clearSelection()
-            self.twEvents.setSelectionMode(QAbstractItemView.MultiSelection)
-            for r in range(0, self.twEvents.rowCount()):
-                if ":" in self.twEvents.item(r, 0).text():
-                    time = util.time2seconds(self.twEvents.item(r, 0).text())
-                else:
-                    time = dec(self.twEvents.item(r, 0).text())
-                if from_sec <= time <= to_sec:
-                    self.twEvents.selectRow(r)
-
-    else:
+    if not self.twEvents.rowCount():
         QMessageBox.warning(self, cfg.programName, "There are no events to select")
+        return
+
+    text, ok = QInputDialog.getText(
+        self,
+        "Select events in time interval",
+        "Interval: (example: 12.5-14.7 or 02:45.780-03:15.120)",
+        QLineEdit.Normal,
+        "",
+    )
+
+    if ok and text != "":
+
+        if "-" not in text:
+            QMessageBox.critical(self, cfg.programName, "Use minus sign (-) to separate initial value from final value")
+            return
+
+        while " " in text:
+            text = text.replace(" ", "")
+
+        from_, to_ = text.split("-")[0:2]
+        from_sec = parseTime(from_)
+        if not from_sec:
+            QMessageBox.critical(self, cfg.programName, f"Time value not recognized: {from_}")
+            return
+        to_sec = parseTime(to_)
+        if not to_sec:
+            QMessageBox.critical(self, cfg.programName, f"Time value not recognized: {to_}")
+            return
+        if to_sec < from_sec:
+            QMessageBox.critical(self, cfg.programName, "The initial time is greater than the final time")
+            return
+        self.twEvents.clearSelection()
+        self.twEvents.setSelectionMode(QAbstractItemView.MultiSelection)
+        for r in range(self.twEvents.rowCount()):
+            if ":" in self.twEvents.item(r, cfg.TW_EVENTS_FIELDS[self.playerType][cfg.TIME]).text():
+                time = util.time2seconds(self.twEvents.item(r, cfg.TW_EVENTS_FIELDS[self.playerType][cfg.TIME]).text())
+            else:
+                time = dec(self.twEvents.item(r, cfg.TW_EVENTS_FIELDS[self.playerType][cfg.TIME]).text())
+            if from_sec <= time <= to_sec:
+                self.twEvents.selectRow(r)
 
 
 def edit_selected_events(self):
@@ -496,27 +438,29 @@ def edit_selected_events(self):
             # fill the undo list
             fill_events_undo_list(self, "Undo 'Edit selected event(s)'")
 
-            tsb_to_edit = []
+            tsb_to_edit: list = []
             for row in twEvents_rows_to_edit:
                 tsb_to_edit.append(
+                    self.twEvents.item(row, cfg.TW_OBS_FIELD[self.playerType][cfg.TIME]).data(Qt.UserRole)
+                )
+                """
+                tsb_to_edit.append(
                     [
-                        util.time2seconds(self.twEvents.item(row, cfg.EVENT_TIME_FIELD_IDX).text())
+                        util.time2seconds(self.read_tw_event_field(row, self.playerType, cfg.TIME))
                         if self.timeFormat == cfg.HHMMSS
-                        else dec(self.twEvents.item(row, cfg.EVENT_TIME_FIELD_IDX).text()),
-                        self.twEvents.item(row, cfg.EVENT_SUBJECT_FIELD_IDX).text(),
-                        self.twEvents.item(row, cfg.EVENT_BEHAVIOR_FIELD_IDX).text(),
+                        else dec(self.read_tw_event_field(row, self.playerType, cfg.TIME)),
+                        self.read_tw_event_field(row, self.playerType, cfg.SUBJECT),
+                        self.read_tw_event_field(row, self.playerType, cfg.BEHAVIOR_CODE),
                     ]
                 )
+                """
 
             behavior_codes = []
             modifiers_mem = []
             mem_event_idx = []
             for idx, event in enumerate(self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS]):
-                if [
-                    event[cfg.EVENT_TIME_FIELD_IDX],
-                    event[cfg.EVENT_SUBJECT_FIELD_IDX],
-                    event[cfg.EVENT_BEHAVIOR_FIELD_IDX],
-                ] in tsb_to_edit:
+                if idx in tsb_to_edit:
+
                     new_event = list(event)
                     if dialogWindow.rbSubject.isChecked():
                         new_event[cfg.EVENT_SUBJECT_FIELD_IDX] = dialogWindow.newText.selectedItems()[0].text()
@@ -600,51 +544,22 @@ def edit_event(self):
 
     twEvents_row = self.twEvents.selectedItems()[0].row()
 
-    if self.playerType in (cfg.MEDIA, cfg.LIVE, cfg.VIEWER_MEDIA, cfg.VIEWER_LIVE):
-        tsb_to_edit = [
-            util.time2seconds(self.twEvents.item(twEvents_row, cfg.EVENT_TIME_FIELD_IDX).text())
-            if self.timeFormat == cfg.HHMMSS
-            else dec(self.twEvents.item(twEvents_row, cfg.EVENT_TIME_FIELD_IDX).text()),
-            self.twEvents.item(twEvents_row, cfg.EVENT_SUBJECT_FIELD_IDX).text(),
-            self.twEvents.item(twEvents_row, cfg.EVENT_BEHAVIOR_FIELD_IDX).text(),
-        ]
+    pj_event_idx = self.twEvents.item(twEvents_row, cfg.TW_OBS_FIELD[self.playerType][cfg.TIME]).data(Qt.UserRole)
 
-        row = [
-            idx
-            for idx, event in enumerate(self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS])
-            if [
-                event[cfg.EVENT_TIME_FIELD_IDX],
-                event[cfg.EVENT_SUBJECT_FIELD_IDX],
-                event[cfg.EVENT_BEHAVIOR_FIELD_IDX],
-            ]
-            == tsb_to_edit
-        ][0]
+    time_value = self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS][pj_event_idx][
+        cfg.PJ_OBS_FIELDS[self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE]][cfg.TIME]
+    ]
 
-    if self.playerType in (cfg.IMAGES, cfg.VIEWER_IMAGES):
-        tsb_to_edit = [
-            self.twEvents.item(twEvents_row, cfg.TW_OBS_FIELD[self.playerType][cfg.SUBJECT]).text(),
-            self.twEvents.item(twEvents_row, cfg.TW_OBS_FIELD[self.playerType][cfg.BEHAVIOR_CODE]).text(),
-            int(self.twEvents.item(twEvents_row, cfg.TW_OBS_FIELD[self.playerType][cfg.IMAGE_INDEX]).text()),
-        ]
-
-        row = [
-            idx
-            for idx, event in enumerate(self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS])
-            if [
-                event[cfg.PJ_OBS_FIELDS[self.playerType][cfg.SUBJECT]],
-                event[cfg.PJ_OBS_FIELDS[self.playerType][cfg.BEHAVIOR_CODE]],
-                event[cfg.PJ_OBS_FIELDS[self.playerType][cfg.IMAGE_INDEX]],
-            ]
-            == tsb_to_edit
-        ][0]
-
+    image_idx = None
     if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE] in (cfg.IMAGES):
-        value = self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS][row][
+        image_idx = self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS][pj_event_idx][
             cfg.PJ_OBS_FIELDS[self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE]][cfg.IMAGE_INDEX]
         ]
+
+    """
     elif self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE] in (cfg.LIVE, cfg.MEDIA):
-        value = self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS][row][
-            cfg.PJ_OBS_FIELDS[self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE]]["time"]
+        value = self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS][pj_event_idx][
+            cfg.PJ_OBS_FIELDS[self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE]][cfg.TIME]
         ]
     else:
         QMessageBox.warning(
@@ -653,29 +568,38 @@ def edit_event(self):
             f"Observation type {self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE]} not recognized",
         )
         return
+    """
 
     if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE] == cfg.IMAGES:
-        current_time = self.image_idx + 1
+        current_value = self.image_idx + 1
     else:
-        current_time = self.getLaps()
+        current_value = self.getLaps()
 
     editWindow = DlgEditEvent(
         observation_type=self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE],
-        time_value=value,
-        current_time=current_time,
+        time_value=time_value,
+        image_idx=image_idx,
+        current_time=current_value,
         time_format=self.timeFormat,
         show_set_current_time=True,
     )
     editWindow.setWindowTitle("Edit event")
 
+    #
+    if self.playerType in (cfg.VIEWER_MEDIA, cfg.VIEWER_LIVE, cfg.VIEWER_IMAGES):
+        editWindow.pb_set_to_current_time.setVisible(False)
+
     sortedSubjects = [""] + sorted([self.pj[cfg.SUBJECTS][x][cfg.SUBJECT_NAME] for x in self.pj[cfg.SUBJECTS]])
 
     editWindow.cobSubject.addItems(sortedSubjects)
 
-    if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS][row][cfg.EVENT_SUBJECT_FIELD_IDX] in sortedSubjects:
+    if (
+        self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS][pj_event_idx][cfg.EVENT_SUBJECT_FIELD_IDX]
+        in sortedSubjects
+    ):
         editWindow.cobSubject.setCurrentIndex(
             sortedSubjects.index(
-                self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS][row][cfg.EVENT_SUBJECT_FIELD_IDX]
+                self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS][pj_event_idx][cfg.EVENT_SUBJECT_FIELD_IDX]
             )
         )
     else:
@@ -683,7 +607,7 @@ def edit_event(self):
             self,
             cfg.programName,
             (
-                f"The subject <b>{self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS][row][cfg.EVENT_SUBJECT_FIELD_IDX]}</b> "
+                f"The subject <b>{self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS][pj_event_idx][cfg.EVENT_SUBJECT_FIELD_IDX]}</b> "
                 "does not exist more in the subject's list"
             ),
         )
@@ -693,16 +617,19 @@ def edit_event(self):
     editWindow.cobCode.addItems(sortedCodes)
 
     # check if selected code is in code's list (no modification of codes)
-    if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS][row][cfg.EVENT_BEHAVIOR_FIELD_IDX] in sortedCodes:
+    if (
+        self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS][pj_event_idx][cfg.EVENT_BEHAVIOR_FIELD_IDX]
+        in sortedCodes
+    ):
         editWindow.cobCode.setCurrentIndex(
             sortedCodes.index(
-                self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS][row][cfg.EVENT_BEHAVIOR_FIELD_IDX]
+                self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS][pj_event_idx][cfg.EVENT_BEHAVIOR_FIELD_IDX]
             )
         )
     else:
         logging.warning(
             (
-                f"The behaviour {self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS][row][cfg.EVENT_BEHAVIOR_FIELD_IDX]} "
+                f"The behaviour {self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS][pj_event_idx][cfg.EVENT_BEHAVIOR_FIELD_IDX]} "
                 "does not exist more in the ethogram"
             )
         )
@@ -710,19 +637,29 @@ def edit_event(self):
             self,
             cfg.programName,
             (
-                f"The behaviour <b>{self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS][row][cfg.EVENT_BEHAVIOR_FIELD_IDX]}</b> "
+                f"The behaviour <b>{self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS][pj_event_idx][cfg.EVENT_BEHAVIOR_FIELD_IDX]}</b> "
                 "does not exist more in the ethogram"
             ),
         )
         editWindow.cobCode.setCurrentIndex(0)
 
     logging.debug(
-        f"original modifiers: {self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS][row][cfg.EVENT_MODIFIER_FIELD_IDX]}"
+        f"original modifiers: {self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS][pj_event_idx][cfg.EVENT_MODIFIER_FIELD_IDX]}"
     )
+
+    # frame index
+    frame_idx = read_event_field(
+        self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS][pj_event_idx],
+        self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE],
+        cfg.FRAME_INDEX,
+    )
+    editWindow.sb_frame_idx.setValue(0 if frame_idx in (cfg.NA, None) else frame_idx)
+    if frame_idx in (cfg.NA, None):
+        editWindow.cb_set_frame_idx_na.setChecked(True)
 
     # comment
     editWindow.leComment.setPlainText(
-        self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS][row][cfg.EVENT_COMMENT_FIELD_IDX]
+        self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS][pj_event_idx][cfg.EVENT_COMMENT_FIELD_IDX]
     )
 
     flag_ok = False  # for looping until event is OK or Cancel pressed
@@ -740,10 +677,17 @@ def edit_event(self):
                         event = self.full_event(key)
                         event[cfg.SUBJECT] = editWindow.cobSubject.currentText()
                         event[cfg.COMMENT] = editWindow.leComment.toPlainText()
-                        event["row"] = row
-                        event["original_modifiers"] = self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS][row][
-                            cfg.PJ_OBS_FIELDS[self.playerType][cfg.MODIFIER]
-                        ]
+
+                        if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE] == cfg.MEDIA:
+                            if not editWindow.sb_frame_idx.value() or editWindow.cb_set_frame_idx_na.isChecked():
+                                event[cfg.FRAME_INDEX] = cfg.NA
+                            else:
+                                event[cfg.FRAME_INDEX] = editWindow.sb_frame_idx.value()
+
+                        event["row"] = pj_event_idx
+                        event["original_modifiers"] = self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS][
+                            pj_event_idx
+                        ][cfg.PJ_OBS_FIELDS[self.playerType][cfg.MODIFIER]]
 
                         r = self.write_event(event, new_time)
                         if r == 1:  # same event already present
@@ -755,25 +699,40 @@ def edit_event(self):
                 self.update_realtime_plot(force_plot=True)
 
             # IMAGES
-            if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE] in (cfg.IMAGES):
-                new_index = editWindow.img_idx_widget.value()
+            if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE] == cfg.IMAGES:
+                new_index = editWindow.sb_image_idx.value()
 
                 for key in self.pj[cfg.ETHOGRAM]:
                     if self.pj[cfg.ETHOGRAM][key][cfg.BEHAVIOR_CODE] == editWindow.cobCode.currentText():
                         event = self.full_event(key)
+                        if editWindow.time_value == cfg.NA or (editWindow.cb_set_time_na.isChecked()):
+                            event[cfg.TIME] = dec("NaN")
+                        else:
+                            event[cfg.TIME] = editWindow.time_widget.get_time()
+
                         event[cfg.SUBJECT] = editWindow.cobSubject.currentText()
                         event[cfg.COMMENT] = editWindow.leComment.toPlainText()
-                        event["row"] = row
-                        event["original_modifiers"] = self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS][row][
-                            cfg.PJ_OBS_FIELDS[self.playerType][cfg.MODIFIER]
-                        ]
+                        event["row"] = pj_event_idx
+                        event["original_modifiers"] = self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS][
+                            pj_event_idx
+                        ][cfg.PJ_OBS_FIELDS[self.playerType][cfg.MODIFIER]]
 
+                        # not editable yet. Read previous value
+                        event[cfg.IMAGE_PATH] = read_event_field(
+                            self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS][pj_event_idx],
+                            self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE],
+                            cfg.IMAGE_PATH,
+                        )
+
+                        """
                         try:
                             event[cfg.IMAGE_PATH] = self.images_list[new_index]
                         except IndexError:
                             event[cfg.IMAGE_PATH] = ""
+                        """
                         event[cfg.IMAGE_INDEX] = new_index
 
+                        """
                         time_ = dec("NaN")
                         if (
                             self.playerType != cfg.VIEWER_IMAGES
@@ -786,8 +745,9 @@ def edit_event(self):
 
                         elif self.pj[cfg.OBSERVATIONS][self.observationId].get(cfg.TIME_LAPSE, 0):
                             time_ = new_index * self.pj[cfg.OBSERVATIONS][self.observationId].get(cfg.TIME_LAPSE, 0)
+                        """
 
-                        r = self.write_event(event, dec(time_).quantize(dec("0.001"), rounding=ROUND_DOWN))
+                        r = self.write_event(event, event[cfg.TIME].quantize(dec("0.001"), rounding=ROUND_DOWN))
 
                         if r == 1:  # same event already present
                             continue
@@ -831,28 +791,17 @@ def edit_time_selected_events(self):
         ):
             return
 
-        tsb_to_shift = []
-        for row in twEvents_rows_to_shift:
-            tsb_to_shift.append(
-                [
-                    util.time2seconds(self.twEvents.item(row, cfg.EVENT_TIME_FIELD_IDX).text())
-                    if self.timeFormat == cfg.HHMMSS
-                    else dec(self.twEvents.item(row, cfg.EVENT_TIME_FIELD_IDX).text()),
-                    self.twEvents.item(row, cfg.EVENT_SUBJECT_FIELD_IDX).text(),
-                    self.twEvents.item(row, cfg.EVENT_BEHAVIOR_FIELD_IDX).text(),
-                ]
-            )
+        # fill the undo list
+        fill_events_undo_list(self, "Undo 'Edit time'")
 
-        for idx, event in enumerate(self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS]):
-            if [
-                event[cfg.EVENT_TIME_FIELD_IDX],
-                event[cfg.EVENT_SUBJECT_FIELD_IDX],
-                event[cfg.EVENT_BEHAVIOR_FIELD_IDX],
-            ] in tsb_to_shift:
-                self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS][idx][cfg.EVENT_TIME_FIELD_IDX] += dec(
-                    f"{d:.3f}"
-                )
-                self.project_changed()
+        for tw_event_idx in twEvents_rows_to_shift:
+            pj_event_idx = self.twEvents.item(tw_event_idx, cfg.TW_OBS_FIELD[self.playerType][cfg.TIME]).data(
+                Qt.UserRole
+            )
+            self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS][pj_event_idx][
+                cfg.PJ_OBS_FIELDS[self.playerType][cfg.TIME]
+            ] += dec(f"{d:.3f}")
+            self.project_changed()
 
         self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS] = sorted(
             self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS]
@@ -862,6 +811,7 @@ def edit_time_selected_events(self):
         self.update_realtime_plot(force_plot=True)
 
 
+'''
 def copy_selected_events(self):
     """
     copy selected events to clipboard
@@ -871,32 +821,52 @@ def copy_selected_events(self):
         QMessageBox.warning(self, cfg.programName, "No event selected!")
         return
 
-    tsb_to_copy = []
+    tsb_to_copy: list = []
     for row in twEvents_rows_to_copy:
-        tsb_to_copy.append(
-            [
-                util.time2seconds(self.twEvents.item(row, cfg.EVENT_TIME_FIELD_IDX).text())
-                if self.timeFormat == cfg.HHMMSS
-                else dec(self.twEvents.item(row, cfg.EVENT_TIME_FIELD_IDX).text()),
-                self.twEvents.item(row, cfg.EVENT_SUBJECT_FIELD_IDX).text(),
-                self.twEvents.item(row, cfg.EVENT_BEHAVIOR_FIELD_IDX).text(),
-            ]
-        )
+        tsb_to_copy.append(self.twEvents.item(row, cfg.TW_OBS_FIELD[self.playerType][cfg.TIME]).data(Qt.UserRole))
 
-    copied_events = []
+    copied_events: list = []
     for idx, event in enumerate(self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS]):
-        if [
-            event[cfg.EVENT_TIME_FIELD_IDX],
-            event[cfg.EVENT_SUBJECT_FIELD_IDX],
-            event[cfg.EVENT_BEHAVIOR_FIELD_IDX],
-        ] in tsb_to_copy:
-            copied_events.append(
-                "\t".join([str(x) for x in self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS][idx]])
-            )
+        if idx in tsb_to_copy:
+            copied_events.append("\t".join([str(x) for x in event]))
 
     cb = QApplication.clipboard()
     cb.clear(mode=cb.Clipboard)
     cb.setText("\n".join(copied_events), mode=cb.Clipboard)
+'''
+
+
+def copy_selected_events(self):
+    """
+    copy selected events from project to clipboard
+    """
+
+    logging.debug("Copy selected events to clipboard")
+
+    twEvents_rows_to_copy = set([item.row() for item in self.twEvents.selectedIndexes()])
+    if not len(twEvents_rows_to_copy):
+        QMessageBox.warning(self, cfg.programName, "No event selected!")
+        return
+
+    pj_event_idx_to_copy: list = []
+    for row in twEvents_rows_to_copy:
+        pj_event_idx_to_copy.append(
+            self.twEvents.item(row, cfg.TW_OBS_FIELD[self.playerType][cfg.TIME]).data(Qt.UserRole)
+        )
+
+    copied_events: list = []
+    for idx, event in enumerate(self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS]):
+        if idx in pj_event_idx_to_copy:
+            if self.playerType in (cfg.MEDIA, cfg.VIEWER_MEDIA) and len(event) < len(cfg.MEDIA_PJ_EVENTS_FIELDS):
+                copied_events.append("\t".join([str(x) for x in event + [cfg.NA]]))
+            else:
+                copied_events.append("\t".join([str(x) for x in event]))
+
+    cb = QApplication.clipboard()
+    cb.clear(mode=cb.Clipboard)
+    cb.setText("\n".join(copied_events), mode=cb.Clipboard)
+
+    logging.debug("Selected events copied in clipboard")
 
 
 def paste_clipboard_to_events(self):
@@ -907,26 +877,30 @@ def paste_clipboard_to_events(self):
     cb = QApplication.clipboard()
     cb_text = cb.text()
     cb_text_splitted = cb_text.split("\n")
-    length = []
-    content = []
+    length: list = []
+    content: list = []
     for l in cb_text_splitted:
         length.append(len(l.split("\t")))
         content.append(l.split("\t"))
-    if set(length) != set([5]):
+
+    if set(length) != set([len(cfg.PJ_EVENTS_FIELDS[self.playerType])]):
         QMessageBox.warning(
             self,
             cfg.programName,
             (
                 "The clipboard does not contain events!\n"
-                "Events must be organized in 5 columns separated by TAB character"
+                f"For an observation from <b>{self.playerType}</b> "
+                f"the events must be organized in {len(cfg.PJ_EVENTS_FIELDS[self.playerType])} columns separated by TAB character"
             ),
         )
         return
 
     for event in content:
-        event[0] = dec(event[0])
+        event[cfg.EVENT_TIME_FIELD_IDX] = dec(event[cfg.EVENT_TIME_FIELD_IDX])
+        # skip if event already present
         if event in self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS]:
             continue
+
         self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS].append(event)
 
         self.project_changed()
@@ -937,3 +911,15 @@ def paste_clipboard_to_events(self):
     self.load_tw_events(self.observationId)
 
     self.update_realtime_plot(force_plot=True)
+
+
+def read_event_field(event: list, player_type: str, field_type: str) -> Union[str, None, int, dec]:
+    """
+    return value of field for event or NA if not available
+    """
+    if field_type not in cfg.PJ_EVENTS_FIELDS[player_type]:
+        return None
+    if cfg.PJ_OBS_FIELDS[player_type][field_type] < len(event):
+        return event[cfg.PJ_OBS_FIELDS[player_type][field_type]]
+    else:
+        return cfg.NA

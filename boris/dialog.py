@@ -146,9 +146,13 @@ def global_error_message(exception_type, exception_value, traceback_object):
     logging.critical(error_text)
 
     # append to boris.log file
-    with open(pl.Path("~").expanduser() / "boris.log", "a") as f_out:
-        f_out.write(error_text + "\n")
-        f_out.write("-" * 80 + "\n")
+    try:
+        with open(pl.Path.home() / "boris.log", "a") as f_out:
+            f_out.write(error_text + "\n")
+            f_out.write("-" * 80 + "\n")
+    except Exception:
+        print(f"Cannot write to {pl.Path.home() / 'boris.log'} file")
+        logging.critical(f"Cannot write to {pl.Path.home() / 'boris.log'} file")
 
     # copy to clipboard
     cb = QApplication.clipboard()
@@ -774,7 +778,7 @@ class Results_dialog(QDialog):
 
 class View_data_head(QDialog):
     """
-    widget for visualizing first rows of data file
+    widget for visualizing rows of data file
     """
 
     def __init__(self):
@@ -797,6 +801,8 @@ class View_data_head(QDialog):
         vbox.addWidget(self.le)
 
         hbox2 = QHBoxLayout()
+
+        hbox2.addItem(QSpacerItem(40, 20, QSizePolicy.Expanding, QSizePolicy.Minimum))
 
         self.pbCancel = QPushButton("Cancel", clicked=self.reject)
         hbox2.addWidget(self.pbCancel)

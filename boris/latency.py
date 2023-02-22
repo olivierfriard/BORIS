@@ -120,7 +120,9 @@ def get_latency(self):
         # print(f"{obs_id=}")
 
         events_with_status = project_functions.events_start_stop(
-            self.pj[cfg.ETHOGRAM], self.pj[cfg.OBSERVATIONS][obs_id][cfg.EVENTS]
+            self.pj[cfg.ETHOGRAM],
+            self.pj[cfg.OBSERVATIONS][obs_id][cfg.EVENTS],
+            self.pj[cfg.OBSERVATIONS][obs_id][cfg.TYPE],
         )
 
         for idx, event in enumerate(events_with_status):

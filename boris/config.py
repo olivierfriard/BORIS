@@ -179,6 +179,7 @@ FILE_PATH = "file_path"
 
 IMAGE_INDEX = "image index"
 IMAGE_PATH = "image path"
+FRAME_INDEX = "frame index"
 
 ZOOM_LEVEL = "zoom level"
 DISPLAY_MEDIA_SUBTITLES = "display subtitles"
@@ -255,10 +256,14 @@ BEHAVIOR_TYPES = [
 
 DEFAULT_BEHAVIOR_TYPE = "Point event"
 
-# fields for events table
-MEDIA_TW_EVENTS_FIELDS = ("time", "subject", "code", "type", "modifier", "comment")
+MEDIA_TW_EVENTS_FIELDS_DEFAULT = ("time", FRAME_INDEX, "subject", "code", "type", "modifier", "comment")
+
+
+# fields for events tablewidget
+MEDIA_TW_EVENTS_FIELDS = ("time", FRAME_INDEX, "subject", "code", "type", "modifier", "comment")
+# MEDIA_TW_EVENTS_FIELDS = ("time", "subject", "code", "type", "modifier", "comment")
 LIVE_TW_EVENTS_FIELDS = ("time", "subject", "code", "type", "modifier", "comment")
-IMAGES_TW_EVENTS_FIELDS = ("time", "subject", "code", "type", "modifier", "comment", "image index", "image path")
+IMAGES_TW_EVENTS_FIELDS = ("time", "subject", "code", "type", "modifier", "comment", IMAGE_INDEX, "image path")
 
 TW_EVENTS_FIELDS = {
     MEDIA: MEDIA_TW_EVENTS_FIELDS,
@@ -269,7 +274,7 @@ TW_EVENTS_FIELDS = {
     VIEWER_IMAGES: IMAGES_TW_EVENTS_FIELDS,
 }
 
-# create dictionaries
+# create dictionary index
 TW_OBS_FIELD = {}
 for observation_type in TW_EVENTS_FIELDS:
     TW_OBS_FIELD[observation_type] = {}
@@ -278,9 +283,9 @@ for observation_type in TW_EVENTS_FIELDS:
 
 
 # fields for project events list
-MEDIA_PJ_EVENTS_FIELDS = ("time", "subject", "code", "modifier", "comment")
-LIVE_PJ_EVENTS_FIELDS = ("time", "subject", "code", "modifier", "comment")
-IMAGES_PJ_EVENTS_FIELDS = ("time", "subject", "code", "modifier", "comment", "image index", "image path")
+MEDIA_PJ_EVENTS_FIELDS = (TIME, "subject", "code", "modifier", "comment", FRAME_INDEX)
+LIVE_PJ_EVENTS_FIELDS = (TIME, "subject", "code", "modifier", "comment")
+IMAGES_PJ_EVENTS_FIELDS = (TIME, "subject", "code", "modifier", "comment", "image index", "image path")
 
 PJ_EVENTS_FIELDS = {
     MEDIA: MEDIA_PJ_EVENTS_FIELDS,
@@ -308,7 +313,7 @@ EVENT_MODIFIER_FIELD_IDX = 3
 EVENT_COMMENT_FIELD_IDX = 4
 EVENT_STATUS_FIELD_IDX = 5
 # EVENT_IMAGEIDX_FIELD_IDX = 6
-EVENT_IMAGEPATH_FIELD_IDX = 7
+# EVENT_IMAGEPATH_FIELD_IDX = 7
 
 
 BEHAV_CODING_MAP_FIELDS = ["name", "Behavior codes"]
@@ -661,8 +666,11 @@ INIT_PARAM = {
     # TIME_BUDGET_FORMAT: DEFAULT_TIME_BUDGET_FORMAT,
     MPV_HWDEC: MPV_HWDEC_DEFAULT_VALUE,
     PROJECT_FILE_INDENTATION: PROJECT_FILE_INDENTATION_DEFAULT_VALUE,
+    f"{MEDIA} tw fields": MEDIA_TW_EVENTS_FIELDS_DEFAULT,
 }
 
+SDIS_EXT = "sds"
+TBS_EXT = "tbs"
 
 # Output format
 TSV = "Tab Separated Values (*.tsv)"
@@ -692,7 +700,7 @@ FILE_NAME_SUFFIX = {
     PANDAS_DF: "pkl",
     RDS: "rds",
     SQL: "sql",
-    SDIS: "sds",
-    TBS: "tbs",
+    SDIS: SDIS_EXT,
+    TBS: TBS_EXT,
     TEXT_FILE: "cli",
 }

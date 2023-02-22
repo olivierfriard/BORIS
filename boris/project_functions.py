@@ -1118,10 +1118,9 @@ def observed_interval(observation: dict) -> Tuple[dec, dec]:
         return (dec(min(events)), dec(max(events)))
 
 
-def events_start_stop(ethogram: dict, events: list) -> list:
+def events_start_stop(ethogram: dict, events: list, obs_type: str) -> List[tuple]:
     """
     returns events with status (START/STOP or POINT)
-    Take consideration of subject
 
     Args:
         events (list): list of events
@@ -1132,18 +1131,10 @@ def events_start_stop(ethogram: dict, events: list) -> list:
 
     state_events_list = util.state_behavior_codes(ethogram)
 
-    events_flagged = []
+    events_flagged: list = []
     for idx, event in enumerate(events):
-        """
-        time, subject, code, modifier = (
-            event[cfg.EVENT_TIME_FIELD_IDX],
-            event[cfg.EVENT_SUBJECT_FIELD_IDX],
-            event[cfg.EVENT_BEHAVIOR_FIELD_IDX],
-            event[cfg.EVENT_MODIFIER_FIELD_IDX],
-        )
-        """
 
-        time, subject, code, modifier = event[: cfg.EVENT_MODIFIER_FIELD_IDX + 1]
+        _, subject, code, modifier = event[: cfg.EVENT_MODIFIER_FIELD_IDX + 1]
 
         # check if code is state
         if code in state_events_list:
@@ -1153,9 +1144,10 @@ def events_start_stop(ethogram: dict, events: list) -> list:
                     [
                         x[cfg.EVENT_BEHAVIOR_FIELD_IDX]
                         for idx1, x in enumerate(events)
-                        if x[cfg.EVENT_BEHAVIOR_FIELD_IDX] == code and idx1 < idx
-                        # and x[cfg.EVENT_TIME_FIELD_IDX] < time
-                        and x[cfg.EVENT_SUBJECT_FIELD_IDX] == subject and x[cfg.EVENT_MODIFIER_FIELD_IDX] == modifier
+                        if x[cfg.EVENT_BEHAVIOR_FIELD_IDX] == code
+                        and idx1 < idx
+                        and x[cfg.EVENT_SUBJECT_FIELD_IDX] == subject
+                        and x[cfg.EVENT_MODIFIER_FIELD_IDX] == modifier
                     ]
                 )
                 % 2
@@ -1166,7 +1158,17 @@ def events_start_stop(ethogram: dict, events: list) -> list:
         else:
             flag = cfg.POINT
 
-        events_flagged.append(tuple(event) + (flag,))
+        # no frame_index
+        if obs_type == cfg.MEDIA and len(event) == 5:
+            events_flagged.append(
+                tuple(event)
+                + (
+                    cfg.NA,
+                    flag,
+                )
+            )
+        else:
+            events_flagged.append(tuple(event) + (flag,))
 
     return events_flagged
 

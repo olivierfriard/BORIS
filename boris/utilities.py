@@ -37,7 +37,7 @@ import wave
 from decimal import Decimal as dec
 from decimal import getcontext, ROUND_DOWN
 from shutil import copyfile
-from typing import Union
+from typing import Union, Optional, List, Tuple, Dict
 
 import numpy as np
 from PyQt5.QtGui import qRgb
@@ -117,7 +117,7 @@ def return_file_header(file_name: str, row_number: int = 5) -> list:
     Returns:
         list: first row_number row(s) of file_name
     """
-    header = []
+    header: list = []
     try:
         with open(file_name) as f_in:
             for _ in range(row_number):
@@ -125,6 +125,35 @@ def return_file_header(file_name: str, row_number: int = 5) -> list:
     except Exception:
         return []
     return header
+
+
+def return_file_header_footer(file_name: str, file_row_number: int = 0, row_number: int = 5) -> Tuple[list, list]:
+    """
+    return file header and footer
+
+    Args:
+        file_name (str): path of file
+        file_row_number (int): total rows number of file
+        row_number (int): number of rows to return
+
+    Returns:
+        list: first row_number row(s) of file_name
+    """
+    header: list = []
+    footer: list = []
+    try:
+        row_idx: int = 0
+        with open(file_name, "rt") as f_in:
+            for row in f_in:
+                if row_idx < row_number:
+                    header.append(row.strip())
+                if file_row_number > row_number * 2 and (row_idx >= file_row_number - row_number):
+                    footer.append(row.strip())
+                row_idx += 1
+
+    except Exception:
+        return [], []
+    return header, footer
 
 
 def bytes_to_str(b: bytes) -> str:
@@ -206,9 +235,11 @@ def file_content_md5(file_name: str) -> str:
         return ""
 
 
-def txt2np_array(file_name: str, columns_str: str, substract_first_value: str, converters=None, column_converter=None):
+def txt2np_array(
+    file_name: str, columns_str: str, substract_first_value: str, converters=None, column_converter=None
+) -> Tuple[bool, str, np.array]:
     """
-    read a txt file (tsv or csv) and return np array with passed columns
+    read a txt file (tsv or csv) and return a np array with columns cited in columns_str
 
     Args:
         file_name (str): path of the file to load in numpy array
@@ -235,7 +266,7 @@ def txt2np_array(file_name: str, columns_str: str, substract_first_value: str, c
         return False, f"Problem with columns {columns_str}", np.array([])
 
     # check converters
-    np_converters = {}
+    np_converters: dict = {}
     for column_idx in column_converter:
         if column_converter[column_idx] in converters:
 
@@ -260,17 +291,27 @@ def txt2np_array(file_name: str, columns_str: str, substract_first_value: str, c
     # snif txt file
     try:
         with open(file_name) as csvfile:
-            buff = csvfile.read(1024)
+            buff = csvfile.read(4096)
             snif = csv.Sniffer()
             dialect = snif.sniff(buff)
-            has_header = snif.has_header(buff)
+            """has_header = snif.has_header(buff)"""
+        # count number of header rows
+        header_rows_nb = 0
+        csv.register_dialect("dialect", dialect)
+        with open(file_name, "r") as f:
+            reader = csv.reader(f, dialect="dialect")
+            for row in reader:
+                if sum([isinstance(intfloatstr(x), str) for x in row]) == len(row):
+                    header_rows_nb += 1
+
     except Exception:
         return False, f"{sys.exc_info()[1]}", np.array([])
 
     try:
         data = np.loadtxt(
-            file_name, delimiter=dialect.delimiter, usecols=columns, skiprows=has_header, converters=np_converters
+            file_name, delimiter=dialect.delimiter, usecols=columns, skiprows=header_rows_nb, converters=np_converters
         )
+
     except Exception:
         return False, f"{sys.exc_info()[1]}", np.array([])
 
@@ -394,15 +435,15 @@ def get_current_states_modifiers_by_subject(
     Returns:
         dict: current states by subject. dict of list
     """
-    current_states = {}
+    current_states: dict = {}
     if time.is_nan():
         for idx in subjects:
             current_states[idx] = []
         return current_states
 
     # check if time contains NA
-    if [x for x in events if events[cfg.EVENT_TIME_FIELD_IDX][cfg.EVENT_TIME_FIELD_IDX].is_nan()]:
-        check_index = cfg.PJ_OBS_FIELDS[cfg.IMAGES]["image index"]
+    if [x for x in events if x[cfg.EVENT_TIME_FIELD_IDX].is_nan()]:
+        check_index = cfg.PJ_OBS_FIELDS[cfg.IMAGES][cfg.IMAGE_INDEX]
     else:
         check_index = cfg.EVENT_TIME_FIELD_IDX
 
@@ -554,35 +595,42 @@ def check_txt_file(file_name: str) -> dict:
     try:
         # snif txt file
         with open(file_name) as csvfile:
-            buff = csvfile.read(1024)
+            buff = csvfile.read(4096)
             snif = csv.Sniffer()
             dialect = snif.sniff(buff)
-            has_header = snif.has_header(buff)
+            """has_header = snif.has_header(buff)"""
 
         csv.register_dialect("dialect", dialect)
-        rows_len = []
+        rows_len: list = []
         with open(file_name, "r") as f:
             reader = csv.reader(f, dialect="dialect")
             for row in reader:
-
                 if not row:
                     continue
+                """
                 if len(row) not in rows_len:
                     rows_len.append(len(row))
                     if len(rows_len) > 1:
                         break
+                """
+                rows_len.append(len(row))
+
+        rows_number = len(rows_len)
+        rows_uniq_len = set(rows_len)
 
         # test if file empty
-        if not len(rows_len):
+        if not rows_uniq_len:
             return {"error": "The file is empty"}
 
-        if len(rows_len) == 1 and rows_len[0] >= 2:
-            return {"homogeneous": True, "fields number": rows_len[0], "separator": dialect.delimiter}
-
-        if len(rows_len) > 1:
-            return {"homogeneous": False}
+        if len(rows_uniq_len) == 1:
+            return {
+                "homogeneous": True,
+                "fields number": rows_len[0],
+                "separator": dialect.delimiter,
+                "rows number": rows_number,
+            }
         else:
-            return {"homogeneous": True, "fields number": rows_len[0], "separator": dialect.delimiter}
+            return {"homogeneous": False}
     except Exception:
         return {"error": str(sys.exc_info()[1])}
 
@@ -1036,7 +1084,7 @@ def ffprobe_media_analysis(ffmpeg_bin: str, file_name: str) -> dict:
     p = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
     out, error = p.communicate()
     if error:
-        return {"error": error.decode("utf-8")}
+        return {"error": f"{error}"}
 
     try:
         hasVideo = False
