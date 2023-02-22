@@ -1801,32 +1801,28 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     def configure_twevents_columns(self):
         """
         configure the visible columns of twEvent tablewidget
+        configuration for playerType is recorded in self.config_param[f"{self.playerType} tw fields"]
         """
-        # cfg.MEDIA_TW_EVENTS_FIELDS = ("time", "subject", "code", "type", "modifier", "comment")
 
         dlg = dialog.Input_dialog(
             label_caption="Select the columns to show",
-            elements_list=[("cb", x, True) for x in cfg.TW_EVENTS_FIELDS[self.playerType]],
+            elements_list=[
+                (
+                    "cb",
+                    x,
+                    # default state
+                    x in self.config_param.get(f"{self.playerType} tw fields", cfg.TW_EVENTS_FIELDS[self.playerType]),
+                )
+                for x in cfg.TW_EVENTS_FIELDS[self.playerType]
+            ],
             title="Select the column to show",
         )
         if not dlg.exec_():
             return
 
-        # dlg.elements["Test media file accessibility"].isChecked()
-
-        # cfg.TW_EVENTS_FIELDS[cfg.MEDIA] = ("time", "subject", "code", "type", "modifier", "comment")
-
-        # create dictionaries
-        cfg.TW_EVENTS_FIELDS[self.playerType] = []
-        for field in cfg.TW_OBS_FIELD[self.playerType]:
-            if dlg.elements[field].isChecked():
-                cfg.TW_EVENTS_FIELDS[self.playerType].append(field)
-
-        cfg.TW_OBS_FIELD[self.playerType] = {}
-        for idx, field in enumerate(cfg.TW_EVENTS_FIELDS[self.playerType]):
-            cfg.TW_OBS_FIELD[self.playerType][field] = idx
-
-        print(cfg.TW_OBS_FIELD[self.playerType])
+        self.config_param[f"{self.playerType} tw fields"] = tuple(
+            field for field in cfg.TW_EVENTS_FIELDS[self.playerType] if dlg.elements[field].isChecked()
+        )
 
         self.load_tw_events(self.observationId)
 
@@ -1842,11 +1838,18 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         """
 
         logging.debug(f"begin load events from obs: {obs_id}")
+        self.twEvents.clear()
 
-        self.twEvents.setColumnCount(len(cfg.TW_EVENTS_FIELDS[self.pj[cfg.OBSERVATIONS][obs_id][cfg.TYPE]]))
-        self.twEvents.setHorizontalHeaderLabels(
-            [s.capitalize() for s in cfg.TW_EVENTS_FIELDS[self.pj[cfg.OBSERVATIONS][obs_id][cfg.TYPE]]]
-        )
+        self.twEvents.setColumnCount(len(cfg.TW_EVENTS_FIELDS[self.playerType]))
+        self.twEvents.setHorizontalHeaderLabels([s.capitalize() for s in cfg.TW_EVENTS_FIELDS[self.playerType]])
+
+        for idx, field in enumerate(cfg.TW_EVENTS_FIELDS[self.playerType]):
+            if field not in self.config_param.get(
+                f"{self.playerType} tw fields", cfg.TW_EVENTS_FIELDS[self.playerType]
+            ):
+                self.twEvents.horizontalHeader().hideSection(idx)
+            else:
+                self.twEvents.horizontalHeader().showSection(idx)
 
         self.twEvents.setRowCount(len(self.pj[cfg.OBSERVATIONS][obs_id][cfg.EVENTS]))
         if self.filtered_behaviors or self.filtered_subjects:
@@ -1872,14 +1875,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
             for field_type in cfg.TW_EVENTS_FIELDS[self.playerType]:
 
-                print(f"{field_type=}")
-
-                """if field_type in cfg.PJ_EVENTS_FIELDS[self.playerType]:"""
-                if field_type in cfg.TW_OBS_FIELD[self.playerType]:
+                if field_type in cfg.PJ_EVENTS_FIELDS[self.playerType]:
 
                     field = event_operations.read_event_field(event, self.playerType, field_type)
 
-                    print(f"{field=}")
+                    # print(f"{field_type=}: {field=}")
 
                     if field_type == cfg.TIME:
                         item = QTableWidgetItem(str(util.convertTime(self.timeFormat, field)))
@@ -1894,8 +1894,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
                     self.twEvents.setItem(row, cfg.TW_OBS_FIELD[self.playerType][field_type], QTableWidgetItem(field))
 
-                # else:
-                #    self.twEvents.setItem(row, cfg.TW_OBS_FIELD[self.playerType][field_type], QTableWidgetItem(""))
+                else:
+                    self.twEvents.setItem(row, cfg.TW_OBS_FIELD[self.playerType][field_type], QTableWidgetItem(""))
 
             row += 1
 

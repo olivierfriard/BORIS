@@ -256,6 +256,9 @@ BEHAVIOR_TYPES = [
 
 DEFAULT_BEHAVIOR_TYPE = "Point event"
 
+MEDIA_TW_EVENTS_FIELDS_DEFAULT = ("time", FRAME_INDEX, "subject", "code", "type", "modifier", "comment")
+
+
 # fields for events tablewidget
 MEDIA_TW_EVENTS_FIELDS = ("time", FRAME_INDEX, "subject", "code", "type", "modifier", "comment")
 # MEDIA_TW_EVENTS_FIELDS = ("time", "subject", "code", "type", "modifier", "comment")
@@ -271,7 +274,7 @@ TW_EVENTS_FIELDS = {
     VIEWER_IMAGES: IMAGES_TW_EVENTS_FIELDS,
 }
 
-# create dictionaries
+# create dictionary index
 TW_OBS_FIELD = {}
 for observation_type in TW_EVENTS_FIELDS:
     TW_OBS_FIELD[observation_type] = {}
@@ -666,6 +669,7 @@ INIT_PARAM = {
     # TIME_BUDGET_FORMAT: DEFAULT_TIME_BUDGET_FORMAT,
     MPV_HWDEC: MPV_HWDEC_DEFAULT_VALUE,
     PROJECT_FILE_INDENTATION: PROJECT_FILE_INDENTATION_DEFAULT_VALUE,
+    f"{MEDIA} tw fields": MEDIA_TW_EVENTS_FIELDS_DEFAULT,
 }
 
 SDIS_EXT = "sds"

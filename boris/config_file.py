@@ -323,14 +323,14 @@ def read(self):
 
 def save(self, lastCheckForNewVersion=0):
     """
-    save config file
+    save config file in $HOME/.boris
     """
 
-    iniFilePath = pl.Path.home() / pl.Path(".boris")
+    file_path = pl.Path.home() / pl.Path(".boris")
 
-    logging.debug(f"save config file: {iniFilePath}")
+    logging.debug(f"save config file: {file_path}")
 
-    settings = QSettings(str(iniFilePath), QSettings.IniFormat)
+    settings = QSettings(str(file_path), QSettings.IniFormat)
 
     settings.setValue("config", self.config_param)
 
@@ -343,7 +343,6 @@ def save(self, lastCheckForNewVersion=0):
     settings.setValue("Time/Repositioning_time_offset", self.repositioningTimeOffset)
     settings.setValue("Time/fast_forward_speed", self.fast)
     settings.setValue("Time/play_rate_step", self.play_rate_step)
-    """settings.setValue("Save_media_file_path", self.saveMediaFilePath)"""
     settings.setValue("Automatic_backup", self.automaticBackup)
     settings.setValue("behavioural_strings_separator", self.behav_seq_separator)
     settings.setValue("close_the_same_current_event", self.close_the_same_current_event)
@@ -370,7 +369,7 @@ def save(self, lastCheckForNewVersion=0):
     settings.setValue("behav_category_colors", "|".join(self.behav_category_colors))
 
     # recent projects
-    logging.debug("save recent projects")
+    logging.debug("Save recent projects")
 
     settings = QSettings(str(pl.Path.home() / ".boris_recent_projects"), QSettings.IniFormat)
     settings.setValue("recent_projects", "|||".join(self.recent_projects))
