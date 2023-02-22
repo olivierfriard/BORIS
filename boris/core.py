@@ -194,7 +194,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     spectrogramHeight = 80
     spectrogram_time_interval = cfg.SPECTROGRAM_DEFAULT_TIME_INTERVAL
     spectrogram_color_map = cfg.SPECTROGRAM_DEFAULT_COLOR_MAP
-    frame_bitmap_format = cfg.FRAME_DEFAULT_BITMAP_FORMAT
+    # frame_bitmap_format = cfg.FRAME_DEFAULT_BITMAP_FORMAT
     alertNoFocalSubject = False  # if True an alert will show up if no focal subject
     trackingCursorAboveEvent = False  # if True the cursor will appear above the current event in events table
     checkForNewVersion = False  # if True BORIS will check for new version every 15 days
