@@ -806,6 +806,7 @@ def edit_time_selected_events(self):
         self.update_realtime_plot(force_plot=True)
 
 
+'''
 def copy_selected_events(self):
     """
     copy selected events to clipboard
@@ -827,6 +828,37 @@ def copy_selected_events(self):
     cb = QApplication.clipboard()
     cb.clear(mode=cb.Clipboard)
     cb.setText("\n".join(copied_events), mode=cb.Clipboard)
+'''
+
+
+def copy_selected_events(self):
+    """
+    copy selected events from project to clipboard
+    """
+
+    logging.debug("Copy selected events to clipboard")
+
+    twEvents_rows_to_copy = set([item.row() for item in self.twEvents.selectedIndexes()])
+    if not len(twEvents_rows_to_copy):
+        QMessageBox.warning(self, cfg.programName, "No event selected!")
+        return
+
+    pj_event_idx_to_copy: list = []
+    for row in twEvents_rows_to_copy:
+        pj_event_idx_to_copy.append(
+            self.twEvents.item(row, cfg.TW_OBS_FIELD[self.playerType][cfg.TIME]).data(Qt.UserRole)
+        )
+
+    copied_events: list = []
+    for idx, event in enumerate(self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS]):
+        if idx in pj_event_idx_to_copy:
+            copied_events.append("\t".join([str(x) for x in event]))
+
+    cb = QApplication.clipboard()
+    cb.clear(mode=cb.Clipboard)
+    cb.setText("\n".join(copied_events), mode=cb.Clipboard)
+
+    logging.debug("Selected events copied in clipboard")
 
 
 def paste_clipboard_to_events(self):
@@ -842,21 +874,25 @@ def paste_clipboard_to_events(self):
     for l in cb_text_splitted:
         length.append(len(l.split("\t")))
         content.append(l.split("\t"))
-    if set(length) != set([5]):
+
+    if set(length) != set([len(cfg.PJ_EVENTS_FIELDS[self.playerType])]):
         QMessageBox.warning(
             self,
             cfg.programName,
             (
                 "The clipboard does not contain events!\n"
-                "Events must be organized in 5 columns separated by TAB character"
+                f"For an observation from <b>{self.playerType}</b> "
+                f"the events must be organized in {len(cfg.PJ_EVENTS_FIELDS[self.playerType])} columns separated by TAB character"
             ),
         )
         return
 
     for event in content:
-        event[0] = dec(event[0])
+        event[cfg.EVENT_TIME_FIELD_IDX] = dec(event[cfg.EVENT_TIME_FIELD_IDX])
+        # skip if event already present
         if event in self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS]:
             continue
+
         self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS].append(event)
 
         self.project_changed()
