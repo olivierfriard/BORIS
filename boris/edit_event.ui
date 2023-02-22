@@ -33,6 +33,13 @@
         </widget>
        </item>
        <item>
+        <widget class="QCheckBox" name="cb_set_time_na">
+         <property name="text">
+          <string>Set NA</string>
+         </property>
+        </widget>
+       </item>
+       <item>
         <spacer name="horizontalSpacer">
          <property name="orientation">
           <enum>Qt::Horizontal</enum>

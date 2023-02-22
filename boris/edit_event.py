@@ -61,9 +61,10 @@ class DlgEditEvent(QDialog, Ui_Form):
         self.pb_set_to_current_time.setVisible(show_set_current_time)
         self.current_time = current_time
 
+        # hide image index
         if observation_type in (cfg.LIVE, cfg.MEDIA):
-            self.lb_image_idx.setVisible(False)
-            self.sb_image_idx.setVisible(False)
+            for w in (self.lb_image_idx, self.sb_image_idx, self.cb_set_time_na):
+                w.setVisible(False)
 
         if (observation_type in (cfg.LIVE, cfg.MEDIA)) or (
             observation_type == cfg.IMAGES and self.time_value != cfg.NA
@@ -78,14 +79,15 @@ class DlgEditEvent(QDialog, Ui_Form):
 
         if observation_type == cfg.IMAGES:
             # hide frame index widgets
-            self.lb_frame_idx.setVisible(False)
-            self.sb_frame_idx.setVisible(False)
-
+            for w in (self.lb_frame_idx, self.sb_frame_idx, self.cb_set_frame_idx_na):
+                w.setVisible(False)
             self.sb_image_idx.setValue(self.image_idx)
 
             self.pb_set_to_current_time.setText("Set to current image index")
 
         self.pb_set_to_current_time.clicked.connect(self.set_to_current_time)
+        self.cb_set_time_na.stateChanged.connect(self.time_na)
+
         self.cb_set_frame_idx_na.stateChanged.connect(self.frame_idx_na)
         self.pbOK.clicked.connect(self.accept)
         self.pbCancel.clicked.connect(self.reject)
@@ -106,8 +108,14 @@ class DlgEditEvent(QDialog, Ui_Form):
         """
         self.lb_frame_idx.setEnabled(not self.cb_set_frame_idx_na.isChecked())
         self.sb_frame_idx.setEnabled(not self.cb_set_frame_idx_na.isChecked())
-        if self.cb_set_frame_idx_na.isChecked():
-            self.sb_frame_idx.setValue(0)
+
+    def time_na(self):
+        """
+        set/unset time to NA
+        """
+
+        self.time_widget.setEnabled(not self.cb_set_time_na.isChecked())
+        self.pb_set_to_current_time.setEnabled(not self.cb_set_time_na.isChecked())
 
 
 class EditSelectedEvents(QDialog):

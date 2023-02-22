@@ -585,6 +585,10 @@ def edit_event(self):
     )
     editWindow.setWindowTitle("Edit event")
 
+    #
+    if self.playerType in (cfg.VIEWER_MEDIA, cfg.VIEWER_LIVE, cfg.VIEWER_IMAGES):
+        editWindow.pb_set_to_current_time.setVisible(False)
+
     sortedSubjects = [""] + sorted([self.pj[cfg.SUBJECTS][x][cfg.SUBJECT_NAME] for x in self.pj[cfg.SUBJECTS]])
 
     editWindow.cobSubject.addItems(sortedSubjects)
@@ -675,10 +679,10 @@ def edit_event(self):
                         event[cfg.COMMENT] = editWindow.leComment.toPlainText()
 
                         if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE] == cfg.MEDIA:
-                            if editWindow.sb_frame_idx.value():
-                                event[cfg.FRAME_INDEX] = editWindow.sb_frame_idx.value()
-                            else:
+                            if not editWindow.sb_frame_idx.value() or editWindow.cb_set_frame_idx_na.isChecked():
                                 event[cfg.FRAME_INDEX] = cfg.NA
+                            else:
+                                event[cfg.FRAME_INDEX] = editWindow.sb_frame_idx.value()
 
                         event["row"] = pj_event_idx
                         event["original_modifiers"] = self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS][
@@ -701,10 +705,11 @@ def edit_event(self):
                 for key in self.pj[cfg.ETHOGRAM]:
                     if self.pj[cfg.ETHOGRAM][key][cfg.BEHAVIOR_CODE] == editWindow.cobCode.currentText():
                         event = self.full_event(key)
-                        if editWindow.time_value != cfg.NA:
-                            event[cfg.TIME] = editWindow.time_widget.get_time()
+                        if editWindow.time_value == cfg.NA or (editWindow.cb_set_time_na.isChecked()):
+                            event[cfg.TIME] = dec("NaN")
                         else:
-                            event[cfg.TIME] = dec(cfg.NA)
+                            event[cfg.TIME] = editWindow.time_widget.get_time()
+
                         event[cfg.SUBJECT] = editWindow.cobSubject.currentText()
                         event[cfg.COMMENT] = editWindow.leComment.toPlainText()
                         event["row"] = pj_event_idx
@@ -852,7 +857,10 @@ def copy_selected_events(self):
     copied_events: list = []
     for idx, event in enumerate(self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS]):
         if idx in pj_event_idx_to_copy:
-            copied_events.append("\t".join([str(x) for x in event]))
+            if self.playerType in (cfg.MEDIA, cfg.VIEWER_MEDIA) and len(event) < len(cfg.MEDIA_PJ_EVENTS_FIELDS):
+                copied_events.append("\t".join([str(x) for x in event + [cfg.NA]]))
+            else:
+                copied_events.append("\t".join([str(x) for x in event]))
 
     cb = QApplication.clipboard()
     cb.clear(mode=cb.Clipboard)
