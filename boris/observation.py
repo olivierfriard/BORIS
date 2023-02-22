@@ -227,9 +227,12 @@ class Observation(QDialog, Ui_Form):
         change stacked widget page in base at the observation type
         """
 
-        for idx, rb in enumerate([self.rb_media_files, self.rb_live, self.rb_images]):
+        for idx, rb in enumerate((self.rb_media_files, self.rb_live, self.rb_images)):
             if rb.isChecked():
                 self.sw_observation_type.setCurrentIndex(idx + 1)
+
+        # hide 'limit observation to time interval' for images
+        self.cb_observation_time_interval.setEnabled(not self.rb_images.isChecked())
 
     def add_images_directory(self):
         """
@@ -247,6 +250,7 @@ class Observation(QDialog, Ui_Form):
                 return
 
         self.lw_images_directory.addItem(QListWidgetItem(dir_path))
+        self.lb_images_info.setText(f"Number of images in {dir_path}: {result.get('number of images', 0)}")
 
     def remove_images_directory(self):
         """

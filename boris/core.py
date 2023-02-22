@@ -1567,9 +1567,22 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         try:
             with open(file_path, "rb") as f_in:
                 tags = exifread.process_file(f_in, details=False, stop_tag="EXIF DateTimeOriginal")
-                date_time_original = f'{tags["EXIF DateTimeOriginal"].values[:4]}-{tags["EXIF DateTimeOriginal"].values[5:7]}-{tags["EXIF DateTimeOriginal"].values[8:10]} {tags["EXIF DateTimeOriginal"].values.split(" ")[-1]}'
+                if "EXIF DateTimeOriginal" in tags:
+                    date_time_original = (
+                        f'{tags["EXIF DateTimeOriginal"].values[:4]}-'
+                        f'{tags["EXIF DateTimeOriginal"].values[5:7]}-'
+                        f'{tags["EXIF DateTimeOriginal"].values[8:10]} '
+                        f'{tags["EXIF DateTimeOriginal"].values.split(" ")[-1]}'
+                    )
+                    return int(datetime.datetime.strptime(date_time_original, "%Y-%m-%d %H:%M:%S").timestamp())
+                else:
+                    try:
+                        # read from file name (YYYY-MM-DD_HHMMSS)
+                        return int(datetime.datetime.strptime(pl.Path(file_path).stem, "%Y-%m-%d_%H%M%S").timestamp())
+                    except Exception:
+                        # read from file name (YYYY-MM-DD_HH:MM:SS)
+                        return int(datetime.datetime.strptime(pl.Path(file_path).stem, "%Y-%m-%d_%H:%M:%S").timestamp())
 
-                return int(datetime.datetime.strptime(date_time_original, "%Y-%m-%d %H:%M:%S").timestamp())
         except Exception:
             return -1
 
@@ -1602,11 +1615,13 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 else:
                     msg += f"<br>EXIF Date/Time Original: <b>NA</b>"
 
+                # self.image_time_ref = 0
                 if self.image_idx == 0 and date_time_original != -1:
                     self.image_time_ref = date_time_original
 
                 if date_time_original != -1:
-                    seconds_from_1st = date_time_original - self.image_time_ref
+                    if self.image_time_ref is not None:
+                        seconds_from_1st = date_time_original - self.image_time_ref
 
                     if self.timeFormat == cfg.HHMMSS:
                         seconds_from_1st_formated = util.seconds2time(seconds_from_1st).split(".")[
@@ -1616,7 +1631,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                         seconds_from_1st_formated = seconds_from_1st
 
                 else:
-                    seconds_from_1st_formated = "NA"
+                    seconds_from_1st_formated = cfg.NA
 
                 msg += f"<br>Time from 1st image: <b>{seconds_from_1st_formated}</b>"
 
