@@ -22,6 +22,8 @@ Copyright 2012-2023 Olivier Friard
 import sys
 import subprocess
 import platform
+import numpy as np
+import pandas as pd
 import matplotlib
 
 from . import version
@@ -76,8 +78,14 @@ def actionAbout_activated(self):
         ]
     )
 
+    # numpy
+    programs_versions.extend(["\nNumpy", f"version {np.__version__}", "https://numpy.org"])
+
     # matplotlib
     programs_versions.extend(["\nMatplotlib", f"version {matplotlib.__version__}", "https://matplotlib.org"])
+
+    # pandas
+    programs_versions.extend(["\nPandas", f"version {pd.__version__}", "https://pandas.pydata.org"])
 
     # graphviz
     gv_result = subprocess.getoutput("dot -V")
