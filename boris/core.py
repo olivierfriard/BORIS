@@ -3354,9 +3354,19 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
             # MEDIA
             if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE] == cfg.MEDIA:
-                event[cfg.FRAME_INDEX] = self.dw_player[0].player.estimated_frame_number + 1
+                event[cfg.FRAME_INDEX] = self.get_frame_index()
 
             self.write_event(event, self.getLaps())
+
+    def get_frame_index(self, player_idx: int = 0) -> Union[int, str]:
+        """
+        returns frame index for player player_idx
+        """
+        estimated_frame_number = self.dw_player[player_idx].player.estimated_frame_number
+        if estimated_frame_number is not None:
+            return estimated_frame_number + 1
+        else:
+            return cfg.NA
 
     def actionUser_guide_triggered(self):
         """
@@ -3396,7 +3406,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
             # MEDIA
             if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE] == cfg.MEDIA:
-                event[cfg.FRAME_INDEX] = self.dw_player[0].player.estimated_frame_number + 1
+                event[cfg.FRAME_INDEX] = self.get_frame_index()
 
             self.write_event(event, self.getLaps())
 
@@ -3627,7 +3637,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         cumulative_time_pos = self.getLaps()
         # get frame index
-        frame_idx = self.dw_player[0].player.estimated_frame_number
+        frame_idx = self.get_frame_index()
 
         if value is None:
             current_media_time_pos = 0
@@ -3721,17 +3731,19 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         msg = ""
         if self.dw_player[0].player.time_pos is not None:  # check if video
 
+            """
             current_media_frame = (
                 (round(value * self.dw_player[0].player.container_fps) + 1)
                 if self.dw_player[0].player.container_fps is not None
                 else "NA"
             )
+            """
 
             msg = f"Current media name: <b>{current_media_name}</b> (#{self.dw_player[0].player.playlist_pos + 1} / {playlist_length})<br>"
 
             msg += (
                 f"Media position: <b>{util.convertTime(self.timeFormat, current_media_time_pos)}</b> / "
-                f"{util.convertTime(self.timeFormat, current_media_duration)} frame: <b>{current_media_frame}</b>"
+                f"{util.convertTime(self.timeFormat, current_media_duration)} frame: <b>{frame_idx}</b>"
             )
 
             # with time offset
@@ -4562,7 +4574,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         # get time
         memLaps = None
-        frame_idx = None
         if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE] == cfg.LIVE:
             if self.pj[cfg.OBSERVATIONS][self.observationId].get(cfg.SCAN_SAMPLING_TIME, 0):
                 if self.timeFormat == cfg.HHMMSS:
@@ -4579,8 +4590,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE] in (cfg.MEDIA, cfg.IMAGES):
             memLaps = self.getLaps()
-            if self.playerType == cfg.MEDIA:
-                frame_idx = self.dw_player[0].player.estimated_frame_number + 1
 
         if memLaps is None:
             return
@@ -4694,7 +4703,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     event[cfg.IMAGE_INDEX] = self.image_idx + 1
 
                 if self.playerType == cfg.MEDIA:
-                    event[cfg.FRAME_INDEX] = self.dw_player[0].player.estimated_frame_number + 1
+                    event[cfg.FRAME_INDEX] = self.get_frame_index()
 
                 self.write_event(event, memLaps)
 

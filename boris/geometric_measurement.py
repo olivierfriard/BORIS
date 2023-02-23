@@ -305,7 +305,10 @@ def image_clicked(self, n_player, event):
         return
 
     self.mem_player = n_player
-    current_frame = self.dw_player[n_player].player.estimated_frame_number + 1
+    if self.dw_player[n_player].player.estimated_frame_number is not None:
+        current_frame = self.dw_player[n_player].player.estimated_frame_number + 1
+    else:
+        current_frame = cfg.NA
     if hasattr(self, "measurement_w") and self.measurement_w is not None and self.measurement_w.isVisible():
         x, y = event.pos().x(), event.pos().y()
 
@@ -521,7 +524,10 @@ def redraw_measurements(self):
 
     for idx, dw in enumerate(self.dw_player):
 
-        current_frame = dw.player.estimated_frame_number + 1
+        if dw.player.estimated_frame_number is not None:
+            current_frame = dw.player.estimated_frame_number + 1
+        else:
+            current_frame = cfg.NA
 
         for frame in self.measurement_w.draw_mem:
 
