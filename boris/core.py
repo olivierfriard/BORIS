@@ -4209,16 +4209,15 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             # print(f'{self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS][event["row"]]=}')
 
         else:  # add event
-            if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE] in (cfg.MEDIA, cfg.LIVE):
-                """
-                # removed to use bisect
-                self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS].append(
-                    [mem_time, subject, event[cfg.BEHAVIOR_CODE], modifier_str, comment]
-                )
-                """
+            if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE] == cfg.MEDIA:
                 bisect.insort(
                     self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS],
                     [mem_time, subject, event[cfg.BEHAVIOR_CODE], modifier_str, comment, frame_idx],
+                )
+            elif self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE] == cfg.LIVE:
+                bisect.insort(
+                    self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS],
+                    [mem_time, subject, event[cfg.BEHAVIOR_CODE], modifier_str, comment],
                 )
 
             elif self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE] == cfg.IMAGES:
@@ -4229,14 +4228,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS].sort(
                     key=lambda x: x[cfg.PJ_OBS_FIELDS[self.playerType][cfg.IMAGE_INDEX]]
                 )
-
-        """
-        # removed to use bisect
-        # sort events in pj
-        if self.playerType in (cfg.MEDIA, cfg.LIVE):
-            removed to use bisect
-            self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS].sort()
-        """
 
         # reload all events in tw
         self.load_tw_events(self.observationId)
@@ -4706,7 +4697,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
                 self.write_event(event, memLaps)
 
-            elif count == 0:
+            elif count == 0:  # not a behavior
 
                 if subj_idx != -1:
                     # check if key defines a suject
