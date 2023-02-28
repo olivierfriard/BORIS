@@ -500,7 +500,7 @@ def needleman_wunsch_identity(
 
     last_event = cursor.execute(
         (
-            "SELECT max(start) FROM aggregated_events "
+            "SELECT max(stop) FROM aggregated_events "
             f"WHERE observation in (?, ?) AND subject in ({','.join('?'*len(selected_subjects))}) "
         ),
         (obsid1, obsid2) + tuple(selected_subjects),
