@@ -5,3 +5,4 @@ dist
 *.gnbs.conf
 .vscode
 tests/output
+boris_behav_obs.egg-info
