@@ -408,22 +408,19 @@ def needleman_wunsch_identity(
         align1 = align1[::-1]
         align2 = align2[::-1]
 
-        i, j = 0, 0
-
+        i = 0
         symbol = []
-        found = 0
         score = 0
         identity = 0
         for i in range(0, len(align1)):
             if align1[i] == align2[i]:
                 symbol.append(align1[i])
-                identity = identity + 1
+                identity += 1
                 score += match_score(align1[i], align2[i])
 
             elif align1[i] != align2[i] and align1[i] != "-" and align2[i] != "-":
                 score += match_score(align1[i], align2[i])
                 symbol.append(" ")
-                found = 0
 
             # if one of them is a gap, output a space
             elif align1[i] == "-" or align2[i] == "-":
@@ -493,7 +490,9 @@ def needleman_wunsch_identity(
     ).fetchone()[0]
 
     if first_event is None:
+
         logging.debug(f"An observation has no recorded events: {obsid1} or {obsid2}")
+
         return -100, f"An observation has no recorded events: {obsid1} {obsid2}"
 
     logging.debug(f"first_event: {first_event}")
@@ -524,7 +523,8 @@ def needleman_wunsch_identity(
         (obsid2,) + tuple(selected_subjects),
     ).fetchone()[0]
 
-    seq1, seq2 = {}, {}
+    seq1: dict = {}
+    seq2: dict = {}
 
     currentTime = dec(str(first_event))
     while currentTime <= last_event:
@@ -662,7 +662,7 @@ def needleman_wunch(self):
         out2 += "\t".join([f"{x:8.6f}" for x in nws_results[r, :]]) + "\n"
 
     self.results = dialog.Results_dialog()
-    self.results.setWindowTitle(cfg.programName + " - Needleman-Wunsch similarity")
+    self.results.setWindowTitle(f"{cfg.programName} - Needleman-Wunsch similarity")
     self.results.ptText.setReadOnly(True)
     if len(selected_observations) == 2:
         self.results.ptText.appendPlainText(out)
