@@ -218,15 +218,6 @@ def read(self):
             self.ffmpeg_cache_dir = ""
         logging.debug(f"ffmpeg_cache_dir: {self.ffmpeg_cache_dir}")
 
-        try:
-            self.frame_bitmap_format = settings.value("frame_bitmap_format")
-            if not self.frame_bitmap_format:
-                self.frame_bitmap_format = cfg.FRAME_DEFAULT_BITMAP_FORMAT
-        except Exception:
-            self.frame_bitmap_format = cfg.FRAME_DEFAULT_BITMAP_FORMAT
-
-        logging.debug(f"frame_bitmap_format: {self.frame_bitmap_format}")
-
         # spectrogram
         self.spectrogramHeight = 80
 
@@ -359,7 +350,6 @@ def save(self, lastCheckForNewVersion=0):
 
     # FFmpeg
     settings.setValue("ffmpeg_cache_dir", self.ffmpeg_cache_dir)
-    settings.setValue("frame_bitmap_format", self.frame_bitmap_format)
     # spectrogram
     settings.setValue("spectrogram_color_map", self.spectrogram_color_map)
     settings.setValue("spectrogram_time_interval", self.spectrogram_time_interval)
