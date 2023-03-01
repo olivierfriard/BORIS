@@ -220,7 +220,7 @@
    <item>
     <widget class="QStackedWidget" name="sw_observation_type">
      <property name="currentIndex">
-      <number>3</number>
+      <number>1</number>
      </property>
      <widget class="QWidget" name="page"/>
      <widget class="QWidget" name="pg_media_files">
@@ -310,7 +310,45 @@
               </widget>
              </item>
              <item>
+              <widget class="QPushButton" name="pb_use_media_file_name_as_obsid">
+               <property name="text">
+                <string>Use media file name as observation id</string>
+               </property>
+              </widget>
+             </item>
+             <item>
               <spacer name="horizontalSpacer_6">
+               <property name="orientation">
+                <enum>Qt::Horizontal</enum>
+               </property>
+               <property name="sizeHint" stdset="0">
+                <size>
+                 <width>40</width>
+                 <height>20</height>
+                </size>
+               </property>
+              </spacer>
+             </item>
+            </layout>
+           </item>
+           <item>
+            <layout class="QHBoxLayout" name="horizontalLayout_15">
+             <item>
+              <widget class="QCheckBox" name="cbVisualizeSpectrogram">
+               <property name="text">
+                <string>Visualize the sound spectrogram for the player #1</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QCheckBox" name="cb_visualize_waveform">
+               <property name="text">
+                <string>Visualize the waveform for the player #1</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <spacer name="horizontalSpacer_11">
                <property name="orientation">
                 <enum>Qt::Horizontal</enum>
                </property>
@@ -327,9 +365,19 @@
            <item>
             <layout class="QHBoxLayout" name="horizontalLayout_12">
              <item>
-              <widget class="QPushButton" name="pb_use_media_file_name_as_obsid">
+              <widget class="QLabel" name="label_2">
                <property name="text">
-                <string>Use media file name as observation id</string>
+                <string>Image display duration (s)</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QSpinBox" name="sb_image_display_duration">
+               <property name="minimum">
+                <number>1</number>
+               </property>
+               <property name="maximum">
+                <number>86400</number>
                </property>
               </widget>
              </item>
@@ -347,20 +395,6 @@
               </spacer>
              </item>
             </layout>
-           </item>
-           <item>
-            <widget class="QCheckBox" name="cbVisualizeSpectrogram">
-             <property name="text">
-              <string>Visualize the sound spectrogram for the player #1</string>
-             </property>
-            </widget>
-           </item>
-           <item>
-            <widget class="QCheckBox" name="cb_visualize_waveform">
-             <property name="text">
-              <string>Visualize the waveform for the player #1</string>
-             </property>
-            </widget>
            </item>
            <item>
             <widget class="QCheckBox" name="cbCloseCurrentBehaviorsBetweenVideo">

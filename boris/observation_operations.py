@@ -582,7 +582,6 @@ def new_observation(self, mode=cfg.NEW, obsId=""):
 
     observationWindow.pj = dict(self.pj)
     observationWindow.sw_observation_type.setCurrentIndex(0)  # no observation type
-    # observationWindow.sw_observation_type.setVisible(False)
     observationWindow.mode = mode
     observationWindow.mem_obs_id = obsId
     observationWindow.chunk_length = self.chunk_length
@@ -778,6 +777,11 @@ def new_observation(self, mode=cfg.NEW, obsId=""):
                 self.pj[cfg.OBSERVATIONS][obsId].get(cfg.VISUALIZE_WAVEFORM, False)
             )
 
+            # image display duration
+            observationWindow.sb_image_display_duration.setValue(
+                self.pj[cfg.OBSERVATIONS][obsId].get(cfg.IMAGE_DISPLAY_DURATION, 1)
+            )
+
             # plot data
             if cfg.PLOT_DATA in self.pj[cfg.OBSERVATIONS][obsId]:
                 if self.pj[cfg.OBSERVATIONS][obsId][cfg.PLOT_DATA]:
@@ -968,6 +972,11 @@ def new_observation(self, mode=cfg.NEW, obsId=""):
         self.pj[cfg.OBSERVATIONS][new_obs_id][
             cfg.VISUALIZE_WAVEFORM
         ] = observationWindow.cb_visualize_waveform.isChecked()
+        # image display duration
+        self.pj[cfg.OBSERVATIONS][new_obs_id][
+            cfg.IMAGE_DISPLAY_DURATION
+        ] = observationWindow.sb_image_display_duration.value()
+
         # time interval for observation
         self.pj[cfg.OBSERVATIONS][new_obs_id][
             cfg.OBSERVATION_TIME_INTERVAL
@@ -1289,7 +1298,7 @@ def initialize_new_media_observation(self) -> bool:
 
     # add all media files to media lists
     self.setDockOptions(QMainWindow.AnimatedDocks | QMainWindow.AllowNestedDocks)
-    self.dw_player = []
+    self.dw_player: list = []
     # create dock widgets for players
 
     for i in range(cfg.N_PLAYER):
@@ -1422,6 +1431,10 @@ def initialize_new_media_observation(self) -> bool:
         # do not close when playing finished
         self.dw_player[i].player.keep_open = True
         self.dw_player[i].player.keep_open_pause = False
+
+        self.dw_player[i].player.image_display_duration = self.pj[cfg.OBSERVATIONS][self.observationId].get(
+            cfg.IMAGE_DISPLAY_DURATION, 1
+        )
 
         # position media
         if cfg.OBSERVATION_TIME_INTERVAL in self.pj[cfg.OBSERVATIONS][self.observationId]:
