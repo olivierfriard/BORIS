@@ -903,7 +903,7 @@ def seconds2time(sec: dec) -> str:
     """
 
     if math.isnan(sec):
-        return "NA"
+        return cfg.NA
 
     if sec > 1_600_000_000:  # epoch time
         t = datetime.datetime.fromtimestamp(float(sec))
@@ -1112,6 +1112,7 @@ def ffprobe_media_analysis(ffmpeg_bin: str, file_name: str) -> dict:
                 video_bitrate = int(stream["bit_rate"]) if "bit_rate" in stream else None
                 resolution = f"{stream['width']}x{stream['height']}"
 
+                """
                 if "avg_frame_rate" in stream:
                     if stream["avg_frame_rate"] == "0/0":
                         fps = 0
@@ -1120,9 +1121,25 @@ def ffprobe_media_analysis(ffmpeg_bin: str, file_name: str) -> dict:
                             fps = eval(stream["avg_frame_rate"])
                         except Exception:
                             fps = 0
+                """
+                if "r_frame_rate" in stream:
+                    if stream["r_frame_rate"] == "0/0":
+                        fps = 0
+                    else:
+                        try:
+                            fps = eval(stream["r_frame_rate"])
+                        except Exception:
+                            fps = 0
 
                 duration = float(stream["duration"])
-                frames_number = int(stream["nb_frames"]) if "nb_frames" in stream else None
+                # frames_number = int(stream["nb_frames"]) if "nb_frames" in stream else None
+                if "duration_ts" in stream:
+                    frames_number = int(stream["duration_ts"])
+                elif "nb_frames" in stream:
+                    frames_number = int(stream["nb_frames"])
+                else:
+                    frames_number = None
+
                 video_codec = stream["codec_long_name"] if "codec_long_name" in stream else None
 
             if stream["codec_type"] == "audio":
