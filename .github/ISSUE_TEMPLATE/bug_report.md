@@ -7,6 +7,9 @@ assignees: ''
 
 ---
 
+**Indicate the version of BORIS**
+ Verify you are using the last version (http://www.boris.unito.it/pages/download.html)
+
 **Describe the bug**
 A clear and concise description of what the bug is.
 
@@ -25,6 +28,7 @@ If applicable, add screenshots to help explain your problem.
 
 **Desktop (please complete the following information):**
  - OS: [windows 10, Ubuntu 22.04 ... ]
- - BORIS Version
+ - Type of BORIS instalaltion (setup or portable ...)
 
-**In case of crash** copy the content of the boris_error.log file (before relaunching BORIS).
+**In case of crash** attach or copy the content of the boris.log file (before relaunching BORIS).
+(see http://www.boris.unito.it/pages/report_a_bug.html for its location)
