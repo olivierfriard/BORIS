@@ -3782,6 +3782,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
             # set video scroll bar
             if scroll_slider and not self.user_move_slider:
+
+                """print(f"{current_media_duration=}")"""
+
                 self.video_slider.setValue(
                     round(current_media_time_pos / current_media_duration * (cfg.SLIDER_MAXIMUM - 1))
                 )

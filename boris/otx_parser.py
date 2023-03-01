@@ -187,9 +187,7 @@ def otx_to_boris(file_path: str) -> dict:
             mutually_exclusive_list.append(behav_code)
 
         if behav_id in connections:
-
             modifier_sets = [modifiers[modifier_set]["set_name"] for modifier_set in connections[behav_id]]
-            print(f"{modifier_sets=}")
         else:
             modifier_sets = []
 
@@ -331,16 +329,10 @@ def otx_to_boris(file_path: str) -> dict:
 
     observations = xmldoc.getElementsByTagName("OBS_OBSERVATION")
 
-    """
-    print(f"{len(observations)=}")
-    print()
-    """
-
     for OBS_OBSERVATION in observations:
         # OBS_OBSERVATION = minidom.parseString(OBS_OBSERVATION.toxml())
 
         obs_id = OBS_OBSERVATION.getAttribute("NAME")
-        """print(f"{obs_id=}")"""
 
         project[cfg.OBSERVATIONS][obs_id] = dict(
             {
@@ -361,8 +353,6 @@ def otx_to_boris(file_path: str) -> dict:
         )
 
         OBS_EVENT_LOGS = OBS_OBSERVATION.getElementsByTagName("OBS_EVENT_LOGS")[0]
-
-        # print(f"{OBS_EVENT_LOGS=}")
 
         for OBS_EVENT_LOG in OBS_EVENT_LOGS.getElementsByTagName("OBS_EVENT_LOG"):
 
@@ -403,13 +393,11 @@ def otx_to_boris(file_path: str) -> dict:
                 except Exception:
                     OBS_EVENT_COMMENT = ""
 
-                """
-                print(f"{timestamp=}")
-                print(f"{OBS_EVENT_SUBJECT=}")
-                print(f"{OBS_EVENT_BEHAVIOR=}")
-                print(f"{OBS_EVENT_BEHAVIOR_MODIFIER=}")
-                print(f"{OBS_EVENT_COMMENT=}")
-                """
+                # print(f"{timestamp=}")
+                # print(f"{OBS_EVENT_SUBJECT=}")
+                # print(f"{OBS_EVENT_BEHAVIOR=}")
+                # print(f"{OBS_EVENT_BEHAVIOR_MODIFIER=}")
+                # print(f"{OBS_EVENT_COMMENT=}")
 
                 project[cfg.OBSERVATIONS][obs_id][cfg.EVENTS].append(
                     [
