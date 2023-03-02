@@ -2621,6 +2621,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         # pass copy of self.pj
         newProjectWindow.pj = dict(self.pj)
 
+        # pass config_param
+        newProjectWindow.config_param = dict(self.config_param)
+
         gui_utilities.restore_geometry(newProjectWindow, "project window", (800, 400))
 
         newProjectWindow.setWindowTitle(f"{mode} project")
