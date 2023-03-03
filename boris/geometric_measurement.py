@@ -38,6 +38,8 @@ from PyQt5.QtWidgets import (
     QVBoxLayout,
     QWidget,
     QColorDialog,
+    QSpacerItem,
+    QSizePolicy,
 )
 
 from . import config as cfg
@@ -75,15 +77,17 @@ class wgMeasurement(QWidget):
         self.rbAngle = QRadioButton("Angle (vertex: left click, segments: right click)")
         vbox.addWidget(self.rbAngle)
 
+        hbox = QHBoxLayout()
         self.cbPersistentMeasurements = QCheckBox("Measurements are persistent")
         self.cbPersistentMeasurements.setChecked(True)
-        vbox.addWidget(self.cbPersistentMeasurements)
+        hbox.addWidget(self.cbPersistentMeasurements)
 
         # color chooser
-
         self.bt_color_chooser = QPushButton("Choose color of marks", clicked=self.choose_marks_color)
         self.bt_color_chooser.setStyleSheet(f"QWidget {{background-color:{self.mark_color}}}")
-        vbox.addWidget(self.bt_color_chooser)
+        hbox.addWidget(self.bt_color_chooser)
+
+        vbox.addLayout(hbox)
 
         vbox.addWidget(QLabel("<b>Scale</b>"))
 
@@ -116,6 +120,7 @@ class wgMeasurement(QWidget):
         vbox.addWidget(self.status_lb)
 
         hbox3 = QHBoxLayout()
+        hbox3.addItem(QSpacerItem(40, 20, QSizePolicy.Expanding, QSizePolicy.Minimum))
 
         self.pbClear = QPushButton("Clear measurements", clicked=self.pbClear_clicked)
         hbox3.addWidget(self.pbClear)

@@ -66,7 +66,7 @@ def error_info(exc_info: tuple) -> tuple:
     return (f"{exc_type}: {exc_obj}", fname, exc_tb.tb_lineno)
 
 
-def pil2pixmap(im) -> QPixmap:
+def pil2pixmap(im: Image) -> QPixmap:
     """
     convert PIL image to pixmap
     see https://stackoverflow.com/questions/34697559/pil-image-to-qpixmap-conversion-issue

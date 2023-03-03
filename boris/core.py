@@ -30,6 +30,8 @@ import pathlib as pl
 import platform
 import re
 import bisect
+import PIL.Image
+import PIL.ImageEnhance
 import subprocess
 import sys
 import tempfile
@@ -1680,76 +1682,105 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         """
         dockwidget was resized. Adapt overlay if any
         """
+
+        def reduce_opacity(im, opacity):
+            """
+            Returns an image with reduced opacity.
+            opacity = 1 -> 0% transparent
+            opacity = 0 -> 100% transparent
+            """
+            if im.mode != "RGBA":
+                im = im.convert("RGBA")
+            else:
+                im = im.copy()
+            alpha = im.split()[3]
+            alpha = PIL.ImageEnhance.Brightness(alpha).enhance(opacity)
+            im.putalpha(alpha)
+            return im
+
         if self.geometric_measurements_mode:
             pass
 
-        if self.playerType == cfg.MEDIA and not self.geometric_measurements_mode:
+        if self.playerType not in (cfg.MEDIA):
+            return
+        if self.geometric_measurements_mode:
+            return
+
+        if not self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO].get(cfg.OVERLAY, {}):
+            return
+
+        try:
+            img = Image.open(
+                self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO][cfg.OVERLAY][str(dw_id + 1)]["file name"]
+            )
+        except Exception:
+            return
+
+        w = self.dw_player[dw_id].player.width
+        h = self.dw_player[dw_id].player.height
+
+        fw = self.dw_player[dw_id].videoframe.size().width()
+        fh = self.dw_player[dw_id].videoframe.size().height()
+
+
+        if fw / fh <= w / h:
+            w_r = fw
+            h_r = w_r / (w / h)
+            x1 = 0
+            y1 = int((fh - h_r) / 2)
+            x2 = int(w_r)
+            y2 = int(y1 + h_r)
+
+        if fw / fh > w / h:
+            h_r = fh
+            w_r = h_r * (w / h)
+            x1 = int((fw - w_r) / 2)
+            y1 = 0
+            x2 = int(x1 + w_r)
+            y2 = int(h_r)
+
+        img_resized = img.resize((x2 - x1, y2 - y1))
+
+        opacity = (
+            -1
+            / 100
+            * self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO][cfg.OVERLAY][str(dw_id + 1)]["transparency"]
+            + 1
+        )
+
+        img_resized = reduce_opacity(img_resized, opacity)
+
+        # check position
+        x_offset, y_offset = 0, 0
+        if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO][cfg.OVERLAY][str(dw_id + 1)][
+            "overlay position"
+        ]:
             try:
-                img = Image.open(
+                x_offset = int(
                     self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO][cfg.OVERLAY][str(dw_id + 1)][
-                        "file name"
+                        "overlay position"
                     ]
+                    .split(",")[0]
+                    .strip()
+                )
+                y_offset = int(
+                    self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO][cfg.OVERLAY][str(dw_id + 1)][
+                        "overlay position"
+                    ]
+                    .split(",")[1]
+                    .strip()
                 )
             except Exception:
-                return
+                logging.warning(f"error in overlay position")
 
-            w = self.dw_player[dw_id].player.width
-            h = self.dw_player[dw_id].player.height
-
-            fw = self.dw_player[dw_id].videoframe.size().width()
-            fh = self.dw_player[dw_id].videoframe.size().height()
-
-            if fw / fh <= w / h:
-                w_r = fw
-                h_r = w_r / (w / h)
-                x1 = 0
-                y1 = int((fh - h_r) / 2)
-                x2 = int(w_r)
-                y2 = int(y1 + h_r)
-
-            if fw / fh > w / h:
-                h_r = fh
-                w_r = h_r * (w / h)
-                x1 = int((fw - w_r) / 2)
-                y1 = 0
-                x2 = int(x1 + w_r)
-                y2 = int(h_r)
-
-            img_resized = img.resize((x2 - x1, y2 - y1))
-            # disabled due to a problem setting trasnparency to 0% with an image with transparent background
-            # and img_resized.putalpha(int((100 - self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO][cfg.OVERLAY][str(dw_id + 1)]["transparency"]) * 2.55))  # 0 means 100% transparency
-
-            # check position
-            x_offset, y_offset = 0, 0
-            if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO][cfg.OVERLAY][str(dw_id + 1)][
-                "overlay position"
-            ]:
-                try:
-                    x_offset = int(
-                        self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO][cfg.OVERLAY][str(dw_id + 1)][
-                            "overlay position"
-                        ]
-                        .split(",")[0]
-                        .strip()
-                    )
-                    y_offset = int(
-                        self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO][cfg.OVERLAY][str(dw_id + 1)][
-                            "overlay position"
-                        ]
-                        .split(",")[1]
-                        .strip()
-                    )
-                except Exception:
-                    logging.warning(f"error in overlay position")
-
-            try:
-                self.overlays[dw_id].remove()
-            except Exception:
-                logging.debug("error removing overlay")
-            try:
-                self.overlays[dw_id].update(img_resized, pos=(x1 + x_offset, y1 + y_offset))
-            except Exception:
-                logging.debug("error updating overlay")
+        try:
+            self.overlays[dw_id].remove()
+        except Exception:
+            logging.debug("error removing overlay")
+        try:
+            self.overlays[dw_id].update(img_resized, pos=(x1 + x_offset, y1 + y_offset))
+        except Exception:
+            logging.debug("error updating overlay")
 
     def signal_from_dw(self, id_, msg, button):
         """
@@ -1787,21 +1818,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
             if self.dw_player[id_].zoomed:
                 self.dw_player[id_].mediaplayer.video_set_crop_geometry(f"{right}x{bottom}+{left}+{top}")
-
-    '''
-    moved in event_operations module
-
-    def read_event_field(self, event: list, player_type: str, field_type: str) -> Union[str, None, int, dec]:
-        """
-        return value of field for event or NA if not available
-        """
-        if field_type not in cfg.PJ_EVENTS_FIELDS[player_type]:
-            return None
-        if cfg.PJ_OBS_FIELDS[player_type][field_type] < len(event):
-            return event[cfg.PJ_OBS_FIELDS[player_type][field_type]]
-        else:
-            return cfg.NA
-    '''
 
     def read_tw_event_field(self, row_idx: int, player_type: str, field_type: str) -> Union[str, None, int, dec]:
         """
@@ -1893,7 +1909,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
                     field = event_operations.read_event_field(event, self.playerType, field_type)
 
-                    # print(f"{field_type=}: {field=}")
 
                     if field_type == cfg.TIME:
                         item = QTableWidgetItem(str(util.convertTime(self.timeFormat, field)))
@@ -4212,7 +4227,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     key=lambda x: x[cfg.PJ_OBS_FIELDS[self.playerType][cfg.IMAGE_INDEX]]
                 )
 
-            # print(f'{self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS][event["row"]]=}')
 
         else:  # add event
             if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE] == cfg.MEDIA:
@@ -5187,7 +5201,6 @@ def main():
 
     if (not options.nosplashscreen) and (sys.platform != "darwin"):
         start = time.time()
-        datadir = os.path.dirname(sys.path[0]) if os.path.isfile(sys.path[0]) else sys.path[0]
         splash = QSplashScreen(QPixmap(":/splash"))
         splash.show()
         splash.raise_()
@@ -5242,8 +5255,11 @@ def main():
                 QMessageBox.information(window, cfg.programName, msg)
             window.load_project(project_path, project_changed, pj)
 
+    window.show()
+    window.raise_()
+
     if observation_to_open and "error" not in pj:
-        r = observation_operations.load_observation(window, observation_to_open)
+        r = observation_operations.load_observation(window, obs_id=observation_to_open, mode=cfg.OBS_START)
         if r:
             QMessageBox.warning(
                 None,
@@ -5252,9 +5268,6 @@ def main():
                 QMessageBox.Ok | QMessageBox.Default,
                 QMessageBox.NoButton,
             )
-
-    window.show()
-    window.raise_()
 
     # connect events filter when app focus changes
     """2019-12-12
