@@ -301,6 +301,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.actionCurrent_Time_Budget.setIcon(QIcon(":/time_budget"))
         self.actionPlot_current_observation.setIcon(QIcon(":/plot_events"))
 
+        self.actionPlot_events_in_real_time.setIcon(QIcon(":/plot_real_time"))
+
         self.actionBehavior_bar_plot.setIcon(QIcon(":/plot_time_budget"))
         self.actionPlot_current_time_budget.setIcon(QIcon(":/plot_time_budget"))
         self.actionFind_in_current_obs.setIcon(QIcon(":/find"))
@@ -1722,7 +1724,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         fw = self.dw_player[dw_id].videoframe.size().width()
         fh = self.dw_player[dw_id].videoframe.size().height()
 
-
         if fw / fh <= w / h:
             w_r = fw
             h_r = w_r / (w / h)
@@ -1908,7 +1909,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 if field_type in cfg.PJ_EVENTS_FIELDS[self.playerType]:
 
                     field = event_operations.read_event_field(event, self.playerType, field_type)
-
 
                     if field_type == cfg.TIME:
                         item = QTableWidgetItem(str(util.convertTime(self.timeFormat, field)))
@@ -4226,7 +4226,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS].sort(
                     key=lambda x: x[cfg.PJ_OBS_FIELDS[self.playerType][cfg.IMAGE_INDEX]]
                 )
-
 
         else:  # add event
             if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE] == cfg.MEDIA:
