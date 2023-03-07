@@ -225,7 +225,7 @@ class Video_overlay_dialog(QDialog):
         self.sb_overlay_transparency.setSingleStep(1)
         self.sb_overlay_transparency.setValue(0)
         vlayout.addWidget(self.sb_overlay_transparency)
-        self.sb_overlay_transparency.setEnabled(False)
+        # self.sb_overlay_transparency.setEnabled(False)
 
         self.cb_player = QComboBox()
         vlayout.addWidget(self.cb_player)

@@ -33,35 +33,31 @@ def add_image_overlay(self):
 
     logging.debug(f"function add_image_overlay")
 
-    try:
-        w = dialog.Video_overlay_dialog()
-        items = list([f"Player #{i + 1}" for i, _ in enumerate(self.dw_player)])
-        w.cb_player.addItems(items)
-        if not w.exec_():
-            return
+    w = dialog.Video_overlay_dialog()
+    items = list([f"Player #{i + 1}" for i, _ in enumerate(self.dw_player)])
+    w.cb_player.addItems(items)
+    if not w.exec_():
+        return
 
-        idx = w.cb_player.currentIndex()
+    idx = w.cb_player.currentIndex()
 
-        if cfg.OVERLAY not in self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO]:
-            self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO][cfg.OVERLAY] = {}
-        self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO][cfg.OVERLAY][str(idx + 1)] = {
-            "file name": w.le_file_path.text(),
-            "overlay position": w.le_overlay_position.text(),
-            "transparency": w.sb_overlay_transparency.value(),
-        }
-        self.overlays[idx] = self.dw_player[idx].player.create_image_overlay()
-        self.project_changed()
-        self.resize_dw(idx)
-
-    except Exception:
-        logging.debug("error in add_image_overlay function")
+    if cfg.OVERLAY not in self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO]:
+        self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO][cfg.OVERLAY] = {}
+    self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO][cfg.OVERLAY][str(idx + 1)] = {
+        "file name": w.le_file_path.text(),
+        "overlay position": w.le_overlay_position.text(),
+        "transparency": w.sb_overlay_transparency.value(),
+    }
+    self.overlays[idx] = self.dw_player[idx].player.create_image_overlay()
+    self.project_changed()
+    self.resize_dw(idx)
 
 
 def remove_image_overlay(self):
     """
     remove image overlay from all players
     """
-    keys_to_delete = []
+    keys_to_delete: list = []
     for n_player in self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO].get(cfg.OVERLAY, {}):
         keys_to_delete.append(n_player)
         try:
