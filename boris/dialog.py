@@ -207,28 +207,43 @@ class Video_overlay_dialog(QDialog):
         super().__init__()
 
         vlayout = QVBoxLayout()
-        vlayout.addWidget(QLabel("File"))
+        self.cb_player = QComboBox()
+        vlayout.addWidget(self.cb_player)
+
         hbox = QHBoxLayout()
+        hbox.addWidget(QLabel("Image file"))
         self.le_file_path = QLineEdit()
         hbox.addWidget(self.le_file_path)
+        vlayout.addLayout(hbox)
+
+        hbox = QHBoxLayout()
         self.pb_browse = QPushButton("Browse", self, clicked=self.browse)
+        hbox.addItem(QSpacerItem(241, 20, QSizePolicy.Expanding, QSizePolicy.Minimum))
         hbox.addWidget(self.pb_browse)
         vlayout.addLayout(hbox)
 
-        vlayout.addWidget(QLabel("Position: x,y"))
+        hbox = QHBoxLayout()
+        hbox.addWidget(QLabel("Position: x,y"))
         self.le_overlay_position = QLineEdit()
-        vlayout.addWidget(self.le_overlay_position)
+        hbox.addWidget(self.le_overlay_position)
+        vlayout.addLayout(hbox)
 
-        vlayout.addWidget(QLabel("Transparency %"))
+        hbox = QHBoxLayout()
+        hbox.addWidget(QLabel("Transparency %"))
         self.sb_overlay_transparency = QSpinBox()
         self.sb_overlay_transparency.setRange(0, 100)
         self.sb_overlay_transparency.setSingleStep(1)
+<<<<<<< HEAD
         self.sb_overlay_transparency.setValue(0)
         vlayout.addWidget(self.sb_overlay_transparency)
         # self.sb_overlay_transparency.setEnabled(False)
+=======
+        self.sb_overlay_transparency.setValue(90)
+        hbox.addWidget(self.sb_overlay_transparency)
+        vlayout.addLayout(hbox)
+>>>>>>> 7c2e2bb3df132ceb749e712951dc0846263bb798
 
-        self.cb_player = QComboBox()
-        vlayout.addWidget(self.cb_player)
+        # self.sb_overlay_transparency.setEnabled(False)
 
         hbox = QHBoxLayout()
         self.pb_cancel = QPushButton("Cancel", self, clicked=self.reject)

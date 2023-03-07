@@ -426,6 +426,7 @@
    <addaction name="actionFrame_backward"/>
    <addaction name="actionFrame_forward"/>
    <addaction name="actionCloseObs"/>
+   <addaction name="actionPlot_events_in_real_time"/>
    <addaction name="actionCurrent_Time_Budget"/>
    <addaction name="actionPlot_current_observation"/>
    <addaction name="actionPlot_current_time_budget"/>

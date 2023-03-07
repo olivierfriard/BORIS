@@ -200,7 +200,7 @@ def load_observation(self, obs_id: str, mode: str = cfg.OBS_START) -> str:
     if obs_id not in self.pj[cfg.OBSERVATIONS]:
         return "Error: Observation not found"
 
-    if self.pj[cfg.OBSERVATIONS][obs_id][cfg.TYPE] not in [cfg.IMAGES, cfg.LIVE, cfg.MEDIA]:
+    if self.pj[cfg.OBSERVATIONS][obs_id][cfg.TYPE] not in (cfg.IMAGES, cfg.LIVE, cfg.MEDIA):
         return f"Error: Observation type {self.pj[cfg.OBSERVATIONS][obs_id][cfg.TYPE]} not found"
 
     self.observationId = obs_id
@@ -1455,6 +1455,7 @@ def initialize_new_media_observation(self) -> bool:
             ].get(n_player, True)
 
         # restore overlays
+
         if cfg.OVERLAY in self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO]:
             if n_player in self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO][cfg.OVERLAY]:
                 self.overlays[i] = self.dw_player[i].player.create_image_overlay()
@@ -1473,7 +1474,6 @@ def initialize_new_media_observation(self) -> bool:
     self.state_behaviors_codes = tuple(util.state_behavior_codes(self.pj[cfg.ETHOGRAM]))
 
     video_operations.display_play_rate(self)
-    """self.lbSpeed.setText(f"Player rate: <b>x{self.play_rate:.3f}</b>")"""
 
     # spectrogram
     if (
@@ -1672,6 +1672,15 @@ def initialize_new_media_observation(self) -> bool:
         self.sync_time(n_player, 0)
 
     self.mpv_timer_out(value=0.0)
+
+    """
+    if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO].get(cfg.OVERLAY, {}):
+        for i in range(cfg.N_PLAYER):
+            # restore overlays
+            if str(i + 1) in self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO][cfg.OVERLAY]:
+                self.overlays[i] = self.dw_player[i].player.create_image_overlay()
+                self.resize_dw(i)
+    """
 
     return True
 

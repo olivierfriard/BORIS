@@ -714,6 +714,7 @@ class Ui_MainWindow(object):
         self.toolBar.addAction(self.actionFrame_backward)
         self.toolBar.addAction(self.actionFrame_forward)
         self.toolBar.addAction(self.actionCloseObs)
+        self.toolBar.addAction(self.actionPlot_events_in_real_time)
         self.toolBar.addAction(self.actionCurrent_Time_Budget)
         self.toolBar.addAction(self.actionPlot_current_observation)
         self.toolBar.addAction(self.actionPlot_current_time_budget)

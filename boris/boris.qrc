@@ -22,6 +22,7 @@
 <file alias="time_budget">icons/glyphicons_119_table.png</file>
 <file alias="close_observation">icons/glyphicons_207_remove_2.png</file>
 <file alias="plot_current">icons/glyphicons_108_left_indent_modified.png</file>
+<file alias="plot_real_time">icons/glyphicons_108_left_indent_modified_realtime.png</file>
 <file alias="find">icons/glyphicons_027_search.png</file>
 <file alias="beep">sounds/beep.wav</file>
 <file alias="key_sound">sounds/key_sound.wav</file>

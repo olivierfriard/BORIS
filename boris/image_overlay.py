@@ -26,18 +26,27 @@ from . import config as cfg
 from . import dialog
 
 
-def add_image_overlay(self):
+def add_image_overlay(self) -> None:
     """
-    add an image overlay on video
+    add an image overlay on video from an image
     """
 
     logging.debug(f"function add_image_overlay")
 
+<<<<<<< HEAD
     w = dialog.Video_overlay_dialog()
     items = list([f"Player #{i + 1}" for i, _ in enumerate(self.dw_player)])
     w.cb_player.addItems(items)
     if not w.exec_():
         return
+=======
+    try:
+        w = dialog.Video_overlay_dialog()
+        items = [f"Player #{i + 1}" for i, _ in enumerate(self.dw_player)]
+        w.cb_player.addItems(items)
+        if not w.exec_():
+            return
+>>>>>>> 7c2e2bb3df132ceb749e712951dc0846263bb798
 
     idx = w.cb_player.currentIndex()
 
@@ -53,7 +62,7 @@ def add_image_overlay(self):
     self.resize_dw(idx)
 
 
-def remove_image_overlay(self):
+def remove_image_overlay(self) -> None:
     """
     remove image overlay from all players
     """
