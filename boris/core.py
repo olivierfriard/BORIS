@@ -4584,11 +4584,13 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         # get time
         memLaps = None
         if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE] == cfg.LIVE:
+
             if self.pj[cfg.OBSERVATIONS][self.observationId].get(cfg.SCAN_SAMPLING_TIME, 0):
                 if self.timeFormat == cfg.HHMMSS:
                     memLaps = dec(int(util.time2seconds(self.lb_current_media_time.text())))
                 if self.timeFormat == cfg.S:
                     memLaps = dec(int(dec(self.lb_current_media_time.text())))
+
             else:  # no scan sampling
                 if self.pj[cfg.OBSERVATIONS][self.observationId].get(cfg.START_FROM_CURRENT_TIME, False):
                     memLaps = dec(str(util.seconds_of_day(datetime.datetime.now())))
