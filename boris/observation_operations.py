@@ -1448,6 +1448,12 @@ def initialize_new_media_observation(self) -> bool:
                 self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO][cfg.ZOOM_LEVEL].get(n_player, 0)
             )
 
+        # restore rotation angle
+        if cfg.ROTATION_ANGLE in self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO]:
+            self.dw_player[i].player.video_rotate = self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO][
+                cfg.ROTATION_ANGLE
+            ].get(n_player, 0)
+
         # restore subtitle visibility
         if cfg.DISPLAY_MEDIA_SUBTITLES in self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO]:
             self.dw_player[i].player.sub_visibility = self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO][

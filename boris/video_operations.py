@@ -108,6 +108,37 @@ def zoom_level(self):
             self.project_changed()
 
 
+def rotate_displayed_video(self):
+    """
+    rotate the displayed video
+    """
+    players_list: list = []
+    for idx, dw in enumerate(self.dw_player):
+        rotation_angles: list = []
+        for choice in (0, 90, 180, 270):
+            rotation_angles.append((str(choice), "selected" if choice == dw.player.video_rotate else ""))
+        players_list.append(("il", f"Player #{idx + 1}", rotation_angles))
+
+    w = dialog.Input_dialog(label_caption="Select the zoom level", elements_list=players_list, title="Video zoom level")
+    if not w.exec_():
+        return
+    if cfg.ROTATION_ANGLE not in self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO]:
+        self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO][cfg.ROTATION_ANGLE] = {}
+
+    for idx, dw in enumerate(self.dw_player):
+        if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO][cfg.ROTATION_ANGLE].get(
+            str(idx + 1), dw.player.video_rotate
+        ) != float(w.elements[f"Player #{idx + 1}"].currentText()):
+            dw.player.video_rotate = int(w.elements[f"Player #{idx + 1}"].currentText())
+
+            logging.debug(f"video rotation changed to {dw.player.video_rotate} for player {idx + 1}")
+
+            self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO][cfg.ROTATION_ANGLE][str(idx + 1)] = int(
+                w.elements[f"Player #{idx + 1}"].currentText()
+            )
+            self.project_changed()
+
+
 def display_subtitles(self):
     """
     display dialog for subtitles display

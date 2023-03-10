@@ -33,33 +33,28 @@ def add_image_overlay(self) -> None:
 
     logging.debug(f"function add_image_overlay")
 
-<<<<<<< HEAD
-    w = dialog.Video_overlay_dialog()
-    items = list([f"Player #{i + 1}" for i, _ in enumerate(self.dw_player)])
-    w.cb_player.addItems(items)
-    if not w.exec_():
-        return
-=======
     try:
         w = dialog.Video_overlay_dialog()
         items = [f"Player #{i + 1}" for i, _ in enumerate(self.dw_player)]
         w.cb_player.addItems(items)
         if not w.exec_():
             return
->>>>>>> 7c2e2bb3df132ceb749e712951dc0846263bb798
 
-    idx = w.cb_player.currentIndex()
+        idx = w.cb_player.currentIndex()
 
-    if cfg.OVERLAY not in self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO]:
-        self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO][cfg.OVERLAY] = {}
-    self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO][cfg.OVERLAY][str(idx + 1)] = {
-        "file name": w.le_file_path.text(),
-        "overlay position": w.le_overlay_position.text(),
-        "transparency": w.sb_overlay_transparency.value(),
-    }
-    self.overlays[idx] = self.dw_player[idx].player.create_image_overlay()
-    self.project_changed()
-    self.resize_dw(idx)
+        if cfg.OVERLAY not in self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO]:
+            self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO][cfg.OVERLAY] = {}
+        self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO][cfg.OVERLAY][str(idx + 1)] = {
+            "file name": w.le_file_path.text(),
+            "overlay position": w.le_overlay_position.text(),
+            "transparency": w.sb_overlay_transparency.value(),
+        }
+        self.overlays[idx] = self.dw_player[idx].player.create_image_overlay()
+        self.project_changed()
+        self.resize_dw(idx)
+
+    except Exception:
+        logging.debug("error in add_image_overlay function")
 
 
 def remove_image_overlay(self) -> None:

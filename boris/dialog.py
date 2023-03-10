@@ -233,15 +233,9 @@ class Video_overlay_dialog(QDialog):
         self.sb_overlay_transparency = QSpinBox()
         self.sb_overlay_transparency.setRange(0, 100)
         self.sb_overlay_transparency.setSingleStep(1)
-<<<<<<< HEAD
-        self.sb_overlay_transparency.setValue(0)
-        vlayout.addWidget(self.sb_overlay_transparency)
-        # self.sb_overlay_transparency.setEnabled(False)
-=======
         self.sb_overlay_transparency.setValue(90)
         hbox.addWidget(self.sb_overlay_transparency)
         vlayout.addLayout(hbox)
->>>>>>> 7c2e2bb3df132ceb749e712951dc0846263bb798
 
         # self.sb_overlay_transparency.setEnabled(False)
 

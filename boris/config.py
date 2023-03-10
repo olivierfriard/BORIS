@@ -182,6 +182,7 @@ IMAGE_PATH = "image path"
 FRAME_INDEX = "frame index"
 
 ZOOM_LEVEL = "zoom level"
+ROTATION_ANGLE = "rotation angle"
 DISPLAY_MEDIA_SUBTITLES = "display subtitles"
 OVERLAY = "video overlay"
 
