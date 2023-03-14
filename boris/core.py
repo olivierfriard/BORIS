@@ -3961,7 +3961,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             image_path = event.get(cfg.IMAGE_PATH, "")
 
         if self.playerType in (cfg.MEDIA, cfg.VIEWER_MEDIA):
-            frame_idx = event.get(cfg.FRAME_INDEX, "")
+            frame_idx = event.get(cfg.FRAME_INDEX, cfg.NA)
 
         # check if a same event is already in events list (time, subject, code)
 
@@ -4182,9 +4182,27 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     event[cfg.BEHAVIOR_CODE] == cs and cm[cs] != modifier_str
                 ):
                     # add excluded state event to observations (= STOP them)
-                    self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS].append(
-                        [mem_time - dec("0.001"), self.currentSubject, cs, cm[cs], ""]
-                    )
+                    if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE] in (cfg.LIVE):
+                        bisect.insort(
+                            self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS],
+                            [mem_time - dec("0.001"), self.currentSubject, cs, cm[cs], ""],
+                        )
+
+                    if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE] in (cfg.MEDIA):
+                        bisect.insort(
+                            self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS],
+                            [mem_time - dec("0.001"), self.currentSubject, cs, cm[cs], "", cfg.NA],
+                        )
+
+                    if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE] in (cfg.IMAGES):
+                        self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS].append(
+                            [mem_time, self.currentSubject, cs, cm[cs], "", image_idx, image_path]
+                        )
+
+                        # order by image index ASC
+                        self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS].sort(
+                            key=lambda x: x[cfg.PJ_OBS_FIELDS[self.playerType][cfg.IMAGE_INDEX]]
+                        )
 
         # add event to pj
         if editing_event:  # modifying event
