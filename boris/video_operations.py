@@ -119,7 +119,9 @@ def rotate_displayed_video(self):
             rotation_angles.append((str(choice), "selected" if choice == dw.player.video_rotate else ""))
         players_list.append(("il", f"Player #{idx + 1}", rotation_angles))
 
-    w = dialog.Input_dialog(label_caption="Select the zoom level", elements_list=players_list, title="Video zoom level")
+    w = dialog.Input_dialog(
+        label_caption="Select the rotation angle", elements_list=players_list, title="Video rotation angle"
+    )
     if not w.exec_():
         return
     if cfg.ROTATION_ANGLE not in self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO]:

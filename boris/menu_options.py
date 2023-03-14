@@ -137,6 +137,7 @@ def update_menu(self):
         self.actionJumpBackward,
         self.actionJumpTo,
         self.actionZoom_level,
+        self.actionRotate_current_video,
         self.actionDisplay_subtitles,
         self.actionPlay,
         self.actionReset,
