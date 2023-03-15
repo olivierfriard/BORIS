@@ -280,8 +280,8 @@ def create_behaviors_bar_plot(
 
                 # color
                 behav_idx = [k for k in pj[cfg.ETHOGRAM] if pj[cfg.ETHOGRAM][k]["code"] == behavior][0]
-                if "color" in pj[cfg.ETHOGRAM][behav_idx]:
-                    colors.append(pj[cfg.ETHOGRAM][behav_idx]["color"])
+                if cfg.COLOR in pj[cfg.ETHOGRAM][behav_idx]:
+                    colors.append(pj[cfg.ETHOGRAM][behav_idx][cfg.COLOR])
                 else:
                     try:
                         colors.append(util.behavior_color(plot_colors, all_behaviors.index(behavior)))
@@ -291,8 +291,8 @@ def create_behaviors_bar_plot(
                 if cfg.STATE in project_functions.event_type(behavior, pj[cfg.ETHOGRAM]):
                     durations.append(behaviors[subject][behavior]["duration"])
                     x_labels_duration.append(behavior)
-                    if "color" in pj[cfg.ETHOGRAM][behav_idx]:
-                        colors_duration.append(pj[cfg.ETHOGRAM][behav_idx]["color"])
+                    if cfg.COLOR in pj[cfg.ETHOGRAM][behav_idx]:
+                        colors_duration.append(pj[cfg.ETHOGRAM][behav_idx][cfg.COLOR])
                     else:
                         try:
                             colors_duration.append(util.behavior_color(plot_colors, all_behaviors.index(behavior)))
@@ -537,14 +537,19 @@ def create_events_plot(
                             seconds=row["stop"] + cfg.POINT_EVENT_PLOT_DURATION * (row["stop"] == row["start"])
                         )
                     )
-                    try:
-                        bar_color = util.behavior_color(plot_colors, all_behaviors.index(behavior))
-                    except Exception:
-                        bar_color = "darkgray"
+                    # color
+                    behav_idx = [k for k in pj[cfg.ETHOGRAM] if pj[cfg.ETHOGRAM][k]["code"] == behavior][0]
+                    if cfg.COLOR in pj[cfg.ETHOGRAM][behav_idx]:
+                        bar_color = pj[cfg.ETHOGRAM][behav_idx][cfg.COLOR]
+                    else:
+                        try:
+                            bar_color = util.behavior_color(plot_colors, all_behaviors.index(behavior))
+                        except Exception:
+                            bar_color = "darkgray"
                     bar_color = cfg.POINT_EVENT_PLOT_COLOR if row["stop"] == row["start"] else bar_color
 
                     # sage colors removed from matplotlib colors list
-                    if bar_color in ["sage", "darksage", "lightsage"]:
+                    if bar_color in ("sage", "darksage", "lightsage"):
                         bar_color = {"darksage": "#598556", "lightsage": "#bcecac", "sage": "#87ae73"}[bar_color]
 
                     try:
@@ -580,12 +585,6 @@ def create_events_plot(
 
             axs[ax_idx].set_ylabel("Behaviors" + " (modifiers)" * include_modifiers, fontdict={"fontsize": 10})
 
-            """
-            axs[ax_idx].set_xlim(
-                left=matplotlib.dates.date2num(init + dt.timedelta(seconds=min_time)),
-                right=matplotlib.dates.date2num(init + dt.timedelta(seconds=max_time + 1)),
-            )
-            """
             axs[ax_idx].set_xlim(
                 left=matplotlib.dates.date2num(init + dt.timedelta(seconds=min_time)),
                 right=matplotlib.dates.date2num(init + dt.timedelta(seconds=max_time)),

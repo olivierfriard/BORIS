@@ -138,6 +138,7 @@ NO_FOCAL_SUBJECT = "No focal subject"
 
 TYPE = "type"
 FILE = "file"
+COLOR = "color"
 DIRECTORIES_LIST = "directories_list"
 
 SAVE_DATASET = 32

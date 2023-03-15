@@ -483,11 +483,11 @@ class projectDialog(QDialog, Ui_dlgProject):
                 )
 
             # convert modifier shortcuts
-            if self.twBehaviors.item(row, cfg.behavioursFields["modifiers"]).text():
+            if self.twBehaviors.item(row, cfg.behavioursFields[cfg.MODIFIERS]).text():
 
                 modifiers_dict = (
-                    eval(self.twBehaviors.item(row, cfg.behavioursFields["modifiers"]).text())
-                    if self.twBehaviors.item(row, cfg.behavioursFields["modifiers"]).text()
+                    eval(self.twBehaviors.item(row, cfg.behavioursFields[cfg.MODIFIERS]).text())
+                    if self.twBehaviors.item(row, cfg.behavioursFields[cfg.MODIFIERS]).text()
                     else {}
                 )
 
@@ -505,7 +505,7 @@ class projectDialog(QDialog, Ui_dlgProject):
                     except Exception:
                         logging.warning("error during conversion of modifier short cut to lower case")
 
-                self.twBehaviors.item(row, cfg.behavioursFields["modifiers"]).setText(str(modifiers_dict))
+                self.twBehaviors.item(row, cfg.behavioursFields[cfg.MODIFIERS]).setText(str(modifiers_dict))
 
     def convert_subjects_keys_to_lower_case(self):
         """
@@ -571,8 +571,8 @@ class projectDialog(QDialog, Ui_dlgProject):
                 self.pj[cfg.BEHAVIORS_CODING_MAP] = []
 
             bcm_code_not_found = []
-            existing_codes = [self.pj[cfg.ETHOGRAM][key]["code"] for key in self.pj[cfg.ETHOGRAM]]
-            for code in [bcm["areas"][key]["code"] for key in bcm["areas"]]:
+            existing_codes = [self.pj[cfg.ETHOGRAM][key][cfg.BEHAVIOR_CODE] for key in self.pj[cfg.ETHOGRAM]]
+            for code in [bcm["areas"][key][cfg.BEHAVIOR_CODE] for key in bcm["areas"]]:
                 if code not in existing_codes:
                     bcm_code_not_found.append(code)
 
@@ -590,7 +590,7 @@ class projectDialog(QDialog, Ui_dlgProject):
             self.twBehavCodingMap.setRowCount(self.twBehavCodingMap.rowCount() + 1)
 
             self.twBehavCodingMap.setItem(self.twBehavCodingMap.rowCount() - 1, 0, QTableWidgetItem(bcm["name"]))
-            codes = ", ".join([bcm["areas"][idx]["code"] for idx in bcm["areas"]])
+            codes = ", ".join([bcm["areas"][idx][cfg.BEHAVIOR_CODE] for idx in bcm["areas"]])
             self.twBehavCodingMap.setItem(self.twBehavCodingMap.rowCount() - 1, 1, QTableWidgetItem(codes))
 
     def remove_behaviors_coding_map(self):
@@ -658,8 +658,8 @@ class projectDialog(QDialog, Ui_dlgProject):
             # check if behavior belong to removed category
             if bc.removed:
                 for row in range(self.twBehaviors.rowCount()):
-                    if self.twBehaviors.item(row, cfg.behavioursFields["category"]):
-                        if self.twBehaviors.item(row, cfg.behavioursFields["category"]).text() == bc.removed:
+                    if self.twBehaviors.item(row, cfg.behavioursFields[cfg.BEHAVIOR_CATEGORY]):
+                        if self.twBehaviors.item(row, cfg.behavioursFields[cfg.BEHAVIOR_CATEGORY]).text() == bc.removed:
                             if (
                                 dialog.MessageDialog(
                                     cfg.programName,
@@ -673,12 +673,17 @@ class projectDialog(QDialog, Ui_dlgProject):
                                 )
                                 == cfg.YES
                             ):
-                                self.twBehaviors.item(row, cfg.behavioursFields["category"]).setText("")
+                                self.twBehaviors.item(row, cfg.behavioursFields[cfg.BEHAVIOR_CATEGORY]).setText("")
             if bc.renamed:
                 for row in range(self.twBehaviors.rowCount()):
-                    if self.twBehaviors.item(row, cfg.behavioursFields["category"]):
-                        if self.twBehaviors.item(row, cfg.behavioursFields["category"]).text() == bc.renamed[0]:
-                            self.twBehaviors.item(row, cfg.behavioursFields["category"]).setText(bc.renamed[1])
+                    if self.twBehaviors.item(row, cfg.behavioursFields[cfg.BEHAVIOR_CATEGORY]):
+                        if (
+                            self.twBehaviors.item(row, cfg.behavioursFields[cfg.BEHAVIOR_CATEGORY]).text()
+                            == bc.renamed[0]
+                        ):
+                            self.twBehaviors.item(row, cfg.behavioursFields[cfg.BEHAVIOR_CATEGORY]).setText(
+                                bc.renamed[1]
+                            )
 
     def twBehaviors_cellDoubleClicked(self, row: int, column: int) -> None:
         """
@@ -712,14 +717,14 @@ class projectDialog(QDialog, Ui_dlgProject):
             self.behavior_type_doubleclicked(row)
 
         # color
-        if column == cfg.behavioursFields["color"]:
+        if column == cfg.behavioursFields[cfg.COLOR]:
             self.color_doubleclicked(row)
 
         # behavioral category
-        if column == cfg.behavioursFields["category"]:
+        if column == cfg.behavioursFields[cfg.BEHAVIOR_CATEGORY]:
             self.category_doubleclicked(row)
 
-        if column == cfg.behavioursFields["modifiers"]:
+        if column == cfg.behavioursFields[cfg.MODIFIERS]:
             # check if behavior has coding map
             if (
                 self.twBehaviors.item(row, cfg.behavioursFields["coding map"]) is not None
@@ -763,24 +768,28 @@ class projectDialog(QDialog, Ui_dlgProject):
 
             self.behaviorTypeChanged(row)
 
-    def color_doubleclicked(self, row):
+    def color_doubleclicked(self, row: int) -> None:
         """
         select a color for behavior
+        Selecting black delete the color
         """
 
         col_diag = QColorDialog()
         col_diag.setOptions(QColorDialog.ShowAlphaChannel | QColorDialog.DontUseNativeDialog)
 
-        if self.twBehaviors.item(row, cfg.behavioursFields["color"]).text():
-            current_color = QColor(self.twBehaviors.item(row, cfg.behavioursFields["color"]).text())
+        if self.twBehaviors.item(row, cfg.behavioursFields[cfg.COLOR]).text():
+            current_color = QColor(self.twBehaviors.item(row, cfg.behavioursFields[cfg.COLOR]).text())
             if current_color.isValid():
                 col_diag.setCurrentColor(current_color)
 
         if col_diag.exec_():
             color = col_diag.currentColor()
-            if color.isValid():
-                self.twBehaviors.item(row, cfg.behavioursFields["color"]).setText(color.name())
-                self.twBehaviors.item(row, cfg.behavioursFields["color"]).setBackground(color)
+            if color.name() == "#000000":  # delete color
+                self.twBehaviors.item(row, cfg.behavioursFields[cfg.COLOR]).setText("")
+                self.twBehaviors.item(row, cfg.behavioursFields[cfg.COLOR]).setBackground(QColor(230, 230, 230))
+            elif color.isValid():
+                self.twBehaviors.item(row, cfg.behavioursFields[cfg.COLOR]).setText(color.name())
+                self.twBehaviors.item(row, cfg.behavioursFields[cfg.COLOR]).setBackground(color)
 
     def category_doubleclicked(self, row):
         """
@@ -789,8 +798,8 @@ class projectDialog(QDialog, Ui_dlgProject):
 
         categories = ["None"] + self.pj[cfg.BEHAVIORAL_CATEGORIES] if cfg.BEHAVIORAL_CATEGORIES in self.pj else ["None"]
 
-        if self.twBehaviors.item(row, cfg.behavioursFields["category"]).text() in categories:
-            selected = categories.index(self.twBehaviors.item(row, cfg.behavioursFields["category"]).text())
+        if self.twBehaviors.item(row, cfg.behavioursFields[cfg.BEHAVIOR_CATEGORY]).text() in categories:
+            selected = categories.index(self.twBehaviors.item(row, cfg.behavioursFields[cfg.BEHAVIOR_CATEGORY]).text())
         else:
             selected = 0
 
@@ -801,7 +810,7 @@ class projectDialog(QDialog, Ui_dlgProject):
         if ok and category:
             if category == "None":
                 category = ""
-            self.twBehaviors.item(row, cfg.behavioursFields["category"]).setText(category)
+            self.twBehaviors.item(row, cfg.behavioursFields[cfg.BEHAVIOR_CATEGORY]).setText(category)
 
     def check_variable_default_value(self, txt, varType):
         """
@@ -1000,7 +1009,7 @@ class projectDialog(QDialog, Ui_dlgProject):
             return
 
         for row in range(self.twBehaviors.rowCount()):
-            if not self.twBehaviors.item(row, cfg.behavioursFields["code"]).text():
+            if not self.twBehaviors.item(row, cfg.behavioursFields[cfg.BEHAVIOR_CODE]).text():
                 QMessageBox.critical(
                     None,
                     cfg.programName,
@@ -1233,7 +1242,7 @@ class projectDialog(QDialog, Ui_dlgProject):
                 if field in (cfg.TYPE, "category", "excluded", "coding map", "modifiers"):
                     item.setFlags(Qt.ItemIsEnabled)
                     item.setBackground(QColor(230, 230, 230))
-                if field == "color":
+                if field == cfg.COLOR:
                     item.setFlags(Qt.ItemIsEnabled)
                     if QColor(self.twBehaviors.item(row, cfg.behavioursFields[field]).text()).isValid():
                         item.setBackground(QColor(self.twBehaviors.item(row, cfg.behavioursFields[field]).text()))
@@ -1292,7 +1301,7 @@ class projectDialog(QDialog, Ui_dlgProject):
             if field_type == cfg.TYPE:
                 item.setText("Point event")
             # no manual editing, gray back ground
-            if field_type in (cfg.TYPE, "color", "category", "modifiers", "excluded", "coding map"):
+            if field_type in (cfg.TYPE, cfg.COLOR, "category", cfg.MODIFIERS, "modifiers", "excluded", "coding map"):
                 item.setFlags(Qt.ItemIsEnabled)
                 item.setBackground(QColor(230, 230, 230))
             self.twBehaviors.setItem(self.twBehaviors.rowCount() - 1, cfg.behavioursFields[field_type], item)
@@ -1571,10 +1580,12 @@ class projectDialog(QDialog, Ui_dlgProject):
         for r in range(self.twBehaviors.rowCount()):
 
             if (
-                self.twBehaviors.item(r, cfg.behavioursFields["code"]).text()
-                != self.twBehaviors.item(r, cfg.behavioursFields["code"]).text().strip()
+                self.twBehaviors.item(r, cfg.behavioursFields[cfg.BEHAVIOR_CODE]).text()
+                != self.twBehaviors.item(r, cfg.behavioursFields[cfg.BEHAVIOR_CODE]).text().strip()
             ):
-                code_with_leading_trailing_spaces.append(self.twBehaviors.item(r, cfg.behavioursFields["code"]).text())
+                code_with_leading_trailing_spaces.append(
+                    self.twBehaviors.item(r, cfg.behavioursFields[cfg.BEHAVIOR_CODE]).text()
+                )
 
             if self.twBehaviors.item(r, cfg.behavioursFields["modifiers"]).text():
                 try:
@@ -1628,7 +1639,10 @@ class projectDialog(QDialog, Ui_dlgProject):
                 if self.twBehaviors.item(r, cfg.behavioursFields[field]):
 
                     # check for | char in code
-                    if field == "code" and "|" in self.twBehaviors.item(r, cfg.behavioursFields[field]).text():
+                    if (
+                        field == cfg.BEHAVIOR_CODE
+                        and "|" in self.twBehaviors.item(r, cfg.behavioursFields[field]).text()
+                    ):
                         QMessageBox.warning(
                             self,
                             cfg.programName,
@@ -1671,7 +1685,7 @@ class projectDialog(QDialog, Ui_dlgProject):
                 else:
                     row[field] = ""
 
-            if (row["type"]) and (row["code"]):
+            if (row["type"]) and (row[cfg.BEHAVIOR_CODE]):
                 checked_ethogram[str(len(checked_ethogram))] = row
             else:
                 missing_data.append(str(r + 1))

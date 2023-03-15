@@ -1111,8 +1111,15 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
                 # behavior colors
                 self.plot_events.behav_color = {}
+
                 for idx, behavior in enumerate(util.all_behaviors(self.pj[cfg.ETHOGRAM])):
-                    self.plot_events.behav_color[behavior] = cfg.BEHAVIORS_PLOT_COLORS[idx]
+                    behav_key = [
+                        k for k in self.pj[cfg.ETHOGRAM] if self.pj[cfg.ETHOGRAM][k][cfg.BEHAVIOR_CODE] == behavior
+                    ][0]
+                    if cfg.COLOR in self.pj[cfg.ETHOGRAM][behav_key]:
+                        self.plot_events.behav_color[behavior] = self.pj[cfg.ETHOGRAM][behav_key][cfg.COLOR]
+                    else:
+                        self.plot_events.behav_color[behavior] = cfg.BEHAVIORS_PLOT_COLORS[idx]
 
                 self.plot_events.sendEvent.connect(self.signal_from_widget)
 
@@ -1135,16 +1142,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     def plot_timer_out(self):
         """
         timer for plotting visualizations: spectrogram, waveform, plot events
-        """
-        """
-        if (VISUALIZE_SPECTROGRAM not in self.pj[cfg.OBSERVATIONS][self.observationId] or
-                not self.pj[cfg.OBSERVATIONS][self.observationId][VISUALIZE_SPECTROGRAM]):
-            return
-        """
-        """
-        if self.playerType == LIVE:
-            QMessageBox.warning(self, cfg.programName, "The sound signal visualization is not available for live observations")
-            return
         """
 
         self.update_realtime_plot()
@@ -2709,9 +2706,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                         if field in (cfg.TYPE, "category", "excluded", "coding map", cfg.MODIFIERS):
                             item.setFlags(Qt.ItemIsEnabled)
                             item.setBackground(QColor(230, 230, 230))
-                        if field in ("color"):
+                        if field == cfg.COLOR:
                             item.setFlags(Qt.ItemIsEnabled)
-                            if QColor(newProjectWindow.pj[cfg.ETHOGRAM][i][field]).isValid():
+                            if QColor(newProjectWindow.pj[cfg.ETHOGRAM][i].get(field, "")).isValid():
                                 item.setBackground(QColor(newProjectWindow.pj[cfg.ETHOGRAM][i][field]))
                             else:
                                 item.setBackground(QColor(230, 230, 230))
