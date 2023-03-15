@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'observation.ui'
+# Form implementation generated from reading ui file 'boris/observation.ui'
 #
 # Created by: PyQt5 UI code generator 5.15.7
 #
@@ -381,7 +381,7 @@ class Ui_Form(object):
 
         self.retranslateUi(Form)
         self.sw_observation_type.setCurrentIndex(1)
-        self.tabWidget.setCurrentIndex(0)
+        self.tabWidget.setCurrentIndex(1)
         QtCore.QMetaObject.connectSlotsByName(Form)
 
     def retranslateUi(self, Form):
@@ -448,7 +448,7 @@ class Ui_Form(object):
         item.setText(_translate("Form", "Color"))
         self.pb_add_data_file.setText(_translate("Form", "Add data file"))
         self.pb_remove_data_file.setText(_translate("Form", "Remove selected data file"))
-        self.pb_view_data_head.setText(_translate("Form", "View first rows"))
+        self.pb_view_data_head.setText(_translate("Form", "View data from file"))
         self.pb_plot_data.setText(_translate("Form", "Show plot"))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab_data_files), _translate("Form", "Data files"))
         self.label_4.setText(_translate("Form", "Scan sampling every"))
