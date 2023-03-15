@@ -88,7 +88,7 @@ def init_behav(ethogram: dict, selected_subjects: list, distinct_behaviors, para
     initialize dictionary with subject, behaviors and modifiers
     """
 
-    behaviors = {}
+    behaviors: dict = {}
     for subj in selected_subjects:
         behaviors[subj] = {}
         for behavior in distinct_behaviors:
@@ -277,18 +277,27 @@ def create_behaviors_bar_plot(
 
                 n_occurences.append(behaviors[subject][behavior]["number of occurences"])
                 x_labels.append(behavior)
-                try:
-                    colors.append(util.behavior_color(plot_colors, all_behaviors.index(behavior)))
-                except Exception:
-                    colors.append("darkgray")
+
+                # color
+                behav_idx = [k for k in pj[cfg.ETHOGRAM] if pj[cfg.ETHOGRAM][k]["code"] == behavior][0]
+                if "color" in pj[cfg.ETHOGRAM][behav_idx]:
+                    colors.append(pj[cfg.ETHOGRAM][behav_idx]["color"])
+                else:
+                    try:
+                        colors.append(util.behavior_color(plot_colors, all_behaviors.index(behavior)))
+                    except Exception:
+                        colors.append("darkgray")
 
                 if cfg.STATE in project_functions.event_type(behavior, pj[cfg.ETHOGRAM]):
                     durations.append(behaviors[subject][behavior]["duration"])
                     x_labels_duration.append(behavior)
-                    try:
-                        colors_duration.append(util.behavior_color(plot_colors, all_behaviors.index(behavior)))
-                    except Exception:
-                        colors_duration.append("darkgray")
+                    if "color" in pj[cfg.ETHOGRAM][behav_idx]:
+                        colors_duration.append(pj[cfg.ETHOGRAM][behav_idx]["color"])
+                    else:
+                        try:
+                            colors_duration.append(util.behavior_color(plot_colors, all_behaviors.index(behavior)))
+                        except Exception:
+                            colors_duration.append("darkgray")
 
             # width = 0.35       # the width of the bars: can also be len(x) sequence
 

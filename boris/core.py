@@ -2706,9 +2706,15 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                         else:
                             item.setText("")
                         # cell with gray background (not editable but double-click needed to change value)
-                        if field in [cfg.TYPE, "category", "excluded", "coding map", cfg.MODIFIERS]:
+                        if field in (cfg.TYPE, "category", "excluded", "coding map", cfg.MODIFIERS):
                             item.setFlags(Qt.ItemIsEnabled)
                             item.setBackground(QColor(230, 230, 230))
+                        if field in ("color"):
+                            item.setFlags(Qt.ItemIsEnabled)
+                            if QColor(newProjectWindow.pj[cfg.ETHOGRAM][i][field]).isValid():
+                                item.setBackground(QColor(newProjectWindow.pj[cfg.ETHOGRAM][i][field]))
+                            else:
+                                item.setBackground(QColor(230, 230, 230))
 
                         newProjectWindow.twBehaviors.setItem(
                             newProjectWindow.twBehaviors.rowCount() - 1, cfg.behavioursFields[field], item

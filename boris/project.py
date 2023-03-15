@@ -44,6 +44,7 @@ from PyQt5.QtWidgets import (
     QSpacerItem,
     QTableWidgetItem,
     QVBoxLayout,
+    QColorDialog,
 )
 
 from . import add_modifier
@@ -311,24 +312,24 @@ class projectDialog(QDialog, Ui_dlgProject):
         self.row_in_modification = -1
         self.flag_modified = False
 
-        for w in [
+        for w in (
             self.le_converter_name,
             self.le_converter_description,
             self.pteCode,
             self.pb_save_converter,
             self.pb_cancel_converter,
-        ]:
+        ):
             w.setEnabled(False)
 
         # disable widget for indep var setting
-        for widget in [
+        for widget in (
             self.leLabel,
             self.le_converter_description,
             self.cbType,
             self.lePredefined,
             self.dte_default_date,
             self.leSetValues,
-        ]:
+        ):
             widget.setEnabled(False)
 
         self.twBehaviors.horizontalHeader().sortIndicatorChanged.connect(self.sort_twBehaviors)
@@ -679,9 +680,10 @@ class projectDialog(QDialog, Ui_dlgProject):
                         if self.twBehaviors.item(row, cfg.behavioursFields["category"]).text() == bc.renamed[0]:
                             self.twBehaviors.item(row, cfg.behavioursFields["category"]).setText(bc.renamed[1])
 
-    def twBehaviors_cellDoubleClicked(self, row, column):
+    def twBehaviors_cellDoubleClicked(self, row: int, column: int) -> None:
         """
         manage double-click on ethogram table:
+        * color
         * behavioral category
         * modifiers
         * exclusion
@@ -708,6 +710,10 @@ class projectDialog(QDialog, Ui_dlgProject):
         # check if double click on category
         if column == cfg.behavioursFields["type"]:
             self.behavior_type_doubleclicked(row)
+
+        # color
+        if column == cfg.behavioursFields["color"]:
+            self.color_doubleclicked(row)
 
         # behavioral category
         if column == cfg.behavioursFields["category"]:
@@ -756,6 +762,25 @@ class projectDialog(QDialog, Ui_dlgProject):
             self.twBehaviors.item(row, cfg.behavioursFields["type"]).setText(new_type)
 
             self.behaviorTypeChanged(row)
+
+    def color_doubleclicked(self, row):
+        """
+        select a color for behavior
+        """
+
+        col_diag = QColorDialog()
+        col_diag.setOptions(QColorDialog.ShowAlphaChannel | QColorDialog.DontUseNativeDialog)
+
+        if self.twBehaviors.item(row, cfg.behavioursFields["color"]).text():
+            current_color = QColor(self.twBehaviors.item(row, cfg.behavioursFields["color"]).text())
+            if current_color.isValid():
+                col_diag.setCurrentColor(current_color)
+
+        if col_diag.exec_():
+            color = col_diag.currentColor()
+            if color.isValid():
+                self.twBehaviors.item(row, cfg.behavioursFields["color"]).setText(color.name())
+                self.twBehaviors.item(row, cfg.behavioursFields["color"]).setBackground(color)
 
     def category_doubleclicked(self, row):
         """
@@ -1205,9 +1230,15 @@ class projectDialog(QDialog, Ui_dlgProject):
             for field in cfg.behavioursFields:
                 item = QTableWidgetItem(self.twBehaviors.item(row, cfg.behavioursFields[field]))
                 self.twBehaviors.setItem(self.twBehaviors.rowCount() - 1, cfg.behavioursFields[field], item)
-                if field in [cfg.TYPE, "category", "excluded", "coding map", "modifiers"]:
+                if field in (cfg.TYPE, "category", "excluded", "coding map", "modifiers"):
                     item.setFlags(Qt.ItemIsEnabled)
                     item.setBackground(QColor(230, 230, 230))
+                if field == "color":
+                    item.setFlags(Qt.ItemIsEnabled)
+                    if QColor(self.twBehaviors.item(row, cfg.behavioursFields[field]).text()).isValid():
+                        item.setBackground(QColor(self.twBehaviors.item(row, cfg.behavioursFields[field]).text()))
+                    else:
+                        item.setBackground(QColor(230, 230, 230))
         self.twBehaviors.scrollToBottom()
 
     def remove_behavior(self):
@@ -1261,7 +1292,7 @@ class projectDialog(QDialog, Ui_dlgProject):
             if field_type == cfg.TYPE:
                 item.setText("Point event")
             # no manual editing, gray back ground
-            if field_type in [cfg.TYPE, "category", "modifiers", "excluded", "coding map"]:
+            if field_type in (cfg.TYPE, "color", "category", "modifiers", "excluded", "coding map"):
                 item.setFlags(Qt.ItemIsEnabled)
                 item.setBackground(QColor(230, 230, 230))
             self.twBehaviors.setItem(self.twBehaviors.rowCount() - 1, cfg.behavioursFields[field_type], item)

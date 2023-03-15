@@ -220,10 +220,11 @@ behavioursFields: dict = {
     "key": 1,
     "code": 2,
     "description": 3,
-    "category": 4,
-    "modifiers": 5,
-    "excluded": 6,
-    "coding map": 7,
+    "color": 4,
+    "category": 5,
+    "modifiers": 6,
+    "excluded": 7,
+    "coding map": 8,
 }
 """
 ETHOGRAM_FIELDS = [
