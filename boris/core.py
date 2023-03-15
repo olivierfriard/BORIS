@@ -3804,13 +3804,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             # set video scroll bar
             if scroll_slider and not self.user_move_slider:
 
-                """print(f"{current_media_duration=}")"""
-
                 self.video_slider.setValue(
                     round(current_media_time_pos / current_media_duration * (cfg.SLIDER_MAXIMUM - 1))
                 )
 
-    def load_behaviors_in_twEthogram(self, behaviorsToShow):
+    def load_behaviors_in_twEthogram(self, behaviors_to_show: list) -> None:
         """
         fill ethogram table with ethogram from pj
         """
@@ -3818,22 +3816,28 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.twEthogram.setRowCount(0)
         if self.pj[cfg.ETHOGRAM]:
             for idx in util.sorted_keys(self.pj[cfg.ETHOGRAM]):
-                if self.pj[cfg.ETHOGRAM][idx][cfg.BEHAVIOR_CODE] in behaviorsToShow:
+                if self.pj[cfg.ETHOGRAM][idx][cfg.BEHAVIOR_CODE] in behaviors_to_show:
                     self.twEthogram.setRowCount(self.twEthogram.rowCount() + 1)
                     for idx_col in cfg.ETHOGRAM_TABLE_COLUMNS:
                         field = cfg.ETHOGRAM_TABLE_COLUMNS[idx_col]
-                        self.twEthogram.setItem(
-                            self.twEthogram.rowCount() - 1,
-                            idx_col,
-                            QTableWidgetItem(str(self.pj[cfg.ETHOGRAM][idx][field])),
-                        )
+                        if field == cfg.COLOR:
+                            item = QTableWidgetItem("")
+                            if QColor(self.pj[cfg.ETHOGRAM][idx].get(field, "")).isValid():
+                                item.setBackground(QColor(self.pj[cfg.ETHOGRAM][idx].get(field, "")))
+                            self.twEthogram.setItem(self.twEthogram.rowCount() - 1, idx_col, item)
+                        else:
+                            self.twEthogram.setItem(
+                                self.twEthogram.rowCount() - 1,
+                                idx_col,
+                                QTableWidgetItem(str(self.pj[cfg.ETHOGRAM][idx].get(field, ""))),
+                            )
         if self.twEthogram.rowCount() < len(self.pj[cfg.ETHOGRAM].keys()):
             self.dwEthogram.setWindowTitle(
                 f"Ethogram (filtered {self.twEthogram.rowCount()}/{len(self.pj[cfg.ETHOGRAM].keys())})"
             )
 
             if self.observationId:
-                self.pj[cfg.OBSERVATIONS][self.observationId]["filtered behaviors"] = behaviorsToShow
+                self.pj[cfg.OBSERVATIONS][self.observationId]["filtered behaviors"] = behaviors_to_show
         else:
             self.dwEthogram.setWindowTitle("Ethogram")
 

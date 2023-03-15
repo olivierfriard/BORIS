@@ -210,9 +210,10 @@ ETHOGRAM_TABLE_COLUMNS: dict = {
     1: "code",
     2: "type",
     3: "description",
-    4: "category",
-    5: "modifiers",
-    6: "excluded",
+    4: "color",
+    5: "category",
+    6: "modifiers",
+    7: "excluded",
 }
 
 # fields in ethogram table from project window
@@ -676,6 +677,7 @@ INIT_PARAM = {
 
 SDIS_EXT = "sds"
 TBS_EXT = "tbs"
+TSV_EXT = "tsv"
 
 # Output format
 TSV = "Tab Separated Values (*.tsv)"
@@ -694,7 +696,7 @@ TBS = "Timed Behavioral Sequences (*.tbs)"
 TEXT_FILE = "Text file"
 
 FILE_NAME_SUFFIX = {
-    TSV: "tsv",
+    TSV: TSV_EXT,
     CSV: "csv",
     ODS: "ods",
     ODS_WB: "ods",

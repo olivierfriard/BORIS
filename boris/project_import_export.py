@@ -71,7 +71,7 @@ def export_ethogram(self) -> None:
         "Legacy Microsoft Excel Spreadsheet XLS (*.xls)",
         "HTML (*.html)",
     ]
-    file_formats = ["boris", "tsv", "csv", "ods", "xlsx", "xls", "html"]
+    file_formats = ["boris", cfg.TSV_EXT, "csv", "ods", "xlsx", "xls", "html"]
 
     filediag_func = QFileDialog().getSaveFileName
 
