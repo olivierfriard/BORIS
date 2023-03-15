@@ -96,10 +96,11 @@ class Advanced_event_filtering_dialog(QDialog):
 
         vbox = QVBoxLayout()
 
-        lb = QLabel("Filter")
-        vbox.addWidget(lb)
+        self.lb_time_interval = QLabel()
+        vbox.addWidget(self.lb_time_interval)
 
         hbox = QHBoxLayout()
+        hbox.addWidget(QLabel("Filter"))
         self.logic = QLineEdit("")
         hbox.addWidget(self.logic)
         self.pb_filter = QPushButton("Filter events", clicked=self.filter)
@@ -434,11 +435,11 @@ def event_filtering(self):
     # create intervals from DB
     cursor.execute("SELECT observation, subject, behavior, start, stop FROM aggregated_events")
 
-    events = {}
+    events: dict = {}
     for row in cursor.fetchall():
         obs, subj, behav, start, stop = row
         if obs not in events:
-            events[obs] = {}
+            events[obs]: dict = {}
 
         # use function in base at event (state or point)
         interval_func = icc if start == stop else ico
@@ -451,4 +452,5 @@ def event_filtering(self):
             events[obs][f"{subj}|{behav}"] |= interval_func([start, stop])
 
     w = Advanced_event_filtering_dialog(events)
+    w.lb_time_interval.setText(f"Time interval: {min_time} - {max_time} s")
     w.exec_()
