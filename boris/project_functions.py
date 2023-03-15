@@ -73,6 +73,7 @@ def check_observation_exhaustivity(
             events_interval[event[cfg.EVENT_SUBJECT_FIELD_IDX]][event[cfg.EVENT_BEHAVIOR_FIELD_IDX]] = I.empty()
             mem_events_interval[event[cfg.EVENT_SUBJECT_FIELD_IDX]][event[cfg.EVENT_BEHAVIOR_FIELD_IDX]] = []
 
+        # state event
         if event[cfg.EVENT_BEHAVIOR_FIELD_IDX] in state_events_list:
             mem_events_interval[event[cfg.EVENT_SUBJECT_FIELD_IDX]][event[cfg.EVENT_BEHAVIOR_FIELD_IDX]].append(
                 event[cfg.EVENT_TIME_FIELD_IDX]
@@ -85,6 +86,7 @@ def check_observation_exhaustivity(
                     mem_events_interval[event[cfg.EVENT_SUBJECT_FIELD_IDX]][event[cfg.EVENT_BEHAVIOR_FIELD_IDX]][1],
                 )
                 mem_events_interval[event[cfg.EVENT_SUBJECT_FIELD_IDX]][event[cfg.EVENT_BEHAVIOR_FIELD_IDX]] = []
+        # point event
         else:
             events_interval[event[cfg.EVENT_SUBJECT_FIELD_IDX]][event[cfg.EVENT_BEHAVIOR_FIELD_IDX]] |= I.singleton(
                 event[cfg.EVENT_TIME_FIELD_IDX]

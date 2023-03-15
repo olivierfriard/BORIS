@@ -78,8 +78,14 @@ class Advanced_event_filtering_dialog(QDialog):
     Dialog for visualizing advanced event filtering results
     """
 
-    summary_header = ["Observation id", "Number of occurences", "Total duration (s)", "Duration mean (s)", "Std Dev"]
-    details_header = ["Observation id", "Comment", "Start time", "Stop time", "Duration (s)"]
+    summary_header: tuple = (
+        "Observation id",
+        "Number of occurences",
+        "Total duration (s)",
+        "Duration mean (s)",
+        "Std Dev",
+    )
+    details_header: tuple = ("Observation id", "Comment", "Start time", "Stop time", "Duration (s)")
 
     def __init__(self, events):
         super().__init__()
@@ -379,29 +385,58 @@ def event_filtering(self):
 
     cursor = db_connector.cursor()
 
-    if parameters[cfg.TIME_INTERVAL] == cfg.TIME_EVENTS:
+    if parameters[cfg.TIME_INTERVAL] in (cfg.TIME_EVENTS, cfg.TIME_FULL_OBS):
         cursor.execute("SELECT MIN(start), MAX(stop) FROM aggregated_events")
         min_time, max_time = cursor.fetchone()
+
+    if parameters[cfg.TIME_INTERVAL] == cfg.TIME_ARBITRARY_INTERVAL:
+        min_time = float(parameters[cfg.START_TIME])
+        max_time = float(parameters[cfg.END_TIME])
+
+    cursor.execute(
+        "UPDATE aggregated_events SET start = ? WHERE start < ? AND stop BETWEEN ? AND ?",
+        (
+            min_time,
+            min_time,
+            min_time,
+            max_time,
+        ),
+    )
+    cursor.execute(
+        "UPDATE aggregated_events SET stop = ? WHERE stop > ? AND start BETWEEN ? AND ?",
+        (
+            max_time,
+            max_time,
+            min_time,
+            max_time,
+        ),
+    )
+    cursor.execute(
+        "UPDATE aggregated_events SET start = ?, stop = ? WHERE start < ? AND stop > ?",
+        (
+            min_time,
+            max_time,
+            min_time,
+            max_time,
+        ),
+    )
+
+    cursor.execute(
+        "DELETE FROM aggregated_events WHERE (start < ? AND stop < ?) OR (start > ? AND stop > ?)",
+        (
+            min_time,
+            min_time,
+            max_time,
+            max_time,
+        ),
+    )
 
     # create intervals from DB
     cursor.execute("SELECT observation, subject, behavior, start, stop FROM aggregated_events")
 
     events = {}
     for row in cursor.fetchall():
-
         obs, subj, behav, start, stop = row
-        # check if start and stop are in selected time interval
-        if stop < min_time:
-            continue
-        if start > max_time:
-            continue
-        """
-        if start < min_time:
-            start = float(parameters[cfg.START_TIME])
-        if stop > parameters[cfg.END_TIME]:
-            stop = float(parameters[cfg.END_TIME])
-        """
-
         if obs not in events:
             events[obs] = {}
 
@@ -413,7 +448,7 @@ def event_filtering(self):
             events[obs][f"{subj}|{behav}"] = interval_func([start, stop])
         else:
             # append to existing interval
-            events[obs][f"{subj}|{behav}"] = events[obs][f"{subj}|{behav}"] | interval_func([start, stop])
+            events[obs][f"{subj}|{behav}"] |= interval_func([start, stop])
 
     w = Advanced_event_filtering_dialog(events)
     w.exec_()
