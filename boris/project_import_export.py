@@ -101,12 +101,12 @@ def export_ethogram(self):
 
     for r in range(self.twBehaviors.rowCount()):
         row = []
-        for field in ["code", cfg.TYPE, "description", "key", "category", "excluded"]:
+        for field in ("code", cfg.TYPE, "description", "key", cfg.COLOR, "category", "excluded"):
             row.append(self.twBehaviors.item(r, cfg.behavioursFields[field]).text())
 
         # modifiers
-        if self.twBehaviors.item(r, cfg.behavioursFields["modifiers"]).text():
-            modifiers_dict = eval(self.twBehaviors.item(r, cfg.behavioursFields["modifiers"]).text())
+        if self.twBehaviors.item(r, cfg.behavioursFields[cfg.MODIFIERS]).text():
+            modifiers_dict = eval(self.twBehaviors.item(r, cfg.behavioursFields[cfg.MODIFIERS]).text())
             modifiers_list = []
             for key in modifiers_dict:
                 if modifiers_dict[key]["values"]:
@@ -356,7 +356,7 @@ def import_ethogram_from_dict(self, project: dict):
                 item.setBackground(QColor(230, 230, 230))
 
             else:
-                if field == "modifiers" and isinstance(project[cfg.ETHOGRAM][i][field], str):
+                if field == cfg.MODIFIERS and isinstance(project[cfg.ETHOGRAM][i][field], str):
                     modif_set_dict = {}
                     if project[cfg.ETHOGRAM][i][field]:
                         modif_set_list = project[cfg.ETHOGRAM][i][field].split("|")

@@ -784,7 +784,7 @@ class projectDialog(QDialog, Ui_dlgProject):
 
         if col_diag.exec_():
             color = col_diag.currentColor()
-            if color.name() == "#000000":  # delete color
+            if color.name() == "#000000":  # black -> delete color
                 self.twBehaviors.item(row, cfg.behavioursFields[cfg.COLOR]).setText("")
                 self.twBehaviors.item(row, cfg.behavioursFields[cfg.COLOR]).setBackground(QColor(230, 230, 230))
             elif color.isValid():
