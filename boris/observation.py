@@ -519,7 +519,7 @@ class Observation(QDialog, Ui_Form):
         # stats
         try:
             df = pd.read_csv(
-                file_name, sep=file_parameters["separator"], header=None if not file_parameters["has header"] else 1
+                file_name, sep=file_parameters["separator"], header=None if not file_parameters["has header"] else [0]
             )
             # set columns names to based 1 index
             if not file_parameters["has header"]:
@@ -658,7 +658,7 @@ class Observation(QDialog, Ui_Form):
             df = pd.read_csv(
                 data_file_path,
                 sep=file_parameters["separator"],
-                header=None if not file_parameters["has header"] else 1,
+                header=None if not file_parameters["has header"] else [0],
             )
             # set columns names to based 1 index
             if not file_parameters["has header"]:

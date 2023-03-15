@@ -228,7 +228,7 @@
        <item>
         <widget class="QTabWidget" name="tabWidget">
          <property name="currentIndex">
-          <number>0</number>
+          <number>1</number>
          </property>
          <widget class="QWidget" name="tab_player_1">
           <attribute name="title">
@@ -499,7 +499,7 @@
                  <item>
                   <widget class="QPushButton" name="pb_view_data_head">
                    <property name="text">
-                    <string>View first rows</string>
+                    <string>View data from file</string>
                    </property>
                   </widget>
                  </item>
