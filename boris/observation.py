@@ -23,6 +23,7 @@ This file is part of BORIS.
 import glob
 import logging
 import os
+import pandas as pd
 import pathlib as pl
 
 from PyQt5.QtCore import Qt
@@ -154,7 +155,7 @@ class Observation(QDialog, Ui_Form):
         self.pb_add_data_file.setMenu(menu_data)
 
         self.pb_remove_data_file.clicked.connect(self.remove_data_file)
-        self.pb_view_data_head.clicked.connect(self.view_data_file_head)
+        self.pb_view_data_head.clicked.connect(self.view_data_file_head_tail)
         self.pb_plot_data.clicked.connect(self.plot_data_file)
 
         self.pb_use_media_file_name_as_obsid.clicked.connect(self.use_media_file_name_as_obsid)
@@ -497,7 +498,7 @@ class Observation(QDialog, Ui_Form):
             QMessageBox.critical(self, cfg.programName, f"Error on file {pl.Path(file_name).name}")
             return
 
-        w = dialog.View_data_head()
+        w = dialog.View_data()
         w.setWindowTitle(f"View data")
         w.lb.setText(f"View first and last rows of <b>{pl.Path(file_name).name}</b> file")
         """w.setWindowFlags(Qt.WindowStaysOnTopHint)"""
@@ -515,6 +516,21 @@ class Observation(QDialog, Ui_Form):
                 item = QTableWidgetItem(v)
                 item.setFlags(Qt.ItemIsEnabled)
                 w.tw.setItem(idx, col, item)
+
+        print(file_parameters)
+        # stats
+        try:
+            df = pd.read_csv(
+                file_name, sep=file_parameters["separator"], header=None if not file_parameters["has header"] else 1
+            )
+            # set columns names to based 1 index
+            if not file_parameters["has header"]:
+                df.columns = range(1, len(df.columns) + 1)
+
+            stats_out = str(df.describe())
+        except Exception:
+            stats_out = "Not available"
+        w.stats.setPlainText(stats_out)
 
         """
         for row in range(len(header)):
@@ -594,7 +610,7 @@ class Observation(QDialog, Ui_Form):
         combobox.addItems(cfg.DATA_PLOT_STYLES)
         self.tw_data_files.setCellWidget(self.tw_data_files.rowCount() - 1, cfg.PLOT_DATA_PLOTCOLOR_IDX, combobox)
 
-    def view_data_file_head(self):
+    def view_data_file_head_tail(self) -> None:
         """
         view first and last rows of data file
         """
@@ -605,7 +621,7 @@ class Observation(QDialog, Ui_Form):
         if self.tw_data_files.rowCount() == 1:
             data_file_path = project_functions.full_path(self.tw_data_files.item(0, 0).text(), self.project_path)
             columns_to_plot = self.tw_data_files.item(0, 1).text()
-        else:
+        else:  #  selected file
             data_file_path = project_functions.full_path(
                 self.tw_data_files.item(self.tw_data_files.selectedIndexes()[0].row(), 0).text(), self.project_path
             )
@@ -624,7 +640,7 @@ class Observation(QDialog, Ui_Form):
             QMessageBox.critical(self, cfg.programName, f"Error on file {pl.Path(data_file_path).name}")
             return
 
-        w = dialog.View_data_head()
+        w = dialog.View_data()
         w.setWindowTitle(f"View data")
         w.lb.setText(f"View first and last rows of <b>{pl.Path(data_file_path).name}</b> file")
         w.pbOK.setText("Close")
@@ -646,6 +662,15 @@ class Observation(QDialog, Ui_Form):
                 item = QTableWidgetItem(v)
                 item.setFlags(Qt.ItemIsEnabled)
                 w.tw.setItem(idx, col, item)
+
+        # stats
+        try:
+            df = pd.read_csv(data_file_path, sep=file_parameters["separator"])
+            stats_out = str(df.describe())
+            print(stats_out)
+        except Exception:
+            stats_out = "Not available"
+        w.stats.setPlainText(stats_out)
 
         w.exec_()
 

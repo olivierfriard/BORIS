@@ -53,6 +53,7 @@ from PyQt5.QtWidgets import (
     QVBoxLayout,
     QWidget,
 )
+from PyQt5.QtGui import QFont
 
 from . import config as cfg
 from . import duration_widget
@@ -785,7 +786,7 @@ class Results_dialog(QDialog):
             self.done(cfg.SAVE_DATASET)
 
 
-class View_data_head(QDialog):
+class View_data(QDialog):
     """
     widget for visualizing rows of data file
     """
@@ -801,7 +802,15 @@ class View_data_head(QDialog):
         vbox.addWidget(self.lb)
 
         self.tw = QTableWidget()
+        self.tw.verticalHeader().hide()
         vbox.addWidget(self.tw)
+
+        self.stats = QPlainTextEdit()
+        font = QFont()
+        font.setFamily("Monospace")
+        self.stats.setFont(font)
+
+        vbox.addWidget(self.stats)
 
         self.label = QLabel("Enter the column indices to plot (time, value) separated by comma (,)")
         vbox.addWidget(self.label)
@@ -823,7 +832,7 @@ class View_data_head(QDialog):
 
         self.setLayout(vbox)
 
-        self.resize(540, 640)
+        self.resize(800, 640)
 
 
 class View_explore_project_results(QWidget):

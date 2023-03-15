@@ -598,7 +598,7 @@ def check_txt_file(file_name: str) -> dict:
             buff = csvfile.read(4096)
             snif = csv.Sniffer()
             dialect = snif.sniff(buff)
-            """has_header = snif.has_header(buff)"""
+            has_header = snif.has_header(buff)
 
         csv.register_dialect("dialect", dialect)
         rows_len: list = []
@@ -628,6 +628,7 @@ def check_txt_file(file_name: str) -> dict:
                 "fields number": rows_len[0],
                 "separator": dialect.delimiter,
                 "rows number": rows_number,
+                "has header": has_header,
             }
         else:
             return {"homogeneous": False}

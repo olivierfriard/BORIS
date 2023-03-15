@@ -2469,13 +2469,13 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                         for idx in pj[cfg.ETHOGRAM]:
                             pj[cfg.ETHOGRAM][idx]["key"] = pj[cfg.ETHOGRAM][idx]["key"].lower()
                             # convert modifier short cuts to lower case
-                            for modifier_set in pj[cfg.ETHOGRAM][idx]["modifiers"]:
+                            for modifier_set in pj[cfg.ETHOGRAM][idx][cfg.MODIFIERS]:
                                 try:
                                     for idx2, value in enumerate(
-                                        pj[cfg.ETHOGRAM][idx]["modifiers"][modifier_set]["values"]
+                                        pj[cfg.ETHOGRAM][idx][cfg.MODIFIERS][modifier_set]["values"]
                                     ):
                                         if re.findall(r"\((\w+)\)", value):
-                                            pj[cfg.ETHOGRAM][idx]["modifiers"][modifier_set]["values"][idx2] = (
+                                            pj[cfg.ETHOGRAM][idx][cfg.MODIFIERS][modifier_set]["values"][idx2] = (
                                                 value.split("(")[0]
                                                 + "("
                                                 + re.findall(r"\((\w+)\)", value)[0].lower()
@@ -2695,7 +2695,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                         if field == cfg.TYPE:
                             item.setText(cfg.DEFAULT_BEHAVIOR_TYPE)
                         if field in newProjectWindow.pj[cfg.ETHOGRAM][i]:
-                            if field == "modifiers":
+                            if field == cfg.MODIFIERS:
                                 item.setText(
                                     json.dumps(newProjectWindow.pj[cfg.ETHOGRAM][i][field])
                                     if newProjectWindow.pj[cfg.ETHOGRAM][i][field]
@@ -2706,7 +2706,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                         else:
                             item.setText("")
                         # cell with gray background (not editable but double-click needed to change value)
-                        if field in [cfg.TYPE, "category", "excluded", "coding map", "modifiers"]:
+                        if field in [cfg.TYPE, "category", "excluded", "coding map", cfg.MODIFIERS]:
                             item.setFlags(Qt.ItemIsEnabled)
                             item.setBackground(QColor(230, 230, 230))
 
@@ -4033,26 +4033,26 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             # check if event has modifiers
             modifier_str = ""
 
-            if event["modifiers"]:
+            if event[cfg.MODIFIERS]:
 
                 selected_modifiers, modifiers_external_data = {}, {}
                 # check if modifiers are from external data
-                for idx in event["modifiers"]:
+                for idx in event[cfg.MODIFIERS]:
 
-                    if event["modifiers"][idx]["type"] == cfg.EXTERNAL_DATA_MODIFIER:
+                    if event[cfg.MODIFIERS][idx]["type"] == cfg.EXTERNAL_DATA_MODIFIER:
 
                         if "row" not in event:  # no edit
                             for idx2 in self.plot_data:
-                                if self.plot_data[idx2].y_label.upper() == event["modifiers"][idx]["name"].upper():
-                                    modifiers_external_data[idx] = dict(event["modifiers"][idx])
+                                if self.plot_data[idx2].y_label.upper() == event[cfg.MODIFIERS][idx]["name"].upper():
+                                    modifiers_external_data[idx] = dict(event[cfg.MODIFIERS][idx])
                                     modifiers_external_data[idx]["selected"] = self.plot_data[idx2].lb_value.text()
                         else:  # edit
                             original_modifiers_list = event.get("original_modifiers", "").split("|")
-                            modifiers_external_data[idx] = dict(event["modifiers"][idx])
+                            modifiers_external_data[idx] = dict(event[cfg.MODIFIERS][idx])
                             modifiers_external_data[idx]["selected"] = original_modifiers_list[int(idx)]
 
                 # check if modifiers are in single, multiple or numeric
-                if [x for x in event["modifiers"] if event["modifiers"][x]["type"] != cfg.EXTERNAL_DATA_MODIFIER]:
+                if [x for x in event[cfg.MODIFIERS] if event[cfg.MODIFIERS][x]["type"] != cfg.EXTERNAL_DATA_MODIFIER]:
 
                     # pause media
                     if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE] in [cfg.MEDIA]:
@@ -4070,7 +4070,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     currentModifiers = event.get("original_modifiers", "")
 
                     modifiers_selector = select_modifiers.ModifiersList(
-                        event["code"], eval(str(event["modifiers"])), currentModifiers
+                        event["code"], eval(str(event[cfg.MODIFIERS])), currentModifiers
                     )
 
                     r = modifiers_selector.exec_()
