@@ -58,7 +58,7 @@ def export_project_as_pickle_object(pj: dict) -> None:
         )
 
 
-def export_ethogram(self):
+def export_ethogram(self) -> None:
     """
     export ethogram in various format
     """
@@ -153,7 +153,7 @@ def export_ethogram(self):
             QMessageBox.critical(None, cfg.programName, msg, QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
 
 
-def export_subjects(self):
+def export_subjects(self) -> None:
     """
     export the subjetcs list in various format
     """
