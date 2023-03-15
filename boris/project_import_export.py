@@ -158,14 +158,14 @@ def export_subjects(self):
     export the subjetcs list in various format
     """
     extended_file_formats = [
-        "Tab Separated Values (*.tsv)",
-        "Comma Separated Values (*.csv)",
-        "Open Document Spreadsheet ODS (*.ods)",
-        "Microsoft Excel Spreadsheet XLSX (*.xlsx)",
-        "Legacy Microsoft Excel Spreadsheet XLS (*.xls)",
-        "HTML (*.html)",
+        cfg.TSV,
+        cfg.CSV,
+        cfg.ODS,
+        cfg.XLSX,
+        cfg.XLS,
+        cfg.HMTL,
     ]
-    file_formats = ["tsv", "csv", "ods", "xlsx", "xls", "html"]
+    file_formats = [cfg.TSV_EXT, "csv", "ods", "xlsx", "xls", "html"]
 
     filediag_func = QFileDialog().getSaveFileName
 
