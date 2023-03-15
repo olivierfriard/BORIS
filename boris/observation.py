@@ -501,7 +501,6 @@ class Observation(QDialog, Ui_Form):
         w = dialog.View_data()
         w.setWindowTitle(f"View data")
         w.lb.setText(f"View first and last rows of <b>{pl.Path(file_name).name}</b> file")
-        """w.setWindowFlags(Qt.WindowStaysOnTopHint)"""
 
         w.tw.setColumnCount(file_parameters["fields number"])
         if footer:
@@ -517,7 +516,6 @@ class Observation(QDialog, Ui_Form):
                 item.setFlags(Qt.ItemIsEnabled)
                 w.tw.setItem(idx, col, item)
 
-        print(file_parameters)
         # stats
         try:
             df = pd.read_csv(
@@ -531,14 +529,6 @@ class Observation(QDialog, Ui_Form):
         except Exception:
             stats_out = "Not available"
         w.stats.setPlainText(stats_out)
-
-        """
-        for row in range(len(header)):
-            for col, v in enumerate(header[row].split(file_parameters["separator"])):
-                item = QTableWidgetItem(v)
-                item.setFlags(Qt.ItemIsEnabled)
-                w.tw.setItem(row, col, item)
-        """
 
         while True:
             flag_ok = True
@@ -665,9 +655,16 @@ class Observation(QDialog, Ui_Form):
 
         # stats
         try:
-            df = pd.read_csv(data_file_path, sep=file_parameters["separator"])
+            df = pd.read_csv(
+                data_file_path,
+                sep=file_parameters["separator"],
+                header=None if not file_parameters["has header"] else 1,
+            )
+            # set columns names to based 1 index
+            if not file_parameters["has header"]:
+                df.columns = range(1, len(df.columns) + 1)
+
             stats_out = str(df.describe())
-            print(stats_out)
         except Exception:
             stats_out = "Not available"
         w.stats.setPlainText(stats_out)

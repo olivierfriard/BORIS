@@ -805,6 +805,8 @@ class View_data(QDialog):
         self.tw.verticalHeader().hide()
         vbox.addWidget(self.tw)
 
+        vbox.addWidget(QLabel("Descriptive statistics"))
+
         self.stats = QPlainTextEdit()
         font = QFont()
         font.setFamily("Monospace")
