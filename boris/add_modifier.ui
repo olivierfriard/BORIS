@@ -124,24 +124,24 @@
           </widget>
          </item>
          <item>
-          <widget class="QLabel" name="lbSetName">
+          <widget class="QLabel" name="lb_name">
            <property name="text">
             <string>Set name</string>
            </property>
           </widget>
          </item>
          <item>
-          <widget class="QLineEdit" name="leSetName"/>
+          <widget class="QLineEdit" name="le_name"/>
          </item>
          <item>
-          <widget class="QLabel" name="label">
+          <widget class="QLabel" name="lb_description">
            <property name="text">
             <string>Description</string>
            </property>
           </widget>
          </item>
          <item>
-          <widget class="QLineEdit" name="le_set_description"/>
+          <widget class="QLineEdit" name="le_description"/>
          </item>
          <item>
           <widget class="QLabel" name="lbType">

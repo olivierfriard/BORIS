@@ -65,8 +65,8 @@ class addModifierDialog(QDialog, Ui_Dialog):
         self.pbOK.clicked.connect(lambda: self.pb_pushed("ok"))
         self.pbCancel.clicked.connect(lambda: self.pb_pushed("cancel"))
 
-        self.leSetName.textChanged.connect(self.set_name_changed)
-        self.le_set_description.textChanged.connect(self.set_description_changed)
+        self.le_name.textChanged.connect(self.set_name_changed)
+        self.le_description.textChanged.connect(self.set_description_changed)
 
         self.cbType.currentIndexChanged.connect(self.type_changed)
 
@@ -86,11 +86,13 @@ class addModifierDialog(QDialog, Ui_Dialog):
             self.tabWidgetModifiersSets.addTab(QWidget(), f"Set #{int(idx) + 1}")
 
         if self.tabWidgetModifiersSets.currentIndex() == -1:
-            for w in [
-                self.lbSetName,
+            for w in (
+                self.lb_name,
+                self.le_name,
                 self.lbType,
                 self.lbValues,
-                self.leSetName,
+                self.lb_description,
+                self.le_description,
                 self.cbType,
                 self.lwModifiers,
                 self.pbMoveUp,
@@ -102,9 +104,9 @@ class addModifierDialog(QDialog, Ui_Dialog):
                 self.pb_add_subjects,
                 self.pb_load_file,
                 self.pb_sort_modifiers,
-            ]:
+            ):
                 w.setVisible(False)
-            for w in [self.leModifier, self.leCode, self.pbAddModifier, self.pbModifyModifier]:
+            for w in (self.leModifier, self.leCode, self.pbAddModifier, self.pbModifyModifier):
                 w.setEnabled(False)
 
         # set first tab as active
@@ -212,19 +214,17 @@ class addModifierDialog(QDialog, Ui_Dialog):
         """
         if not self.modifiers_sets_dict:
             self.modifiers_sets_dict["0"] = {"name": "", "description": "", "type": cfg.SINGLE_SELECTION, "values": []}
-        self.modifiers_sets_dict[str(self.tabWidgetModifiersSets.currentIndex())][
-            "name"
-        ] = self.leSetName.text().strip()
+        self.modifiers_sets_dict[str(self.tabWidgetModifiersSets.currentIndex())]["name"] = self.le_name.text().strip()
 
     def set_description_changed(self):
         """
-        set name changed
+        set description changed
         """
         if not self.modifiers_sets_dict:
             self.modifiers_sets_dict["0"] = {"name": "", "description": "", "type": cfg.SINGLE_SELECTION, "values": []}
         self.modifiers_sets_dict[str(self.tabWidgetModifiersSets.currentIndex())][
             "description"
-        ] = self.le_set_description.text().strip()
+        ] = self.le_description.text().strip()
 
     def type_changed(self):
         """
@@ -234,7 +234,7 @@ class addModifierDialog(QDialog, Ui_Dialog):
             self.modifiers_sets_dict["0"] = {"name": "", "description": "", "type": cfg.SINGLE_SELECTION, "values": []}
         self.modifiers_sets_dict[str(self.tabWidgetModifiersSets.currentIndex())]["type"] = self.cbType.currentIndex()
         # disable if modifier numeric or value from external data file
-        for obj in [
+        for obj in (
             self.lbValues,
             self.lwModifiers,
             self.leModifier,
@@ -250,12 +250,12 @@ class addModifierDialog(QDialog, Ui_Dialog):
             self.pbModifyModifier,
             self.pb_load_file,
             self.pb_sort_modifiers,
-        ]:
+        ):
             obj.setEnabled(self.cbType.currentIndex() not in [cfg.NUMERIC_MODIFIER, cfg.EXTERNAL_DATA_MODIFIER])
         if self.cbType.currentIndex() == cfg.EXTERNAL_DATA_MODIFIER:
-            self.lbSetName.setText("Variable name")
+            self.lb_name.setText("Variable name")
         else:
-            self.lbSetName.setText("Set name")
+            self.lb_name.setText("Set name")
 
     def moveSetLeft(self):
         """
@@ -333,12 +333,13 @@ class addModifierDialog(QDialog, Ui_Dialog):
             self.tabMem = self.tabWidgetModifiersSets.currentIndex()
 
             # set visible and available buttons and others elements
-            for w in [
-                self.lbSetName,
+            for w in (
+                self.lb_name,
                 self.lbType,
                 self.lbValues,
-                self.leSetName,
-                self.le_set_description,
+                self.le_name,
+                self.lb_description,
+                self.le_description,
                 self.cbType,
                 self.lwModifiers,
                 self.pbMoveUp,
@@ -350,7 +351,7 @@ class addModifierDialog(QDialog, Ui_Dialog):
                 self.pb_add_subjects,
                 self.pb_load_file,
                 self.pb_sort_modifiers,
-            ]:
+            ):
                 w.setVisible(True)
             for w in [self.leModifier, self.leCode, self.pbAddModifier, self.pbModifyModifier]:
                 w.setEnabled(True)
@@ -401,11 +402,13 @@ class addModifierDialog(QDialog, Ui_Dialog):
 
                 # set not visible and not available buttons and others elements
                 if self.tabWidgetModifiersSets.currentIndex() == -1:
-                    for w in [
-                        self.lbSetName,
+                    for w in (
+                        self.lb_name,
+                        self.le_name,
                         self.lbType,
                         self.lbValues,
-                        self.leSetName,
+                        self.lb_description,
+                        self.le_description,
                         self.cbType,
                         self.lwModifiers,
                         self.pbMoveUp,
@@ -414,7 +417,7 @@ class addModifierDialog(QDialog, Ui_Dialog):
                         self.pbRemoveSet,
                         self.pbMoveSetLeft,
                         self.pbMoveSetRight,
-                    ]:
+                    ):
                         w.setVisible(False)
                     for w in [self.leModifier, self.leCode, self.pbAddModifier, self.pbModifyModifier]:
                         w.setEnabled(False)
@@ -422,10 +425,12 @@ class addModifierDialog(QDialog, Ui_Dialog):
                 if not len(self.modifiers_sets_dict):
                     # set invisible and unavailable buttons and others elements
                     for w in [
-                        self.lbSetName,
+                        self.lb_name,
+                        self.le_name,
                         self.lbType,
                         self.lbValues,
-                        self.leSetName,
+                        self.lb_description,
+                        self.le_description,
                         self.cbType,
                         self.lwModifiers,
                         self.pbMoveUp,
@@ -599,8 +604,8 @@ class addModifierDialog(QDialog, Ui_Dialog):
             self.tabMem = tabIndex
 
             if tabIndex != -1:
-                self.leSetName.setText(self.modifiers_sets_dict[str(tabIndex)]["name"])
-                self.le_set_description.setText(self.modifiers_sets_dict[str(tabIndex)].get("description", ""))
+                self.le_name.setText(self.modifiers_sets_dict[str(tabIndex)]["name"])
+                self.le_description.setText(self.modifiers_sets_dict[str(tabIndex)].get("description", ""))
                 self.cbType.setCurrentIndex(self.modifiers_sets_dict[str(tabIndex)]["type"])
                 self.lwModifiers.addItems(self.modifiers_sets_dict[str(tabIndex)]["values"])
 
