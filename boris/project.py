@@ -665,7 +665,8 @@ class projectDialog(QDialog, Ui_dlgProject):
                                     cfg.programName,
                                     (
                                         f"The <b>{self.twBehaviors.item(row, cfg.behavioursFields['code']).text()}</b> behavior belongs "
-                                        f"to a behavioral category <b>{self.twBehaviors.item(row, cfg.behavioursFields['category']).text()}</b> "
+                                        "to a behavioral category "
+                                        f"<b>{self.twBehaviors.item(row, cfg.behavioursFields['category']).text()}</b> "
                                         "that is no more in the behavioral categories list.<br><br>"
                                         "Remove the behavior from category?"
                                     ),
@@ -1271,7 +1272,6 @@ class projectDialog(QDialog, Ui_dlgProject):
             if dialog.MessageDialog(cfg.programName, "Remove the selected behavior?", [cfg.YES, cfg.CANCEL]) == cfg.YES:
 
                 # check if behavior already used in observations
-                flag_break = False
                 codeToDelete = self.twBehaviors.item(self.twBehaviors.selectedIndexes()[0].row(), 2).text()
                 for obs_id in self.pj[cfg.OBSERVATIONS]:
                     if codeToDelete in [
@@ -1605,7 +1605,9 @@ class projectDialog(QDialog, Ui_dlgProject):
                 (
                     "<b>Warning!</b> Some leading and/or trailing spaces are present"
                     " in the following behaviors code(s):<br>"
-                    f"<b>{'<br>'.join([util.replace_leading_trailing_chars(x, ' ', '&#9608;') for x in code_with_leading_trailing_spaces])}</b><br><br>"
+                    "<b>"
+                    f"{'<br>'.join([util.replace_leading_trailing_chars(x, ' ', '&#9608;') for x in code_with_leading_trailing_spaces])}"
+                    "</b><br><br>"
                     "Do you want to remove the leading and trailing spaces (visualized as black boxes) from behaviors?<br><br>"
                     """<font color="red"><b>Be careful with this option"""
                     """ if you have already done observations!</b></font>"""
@@ -1621,9 +1623,9 @@ class projectDialog(QDialog, Ui_dlgProject):
                 cfg.programName,
                 (
                     "<b>Warning!</b> Some leading and/or trailing spaces are present"
-                    " in the following modifier(s):<br>"
-                    f"<b>{'<br>'.join([util.replace_leading_trailing_chars(x, ' ', '&#9608;') for x in set(modifiers_with_leading_trailing_spaces)])}</b><br><br>"
-                    "Do you want to remove the leading and trailing spaces (visualized as black boxes) from modifiers?<br><br>"
+                    " in the following modifier(s):<br><b>"
+                    f"{'<br>'.join([util.replace_leading_trailing_chars(x, ' ', '&#9608;') for x in set(modifiers_with_leading_trailing_spaces)])}"
+                    "</b><br><br>Do you want to remove the leading and trailing spaces (visualized as black boxes) from modifiers?<br><br>"
                     """<font color="red"><b>Be careful with this option"""
                     """ if you have already done observations!</b></font>"""
                 ),

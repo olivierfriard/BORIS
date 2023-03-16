@@ -218,7 +218,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
     measurement_w = None
     memPoints: list = []  # memory of clicked points for measurement tool
-    memPoints_video: list = []  # memory of clicked points for measurement tool
+    mem_video: list = []  # memory of clicked points for measurement tool
+    current_image_size = None
 
     behav_seq_separator: str = "|"
     # time laps
@@ -1603,6 +1604,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         if self.playerType == cfg.IMAGES:
             pixmap = QPixmap(self.images_list[self.image_idx])
+            self.current_image_size = (pixmap.size().width(), pixmap.size().height())
 
             msg = f"Image index: <b>{self.image_idx + 1} / {len(self.images_list)}</b>"
 

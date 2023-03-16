@@ -305,7 +305,7 @@ def image_clicked(self, n_player, event):
         event (Qevent): event (mousepressed)
     """
 
-    logging.debug(f"function image_clicked")
+    logging.debug("function image_clicked")
 
     if not self.geometric_measurements_mode:
         return
@@ -510,7 +510,7 @@ def image_clicked(self, n_player, event):
                 self.measurement_w.mark_color,
                 n_player,
             )
-            area = util.polygon_area(self.memPoints_video)
+            area = util.polygon_area(self.mem_video)
 
             if current_frame not in self.measurement_w.draw_mem:
                 self.measurement_w.draw_mem[current_frame] = []
@@ -544,6 +544,31 @@ def redraw_measurements(self):
     """
     redraw measurements from previous frames
     """
+
+    def scale_coord(coord_list: list):
+        """
+        scale coordinates from original media resolution to pixmap
+        """
+
+        if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE] == cfg.IMAGES:
+            # pixmap_size = QPixmap(self.images_list[self.image_idx]).size()
+            original_width, original_height = self.current_image_size
+        if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE] == cfg.MEDIA:
+            original_width = dw.player.width
+            original_height = dw.player.height
+
+        pixmap_coord_list: list = []
+        for idx, coord in enumerate(coord_list):
+            if idx % 2 == 0:
+                coord_frac = coord / original_width
+                coord_pixmap = coord_frac * dw.frame_viewer.pixmap().width()
+            else:
+                coord_frac = coord / original_height
+                coord_pixmap = coord_frac * dw.frame_viewer.pixmap().height()
+            pixmap_coord_list.append(coord_pixmap)
+
+        return pixmap_coord_list
+
     logging.debug("Redraw measurement marks")
 
     if not (hasattr(self, "measurement_w") and self.measurement_w is not None and self.measurement_w.isVisible()):
@@ -571,34 +596,20 @@ def redraw_measurements(self):
 
                 if element[0] == idx:
                     if element[1] == "point":
-                        x, y = element[3:]
+                        x, y = scale_coord(element[3:])
 
-                        if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE] == cfg.IMAGES:
-                            original_width = QPixmap(self.images_list[self.image_idx]).size().width()
-                            original_height = QPixmap(self.images_list[self.image_idx]).size().height()
-
-                        if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE] == cfg.MEDIA:
-                            original_width = dw.player.width
-                            original_height = dw.player.height
-
-                        x_frac = x / original_width
-                        y_frac = y / original_height
-
-                        x_pixmap = x_frac * dw.frame_viewer.pixmap().width()
-                        y_pixmap = y_frac * dw.frame_viewer.pixmap().height()
-
-                        draw_point(self, int(x_pixmap), int(y_pixmap), elementsColor, n_player=idx)
+                        draw_point(self, int(x), int(y), elementsColor, n_player=idx)
 
                     if element[1] == "line":
-                        x1, y1, x2, y2 = element[3:]
+                        x1, y1, x2, y2 = scale_coord(element[3:])
                         draw_line(self, x1, y1, x2, y2, elementsColor, n_player=idx)
                         draw_point(self, x1, y1, elementsColor, n_player=idx)
                         draw_point(self, x2, y2, elementsColor, n_player=idx)
 
                     if element[1] == "angle":
-                        x1, y1 = element[3][0]
-                        x2, y2 = element[3][1]
-                        x3, y3 = element[3][2]
+                        x1, y1 = scale_coord(element[3][0])
+                        x2, y2 = scale_coord(element[3][1])
+                        x3, y3 = scale_coord(element[3][2])
                         draw_line(self, x1, y1, x2, y2, elementsColor, n_player=idx)
                         draw_line(self, x1, y1, x3, y3, elementsColor, n_player=idx)
                         draw_point(self, x1, y1, elementsColor, n_player=idx)
@@ -607,8 +618,10 @@ def redraw_measurements(self):
 
                     if element[1] == "polygon":
                         polygon = QPolygon()
-                        for point in element[3]:
-                            polygon.append(QPoint(point[0], point[1]))
+
+                        for x, y in element[3]:
+                            x, y = scale_coord([x, y])
+                            polygon.append(QPoint(x, y))
                         painter = QPainter()
                         painter.begin(self.dw_player[idx].frame_viewer.pixmap())
                         painter.setPen(QColor(elementsColor))
