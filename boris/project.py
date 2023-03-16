@@ -1629,7 +1629,7 @@ class projectDialog(QDialog, Ui_dlgProject):
                     """<font color="red"><b>Be careful with this option"""
                     """ if you have already done observations!</b></font>"""
                 ),
-                [cfg.YES, cfg.NO, cfg.CANCEL],
+                (cfg.YES, cfg.NO, cfg.CANCEL),
             )
         if remove_leading_trailing_spaces_in_modifiers == cfg.CANCEL:
             return {cfg.CANCEL: True}

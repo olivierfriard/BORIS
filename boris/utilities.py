@@ -19,7 +19,6 @@ Copyright 2012-2023 Olivier Friard
   MA 02110-1301, USA.
 """
 
-from cmath import isnan
 import csv
 import datetime
 import hashlib
@@ -37,10 +36,9 @@ import wave
 from decimal import Decimal as dec
 from decimal import getcontext, ROUND_DOWN
 from shutil import copyfile
-from typing import Union, Optional, List, Tuple, Dict
+from typing import Union, Tuple
 
 import numpy as np
-from PyQt5.QtGui import qRgb
 from PyQt5.QtGui import QPixmap, QImage
 
 from PIL.ImageQt import Image
@@ -687,21 +685,20 @@ def decimal_default(obj):
     raise TypeError
 
 
-def complete(l: list, max_: int) -> list:
+def complete(lst: list, max_: int) -> list:
     """
     complete list with empty string ("") until len = max
 
     Args:
-        l (list): list to complete
+        lst (list): list to complete
         max_ (int): number of items to reach
 
     Returns:
         list: list completed to max_ items with empty string ("")
     """
-    while len(l) < max_:
-        l.append("")
-    # l.extend([""] * (max_ - len(l)))
-    return l
+    while len(lst) < max_:
+        lst.append("")
+    return lst
 
 
 def datetime_iso8601(dt) -> str:
