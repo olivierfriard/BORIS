@@ -23,7 +23,7 @@ This file is part of BORIS.
 import logging
 
 from PyQt5.QtCore import QPoint, Qt, pyqtSignal, QEvent
-from PyQt5.QtGui import QColor, QPainter, QPolygon
+from PyQt5.QtGui import QColor, QPainter, QPolygon, QPixmap
 from PyQt5.QtWidgets import (
     QApplication,
     QCheckBox,
@@ -228,21 +228,26 @@ def show_widget(self):
     """
 
     def close_measurement_widget():
+        """
+        close the geometric measurement widget
+        """
+
+        if self.observationId and self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE] == cfg.MEDIA:
+            for n_player, dw in enumerate(self.dw_player):
+                dw.frame_viewer.clear()
+                dw.stack.setCurrentIndex(cfg.VIDEO_VIEWER)
+                dw.setWindowTitle(f"Player #{n_player + 1}")
+            self.actionPlay.setEnabled(True)
 
         self.geometric_measurements_mode = False
-        for n_player, dw in enumerate(self.dw_player):
-            dw.frame_viewer.clear()
-            dw.stack.setCurrentIndex(cfg.VIDEO_VIEWER)
-            dw.setWindowTitle(f"Player #{n_player + 1}")
         self.measurement_w.close()
-
         menu_options.update_menu(self)
 
-        self.actionPlay.setEnabled(True)
-
+    """
     if self.playerType == cfg.IMAGES:
         QMessageBox.warning(None, cfg.programName, ("Not yet implemented"), QMessageBox.Ok)
         return
+    """
 
     self.geometric_measurements_mode = True
     self.pause_video()
@@ -314,204 +319,225 @@ def image_clicked(self, n_player, event):
         current_frame = self.dw_player[n_player].player.estimated_frame_number + 1
     else:
         current_frame = cfg.NA
-    if hasattr(self, "measurement_w") and self.measurement_w is not None and self.measurement_w.isVisible():
-        x, y = event.pos().x(), event.pos().y()
 
-        # convert label coordinates in pixmap coordinates
-        x = int(
-            x
-            - (self.dw_player[n_player].frame_viewer.width() - self.dw_player[n_player].frame_viewer.pixmap().width())
-            / 2
-        )
-        y = int(
-            y
-            - (self.dw_player[n_player].frame_viewer.height() - self.dw_player[n_player].frame_viewer.pixmap().height())
-            / 2
-        )
-
-        # convert pixmap coordinates in video coordinates
-        x_video = round(
-            (x / self.dw_player[n_player].frame_viewer.pixmap().width()) * self.dw_player[n_player].player.width
-        )
-        y_video = round(
-            (y / self.dw_player[n_player].frame_viewer.pixmap().height()) * self.dw_player[n_player].player.height
-        )
-
-        if not (
-            0 <= x <= self.dw_player[n_player].frame_viewer.pixmap().width()
-            and 0 <= y <= self.dw_player[n_player].frame_viewer.pixmap().height()
-        ):
-            self.measurement_w.status_lb.setText("<b>The click is outside the video area</b>")
-            return
-
-        self.measurement_w.status_lb.clear()
-
-        # point
-        if self.measurement_w.rbPoint.isChecked():
-            if event.button() == 1:  # left click
-                draw_point(self, x, y, self.measurement_w.mark_color, n_player)
-                if current_frame not in self.measurement_w.draw_mem:
-                    self.measurement_w.draw_mem[current_frame] = []
-
-                self.measurement_w.draw_mem[current_frame].append(
-                    [n_player, "point", self.measurement_w.mark_color, x, y]
-                )
-
-                self.measurement_w.pte.appendPlainText(
-                    (
-                        f"Time: {self.getLaps():.3f}\tPlayer: {n_player + 1}\t"
-                        f"Frame: {current_frame}\tPoint: {x_video},{y_video}"
-                    )
-                )
-                self.measurement_w.flag_saved = False
-
-        # distance
-        elif self.measurement_w.rbDistance.isChecked():
-            if event.button() == 1:  # left
-                draw_point(self, x, y, self.measurement_w.mark_color, n_player)
-                self.memx, self.memy = x, y
-                self.memx_video, self.memy_video = x_video, y_video
-
-            if event.button() == 2 and self.memx != -1 and self.memy != -1:
-                draw_point(self, x, y, self.measurement_w.mark_color, n_player)
-                draw_line(self, self.memx, self.memy, x, y, self.measurement_w.mark_color, n_player)
-
-                if current_frame not in self.measurement_w.draw_mem:
-                    self.measurement_w.draw_mem[current_frame] = []
-                self.measurement_w.draw_mem[current_frame].append(
-                    [n_player, "line", self.measurement_w.mark_color, self.memx, self.memy, x, y]
-                )
-
-                distance = ((x_video - self.memx_video) ** 2 + (y_video - self.memy_video) ** 2) ** 0.5
-                try:
-                    distance = distance / float(self.measurement_w.lePx.text()) * float(self.measurement_w.leRef.text())
-                except Exception:
-                    QMessageBox.critical(
-                        None,
-                        cfg.programName,
-                        "Check reference and pixel values! Values must be numeric.",
-                        QMessageBox.Ok | QMessageBox.Default,
-                        QMessageBox.NoButton,
-                    )
-
-                self.measurement_w.pte.appendPlainText(
-                    (
-                        f"Time: {self.getLaps()}\tPlayer: {n_player + 1}\t"
-                        f"Frame: {current_frame}\tDistance: {round(distance, 1)}"
-                    )
-                )
-                self.measurement_w.flag_saved = False
-                self.memx, self.memy = -1, -1
-
-        # angle 1st clic -> vertex
-        elif self.measurement_w.rbAngle.isChecked():
-            if event.button() == 1:  # left for vertex
-                draw_point(self, x, y, self.measurement_w.mark_color, n_player)
-                self.memPoints = [(x, y)]
-
-            if event.button() == 2 and len(self.memPoints):
-                draw_point(self, x, y, self.measurement_w.mark_color, n_player)
-                draw_line(
-                    self, self.memPoints[0][0], self.memPoints[0][1], x, y, self.measurement_w.mark_color, n_player
-                )
-
-                self.memPoints.append((x, y))
-
-                if len(self.memPoints) == 3:
-                    self.measurement_w.pte.appendPlainText(
-                        (
-                            f"Time: {self.getLaps()}\tPlayer: {n_player + 1}\t"
-                            f"Frame: {current_frame}\t"
-                            f"Angle: {round(util.angle(self.memPoints[0], self.memPoints[1], self.memPoints[2]), 1)}"
-                        )
-                    )
-                    self.measurement_w.flag_saved = False
-                    if current_frame not in self.measurement_w.draw_mem:
-                        self.measurement_w.draw_mem[current_frame] = []
-                    self.measurement_w.draw_mem[current_frame].append(
-                        [n_player, "angle", self.measurement_w.mark_color, self.memPoints]
-                    )
-
-                    self.memPoints = []
-
-        # Area
-        elif self.measurement_w.rbArea.isChecked():
-            if event.button() == 1:  # left
-                draw_point(self, x, y, self.measurement_w.mark_color)
-                if len(self.memPoints):
-                    draw_line(
-                        self,
-                        self.memPoints[-1][0],
-                        self.memPoints[-1][1],
-                        x,
-                        y,
-                        self.measurement_w.mark_color,
-                        n_player,
-                    )
-                self.memPoints.append((x, y))
-                self.memPoints_video.append((x_video, y_video))
-
-            if event.button() == 2 and len(self.memPoints) >= 2:
-                draw_point(self, x, y, self.measurement_w.mark_color, n_player)
-                draw_line(
-                    self, self.memPoints[-1][0], self.memPoints[-1][1], x, y, self.measurement_w.mark_color, n_player
-                )
-                self.memPoints.append((x, y))
-                self.memPoints_video.append((x_video, y_video))
-
-                # close polygon
-                draw_line(
-                    self,
-                    self.memPoints[-1][0],
-                    self.memPoints[-1][1],
-                    self.memPoints[0][0],
-                    self.memPoints[0][1],
-                    self.measurement_w.mark_color,
-                    n_player,
-                )
-                area = util.polygon_area(self.memPoints_video)
-
-                if current_frame not in self.measurement_w.draw_mem:
-                    self.measurement_w.draw_mem[current_frame] = []
-                self.measurement_w.draw_mem[current_frame].append(
-                    [n_player, "polygon", self.measurement_w.mark_color, self.memPoints]
-                )
-
-                try:
-                    area = (
-                        area
-                        / (float(self.measurement_w.lePx.text()) ** 2)
-                        * float(self.measurement_w.leRef.text()) ** 2
-                    )
-                except Exception:
-                    QMessageBox.critical(
-                        None,
-                        cfg.programName,
-                        "Check reference and pixel values! Values must be numeric.",
-                        QMessageBox.Ok | QMessageBox.Default,
-                        QMessageBox.NoButton,
-                    )
-
-                self.measurement_w.pte.appendPlainText(
-                    (
-                        f"Time: {self.getLaps()}\tPlayer: {n_player + 1}\t"
-                        f"Frame: {current_frame}\tArea: {round(area, 1)}"
-                    )
-                )
-                self.measurement_w.flag_saved = False
-                self.memPoints, self.memPoints_video = [], []
-
-        else:
-            self.measurement_w.status_lb.setText("<b>Choose a measurement type!</b>")
-
-    else:  # no measurements
+    if not (hasattr(self, "measurement_w") and (self.measurement_w is not None) and (self.measurement_w.isVisible())):
+        return
+        """
         QMessageBox.warning(
             self,
             cfg.programName,
             "The Focus area function is not yet available in frame-by-frame mode.",
             QMessageBox.Ok | QMessageBox.Default,
             QMessageBox.NoButton,
+        )"""
+
+    x, y = event.pos().x(), event.pos().y()
+
+    print(f"{x=}  {y=}")
+
+    # convert label coordinates in pixmap coordinates
+    pixmap_x = int(
+        x - (self.dw_player[n_player].frame_viewer.width() - self.dw_player[n_player].frame_viewer.pixmap().width()) / 2
+    )
+    pixmap_y = int(
+        y
+        - (self.dw_player[n_player].frame_viewer.height() - self.dw_player[n_player].frame_viewer.pixmap().height()) / 2
+    )
+
+    if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE] == cfg.MEDIA:
+        # convert pixmap coordinates in video coordinates
+        x_video = round(
+            (pixmap_x / self.dw_player[n_player].frame_viewer.pixmap().width()) * self.dw_player[n_player].player.width
         )
+        y_video = round(
+            (pixmap_y / self.dw_player[n_player].frame_viewer.pixmap().height())
+            * self.dw_player[n_player].player.height
+        )
+    elif self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE] == cfg.IMAGES:
+
+        original_width = QPixmap(self.images_list[self.image_idx]).size().width()
+        original_height = QPixmap(self.images_list[self.image_idx]).size().height()
+        x_video = round((pixmap_x / self.dw_player[n_player].frame_viewer.pixmap().width()) * original_width)
+        y_video = round((pixmap_y / self.dw_player[n_player].frame_viewer.pixmap().height()) * original_height)
+
+    print(f"{x_video=}  {y_video=}")
+
+    if not (
+        0 <= pixmap_x <= self.dw_player[n_player].frame_viewer.pixmap().width()
+        and 0 <= pixmap_y <= self.dw_player[n_player].frame_viewer.pixmap().height()
+    ):
+        self.measurement_w.status_lb.setText("<b>The click is outside the video area</b>")
+        return
+
+    self.measurement_w.status_lb.clear()
+
+    # point
+    if self.measurement_w.rbPoint.isChecked():
+        if event.button() == 1:  # left click
+            draw_point(self, pixmap_x, pixmap_y, self.measurement_w.mark_color, n_player)
+            if current_frame not in self.measurement_w.draw_mem:
+                self.measurement_w.draw_mem[current_frame] = []
+
+            self.measurement_w.draw_mem[current_frame].append(
+                [n_player, "point", self.measurement_w.mark_color, x_video, y_video]
+            )
+
+            self.measurement_w.pte.appendPlainText(
+                (
+                    f"Time: {self.getLaps():.3f}\tPlayer: {n_player + 1}\t"
+                    f"Frame: {current_frame}\tPoint: {x_video},{y_video}"
+                )
+            )
+            self.measurement_w.flag_saved = False
+
+    # distance
+    elif self.measurement_w.rbDistance.isChecked():
+        if event.button() == 1:  # left
+            draw_point(self, pixmap_x, pixmap_y, self.measurement_w.mark_color, n_player)
+            self.memx, self.memy = pixmap_x, pixmap_y
+            self.memx_video, self.memy_video = x_video, y_video
+
+        if event.button() == 2 and self.memx != -1 and self.memy != -1:
+            draw_point(self, pixmap_x, pixmap_y, self.measurement_w.mark_color, n_player)
+            draw_line(self, self.memx, self.memy, pixmap_x, pixmap_y, self.measurement_w.mark_color, n_player)
+
+            if current_frame not in self.measurement_w.draw_mem:
+                self.measurement_w.draw_mem[current_frame] = []
+
+            self.measurement_w.draw_mem[current_frame].append(
+                [n_player, "line", self.measurement_w.mark_color, self.memx_video, self.memy_video, x_video, y_video]
+            )
+
+            distance = ((x_video - self.memx_video) ** 2 + (y_video - self.memy_video) ** 2) ** 0.5
+            try:
+                distance = distance / float(self.measurement_w.lePx.text()) * float(self.measurement_w.leRef.text())
+            except Exception:
+                QMessageBox.critical(
+                    None,
+                    cfg.programName,
+                    "Check reference and pixel values! Values must be numeric.",
+                    QMessageBox.Ok | QMessageBox.Default,
+                    QMessageBox.NoButton,
+                )
+
+            self.measurement_w.pte.appendPlainText(
+                (
+                    f"Time: {self.getLaps()}\tPlayer: {n_player + 1}\t"
+                    f"Frame: {current_frame}\tDistance: {round(distance, 1)}"
+                )
+            )
+            self.measurement_w.flag_saved = False
+            self.memx, self.memy = -1, -1
+
+    # angle 1st clic -> vertex
+    elif self.measurement_w.rbAngle.isChecked():
+        if event.button() == 1:  # left for vertex
+            draw_point(self, pixmap_x, pixmap_y, self.measurement_w.mark_color, n_player)
+            self.memPoints = [(pixmap_x, pixmap_y)]
+            self.mem_video = [(x_video, y_video)]
+
+        if event.button() == 2 and len(self.memPoints):
+            draw_point(self, pixmap_x, pixmap_y, self.measurement_w.mark_color, n_player)
+            draw_line(
+                self,
+                self.memPoints[0][0],
+                self.memPoints[0][1],
+                pixmap_x,
+                pixmap_y,
+                self.measurement_w.mark_color,
+                n_player,
+            )
+
+            self.memPoints.append((pixmap_x, pixmap_y))
+            self.mem_video.append((x_video, y_video))
+
+            if len(self.memPoints) == 3:
+                self.measurement_w.pte.appendPlainText(
+                    (
+                        f"Time: {self.getLaps()}\tPlayer: {n_player + 1}\t"
+                        f"Frame: {current_frame}\t"
+                        f"Angle: {round(util.angle(self.memPoints[0], self.memPoints[1], self.memPoints[2]), 1)}"
+                    )
+                )
+                self.measurement_w.flag_saved = False
+                if current_frame not in self.measurement_w.draw_mem:
+                    self.measurement_w.draw_mem[current_frame] = []
+
+                self.measurement_w.draw_mem[current_frame].append(
+                    [n_player, "angle", self.measurement_w.mark_color, self.mem_video]
+                )
+
+                self.memPoints, self.mem_video = [], []
+
+    # Area
+    elif self.measurement_w.rbArea.isChecked():
+        if event.button() == 1:  # left
+            draw_point(self, pixmap_x, pixmap_y, self.measurement_w.mark_color)
+            if len(self.memPoints):
+                draw_line(
+                    self,
+                    self.memPoints[-1][0],
+                    self.memPoints[-1][1],
+                    pixmap_x,
+                    pixmap_y,
+                    self.measurement_w.mark_color,
+                    n_player,
+                )
+            self.memPoints.append((pixmap_x, pixmap_y))
+            self.mem_video.append((x_video, y_video))
+
+        if event.button() == 2 and len(self.memPoints) >= 2:
+            draw_point(self, pixmap_x, pixmap_y, self.measurement_w.mark_color, n_player)
+            draw_line(
+                self,
+                self.memPoints[-1][0],
+                self.memPoints[-1][1],
+                pixmap_x,
+                pixmap_y,
+                self.measurement_w.mark_color,
+                n_player,
+            )
+            self.memPoints.append((pixmap_x, pixmap_y))
+            self.mem_video.append((x_video, y_video))
+
+            # close polygon
+            draw_line(
+                self,
+                self.memPoints[-1][0],
+                self.memPoints[-1][1],
+                self.memPoints[0][0],
+                self.memPoints[0][1],
+                self.measurement_w.mark_color,
+                n_player,
+            )
+            area = util.polygon_area(self.memPoints_video)
+
+            if current_frame not in self.measurement_w.draw_mem:
+                self.measurement_w.draw_mem[current_frame] = []
+
+            self.measurement_w.draw_mem[current_frame].append(
+                [n_player, "polygon", self.measurement_w.mark_color, self.mem_video]
+            )
+
+            try:
+                area = area / (float(self.measurement_w.lePx.text()) ** 2) * float(self.measurement_w.leRef.text()) ** 2
+            except Exception:
+                QMessageBox.critical(
+                    None,
+                    cfg.programName,
+                    "Check reference and pixel values! Values must be numeric.",
+                    QMessageBox.Ok | QMessageBox.Default,
+                    QMessageBox.NoButton,
+                )
+
+            self.measurement_w.pte.appendPlainText(
+                (f"Time: {self.getLaps()}\tPlayer: {n_player + 1}\t" f"Frame: {current_frame}\tArea: {round(area, 1)}")
+            )
+            self.measurement_w.flag_saved = False
+            self.memPoints, self.mem_video = [], []
+
+    else:
+        self.measurement_w.status_lb.setText("<b>Choose a measurement type!</b>")
 
 
 def redraw_measurements(self):
@@ -546,7 +572,22 @@ def redraw_measurements(self):
                 if element[0] == idx:
                     if element[1] == "point":
                         x, y = element[3:]
-                        draw_point(self, x, y, elementsColor, n_player=idx)
+
+                        if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE] == cfg.IMAGES:
+                            original_width = QPixmap(self.images_list[self.image_idx]).size().width()
+                            original_height = QPixmap(self.images_list[self.image_idx]).size().height()
+
+                        if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE] == cfg.MEDIA:
+                            original_width = dw.player.width
+                            original_height = dw.player.height
+
+                        x_frac = x / original_width
+                        y_frac = y / original_height
+
+                        x_pixmap = x_frac * dw.frame_viewer.pixmap().width()
+                        y_pixmap = y_frac * dw.frame_viewer.pixmap().height()
+
+                        draw_point(self, int(x_pixmap), int(y_pixmap), elementsColor, n_player=idx)
 
                     if element[1] == "line":
                         x1, y1, x2, y2 = element[3:]

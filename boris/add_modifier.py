@@ -353,7 +353,7 @@ class addModifierDialog(QDialog, Ui_Dialog):
                 self.pb_sort_modifiers,
             ):
                 w.setVisible(True)
-            for w in [self.leModifier, self.leCode, self.pbAddModifier, self.pbModifyModifier]:
+            for w in (self.leModifier, self.leCode, self.pbAddModifier, self.pbModifyModifier):
                 w.setEnabled(True)
             return
 

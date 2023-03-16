@@ -1638,12 +1638,14 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             # image path
             msg += f"<br><br>Directory: <b>{pl.Path(self.images_list[self.image_idx]).parent}</b>"
             msg += f"<br>File name: <b>{pl.Path(self.images_list[self.image_idx]).name}</b>"
+            msg += f"<br><small>Image resolution: <b>{pixmap.size().width()}x{pixmap.size().height()}</b></small>"
 
             self.lb_current_media_time.setText(msg)
 
             dw.frame_viewer.setPixmap(
                 pixmap.scaled(dw.frame_viewer.size(), Qt.KeepAspectRatio, Qt.SmoothTransformation)
             )
+
         self.get_events_current_row()
 
         # index of current subject selected by observer
@@ -3210,8 +3212,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 for idx in self.plot_data:
                     self.timer_plot_data_out(self.plot_data[idx])
 
-            if self.geometric_measurements_mode:
-                geometric_measurement.redraw_measurements(self)
+        if self.geometric_measurements_mode:
+            geometric_measurement.redraw_measurements(self)
 
             self.actionPlay.setIcon(QIcon(":/play"))
 
@@ -3234,8 +3236,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 for idx in self.plot_data:
                     self.timer_plot_data_out(self.plot_data[idx])
 
-            if self.geometric_measurements_mode:
-                geometric_measurement.redraw_measurements(self)
+        if self.geometric_measurements_mode:
+            geometric_measurement.redraw_measurements(self)
 
             self.actionPlay.setIcon(QIcon(":/play"))
 
