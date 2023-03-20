@@ -1943,15 +1943,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         """
 
         logging.debug("function: close_tool_windows")
-        """
-        for w in [self.measurement_w, self.codingpad, self.subjects_pad, self.spectro,
-                  self.frame_viewer1, self.frame_viewer2, self.results,
-                  self.mapCreatorWindow]:
-            try:
-                w.close()
-            except:
-                pass
-        """
         try:
             del self.iw
         except Exception:

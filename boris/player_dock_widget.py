@@ -76,8 +76,7 @@ class Clickable_label(QLabel):
         """
         label clicked
         """
-
-        logging.debug(f"mousepress event: label {self.id_} clicked")
+        """logging.debug(f"mousepress event: label {self.id_} clicked")"""
 
         self.mouse_pressed_signal.emit(self.id_, event)
 
