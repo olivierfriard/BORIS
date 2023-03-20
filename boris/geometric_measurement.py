@@ -277,8 +277,6 @@ def show_widget(self):
         dw.stack.setCurrentIndex(cfg.PICTURE_VIEWER)
         self.extract_frame(dw)
 
-    # print(f"{self.measurement_w.draw_mem=}")
-
 
 def draw_point(self, x, y, color: str, n_player: int = 0):
     """
