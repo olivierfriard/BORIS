@@ -176,7 +176,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
     pj = dict(cfg.EMPTY_PROJECT)
     project: bool = False  # project is loaded?
-    geometric_measurements_mode = False  # geometric measurement modae active?
+    geometric_measurements_mode = False  # geometric measurement mode active?
 
     state_behaviors_codes: tuple = tuple()
 
@@ -264,7 +264,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     mem_hash_obs: int = 0
 
     def __init__(self, ffmpeg_bin, parent=None):
-
         super(MainWindow, self).__init__(parent)
         self.setupUi(self)
 
@@ -711,9 +710,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             categories = ["###no category###"]
 
         for category in categories:
-
             if category != "###no category###":
-
                 if category == "":
                     paramPanelWindow.item = QListWidgetItem("No category")
                     paramPanelWindow.item.setData(34, "No category")
@@ -745,7 +742,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                         and self.pj[cfg.ETHOGRAM][x][cfg.BEHAVIOR_CATEGORY] == category
                     ]
                 ):
-
                     paramPanelWindow.item = QListWidgetItem(behavior)
                     if behavior in filtered_behaviors:
                         paramPanelWindow.item.setCheckState(Qt.Checked)
@@ -811,7 +807,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         ]
 
         for subject in [self.pj[cfg.SUBJECTS][x][cfg.SUBJECT_NAME] for x in util.sorted_keys(self.pj[cfg.SUBJECTS])]:
-
             paramPanelWindow.item = QListWidgetItem(subject)
             if subject in filtered_subjects:
                 paramPanelWindow.item.setCheckState(Qt.Checked)
@@ -860,7 +855,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         for media in self.pj[cfg.OBSERVATIONS][self.observationId][cfg.FILE][cfg.PLAYER1]:
             media_file_path = project_functions.full_path(media, self.projectFileName)
             if os.path.isfile(media_file_path):
-
                 w.show()
                 QApplication.processEvents()
 
@@ -1148,7 +1142,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.update_realtime_plot()
 
         if self.playerType == cfg.MEDIA:
-
             current_media_time = self.dw_player[0].player.time_pos
 
             tmp_dir = (
@@ -1169,12 +1162,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
             # waveform
             if self.pj[cfg.OBSERVATIONS][self.observationId].get(cfg.VISUALIZE_WAVEFORM, False):
-
                 if not hasattr(self, "waveform"):
                     return
 
                 if not self.waveform.visibleRegion().isEmpty():
-
                     if self.waveform.wav_file_path == wav_file_path:
                         self.waveform.plot_waveform(current_media_time)
                     else:
@@ -1186,12 +1177,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
             # spectrogram
             if self.pj[cfg.OBSERVATIONS][self.observationId].get(cfg.VISUALIZE_SPECTROGRAM, False):
-
                 if not hasattr(self, "spectro"):
                     return
 
                 if not self.spectro.visibleRegion().isEmpty():
-
                     if self.spectro.wav_file_path == wav_file_path:
                         self.spectro.plot_spectro(current_media_time)
                     else:
@@ -1242,7 +1231,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.pj[cfg.BEHAVIORS_CODING_MAP] = []
 
         if [bcm for bcm in self.pj[cfg.BEHAVIORS_CODING_MAP] if bcm["name"] == behav_coding_map["name"]]:
-
             response = dialog.MessageDialog(
                 "BORIS - Behaviors map creator",
                 (
@@ -1322,9 +1310,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         logging.debug(f"paused? {flag_paused}")
 
         if self.dw_player[player].player.playlist_count == 1:
-
             if new_time < self.dw_player[player].player.duration:
-
                 self.dw_player[player].player.seek(new_time, "absolute+exact")
 
                 if player == 0 and not self.user_move_slider:
@@ -1340,7 +1326,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 pass
 
         elif self.dw_player[player].player.playlist_count > 1:
-
             if new_time < sum(self.dw_player[player].media_durations) / 1000:
                 # remember if player paused (go previous will start playing)
                 flagPaused = self.is_playing()
@@ -1349,7 +1334,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 for idx, d in enumerate(self.dw_player[player].media_durations):
                     """if new_time >= tot and new_time < tot + d / 1000:"""
                     if tot <= new_time < tot + d / 1000:
-
                         if idx == self.dw_player[player].player.playlist_pos + 1:
                             self.dw_player[player].player.playlist_next()
                             time.sleep(1)
@@ -1418,7 +1402,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         """
 
         if self.playerType == cfg.MEDIA:
-
             if len(self.pj[cfg.OBSERVATIONS][self.observationId][cfg.FILE][cfg.PLAYER1]) == 1:
                 return
 
@@ -1433,7 +1416,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 self.spectro.memChunk = -1
 
         if self.playerType == cfg.IMAGES:
-
             if len(self.pj[cfg.OBSERVATIONS][self.observationId].get(cfg.DIRECTORIES_LIST, [])) <= 1:
                 return
             if self.image_idx == 0:
@@ -1462,7 +1444,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         go to next media file (if any) in first player
         """
         if self.playerType == cfg.MEDIA:
-
             if len(self.pj[cfg.OBSERVATIONS][self.observationId][cfg.FILE][cfg.PLAYER1]) == 1:
                 return
 
@@ -1480,7 +1461,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 self.spectro.memChunk = -1
 
         if self.playerType == cfg.IMAGES:
-
             if len(self.pj[cfg.OBSERVATIONS][self.observationId].get(cfg.DIRECTORIES_LIST, [])) <= 1:
                 return
             current_dir = pl.Path(self.images_list[self.image_idx]).parent
@@ -1509,7 +1489,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         """
 
         if self.observationId and self.projectFileName:
-
             logging.info("autosave project")
 
             self.save_project_activated()
@@ -1593,7 +1572,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         for IMAGES obs: load picture and visualize it in frame_viewer, extract EXIF Date/Time Original tag if available
         """
         if self.playerType == cfg.MEDIA:
-
             time.sleep(0.3)  # required for correct frame number
 
             dw.frame_viewer.setPixmap(
@@ -1610,7 +1588,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
             # extract EXIF tag
             if self.pj[cfg.OBSERVATIONS][self.observationId].get(cfg.USE_EXIF_DATE, False):
-
                 date_time_original = self.extract_exif_DateTimeOriginal(self.images_list[self.image_idx])
                 if date_time_original != -1:
                     msg += f"<br>EXIF Date/Time Original: <b>{datetime.datetime.fromtimestamp(date_time_original):%Y-%m-%d %H:%M:%S}</b>"
@@ -1817,7 +1794,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 self.dw_player[id_].zoomed = False
 
         elif msg == "resized":
-
             if self.dw_player[id_].zoomed:
                 self.dw_player[id_].mediaplayer.video_set_crop_geometry(f"{right}x{bottom}+{left}+{top}")
 
@@ -1889,7 +1865,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         row = 0
 
         for event_idx, event in enumerate(self.pj[cfg.OBSERVATIONS][obs_id][cfg.EVENTS]):
-
             if (
                 self.filtered_behaviors
                 and event[cfg.PJ_OBS_FIELDS[self.playerType][cfg.BEHAVIOR_CODE]] not in self.filtered_behaviors
@@ -1906,9 +1881,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 self.twEvents.insertRow(self.twEvents.rowCount())
 
             for field_type in cfg.TW_EVENTS_FIELDS[self.playerType]:
-
                 if field_type in cfg.PJ_EVENTS_FIELDS[self.playerType]:
-
                     field = event_operations.read_event_field(event, self.playerType, field_type)
 
                     if field_type == cfg.TIME:
@@ -2094,7 +2067,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         try:
             if cfg.OBSERVATION_TIME_INTERVAL in self.pj[cfg.OBSERVATIONS][obs_id]:
                 if self.pj[cfg.OBSERVATIONS][obs_id][cfg.OBSERVATION_TIME_INTERVAL] != [0, 0]:
-
                     if self.timeFormat == cfg.HHMMSS:
                         start_time = util.seconds2time(
                             self.pj[cfg.OBSERVATIONS][obs_id][cfg.OBSERVATION_TIME_INTERVAL][0]
@@ -2657,7 +2629,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             newProjectWindow.lb_project_format_version.setText(f"Project format version: {cfg.project_format_version}")
 
         if mode == cfg.EDIT:
-
             if newProjectWindow.pj[cfg.PROJECT_NAME]:
                 newProjectWindow.leProjectName.setText(newProjectWindow.pj[cfg.PROJECT_NAME])
 
@@ -2758,7 +2729,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         # warning
         if mode == cfg.EDIT and self.pj[cfg.OBSERVATIONS]:
-
             if (
                 dialog.MessageDialog(
                     cfg.programName,
@@ -2775,7 +2745,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 return
 
         if newProjectWindow.exec_():  # button OK returns True
-
             if mode == cfg.NEW:
                 self.projectFileName = ""
                 self.project_changed()
@@ -3065,6 +3034,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             ):
                 self.beep("beep")
                 self.liveTimer.stop()
+                self.liveObservationStarted = False
                 self.pb_live_obs.setText("Live observation finished")
 
     def start_live_observation(self):
@@ -3548,11 +3518,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         """
 
         if self.dw_player[n_player].player.playlist_count == 1:
-
             if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO][cfg.OFFSET][str(n_player + 1)]:
-
                 if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO][cfg.OFFSET][str(n_player + 1)] > 0:
-
                     if (
                         new_time
                         < self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO][cfg.OFFSET][str(n_player + 1)]
@@ -3560,7 +3527,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                         # hide video if time < offset
                         self.dw_player[n_player].stack.setCurrentIndex(1)
                     else:
-
                         if new_time - dec(
                             self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO][cfg.OFFSET][str(n_player + 1)]
                         ) > sum(self.dw_player[n_player].media_durations):
@@ -3581,7 +3547,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                             )
 
                 elif self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO][cfg.OFFSET][str(n_player + 1)] < 0:
-
                     if new_time - dec(
                         self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO][cfg.OFFSET][str(n_player + 1)]
                     ) > sum(self.dw_player[n_player].media_durations):
@@ -3603,7 +3568,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 self.seek_mediaplayer(new_time, player=n_player)
 
         elif self.dw_player[n_player].player.playlist_count > 1:
-
             # check if new time is before the end of last video
             """
             TODO: use cumul_media_durations
@@ -3612,7 +3576,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             """
 
             if new_time < sum(self.dw_player[n_player].media_durations):
-
                 media_idx = self.dw_player[n_player].player.playlist_pos
 
                 if (
@@ -3626,14 +3589,12 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                         new_time - sum(self.dw_player[n_player].media_durations[0:media_idx]), player=n_player
                     )
                 else:  # out of current media
-
                     logging.debug(f"{n_player + 1} not correct media")
 
                     flag_paused = self.dw_player[n_player].player.pause
                     tot = 0
                     for idx, d in enumerate(self.dw_player[n_player].media_durations):
                         if tot <= new_time < tot + d:
-
                             self.dw_player[n_player].player.playing_pos = idx
                             if flag_paused:
                                 self.dw_player[n_player].player.pause = True
@@ -3644,7 +3605,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                         tot += d
 
             else:  # end of media list
-
                 logging.debug(f"{n_player + 1} end of media")
                 self.dw_player[n_player].player.playlist_pos = self.dw_player[n_player].player.playlist_count - 1
                 self.seek_mediaplayer(self.dw_player[n_player].media_durations[-1], player=n_player)
@@ -3696,9 +3656,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         ct0 = cumulative_time_pos
 
         if self.dw_player[0].player.time_pos is not None:
-
             for n_player in range(1, len(self.dw_player)):
-
                 ct = self.getLaps(n_player=n_player)
 
                 # sync players 2..8 if time diff >= 1 s
@@ -3754,7 +3712,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         # update observation info
         msg = ""
         if self.dw_player[0].player.time_pos is not None:  # check if video
-
             """
             current_media_frame = (
                 (round(value * self.dw_player[0].player.container_fps) + 1)
@@ -3772,7 +3729,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
             # with time offset
             if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TIME_OFFSET]:
-
                 msg += (
                     f"<br>Media position with offset: <b>{util.convertTime(self.timeFormat, current_media_time_pos + float(self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TIME_OFFSET]))}</b> / "
                     f"{util.convertTime(self.timeFormat, current_media_duration + float(self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TIME_OFFSET]))}"
@@ -3807,7 +3763,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
             # set video scroll bar
             if scroll_slider and not self.user_move_slider:
-
                 self.video_slider.setValue(
                     round(current_media_time_pos / current_media_duration * (cfg.SLIDER_MAXIMUM - 1))
                 )
@@ -3862,11 +3817,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         if self.pj[cfg.SUBJECTS]:
             for idx in util.sorted_keys(self.pj[cfg.SUBJECTS]):
-
                 self.subject_name_index[self.pj[cfg.SUBJECTS][idx][cfg.SUBJECT_NAME]] = idx
 
                 if self.pj[cfg.SUBJECTS][idx][cfg.SUBJECT_NAME] in subjects_to_show:
-
                     self.twSubjects.setRowCount(self.twSubjects.rowCount() + 1)
 
                     for idx2, field in enumerate(cfg.subjectsFields):
@@ -3892,14 +3845,12 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         mem_behav = {}
 
         for row in range(self.twEvents.rowCount()):
-
             subject = self.twEvents.item(row, cfg.TW_OBS_FIELD[self.playerType][cfg.SUBJECT]).text()
             code = self.twEvents.item(row, cfg.TW_OBS_FIELD[self.playerType][cfg.BEHAVIOR_CODE]).text()
             modifier = self.twEvents.item(row, cfg.TW_OBS_FIELD[self.playerType]["modifier"]).text()
 
             # check if code is state
             if code in state_events_list:
-
                 if f"{subject}|{code}|{modifier}" in mem_behav and mem_behav[f"{subject}|{code}|{modifier}"]:
                     self.twEvents.item(row, cfg.TW_OBS_FIELD[self.playerType][cfg.TYPE]).setText(cfg.STOP)
                 else:
@@ -3954,11 +3905,38 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         if event is None:
             return
 
+        # live observation finished (end of time interval reached)
+        if not self.liveObservationStarted and mem_time.is_nan():
+            _ = dialog.MessageDialog(
+                cfg.programName,
+                (
+                    "The live observation is finished.<br>"
+                    f"The observation interval is {self.pj[cfg.OBSERVATIONS][self.observationId].get(cfg.OBSERVATION_TIME_INTERVAL, [0, 0])[0]} - "
+                    f"{self.pj[cfg.OBSERVATIONS][self.observationId].get(cfg.OBSERVATION_TIME_INTERVAL, [0, 0])[1]}"
+                ),
+                (cfg.OK,),
+            )
+            return
+
+        if (
+            self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE] == cfg.LIVE
+            and mem_time < self.pj[cfg.OBSERVATIONS][self.observationId].get(cfg.OBSERVATION_TIME_INTERVAL, [0, 0])[0]
+        ):
+            _ = dialog.MessageDialog(
+                cfg.programName,
+                (
+                    "The live observation has not began.<br>"
+                    f"The observation interval is {self.pj[cfg.OBSERVATIONS][self.observationId].get(cfg.OBSERVATION_TIME_INTERVAL, [0, 0])[0]} - "
+                    f"{self.pj[cfg.OBSERVATIONS][self.observationId].get(cfg.OBSERVATION_TIME_INTERVAL, [0, 0])[1]}"
+                ),
+                (cfg.OK,),
+            )
+            return
+
         editing_event = "row" in event
 
         # add time offset if not from editing
         if not editing_event:
-
             # add offset
             if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE] in (cfg.MEDIA, cfg.LIVE):
                 mem_time += dec(self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TIME_OFFSET]).quantize(dec(".001"))
@@ -3985,7 +3963,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 event[cfg.BEHAVIOR_CODE],
             ):
                 _ = dialog.MessageDialog(
-                    cfg.programName, "The same event already exists (same time, behavior code and subject).", [cfg.OK]
+                    cfg.programName, "The same event already exists (same time, behavior code and subject).", (cfg.OK,)
                 )
                 return 1
 
@@ -4036,7 +4014,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     _ = dialog.MessageDialog(
                         cfg.programName,
                         "The same event already exists (same image index, behavior code and subject).",
-                        [cfg.OK],
+                        (cfg.OK,),
                     )
                     return 1
 
@@ -4045,13 +4023,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             modifier_str = ""
 
             if event[cfg.MODIFIERS]:
-
                 selected_modifiers, modifiers_external_data = {}, {}
                 # check if modifiers are from external data
                 for idx in event[cfg.MODIFIERS]:
-
                     if event[cfg.MODIFIERS][idx]["type"] == cfg.EXTERNAL_DATA_MODIFIER:
-
                         if "row" not in event:  # no edit
                             for idx2 in self.plot_data:
                                 if self.plot_data[idx2].y_label.upper() == event[cfg.MODIFIERS][idx]["name"].upper():
@@ -4064,7 +4039,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
                 # check if modifiers are in single, multiple or numeric
                 if [x for x in event[cfg.MODIFIERS] if event[cfg.MODIFIERS][x]["type"] != cfg.EXTERNAL_DATA_MODIFIER]:
-
                     # pause media
                     if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE] in [cfg.MEDIA]:
                         if self.playerType == cfg.MEDIA:
@@ -4171,7 +4145,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             cm: dict = {}  # modifiers for current behaviors
             for cs in csj:
                 for ev in self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS]:
-
                     if ev[check_index] > position:
                         break
 
@@ -4217,7 +4190,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         # add event to pj
         if editing_event:  # modifying event
-
             if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE] == cfg.MEDIA:
                 self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS][event["row"]] = [
                     mem_time,
@@ -4321,7 +4293,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         items = []
         for idx in self.pj[cfg.ETHOGRAM]:
             if self.pj[cfg.ETHOGRAM][idx]["key"] == obs_key:
-
                 code_descr = self.pj[cfg.ETHOGRAM][idx][cfg.BEHAVIOR_CODE]
                 if self.pj[cfg.ETHOGRAM][idx][cfg.DESCRIPTION]:
                     code_descr += " - " + self.pj[cfg.ETHOGRAM][idx][cfg.DESCRIPTION]
@@ -4356,17 +4327,17 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             return dec("0")
 
         if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE] == cfg.LIVE:
-
+            if "Live observation finished" in self.pb_live_obs.text():
+                return dec("NaN")
             if self.liveObservationStarted:
                 now = QTime()
                 now.start()  # current time
                 memLaps = dec(str(round(self.liveStartTime.msecsTo(now) / 1000, 3)))
                 return memLaps
             else:
-                return dec(0)
+                return dec("0")
 
         if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE] == cfg.IMAGES:
-
             if self.playerType == cfg.VIEWER_IMAGES:
                 return dec("NaN")
 
@@ -4384,7 +4355,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 return dec(time_).quantize(dec("0.001"), rounding=ROUND_DOWN)
 
         if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE] == cfg.MEDIA:
-
             if self.playerType in [cfg.VIEWER_LIVE, cfg.VIEWER_MEDIA]:
                 return dec(0)
 
@@ -4415,11 +4385,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         event = dict(self.pj[cfg.ETHOGRAM][behavior_idx])
         # check if coding map for modifiers
         if "coding map" in self.pj[cfg.ETHOGRAM][behavior_idx] and self.pj[cfg.ETHOGRAM][behavior_idx]["coding map"]:
-
             # pause if media and media playing
             if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE] in [cfg.MEDIA]:
                 if self.playerType == cfg.MEDIA:
-
                     if self.is_playing():
                         flag_player_playing = True
                         self.pause_video()
@@ -4466,7 +4434,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         """
 
         if self.playerType == cfg.MEDIA:
-
             if self.dw_player[0].player.pause:
                 return False
             elif self.dw_player[0].player.time_pos is not None:
@@ -4510,7 +4477,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             event_operations.undo_event_operation(self)
             return
 
-        if ek in [Qt.Key_Tab, Qt.Key_Shift, Qt.Key_Control, Qt.Key_Meta, Qt.Key_Alt, Qt.Key_AltGr]:
+        if ek in (Qt.Key_Tab, Qt.Key_Shift, Qt.Key_Control, Qt.Key_Meta, Qt.Key_Alt, Qt.Key_AltGr):
             return
 
         if self.playerType in cfg.VIEWERS:
@@ -4571,7 +4538,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         if self.playerType == cfg.MEDIA:
             #  jump backward
             if ek == Qt.Key_Down:
-
                 logging.debug("jump backward")
 
                 self.jumpBackward_activated()
@@ -4579,7 +4545,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
             # jump forward
             if ek == Qt.Key_Up:
-
                 logging.debug("jump forward")
 
                 self.jumpForward_activated()
@@ -4587,14 +4552,12 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
             # next media file (page up)
             if ek == Qt.Key_PageUp:
-
                 logging.debug("next media file")
 
                 self.next_media_file()
 
             # previous media file (page down)
             if ek == Qt.Key_PageDown:
-
                 logging.debug("previous media file")
 
                 self.previous_media_file()
@@ -4613,7 +4576,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         # get time
         memLaps = None
         if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE] == cfg.LIVE:
-
             if self.pj[cfg.OBSERVATIONS][self.observationId].get(cfg.SCAN_SAMPLING_TIME, 0):
                 if self.timeFormat == cfg.HHMMSS:
                     memLaps = dec(int(util.time2seconds(self.lb_current_media_time.text())))
@@ -4639,7 +4601,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             or (ek in cfg.function_keys)
             or (ek == Qt.Key_Enter and event.text())
         ):  # click from coding pad or subjects pad
-
             ethogram_idx, subj_idx, count = -1, -1, 0
 
             if ek in cfg.function_keys:
@@ -4748,7 +4709,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 self.write_event(event, memLaps)
 
             elif count == 0:  # not a behavior
-
                 if subj_idx != -1:
                     # check if key defines a suject
                     flag_subject = False
@@ -4842,7 +4802,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             if (not self.find_dialog.cbFindInSelectedEvents.isChecked()) or (
                 self.find_dialog.cbFindInSelectedEvents.isChecked() and event_idx in self.find_dialog.rowsToFind
             ):
-
                 for idx in fields_list:
                     if (
                         self.find_dialog.cb_case_sensitive.isChecked()
@@ -4852,7 +4811,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                         and self.find_dialog.findText.text().upper()
                         in self.twEvents.item(event_idx, idx).text().upper()
                     ):
-
                         self.find_dialog.currentIdx = event_idx
                         self.twEvents.scrollToItem(self.twEvents.item(event_idx, 0))
                         self.twEvents.selectRow(event_idx)
@@ -4904,7 +4862,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         number_replacement = 0
         insensitive_re = re.compile(re.escape(self.find_replace_dialog.findText.text()), re.IGNORECASE)
         for event_idx, event in enumerate(self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS]):
-
             # apply modif only to filtered subjects
             if self.filtered_subjects:
                 if (
@@ -4938,7 +4895,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                         not self.find_replace_dialog.cb_case_sensitive.isChecked()
                         and self.find_replace_dialog.findText.text().upper() in event[idx1].upper()
                     ):
-
                         number_replacement += 1
                         self.find_replace_dialog.currentIdx = event_idx
                         self.find_replace_dialog.currentIdx_idx = idx1
@@ -5051,7 +5007,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             return
 
         if self.playerType == cfg.MEDIA:
-
             # check if player 1 is ended
             for i, dw in enumerate(self.dw_player):
                 if (
@@ -5083,15 +5038,12 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         """
 
         if self.playerType == cfg.MEDIA:
-
             for i, player in enumerate(self.dw_player):
                 if (
                     str(i + 1) in self.pj[cfg.OBSERVATIONS][self.observationId][cfg.FILE]
                     and self.pj[cfg.OBSERVATIONS][self.observationId][cfg.FILE][str(i + 1)]
                 ):
-
                     if not player.player.pause:
-
                         self.plot_timer.stop()
                         # stop all timer for plotting data
                         for data_timer in self.ext_data_timer_list:
@@ -5125,7 +5077,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         rewind from current position
         """
         if self.playerType == cfg.MEDIA:
-
             decrement = (
                 self.fast * self.play_rate
                 if self.config_param.get(cfg.ADAPT_FAST_JUMP, cfg.ADAPT_FAST_JUMP_DEFAULT)
@@ -5159,7 +5110,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         logging.debug("function: jumpForward_activated")
 
         if self.playerType == cfg.MEDIA:
-
             increment = (
                 self.fast * self.play_rate
                 if self.config_param.get(cfg.ADAPT_FAST_JUMP, cfg.ADAPT_FAST_JUMP_DEFAULT)
@@ -5192,7 +5142,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         logging.debug("Reset activated")
 
         if self.playerType == cfg.MEDIA:
-
             self.pause_video()
 
             if cfg.OBSERVATION_TIME_INTERVAL in self.pj[cfg.OBSERVATIONS][self.observationId]:
@@ -5219,7 +5168,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
 
 def main():
-
     app = QApplication(sys.argv)
 
     import locale
@@ -5274,7 +5222,6 @@ def main():
         observation_to_open = options.observation
 
     if project_to_open:
-
         project_path, project_changed, pj, msg = project_functions.open_project_json(project_to_open)
 
         if "error" in pj:

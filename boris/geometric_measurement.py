@@ -42,6 +42,8 @@ from PyQt5.QtWidgets import (
     QSizePolicy,
 )
 
+from typing import Union, Optional, List, Tuple, Dict
+
 from . import config as cfg
 from . import dialog, menu_options
 from . import utilities as util
@@ -152,6 +154,7 @@ class wgMeasurement(QWidget):
         cd = QColorDialog()
         cd.setWindowFlags(Qt.WindowStaysOnTopHint)
         cd.setOptions(QColorDialog.ShowAlphaChannel | QColorDialog.DontUseNativeDialog)
+        cd.setCurrentColor(QColor(self.mark_color))
 
         if cd.exec_():
             new_color = cd.currentColor()
@@ -163,11 +166,13 @@ class wgMeasurement(QWidget):
         Intercept the close event to check if measurements are saved
         """
 
+        logging.debug("close event")
+
         if not self.flag_saved:
             response = dialog.MessageDialog(
                 cfg.programName,
                 "The current measurements are not saved. Do you want to save the measurement results before closing?",
-                [cfg.YES, cfg.NO, cfg.CANCEL],
+                (cfg.YES, cfg.NO, cfg.CANCEL),
             )
             if response == cfg.YES:
                 self.pbSave_clicked()
@@ -188,7 +193,7 @@ class wgMeasurement(QWidget):
             response = dialog.MessageDialog(
                 cfg.programName,
                 "Confirm clearing",
-                [cfg.YES, cfg.CANCEL],
+                (cfg.YES, cfg.CANCEL),
             )
             if response == cfg.CANCEL:
                 return
@@ -201,6 +206,7 @@ class wgMeasurement(QWidget):
         """
         Close button
         """
+        logging.debug("close function")
         self.close()
 
     def pbSave_clicked(self):
@@ -232,6 +238,8 @@ def show_widget(self):
         close the geometric measurement widget
         """
 
+        logging.debug("close_measurement_widget")
+
         if self.observationId and self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE] == cfg.MEDIA:
             for n_player, dw in enumerate(self.dw_player):
                 dw.frame_viewer.clear()
@@ -239,15 +247,15 @@ def show_widget(self):
                 dw.setWindowTitle(f"Player #{n_player + 1}")
             self.actionPlay.setEnabled(True)
 
+        if self.observationId and self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE] == cfg.IMAGES:
+            for dw in self.dw_player:
+                self.extract_frame(dw)
+
         self.geometric_measurements_mode = False
+        self.measurement_w.draw_mem = {}
+
         self.measurement_w.close()
         menu_options.update_menu(self)
-
-    """
-    if self.playerType == cfg.IMAGES:
-        QMessageBox.warning(None, cfg.programName, ("Not yet implemented"), QMessageBox.Ok)
-        return
-    """
 
     self.geometric_measurements_mode = True
     self.pause_video()
@@ -260,12 +268,16 @@ def show_widget(self):
     self.measurement_w.setWindowFlags(Qt.WindowStaysOnTopHint)
     self.measurement_w.closeSignal.connect(close_measurement_widget)
     self.measurement_w.send_event_signal.connect(self.signal_from_widget)
+    self.measurement_w.draw_mem = {}
+
     self.measurement_w.show()
 
     for dw in self.dw_player:
         dw.setWindowTitle("Geometric measurements")
         dw.stack.setCurrentIndex(cfg.PICTURE_VIEWER)
         self.extract_frame(dw)
+
+    # print(f"{self.measurement_w.draw_mem=}")
 
 
 def draw_point(self, x, y, color: str, n_player: int = 0):
@@ -315,10 +327,13 @@ def image_clicked(self, n_player, event):
         return
 
     self.mem_player = n_player
-    if self.dw_player[n_player].player.estimated_frame_number is not None:
-        current_frame = self.dw_player[n_player].player.estimated_frame_number + 1
-    else:
-        current_frame = cfg.NA
+    if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE] == cfg.MEDIA:
+        if self.dw_player[n_player].player.estimated_frame_number is not None:
+            current_frame = self.dw_player[n_player].player.estimated_frame_number + 1
+        else:
+            current_frame = cfg.NA
+    elif self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE] == cfg.IMAGES:
+        current_frame = self.image_idx
 
     if not (hasattr(self, "measurement_w") and (self.measurement_w is not None) and (self.measurement_w.isVisible())):
         return
@@ -332,8 +347,6 @@ def image_clicked(self, n_player, event):
         )"""
 
     x, y = event.pos().x(), event.pos().y()
-
-    print(f"{x=}  {y=}")
 
     # convert label coordinates in pixmap coordinates
     pixmap_x = int(
@@ -354,13 +367,10 @@ def image_clicked(self, n_player, event):
             * self.dw_player[n_player].player.height
         )
     elif self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE] == cfg.IMAGES:
-
         original_width = QPixmap(self.images_list[self.image_idx]).size().width()
         original_height = QPixmap(self.images_list[self.image_idx]).size().height()
         x_video = round((pixmap_x / self.dw_player[n_player].frame_viewer.pixmap().width()) * original_width)
         y_video = round((pixmap_y / self.dw_player[n_player].frame_viewer.pixmap().height()) * original_height)
-
-    print(f"{x_video=}  {y_video=}")
 
     if not (
         0 <= pixmap_x <= self.dw_player[n_player].frame_viewer.pixmap().width()
@@ -394,8 +404,8 @@ def image_clicked(self, n_player, event):
     elif self.measurement_w.rbDistance.isChecked():
         if event.button() == 1:  # left
             draw_point(self, pixmap_x, pixmap_y, self.measurement_w.mark_color, n_player)
-            self.memx, self.memy = pixmap_x, pixmap_y
-            self.memx_video, self.memy_video = x_video, y_video
+            self.memx, self.memy = round(pixmap_x), round(pixmap_y)
+            self.memx_video, self.memy_video = round(x_video), round(y_video)
 
         if event.button() == 2 and self.memx != -1 and self.memy != -1:
             draw_point(self, pixmap_x, pixmap_y, self.measurement_w.mark_color, n_player)
@@ -545,7 +555,7 @@ def redraw_measurements(self):
     redraw measurements from previous frames
     """
 
-    def scale_coord(coord_list: list):
+    def scale_coord(coord_list: list) -> List[int]:
         """
         scale coordinates from original media resolution to pixmap
         """
@@ -557,14 +567,12 @@ def redraw_measurements(self):
             original_width = dw.player.width
             original_height = dw.player.height
 
-        pixmap_coord_list: list = []
+        pixmap_coord_list: List[int] = []
         for idx, coord in enumerate(coord_list):
             if idx % 2 == 0:
-                coord_frac = coord / original_width
-                coord_pixmap = coord_frac * dw.frame_viewer.pixmap().width()
+                coord_pixmap = round(coord / original_width * dw.frame_viewer.pixmap().width())
             else:
-                coord_frac = coord / original_height
-                coord_pixmap = coord_frac * dw.frame_viewer.pixmap().height()
+                coord_pixmap = round(coord / original_height * dw.frame_viewer.pixmap().height())
             pixmap_coord_list.append(coord_pixmap)
 
         return pixmap_coord_list
@@ -579,16 +587,16 @@ def redraw_measurements(self):
         return
 
     for idx, dw in enumerate(self.dw_player):
-
-        if dw.player.estimated_frame_number is not None:
-            current_frame = dw.player.estimated_frame_number + 1
-        else:
-            current_frame = cfg.NA
+        if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE] == cfg.MEDIA:
+            if dw.player.estimated_frame_number is not None:
+                current_frame = dw.player.estimated_frame_number + 1
+            else:
+                current_frame = cfg.NA
+        if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE] == cfg.IMAGES:
+            current_frame = self.image_idx
 
         for frame in self.measurement_w.draw_mem:
-
             for element in self.measurement_w.draw_mem[frame]:
-
                 if frame == current_frame:
                     elementsColor = element[2]  # color
                 else:
@@ -631,7 +639,6 @@ def redraw_measurements(self):
 
 
 if __name__ == "__main__":
-
     import sys
 
     app = QApplication(sys.argv)
