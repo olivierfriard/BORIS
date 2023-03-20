@@ -76,6 +76,8 @@ from PyQt5.QtWidgets import (
     QAction,
     QAbstractItemView,
     QSplashScreen,
+    QToolButton,
+    QMenu,
 )
 from PIL.ImageQt import Image
 
@@ -263,7 +265,43 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
     mem_hash_obs: int = 0
 
+    '''
+    def add_button_menu(self, data, menu_obj):
+        """
+        add menu option from dictionary
+        """
+        if isinstance(data, dict):
+            for k, v in data.items():
+                sub_menu = QMenu(k, menu_obj)
+                menu_obj.addMenu(sub_menu)
+                self.add_button_menu(v, sub_menu)
+        elif isinstance(data, list):
+            for element in data:
+                self.add_button_menu(element, menu_obj)
+        else:
+            action = menu_obj.addAction(data.split("|")[1])
+            # tips are used to discriminate the menu option
+            action.setStatusTip(data.split("|")[0])
+            action.setIconVisibleInMenu(False)
+
+    def behavior(self, action: str):
+        """
+        behavior menu
+        """
+        if action == "new":
+            self.add_behavior()
+        if action == "clone":
+            self.clone_behavior()
+        if action == "remove":
+            self.remove_behavior()
+        if action == "remove all":
+            self.remove_all_behaviors()
+        if action == "lower":
+            self.convert_behaviors_keys_to_lower_case()
+    '''
+
     def __init__(self, ffmpeg_bin, parent=None):
+
         super(MainWindow, self).__init__(parent)
         self.setupUi(self)
 
@@ -272,6 +310,25 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.ffmpeg_bin = ffmpeg_bin
         # set icons
         self.setWindowIcon(QIcon(":/small_logo"))
+        """
+        self.tb_export = QToolButton()
+        self.tb_export.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
+        self.tb_export.setIcon(QIcon(":/export"))
+        self.tb_export.setFocusPolicy(Qt.NoFocus)
+        self.toolBar.addWidget(self.tb_export)
+
+        behavior_button_items = [
+            "new|Add new behavior",
+            "clone|Clone behavior",
+            "remove|Remove behavior",
+            "remove all|Remove all behaviors",
+            "lower|Convert keys to lower case",
+        ]
+        self.menu = QMenu()
+        self.menu.triggered.connect(lambda x: self.behavior(action=x.statusTip()))
+        self.add_button_menu(behavior_button_items, self.menu)
+        self.tb_export.setMenu(self.menu)
+        """
 
         # menu
         self.actionTime_budget.setIcon(QIcon(":/time_budget"))
