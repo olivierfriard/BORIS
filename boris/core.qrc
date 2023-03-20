@@ -29,6 +29,7 @@
 <file alias="explore">icons/glyphicons_025_binoculars.png</file>
 <file alias="plot_time_budget">icons/glyphicons_041_charts.png</file>
 <file alias="filter">icons/glyphicons_320_filter.png</file>
+<file alias="measurement">icons/glyphicons_097_vector_path_line.png</file>
 <file alias="preferences">icons/glyphicons_136_cogwheel.png</file>
 <file alias="beep">sounds/beep.wav</file>
 <file alias="key_sound">sounds/key_sound.wav</file>
