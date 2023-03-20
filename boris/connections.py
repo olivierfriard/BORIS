@@ -190,6 +190,7 @@ def connections(self):
 
     self.actionShow_data_files.triggered.connect(self.show_data_files)
     self.action_geometric_measurements.triggered.connect(lambda: geometric_measurement.show_widget(self))
+
     self.actionBehaviors_coding_map.triggered.connect(lambda: behaviors_coding_map.show_behaviors_coding_map(self))
 
     self.actionCoding_pad.triggered.connect(lambda: coding_pad.show_coding_pad(self))

@@ -305,6 +305,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         self.actionBehavior_bar_plot.setIcon(QIcon(":/plot_time_budget"))
         self.actionPlot_current_time_budget.setIcon(QIcon(":/plot_time_budget"))
+        self.action_geometric_measurements.setIcon(QIcon(":/measurement"))
         self.actionFind_in_current_obs.setIcon(QIcon(":/find"))
         self.actionExplore_project.setIcon(QIcon(":/explore"))
 

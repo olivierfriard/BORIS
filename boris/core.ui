@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>2165</width>
-    <height>714</height>
+    <width>2018</width>
+    <height>725</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -151,7 +151,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>2165</width>
+     <width>2018</width>
      <height>22</height>
     </rect>
    </property>
@@ -432,6 +432,7 @@
    <addaction name="actionCurrent_Time_Budget"/>
    <addaction name="actionPlot_current_observation"/>
    <addaction name="actionPlot_current_time_budget"/>
+   <addaction name="action_geometric_measurements"/>
    <addaction name="actionFind_in_current_obs"/>
    <addaction name="actionExplore_project"/>
    <addaction name="actionPreferences"/>

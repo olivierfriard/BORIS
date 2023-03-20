@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'boris/core.ui'
+# Form implementation generated from reading ui file 'core.ui'
 #
 # Created by: PyQt5 UI code generator 5.15.7
 #
@@ -14,7 +14,7 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
         MainWindow.setObjectName("MainWindow")
-        MainWindow.resize(2165, 714)
+        MainWindow.resize(2018, 725)
         MainWindow.setDockOptions(QtWidgets.QMainWindow.AllowNestedDocks|QtWidgets.QMainWindow.AllowTabbedDocks|QtWidgets.QMainWindow.AnimatedDocks)
         MainWindow.setUnifiedTitleAndToolBarOnMac(False)
         self.centralwidget = QtWidgets.QWidget(MainWindow)
@@ -84,7 +84,7 @@ class Ui_MainWindow(object):
         self.horizontalLayout_2.addLayout(self.horizontalLayout)
         MainWindow.setCentralWidget(self.centralwidget)
         self.menubar = QtWidgets.QMenuBar(MainWindow)
-        self.menubar.setGeometry(QtCore.QRect(0, 0, 2165, 22))
+        self.menubar.setGeometry(QtCore.QRect(0, 0, 2018, 22))
         self.menubar.setObjectName("menubar")
         self.menuHelp = QtWidgets.QMenu(self.menubar)
         self.menuHelp.setObjectName("menuHelp")
@@ -724,6 +724,7 @@ class Ui_MainWindow(object):
         self.toolBar.addAction(self.actionCurrent_Time_Budget)
         self.toolBar.addAction(self.actionPlot_current_observation)
         self.toolBar.addAction(self.actionPlot_current_time_budget)
+        self.toolBar.addAction(self.action_geometric_measurements)
         self.toolBar.addAction(self.actionFind_in_current_obs)
         self.toolBar.addAction(self.actionExplore_project)
         self.toolBar.addAction(self.actionPreferences)
