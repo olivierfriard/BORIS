@@ -229,10 +229,6 @@ class wgMeasurement(QWidget):
         if not file_name:
             return
 
-        """file_name, _ = QFileDialog().getSaveFileName(
-            self, "Save geometric measurements", "", "Text files (*.txt);;All files (*)"
-        )"""
-
         # add correct file extension if not present
         if pl.Path(file_name).suffix != f".{cfg.FILE_NAME_SUFFIX[filter_]}":
             file_name = str(pl.Path(file_name)) + "." + cfg.FILE_NAME_SUFFIX[filter_]
