@@ -338,6 +338,7 @@
     <addaction name="actionJumpForward"/>
     <addaction name="actionJumpBackward"/>
     <addaction name="actionJumpTo"/>
+    <addaction name="action_deinterlace"/>
     <addaction name="separator"/>
     <addaction name="actionZoom_level"/>
     <addaction name="separator"/>
@@ -1554,6 +1555,14 @@
   <action name="actionRotate_current_video">
    <property name="text">
     <string>Rotate video</string>
+   </property>
+  </action>
+  <action name="action_deinterlace">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Deinterlace</string>
    </property>
   </action>
  </widget>

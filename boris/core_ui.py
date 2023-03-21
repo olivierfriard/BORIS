@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'core.ui'
+# Form implementation generated from reading ui file 'boris/core.ui'
 #
 # Created by: PyQt5 UI code generator 5.15.7
 #
@@ -569,6 +569,9 @@ class Ui_MainWindow(object):
         self.actionConfigure_twEvents_columns.setObjectName("actionConfigure_twEvents_columns")
         self.actionRotate_current_video = QtWidgets.QAction(MainWindow)
         self.actionRotate_current_video.setObjectName("actionRotate_current_video")
+        self.action_deinterlace = QtWidgets.QAction(MainWindow)
+        self.action_deinterlace.setCheckable(True)
+        self.action_deinterlace.setObjectName("action_deinterlace")
         self.menuHelp.addAction(self.actionUser_guide)
         self.menuHelp.addAction(self.actionCheckUpdate)
         self.menuHelp.addSeparator()
@@ -668,6 +671,7 @@ class Ui_MainWindow(object):
         self.menuPlayback.addAction(self.actionJumpForward)
         self.menuPlayback.addAction(self.actionJumpBackward)
         self.menuPlayback.addAction(self.actionJumpTo)
+        self.menuPlayback.addAction(self.action_deinterlace)
         self.menuPlayback.addSeparator()
         self.menuPlayback.addAction(self.actionZoom_level)
         self.menuPlayback.addSeparator()
@@ -965,3 +969,4 @@ class Ui_MainWindow(object):
         self.actionExport_project.setText(_translate("MainWindow", "Export project"))
         self.actionConfigure_twEvents_columns.setText(_translate("MainWindow", "Configure columns"))
         self.actionRotate_current_video.setText(_translate("MainWindow", "Rotate video"))
+        self.action_deinterlace.setText(_translate("MainWindow", "Deinterlace"))

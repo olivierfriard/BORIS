@@ -171,6 +171,7 @@ def connections(self):
 
     # menu playback
     self.actionJumpTo.triggered.connect(self.jump_to)
+    self.action_deinterlace.triggered.connect(lambda: video_operations.deinterlace(self))
     self.actionZoom_level.triggered.connect(lambda: video_operations.zoom_level(self))
     self.actionRotate_current_video.triggered.connect(lambda: video_operations.rotate_displayed_video(self))
     self.actionDisplay_subtitles.triggered.connect(lambda: video_operations.display_subtitles(self))

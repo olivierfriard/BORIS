@@ -678,6 +678,10 @@ INIT_PARAM = {
 SDIS_EXT = "sds"
 TBS_EXT = "tbs"
 TSV_EXT = "tsv"
+CSV_EXT = "cvs"
+RDS_EXT = "rds"
+PANDAS_DF_EXT = "pkl"
+HMTL_EXT = "html"
 
 # Output format
 TSV = "Tab Separated Values (*.tsv)"
@@ -705,7 +709,7 @@ FILE_NAME_SUFFIX = {
     XLS: "xls",
     HTML: "html",
     PANDAS_DF: "pkl",
-    RDS: "rds",
+    RDS: RDS_EXT,
     SQL: "sql",
     SDIS: SDIS_EXT,
     TBS: TBS_EXT,

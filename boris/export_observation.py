@@ -593,7 +593,7 @@ def dataset_write(
 
     try:
 
-        if output_format in ("pkl", "rds"):
+        if output_format in (cfg.PANDAS_DF_EXT, cfg.RDS_EXT):
 
             # build pandas dataframe from the tsv export of tablib dataset
             date_type = []
@@ -611,15 +611,15 @@ def dataset_write(
                 parse_dates=date_type,
             )
 
-            if output_format == "pkl":
+            if output_format == cfg.PANDAS_DF_EXT:
                 df.to_pickle(file_name)
 
-            if flag_pyreadr_loaded and output_format == "rds":
+            if flag_pyreadr_loaded and output_format == cfg.RDS_EXT:
                 pyreadr.write_rds(file_name, df)
 
             return True, ""
 
-        if output_format in ("csv", "tsv", "html"):
+        if output_format in (cfg.CSV_EXT, cfg.TSV_EXT, cfg.HMTL_EXT):
             with open(file_name, "wb") as f:
                 f.write(str.encode(dataset.export(output_format)))
             return True, ""

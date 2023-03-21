@@ -25,6 +25,14 @@ import io
 import pandas as pd
 import pathlib as pl
 
+try:
+    import pyreadr
+
+    flag_pyreadr_loaded = True
+except ModuleNotFoundError:
+    flag_pyreadr_loaded = False
+
+
 from PyQt5.QtCore import QPoint, Qt, pyqtSignal, QEvent
 from PyQt5.QtGui import QColor, QPainter, QPolygon, QPixmap
 from PyQt5.QtWidgets import (
@@ -211,7 +219,9 @@ class wgMeasurement(QWidget):
         Save measurements results in plain text file
         """
 
-        file_formats = [cfg.TSV, cfg.CSV, cfg.ODS, cfg.XLSX, cfg.HTML, cfg.PANDAS_DF, cfg.RDS]
+        file_formats = [cfg.TSV, cfg.CSV, cfg.ODS, cfg.XLSX, cfg.HTML, cfg.PANDAS_DF]
+        if flag_pyreadr_loaded:
+            file_formats.append(cfg.RDS)
 
         file_name, filter_ = QFileDialog().getSaveFileName(
             self, "Save geometric measurements", "", ";;".join(file_formats)
@@ -230,7 +240,7 @@ class wgMeasurement(QWidget):
             if pl.Path(file_name).is_file():
                 if (
                     dialog.MessageDialog(
-                        cfg.programName, f"The file {file_name} already exists.", [cfg.CANCEL, cfg.OVERWRITE]
+                        cfg.programName, f"The file {file_name} already exists.", (cfg.CANCEL, cfg.OVERWRITE)
                     )
                     == cfg.CANCEL
                 ):
@@ -242,7 +252,6 @@ class wgMeasurement(QWidget):
             if filter_ == cfg.ODS:
                 df.to_excel(file_name, engine="odf", sheet_name="Geometric measurements", index=False, na_rep="NA")
                 self.flag_saved = True
-
             if filter_ == cfg.XLSX:
                 df.to_excel(file_name, sheet_name="Geometric measurements", index=False, na_rep="NA")
                 self.flag_saved = True
@@ -256,6 +265,11 @@ class wgMeasurement(QWidget):
                 df.to_csv(file_name, index=False, sep="\t", na_rep="NA")
                 self.flag_saved = True
             # TODO: implement pandas df and RDS
+            if filter_ == cfg.PANDAS_DF:
+                df.to_pickle(file_name)
+            if filter_ == cfg.RDS:
+                pyreadr.write_rds(file_name, df)
+
         except Exception:
             QMessageBox.warning(self, cfg.programName, "An error occured during saving the measurement results")
 

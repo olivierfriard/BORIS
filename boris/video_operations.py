@@ -32,6 +32,15 @@ from . import config as cfg
 from . import dialog
 
 
+def deinterlace(self):
+    """
+    change the deinterlace status of player
+    """
+    for dw in self.dw_player:
+        dw.player.deinterlace = self.action_deinterlace.isChecked()
+        print(dw.player.deinterlace)
+
+
 def snapshot(self):
     """
     MEDIA obs: take snapshot of current video at current position
