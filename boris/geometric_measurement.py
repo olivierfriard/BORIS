@@ -264,7 +264,6 @@ class wgMeasurement(QWidget):
             if filter_ == cfg.TSV:
                 df.to_csv(file_name, index=False, sep="\t", na_rep="NA")
                 self.flag_saved = True
-            # TODO: implement pandas df and RDS
             if filter_ == cfg.PANDAS_DF:
                 df.to_pickle(file_name)
             if filter_ == cfg.RDS:
