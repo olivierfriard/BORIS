@@ -228,11 +228,10 @@ class Advanced_event_filtering_dialog(QDialog):
                     if not i.empty:
                         self.out.append([obs_id, "", f"{i.lower}", f"{i.upper}", f"{i.upper - i.lower:.3f}"])
             except KeyError:
-                self.out.append([obs_id, "subject / behavior not found", "NA", "NA", "NA"])
+                self.out.append([obs_id, "subject / behavior not found", cfg.NA, cfg.NA, cfg.NA])
             except Exception:
-
                 error_type, _, _ = util.error_info(sys.exc_info())
-                self.out.append([obs_id, f"Error in {self.logic.text()}: {error_type} ", "NA", "NA", "NA"])
+                self.out.append([obs_id, f"Error in {self.logic.text()}: {error_type} ", cfg.NA, cfg.NA, cfg.NA])
                 flag_error = True
 
         self.tw.clear()
