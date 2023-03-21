@@ -301,7 +301,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     '''
 
     def __init__(self, ffmpeg_bin, parent=None):
-
         super(MainWindow, self).__init__(parent)
         self.setupUi(self)
 
@@ -3891,7 +3890,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         """
 
         state_events_list = util.state_behavior_codes(self.pj[cfg.ETHOGRAM])
-        mem_behav = {}
+        mem_behav: dict = {}
 
         for row in range(self.twEvents.rowCount()):
             subject = self.twEvents.item(row, cfg.TW_OBS_FIELD[self.playerType][cfg.SUBJECT]).text()

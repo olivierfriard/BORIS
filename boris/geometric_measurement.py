@@ -294,7 +294,7 @@ def draw_point(self, x, y, color: str, n_player: int = 0):
     self.dw_player[n_player].frame_viewer.update()
 
 
-def draw_line(self, x1, y1, x2, y2, color: str, n_player=0):
+def draw_line(self, x1: int, y1: int, x2: int, y2: int, color: str, n_player: int = 0) -> None:
     """
     draw line on frame-by-frame image
     """
