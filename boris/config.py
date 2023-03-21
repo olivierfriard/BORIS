@@ -37,9 +37,9 @@ MAX_UNDO_QUEUE: int = 25
 
 NA: str = "NA"
 
-CTRL_KEY = "Ctrl"
+CTRL_KEY: str = "Ctrl"
 
-SPECTRO_TIMER = 500
+SPECTRO_TIMER: int = 500
 
 function_keys = {
     16777264: "F1",

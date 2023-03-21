@@ -168,9 +168,9 @@ class timeBudgetResults(QWidget):
                 ):
                     return
 
-        rows = []
+        rows: list = []
 
-        header = ["Observation id", "Observation date", "Description"]
+        header: list = ["Observation id", "Observation date", "Description"]
         # indep var labels
         header.extend([self.pj[cfg.INDEPENDENT_VARIABLES][idx]["label"] for idx in self.pj[cfg.INDEPENDENT_VARIABLES]])
         header.extend(["Time budget start", "Time budget stop", "Time budget duration"])
@@ -462,7 +462,6 @@ def time_budget(self, mode: str, mode2: str = "list"):
 
     # check if time_budget window must be used
     if flagGroup or len(selected_observations) == 1:
-
         cursor = db_functions.load_events_in_db(
             self.pj,
             parameters[cfg.SELECTED_SUBJECTS],
@@ -473,7 +472,6 @@ def time_budget(self, mode: str, mode2: str = "list"):
 
         total_observation_time = 0
         for obsId in selected_observations:
-
             obs_length = observation_operations.observation_total_length(self.pj[cfg.OBSERVATIONS][obsId])
 
             if obs_length == dec(-1):  # media length not available
@@ -524,7 +522,6 @@ def time_budget(self, mode: str, mode2: str = "list"):
                         # logging.debug("distinct_modifiers: {}".format(distinct_modifiers))
 
                         for modifier in distinct_modifiers:
-
                             # logging.debug("modifier #{}#".format(modifier[0]))
 
                             # insert events at boundaries of time interval
@@ -541,7 +538,6 @@ def time_budget(self, mode: str, mode2: str = "list"):
                                 )
                                 % 2
                             ):
-
                                 cursor.execute(
                                     (
                                         "INSERT INTO events (observation, subject, code, type, modifiers, occurence) "
@@ -562,7 +558,6 @@ def time_budget(self, mode: str, mode2: str = "list"):
                                 )
                                 % 2
                             ):
-
                                 cursor.execute(
                                     (
                                         "INSERT INTO events (observation, subject, code, type, modifiers, occurence) "
@@ -641,7 +636,6 @@ def time_budget(self, mode: str, mode2: str = "list"):
             self.tb.excluded_behaviors_list.setVisible(False)
 
         if mode == "by_behavior":
-
             tb_fields = [
                 "Subject",
                 "Behavior",
@@ -673,7 +667,6 @@ def time_budget(self, mode: str, mode2: str = "list"):
                 self.tb.twTB.setRowCount(self.tb.twTB.rowCount() + 1)
                 column = 0
                 for field in fields:
-
                     if isinstance(row[field], float):
                         item = QTableWidgetItem(f"{row[field]:.3f}")
                     else:
@@ -703,7 +696,6 @@ def time_budget(self, mode: str, mode2: str = "list"):
                 self.tb.twTB.setItem(self.tb.twTB.rowCount() - 1, column, item)
 
         if mode == "by_category":
-
             tb_fields = ["Subject", "Category", "Total number", "Total duration (s)"]
             fields = ["number", "duration"]
 
@@ -711,9 +703,7 @@ def time_budget(self, mode: str, mode2: str = "list"):
             self.tb.twTB.setHorizontalHeaderLabels(tb_fields)
 
             for subject in categories:
-
                 for category in categories[subject]:
-
                     self.tb.twTB.setRowCount(self.tb.twTB.rowCount() + 1)
 
                     column = 0
@@ -750,7 +740,6 @@ def time_budget(self, mode: str, mode2: str = "list"):
         self.tb.show()
 
     if not flagGroup and len(selected_observations) > 1:
-
         output_format, ok = QInputDialog.getItem(
             self,
             "Time budget analysis format",
@@ -805,7 +794,6 @@ def time_budget(self, mode: str, mode2: str = "list"):
                 return
 
         if mode == "by_behavior":
-
             tb_fields = [
                 "Subject",
                 "Behavior",
@@ -831,13 +819,11 @@ def time_budget(self, mode: str, mode2: str = "list"):
             ]
 
         if mode == "by_category":
-
             tb_fields = ["Subject", "Category", "Total number of occurences", "Total duration (s)"]
             fields = ["subject", "category", "number", "duration"]
 
         mem_command = ""
         for obsId in selected_observations:
-
             cursor = db_functions.load_events_in_db(
                 self.pj, parameters[cfg.SELECTED_SUBJECTS], [obsId], parameters[cfg.SELECTED_BEHAVIORS]
             )
@@ -889,7 +875,6 @@ def time_budget(self, mode: str, mode2: str = "list"):
                         distinct_modifiers = list(cursor.fetchall())
 
                         for modifier in distinct_modifiers:
-
                             if (
                                 len(
                                     cursor.execute(
@@ -980,7 +965,6 @@ def time_budget(self, mode: str, mode2: str = "list"):
             header.extend(["Time budget start", "Time budget stop", "Time budget duration"])
 
             if mode == "by_behavior":
-
                 # header
                 rows.append(header + tb_fields)
 
@@ -1010,7 +994,6 @@ def time_budget(self, mode: str, mode2: str = "list"):
                 rows.append(header + tb_fields)
 
                 for subject in categories:
-
                     for category in categories[subject]:
                         values = []
                         values.append(subject)
@@ -1039,7 +1022,6 @@ def time_budget(self, mode: str, mode2: str = "list"):
                 workbook.add_sheet(data)
 
             else:
-
                 file_name = f"{pl.Path(exportDir) / pl.Path(util.safeFileName(obsId))}.{extension}"
                 if mem_command != cfg.OVERWRITE_ALL and pl.Path(file_name).is_file():
                     if mem_command == "Skip all":

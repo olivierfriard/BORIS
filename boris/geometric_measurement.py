@@ -21,6 +21,9 @@ This file is part of BORIS.
 """
 
 import logging
+import io
+import pandas as pd
+import pathlib as pl
 
 from PyQt5.QtCore import QPoint, Qt, pyqtSignal, QEvent
 from PyQt5.QtGui import QColor, QPainter, QPolygon, QPixmap
@@ -94,45 +97,39 @@ class wgMeasurement(QWidget):
         vbox.addWidget(QLabel("<b>Scale</b>"))
 
         hbox1 = QHBoxLayout()
-
         self.lbRef = QLabel("Reference")
         hbox1.addWidget(self.lbRef)
-
         self.lbPx = QLabel("Pixels")
         hbox1.addWidget(self.lbPx)
-
         vbox.addLayout(hbox1)
 
         hbox2 = QHBoxLayout()
-
         self.leRef = QLineEdit()
         self.leRef.setText("1")
         hbox2.addWidget(self.leRef)
-
         self.lePx = QLineEdit()
         self.lePx.setText("1")
         hbox2.addWidget(self.lePx)
-
         vbox.addLayout(hbox2)
 
         self.pte = QPlainTextEdit()
         vbox.addWidget(self.pte)
+        self.pte.setReadOnly(True)
+        self.pte.setLineWrapMode(QPlainTextEdit.NoWrap)
+        # header
+        self.pte.setPlainText("Player\tTime\tFrame index\ttype of measurement\tx\ty\tdistance\tarea\tangle")
 
         self.status_lb = QLabel()
         vbox.addWidget(self.status_lb)
 
         hbox3 = QHBoxLayout()
         hbox3.addItem(QSpacerItem(40, 20, QSizePolicy.Expanding, QSizePolicy.Minimum))
-
         self.pbClear = QPushButton("Clear measurements", clicked=self.pbClear_clicked)
         hbox3.addWidget(self.pbClear)
-
         self.pbSave = QPushButton("Save results", clicked=self.pbSave_clicked)
         hbox3.addWidget(self.pbSave)
-
         self.pbClose = QPushButton("Close", clicked=self.pbClose_clicked)
         hbox3.addWidget(self.pbClose)
-
         vbox.addLayout(hbox3)
 
         self.installEventFilter(self)
@@ -213,19 +210,54 @@ class wgMeasurement(QWidget):
         """
         Save measurements results in plain text file
         """
-        if self.pte.toPlainText():
-            file_name, _ = QFileDialog().getSaveFileName(
-                self, "Save geometric measurements", "", "Text files (*.txt);;All files (*)"
-            )
-            if file_name:
-                try:
-                    with open(file_name, "w") as f:
-                        f.write(self.pte.toPlainText())
-                    self.flag_saved = True
-                except Exception:
-                    QMessageBox.warning(self, cfg.programName, "An error occured during saving the measurement results")
-        else:
-            QMessageBox.information(self, cfg.programName, "There are no measurement results to save")
+
+        file_formats = [cfg.TSV, cfg.CSV, cfg.ODS, cfg.XLSX, cfg.HTML, cfg.PANDAS_DF, cfg.RDS]
+
+        file_name, filter_ = QFileDialog().getSaveFileName(
+            self, "Save geometric measurements", "", ";;".join(file_formats)
+        )
+        if not file_name:
+            return
+
+        """file_name, _ = QFileDialog().getSaveFileName(
+            self, "Save geometric measurements", "", "Text files (*.txt);;All files (*)"
+        )"""
+
+        # add correct file extension if not present
+        if pl.Path(file_name).suffix != f".{cfg.FILE_NAME_SUFFIX[filter_]}":
+            file_name = str(pl.Path(file_name)) + "." + cfg.FILE_NAME_SUFFIX[filter_]
+            # check if file with new extension already exists
+            if pl.Path(file_name).is_file():
+                if (
+                    dialog.MessageDialog(
+                        cfg.programName, f"The file {file_name} already exists.", [cfg.CANCEL, cfg.OVERWRITE]
+                    )
+                    == cfg.CANCEL
+                ):
+                    return
+
+        df = pd.read_csv(io.StringIO(self.pte.toPlainText()), sep="\t")
+
+        try:
+            if filter_ == cfg.ODS:
+                df.to_excel(file_name, engine="odf", sheet_name="Geometric measurements", index=False, na_rep="NA")
+                self.flag_saved = True
+
+            if filter_ == cfg.XLSX:
+                df.to_excel(file_name, sheet_name="Geometric measurements", index=False, na_rep="NA")
+                self.flag_saved = True
+            if filter_ == cfg.HTML:
+                df.to_html(file_name, index=False, na_rep="NA")
+                self.flag_saved = True
+            if filter_ == cfg.CSV:
+                df.to_csv(file_name, index=False, sep=",", na_rep="NA")
+                self.flag_saved = True
+            if filter_ == cfg.TSV:
+                df.to_csv(file_name, index=False, sep="\t", na_rep="NA")
+                self.flag_saved = True
+            # TODO: implement pandas df and RDS
+        except Exception:
+            QMessageBox.warning(self, cfg.programName, "An error occured during saving the measurement results")
 
 
 def show_widget(self):
@@ -278,7 +310,7 @@ def show_widget(self):
         self.extract_frame(dw)
 
 
-def draw_point(self, x, y, color: str, n_player: int = 0):
+def draw_point(self, x: int, y: int, color: str, n_player: int = 0) -> None:
     """
     draw point on frame-by-frame image
     """
@@ -306,7 +338,14 @@ def draw_line(self, x1: int, y1: int, x2: int, y2: int, color: str, n_player: in
     self.dw_player[n_player].frame_viewer.update()
 
 
-def image_clicked(self, n_player, event):
+def append_results(self, results: List):
+    """
+    append results to plain text widget
+    """
+    self.measurement_w.pte.appendPlainText("\t".join([str(x) for x in results]))
+
+
+def image_clicked(self, n_player: int, event) -> None:
     """
     Geometric measurements on image
 
@@ -390,12 +429,21 @@ def image_clicked(self, n_player, event):
                 [n_player, "point", self.measurement_w.mark_color, x_video, y_video]
             )
 
-            self.measurement_w.pte.appendPlainText(
+            append_results(
+                self,
                 (
-                    f"Time: {self.getLaps():.3f}\tPlayer: {n_player + 1}\t"
-                    f"Frame: {current_frame}\tPoint: {x_video},{y_video}"
-                )
+                    n_player + 1,
+                    f"{self.getLaps():.03f}",
+                    current_frame,
+                    "Point",
+                    x_video,
+                    y_video,
+                    cfg.NA,
+                    cfg.NA,
+                    cfg.NA,
+                ),
             )
+
             self.measurement_w.flag_saved = False
 
     # distance
@@ -428,12 +476,21 @@ def image_clicked(self, n_player, event):
                     QMessageBox.NoButton,
                 )
 
-            self.measurement_w.pte.appendPlainText(
+            append_results(
+                self,
                 (
-                    f"Time: {self.getLaps()}\tPlayer: {n_player + 1}\t"
-                    f"Frame: {current_frame}\tDistance: {round(distance, 1)}"
-                )
+                    n_player + 1,
+                    f"{self.getLaps():.03f}",
+                    current_frame,
+                    "Distance",
+                    cfg.NA,
+                    cfg.NA,
+                    round(distance, 3),
+                    cfg.NA,
+                    cfg.NA,
+                ),
             )
+
             self.measurement_w.flag_saved = False
             self.memx, self.memy = -1, -1
 
@@ -460,13 +517,21 @@ def image_clicked(self, n_player, event):
             self.mem_video.append((x_video, y_video))
 
             if len(self.memPoints) == 3:
-                self.measurement_w.pte.appendPlainText(
+                append_results(
+                    self,
                     (
-                        f"Time: {self.getLaps()}\tPlayer: {n_player + 1}\t"
-                        f"Frame: {current_frame}\t"
-                        f"Angle: {round(util.angle(self.memPoints[0], self.memPoints[1], self.memPoints[2]), 1)}"
-                    )
+                        n_player + 1,
+                        f"{self.getLaps():.03f}",
+                        current_frame,
+                        "Angle",
+                        cfg.NA,
+                        cfg.NA,
+                        cfg.NA,
+                        cfg.NA,
+                        round(util.angle(self.memPoints[0], self.memPoints[1], self.memPoints[2]), 1),
+                    ),
                 )
+
                 self.measurement_w.flag_saved = False
                 if current_frame not in self.measurement_w.draw_mem:
                     self.measurement_w.draw_mem[current_frame] = []
@@ -538,9 +603,21 @@ def image_clicked(self, n_player, event):
                     QMessageBox.NoButton,
                 )
 
-            self.measurement_w.pte.appendPlainText(
-                (f"Time: {self.getLaps()}\tPlayer: {n_player + 1}\t" f"Frame: {current_frame}\tArea: {round(area, 1)}")
+            append_results(
+                self,
+                (
+                    n_player + 1,
+                    f"{self.getLaps():.03f}",
+                    current_frame,
+                    "Area",
+                    cfg.NA,
+                    cfg.NA,
+                    cfg.NA,
+                    round(area, 3),
+                    cfg.NA,
+                ),
             )
+
             self.measurement_w.flag_saved = False
             self.memPoints, self.mem_video = [], []
 

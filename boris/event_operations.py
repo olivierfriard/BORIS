@@ -32,6 +32,7 @@ from . import utilities as util
 from . import dialog
 from . import select_subj_behav
 from . import select_modifiers
+from . import write_event
 from .edit_event import DlgEditEvent, EditSelectedEvents
 
 from PyQt5.QtWidgets import QMessageBox, QInputDialog, QLineEdit, QAbstractItemView, QApplication
@@ -84,21 +85,19 @@ def add_event(self):
     editWindow.cobCode.addItems(sortedCodes)
 
     if editWindow.exec_():  # button OK
-
         # MEDIA / LIVE
         if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE] in (cfg.MEDIA, cfg.LIVE):
             newTime = editWindow.time_widget.get_time()
 
             for idx in self.pj[cfg.ETHOGRAM]:
                 if self.pj[cfg.ETHOGRAM][idx][cfg.BEHAVIOR_CODE] == editWindow.cobCode.currentText():
-
                     event = self.full_event(idx)
 
                     event[cfg.SUBJECT] = editWindow.cobSubject.currentText()
                     if editWindow.leComment.toPlainText():
                         event[cfg.COMMENT] = editWindow.leComment.toPlainText()
 
-                    self.write_event(event, newTime)
+                    write_event.write_event(self, event, newTime)
                     break
 
             self.update_realtime_plot(force_plot=True)
@@ -129,7 +128,6 @@ def add_event(self):
 
             for idx in self.pj[cfg.ETHOGRAM]:
                 if self.pj[cfg.ETHOGRAM][idx][cfg.BEHAVIOR_CODE] == editWindow.cobCode.currentText():
-
                     event = self.full_event(idx)
 
                     event[cfg.SUBJECT] = editWindow.cobSubject.currentText()
@@ -155,7 +153,7 @@ def add_event(self):
                     elif self.pj[cfg.OBSERVATIONS][self.observationId].get(cfg.TIME_LAPSE, 0):
                         time_ = new_index * self.pj[cfg.OBSERVATIONS][self.observationId].get(cfg.TIME_LAPSE, 0)
 
-                    self.write_event(event, dec(time_).quantize(dec("0.001"), rounding=ROUND_DOWN))
+                    write_event.write_event(self, event, dec(time_).quantize(dec("0.001"), rounding=ROUND_DOWN))
 
                     break
 
@@ -286,7 +284,6 @@ def delete_all_events(self):
         )
         == cfg.YES
     ):
-
         # fill the undo list
         fill_events_undo_list(self, "Undo 'Delete all events'")
 
@@ -380,7 +377,6 @@ def select_events_between_activated(self):
     )
 
     if ok and text != "":
-
         if "-" not in text:
             QMessageBox.critical(self, cfg.programName, "Use minus sign (-) to separate initial value from final value")
             return
@@ -434,7 +430,6 @@ def edit_selected_events(self):
         ]
 
         if dialogWindow.exec_():
-
             # fill the undo list
             fill_events_undo_list(self, "Undo 'Edit selected event(s)'")
 
@@ -460,7 +455,6 @@ def edit_selected_events(self):
             mem_event_idx = []
             for idx, event in enumerate(self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS]):
                 if idx in tsb_to_edit:
-
                     new_event = list(event)
                     if dialogWindow.rbSubject.isChecked():
                         new_event[cfg.EVENT_SUBJECT_FIELD_IDX] = dialogWindow.newText.selectedItems()[0].text()
@@ -481,7 +475,6 @@ def edit_selected_events(self):
 
             # check if behavior is unique for editing modifiers
             if len(behavior_codes) == 1:
-
                 # get behavior index
                 for idx in self.pj[cfg.ETHOGRAM]:
                     if self.pj[cfg.ETHOGRAM][idx][cfg.BEHAVIOR_CODE] == behavior_codes[0]:
@@ -665,12 +658,10 @@ def edit_event(self):
     flag_ok = False  # for looping until event is OK or Cancel pressed
     while True:
         if editWindow.exec_():  # button OK
-
             self.project_changed()
 
             # MEDIA / LIVE
             if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE] in (cfg.MEDIA, cfg.LIVE):
-
                 new_time = editWindow.time_widget.get_time()
                 for key in self.pj[cfg.ETHOGRAM]:
                     if self.pj[cfg.ETHOGRAM][key][cfg.BEHAVIOR_CODE] == editWindow.cobCode.currentText():
@@ -689,7 +680,7 @@ def edit_event(self):
                             pj_event_idx
                         ][cfg.PJ_OBS_FIELDS[self.playerType][cfg.MODIFIER]]
 
-                        r = self.write_event(event, new_time)
+                        r = write_event.write_event(self, event, new_time)
                         if r == 1:  # same event already present
                             continue
                         if not r:
@@ -747,13 +738,13 @@ def edit_event(self):
                             time_ = new_index * self.pj[cfg.OBSERVATIONS][self.observationId].get(cfg.TIME_LAPSE, 0)
                         """
 
-                        r = self.write_event(event, event[cfg.TIME].quantize(dec("0.001"), rounding=ROUND_DOWN))
-
+                        r = write_event.write_event(
+                            self, event, event[cfg.TIME].quantize(dec("0.001"), rounding=ROUND_DOWN)
+                        )
                         if r == 1:  # same event already present
                             continue
                         if not r:
                             flag_ok = True
-
                         break
 
         else:  # Cancel button
