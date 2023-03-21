@@ -36,9 +36,11 @@ def deinterlace(self):
     """
     change the deinterlace status of player
     """
+
+    logging.info(f"change deinterlace status of player")
+
     for dw in self.dw_player:
         dw.player.deinterlace = self.action_deinterlace.isChecked()
-        print(dw.player.deinterlace)
 
 
 def snapshot(self):
@@ -82,6 +84,8 @@ def zoom_level(self):
     """
     display dialog for zoom level
     """
+    logging.info(f"change zoom level of player")
+
     players_list: list = []
     for idx, dw in enumerate(self.dw_player):
         zoom_levels: list = []

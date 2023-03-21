@@ -37,6 +37,8 @@ MAX_UNDO_QUEUE: int = 25
 
 NA: str = "NA"
 
+DYNAMIC_TIME_CUTOFF_DEFAULT = 300
+
 CTRL_KEY: str = "Ctrl"
 
 SPECTRO_TIMER: int = 500

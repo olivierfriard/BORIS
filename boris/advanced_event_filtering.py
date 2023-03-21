@@ -452,5 +452,11 @@ def event_filtering(self):
             events[obs][f"{subj}|{behav}"] |= interval_func([start, stop])
 
     w = Advanced_event_filtering_dialog(events)
-    w.lb_time_interval.setText(f"Time interval: {min_time} - {max_time} s")
+    w.lb_time_interval.setText(
+        (
+            f"Time interval: "
+            f"{util.dynamic_time_format(min_time, cfg.DYNAMIC_TIME_CUTOFF_DEFAULT, self.timeFormat)} - "
+            f"{util.dynamic_time_format(max_time, cfg.DYNAMIC_TIME_CUTOFF_DEFAULT, self.timeFormat)}"
+        )
+    )
     w.exec_()

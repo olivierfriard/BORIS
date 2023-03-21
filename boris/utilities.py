@@ -175,7 +175,7 @@ def bytes_to_str(b: bytes) -> str:
         return b
 
 
-def convertTime(time_format: str, sec: float) -> str:
+def convertTime(time_format: str, sec: Union[float, dec]) -> str:
     """
     convert time in base at the current format (S or HHMMSS)
 
@@ -196,6 +196,18 @@ def convertTime(time_format: str, sec: float) -> str:
         return seconds2time(sec)
 
     return None
+
+
+def dynamic_time_format(sec: Union[float, dec], cutoff: dec, time_format: str) -> str:
+    """
+    returns time in seconds if <= cutoff else in HH:MM:SS.ZZZ format
+    """
+    if cutoff == 0:
+        return convertTime(time_format, sec)
+    if sec <= cutoff:
+        return f"{sec:.3f}"
+    else:
+        return seconds2time(sec)
 
 
 def convert_time_to_decimal(pj: dict) -> dict:
