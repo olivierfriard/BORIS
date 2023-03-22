@@ -65,7 +65,6 @@ class CodingPad(QWidget):
         self.grid = QGridLayout(self)
 
         self.installEventFilter(self)
-        # self.compose()
 
     def config(self):
         """
@@ -144,7 +143,7 @@ class CodingPad(QWidget):
 
         self.button_configuration()
 
-    def addWidget(self, behavior_code, i, j):
+    def addWidget(self, behavior_code: str, i: int, j: int) -> None:
 
         self.grid.addWidget(Button(), i, j)
         index = self.grid.count() - 1
@@ -152,7 +151,6 @@ class CodingPad(QWidget):
 
         if widget is not None:
             widget.pushButton.setText(behavior_code)
-
             widget.pushButton.clicked.connect(lambda: self.click(behavior_code))
 
     def button_configuration(self):
@@ -185,12 +183,20 @@ class CodingPad(QWidget):
                         if self.pj[cfg.ETHOGRAM][x][cfg.BEHAVIOR_CODE] == behavior_code
                     ][0]
                 )
-                color = self.behavior_colors_list[behavior_position % len(self.behavior_colors_list)].replace(
-                    "tab:", ""
-                )
+
+                # behavior button color
+                behav_color = util.behavior_user_color(self.pj[cfg.ETHOGRAM], behavior_code)
+
+                print(f"{behav_color=}")
+
+                if behav_color is not None:
+                    color = behav_color
+                else:
+                    color = self.behavior_colors_list[behavior_position % len(self.behavior_colors_list)].replace(
+                        "tab:", ""
+                    )
 
             if self.preferences["button color"] == "no color":
-                # color = cfg.NO_COLOR_CODING_PAD
                 color = ""
 
             # set checkable if state behavior
@@ -208,13 +214,13 @@ class CodingPad(QWidget):
         """
         self.button_configuration()
 
-    def click(self, behaviorCode):
+    def click(self, behavior_code: str) -> None:
         """
         Button clicked
         """
-        self.clickSignal.emit(behaviorCode)
+        self.clickSignal.emit(behavior_code)
 
-    def eventFilter(self, receiver, event):
+    def eventFilter(self, receiver, event) -> bool:
         """
         send event (if keypress) to main window
         """
@@ -224,7 +230,7 @@ class CodingPad(QWidget):
         else:
             return False
 
-    def closeEvent(self, event):
+    def closeEvent(self, event) -> None:
         """
         send event for widget geometry memory
         """
@@ -280,7 +286,7 @@ def show_coding_pad(self):
                 self.config_param[cfg.CODING_PAD_GEOMETRY].height(),
             )
         else:
-            self.codingpad.setGeometry(200, 200, 660, 500)
+            self.codingpad.setGeometry(100, 100, 660, 500)
 
         if self.config_param.get(cfg.CODING_PAD_CONFIG, {}):
             self.codingpad.preferences = self.config_param[cfg.CODING_PAD_CONFIG]

@@ -348,6 +348,18 @@ def versiontuple(version_str: str):
     return tuple(filled)
 
 
+def behavior_user_color(ethogram: dict, behavior_code: str) -> Union[str, None]:
+    """
+    returns the color of behavior if defined else None
+    """
+    print(f"{ethogram=}")
+    for x in ethogram:
+        if ethogram[x][cfg.BEHAVIOR_CODE] == behavior_code:
+            return ethogram[x].get(cfg.COLOR, None)
+
+    return None
+
+
 def state_behavior_codes(ethogram: dict) -> list:
     """
     behavior codes defined as STATE event
