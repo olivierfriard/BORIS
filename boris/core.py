@@ -1015,7 +1015,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 self.spectro.setWindowFlags(self.spectro.windowFlags() & ~Qt.WindowMinimizeButtonHint)
 
                 self.spectro.interval = self.spectrogram_time_interval
-                self.spectro.cursor_color = "red"
+                self.spectro.cursor_color = cfg.REALTIME_PLOT_CURSOR_COLOR
 
                 # color palette
                 try:
@@ -1111,7 +1111,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 self.waveform.setWindowFlags(self.waveform.windowFlags() & ~Qt.WindowMinimizeButtonHint)
 
                 self.waveform.interval = self.spectrogram_time_interval
-                self.waveform.cursor_color = "red"
+                self.waveform.cursor_color = cfg.REALTIME_PLOT_CURSOR_COLOR
 
                 r = self.waveform.load_wav(str(wav_file_path))
                 if "error" in r:
@@ -1149,7 +1149,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
                 self.plot_events.groupby = "behaviors"
                 self.plot_events.interval = 60  # time interval for x axe
-                self.plot_events.cursor_color = "red"
+                self.plot_events.cursor_color = cfg.REALTIME_PLOT_CURSOR_COLOR
                 self.plot_events.observation_type = self.playerType
 
                 self.plot_events.point_event_plot_duration = cfg.POINT_EVENT_PLOT_DURATION
@@ -1166,11 +1166,15 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 self.plot_events.behav_color = {}
 
                 for idx, behavior in enumerate(util.all_behaviors(self.pj[cfg.ETHOGRAM])):
+                    """
                     behav_key = [
                         k for k in self.pj[cfg.ETHOGRAM] if self.pj[cfg.ETHOGRAM][k][cfg.BEHAVIOR_CODE] == behavior
                     ][0]
-                    if cfg.COLOR in self.pj[cfg.ETHOGRAM][behav_key]:
-                        self.plot_events.behav_color[behavior] = self.pj[cfg.ETHOGRAM][behav_key][cfg.COLOR]
+                    """
+
+                    col = util.behavior_user_color(self.pj[cfg.ETHOGRAM], behavior)
+                    if col is not None:
+                        self.plot_events.behav_color[behavior] = col
                     else:
                         self.plot_events.behav_color[behavior] = cfg.BEHAVIORS_PLOT_COLORS[idx]
 
@@ -2256,7 +2260,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             return
 
         plot_events.create_events_plot(
-            self.pj,
+            self,
             selected_observations,
             parameters,
             plot_colors=self.plot_colors,

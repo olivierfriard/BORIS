@@ -280,8 +280,11 @@ def create_behaviors_bar_plot(
 
                 # color
                 behav_idx = [k for k in pj[cfg.ETHOGRAM] if pj[cfg.ETHOGRAM][k]["code"] == behavior][0]
+                col = None
                 if cfg.COLOR in pj[cfg.ETHOGRAM][behav_idx]:
-                    colors.append(pj[cfg.ETHOGRAM][behav_idx][cfg.COLOR])
+                    col = util.behavior_user_color(pj[cfg.ETHOGRAM], behavior)
+                if col is not None:
+                    colors.append(col)
                 else:
                     try:
                         colors.append(util.behavior_color(plot_colors, all_behaviors.index(behavior)))
@@ -291,8 +294,12 @@ def create_behaviors_bar_plot(
                 if cfg.STATE in project_functions.event_type(behavior, pj[cfg.ETHOGRAM]):
                     durations.append(behaviors[subject][behavior]["duration"])
                     x_labels_duration.append(behavior)
+
+                    col = None
                     if cfg.COLOR in pj[cfg.ETHOGRAM][behav_idx]:
-                        colors_duration.append(pj[cfg.ETHOGRAM][behav_idx][cfg.COLOR])
+                        col = util.behavior_user_color(pj[cfg.ETHOGRAM], behavior)
+                    if col is not None:
+                        colors_duration.append(col)
                     else:
                         try:
                             colors_duration.append(util.behavior_color(plot_colors, all_behaviors.index(behavior)))
@@ -350,10 +357,10 @@ def create_behaviors_bar_plot(
 
 
 def create_events_plot(
-    pj, selected_observations, parameters, plot_colors=cfg.BEHAVIORS_PLOT_COLORS, plot_directory="", file_format="png"
+    self, selected_observations, parameters, plot_colors=cfg.BEHAVIORS_PLOT_COLORS, plot_directory="", file_format="png"
 ):
     """
-    create a time diagram plot (sort of gantt chart)
+    create a time diagram plot (like a gantt chart)
     with matplotlib barh function (https://matplotlib.org/3.1.0/api/_as_gen/matplotlib.pyplot.barh.html)
     """
 
@@ -365,7 +372,7 @@ def create_events_plot(
     end_time = parameters[cfg.END_TIME]
 
     ok, msg, db_connector = db_functions.load_aggregated_events_in_db(
-        pj, selected_subjects, selected_observations, selected_behaviors
+        self.pj, selected_subjects, selected_observations, selected_behaviors
     )
 
     if not ok:
@@ -388,11 +395,11 @@ def create_events_plot(
     distinct_behav_modif = sorted(distinct_behav_modif)
     max_len = len(distinct_behav_modif)
 
-    all_behaviors = [pj[cfg.ETHOGRAM][x][cfg.BEHAVIOR_CODE] for x in util.sorted_keys(pj[cfg.ETHOGRAM])]
+    all_behaviors = [self.pj[cfg.ETHOGRAM][x][cfg.BEHAVIOR_CODE] for x in util.sorted_keys(self.pj[cfg.ETHOGRAM])]
 
     par1 = 1
     bar_height = 0.5
-    init = dt.datetime(2017, 1, 1)
+    epoch_date = dt.datetime(2017, 1, 1)
 
     for obs_id in selected_observations:
 
@@ -404,7 +411,7 @@ def create_events_plot(
             axs[0] = ax
 
         ok, msg, db_connector = db_functions.load_aggregated_events_in_db(
-            pj, selected_subjects, [obs_id], selected_behaviors
+            self.pj, selected_subjects, [obs_id], selected_behaviors
         )
 
         cursor = db_connector.cursor()
@@ -426,7 +433,7 @@ def create_events_plot(
         max_len = len(distinct_behav_modif)
 
         # time
-        obs_length = observation_operations.observation_total_length(pj[cfg.OBSERVATIONS][obs_id])
+        obs_length = observation_operations.observation_total_length(self.pj[cfg.OBSERVATIONS][obs_id])
         if obs_length == -1:  # media length not available
             interval = cfg.TIME_EVENTS
 
@@ -436,11 +443,11 @@ def create_events_plot(
 
         if interval == cfg.TIME_EVENTS:
             try:
-                min_time = float(pj[cfg.OBSERVATIONS][obs_id][cfg.EVENTS][0][0])  # first event
+                min_time = float(self.pj[cfg.OBSERVATIONS][obs_id][cfg.EVENTS][0][0])  # first event
             except Exception:
                 min_time = 0.0
             try:
-                max_time = float(pj[cfg.OBSERVATIONS][obs_id][cfg.EVENTS][-1][0])  # last event
+                max_time = float(self.pj[cfg.OBSERVATIONS][obs_id][cfg.EVENTS][-1][0])  # last event
             except Exception:
                 max_time = float(obs_length)
 
@@ -530,17 +537,25 @@ def create_events_plot(
                 for row in cursor.fetchall():
                     bars[behavior_modifiers_str].append((row["start"], row["stop"]))
 
-                    start_date = matplotlib.dates.date2num(init + dt.timedelta(seconds=row["start"]))
-                    end_date = matplotlib.dates.date2num(
-                        init
-                        + dt.timedelta(
-                            seconds=row["stop"] + cfg.POINT_EVENT_PLOT_DURATION * (row["stop"] == row["start"])
+                    if self.timeFormat == cfg.HHMMSS:
+                        start_date = matplotlib.dates.date2num(epoch_date + dt.timedelta(seconds=row["start"]))
+                        end_date = matplotlib.dates.date2num(
+                            epoch_date
+                            + dt.timedelta(
+                                seconds=row["stop"] + cfg.POINT_EVENT_PLOT_DURATION * (row["stop"] == row["start"])
+                            )
                         )
-                    )
+                    if self.timeFormat == cfg.S:
+                        start_date = row["start"]
+                        end_date = row["stop"]
+
                     # color
-                    behav_idx = [k for k in pj[cfg.ETHOGRAM] if pj[cfg.ETHOGRAM][k]["code"] == behavior][0]
-                    if cfg.COLOR in pj[cfg.ETHOGRAM][behav_idx]:
-                        bar_color = pj[cfg.ETHOGRAM][behav_idx][cfg.COLOR]
+                    behav_idx = [k for k in self.pj[cfg.ETHOGRAM] if self.pj[cfg.ETHOGRAM][k]["code"] == behavior][0]
+                    col = None
+                    if cfg.COLOR in self.pj[cfg.ETHOGRAM][behav_idx]:
+                        col = util.behavior_user_color(self.pj[cfg.ETHOGRAM], behavior)
+                    if col is not None:
+                        bar_color = col
                     else:
                         try:
                             bar_color = util.behavior_color(plot_colors, all_behaviors.index(behavior))
@@ -585,18 +600,25 @@ def create_events_plot(
 
             axs[ax_idx].set_ylabel("Behaviors" + " (modifiers)" * include_modifiers, fontdict={"fontsize": 10})
 
-            axs[ax_idx].set_xlim(
-                left=matplotlib.dates.date2num(init + dt.timedelta(seconds=min_time)),
-                right=matplotlib.dates.date2num(init + dt.timedelta(seconds=max_time)),
-            )
+            if self.timeFormat == cfg.HHMMSS:
+                axs[ax_idx].set_xlim(
+                    left=matplotlib.dates.date2num(epoch_date + dt.timedelta(seconds=min_time)),
+                    right=matplotlib.dates.date2num(epoch_date + dt.timedelta(seconds=max_time)),
+                )
 
             axs[ax_idx].grid(color="g", linestyle=":")
-            axs[ax_idx].xaxis_date()
-            axs[ax_idx].xaxis.set_major_formatter(DateFormatter("%H:%M:%S"))
-            axs[ax_idx].set_xlabel("Time (HH:MM:SS)", fontdict={"fontsize": 12})
+            if self.timeFormat == cfg.HHMMSS:
+                axs[ax_idx].xaxis_date()
+                axs[ax_idx].xaxis.set_major_formatter(DateFormatter("%H:%M:%S"))
+                axs[ax_idx].set_xlabel("Time (HH:MM:SS)", fontdict={"fontsize": 12})
+            if self.timeFormat == cfg.S:
+                axs[ax_idx].set_xlabel("Time (s)", fontdict={"fontsize": 12})
+
             axs[ax_idx].invert_yaxis()
 
-        fig.autofmt_xdate()
+        if self.timeFormat == cfg.HHMMSS:
+            fig.autofmt_xdate()
+
         plt.tight_layout()
 
         if len(selected_observations) > 1:

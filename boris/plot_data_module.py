@@ -42,6 +42,7 @@ from PyQt5.QtWidgets import (
 )
 
 from . import utilities as util
+from . import config as cfg
 
 
 class MyMplCanvas(FigureCanvas):
@@ -289,11 +290,6 @@ class Plot_data(QWidget):
     # Slot receives data and plots it
     def plot(self, x, y, position_data, position_start, min_value, max_value, position_end):
 
-        """
-        logging.debug(f"len x (plot): {len(x)}")
-        logging.debug(f"len y (plot): {len(y)}")
-        """
-
         # print current value
         try:
             if x[0] == 0:
@@ -310,12 +306,11 @@ class Plot_data(QWidget):
             self.myplot.axes.set_ylabel(self.y_label, rotation=90, labelpad=10)
             self.myplot.axes.set_ylim((min_value, max_value))
             self.myplot.axes.plot(x, y, self.plot_style)
-            self.myplot.axes.axvline(x=position_data, color="red", linestyle="-")
+            self.myplot.axes.axvline(x=position_data, color=cfg.REALTIME_PLOT_CURSOR_COLOR, linestyle="-")
 
             self.myplot.draw()
         except:
             logging.debug(f"error in plotting external data: {sys.exc_info()[1]}")
-            pass  # only for protection against crash
 
 
 class Plotter(QObject):

@@ -35,8 +35,6 @@ from PyQt5.QtWidgets import (
     QInputDialog,
     QLabel,
     QLineEdit,
-    QListWidget,
-    QListWidgetItem,
     QMenu,
     QMessageBox,
     QPushButton,
@@ -45,6 +43,8 @@ from PyQt5.QtWidgets import (
     QTableWidgetItem,
     QVBoxLayout,
     QColorDialog,
+    QTableWidget,
+    QAbstractItemView,
 )
 
 from . import add_modifier
@@ -74,11 +74,51 @@ class BehavioralCategories(QDialog):
         self.label.setText("Behavioral categories")
         self.vbox.addWidget(self.label)
 
-        self.lw = QListWidget()
+        # self.lw = QListWidget()
+        self.lw = QTableWidget()
+        self.lw.cellDoubleClicked[int, int].connect(self.lw_double_clicked)
 
         # add categories
-        for category in sorted(pj.get(cfg.BEHAVIORAL_CATEGORIES, [])):
-            self.lw.addItem(QListWidgetItem(category))
+        self.lw.setColumnCount(2)
+        self.lw.setHorizontalHeaderLabels(["Category name", "Color"])
+        # self.lw.verticalHeader().hide()
+        self.lw.setEditTriggers(QAbstractItemView.NoEditTriggers)
+
+        # self.lw.setSelectionBehavior(QAbstractItemView.SelectRows)
+        self.lw.setSelectionMode(QAbstractItemView.SingleSelection)
+
+        if cfg.BEHAVIORAL_CATEGORIES_CONF in pj:
+            self.lw.setRowCount(len(pj.get(cfg.BEHAVIORAL_CATEGORIES_CONF, {})))
+            behav_cat = pj.get(cfg.BEHAVIORAL_CATEGORIES_CONF, {})
+            for idx, key in enumerate(behav_cat.keys()):
+                # name
+                item = QTableWidgetItem()
+                item.setText(behav_cat[key]["name"])
+                # item.setFlags(Qt.ItemIsEnabled)
+                self.lw.setItem(idx, 0, item)
+                # color
+                item = QTableWidgetItem()
+                item.setText(behav_cat[key].get(cfg.COLOR, ""))
+                if behav_cat[key].get(cfg.COLOR, ""):
+                    item.setBackground(QColor(behav_cat[key].get(cfg.COLOR, "")))
+                else:
+                    item.setBackground(QColor(230, 230, 230))
+                # item.setFlags(Qt.ItemIsEnabled)
+                self.lw.setItem(idx, 1, item)
+        else:
+            self.lw.setRowCount(len(pj.get(cfg.BEHAVIORAL_CATEGORIES, [])))
+            for idx, category in enumerate(sorted(pj.get(cfg.BEHAVIORAL_CATEGORIES, []))):
+                item = QTableWidgetItem()
+                item.setText(category)
+                # item.setFlags(Qt.ItemIsEnabled)
+                self.lw.setItem(idx, 0, item)
+
+                item = QTableWidgetItem()
+                item.setText("")
+                # item.setFlags(Qt.ItemIsEnabled)
+                self.lw.setItem(idx, 1, item)
+
+            # self.lw.addItem(QListWidgetItem(category))
 
         self.vbox.addWidget(self.lw)
 
@@ -106,23 +146,63 @@ class BehavioralCategories(QDialog):
 
         self.setLayout(self.vbox)
 
+    def lw_double_clicked(self, row: int, column: int):
+        """
+        change color
+        """
+
+        if column != 1:
+            return
+        col_diag = QColorDialog()
+        col_diag.setOptions(QColorDialog.DontUseNativeDialog)
+
+        if self.lw.item(row, 1).text():
+            current_color = QColor(self.lw.item(row, 1).text())
+            if current_color.isValid():
+                col_diag.setCurrentColor(current_color)
+
+        if col_diag.exec_():
+            color = col_diag.currentColor()
+            if color.name() == "#000000":  # black -> delete color
+                self.lw.item(row, 1).setText("")
+                self.lw.item(row, 1).setBackground(QColor(230, 230, 230))
+            elif color.isValid():
+                self.lw.item(row, 1).setText(color.name())
+                self.lw.item(row, 1).setBackground(color)
+
     def add_behavioral_category(self):
         """
         add a behavioral category
         """
         category, ok = QInputDialog.getText(self, "New behavioral category", "Category name:")
         if ok:
-            self.lw.addItem(QListWidgetItem(category))
+            self.lw.insertRow(self.lw.rowCount())
+            item = QTableWidgetItem(category)
+            self.lw.setItem(self.lw.rowCount() - 1, 0, item)
+
+            item = QTableWidgetItem("")
+            # item.setFlags(Qt.ItemIsEnabled)
+            self.lw.setItem(self.lw.rowCount() - 1, 1, item)
 
     def remove_behavioral_category(self):
         """
         remove the selected behavioral category
         """
 
-        for SelectedItem in self.lw.selectedItems():
+        for selected_item in self.lw.selectedItems():
             # check if behavioral category is in use
-            category_to_remove = self.lw.item(self.lw.row(SelectedItem)).text().strip()
-            behaviors_in_category = []
+            if (
+                dialog.MessageDialog(
+                    cfg.programName,
+                    ("Confirm deletion of the behavioral category"),
+                    ("Confirm", cfg.CANCEL),
+                )
+                == cfg.CANCEL
+            ):
+                continue
+
+            category_to_remove = self.lw.item(self.lw.row(selected_item), 0).text().strip()
+            behaviors_in_category: list = []
             for idx in self.pj[cfg.ETHOGRAM]:
                 if (
                     cfg.BEHAVIOR_CATEGORY in self.pj[cfg.ETHOGRAM][idx]
@@ -131,16 +211,15 @@ class BehavioralCategories(QDialog):
                     behaviors_in_category.append(self.pj[cfg.ETHOGRAM][idx][cfg.BEHAVIOR_CODE])
             flag_remove = False
             if behaviors_in_category:
-
                 flag_remove = (
                     dialog.MessageDialog(
                         cfg.programName,
                         (
-                            "Some behavior belong to the <b>{1}</b> to remove:<br>"
-                            "{0}<br>"
+                            f"Some behavior belong to the <b>{category_to_remove}</b> to remove:<br>"
+                            f"{'<br>'.join(behaviors_in_category)}<br>"
                             "<br>Some features may not be available anymore.<br>"
-                        ).format("<br>".join(behaviors_in_category), category_to_remove),
-                        ["Remove category", cfg.CANCEL],
+                        ),
+                        ("Remove category", cfg.CANCEL),
                     )
                     == "Remove category"
                 )
@@ -149,17 +228,18 @@ class BehavioralCategories(QDialog):
                 flag_remove = True
 
             if flag_remove:
-                self.lw.takeItem(self.lw.row(SelectedItem))
+                self.lw.removeRow(self.lw.row(selected_item))
                 self.removed = category_to_remove
+
                 self.accept()
 
-    def pb_rename_category_clicked(self):
+    def pb_rename_category_clicked(self, row: int):
         """
         rename the selected behavioral category
         """
-        for SelectedItem in self.lw.selectedItems():
+        for selected_item in self.lw.selectedItems():
             # check if behavioral category is in use
-            category_to_rename = self.lw.item(self.lw.row(SelectedItem)).text().strip()
+            category_to_rename = self.lw.item(self.lw.row(selected_item), 0).text().strip()
             behaviors_in_category = []
             for idx in self.pj[cfg.ETHOGRAM]:
                 if (
@@ -188,7 +268,7 @@ class BehavioralCategories(QDialog):
                     self, "Rename behavioral category", "New category name:", QLineEdit.Normal, category_to_rename
                 )
                 if ok:
-                    self.lw.item(self.lw.indexFromItem(SelectedItem).row()).setText(new_category_name)
+                    self.lw.item(self.lw.indexFromItem(selected_item).row(), 0).setText(new_category_name)
                     # check behaviors belonging to the renamed category
                     self.renamed = [category_to_rename, new_category_name]
                     self.accept()
@@ -649,8 +729,13 @@ class projectDialog(QDialog, Ui_dlgProject):
 
         if bc.exec_():
             self.pj[cfg.BEHAVIORAL_CATEGORIES] = []
-            for index in range(bc.lw.count()):
-                self.pj[cfg.BEHAVIORAL_CATEGORIES].append(bc.lw.item(index).text().strip())
+            self.pj[cfg.BEHAVIORAL_CATEGORIES_CONF] = {}
+            for index in range(bc.lw.rowCount()):
+                self.pj[cfg.BEHAVIORAL_CATEGORIES].append(bc.lw.item(index, 0).text().strip())
+                self.pj[cfg.BEHAVIORAL_CATEGORIES_CONF][str(index)] = {
+                    "name": bc.lw.item(index, 0).text().strip(),
+                    cfg.COLOR: bc.lw.item(index, 1).text(),
+                }
 
             # sort
             self.pj[cfg.BEHAVIORAL_CATEGORIES] = sorted(self.pj[cfg.BEHAVIORAL_CATEGORIES])

@@ -37,6 +37,8 @@ MAX_UNDO_QUEUE: int = 25
 
 NA: str = "NA"
 
+REALTIME_PLOT_CURSOR_COLOR = "red"
+
 DYNAMIC_TIME_CUTOFF_DEFAULT = 300
 
 CTRL_KEY: str = "Ctrl"
@@ -74,6 +76,7 @@ BEHAVIORS_CODING_MAP = "behaviors_coding_map"
 SUBJECTS = "subjects_conf"
 ETHOGRAM = "behaviors_conf"
 BEHAVIORAL_CATEGORIES = "behavioral_categories"
+BEHAVIORAL_CATEGORIES_CONF = "behavioral_categories_config"
 CONVERTERS = "converters"
 
 OFFSET = "offset"

@@ -166,13 +166,20 @@ class CodingPad(QWidget):
             behavior_code = self.grid.itemAt(index).widget().pushButton.text()
 
             if self.preferences["button color"] == cfg.BEHAVIOR_CATEGORY:
-                color = self.behavioral_category_colors[
-                    [
-                        self.pj[cfg.ETHOGRAM][x][cfg.BEHAVIOR_CATEGORY]
-                        for x in self.pj[cfg.ETHOGRAM]
-                        if self.pj[cfg.ETHOGRAM][x][cfg.BEHAVIOR_CODE] == behavior_code
-                    ][0]
-                ]
+
+                behav_cat = [
+                    self.pj[cfg.ETHOGRAM][x][cfg.BEHAVIOR_CATEGORY]
+                    for x in self.pj[cfg.ETHOGRAM]
+                    if self.pj[cfg.ETHOGRAM][x][cfg.BEHAVIOR_CODE] == behavior_code
+                ][0]
+                if cfg.BEHAVIORAL_CATEGORIES_CONF in self.pj:
+                    behav_cat_color = util.behav_category_user_color(self.pj[cfg.BEHAVIORAL_CATEGORIES_CONF], behav_cat)
+                else:
+                    behav_cat_color = None
+                if behav_cat_color is None:
+                    color = self.behavioral_category_colors[behav_cat]
+                else:
+                    color = behav_cat_color
 
             if self.preferences["button color"] == "behavior":
                 # behavioral categories are not defined
@@ -186,8 +193,6 @@ class CodingPad(QWidget):
 
                 # behavior button color
                 behav_color = util.behavior_user_color(self.pj[cfg.ETHOGRAM], behavior_code)
-
-                print(f"{behav_color=}")
 
                 if behav_color is not None:
                     color = behav_color

@@ -352,10 +352,23 @@ def behavior_user_color(ethogram: dict, behavior_code: str) -> Union[str, None]:
     """
     returns the color of behavior if defined else None
     """
-    print(f"{ethogram=}")
     for x in ethogram:
         if ethogram[x][cfg.BEHAVIOR_CODE] == behavior_code:
-            return ethogram[x].get(cfg.COLOR, None)
+            if ethogram[x].get(cfg.COLOR, None) == "":
+                return None
+            else:
+                return ethogram[x].get(cfg.COLOR, None)
+
+    return None
+
+
+def behav_category_user_color(behavioral_categories: dict, name: str) -> Union[str, None]:
+    """
+    returns the color of the behavioral category if defined else None
+    """
+    for key in behavioral_categories:
+        if behavioral_categories[key]["name"] == name:
+            return behavioral_categories[key].get(cfg.COLOR, None)
 
     return None
 
@@ -1330,7 +1343,7 @@ def behavior_color(colors_list: list, idx: int, default_color: str = "darkgray")
     """
 
     try:
-        return colors_list[idx % len(colors_list)]
+        return colors_list[idx % len(colors_list)].replace("tab:", "")
     except Exception:
         return default_color
 

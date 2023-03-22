@@ -51,7 +51,7 @@ class Plot_events_RT(QWidget):
 
         self.events_mem = {"init": 0}
 
-        self.cursor_color = "red"  # default cursor color
+        self.cursor_color = cfg.REALTIME_PLOT_CURSOR_COLOR  # default cursor color
         self.observation_type = cfg.MEDIA
         self.groupby = "behaviors"  # group results by "behaviors" or "modifiers"
 
