@@ -231,6 +231,13 @@ def convert_time_to_decimal(pj: dict) -> dict:
     return pj
 
 
+def count_media_file(media_files: dict) -> int:
+    """
+    count number of media file for observation
+    """
+    return sum([len(media_files[idx]) for idx in media_files])
+
+
 def file_content_md5(file_name: str) -> str:
     """
     returns the MD5 sum of file content
@@ -279,7 +286,6 @@ def txt2np_array(
     np_converters: dict = {}
     for column_idx in column_converter:
         if column_converter[column_idx] in converters:
-
             conv_name = column_converter[column_idx]
 
             function = f"""def {conv_name}(INPUT):\n"""
@@ -423,7 +429,6 @@ def group_events(pj: dict, obs_id: str, include_modifiers: bool = False) -> dict
         intervals_behav = {}
 
         for event in pj[cfg.OBSERVATIONS][obs_id][cfg.EVENTS]:
-
             time_ = event[cfg.EVENT_TIME_FIELD_IDX]
             subject = event[cfg.EVENT_SUBJECT_FIELD_IDX]
             code = event[cfg.EVENT_BEHAVIOR_FIELD_IDX]
@@ -431,9 +436,7 @@ def group_events(pj: dict, obs_id: str, include_modifiers: bool = False) -> dict
 
             # check if code is state
             if code in state_events_list:
-
                 if (subject, code, modifier) in mem_behav and mem_behav[(subject, code, modifier)]:
-
                     if (subject, code, modifier) not in intervals_behav:
                         intervals_behav[(subject, code, modifier)] = []
                     intervals_behav[(subject, code, modifier)].append((mem_behav[(subject, code, modifier)], time_))
@@ -854,7 +857,6 @@ def mem_info():
             return True, {"msg": error_info(sys.exc_info())[0]}
 
     if sys.platform.startswith("win"):
-
         try:
             output = subprocess.run(
                 ["wmic", "computersystem", "get", "TotalPhysicalMemory", "/", "Value"], stdout=subprocess.PIPE
@@ -1039,7 +1041,6 @@ def check_ffmpeg_path():
     """
 
     if sys.platform.startswith("linux") or sys.platform.startswith("darwin"):
-
         ffmpeg_path = pl.Path("")
         # search embedded ffmpeg
         if sys.argv[0].endswith("start_boris.py"):
@@ -1059,7 +1060,6 @@ def check_ffmpeg_path():
             return False, "FFmpeg is not available"
 
     if sys.platform.startswith("win"):
-
         ffmpeg_path = pl.Path("")
         # search embedded ffmpeg
         if sys.argv[0].endswith("start_boris.py"):
@@ -1141,7 +1141,6 @@ def ffprobe_media_analysis(ffmpeg_bin: str, file_name: str) -> dict:
             size = int(video_param["format"]["size"])
 
         for stream in video_param["streams"]:
-
             if stream["codec_type"] == "video":
                 hasVideo = True
                 video_bitrate = int(stream["bit_rate"]) if "bit_rate" in stream else None

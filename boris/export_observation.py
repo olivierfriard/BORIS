@@ -66,7 +66,6 @@ def export_events_jwatcher(
         str: error message
     """
     for subject in parameters[cfg.SELECTED_SUBJECTS]:
-
         # select events for current subject
         events = []
         for event in observation[cfg.EVENTS]:
@@ -168,7 +167,7 @@ def export_events_jwatcher(
         rows.append("# Format: Focal Master File 1.0")
         rows.append(f"# Updated: {dt.datetime.now().isoformat()}")
         rows.append("#-----------------------------------------------------------")
-        for (behav, key) in all_observed_behaviors:
+        for behav, key in all_observed_behaviors:
             rows.append(f"Behaviour.name.{key}={behav}")
             behav_description = [
                 ethogram[k][cfg.DESCRIPTION] for k in ethogram if ethogram[k][cfg.BEHAVIOR_CODE] == behav
@@ -276,7 +275,7 @@ def export_events_jwatcher(
         rows.append("AllCodesMutuallyExclusive=true")
         rows.append("")
 
-        for (behav, key) in all_observed_behaviors:
+        for behav, key in all_observed_behaviors:
             rows.append(f"Behavior.isModified.{key}=false")
             rows.append(f"Behavior.isSubtracted.{key}=false")
             rows.append(f"Behavior.isIgnored.{key}=false")
@@ -325,7 +324,6 @@ def export_tabular_events(
         max_time = end_coding
 
     if interval == cfg.TIME_FULL_OBS:
-
         if observation[cfg.TYPE] == cfg.MEDIA:
             max_media_duration, _ = observation_operations.media_duration(pj[cfg.OBSERVATIONS], [obs_id])
             min_time = dec("0")
@@ -356,10 +354,7 @@ def export_tabular_events(
                 max_modifiers = max(max_modifiers, len(event[cfg.EVENT_MODIFIER_FIELD_IDX].split("|")))
 
     # media file number
-    mediaNb = 0
-    if observation[cfg.TYPE] == cfg.MEDIA:
-        for player in observation[cfg.FILE]:
-            mediaNb += len(observation[cfg.FILE][player])
+    media_nb = util.count_media_file(observation[cfg.FILE])
 
     rows: list = []
 
@@ -371,9 +366,13 @@ def export_tabular_events(
         "Observation duration": float,
         "Observation type": str,
         "Source": str,
-        "Media duration (s)": str,
-        "FPS": float,
     }
+    if media_nb == 1:
+        fields_type["Media duration (s)"] = float
+        fields_type["FPS"] = float
+    else:
+        fields_type["Media duration (s)"] = str
+        fields_type["FPS"] = str
 
     # independent variables
     if cfg.INDEPENDENT_VARIABLES in observation:
@@ -418,7 +417,6 @@ def export_tabular_events(
             (event[cfg.EVENT_SUBJECT_FIELD_IDX] in parameters[cfg.SELECTED_SUBJECTS])
             or (event[cfg.EVENT_SUBJECT_FIELD_IDX] == "" and cfg.NO_FOCAL_SUBJECT in parameters[cfg.SELECTED_SUBJECTS])
         ) and (event[cfg.EVENT_BEHAVIOR_FIELD_IDX] in parameters[cfg.SELECTED_BEHAVIORS]):
-
             fields: list = []
             fields.append(obs_id)
             fields.append(observation.get("date", "").replace("T", " "))
@@ -583,6 +581,7 @@ def dataset_write(
         dataset (tablib.dataset): dataset to write
         file_name (str): file name
         output_format (str): format of output
+        dtype (dict): type of field
 
     Returns:
         bool: result. True if OK else False
@@ -592,9 +591,7 @@ def dataset_write(
     logging.debug("function: dataset_write")
 
     try:
-
         if output_format in (cfg.PANDAS_DF_EXT, cfg.RDS_EXT):
-
             # build pandas dataframe from the tsv export of tablib dataset
             date_type = []
             for field_name in dtype:
@@ -605,7 +602,7 @@ def dataset_write(
                 del dtype[field_name]
 
             df = pd.read_csv(
-                StringIO(dataset.export("tsv")),
+                StringIO(dataset.export(cfg.TSV_EXT)),
                 sep="\t",
                 dtype=dtype,
                 parse_dates=date_type,
@@ -624,8 +621,7 @@ def dataset_write(
                 f.write(str.encode(dataset.export(output_format)))
             return True, ""
 
-        if output_format in ("ods", "xls", "xlsx"):
-
+        if output_format in (cfg.ODS_EXT, cfg.XLS_EXT, cfg.XLSX_EXT):
             dataset.title = util.safe_xl_worksheet_title(dataset.title, output_format)
 
             with open(file_name, "wb") as f:
@@ -755,7 +751,6 @@ def export_aggregated_events(pj: dict, parameters: dict, obsId: str) -> Tuple[ta
             max_modifiers = max(max_modifiers, row["modifiers"].count("|") + 1)
 
     for subject in parameters[cfg.SELECTED_SUBJECTS]:
-
         # calculate observation duration by subject (by obs)
         cursor.execute(("SELECT SUM(stop - start) AS duration FROM aggregated_events WHERE subject = ? "), (subject,))
         duration_by_subject_by_obs = cursor.fetchone()["duration"]
@@ -763,7 +758,6 @@ def export_aggregated_events(pj: dict, parameters: dict, obsId: str) -> Tuple[ta
             duration_by_subject_by_obs = round(duration_by_subject_by_obs, 3)
 
         for behavior in parameters[cfg.SELECTED_BEHAVIORS]:
-
             cursor.execute(
                 "SELECT DISTINCT modifiers FROM aggregated_events WHERE subject=? AND behavior=? ORDER BY modifiers",
                 (
@@ -775,7 +769,6 @@ def export_aggregated_events(pj: dict, parameters: dict, obsId: str) -> Tuple[ta
             rows_distinct_modifiers = list(x[0] for x in cursor.fetchall())
 
             for distinct_modifiers in rows_distinct_modifiers:
-
                 cursor.execute(
                     (
                         "SELECT start, stop, type, modifiers, comment, comment_stop, "
@@ -787,7 +780,6 @@ def export_aggregated_events(pj: dict, parameters: dict, obsId: str) -> Tuple[ta
                 )
 
                 for row in cursor.fetchall():
-
                     media_file_name = cfg.NA
 
                     if observation[cfg.TYPE] == cfg.MEDIA:
@@ -954,7 +946,6 @@ def events_to_behavioral_sequences(pj, obs_id: str, subj: str, parameters: dict,
         if event[cfg.EVENT_SUBJECT_FIELD_IDX] == subj or (
             subj == cfg.NO_FOCAL_SUBJECT and event[cfg.EVENT_SUBJECT_FIELD_IDX] == ""
         ):
-
             # if event[cfg.EVENT_STATUS_FIELD_IDX] == cfg.POINT:
             if event[-1] == cfg.POINT:  # status is last element
                 if current_states:
@@ -986,7 +977,6 @@ def events_to_behavioral_sequences(pj, obs_id: str, subj: str, parameters: dict,
 
             # if event[cfg.EVENT_STATUS_FIELD_IDX] == cfg.STOP:
             if event[-1] == cfg.STOP:
-
                 if parameters[cfg.INCLUDE_MODIFIERS]:
                     behav_modif = (
                         f"{event[cfg.EVENT_BEHAVIOR_FIELD_IDX]}"
@@ -1041,7 +1031,6 @@ def events_to_behavioral_sequences_all_subj(
         if (event[cfg.EVENT_SUBJECT_FIELD_IDX] in subjects_list) or (
             event[cfg.EVENT_SUBJECT_FIELD_IDX] == "" and cfg.NO_FOCAL_SUBJECT in subjects_list
         ):
-
             subject = event[cfg.EVENT_SUBJECT_FIELD_IDX] if event[cfg.EVENT_SUBJECT_FIELD_IDX] else cfg.NO_FOCAL_SUBJECT
 
             if event[-1] == cfg.POINT:
@@ -1074,7 +1063,6 @@ def events_to_behavioral_sequences_all_subj(
                 out += behav_seq_separator
 
             if event[-1] == cfg.STOP:
-
                 if parameters[cfg.INCLUDE_MODIFIERS]:
                     behav_modif = (
                         f"{event[cfg.EVENT_BEHAVIOR_FIELD_IDX]}"
@@ -1154,7 +1142,6 @@ def events_to_timed_behavioral_sequences(
 def observation_to_behavioral_sequences(
     pj, selected_observations, parameters, behaviors_separator, separated_subjects, timed, file_name
 ):
-
     try:
         with open(file_name, "w", encoding="utf-8") as out_file:
             for obs_id in selected_observations:

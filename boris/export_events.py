@@ -203,7 +203,6 @@ def export_tabular_events(self, mode: str = "tabular") -> None:
             cfg.RDS,
         )
         if len(selected_observations) > 1:  # choose directory for exporting observations
-
             item, ok = QInputDialog.getItem(
                 self,
                 "Export events format",
@@ -226,7 +225,6 @@ def export_tabular_events(self, mode: str = "tabular") -> None:
                 return
 
         if len(selected_observations) == 1:
-
             file_name, filter_ = QFileDialog().getSaveFileName(self, "Export events", "", ";;".join(available_formats))
             if not file_name:
                 return
@@ -301,7 +299,6 @@ def export_aggregated_events(self):
     """
 
     def fields_type(max_modif_number: int) -> dict:
-
         fields_type_dict: dict = {
             "Observation id": str,
             "Observation date": dt.datetime,
@@ -309,9 +306,11 @@ def export_aggregated_events(self):
             "Observation type": str,
             "Source": str,
             "Total duration": float,
-            "Media duration (s)": float,
-            "FPS (frame/s)": float,
+            "Media duration (s)": str,
+            "FPS (frame/s)": str,
         }
+        # TODO: "Media duration (s)" and "FPS (frame/s)" can be float for observation from 1 video
+
         if cfg.INDEPENDENT_VARIABLES in self.pj:
             for idx in util.sorted_keys(self.pj[cfg.INDEPENDENT_VARIABLES]):
                 if self.pj[cfg.INDEPENDENT_VARIABLES][idx]["type"] == "timestamp":
@@ -331,16 +330,6 @@ def export_aggregated_events(self):
         )
 
         # max number of modifiers
-        """
-        max_modif_number = max(
-            [
-                len(self.pj[cfg.ETHOGRAM][idx][cfg.MODIFIERS])
-                for idx in self.pj[cfg.ETHOGRAM]
-                if self.pj[cfg.ETHOGRAM][idx][cfg.BEHAVIOR_CODE] in parameters[cfg.SELECTED_BEHAVIORS]
-            ]
-        )
-        """
-
         for i in range(max_modif_number):
             fields_type_dict[f"Modifier #{i + 1}"] = str
 
@@ -415,7 +404,6 @@ def export_aggregated_events(self):
         )
 
     if flag_group:
-
         file_formats = (
             cfg.TSV,
             cfg.CSV,
@@ -449,7 +437,6 @@ def export_aggregated_events(self):
                     return
 
     else:  # not grouping
-
         file_formats = (
             cfg.TSV,
             cfg.CSV,
@@ -483,7 +470,6 @@ def export_aggregated_events(self):
                 for line in conn.iterdump():
                     f.write(f"{line}\n")
         except Exception:
-
             QMessageBox.critical(
                 None,
                 cfg.programName,
@@ -506,7 +492,6 @@ def export_aggregated_events(self):
     header = list(fields_type(tot_max_modifiers).keys())
 
     for obs_id in selected_observations:
-
         logging.debug(f"Exporting aggregated events for obs Id: {obs_id}")
 
         data_single_obs, max_modifiers = export_observation.export_aggregated_events(self.pj, parameters, obs_id)
@@ -538,7 +523,7 @@ def export_aggregated_events(self):
 
         data_single_obs_sorted.title = obs_id
 
-        if (not flag_group) and (outputFormat not in (cfg.SDIS_EXT, "tbs")):
+        if (not flag_group) and (outputFormat not in (cfg.SDIS_EXT, cfg.TBS_EXT)):
             fileName = f"{pl.Path(exportDir) / util.safeFileName(obs_id)}.{outputFormat}"
             # check if file with new extension already exists
             if mem_command != cfg.OVERWRITE_ALL and pl.Path(fileName).is_file():
@@ -554,7 +539,9 @@ def export_aggregated_events(self):
                 if mem_command in (cfg.SKIP, cfg.SKIP_ALL):
                     continue
 
-            r, msg = export_observation.dataset_write(data_single_obs_sorted, fileName, outputFormat, dtype=fields_type)
+            r, msg = export_observation.dataset_write(
+                data_single_obs_sorted, fileName, outputFormat, dtype=fields_type(max_modifiers)
+            )
             if not r:
                 QMessageBox.warning(
                     None, cfg.programName, msg, QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton
@@ -653,7 +640,9 @@ def export_aggregated_events(self):
         return
 
     if flag_group:
-        r, msg = export_observation.dataset_write(data_grouped_obs_all, fileName, outputFormat, dtype=fields_type)
+        r, msg = export_observation.dataset_write(
+            data_grouped_obs_all, fileName, outputFormat, dtype=fields_type(max_modifiers)
+        )
         if not r:
             QMessageBox.warning(None, cfg.programName, msg, QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
 
@@ -765,7 +754,6 @@ def export_events_as_textgrid(self) -> None:
     file_count: int = 0
 
     for obs_id in selected_observations:
-
         if parameters["time"] == cfg.TIME_EVENTS:
             start_coding, end_coding, coding_duration = observation_operations.coding_time(
                 self.pj[cfg.OBSERVATIONS], [obs_id]
@@ -784,7 +772,6 @@ def export_events_as_textgrid(self) -> None:
             max_time = float(end_coding)
 
         if parameters["time"] == cfg.TIME_FULL_OBS:
-
             if self.pj[cfg.OBSERVATIONS][obs_id][cfg.TYPE] == cfg.MEDIA:
                 max_media_duration, _ = observation_operations.media_duration(self.pj[cfg.OBSERVATIONS], [obs_id])
                 min_time = float(0)
@@ -921,10 +908,8 @@ def export_events_as_textgrid(self) -> None:
                 out += interval_template.format(count=count, name="null", xmin=0.0, xmax=rows[0]["start"])
 
             for idx, row in enumerate(rows):
-
                 # check if events are overlapping
                 if (idx + 1 < len(rows)) and (row["stop"] > rows[idx + 1]["start"]):
-
                     self.results.ptText.appendHtml(
                         (
                             f"The events overlap for subject <b>{subject}</b> in the observation <b>{obs_id}</b>. "
@@ -993,7 +978,6 @@ def export_events_as_textgrid(self) -> None:
             count = 0
 
             for idx, row in enumerate(rows):
-
                 count += 1
                 out += point_template.format(count=count, mark=row["code"], number=row["start"])
 

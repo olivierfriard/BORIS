@@ -687,6 +687,10 @@ CSV_EXT = "cvs"
 RDS_EXT = "rds"
 PANDAS_DF_EXT = "pkl"
 HMTL_EXT = "html"
+SQL_EXT = "sql"
+ODS_EXT = "ods"
+XLS_EXT = "xls"
+XLSX_EXT = "xlsx"
 
 # Output format
 TSV = "Tab Separated Values (*.tsv)"
@@ -706,16 +710,16 @@ TEXT_FILE = "Text file"
 
 FILE_NAME_SUFFIX = {
     TSV: TSV_EXT,
-    CSV: "csv",
-    ODS: "ods",
-    ODS_WB: "ods",
-    XLSX: "xlsx",
-    XLSX_WB: "xlsx",
-    XLS: "xls",
-    HTML: "html",
-    PANDAS_DF: "pkl",
+    CSV: CSV_EXT,
+    ODS: ODS_EXT,
+    ODS_WB: ODS_EXT,
+    XLSX: XLSX_EXT,
+    XLSX_WB: XLSX_EXT,
+    XLS: XLS_EXT,
+    HTML: HMTL_EXT,
+    PANDAS_DF: PANDAS_DF_EXT,
     RDS: RDS_EXT,
-    SQL: "sql",
+    SQL: SQL_EXT,
     SDIS: SDIS_EXT,
     TBS: TBS_EXT,
     TEXT_FILE: "cli",
