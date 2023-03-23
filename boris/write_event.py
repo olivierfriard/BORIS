@@ -62,7 +62,8 @@ def write_event(self, event: dict, mem_time: dec) -> int:
             cfg.programName,
             (
                 "The live observation is finished.<br>"
-                f"The observation interval is {self.pj[cfg.OBSERVATIONS][self.observationId].get(cfg.OBSERVATION_TIME_INTERVAL, [0, 0])[0]} - "
+                "The observation interval is "
+                f"{self.pj[cfg.OBSERVATIONS][self.observationId].get(cfg.OBSERVATION_TIME_INTERVAL, [0, 0])[0]} - "
                 f"{self.pj[cfg.OBSERVATIONS][self.observationId].get(cfg.OBSERVATION_TIME_INTERVAL, [0, 0])[1]}"
             ),
             (cfg.OK,),
@@ -77,7 +78,8 @@ def write_event(self, event: dict, mem_time: dec) -> int:
             cfg.programName,
             (
                 "The live observation has not began.<br>"
-                f"The observation interval is {self.pj[cfg.OBSERVATIONS][self.observationId].get(cfg.OBSERVATION_TIME_INTERVAL, [0, 0])[0]} - "
+                "The observation interval is "
+                f"{self.pj[cfg.OBSERVATIONS][self.observationId].get(cfg.OBSERVATION_TIME_INTERVAL, [0, 0])[0]} - "
                 f"{self.pj[cfg.OBSERVATIONS][self.observationId].get(cfg.OBSERVATION_TIME_INTERVAL, [0, 0])[1]}"
             ),
             (cfg.OK,),
@@ -267,7 +269,7 @@ def write_event(self, event: dict, mem_time: dec) -> int:
         self, "Undo last event edition" if editing_event else "Undo last event insertion"
     )
 
-    logging.debug(f"save list of events for undo operation")
+    logging.debug("save list of events for undo operation")
 
     if not editing_event:
         if self.currentSubject:

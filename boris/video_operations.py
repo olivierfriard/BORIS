@@ -37,7 +37,7 @@ def deinterlace(self):
     change the deinterlace status of player
     """
 
-    logging.info(f"change deinterlace status of player")
+    logging.info("change deinterlace status of player")
 
     for dw in self.dw_player:
         dw.player.deinterlace = self.action_deinterlace.isChecked()
@@ -52,13 +52,11 @@ def snapshot(self):
     """
 
     if self.playerType == cfg.MEDIA:
-
         for i, player in enumerate(self.dw_player):
             if (
                 str(i + 1) in self.pj[cfg.OBSERVATIONS][self.observationId][cfg.FILE]
                 and self.pj[cfg.OBSERVATIONS][self.observationId][cfg.FILE][str(i + 1)]
             ):
-
                 p = pl.Path(self.dw_player[0].player.playlist[self.dw_player[0].player.playlist_pos]["filename"])
 
                 snapshot_file_path = str(p.parent / f"{p.stem}_{player.player.time_pos:0.3f}.png")
@@ -69,7 +67,6 @@ def snapshot(self):
                 logging.debug(f"video snapshot saved in {snapshot_file_path}")
 
     if self.playerType == cfg.IMAGES:
-
         output_file_name, _ = QFileDialog().getSaveFileName(
             self, "Save copy of the current image", pl.Path(self.images_list[self.image_idx]).name
         )
@@ -84,7 +81,7 @@ def zoom_level(self):
     """
     display dialog for zoom level
     """
-    logging.info(f"change zoom level of player")
+    logging.info("change zoom level of player")
 
     players_list: list = []
     for idx, dw in enumerate(self.dw_player):

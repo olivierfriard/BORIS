@@ -24,7 +24,6 @@ import logging
 import os
 import subprocess
 import tempfile
-from decimal import Decimal as dec
 
 from PyQt5.QtWidgets import QFileDialog, QMessageBox
 
@@ -141,11 +140,9 @@ def create_transitions_gv_from_matrix(matrix, cutoff_all=0, cutoff_behavior=0, e
 
     for behaviour1 in behaviours:
         for behaviour2 in behaviours:
-
             if behaviour1 not in transitions or behaviour2 not in transitions:
                 return True, "Error: the file does not seem a transition matrix"
             if transitions[behaviour1][behaviour2]:
-
                 if edge_label == "percent_node":
                     if transitions[behaviour1][behaviour2] > cutoff_all:
                         out += '"{behaviour1}" -> "{behaviour2}" [label="{label:0.3f}"];\n'.format(
@@ -197,7 +194,6 @@ def transitions_matrix(self, mode):
 
     flagMulti = False
     if len(parameters[cfg.SELECTED_SUBJECTS]) == 1:
-
         fn = QFileDialog().getSaveFileName(
             None,
             "Create matrix of transitions " + mode,
@@ -219,7 +215,6 @@ def transitions_matrix(self, mode):
 
     flag_overwrite_all = False
     for subject in parameters[cfg.SELECTED_SUBJECTS]:
-
         logging.debug(f"subjects: {subject}")
 
         strings_list = []
@@ -244,7 +239,6 @@ def transitions_matrix(self, mode):
 
         if flagMulti:
             try:
-
                 nf = f"{exportDir}{os.sep}{subject}_transitions_{mode}_matrix.tsv"
 
                 if os.path.isfile(nf) and not flag_overwrite_all:
