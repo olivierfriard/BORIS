@@ -56,6 +56,7 @@ else:
             "filename."
         )
     backend = CDLL(sofile)
+
     fs_enc = sys.getfilesystemencoding()
 
 
