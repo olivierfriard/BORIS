@@ -1,5 +1,5 @@
 ===============================================================
-Behavioral Observation Research Interactive Software (BORIS)
+BORIS (Behavioral Observation Research Interactive Software)
 ===============================================================
 
 .. image:: https://github.com/olivierfriard/BORIS/blob/master/boris/icons/logo_boris.png?raw=true
