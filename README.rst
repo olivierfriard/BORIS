@@ -27,7 +27,7 @@ See http://www.boris.unito.it
 .. image:: https://img.shields.io/pypi/v/boris-behav-obs.svg
  :target: https://pypi.org/project/boris-behav-obs/
 
-
+.. image:: https://img.shields.io/pypi/pyversions/boris-behav-obs
 
 
 Documentation
