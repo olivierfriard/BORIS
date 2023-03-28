@@ -33,6 +33,7 @@ try:
     from . import mpv2 as mpv
 
     # check if MPV API v. 1
+    # is v. 1 use the old version of mpv.py
     try:
         if "libmpv.so.1" in mpv.sofile:
             from . import mpv as mpv
@@ -46,11 +47,15 @@ except RuntimeError:  # libmpv found but version too old
 except OSError:  # libmpv not found
     msg = "LIBMPV library not found!\n"
     logging.critical(msg)
+
+    print(f"{dt.datetime.now():%Y-%m-%d %H:%M}: msg")
+    """
     # append to boris.log file
     with open(pl.Path("~").expanduser() / "boris.log", "a") as f_out:
         f_out.write(f"{dt.datetime.now():%Y-%m-%d %H:%M}\n")
         f_out.write(msg)
         f_out.write("-" * 80 + "\n")
+    """
     sys.exit()
 
 
