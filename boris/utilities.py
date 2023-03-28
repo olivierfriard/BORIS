@@ -1124,7 +1124,7 @@ def ffprobe_media_analysis(ffmpeg_bin: str, file_name: str) -> dict:
     try:
         hasVideo = False
         hasAudio = False
-        bitrate = None
+        '''bitrate = None'''
         video_bitrate = None
         audio_bitrate = []
         resolution = None

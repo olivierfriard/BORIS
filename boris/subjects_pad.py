@@ -19,9 +19,8 @@ Copyright 2012-2023 Olivier Friard
   MA 02110-1301, USA.
 """
 
-from PyQt5.QtCore import *
-from PyQt5.QtGui import *
-from PyQt5.QtWidgets import *
+from PyQt5.QtCore import pyqtSignal, QRect, QEvent, Qt
+from PyQt5.QtWidgets import QGridLayout, QPushButton, QHBoxLayout, QWidget
 
 from . import config as cfg
 from . import utilities as util

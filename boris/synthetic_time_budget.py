@@ -22,7 +22,6 @@ This file is part of BORIS.
 
 import logging
 import pathlib as pl
-from decimal import Decimal as dec
 
 from PyQt5.QtWidgets import QFileDialog, QMessageBox
 from PyQt5.QtGui import QFont, QTextOption, QTextCursor
@@ -42,6 +41,8 @@ def synthetic_time_budget(self) -> None:
     """
     Synthetic time budget
     """
+
+    logging.debug('synthetic time budget function')
 
     _, selected_observations = select_observations.select_observations2(
         self, mode=cfg.MULTIPLE, windows_title="Select observations for synthetic time budget"

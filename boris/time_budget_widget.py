@@ -129,20 +129,20 @@ class timeBudgetResults(QWidget):
         save time budget analysis results in TSV, CSV, ODS, XLS format
         """
 
-        def complete(l: list, max_: int) -> list:
+        def complete(lst: list, max_: int) -> list:
             """
             complete list with empty string until len = max
 
             Args:
-                l (list): list to complete
+                lst (list): list to complete
                 max_ (int): length of the returned list
 
             Returns:
                 list: completed list
             """
 
-            l.extend([""] * (max_ - len(l)))
-            return l
+            lst.extend([""] * (max_ - len(lst)))
+            return lst
 
         logging.debug("save time budget results to file")
 
@@ -221,10 +221,10 @@ class timeBudgetResults(QWidget):
             col1.extend([f"{self.min_time:0.3f}", f"{self.max_time:0.3f}", f"{self.max_time - self.min_time:0.3f}"])
 
         if self.time_interval == cfg.TIME_FULL_OBS:
-            col1.extend([f"Full observation", f"Full observation", f"Full observation"])
+            col1.extend(["Full observation", "Full observation", "Full observation"])
 
         if self.time_interval == cfg.TIME_EVENTS:
-            col1.extend([f"Limited to coded events", f"Limited to coded events", f"Limited to coded events"])
+            col1.extend(["Limited to coded events", "Limited to coded events", "Limited to coded events"])
 
         for row_idx in range(self.twTB.rowCount()):
             values = []

@@ -134,7 +134,7 @@ def create_transitions_gv_from_matrix(matrix, cutoff_all=0, cutoff_behavior=0, e
             else:
                 transitions[row.split("\t")[0]][behaviours[idx]] = int(r)
 
-    transitions_total_number = sum([sum(transitions[x].values()) for x in transitions])
+    '''transitions_total_number = sum([sum(transitions[x].values()) for x in transitions])'''
 
     out = "digraph G { \n"
 

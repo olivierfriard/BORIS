@@ -158,8 +158,8 @@ def synthetic_time_budget_bin(pj: dict, selected_observations: list, parameters_
         else:
             try:
                 return f"{statistics.stdev([x.upper - x.lower for x in interval]):.3f}"
-            except:
-                return "NA"
+            except Exception:
+                return cfg.NA
 
     selected_subjects = parameters_obs[cfg.SELECTED_SUBJECTS]
     selected_behaviors = parameters_obs[cfg.SELECTED_BEHAVIORS]
