@@ -54,7 +54,14 @@ class MyTableWidgetItem(QTableWidgetItem):
 
 
 class observationsList_widget(QDialog):
-    def __init__(self, data: list, header: list, column_type: list, not_paired: list = [], parent=None):
+    def __init__(
+        self,
+        data: list,
+        header: list,
+        column_type: list,
+        not_paired: list = [],
+        parent=None,
+    ):
 
         super(observationsList_widget, self).__init__(parent)
 
@@ -78,7 +85,17 @@ class observationsList_widget(QDialog):
 
         self.cbLogic = QComboBox(self)
         self.cbLogic.addItems(
-            ["contains", "does not contain", "=", "!=", ">", "<", ">=", "<=", "between (use and to separate terms)"]
+            [
+                "contains",
+                "does not contain",
+                "=",
+                "!=",
+                ">",
+                "<",
+                ">=",
+                "<=",
+                "between (use and to separate terms)",
+            ]
         )
         self.cbLogic.currentIndexChanged.connect(self.view_filter)
 
@@ -139,7 +156,9 @@ class observationsList_widget(QDialog):
         self.comboBox.addItems(header)
 
         self.view.setEditTriggers(QAbstractItemView.NoEditTriggers)
-        self.label.setText(f"{self.view.rowCount()} observation{'s' * (self.view.rowCount() > 1)}")
+        self.label.setText(
+            f"{self.view.rowCount()} observation{'s' * (self.view.rowCount() > 1)}"
+        )
 
     def view_doubleClicked(self, index):
 
@@ -155,7 +174,9 @@ class observationsList_widget(QDialog):
             return
 
         response = dialog.MessageDialog(
-            cfg.programName, "What do you want to do with this observation?", list(commands_index.keys()) + [cfg.CANCEL]
+            cfg.programName,
+            "What do you want to do with this observation?",
+            list(commands_index.keys()) + [cfg.CANCEL],
         )
         if response == cfg.CANCEL:
             return
@@ -208,7 +229,7 @@ class observationsList_widget(QDialog):
         filter
         """
 
-        def str2float(s):
+        def str2float(s: str):
             """
             convert str in float or return str
             """
@@ -313,7 +334,11 @@ class observationsList_widget(QDialog):
                     if logic(search, row[self.comboBox.currentIndex()].upper()):
                         self.view.setRowCount(self.view.rowCount() + 1)
                         for c, _ in enumerate(row):
-                            self.view.setItem(self.view.rowCount() - 1, c, self.set_item(r, c))
+                            self.view.setItem(
+                                self.view.rowCount() - 1, c, self.set_item(r, c)
+                            )
             except Exception:
                 pass
-        self.label.setText(f"{self.view.rowCount()} observation{'s' * (self.view.rowCount() > 1)}")
+        self.label.setText(
+            f"{self.view.rowCount()} observation{'s' * (self.view.rowCount() > 1)}"
+        )

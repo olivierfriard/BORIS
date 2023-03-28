@@ -22,12 +22,21 @@ Copyright 2012-2023 Olivier Friard
 """
 
 import wave
-
 import matplotlib
 
 matplotlib.use("Qt5Agg")
 import numpy as np
-from PyQt5.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QPushButton, QLabel, QSpinBox
+
+from . import config as cfg
+
+from PyQt5.QtWidgets import (
+    QWidget,
+    QVBoxLayout,
+    QHBoxLayout,
+    QPushButton,
+    QLabel,
+    QSpinBox,
+)
 from PyQt5.QtCore import pyqtSignal, QEvent
 from PyQt5 import Qt
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
@@ -42,12 +51,12 @@ class Plot_spectrogram_RT(QWidget):
 
     def __init__(self):
         super().__init__()
-        self.setWindowTitle(f"Spectrogram")
+        self.setWindowTitle("Spectrogram")
 
         self.interval = 10  # interval of visualization (in seconds)
         self.time_mem = -1
 
-        self.cursor_color = "red"
+        self.cursor_color = cfg.REALTIME_PLOT_CURSOR_COLOR
 
         self.spectro_color_map = matplotlib.pyplot.get_cmap("viridis")
 
@@ -62,19 +71,33 @@ class Plot_spectrogram_RT(QWidget):
         hlayout1 = QHBoxLayout()
         hlayout1.addWidget(QLabel("Time interval"))
         hlayout1.addWidget(
-            QPushButton("+", self, clicked=lambda: self.time_interval_changed(1), focusPolicy=Qt.Qt.NoFocus)
+            QPushButton(
+                "+",
+                self,
+                clicked=lambda: self.time_interval_changed(1),
+                focusPolicy=Qt.Qt.NoFocus,
+            )
         )
         hlayout1.addWidget(
-            QPushButton("-", self, clicked=lambda: self.time_interval_changed(-1), focusPolicy=Qt.Qt.NoFocus)
+            QPushButton(
+                "-",
+                self,
+                clicked=lambda: self.time_interval_changed(-1),
+                focusPolicy=Qt.Qt.NoFocus,
+            )
         )
         layout.addLayout(hlayout1)
 
         hlayout2 = QHBoxLayout()
         hlayout2.addWidget(QLabel("Frequency interval"))
-        self.sb_freq_min = QSpinBox(valueChanged=self.frequency_interval_changed, focusPolicy=Qt.Qt.NoFocus)
+        self.sb_freq_min = QSpinBox(
+            valueChanged=self.frequency_interval_changed, focusPolicy=Qt.Qt.NoFocus
+        )
         self.sb_freq_min.setRange(0, 200000)
         self.sb_freq_min.setSingleStep(100)
-        self.sb_freq_max = QSpinBox(valueChanged=self.frequency_interval_changed, focusPolicy=Qt.Qt.NoFocus)
+        self.sb_freq_max = QSpinBox(
+            valueChanged=self.frequency_interval_changed, focusPolicy=Qt.Qt.NoFocus
+        )
         self.sb_freq_max.setRange(0, 200000)
         self.sb_freq_max.setSingleStep(100)
         hlayout2.addWidget(self.sb_freq_min)
@@ -192,7 +215,9 @@ class Plot_spectrogram_RT(QWidget):
                 cmap=self.spectro_color_map,
             )
 
-            self.ax.set_xlim(current_time - self.interval / 2, current_time + self.interval / 2)
+            self.ax.set_xlim(
+                current_time - self.interval / 2, current_time + self.interval / 2
+            )
 
             # cursor
             self.ax.axvline(x=current_time, color=self.cursor_color, linestyle="-")
@@ -215,20 +240,29 @@ class Plot_spectrogram_RT(QWidget):
 
             self.ax.set_xlim(lim1, lim2)
 
-            self.ax.xaxis.set_major_locator(mticker.FixedLocator(self.ax.get_xticks().tolist()))
+            self.ax.xaxis.set_major_locator(
+                mticker.FixedLocator(self.ax.get_xticks().tolist())
+            )
             self.ax.set_xticklabels(
-                [str(round(w + self.media_length - self.interval, 1)) for w in self.ax.get_xticks()]
+                [
+                    str(round(w + self.media_length - self.interval, 1))
+                    for w in self.ax.get_xticks()
+                ]
             )
 
             # cursor
-            self.ax.axvline(x=lim1 + self.interval / 2, color=self.cursor_color, linestyle="-")
+            self.ax.axvline(
+                x=lim1 + self.interval / 2, color=self.cursor_color, linestyle="-"
+            )
 
         # middle
         else:
 
             self.ax.specgram(
                 self.sound_info[
-                    int(round((current_time - self.interval / 2) * self.frame_rate, 0)) : int(
+                    int(
+                        round((current_time - self.interval / 2) * self.frame_rate, 0)
+                    ) : int(
                         round((current_time + self.interval / 2) * self.frame_rate, 0)
                     )
                 ],
@@ -239,8 +273,15 @@ class Plot_spectrogram_RT(QWidget):
                 cmap=self.spectro_color_map,
             )
 
-            self.ax.xaxis.set_major_locator(mticker.FixedLocator(self.ax.get_xticks().tolist()))
-            self.ax.set_xticklabels([str(round(current_time + w - self.interval / 2, 1)) for w in self.ax.get_xticks()])
+            self.ax.xaxis.set_major_locator(
+                mticker.FixedLocator(self.ax.get_xticks().tolist())
+            )
+            self.ax.set_xticklabels(
+                [
+                    str(round(current_time + w - self.interval / 2, 1))
+                    for w in self.ax.get_xticks()
+                ]
+            )
 
             # cursor
             self.ax.axvline(x=self.interval / 2, color=self.cursor_color, linestyle="-")
