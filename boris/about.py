@@ -34,6 +34,7 @@ try:
     from . import mpv2 as mpv
 
     # check if MPV API v. 1
+    # is v. 1 use the old version of mpv.py
     try:
         if "libmpv.so.1" in mpv.sofile:
             from . import mpv as mpv
