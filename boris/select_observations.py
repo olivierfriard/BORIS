@@ -20,7 +20,7 @@ Copyright 2012-2023 Olivier Friard
   MA 02110-1301, USA.
 
 """
-from typing import List, Tuple, Dict
+from typing import Tuple
 from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import QAbstractItemView
 

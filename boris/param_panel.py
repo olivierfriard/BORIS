@@ -20,7 +20,6 @@ This file is part of BORIS.
 
 """
 
-import logging
 
 from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import QDialog
@@ -44,13 +43,25 @@ class Param_panel(QDialog, Ui_Dialog):
         self.end_time = duration_widget.Duration_widget(0)
         self.horizontalLayout_6.insertWidget(1, self.end_time)
 
-        self.pbSelectAllSubjects.clicked.connect(lambda: self.subjects_button_clicked("select all"))
-        self.pbUnselectAllSubjects.clicked.connect(lambda: self.subjects_button_clicked("unselect all"))
-        self.pbReverseSubjectsSelection.clicked.connect(lambda: self.subjects_button_clicked("reverse selection"))
+        self.pbSelectAllSubjects.clicked.connect(
+            lambda: self.subjects_button_clicked("select all")
+        )
+        self.pbUnselectAllSubjects.clicked.connect(
+            lambda: self.subjects_button_clicked("unselect all")
+        )
+        self.pbReverseSubjectsSelection.clicked.connect(
+            lambda: self.subjects_button_clicked("reverse selection")
+        )
 
-        self.pbSelectAllBehaviors.clicked.connect(lambda: self.behaviors_button_clicked("select all"))
-        self.pbUnselectAllBehaviors.clicked.connect(lambda: self.behaviors_button_clicked("unselect all"))
-        self.pbReverseBehaviorsSelection.clicked.connect(lambda: self.behaviors_button_clicked("reverse selection"))
+        self.pbSelectAllBehaviors.clicked.connect(
+            lambda: self.behaviors_button_clicked("select all")
+        )
+        self.pbUnselectAllBehaviors.clicked.connect(
+            lambda: self.behaviors_button_clicked("unselect all")
+        )
+        self.pbReverseBehaviorsSelection.clicked.connect(
+            lambda: self.behaviors_button_clicked("reverse selection")
+        )
 
         self.pbOK.clicked.connect(self.ok)
         self.pbCancel.clicked.connect(self.reject)
@@ -59,9 +70,15 @@ class Param_panel(QDialog, Ui_Dialog):
 
         self.rb_observed_events.setChecked(True)
 
-        self.rb_media_duration.clicked.connect(lambda: self.rb_time_interval_selection(cfg.TIME_FULL_OBS))
-        self.rb_observed_events.clicked.connect(lambda: self.rb_time_interval_selection(cfg.TIME_EVENTS))
-        self.rb_user_defined.clicked.connect(lambda: self.rb_time_interval_selection(cfg.TIME_ARBITRARY_INTERVAL))
+        self.rb_media_duration.clicked.connect(
+            lambda: self.rb_time_interval_selection(cfg.TIME_FULL_OBS)
+        )
+        self.rb_observed_events.clicked.connect(
+            lambda: self.rb_time_interval_selection(cfg.TIME_EVENTS)
+        )
+        self.rb_user_defined.clicked.connect(
+            lambda: self.rb_time_interval_selection(cfg.TIME_ARBITRARY_INTERVAL)
+        )
 
     def rb_time_interval_selection(self, button):
         """
@@ -77,7 +94,11 @@ class Param_panel(QDialog, Ui_Dialog):
             self.frm_time_interval.setEnabled(False)
             self.frm_time_interval.setVisible(True)
 
-        elif button == cfg.TIME_FULL_OBS and len(self.selectedObservations) == 1 and self.media_duration is not None:
+        elif (
+            button == cfg.TIME_FULL_OBS
+            and len(self.selectedObservations) == 1
+            and self.media_duration is not None
+        ):
             self.start_time.set_time(0)
             self.end_time.set_time(self.media_duration)
             self.frm_time_interval.setEnabled(False)
@@ -137,7 +158,10 @@ class Param_panel(QDialog, Ui_Dialog):
         if item.data(33) == "category":
             category = item.data(34)
             for i in range(self.lwBehaviors.count()):
-                if self.lwBehaviors.item(i).data(34) == category and self.lwBehaviors.item(i).data(33) != "category":
+                if (
+                    self.lwBehaviors.item(i).data(34) == category
+                    and self.lwBehaviors.item(i).data(33) != "category"
+                ):
 
                     if item.data(35):
                         self.lwBehaviors.item(i).setCheckState(Qt.Unchecked)
@@ -155,13 +179,16 @@ class Param_panel(QDialog, Ui_Dialog):
 
         # extract events from selected observations
         all_events = [
-            self.pj[cfg.OBSERVATIONS][x][cfg.EVENTS] for x in self.pj[cfg.OBSERVATIONS] if x in selected_observations
+            self.pj[cfg.OBSERVATIONS][x][cfg.EVENTS]
+            for x in self.pj[cfg.OBSERVATIONS]
+            if x in selected_observations
         ]
 
         for events in all_events:
             for event in events:
                 if event[cfg.EVENT_SUBJECT_FIELD_IDX] in selected_subjects or (
-                    not event[cfg.EVENT_SUBJECT_FIELD_IDX] and cfg.NO_FOCAL_SUBJECT in selected_subjects
+                    not event[cfg.EVENT_SUBJECT_FIELD_IDX]
+                    and cfg.NO_FOCAL_SUBJECT in selected_subjects
                 ):
                     observed_behaviors.append(event[cfg.EVENT_BEHAVIOR_FIELD_IDX])
 
@@ -175,7 +202,9 @@ class Param_panel(QDialog, Ui_Dialog):
             if cb and cb.isChecked():
                 selected_subjects.append(cb.text())
 
-        observed_behaviors = self.extract_observed_behaviors(self.selectedObservations, selected_subjects)
+        observed_behaviors = self.extract_observed_behaviors(
+            self.selectedObservations, selected_subjects
+        )
 
         for idx in range(self.lwBehaviors.count()):
 

@@ -52,7 +52,7 @@ def export_project_as_pickle_object(pj: dict) -> None:
         QMessageBox.critical(
             None,
             cfg.programName,
-            f"Error during file saving.",
+            "Error during file saving.",
             QMessageBox.Ok | QMessageBox.Default,
             QMessageBox.NoButton,
         )
@@ -142,7 +142,7 @@ def export_ethogram(self) -> None:
             QMessageBox.critical(
                 None,
                 cfg.programName,
-                f"Error during file saving.",
+                "Error during file saving.",
                 QMessageBox.Ok | QMessageBox.Default,
                 QMessageBox.NoButton,
             )

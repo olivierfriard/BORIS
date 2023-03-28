@@ -28,7 +28,6 @@ import sys
 from . import dialog
 from . import gui_utilities
 from . import menu_options
-from . import dialog
 from . import config as cfg
 from . import config_file
 
@@ -75,7 +74,10 @@ class Preferences(QDialog, Ui_prefDialog):
         allow user select a cache dir for ffmpeg images
         """
         FFmpegCacheDir = QFileDialog().getExistingDirectory(
-            self, "Select a directory", os.path.expanduser("~"), options=QFileDialog().ShowDirsOnly
+            self,
+            "Select a directory",
+            os.path.expanduser("~"),
+            options=QFileDialog().ShowDirsOnly,
         )
         if FFmpegCacheDir:
             self.leFFmpegCacheDir.setText(FFmpegCacheDir)
@@ -112,7 +114,9 @@ def preferences(self):
         preferencesWindow.cbTimeFormat.setCurrentIndex(1)
 
     preferencesWindow.sbffSpeed.setValue(self.fast)
-    preferencesWindow.cb_adapt_fast_jump.setChecked(self.config_param.get(cfg.ADAPT_FAST_JUMP, False))
+    preferencesWindow.cb_adapt_fast_jump.setChecked(
+        self.config_param.get(cfg.ADAPT_FAST_JUMP, False)
+    )
     preferencesWindow.sbRepositionTimeOffset.setValue(self.repositioningTimeOffset)
     preferencesWindow.sbSpeedStep.setValue(self.play_rate_step)
     # automatic backup
@@ -128,11 +132,15 @@ def preferences(self):
     # alert no focal subject
     preferencesWindow.cbAlertNoFocalSubject.setChecked(self.alertNoFocalSubject)
     # tracking cursor above event
-    preferencesWindow.cbTrackingCursorAboveEvent.setChecked(self.trackingCursorAboveEvent)
+    preferencesWindow.cbTrackingCursorAboveEvent.setChecked(
+        self.trackingCursorAboveEvent
+    )
     # check for new version
     preferencesWindow.cbCheckForNewVersion.setChecked(self.checkForNewVersion)
     # display subtitles
-    preferencesWindow.cb_display_subtitles.setChecked(self.config_param[cfg.DISPLAY_SUBTITLES])
+    preferencesWindow.cb_display_subtitles.setChecked(
+        self.config_param[cfg.DISPLAY_SUBTITLES]
+    )
     # pause before add event
     preferencesWindow.cb_pause_before_addevent.setChecked(self.pause_before_addevent)
     # MPV hwdec
@@ -140,24 +148,33 @@ def preferences(self):
     preferencesWindow.cb_hwdec.addItems(cfg.MPV_HWDEC_OPTIONS)
     try:
         preferencesWindow.cb_hwdec.setCurrentIndex(
-            cfg.MPV_HWDEC_OPTIONS.index(self.config_param.get(cfg.MPV_HWDEC, cfg.MPV_HWDEC_DEFAULT_VALUE))
+            cfg.MPV_HWDEC_OPTIONS.index(
+                self.config_param.get(cfg.MPV_HWDEC, cfg.MPV_HWDEC_DEFAULT_VALUE)
+            )
         )
     except Exception:
         preferencesWindow.cb_hwdec.setCurrentIndex(cfg.MPV_HWDEC_DEFAULT_VALUE)
 
     # PROJET FILE INDENTATION
     preferencesWindow.combo_project_file_indentation.clear()
-    preferencesWindow.combo_project_file_indentation.addItems(cfg.PROJECT_FILE_INDENTATION_COMBO_OPTIONS)
+    preferencesWindow.combo_project_file_indentation.addItems(
+        cfg.PROJECT_FILE_INDENTATION_COMBO_OPTIONS
+    )
     try:
         preferencesWindow.combo_project_file_indentation.setCurrentIndex(
             cfg.PROJECT_FILE_INDENTATION_OPTIONS.index(
-                self.config_param.get(cfg.PROJECT_FILE_INDENTATION, cfg.PROJECT_FILE_INDENTATION_DEFAULT_VALUE)
+                self.config_param.get(
+                    cfg.PROJECT_FILE_INDENTATION,
+                    cfg.PROJECT_FILE_INDENTATION_DEFAULT_VALUE,
+                )
             )
         )
     except Exception:
         preferencesWindow.combo_project_file_indentation.setCurrentText(
             cfg.PROJECT_FILE_INDENTATION_COMBO_OPTIONS[
-                cfg.PROJECT_FILE_INDENTATION_OPTIONS.index(cfg.PROJECT_FILE_INDENTATION_DEFAULT_VALUE)
+                cfg.PROJECT_FILE_INDENTATION_OPTIONS.index(
+                    cfg.PROJECT_FILE_INDENTATION_DEFAULT_VALUE
+                )
             ]
         )
 
@@ -189,7 +206,9 @@ def preferences(self):
     try:
         preferencesWindow.sb_time_interval.setValue(self.spectrogram_time_interval)
     except Exception:
-        preferencesWindow.sb_time_interval.setValue(cfg.SPECTROGRAM_DEFAULT_TIME_INTERVAL)
+        preferencesWindow.sb_time_interval.setValue(
+            cfg.SPECTROGRAM_DEFAULT_TIME_INTERVAL
+        )
 
     # behavior colors
     if not self.plot_colors:
@@ -199,7 +218,9 @@ def preferences(self):
     # category colors
     if not self.behav_category_colors:
         self.behav_category_colors = cfg.CATEGORY_COLORS_LIST
-    preferencesWindow.te_category_colors.setPlainText("\n".join(self.behav_category_colors))
+    preferencesWindow.te_category_colors.setPlainText(
+        "\n".join(self.behav_category_colors)
+    )
 
     gui_utilities.restore_geometry(preferencesWindow, "preferences", (700, 500))
 
@@ -228,7 +249,9 @@ def preferences(self):
 
         self.fast = preferencesWindow.sbffSpeed.value()
 
-        self.config_param[cfg.ADAPT_FAST_JUMP] = preferencesWindow.cb_adapt_fast_jump.isChecked()
+        self.config_param[
+            cfg.ADAPT_FAST_JUMP
+        ] = preferencesWindow.cb_adapt_fast_jump.isChecked()
 
         self.repositioningTimeOffset = preferencesWindow.sbRepositionTimeOffset.value()
 
@@ -242,7 +265,9 @@ def preferences(self):
 
         self.behav_seq_separator = preferencesWindow.leSeparator.text()
 
-        self.close_the_same_current_event = preferencesWindow.cbCloseSameEvent.isChecked()
+        self.close_the_same_current_event = (
+            preferencesWindow.cbCloseSameEvent.isChecked()
+        )
 
         self.confirmSound = preferencesWindow.cbConfirmSound.isChecked()
 
@@ -250,19 +275,29 @@ def preferences(self):
 
         self.alertNoFocalSubject = preferencesWindow.cbAlertNoFocalSubject.isChecked()
 
-        self.trackingCursorAboveEvent = preferencesWindow.cbTrackingCursorAboveEvent.isChecked()
+        self.trackingCursorAboveEvent = (
+            preferencesWindow.cbTrackingCursorAboveEvent.isChecked()
+        )
 
         self.checkForNewVersion = preferencesWindow.cbCheckForNewVersion.isChecked()
 
-        self.config_param[cfg.DISPLAY_SUBTITLES] = preferencesWindow.cb_display_subtitles.isChecked()
+        self.config_param[
+            cfg.DISPLAY_SUBTITLES
+        ] = preferencesWindow.cb_display_subtitles.isChecked()
 
-        self.pause_before_addevent = preferencesWindow.cb_pause_before_addevent.isChecked()
+        self.pause_before_addevent = (
+            preferencesWindow.cb_pause_before_addevent.isChecked()
+        )
 
         # MPV hwdec
-        self.config_param[cfg.MPV_HWDEC] = cfg.MPV_HWDEC_OPTIONS[preferencesWindow.cb_hwdec.currentIndex()]
+        self.config_param[cfg.MPV_HWDEC] = cfg.MPV_HWDEC_OPTIONS[
+            preferencesWindow.cb_hwdec.currentIndex()
+        ]
 
         # project file indentation
-        self.config_param[cfg.PROJECT_FILE_INDENTATION] = cfg.PROJECT_FILE_INDENTATION_OPTIONS[
+        self.config_param[
+            cfg.PROJECT_FILE_INDENTATION
+        ] = cfg.PROJECT_FILE_INDENTATION_OPTIONS[
             preferencesWindow.combo_project_file_indentation.currentIndex()
         ]
 
@@ -273,14 +308,18 @@ def preferences(self):
         self.ffmpeg_cache_dir = preferencesWindow.leFFmpegCacheDir.text()
 
         # spectrogram
-        self.spectrogram_color_map = preferencesWindow.cbSpectrogramColorMap.currentText()
+        self.spectrogram_color_map = (
+            preferencesWindow.cbSpectrogramColorMap.currentText()
+        )
         # self.spectrogramHeight = preferencesWindow.sbSpectrogramHeight.value()
         self.spectrogram_time_interval = preferencesWindow.sb_time_interval.value()
 
         # behav colors
         self.plot_colors = preferencesWindow.te_behav_colors.toPlainText().split()
         # category colors
-        self.behav_category_colors = preferencesWindow.te_category_colors.toPlainText().split()
+        self.behav_category_colors = (
+            preferencesWindow.te_category_colors.toPlainText().split()
+        )
 
         menu_options.update_menu(self)
 

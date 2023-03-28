@@ -103,13 +103,17 @@ class Plot_data(QWidget):
         self.hlayout1.addWidget(QLabel("Zoom"))
         self.hlayout1.addWidget(self.button_plus)
         self.hlayout1.addWidget(self.button_minus)
-        self.hlayout1.addItem(QSpacerItem(40, 20, QSizePolicy.Expanding, QSizePolicy.Minimum))
+        self.hlayout1.addItem(
+            QSpacerItem(40, 20, QSizePolicy.Expanding, QSizePolicy.Minimum)
+        )
 
         self.hlayout2 = QHBoxLayout()
         self.hlayout2.addWidget(QLabel("Value"))
         self.lb_value = QLabel("")
         self.hlayout2.addWidget(self.lb_value)
-        self.hlayout2.addItem(QSpacerItem(40, 20, QSizePolicy.Expanding, QSizePolicy.Minimum))
+        self.hlayout2.addItem(
+            QSpacerItem(40, 20, QSizePolicy.Expanding, QSizePolicy.Minimum)
+        )
 
         self.layout.addLayout(self.hlayout1)
         self.layout.addLayout(self.hlayout2)
@@ -193,7 +197,9 @@ class Plot_data(QWidget):
             if min_time_step > 1:
                 min_time_step = 1
 
-            x2 = np.arange(min_time_value, max_time_value + min_time_step, min_time_step)
+            x2 = np.arange(
+                min_time_value, max_time_value + min_time_step, min_time_step
+            )
             data = np.array((x2, np.interp(x2, data[:, 0], data[:, 1]))).T
             del x2
 
@@ -288,7 +294,9 @@ class Plot_data(QWidget):
         self.close()
 
     # Slot receives data and plots it
-    def plot(self, x, y, position_data, position_start, min_value, max_value, position_end):
+    def plot(
+        self, x, y, position_data, position_start, min_value, max_value, position_end
+    ):
 
         # print current value
         try:
@@ -296,7 +304,7 @@ class Plot_data(QWidget):
                 self.lb_value.setText(str(round(y[position_data], 3)))
             else:
                 self.lb_value.setText(str(round(y[len(y) // 2], 3)))
-        except:
+        except Exception:
             self.lb_value.setText("Read error")
 
         try:
@@ -306,10 +314,12 @@ class Plot_data(QWidget):
             self.myplot.axes.set_ylabel(self.y_label, rotation=90, labelpad=10)
             self.myplot.axes.set_ylim((min_value, max_value))
             self.myplot.axes.plot(x, y, self.plot_style)
-            self.myplot.axes.axvline(x=position_data, color=cfg.REALTIME_PLOT_CURSOR_COLOR, linestyle="-")
+            self.myplot.axes.axvline(
+                x=position_data, color=cfg.REALTIME_PLOT_CURSOR_COLOR, linestyle="-"
+            )
 
             self.myplot.draw()
-        except:
+        except Exception:
             logging.debug(f"error in plotting external data: {sys.exc_info()[1]}")
 
 
@@ -329,7 +339,9 @@ class Plotter(QObject):
 
         logging.debug("current_time: {}".format(current_time))
 
-        current_discrete_time = round(round(current_time / self.min_time_step) * self.min_time_step, 2)
+        current_discrete_time = round(
+            round(current_time / self.min_time_step) * self.min_time_step, 2
+        )
 
         logging.debug("current_discrete_time: {}".format(current_discrete_time))
         logging.debug("self.interval: {}".format(self.interval))
@@ -338,7 +350,9 @@ class Plotter(QObject):
 
         if self.min_time_value <= current_discrete_time <= self.max_time_value:
 
-            logging.debug("self.min_time_value <= current_discrete_time <= self.max_time_value")
+            logging.debug(
+                "self.min_time_value <= current_discrete_time <= self.max_time_value"
+            )
 
             idx = np.where(self.data[:, 0] == current_discrete_time)[0]
             if not len(idx):
@@ -383,18 +397,23 @@ class Plotter(QObject):
 
         elif current_time > self.max_time_value:
 
-            logging.debug(f"self.interval/self.min_time_step/2: {self.interval / self.min_time_step / 2}")
+            logging.debug(
+                f"self.interval/self.min_time_step/2: {self.interval / self.min_time_step / 2}"
+            )
 
             dim_footer = int(
                 round(
-                    (current_time - self.max_time_value) / self.min_time_step + self.interval / self.min_time_step / 2
+                    (current_time - self.max_time_value) / self.min_time_step
+                    + self.interval / self.min_time_step / 2
                 )
             )
 
             footer = np.array([np.nan] * dim_footer).T
             logging.debug(f"len footer: {len(footer)}")
 
-            a = (self.interval / 2 - (current_time - self.max_time_value)) / self.min_time_step
+            a = (
+                self.interval / 2 - (current_time - self.max_time_value)
+            ) / self.min_time_step
             logging.debug(f"a: {a}")
 
             if a >= 0:
@@ -434,7 +453,9 @@ class Plotter(QObject):
             if b >= 0:
                 d = np.append(header, self.data[0:b][:, 1], axis=0)
                 if len(d) < freq_interval:
-                    d = np.append(d, np.array([np.nan] * int(freq_interval - len(d))).T, axis=0)
+                    d = np.append(
+                        d, np.array([np.nan] * int(freq_interval - len(d))).T, axis=0
+                    )
 
             else:
                 d = np.array([np.nan] * int(self.interval / self.min_time_step)).T
@@ -444,7 +465,11 @@ class Plotter(QObject):
 
         logging.debug(f"self.min_time_step: {self.min_time_step}")
 
-        x = np.arange(current_time - self.interval // 2, current_time + self.interval // 2, self.min_time_step)
+        x = np.arange(
+            current_time - self.interval // 2,
+            current_time + self.interval // 2,
+            self.min_time_step,
+        )
 
         logging.debug(f"len x 1: {len(x)}")
 
@@ -489,7 +514,12 @@ if __name__ == "__main__":
         "convert_time_ecg": {
             "name": "convert_time_ecg",
             "description": "convert '%d/%m/%Y %H:%M:%S.%f' in seconds from epoch",
-            "code": '\nimport datetime\nepoch = datetime.datetime.utcfromtimestamp(0)\ndatetime_format = "%d/%m/%Y %H:%M:%S.%f"\n\nOUTPUT = (datetime.datetime.strptime(INPUT, datetime_format) - epoch).total_seconds()\n',
+            "code": (
+                "\nimport datetime\n"
+                "epoch = datetime.datetime.utcfromtimestamp(0)\n"
+                'datetime_format = "%d/%m/%Y %H:%M:%S.%f"\n\n'
+                "OUTPUT = (datetime.datetime.strptime(INPUT, datetime_format) - epoch).total_seconds()\n"
+            ),
         },
         "hhmmss_2_seconds": {
             "name": "hhmmss_2_seconds",
