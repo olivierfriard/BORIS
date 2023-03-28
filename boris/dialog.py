@@ -146,14 +146,9 @@ def global_error_message(exception_type, exception_value, traceback_object):
 
     logging.critical(error_text)
 
-    # append to boris.log file
-    try:
-        with open(pl.Path.home() / "boris.log", "a") as f_out:
-            f_out.write(error_text + "\n")
-            f_out.write("-" * 80 + "\n")
-    except Exception:
-        print(f"Cannot write to {pl.Path.home() / 'boris.log'} file")
-        logging.critical(f"Cannot write to {pl.Path.home() / 'boris.log'} file")
+    # write error on stdout
+    print(error_text)
+    print("-" * 80 + "\n")
 
     # copy to clipboard
     cb = QApplication.clipboard()

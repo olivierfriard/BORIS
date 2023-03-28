@@ -124,11 +124,8 @@ __version_date__ = version.__version_date__
 if util.versiontuple(platform.python_version()) < util.versiontuple("3.8"):
     msg = f"BORIS requires Python 3.8+! You are using Python v. {platform.python_version()}\n"
     logging.critical(msg)
-    # append to boris.log file
-    with open(pl.Path("~").expanduser() / "boris.log", "a") as f_out:
-        f_out.write(f"{datetime.datetime.now():%Y-%m-%d %H:%M}\n")
-        f_out.write(msg)
-        f_out.write("-" * 80 + "\n")
+
+    print(f"{datetime.datetime.now():%Y-%m-%d %H:%M}: {msg}")
     sys.exit()
 
 if sys.platform == "darwin":  # for MacOS
