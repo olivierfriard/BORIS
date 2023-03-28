@@ -41,7 +41,6 @@ from . import (
     observation_operations,
     preferences,
     project_import_export,
-    project_server,
     synthetic_time_budget,
     time_budget_widget,
     transitions,
@@ -77,8 +76,6 @@ def connections(self):
 
     self.action_remove_media_files_and_images_directories_path.triggered.connect(self.remove_media_files_path)
     self.action_remove_data_files_path.triggered.connect(self.remove_data_files_path)
-
-    self.actionSend_project.triggered.connect(lambda: project_server.send_project_via_socket(self))
 
     self.menuCreate_subtitles_2.triggered.connect(self.create_subtitles)
 
