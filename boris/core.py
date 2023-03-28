@@ -4823,32 +4823,29 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         flagPlayerPlaying = self.is_playing()
 
-        # speed down
-        if ek == Qt.Key_End:
-            if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE] in [cfg.MEDIA]:
+        if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE] == cfg.MEDIA:
+            # speed down
+            if ek == Qt.Key_End:
                 video_operations.video_slower_activated(self)
-            return
+                return
 
-        # speed up
-        if ek == Qt.Key_Home:
-            if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE] in [cfg.MEDIA]:
+            # speed up
+            if ek == Qt.Key_Home:
                 video_operations.video_faster_activated(self)
-            return
+                return
 
-        # speed normal
-        if ek == Qt.Key_Backspace:
-            if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE] in [cfg.MEDIA]:
+            # speed normal
+            if ek == Qt.Key_Backspace:
                 video_operations.video_normalspeed_activated(self)
-            return
+                return
 
-        # play / pause with space bar
-        if ek == Qt.Key_Space:
-            if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE] in [cfg.MEDIA]:
+            # play / pause with space bar
+            if ek == Qt.Key_Space:
                 if flagPlayerPlaying:
                     self.pause_video()
                 else:
                     self.play_video()
-            return
+                return
 
         # frame-by-frame mode
         if ek == 47 or ek == Qt.Key_Left:  # / one frame back
