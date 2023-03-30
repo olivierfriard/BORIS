@@ -54,7 +54,7 @@ def actionAbout_activated(self):
     """
     About dialog
     """
-
+    1 / 0
     programs_versions = ["MPV media player"]
     if sys.platform.startswith("linux"):
         programs_versions.append(

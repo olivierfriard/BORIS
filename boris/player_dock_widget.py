@@ -47,15 +47,6 @@ except RuntimeError:  # libmpv found but version too old
 except OSError:  # libmpv not found
     msg = "LIBMPV library not found!\n"
     logging.critical(msg)
-
-    print(f"{dt.datetime.now():%Y-%m-%d %H:%M}: msg")
-    """
-    # append to boris.log file
-    with open(pl.Path("~").expanduser() / "boris.log", "a") as f_out:
-        f_out.write(f"{dt.datetime.now():%Y-%m-%d %H:%M}\n")
-        f_out.write(msg)
-        f_out.write("-" * 80 + "\n")
-    """
     sys.exit()
 
 

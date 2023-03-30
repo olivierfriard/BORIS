@@ -54,7 +54,7 @@ from PyQt5.QtWidgets import (
     QVBoxLayout,
     QWidget,
 )
-from PyQt5.QtGui import QFont
+from PyQt5.QtGui import QFont, QTextCursor
 
 from . import config as cfg
 from . import duration_widget
@@ -154,14 +154,6 @@ def global_error_message(exception_type, exception_value, traceback_object):
     logging.critical(error_text)
     logging.critical(systeminfo)
 
-    # write error on stdout
-    """
-    print(error_text)
-    print("System info:")
-    print(systeminfo)
-    print("-" * 80 + "\n")
-    """
-
     # copy to clipboard
     cb = QApplication.clipboard()
     cb.clear(mode=cb.Clipboard)
@@ -193,6 +185,8 @@ def global_error_message(exception_type, exception_value, traceback_object):
 
     errorbox.ptText.clear()
     errorbox.ptText.appendHtml(text)
+
+    errorbox.ptText.moveCursor(QTextCursor.Start)
 
     """
     errorbox = QMessageBox()
