@@ -26,6 +26,7 @@ import pathlib as pl
 import traceback
 import platform
 import datetime as dt
+import subprocess
 from decimal import Decimal as dec
 
 from PyQt5.QtCore import Qt, pyqtSignal, QT_VERSION_STR, PYQT_VERSION_STR
@@ -131,7 +132,7 @@ def error_message() -> None:
 def global_error_message(exception_type, exception_value, traceback_object):
     """
     global error management
-    save error using loggin.critical and append error message to ~/boris.log
+    save error using loggin.critical and stdout
     """
 
     error_text: str = (
@@ -144,40 +145,67 @@ def global_error_message(exception_type, exception_value, traceback_object):
     )
     error_text += "".join(traceback.format_exception(exception_type, exception_value, traceback_object))
 
+    # system info
+    if sys.platform.startswith("win"):
+        systeminfo = subprocess.getoutput("systeminfo")
+    if sys.platform.startswith("linux"):
+        systeminfo = subprocess.getoutput("cat /etc/*rel*; uname -a")
+
     logging.critical(error_text)
+    logging.critical(systeminfo)
 
     # write error on stdout
+    """
     print(error_text)
+    print("System info:")
+    print(systeminfo)
     print("-" * 80 + "\n")
+    """
 
     # copy to clipboard
     cb = QApplication.clipboard()
     cb.clear(mode=cb.Clipboard)
-    cb.setText(error_text, mode=cb.Clipboard)
+    cb.setText(error_text + "\nSystem info:\n" + systeminfo, mode=cb.Clipboard)
 
     error_text: str = error_text.replace("\r\n", "\n").replace("\n", "<br>")
 
     text: str = (
-        f"<b>An error has occured</b>:<br><br>"
-        f"{error_text}<br>"
+        f"<b>An error has occured</b><br><br>"
         "to improve the software please report this problem at:<br>"
         '<a href="https://github.com/olivierfriard/BORIS/issues">'
         "https://github.com/olivierfriard/BORIS/issues</a><br>"
         "Please no screenshot, the error message was copied to the clipboard.<br><br>"
         "Thank you for your collaboration!"
+        "<br><br>"
+        "<pre>"
+        f"{error_text}"
+        "<hr>"
+        "<b>System info</b><br>"
+        f"{systeminfo}"
+        "</pre>"
     )
 
+    errorbox = Results_dialog()
+    errorbox.setWindowTitle("BORIS - An error occured")
+    errorbox.pbOK.setText("Abort")
+    errorbox.pbCancel.setVisible(True)
+    errorbox.pbCancel.setText("Ignore and try to continue")
+
+    errorbox.ptText.clear()
+    errorbox.ptText.appendHtml(text)
+
+    """
     errorbox = QMessageBox()
     errorbox.setWindowTitle("BORIS error occured")
     errorbox.setText(text)
     errorbox.setTextFormat(Qt.RichText)
     errorbox.setStandardButtons(QMessageBox.Abort)
-
     _ = errorbox.addButton("Ignore and try to continue", QMessageBox.RejectRole)
+    """
 
     ret = errorbox.exec_()
 
-    if ret == QMessageBox.Abort:
+    if ret == 1:  # Abort
         sys.exit(1)
 
 
@@ -742,17 +770,16 @@ class Results_dialog(QDialog):
         hbox.addWidget(self.ptText)
 
         hbox2 = QHBoxLayout()
+        hbox2.addItem(QSpacerItem(241, 20, QSizePolicy.Expanding, QSizePolicy.Minimum))
+
         self.pbSave = QPushButton("Save results", clicked=self.save_results)
         hbox2.addWidget(self.pbSave)
-
-        hbox2.addItem(QSpacerItem(241, 20, QSizePolicy.Expanding, QSizePolicy.Minimum))
 
         self.pbCancel = QPushButton(cfg.CANCEL, clicked=self.reject)
         hbox2.addWidget(self.pbCancel)
         self.pbCancel.setVisible(False)
 
-        self.pbOK = QPushButton(cfg.OK)
-        self.pbOK.clicked.connect(self.accept)
+        self.pbOK = QPushButton(cfg.OK, clicked=self.accept)
         hbox2.addWidget(self.pbOK)
 
         hbox.addLayout(hbox2)
