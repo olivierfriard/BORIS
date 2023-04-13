@@ -202,8 +202,6 @@ def synthetic_time_budget_bin(pj: dict, selected_observations: list, parameters_
         if [x for x in distinct_behav_modif if x[0] == behav] == []:
             distinct_behav_modif.append((behav, ""))
 
-    behaviors = init_behav_modif_bin(pj[cfg.ETHOGRAM], selected_subjects, distinct_behav_modif, parameters)
-
     param_header = ["Observations id", "Total length (s)", "Time interval (s)"]
     subj_header, behav_header, modif_header = (
         [""] * len(param_header),
@@ -237,6 +235,8 @@ def synthetic_time_budget_bin(pj: dict, selected_observations: list, parameters_
     ]
     # select time interval
     for obs_id in selected_observations:
+
+        behaviors = init_behav_modif_bin(pj[cfg.ETHOGRAM], selected_subjects, distinct_behav_modif, parameters)
 
         obs_length = observation_operations.observation_total_length(pj[cfg.OBSERVATIONS][obs_id])
 
@@ -407,8 +407,6 @@ def synthetic_time_budget(pj: dict, selected_observations: list, parameters_obs:
         pj, selected_subjects, selected_observations, selected_behaviors
     )
 
-    # return
-
     if not ok:
         return False, msg, None
 
@@ -428,7 +426,7 @@ def synthetic_time_budget(pj: dict, selected_observations: list, parameters_obs:
         if [x for x in distinct_behav_modif if x[0] == behav] == []:
             distinct_behav_modif.append([behav, ""])
 
-    behaviors = init_behav_modif(pj[cfg.ETHOGRAM], selected_subjects, distinct_behav_modif, parameters)
+    """behaviors = init_behav_modif(pj[cfg.ETHOGRAM], selected_subjects, distinct_behav_modif, parameters)"""
 
     param_header = ["Observations id", "Total length (s)"]
     subj_header, behav_header, modif_header = (
@@ -458,6 +456,8 @@ def synthetic_time_budget(pj: dict, selected_observations: list, parameters_obs:
 
     # select time interval
     for obs_id in selected_observations:
+
+        behaviors = init_behav_modif(pj[cfg.ETHOGRAM], selected_subjects, distinct_behav_modif, parameters)
 
         ok, msg, db_connector = db_functions.load_aggregated_events_in_db(
             pj, selected_subjects, [obs_id], selected_behaviors

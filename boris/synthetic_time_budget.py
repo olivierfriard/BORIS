@@ -42,7 +42,7 @@ def synthetic_time_budget(self) -> None:
     Synthetic time budget
     """
 
-    logging.debug('synthetic time budget function')
+    logging.debug("synthetic time budget function")
 
     _, selected_observations = select_observations.select_observations2(
         self, mode=cfg.MULTIPLE, windows_title="Select observations for synthetic time budget"
@@ -88,7 +88,7 @@ def synthetic_time_budget(self) -> None:
     if not start_coding.is_nan():
         cancel_pressed, synth_tb_param[cfg.EXCLUDED_BEHAVIORS] = self.filter_behaviors(
             title="Select behaviors to exclude from the total time",
-            text=("The duration of the selected behaviors will " "be subtracted from the total time"),
+            text="The duration of the selected behaviors will be subtracted from the total time",
             table="",
             behavior_type=[cfg.STATE_EVENT],
         )
