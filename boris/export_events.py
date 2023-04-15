@@ -461,7 +461,7 @@ def export_aggregated_events(self):
         if not exportDir:
             return
 
-    if outputFormat == "sql":
+    if outputFormat == cfg.SQL_EXT:
         _, _, conn = db_functions.load_aggregated_events_in_db(
             self.pj, parameters[cfg.SELECTED_SUBJECTS], selected_observations, parameters[cfg.SELECTED_BEHAVIORS]
         )
