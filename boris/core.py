@@ -3993,12 +3993,12 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         mem_behav: dict = {}
 
         for row in range(self.twEvents.rowCount()):
-            subject = self.twEvents.item(row, cfg.TW_OBS_FIELD[self.playerType][cfg.SUBJECT]).text()
             code = self.twEvents.item(row, cfg.TW_OBS_FIELD[self.playerType][cfg.BEHAVIOR_CODE]).text()
-            modifier = self.twEvents.item(row, cfg.TW_OBS_FIELD[self.playerType]["modifier"]).text()
-
             # check if code is state
             if code in state_events_list:
+                subject = self.twEvents.item(row, cfg.TW_OBS_FIELD[self.playerType][cfg.SUBJECT]).text()
+                modifier = self.twEvents.item(row, cfg.TW_OBS_FIELD[self.playerType][cfg.MODIFIER]).text()
+
                 if f"{subject}|{code}|{modifier}" in mem_behav and mem_behav[f"{subject}|{code}|{modifier}"]:
                     self.twEvents.item(row, cfg.TW_OBS_FIELD[self.playerType][cfg.TYPE]).setText(cfg.STOP)
                 else:
