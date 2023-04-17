@@ -87,14 +87,28 @@ df = pd.concat(
     ]
 )
 del l
-print(df)
+print(df.describe())
+
+print(f'{df["subject"].value_counts()=}')
+print(f'{df["subject"].nunique()=}')
+
+r = df.groupby(["subject", "behavior"])["duration"].sum()
+
+
+pd.set_option("display.max_rows", None, "display.max_columns", None)
+print(r)
+
 """
+# replace value (for selecting a time interval)
 t1 = time.time()
 df.loc[df["stop"] > 10, "stop"] = 10
 print(time.time() - t1)
 print(df)
 """
+
+
+"""
 t1 = 1
 t2 = 2
-
 print(df.query(f"`start` <= {t1} & `stop` >= {t2} & `duration` != 0"))
+"""
