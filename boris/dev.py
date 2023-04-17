@@ -47,22 +47,32 @@ for obs_id in pj[cfg.OBSERVATIONS]:
     # print(obs_id)
     obs_type = pj[cfg.OBSERVATIONS][obs_id][cfg.TYPE]
     obs_descr = pj[cfg.OBSERVATIONS][obs_id][cfg.DESCRIPTION]
-
+    mem_idx = []
     for idx, event in enumerate(pj[cfg.OBSERVATIONS][obs_id][cfg.EVENTS]):
+        if idx in mem_idx:
+            continue
         start = event_val(event, cfg.TIME)
         subject = event_val(event, cfg.SUBJECT)
         behavior = event_val(event, cfg.BEHAVIOR_CODE)
         modifier = event_val(event, cfg.MODIFIER)
         if behavior in state_events_list:
-            for idx2, event2 in enumerate(pj[cfg.OBSERVATIONS][obs_id][cfg.EVENTS][idx + 1 :]):
+            stop = None
+            for idx2, event2 in enumerate(pj[cfg.OBSERVATIONS][obs_id][cfg.EVENTS][idx + 1 :], start=idx + 1):
                 subject2 = event_val(event2, cfg.SUBJECT)
                 behavior2 = event_val(event2, cfg.BEHAVIOR_CODE)
                 modifier2 = event_val(event2, cfg.MODIFIER)
                 if subject == subject2 and behavior == behavior2 and modifier == modifier2:
                     stop = event_val(event2, cfg.TIME)
+                    mem_idx.append(idx2)
                     l.append([obs_id, obs_type, obs_descr, subject, behavior, modifier, start, stop, stop - start])
                     break
+            if stop is None:
+                print(obs_id, " not paired")
+                # print(pj[cfg.OBSERVATIONS][obs_id][cfg.EVENTS])
+                # print(f"{l=}")
+                # print(f"{mem_idx=}")
 
+                sys.exit()
         else:
             l.append([obs_id, obs_type, obs_descr, subject, behavior, modifier, start, start, 0])
 
