@@ -97,16 +97,26 @@ df = pd.concat(
     ]
 )
 del l
+print("=" * 30)
+print("describe")
 print(df.describe())
+print("=" * 30)
 
-print(f'{df["subject"].value_counts()=}')
-print(f'{df["subject"].nunique()=}')
-
-r = df.groupby(["subject", "behavior"])["duration"].sum()
-
+# print(f'{df["subject"].value_counts()=}')
+# print(f'{df["subject"].nunique()=}')
 
 pd.set_option("display.max_rows", None, "display.max_columns", None)
+
+print("=" * 30)
+print("mean")
+r = df.groupby(["subject", "behavior"])["duration"].mean()
 print(r)
+print("=" * 30)
+
+
+r = df.groupby(["observation id", "subject", "behavior"])
+print(r["start"])
+
 
 """
 # replace value (for selecting a time interval)
