@@ -146,9 +146,9 @@ def synthetic_time_budget(self) -> None:
                     return
 
         with open(file_name, "wb") as f:
-            if filter_ in [cfg.TSV, cfg.CSV, cfg.HTML, cfg.TEXT_FILE]:
+            if filter_ in (cfg.TSV, cfg.CSV, cfg.HTML, cfg.TEXT_FILE):
                 f.write(str.encode(data_report.export(output_format)))
-            if output_format in [cfg.ODS, cfg.XLSX, cfg.XLS]:
+            if filter_ in (cfg.ODS, cfg.XLSX, cfg.XLS):
                 f.write(data_report.export(output_format))
 
 
@@ -251,17 +251,19 @@ def synthetic_binned_time_budget(self) -> None:
         ]
 
         file_name, filter_ = QFileDialog().getSaveFileName(
-            self, "Synthetic time budget with time bin", "", ";;".join(file_formats)
+            self, "Save the Synthetic time budget with time bin", "", ";;".join(file_formats)
         )
         if not file_name:
             return
 
-        if filter_ != cfg.TEXT_FILE and pl.Path(file_name).suffix != "." + cfg.FILE_NAME_SUFFIX[filter_]:
-            file_name = str(pl.Path(file_name)) + "." + cfg.FILE_NAME_SUFFIX[filter_]
+        output_format = cfg.FILE_NAME_SUFFIX[filter_]
+
+        if filter_ != cfg.TEXT_FILE and pl.Path(file_name).suffix != "." + output_format:
+            file_name = str(pl.Path(file_name)) + "." + output_format
             if pl.Path(file_name).is_file():
                 if (
                     dialog.MessageDialog(
-                        cfg.programName, f"The file {file_name} already exists.", [cfg.CANCEL, cfg.OVERWRITE]
+                        cfg.programName, f"The file {file_name} already exists.", (cfg.CANCEL, cfg.OVERWRITE)
                     )
                     == cfg.CANCEL
                 ):
@@ -269,6 +271,6 @@ def synthetic_binned_time_budget(self) -> None:
 
         with open(file_name, "wb") as f:
             if filter_ in (cfg.TSV, cfg.CSV, cfg.HTML, cfg.TEXT_FILE):
-                f.write(str.encode(data_report.export(cfg.FILE_NAME_SUFFIX[filter_])))
+                f.write(str.encode(data_report.export(output_format)))
             if filter_ in (cfg.ODS, cfg.XLSX, cfg.XLS):
-                f.write(data_report.export(cfg.FILE_NAME_SUFFIX[filter_]))
+                f.write(data_report.export(output_format))
