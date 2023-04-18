@@ -1,0 +1,44 @@
+[tool.black]
+line-length = 140
+include = '\.pyi?$'
+
+[tool.ruff]
+line-length = 140
+
+
+[project]
+name = "boris-behav-obs"
+description = "BORIS - Behavioral Observation Research Interactive Software"
+authors = [
+  { name="Olivier Friard", email="olivier.friard@unito.it" },
+]
+version = "0.0.1"
+readme = "README.rst"
+requires-python = ">=3.8"
+classifiers=[
+        "Topic :: Scientific/Engineering",
+        "Intended Audience :: Science/Research",
+        "Intended Audience :: Education",
+        "Programming Language :: Python :: 3.8",
+        "Programming Language :: Python :: 3.9",
+        "Programming Language :: Python :: 3.10",
+        "Programming Language :: Python :: 3.11",
+        "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
+        "Operating System :: OS Independent",
+    ]
+
+[project.urls]
+"Homepage" = "http://www.boris.unito.it"
+"Documentation" = "https://boris.readthedocs.io/en/latest/"
+"Changelog" = "https://github.com/olivierfriard/BORIS/wiki/BORIS-change-log-v.8"
+"Source code" = "https://github.com/olivierfriard/BORIS"
+"Issues" = "https://github.com/olivierfriard/BORIS/issues"
+
+
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
+
+
+[tool.distutils.bdist_wheel]
+universal = true
