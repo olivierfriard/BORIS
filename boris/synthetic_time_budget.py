@@ -134,8 +134,11 @@ def synthetic_time_budget(self) -> None:
 
         output_format = cfg.FILE_NAME_SUFFIX[filter_]
 
-        if filter_ != cfg.TEXT_FILE and pl.Path(file_name).suffix != "." + output_format:
-            file_name = str(pl.Path(file_name)) + "." + output_format
+        if pl.Path(file_name).suffix != "." + output_format:
+            if filter_ != cfg.TEXT_FILE:
+                file_name = str(pl.Path(file_name)) + "." + output_format
+            else:
+                file_name = str(pl.Path(file_name))
             if pl.Path(file_name).is_file():
                 if (
                     dialog.MessageDialog(
@@ -258,8 +261,11 @@ def synthetic_binned_time_budget(self) -> None:
 
         output_format = cfg.FILE_NAME_SUFFIX[filter_]
 
-        if filter_ != cfg.TEXT_FILE and pl.Path(file_name).suffix != "." + output_format:
-            file_name = str(pl.Path(file_name)) + "." + output_format
+        if pl.Path(file_name).suffix != "." + output_format:
+            if filter_ != cfg.TEXT_FILE:
+                file_name = str(pl.Path(file_name)) + "." + output_format
+            else:
+                file_name = str(pl.Path(file_name))
             if pl.Path(file_name).is_file():
                 if (
                     dialog.MessageDialog(
