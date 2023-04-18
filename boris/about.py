@@ -56,13 +56,17 @@ def actionAbout_activated(self):
     """
 
     programs_versions = ["MPV media player"]
+    try:
+        python_mpv_version = mpv.__version__
+    except Exception:
+        python_mpv_version = "Not found"
     if sys.platform.startswith("linux"):
         programs_versions.append(
-            f"Library version: {'.'.join([str(x) for x in mpv._mpv_client_api_version()])} file: {mpv.sofile}"
+            f"Library version: {'.'.join([str(x) for x in mpv._mpv_client_api_version()])} file: {mpv.sofile} python-mpv version: {python_mpv_version}"
         )
     if sys.platform.startswith("win"):
         programs_versions.append(
-            f"Library version: {'.'.join([str(x) for x in mpv._mpv_client_api_version()])} file: {mpv.dll}"
+            f"Library version: {'.'.join([str(x) for x in mpv._mpv_client_api_version()])} file: {mpv.dll} python-mpv version: {python_mpv_version}"
         )
 
     # ffmpeg
