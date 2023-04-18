@@ -1,0 +1,2 @@
+# Install a specific version of pip before installing any other package.
+pip==23.1
