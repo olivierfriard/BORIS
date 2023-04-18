@@ -118,7 +118,6 @@ def observations_list(self):
         return
 
     if self.observationId:
-
         self.hide_data_files()
         response = dialog.MessageDialog(
             cfg.programName, "The current observation will be closed. Do you want to continue?", (cfg.YES, cfg.NO)
@@ -163,7 +162,6 @@ def open_observation(self, mode: str) -> str:
 
     # check if current observation must be closed to open a new one
     if self.observationId:
-
         self.hide_data_files()
         response = dialog.MessageDialog(
             cfg.programName, "The current observation will be closed. Do you want to continue?", (cfg.YES, cfg.NO)
@@ -206,7 +204,6 @@ def load_observation(self, obs_id: str, mode: str = cfg.OBS_START) -> str:
     self.observationId = obs_id
 
     if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE] == cfg.IMAGES:
-
         self.image_idx = 0
         self.images_list = []
 
@@ -219,7 +216,6 @@ def load_observation(self, obs_id: str, mode: str = cfg.OBS_START) -> str:
             self.dwEvents.setVisible(True)
 
     if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE] == cfg.LIVE:
-
         if mode == cfg.OBS_START:
             initialize_new_live_observation(self)
 
@@ -228,7 +224,6 @@ def load_observation(self, obs_id: str, mode: str = cfg.OBS_START) -> str:
             self.dwEvents.setVisible(True)
 
     if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE] == cfg.MEDIA:
-
         if mode == cfg.OBS_START:
             if not initialize_new_media_observation(self):
                 self.observationId = ""
@@ -564,7 +559,6 @@ def new_observation(self, mode=cfg.NEW, obsId=""):
             )
             == cfg.NO
         ):
-
             # show data plot
             self.show_data_files()
             return
@@ -592,10 +586,8 @@ def new_observation(self, mode=cfg.NEW, obsId=""):
 
     # add independent variables
     if cfg.INDEPENDENT_VARIABLES in self.pj:
-
         observationWindow.twIndepVariables.setRowCount(0)
         for i in util.sorted_keys(self.pj[cfg.INDEPENDENT_VARIABLES]):
-
             observationWindow.twIndepVariables.setRowCount(observationWindow.twIndepVariables.rowCount() + 1)
 
             # label
@@ -659,7 +651,6 @@ def new_observation(self, mode=cfg.NEW, obsId=""):
         observationWindow.obs_time_offset.set_format_hhmmss()
 
     if mode == cfg.EDIT:
-
         observationWindow.setWindowTitle(f'Edit observation "{obsId}"')
         mem_obs_id = obsId
         observationWindow.leObservationId.setText(obsId)
@@ -785,7 +776,6 @@ def new_observation(self, mode=cfg.NEW, obsId=""):
             # plot data
             if cfg.PLOT_DATA in self.pj[cfg.OBSERVATIONS][obsId]:
                 if self.pj[cfg.OBSERVATIONS][obsId][cfg.PLOT_DATA]:
-
                     observationWindow.tw_data_files.setRowCount(0)
                     for idx2 in util.sorted_keys(self.pj[cfg.OBSERVATIONS][obsId][cfg.PLOT_DATA]):
                         observationWindow.tw_data_files.setRowCount(observationWindow.tw_data_files.rowCount() + 1)
@@ -899,7 +889,6 @@ def new_observation(self, mode=cfg.NEW, obsId=""):
     gui_utilities.save_geometry(observationWindow, "new observation")
 
     if rv:
-
         self.project_changed()
 
         new_obs_id = observationWindow.leObservationId.text().strip()
@@ -918,7 +907,6 @@ def new_observation(self, mode=cfg.NEW, obsId=""):
 
         # check if id changed
         if mode == cfg.EDIT and new_obs_id != obsId:
-
             logging.info(f"observation id {obsId} changed in {new_obs_id}")
 
             self.pj[cfg.OBSERVATIONS][new_obs_id] = dict(self.pj[cfg.OBSERVATIONS][obsId])
@@ -939,7 +927,6 @@ def new_observation(self, mode=cfg.NEW, obsId=""):
         # independent variables for observation
         self.pj[cfg.OBSERVATIONS][new_obs_id][cfg.INDEPENDENT_VARIABLES] = {}
         for r in range(observationWindow.twIndepVariables.rowCount()):
-
             # set dictionary as label (col 0) => value (col 2)
             if observationWindow.twIndepVariables.item(r, 1).text() == cfg.SET_OF_VALUES:
                 self.pj[cfg.OBSERVATIONS][new_obs_id][cfg.INDEPENDENT_VARIABLES][
@@ -1040,7 +1027,6 @@ def new_observation(self, mode=cfg.NEW, obsId=""):
 
         # media
         if self.pj[cfg.OBSERVATIONS][new_obs_id][cfg.TYPE] == cfg.MEDIA:
-
             self.pj[cfg.OBSERVATIONS][new_obs_id][cfg.MEDIA_INFO] = {
                 cfg.LENGTH: observationWindow.mediaDurations,
                 cfg.FPS: observationWindow.mediaFPS,
@@ -1112,7 +1098,6 @@ def close_observation(self):
     )
 
     if not flag_ok:
-
         out = f"The current observation has state event(s) that are not PAIRED:<br><br>{msg}"
         results = dialog.Results_dialog()
         results.setWindowTitle(f"{cfg.programName} - Check selected observations")
@@ -1124,7 +1109,6 @@ def close_observation(self):
         results.pbOK.setText("Fix unpaired state events")
 
         if results.exec_():  # fix events
-
             w = dialog.Ask_time(self.timeFormat)
             w.setWindowTitle("Fix UNPAIRED state events")
             w.label.setText("Fix UNPAIRED events at time")
@@ -1160,7 +1144,6 @@ def close_observation(self):
     self.saved_state = self.saveState()
 
     if self.playerType == cfg.MEDIA:
-
         logging.info(f"Stop plot timer")
         self.plot_timer.stop()
 
@@ -1211,7 +1194,6 @@ def close_observation(self):
         """
 
         for dw in self.dw_player:
-
             logging.info(f"remove dock widget")
 
             self.removeDockWidget(dw)
@@ -1301,6 +1283,38 @@ def initialize_new_media_observation(self) -> bool:
     self.dw_player: list = []
     # create dock widgets for players
 
+    def video_clicked_coord(player, videoframe):
+        """
+        returns the x, y coordinates of the click into the video expressed in video coordinates
+        """
+        vw = player.width
+        vh = player.height
+
+        fw = videoframe.size().width()
+        fh = videoframe.size().height()
+
+        if fw / fh >= player.width / player.height:  # vertical black lane
+            x = vw / vh * fh
+            offset = (fw - x) / 2
+            px = player.mouse_pos["x"] - offset
+            if 0 <= px < x:
+                px = round((px / x) * player.width)
+            else:
+                px = -2
+            py = round(player.mouse_pos["y"] / videoframe.size().height() * player.height)
+
+        else:
+            y = fw / vw * vh
+            offset = (fh - y) / 2
+            py = player.mouse_pos["y"] - offset
+            if 0 <= py < y:
+                py = round((py / y) * self.player.height)
+            else:
+                py = -2
+            px = round(player.mouse_pos["x"] / videoframe.size().width() * player.width)
+
+        return px, py
+
     for i in range(cfg.N_PLAYER):
         n_player = str(i + 1)
         if (
@@ -1309,6 +1323,134 @@ def initialize_new_media_observation(self) -> bool:
         ):
             continue
 
+        # Not pretty but the unique solution I have found to capture the click signal for each player
+
+        if i == 0:  # first player
+            p0 = player_dock_widget.DW_player(i, self)
+
+            @p0.player.property_observer("time-pos")
+            def time_observer(_name, value):
+                if value is not None:
+                    self.time_observer_signal.emit(value)
+
+            @p0.player.on_key_press("MBTN_LEFT")
+            def mbtn_left():
+                px, py = video_clicked_coord(p0.player, p0.videoframe)
+                self.video_click_signal.emit(0, px, py)
+
+            @p0.player.on_key_press("MBTN_RIGHT")
+            def mbtn_right():
+                # no zoom
+                self.video_click_signal.emit(0, -1, -1)
+
+            self.dw_player.append(p0)
+
+        if i == 1:  # second player
+            p1 = player_dock_widget.DW_player(i, self)
+
+            @p1.player.on_key_press("MBTN_LEFT")
+            def mbtn_left():
+                px, py = video_clicked_coord(p1.player, p1.videoframe)
+                self.video_click_signal.emit(1, px, py)
+
+            @p1.player.on_key_press("MBTN_RIGHT")
+            def mbtn_right():
+                # no zoom
+                self.video_click_signal.emit(1, -1, -1)
+
+            self.dw_player.append(p1)
+
+        if i == 2:
+            p2 = player_dock_widget.DW_player(i, self)
+
+            @p2.player.on_key_press("MBTN_LEFT")
+            def mbtn_left():
+                px, py = video_clicked_coord(p2.player, p2.videoframe)
+                self.video_click_signal.emit(2, px, py)
+
+            @p2.player.on_key_press("MBTN_RIGHT")
+            def mbtn_right():
+                # no zoom
+                self.video_click_signal.emit(2, -1, -1)
+
+            self.dw_player.append(p2)
+
+        if i == 3:
+            p3 = player_dock_widget.DW_player(i, self)
+
+            @p3.player.on_key_press("MBTN_LEFT")
+            def mbtn_left():
+                px, py = video_clicked_coord(p3.player, p3.videoframe)
+                self.video_click_signal.emit(3, px, py)
+
+            @p3.player.on_key_press("MBTN_RIGHT")
+            def mbtn_right():
+                # no zoom
+                self.video_click_signal.emit(3, -1, -1)
+
+            self.dw_player.append(p3)
+
+        if i == 4:
+            p4 = player_dock_widget.DW_player(i, self)
+
+            @p4.player.on_key_press("MBTN_LEFT")
+            def mbtn_left():
+                px, py = video_clicked_coord(p4.player, p4.videoframe)
+                self.video_click_signal.emit(4, px, py)
+
+            @p4.player.on_key_press("MBTN_RIGHT")
+            def mbtn_right():
+                # no zoom
+                self.video_click_signal.emit(4, -1, -1)
+
+            self.dw_player.append(p4)
+
+        if i == 5:
+            p5 = player_dock_widget.DW_player(i, self)
+
+            @p5.player.on_key_press("MBTN_LEFT")
+            def mbtn_left():
+                px, py = video_clicked_coord(p5.player, p5.videoframe)
+                self.video_click_signal.emit(5, px, py)
+
+            @p5.player.on_key_press("MBTN_RIGHT")
+            def mbtn_right():
+                # no zoom
+                self.video_click_signal.emit(5, -1, -1)
+
+            self.dw_player.append(p5)
+
+        if i == 6:
+            p6 = player_dock_widget.DW_player(i, self)
+
+            @p6.player.on_key_press("MBTN_LEFT")
+            def mbtn_left():
+                px, py = video_clicked_coord(p6.player, p6.videoframe)
+                self.video_click_signal.emit(6, px, py)
+
+            @p6.player.on_key_press("MBTN_RIGHT")
+            def mbtn_right():
+                # no zoom
+                self.video_click_signal.emit(6, -1, -1)
+
+            self.dw_player.append(p6)
+
+        if i == 7:
+            p7 = player_dock_widget.DW_player(i, self)
+
+            @p7.player.on_key_press("MBTN_LEFT")
+            def mbtn_left():
+                px, py = video_clicked_coord(p7.player, p7.videoframe)
+                self.video_click_signal.emit(7, px, py)
+
+            @p7.player.on_key_press("MBTN_RIGHT")
+            def mbtn_right():
+                # no zoom
+                self.video_click_signal.emit(7, -1, -1)
+
+            self.dw_player.append(p7)
+
+        """
         if i == 0:  # first player
             p = player_dock_widget.DW_player(i, self)
             self.dw_player.append(p)
@@ -1318,8 +1460,18 @@ def initialize_new_media_observation(self) -> bool:
                 if value is not None:
                     self.time_observer_signal.emit(value)
 
+            @p.player.on_key_press("MBTN_LEFT")
+            def mbtn_left():
+                self.video_click_signal.emit(1, 2)
+
+            @p.player.on_key_press("MBTN_RIGHT")
+            def mbtn_right():
+                # no zoom
+                self.video_click_signal.emit(-1, -1)
+
         else:
             self.dw_player.append(player_dock_widget.DW_player(i, self))
+        """
 
         self.dw_player[-1].setFloating(False)
         self.dw_player[-1].setVisible(False)
@@ -1354,7 +1506,6 @@ def initialize_new_media_observation(self) -> bool:
         self.dw_player[i].fps = {}
 
         for mediaFile in self.pj[cfg.OBSERVATIONS][self.observationId][cfg.FILE][n_player]:
-
             logging.debug(f"media file: {mediaFile}")
 
             media_full_path = project_functions.full_path(mediaFile, self.projectFileName)
@@ -1368,7 +1519,6 @@ def initialize_new_media_observation(self) -> bool:
                 )
                 mediaFPS = self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO][cfg.FPS][mediaFile]
             except Exception:
-
                 logging.debug("media_info key not found")
 
                 r = util.accurate_media_analysis(self.ffmpeg_bin, media_full_path)
@@ -1470,6 +1620,7 @@ def initialize_new_media_observation(self) -> bool:
     menu_options.update_menu(self)
 
     self.time_observer_signal.connect(self.mpv_timer_out)
+    self.video_click_signal.connect(self.signal_from_dw)
 
     self.actionPlay.setIcon(QIcon(":/play"))
 
@@ -1486,7 +1637,6 @@ def initialize_new_media_observation(self) -> bool:
         cfg.VISUALIZE_SPECTROGRAM in self.pj[cfg.OBSERVATIONS][self.observationId]
         and self.pj[cfg.OBSERVATIONS][self.observationId][cfg.VISUALIZE_SPECTROGRAM]
     ):
-
         tmp_dir = (
             self.ffmpeg_cache_dir
             if self.ffmpeg_cache_dir and os.path.isdir(self.ffmpeg_cache_dir)
@@ -1510,7 +1660,6 @@ def initialize_new_media_observation(self) -> bool:
         cfg.VISUALIZE_WAVEFORM in self.pj[cfg.OBSERVATIONS][self.observationId]
         and self.pj[cfg.OBSERVATIONS][self.observationId][cfg.VISUALIZE_WAVEFORM]
     ):
-
         tmp_dir = (
             self.ffmpeg_cache_dir
             if self.ffmpeg_cache_dir and os.path.isdir(self.ffmpeg_cache_dir)
@@ -1534,7 +1683,6 @@ def initialize_new_media_observation(self) -> bool:
         cfg.PLOT_DATA in self.pj[cfg.OBSERVATIONS][self.observationId]
         and self.pj[cfg.OBSERVATIONS][self.observationId][cfg.PLOT_DATA]
     ):
-
         self.plot_data = {}
         self.ext_data_timer_list = []
         count = 0

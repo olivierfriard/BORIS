@@ -176,6 +176,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     state_behaviors_codes: tuple = tuple()
 
     time_observer_signal = pyqtSignal(float)
+    video_click_signal = pyqtSignal(int, int, int)
 
     processes = []  # list of QProcess processes
     overlays = {}  # dict for storing video overlays
@@ -1824,41 +1825,26 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         except Exception:
             logging.debug("error updating overlay")
 
-    def signal_from_dw(self, id_, msg, button):
+    def signal_from_dw(self, player_id: int, x: int, y: int) -> None:
         """
         receive signal from dock widget: clicked or resized
         """
-        return  # function disabled
+        print(player_id, x, y)
 
-        if msg == "clicked_out_of_video":
-            self.dw_player[id_].mediaplayer.video_set_crop_geometry(None)
-            self.dw_player[id_].zoomed = False
+        print(self.dw_player[player_id].player.video_zoom)
 
+        if x == -2 or y == -2:
+            return
+        if x == -1:
+            self.dw_player[player_id].player.video_pan_x = 0
+            self.dw_player[player_id].player.video_pan_y = 0
+            self.dw_player[player_id].player.video_zoom = 0
             return
 
-        x_center = self.dw_player[id_].videoframe.x_click
-        y_center = self.dw_player[id_].videoframe.y_click
+        self.dw_player[player_id].player.video_pan_x = -(x / self.dw_player[player_id].player.width) + 0.5
+        self.dw_player[player_id].player.video_pan_y = -(y / self.dw_player[player_id].player.height) + 0.5
 
-        fw = self.dw_player[id_].videoframe.geometry().width()
-        fh = self.dw_player[id_].videoframe.geometry().height()
-
-        left = int(x_center - fw / 2)
-        top = int(y_center - fh / 2)
-
-        right = left + fw
-        bottom = top + fh
-
-        if msg == "clicked" and button == Qt.LeftButton:
-            if not self.dw_player[id_].zoomed:
-                self.dw_player[id_].mediaplayer.video_set_crop_geometry(f"{right}x{bottom}+{left}+{top}")
-                self.dw_player[id_].zoomed = True
-            else:
-                self.dw_player[id_].mediaplayer.video_set_crop_geometry(None)
-                self.dw_player[id_].zoomed = False
-
-        elif msg == "resized":
-            if self.dw_player[id_].zoomed:
-                self.dw_player[id_].mediaplayer.video_set_crop_geometry(f"{right}x{bottom}+{left}+{top}")
+        self.dw_player[player_id].player.video_zoom = 1
 
     def read_tw_event_field(self, row_idx: int, player_type: str, field_type: str) -> Union[str, None, int, dec]:
         """
