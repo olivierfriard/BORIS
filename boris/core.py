@@ -392,6 +392,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         for w in (
             self.lb_player_status,
             self.lb_current_media_time,
+            self.lb_video_info,
+            self.lb_zoom_level,
             self.lbFocalSubject,
             self.lbCurrentStates,
         ):
@@ -411,11 +413,14 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.lbTimeOffset.setMinimumWidth(160)
         self.statusbar.addPermanentWidget(self.lbTimeOffset)
 
+        # play rate are now displayed in the main info widget
+        """
         # SPEED
         self.lbSpeed = QLabel()
         self.lbSpeed.setFrameStyle(QFrame.StyledPanel)
         self.lbSpeed.setMinimumWidth(40)
         self.statusbar.addPermanentWidget(self.lbSpeed)
+        """
 
         # set painter for twEvents to highlight current row
         self.twEvents.setItemDelegate(events_cursor.StyledItemDelegateTriangle(self.events_current_row))
@@ -1817,6 +1822,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.dw_player[player_id].player.video_pan_x = 0
             self.dw_player[player_id].player.video_pan_y = 0
             self.dw_player[player_id].player.video_zoom = 0
+            video_operations.display_zoom_level(self)
             return
 
         """
@@ -3767,7 +3773,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 )
 
             # player rate
-            msg += f"<br>Play rate: <b>x{self.play_rate:.3f}</b>"
+            '''msg += f"<br>Play rate: <b>x{self.play_rate:.3f}</b>"'''
 
             self.lb_player_status.setText("Player paused" if self.dw_player[0].player.pause else "")
 
@@ -3783,7 +3789,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.actionPlay.setIcon(QIcon(":/play"))
 
         if msg:
-            # show time
             self.lb_current_media_time.setText(msg)
 
             # set video scroll bar
@@ -4169,11 +4174,16 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
             if modifier == cfg.CTRL_KEY:
                 # video zoom
+                if ek == 48:  # no zoom Ctrl + 0
+                    self.dw_player[self.current_player].player.video_zoom = 0
+                    self.dw_player[self.current_player].player.video_pan_x = 0
+                    self.dw_player[self.current_player].player.video_pan_y = 0
                 zoom_step = 0.1
                 if ek == Qt.Key_Plus:  # zoom in with minus key
                     self.dw_player[self.current_player].player.video_zoom += zoom_step
                 if ek == Qt.Key_Minus:  # zoom out with plus key
                     self.dw_player[self.current_player].player.video_zoom -= zoom_step
+                video_operations.display_zoom_level(self)
                 # video pan
                 pan_step = 0.05
                 if ek == Qt.Key_Left:

@@ -1117,6 +1117,8 @@ def close_observation(self):
 
     self.lb_current_media_time.clear()
     self.lb_player_status.clear()
+    self.lb_video_info.clear()
+    self.lb_zoom_level.clear()
 
     self.currentSubject = ""
     self.lbFocalSubject.setText(cfg.NO_FOCAL_SUBJECT)
@@ -1125,7 +1127,7 @@ def close_observation(self):
     for i in range(self.twSubjects.rowCount()):
         self.twSubjects.item(i, len(cfg.subjectsFields)).setText("")
 
-    for w in [self.lbTimeOffset, self.lbSpeed, self.lb_obs_time_interval]:
+    for w in [self.lbTimeOffset, self.lb_obs_time_interval]:
         w.clear()
     self.play_rate, self.playerType = 1, ""
 
@@ -1172,6 +1174,8 @@ def initialize_new_media_observation(self) -> bool:
     font = QFont()
     font.setPointSize(15)
     self.lb_current_media_time.setFont(font)
+    self.lb_video_info.setFont(font)
+    self.lb_zoom_level.setFont(font)
 
     # initialize video slider
     self.video_slider = QSlider(Qt.Horizontal, self)
@@ -1463,7 +1467,6 @@ def initialize_new_media_observation(self) -> bool:
             ].get(n_player, True)
 
         # restore overlays
-
         if cfg.OVERLAY in self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO]:
             if n_player in self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO][cfg.OVERLAY]:
                 self.overlays[i] = self.dw_player[i].player.create_image_overlay()
@@ -1483,6 +1486,7 @@ def initialize_new_media_observation(self) -> bool:
     self.state_behaviors_codes = tuple(util.state_behavior_codes(self.pj[cfg.ETHOGRAM]))
 
     video_operations.display_play_rate(self)
+    video_operations.display_zoom_level(self)
 
     # spectrogram
     if (

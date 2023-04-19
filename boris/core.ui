@@ -90,6 +90,20 @@
               </widget>
              </item>
              <item>
+              <widget class="QLabel" name="lb_video_info">
+               <property name="text">
+                <string>lb_video_info</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QLabel" name="lb_zoom_level">
+               <property name="text">
+                <string>lb_zoom_level</string>
+               </property>
+              </widget>
+             </item>
+             <item>
               <spacer name="verticalSpacer_2">
                <property name="orientation">
                 <enum>Qt::Vertical</enum>
