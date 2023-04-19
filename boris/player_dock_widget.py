@@ -87,7 +87,7 @@ class DW_player(QDockWidget):
     def __init__(self, id_, parent=None):
         super().__init__(parent)
         self.id_ = id_
-        self.zoomed = False
+        '''self.zoomed = False'''
         self.setWindowTitle(f"Player #{id_ + 1}")
         self.setObjectName(f"player{id_ + 1}")
 

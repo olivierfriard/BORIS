@@ -176,7 +176,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     state_behaviors_codes: tuple = tuple()
 
     time_observer_signal = pyqtSignal(float)
-    video_click_signal = pyqtSignal(int, int, int)
+    video_click_signal = pyqtSignal(int, str)
 
     processes = []  # list of QProcess processes
     overlays = {}  # dict for storing video overlays
@@ -1825,26 +1825,73 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         except Exception:
             logging.debug("error updating overlay")
 
-    def signal_from_dw(self, player_id: int, x: int, y: int) -> None:
+    def player_clicked(self, player_id: int, cmd:str) -> None:
         """
-        receive signal from dock widget: clicked or resized
+        receive signal from dock widget when player clicked.
+        Change zoom level:
+        * double-left-click increase the zoom level
+        * right-click: reset zoom level to 1
+
         """
-        print(player_id, x, y)
 
-        print(self.dw_player[player_id].player.video_zoom)
+        def video_clicked_coord(player, videoframe):
+            """
+            returns the x, y coordinates of the click into the video expressed in video coordinates
+            """
+            vw = player.width
+            vh = player.height
 
-        if x == -2 or y == -2:
-            return
-        if x == -1:
+            fw = videoframe.size().width()
+            fh = videoframe.size().height()
+
+            print(f'{player.mouse_pos["x"]=}')
+
+            if fw / fh >= player.width / player.height:  # vertical black lane
+                x = vw / vh * fh
+                offset = (fw - x) / 2
+                px = player.mouse_pos["x"] - offset
+                if 0 <= px < x:
+                    px = round((px / x) * player.width)
+                else:
+                    px = -2
+                py = round(player.mouse_pos["y"] / videoframe.size().height() * player.height)
+
+            else:
+                y = fw / vw * vh
+                offset = (fh - y) / 2
+                py = player.mouse_pos["y"] - offset
+                if 0 <= py < y:
+                    py = round((py / y) * player.height)
+                else:
+                    py = -2
+                px = round(player.mouse_pos["x"] / videoframe.size().width() * player.width)
+
+            return px, py
+
+
+
+
+        print(player_id)
+        print(f'{self.dw_player[player_id].player.mouse_pos["x"]=}')
+
+        if cmd == "MBTN_RIGHT":
             self.dw_player[player_id].player.video_pan_x = 0
             self.dw_player[player_id].player.video_pan_y = 0
             self.dw_player[player_id].player.video_zoom = 0
             return
 
+        current_zoom_level = self.dw_player[player_id].player.video_zoom
+
+        x, y = video_clicked_coord(self.dw_player[player_id].player, self.dw_player[player_id].videoframe)
+
+        if x==-2 or y == -2:
+            return
+
         self.dw_player[player_id].player.video_pan_x = -(x / self.dw_player[player_id].player.width) + 0.5
         self.dw_player[player_id].player.video_pan_y = -(y / self.dw_player[player_id].player.height) + 0.5
 
-        self.dw_player[player_id].player.video_zoom = 1
+        if current_zoom_level < 4:
+            self.dw_player[player_id].player.video_zoom += 1
 
     def read_tw_event_field(self, row_idx: int, player_type: str, field_type: str) -> Union[str, None, int, dec]:
         """
