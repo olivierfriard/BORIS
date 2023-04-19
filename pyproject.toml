@@ -51,7 +51,7 @@ universal = true
 
 [tool.black]
 line-length = 140
-include = '\.pyi?$'
+
 
 [tool.ruff]
 line-length = 140
