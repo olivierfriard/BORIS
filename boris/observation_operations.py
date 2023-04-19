@@ -1186,8 +1186,6 @@ def initialize_new_media_observation(self) -> bool:
     self.dw_player: list = []
     # create dock widgets for players
 
-    zoom_in_cmd = "MBTN_LEFT_DBL"
-
     for i in range(cfg.N_PLAYER):
         n_player = str(i + 1)
         if (
@@ -1206,10 +1204,9 @@ def initialize_new_media_observation(self) -> bool:
                 if value is not None:
                     self.time_observer_signal.emit(value)
 
-            @p0.player.on_key_press(zoom_in_cmd)
+            @p0.player.on_key_press("MBTN_LEFT")
             def mbtn_left():
-                # px, py = video_clicked_coord(p0.player, p0.videoframe)
-                self.video_click_signal.emit(0, zoom_in_cmd)
+                self.video_click_signal.emit(0, "MBTN_LEFT")
 
             @p0.player.on_key_press("MBTN_RIGHT")
             def mbtn_right():
@@ -1221,10 +1218,9 @@ def initialize_new_media_observation(self) -> bool:
         if i == 1:  # second player
             p1 = player_dock_widget.DW_player(i, self)
 
-            @p1.player.on_key_press(zoom_in_cmd)
+            @p1.player.on_key_press("MBTN_LEFT")
             def mbtn_left():
-                # px, py = video_clicked_coord(p1.player, p1.videoframe)
-                self.video_click_signal.emit(1, zoom_in_cmd)
+                self.video_click_signal.emit(1, "MBTN_LEFT")
 
             @p1.player.on_key_press("MBTN_RIGHT")
             def mbtn_right():
@@ -1236,10 +1232,9 @@ def initialize_new_media_observation(self) -> bool:
         if i == 2:
             p2 = player_dock_widget.DW_player(i, self)
 
-            @p2.player.on_key_press(zoom_in_cmd)
+            @p2.player.on_key_press("MBTN_LEFT")
             def mbtn_left():
-                # px, py = video_clicked_coord(p2.player, p2.videoframe)
-                self.video_click_signal.emit(2, zoom_in_cmd)
+                self.video_click_signal.emit(2, "MBTN_LEFT")
 
             @p2.player.on_key_press("MBTN_RIGHT")
             def mbtn_right():
@@ -1251,10 +1246,9 @@ def initialize_new_media_observation(self) -> bool:
         if i == 3:
             p3 = player_dock_widget.DW_player(i, self)
 
-            @p3.player.on_key_press(zoom_in_cmd)
+            @p3.player.on_key_press("MBTN_LEFT")
             def mbtn_left():
-                # px, py = video_clicked_coord(p3.player, p3.videoframe)
-                self.video_click_signal.emit(3, zoom_in_cmd)
+                self.video_click_signal.emit(3, "MBTN_LEFT")
 
             @p3.player.on_key_press("MBTN_RIGHT")
             def mbtn_right():
@@ -1266,10 +1260,9 @@ def initialize_new_media_observation(self) -> bool:
         if i == 4:
             p4 = player_dock_widget.DW_player(i, self)
 
-            @p4.player.on_key_press(zoom_in_cmd)
+            @p4.player.on_key_press("MBTN_LEFT")
             def mbtn_left():
-                # px, py = video_clicked_coord(p4.player, p4.videoframe)
-                self.video_click_signal.emit(4, zoom_in_cmd)
+                self.video_click_signal.emit(4, "MBTN_LEFT")
 
             @p4.player.on_key_press("MBTN_RIGHT")
             def mbtn_right():
@@ -1281,10 +1274,9 @@ def initialize_new_media_observation(self) -> bool:
         if i == 5:
             p5 = player_dock_widget.DW_player(i, self)
 
-            @p5.player.on_key_press(zoom_in_cmd)
+            @p5.player.on_key_press("MBTN_LEFT")
             def mbtn_left():
-                # px, py = video_clicked_coord(p5.player, p5.videoframe)
-                self.video_click_signal.emit(5, zoom_in_cmd)
+                self.video_click_signal.emit(5, "MBTN_LEFT")
 
             @p5.player.on_key_press("MBTN_RIGHT")
             def mbtn_right():
@@ -1296,10 +1288,9 @@ def initialize_new_media_observation(self) -> bool:
         if i == 6:
             p6 = player_dock_widget.DW_player(i, self)
 
-            @p6.player.on_key_press(zoom_in_cmd)
+            @p6.player.on_key_press("MBTN_LEFT")
             def mbtn_left():
-                # px, py = video_clicked_coord(p6.player, p6.videoframe)
-                self.video_click_signal.emit(6, zoom_in_cmd)
+                self.video_click_signal.emit(6, "MBTN_LEFT")
 
             @p6.player.on_key_press("MBTN_RIGHT")
             def mbtn_right():
@@ -1311,10 +1302,9 @@ def initialize_new_media_observation(self) -> bool:
         if i == 7:
             p7 = player_dock_widget.DW_player(i, self)
 
-            @p7.player.on_key_press(zoom_in_cmd)
+            @p7.player.on_key_press("MBTN_LEFT")
             def mbtn_left():
-                # px, py = video_clicked_coord(p7.player, p7.videoframe)
-                self.video_click_signal.emit(7, zoom_in_cmd)
+                self.video_click_signal.emit(7, "MBTN_LEFT")
 
             @p7.player.on_key_press("MBTN_RIGHT")
             def mbtn_right():

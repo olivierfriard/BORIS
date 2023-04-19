@@ -184,27 +184,29 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     undo_queue = deque()
     undo_description = deque()
 
+    current_player: int = 0  # id of the selected (left click) video player
+
     saved_state = None
     user_move_slider: bool = False
     observationId: str = ""  # current observation id
-    timeOffset = 0.0
-    confirmSound = False  # if True each keypress will be confirmed by a beep
-    spectrogramHeight = 80
+    timeOffset: float = 0.0
+    confirmSound: bool = False  # if True each keypress will be confirmed by a beep
+    spectrogramHeight: int = 80
     spectrogram_time_interval = cfg.SPECTROGRAM_DEFAULT_TIME_INTERVAL
     spectrogram_color_map = cfg.SPECTROGRAM_DEFAULT_COLOR_MAP
-    alertNoFocalSubject = False  # if True an alert will show up if no focal subject
-    trackingCursorAboveEvent = False  # if True the cursor will appear above the current event in events table
-    checkForNewVersion = False  # if True BORIS will check for new version every 15 days
-    pause_before_addevent = False  # pause before "Add event" command CTRL + A
-    timeFormat = cfg.HHMMSS  # 's' or 'hh:mm:ss'
+    alertNoFocalSubject: bool = False  # if True an alert will show up if no focal subject
+    trackingCursorAboveEvent: bool = False  # if True the cursor will appear above the current event in events table
+    checkForNewVersion: bool = False  # if True BORIS will check for new version every 15 days
+    pause_before_addevent: bool = False  # pause before "Add event" command CTRL + A
+    timeFormat: str = cfg.HHMMSS  # 's' or 'hh:mm:ss'
     repositioningTimeOffset = 0
     automaticBackup: int = 0  # automatic backup interval (0 no backup)
     events_current_row: int = -1
     projectChanged: bool = False  # store if project was changed
     liveObservationStarted = False
     # data structures for external data plot
-    plot_data = {}
-    ext_data_timer_list = []
+    plot_data: dict = {}
+    ext_data_timer_list: list = []
     projectFileName: str = ""
     mediaTotalLength = None
     beep_every = 0
@@ -1773,6 +1775,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         """
 
+        '''
         def video_clicked_coord(player, videoframe):
             """
             returns the x, y coordinates of the click into the video expressed in video coordinates
@@ -1782,8 +1785,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
             fw = videoframe.size().width()
             fh = videoframe.size().height()
-
-            print(f'{player.mouse_pos["x"]=}')
 
             if fw / fh >= player.width / player.height:  # vertical black lane
                 x = vw / vh * fh
@@ -1806,9 +1807,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 px = round(player.mouse_pos["x"] / videoframe.size().width() * player.width)
 
             return px, py
+        '''
 
-        print(player_id)
-        print(f'{self.dw_player[player_id].player.mouse_pos["x"]=}')
+        if cmd == "MBTN_LEFT":
+            self.current_player = player_id
+            return
 
         if cmd == "MBTN_RIGHT":
             self.dw_player[player_id].player.video_pan_x = 0
@@ -1816,15 +1819,12 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.dw_player[player_id].player.video_zoom = 0
             return
 
-        current_zoom_level = self.dw_player[player_id].player.video_zoom
-
+        """
         x, y = video_clicked_coord(self.dw_player[player_id].player, self.dw_player[player_id].videoframe)
 
         if x == -2 or y == -2:
             return
-
-        if current_zoom_level < 8:
-            self.dw_player[player_id].player.video_zoom += 0.1
+        """
 
     def read_tw_event_field(self, row_idx: int, player_type: str, field_type: str) -> Union[str, None, int, dec]:
         """
@@ -4168,22 +4168,22 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 return
 
             if modifier == cfg.CTRL_KEY:
-                current_player = 0
                 # video zoom
+                zoom_step = 0.1
                 if ek == Qt.Key_Plus:  # zoom in with minus key
-                    self.dw_player[current_player].player.video_zoom += 0.1
+                    self.dw_player[self.current_player].player.video_zoom += zoom_step
                 if ek == Qt.Key_Minus:  # zoom out with plus key
-                    self.dw_player[current_player].player.video_zoom -= 0.1
+                    self.dw_player[self.current_player].player.video_zoom -= zoom_step
                 # video pan
                 pan_step = 0.05
                 if ek == Qt.Key_Left:
-                    self.dw_player[current_player].player.video_pan_x -= pan_step
+                    self.dw_player[self.current_player].player.video_pan_x -= pan_step
                 if ek == Qt.Key_Right:
-                    self.dw_player[current_player].player.video_pan_x += pan_step
+                    self.dw_player[self.current_player].player.video_pan_x += pan_step
                 if ek == Qt.Key_Up:
-                    self.dw_player[current_player].player.video_pan_y -= pan_step
+                    self.dw_player[self.current_player].player.video_pan_y -= pan_step
                 if ek == Qt.Key_Down:
-                    self.dw_player[current_player].player.video_pan_y += pan_step
+                    self.dw_player[self.current_player].player.video_pan_y += pan_step
 
         # frame-by-frame mode
         if ek == 47 or (ek == Qt.Key_Left and modifier != cfg.CTRL_KEY):  # / one frame back
