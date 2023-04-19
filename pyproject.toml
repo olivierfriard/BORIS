@@ -1,19 +1,11 @@
-[tool.black]
-line-length = 140
-include = '\.pyi?$'
-
-[tool.ruff]
-line-length = 140
-
 
 [project]
 name = "boris-behav-obs"
+version = "8.16.7"
 description = "BORIS - Behavioral Observation Research Interactive Software"
-authors = [
-  { name="Olivier Friard", email="olivier.friard@unito.it" },
-]
-version = "0.0.1"
+authors = [{ name="Olivier Friard", email="olivier.friard@unito.it" }]
 readme = "README.rst"
+license = { file = "LICENSE.TXT" }
 requires-python = ">=3.8"
 classifiers=[
         "Topic :: Scientific/Engineering",
@@ -28,17 +20,26 @@ classifiers=[
     ]
 
 [project.urls]
-"Homepage" = "http://www.boris.unito.it"
-"Documentation" = "https://boris.readthedocs.io/en/latest/"
-"Changelog" = "https://github.com/olivierfriard/BORIS/wiki/BORIS-change-log-v.8"
-"Source code" = "https://github.com/olivierfriard/BORIS"
-"Issues" = "https://github.com/olivierfriard/BORIS/issues"
+Homepage = "http://www.boris.unito.it"
+Documentation = "https://boris.readthedocs.io/en/latest/"
+Change_log = "https://github.com/olivierfriard/BORIS/wiki/BORIS-change-log-v.8"
+Source_code = "https://github.com/olivierfriard/BORIS"
+Issues = "https://github.com/olivierfriard/BORIS/issues"
 
+[project.scripts]
+boris = "boris:main"
 
 [build-system]
-requires = ["setuptools"]
+requires = ["setuptools", "wheel"]
 build-backend = "setuptools.build_meta"
 
 
 [tool.distutils.bdist_wheel]
 universal = true
+
+[tool.black]
+line-length = 140
+include = '\.pyi?$'
+
+[tool.ruff]
+line-length = 140
