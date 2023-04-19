@@ -1,7 +1,7 @@
 
 [project]
 name = "boris-behav-obs"
-version = "8.16.7"
+version = "8.17"
 description = "BORIS - Behavioral Observation Research Interactive Software"
 authors = [{ name="Olivier Friard", email="olivier.friard@unito.it" }]
 readme = "README.rst"
@@ -57,7 +57,7 @@ line-length = 140
 line-length = 140
 
 [tool.bumpver]
-current_version = "8.16.7"
+current_version = "8.17"
 version_pattern = "MAJOR.MINOR.PATCH"
 
 
