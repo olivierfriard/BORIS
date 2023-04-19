@@ -78,7 +78,6 @@ class Clickable_label(QLabel):
 
 
 class DW_player(QDockWidget):
-
     key_pressed_signal = pyqtSignal(QEvent)
     volume_slider_moved_signal = pyqtSignal(int, int)
     view_signal = pyqtSignal(int, str, int)
@@ -87,7 +86,6 @@ class DW_player(QDockWidget):
     def __init__(self, id_, parent=None):
         super().__init__(parent)
         self.id_ = id_
-        '''self.zoomed = False'''
         self.setWindowTitle(f"Player #{id_ + 1}")
         self.setObjectName(f"player{id_ + 1}")
 
