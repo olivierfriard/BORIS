@@ -24,6 +24,7 @@ This file is part of BORIS.
 import os
 import tempfile
 import pathlib as pl
+import logging
 
 from PyQt5.QtWidgets import QFileDialog, QMessageBox, QInputDialog
 from PyQt5.QtCore import (
@@ -83,9 +84,7 @@ def ffmpeg_process(self, action: str):
             self.processes[-1][0].start(self.processes[-1][1][0], self.processes[-1][1][1])
         else:
             self.processes_widget.label.setText(
-                (
-                    f"Done: {self.processes_widget.number_of_files - len(self.processes)} of {self.processes_widget.number_of_files}"
-                )
+                (f"Done: {self.processes_widget.number_of_files - len(self.processes)} of {self.processes_widget.number_of_files}")
             )
             """
             self.processes_widget.hide()
@@ -103,35 +102,37 @@ def ffmpeg_process(self, action: str):
         msg = f"Select one or more video files to {action.replace('_', ' and ')}"
         file_type = "Video files (*)"
     fn = QFileDialog().getOpenFileNames(self, msg, "", file_type)
-    fileNames = fn[0] if type(fn) is tuple else fn
+    file_names = fn[0] if type(fn) is tuple else fn
 
-    if not fileNames:
+    if not file_names:
         return
 
     if action == "reencode_resize":
-        current_bitrate = 200_000
+        current_bitrate = 10_000_000  # default 10 Mb/s
         current_resolution = 1024
 
-        r = util.accurate_media_analysis(self.ffmpeg_bin, fileNames[0])
+        r = util.accurate_media_analysis(self.ffmpeg_bin, file_names[0])
         if "error" in r:
-            QMessageBox.warning(self, cfg.programName, f"{fileNames[0]}. {r['error']}")
+            QMessageBox.warning(self, cfg.programName, f"{file_names[0]}. {r['error']}")
         elif r["has_video"]:
             current_bitrate = r.get("bitrate", None)
             if current_bitrate is None:
                 current_bitrate = -1
+            else:
+                current_bitrate = round(current_bitrate / 1024 / 1024)  # Convert to Mb/s
             current_resolution = int(r["resolution"].split("x")[0]) if r["resolution"] is not None else None
 
         ib = dialog.Input_dialog(
             "Set the parameters for re-encoding / resizing",
             [
                 ("sb", "Horizontal resolution (in pixel)", 352, 3840, 100, current_resolution),
-                ("sb", "Video quality (bitrate)", 50_000, 100_000_000, 50_000, current_bitrate),
+                ("sb", "Video quality (bitrate Mb/s)", 1, 1000, 1, current_bitrate),
             ],
         )
         if not ib.exec_():
             return
 
-        if len(fileNames) > 1:
+        if len(file_names) > 1:
             if (
                 dialog.MessageDialog(
                     cfg.programName,
@@ -143,16 +144,16 @@ def ffmpeg_process(self, action: str):
                 return
 
         horiz_resol = ib.elements["Horizontal resolution (in pixel)"].value()
-        video_quality = ib.elements["Video quality (bitrate)"].value()
+        video_quality = ib.elements["Video quality (bitrate Mb/s)"].value()
 
     if action == "merge":
-        if len(fileNames) == 1:
+        if len(file_names) == 1:
             QMessageBox.critical(self, cfg.programName, "Select more than one file")
             return
 
         file_extensions = []  # check extension of 1st media file
         file_list_lst = []
-        for file_name in fileNames:
+        for file_name in file_names:
             file_list_lst.append(f"file '{file_name}'")
             file_extensions.append(pl.Path(file_name).suffix)
         if len(set(file_extensions)) > 1:
@@ -190,10 +191,9 @@ def ffmpeg_process(self, action: str):
     # check if processed files already exist
     if action in ("reencode_resize", "rotate"):
         files_list = []
-        for file_name in fileNames:
-
+        for file_name in file_names:
             if action == "reencode_resize":
-                fn = f"{file_name}.re-encoded.{horiz_resol}px.{video_quality}k.avi"
+                fn = f"{file_name}.re-encoded.{horiz_resol}px.{video_quality}Mb.avi"
 
             if action == "rotate":
                 fn = f"{file_name}.rotated{['', '90', '-90', '180'][rotation_idx]}.avi"
@@ -221,10 +221,8 @@ def ffmpeg_process(self, action: str):
     if action == "merge":
         self.processes_widget.setWindowTitle("Merging media files")
 
-    self.processes_widget.label.setText(
-        "This operation can be long. Be patient...\nIn the meanwhile you can continue to use BORIS\n\n"
-    )
-    self.processes_widget.number_of_files = len(fileNames)
+    self.processes_widget.label.setText("This operation can be long. Be patient...\nIn the meanwhile you can continue to use BORIS\n\n")
+    self.processes_widget.number_of_files = len(file_names)
     self.processes_widget.show()
 
     if action == "merge":
@@ -239,8 +237,7 @@ def ffmpeg_process(self, action: str):
         self.processes[-1][0].start(self.processes[-1][1][0], self.processes[-1][1][1])
 
     if action in ("reencode_resize", "rotate"):
-        for file_name in sorted(fileNames, reverse=True):
-
+        for file_name in sorted(file_names, reverse=True):
             if action == "reencode_resize":
                 args = [
                     "-hide_banner",
@@ -250,20 +247,19 @@ def ffmpeg_process(self, action: str):
                     "-vf",
                     f"scale={horiz_resol}:-1",
                     "-b:v",
-                    f"{video_quality}",
-                    f"{file_name}.re-encoded.{horiz_resol}px.{video_quality}k.avi",
+                    f"{video_quality * 1024 * 1024}",
+                    f"{file_name}.re-encoded.{horiz_resol}px.{video_quality}Mb.avi",
                 ]
 
             if action == "rotate":
-
                 # check bitrate
                 r = util.accurate_media_analysis(self.ffmpeg_bin, file_name)
                 if "error" not in r and r["bitrate"] is not None:
-                    video_quality = r["bitrate"]
+                    current_bitrate = r["bitrate"]
                 else:
-                    video_quality = 200_000
+                    current_bitrate = 10_000_000
 
-                if rotation_idx in [1, 2]:
+                if rotation_idx in (1, 2):
                     args = [
                         "-hide_banner",
                         "-y",
@@ -274,7 +270,7 @@ def ffmpeg_process(self, action: str):
                         "-codec:a",
                         "copy",
                         "-b:v",
-                        f"{video_quality}",
+                        f"{current_bitrate}",
                         f"{file_name}.rotated{['', '90', '-90'][rotation_idx]}.avi",
                     ]
 
@@ -289,9 +285,12 @@ def ffmpeg_process(self, action: str):
                         "-codec:a",
                         "copy",
                         "-b:v",
-                        f"{video_quality}",
+                        f"{current_bitrate}",
                         f"{file_name}.rotated180.avi",
                     ]
+
+            logging.debug("Launch process")
+            logging.debug(f"{self.ffmpeg_bin} {' '.join(args)}")
 
             self.processes.append([QProcess(self), [self.ffmpeg_bin, args, file_name]])
 

@@ -20,7 +20,6 @@ This file is part of BORIS.
 
 """
 
-import glob
 import logging
 import os
 import pandas as pd
@@ -315,9 +314,7 @@ class Observation(QDialog, Ui_Form):
                     self.cb_observation_time_interval.setChecked(False)
                     return
                 self.observation_time_interval = [start_time, stop_time]
-                self.cb_observation_time_interval.setText(
-                    f"Limit observation to a time interval: {start_time} - {stop_time}"
-                )
+                self.cb_observation_time_interval.setText(f"Limit observation to a time interval: {start_time} - {stop_time}")
         else:
             self.observation_time_interval = [0, 0]
             self.cb_observation_time_interval.setText("Limit observation to a time interval")
@@ -338,9 +335,7 @@ class Observation(QDialog, Ui_Form):
 
                 if w.exec_():
                     d = {}
-                    for col_idx, cb in zip(
-                        self.tw_data_files.item(row, cfg.PLOT_DATA_COLUMNS_IDX).text().split(","), w.cbb
-                    ):
+                    for col_idx, cb in zip(self.tw_data_files.item(row, cfg.PLOT_DATA_COLUMNS_IDX).text().split(","), w.cbb):
                         if cb.currentText() != "None":
                             d[col_idx] = cb.currentText()
                     self.tw_data_files.item(row, cfg.PLOT_DATA_CONVERTERS_IDX).setText(str(d))
@@ -361,7 +356,6 @@ class Observation(QDialog, Ui_Form):
             return
 
         if self.tw_data_files.selectedIndexes() or self.tw_data_files.rowCount() == 1:
-
             if self.tw_data_files.rowCount() == 1:
                 row_idx = 0
             else:
@@ -381,9 +375,7 @@ class Observation(QDialog, Ui_Form):
             time_interval = int(self.tw_data_files.item(row_idx, cfg.PLOT_DATA_TIMEINTERVAL_IDX).text())
             time_offset = int(self.tw_data_files.item(row_idx, cfg.PLOT_DATA_TIMEOFFSET_IDX).text())
 
-            substract_first_value = self.tw_data_files.cellWidget(
-                row_idx, cfg.PLOT_DATA_SUBSTRACT1STVALUE_IDX
-            ).currentText()
+            substract_first_value = self.tw_data_files.cellWidget(row_idx, cfg.PLOT_DATA_SUBSTRACT1STVALUE_IDX).currentText()
 
             plot_color = self.tw_data_files.cellWidget(row_idx, cfg.PLOT_DATA_PLOTCOLOR_IDX).currentText()
 
@@ -461,10 +453,7 @@ class Observation(QDialog, Ui_Form):
             QMessageBox.warning(
                 self,
                 cfg.programName,
-                (
-                    "It is not yet possible to plot more than 2 external data sources"
-                    "This limitation will be removed in future"
-                ),
+                ("It is not yet possible to plot more than 2 external data sources" "This limitation will be removed in future"),
             )
             return
 
@@ -490,9 +479,7 @@ class Observation(QDialog, Ui_Form):
             QMessageBox.critical(self, cfg.programName, "This file does not contain a constant number of columns")
             return
 
-        header, footer = util.return_file_header_footer(
-            file_name, file_row_number=file_parameters["rows number"], row_number=5
-        )
+        header, footer = util.return_file_header_footer(file_name, file_row_number=file_parameters["rows number"], row_number=5)
 
         if not header:
             QMessageBox.critical(self, cfg.programName, f"Error on file {pl.Path(file_name).name}")
@@ -518,9 +505,7 @@ class Observation(QDialog, Ui_Form):
 
         # stats
         try:
-            df = pd.read_csv(
-                file_name, sep=file_parameters["separator"], header=None if not file_parameters["has header"] else [0]
-            )
+            df = pd.read_csv(file_name, sep=file_parameters["separator"], header=None if not file_parameters["has header"] else [0])
             # set columns names to based 1 index
             if not file_parameters["has header"]:
                 df.columns = range(1, len(df.columns) + 1)
@@ -556,7 +541,6 @@ class Observation(QDialog, Ui_Form):
         self.tw_data_files.setRowCount(self.tw_data_files.rowCount() + 1)
 
         if " rel " in mode:
-
             try:
                 file_path = str(pl.Path(file_name).relative_to(pl.Path(self.project_path).parent))
             except ValueError:
@@ -591,9 +575,7 @@ class Observation(QDialog, Ui_Form):
         # substract first value
         combobox = QComboBox()
         combobox.addItems(["True", "False"])
-        self.tw_data_files.setCellWidget(
-            self.tw_data_files.rowCount() - 1, cfg.PLOT_DATA_SUBSTRACT1STVALUE_IDX, combobox
-        )
+        self.tw_data_files.setCellWidget(self.tw_data_files.rowCount() - 1, cfg.PLOT_DATA_SUBSTRACT1STVALUE_IDX, combobox)
 
         # plot line color
         combobox = QComboBox()
@@ -622,9 +604,7 @@ class Observation(QDialog, Ui_Form):
         if "error" in file_parameters:
             QMessageBox.critical(self, cfg.programName, f"Error on file {data_file_path}: {file_parameters['error']}")
             return
-        header, footer = util.return_file_header_footer(
-            data_file_path, file_row_number=file_parameters["rows number"], row_number=5
-        )
+        header, footer = util.return_file_header_footer(data_file_path, file_row_number=file_parameters["rows number"], row_number=5)
 
         if not header:
             QMessageBox.critical(self, cfg.programName, f"Error on file {pl.Path(data_file_path).name}")
@@ -694,7 +674,6 @@ class Observation(QDialog, Ui_Form):
                                                   "The WAV will be extracted from the media files, be patient"), [YES, NO]) == YES:
             """
             if True:
-
                 w = dialog.Info_widget()
                 w.resize(350, 100)
                 # w.setWindowFlags(Qt.WindowStaysOnTopHint)
@@ -710,9 +689,7 @@ class Observation(QDialog, Ui_Form):
                         self.twVideo1.item(row, cfg.MEDIA_FILE_PATH_IDX).text(), self.project_path
                     )
                     if self.twVideo1.item(row, cfg.HAS_AUDIO_IDX).text() == "False":
-                        QMessageBox.critical(
-                            self, cfg.programName, f"The media file {media_file_path} does not seem to have audio"
-                        )
+                        QMessageBox.critical(self, cfg.programName, f"The media file {media_file_path} does not seem to have audio")
                         flag_wav_produced = False
                         break
 
@@ -901,9 +878,7 @@ class Observation(QDialog, Ui_Form):
         # check if indep variables are correct type
         for row in range(self.twIndepVariables.rowCount()):
             if self.twIndepVariables.item(row, 1).text() == cfg.NUMERIC:
-                if self.twIndepVariables.item(row, 2).text() and not is_numeric(
-                    self.twIndepVariables.item(row, 2).text()
-                ):
+                if self.twIndepVariables.item(row, 2).text() and not is_numeric(self.twIndepVariables.item(row, 2).text()):
                     QMessageBox.critical(
                         self,
                         cfg.programName,
@@ -927,9 +902,7 @@ class Observation(QDialog, Ui_Form):
 
         for row in range(self.twIndepVariables.rowCount()):
             if self.twIndepVariables.item(row, 1).text() == cfg.NUMERIC:
-                if self.twIndepVariables.item(row, 2).text() and not is_numeric(
-                    self.twIndepVariables.item(row, 2).text()
-                ):
+                if self.twIndepVariables.item(row, 2).text() and not is_numeric(self.twIndepVariables.item(row, 2).text()):
                     QMessageBox.critical(
                         self,
                         cfg.programName,
@@ -981,7 +954,6 @@ class Observation(QDialog, Ui_Form):
             return False, media_info["error"]
         else:
             if media_info["duration"] > 0:
-
                 if " rel " in mode:
                     # convert to relative path (relative to BORIS project file)
                     file_path = str(pl.Path(file_path).relative_to(pl.Path(self.project_path).parent))
@@ -1021,9 +993,7 @@ class Observation(QDialog, Ui_Form):
             QMessageBox.critical(
                 self,
                 cfg.programName,
-                (
-                    "It is not possible to add a media file without path or with a relative path if the project is not already saved"
-                ),
+                ("It is not possible to add a media file without path or with a relative path if the project is not already saved"),
             )
             return
 
@@ -1034,7 +1004,6 @@ class Observation(QDialog, Ui_Form):
             fd.setDirectory(os.path.expanduser("~") if (" abs " in mode) else str(pl.Path(self.project_path).parent))
 
         if "media " in mode:
-
             fn = fd.getOpenFileNames(self, "Add media file(s)", "", "All files (*)")
             file_paths = fn[0] if type(fn) is tuple else fn
 
@@ -1059,28 +1028,29 @@ class Observation(QDialog, Ui_Form):
                         QMessageBox.critical(self, cfg.programName, f"<b>{file_path}</b>. {msg}")
 
         if "dir " in mode:
-
             dir_name = fd.getExistingDirectory(self, "Select directory")
             if dir_name:
                 response = ""
-                for file_path in glob.glob(dir_name + os.sep + "*"):
-                    (error, msg) = self.check_media(file_path, mode)
+                for file_path in sorted(pl.Path(dir_name).glob("*")):
+                    if not file_path.is_file():
+                        continue
+                    (error, msg) = self.check_media(str(file_path), mode)
                     if error:
                         if response != "Skip all non media files":
                             response = dialog.MessageDialog(
                                 cfg.programName,
                                 f"<b>{file_path}</b> {msg}",
-                                ["Continue", "Skip all non media files", "Cancel"],
+                                ["Continue", "Skip all non media files", cfg.CANCEL],
                             )
-                            if response == "Cancel":
+                            if response == cfg.CANCEL:
                                 break
 
-        for w in [
+        for w in (
             self.cbVisualizeSpectrogram,
             self.cb_visualize_waveform,
             self.cb_observation_time_interval,
             self.cbCloseCurrentBehaviorsBetweenVideo,
-        ]:
+        ):
             w.setEnabled(self.twVideo1.rowCount() > 0)
 
         # disabled for problems
@@ -1136,9 +1106,7 @@ class Observation(QDialog, Ui_Form):
             for row in sorted(rows_to_delete, reverse=True):
                 media_path = self.twVideo1.item(row, cfg.MEDIA_FILE_PATH_IDX).text()
                 self.twVideo1.removeRow(row)
-                if media_path not in [
-                    self.twVideo1.item(idx, cfg.MEDIA_FILE_PATH_IDX).text() for idx in range(self.twVideo1.rowCount())
-                ]:
+                if media_path not in [self.twVideo1.item(idx, cfg.MEDIA_FILE_PATH_IDX).text() for idx in range(self.twVideo1.rowCount())]:
                     try:
                         del self.mediaDurations[media_path]
                     except NameError:
