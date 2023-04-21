@@ -1829,6 +1829,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         """
         x, y = video_clicked_coord(self.dw_player[player_id].player, self.dw_player[player_id].videoframe)
 
+        if x == -2 or y == -2:
+            return
         """
 
     def read_tw_event_field(self, row_idx: int, player_type: str, field_type: str) -> Union[str, None, int, dec]:
