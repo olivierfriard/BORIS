@@ -4183,7 +4183,16 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     self.dw_player[self.current_player].player.video_zoom += zoom_step
                 if ek == Qt.Key_Minus:  # zoom out with plus key
                     self.dw_player[self.current_player].player.video_zoom -= zoom_step
-                video_operations.display_zoom_level(self)
+
+                if ek in (48, Qt.Key_Plus, Qt.Key_Minus):
+                    if cfg.ZOOM_LEVEL not in self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO]:
+                        self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO][cfg.ZOOM_LEVEL] = {}
+                    self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO][cfg.ZOOM_LEVEL][str(self.current_player + 1)] = (
+                        2 ** self.dw_player[self.current_player].player.video_zoom
+                    )
+                    self.project_changed()
+                    video_operations.display_zoom_level(self)
+
                 # video pan
                 pan_step = 0.05
                 if ek == Qt.Key_Left:

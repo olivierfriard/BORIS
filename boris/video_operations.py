@@ -79,16 +79,21 @@ def snapshot(self):
 
 def zoom_level(self):
     """
-    display dialog for zoom level
+    display dialog box for setting the zoom level
     """
     logging.info("change zoom level of player")
 
     players_list: list = []
     for idx, dw in enumerate(self.dw_player):
+
+        players_list.append(("dsb", f"Player #{idx + 1}", 0.1, 12, 0.1, 2**dw.player.video_zoom, 1))
+
+        """
         zoom_levels: list = []
         for choice in (2, 1, 0.5, 0.25):
             zoom_levels.append((str(choice), "selected" if log2(choice) == dw.player.video_zoom else ""))
         players_list.append(("il", f"Player #{idx + 1}", zoom_levels))
+        """
 
     zl = dialog.Input_dialog(label_caption="Select the zoom level", elements_list=players_list, title="Video zoom level")
     if not zl.exec_():
@@ -98,21 +103,19 @@ def zoom_level(self):
         self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO][cfg.ZOOM_LEVEL] = {}
 
     for idx, dw in enumerate(self.dw_player):
-        if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO][cfg.ZOOM_LEVEL].get(str(idx + 1), dw.player.video_zoom) != float(
-            zl.elements[f"Player #{idx + 1}"].currentText()
+        if (
+            self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO][cfg.ZOOM_LEVEL].get(str(idx + 1), dw.player.video_zoom)
+            != zl.elements[f"Player #{idx + 1}"].value()
         ):
-            dw.player.video_zoom = log2(float(zl.elements[f"Player #{idx + 1}"].currentText()))
 
-            """
-            dw.player.video_pan_x = 0.25
-            dw.player.video_pan_x = 0.25
-            """
+            dw.player.video_zoom = log2(float(zl.elements[f"Player #{idx + 1}"].value()))
 
             logging.debug(f"video zoom changed in {dw.player.video_zoom} for player {idx + 1}")
 
             self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO][cfg.ZOOM_LEVEL][str(idx + 1)] = float(
-                zl.elements[f"Player #{idx + 1}"].currentText()
+                zl.elements[f"Player #{idx + 1}"].value()
             )
+            display_zoom_level(self)
             self.project_changed()
 
 
@@ -200,7 +203,6 @@ def display_play_rate(self) -> None:
     """
     display current play rate in status bar widget
     """
-    """self.lbSpeed.setText(f"Play rate: <b>x{self.play_rate:.3f}</b>")"""
 
     self.lb_video_info.setText(f"Play rate: <b>x{self.play_rate:.3f}</b>")
 
