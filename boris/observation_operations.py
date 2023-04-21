@@ -1448,11 +1448,17 @@ def initialize_new_media_observation(self) -> bool:
         if cfg.OBSERVATION_TIME_INTERVAL in self.pj[cfg.OBSERVATIONS][self.observationId]:
             self.seek_mediaplayer(int(self.pj[cfg.OBSERVATIONS][self.observationId][cfg.OBSERVATION_TIME_INTERVAL][0]), player=i)
 
-        # restore zoom level
+        # restore video zoom level
         if cfg.ZOOM_LEVEL in self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO]:
             self.dw_player[i].player.video_zoom = log2(
                 self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO][cfg.ZOOM_LEVEL].get(n_player, 0)
             )
+
+        # restore video pan
+        if cfg.PAN_X in self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO]:
+            self.dw_player[i].player.video_pan_x = self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO][cfg.PAN_X].get(n_player, 0)
+        if cfg.PAN_Y in self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO]:
+            self.dw_player[i].player.video_pan_y = self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO][cfg.PAN_Y].get(n_player, 0)
 
         # restore rotation angle
         if cfg.ROTATION_ANGLE in self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO]:

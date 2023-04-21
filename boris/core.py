@@ -1822,14 +1822,13 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.dw_player[player_id].player.video_pan_x = 0
             self.dw_player[player_id].player.video_pan_y = 0
             self.dw_player[player_id].player.video_zoom = 0
-            video_operations.display_zoom_level(self)
+
+            self.update_project_zoom_pan_values()
             return
 
         """
         x, y = video_clicked_coord(self.dw_player[player_id].player, self.dw_player[player_id].videoframe)
 
-        if x == -2 or y == -2:
-            return
         """
 
     def read_tw_event_field(self, row_idx: int, player_type: str, field_type: str) -> Union[str, None, int, dec]:
@@ -4074,6 +4073,27 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         else:
             return False
 
+    def update_project_zoom_pan_values(self):
+        """
+        update values of video zoom and video pan in project
+        """
+        for k in (cfg.ZOOM_LEVEL, cfg.PAN_X, cfg.PAN_Y):
+            if k not in self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO]:
+                self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO][k] = {}
+
+        self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO][cfg.ZOOM_LEVEL][str(self.current_player + 1)] = (
+            2 ** self.dw_player[self.current_player].player.video_zoom
+        )
+        self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO][cfg.PAN_X][str(self.current_player + 1)] = self.dw_player[
+            self.current_player
+        ].player.video_pan_x
+        self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO][cfg.PAN_Y][str(self.current_player + 1)] = self.dw_player[
+            self.current_player
+        ].player.video_pan_y
+
+        self.project_changed()
+        video_operations.display_zoom_level(self)
+
     def keyPressEvent(self, event) -> None:
         """
         http://qt-project.org/doc/qt-5.0/qtcore/qt.html#Key-enum
@@ -4184,15 +4204,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 if ek == Qt.Key_Minus:  # zoom out with plus key
                     self.dw_player[self.current_player].player.video_zoom -= zoom_step
 
-                if ek in (48, Qt.Key_Plus, Qt.Key_Minus):
-                    if cfg.ZOOM_LEVEL not in self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO]:
-                        self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO][cfg.ZOOM_LEVEL] = {}
-                    self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO][cfg.ZOOM_LEVEL][str(self.current_player + 1)] = (
-                        2 ** self.dw_player[self.current_player].player.video_zoom
-                    )
-                    self.project_changed()
-                    video_operations.display_zoom_level(self)
-
                 # video pan
                 pan_step = 0.05
                 if ek == Qt.Key_Left:
@@ -4203,6 +4214,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     self.dw_player[self.current_player].player.video_pan_y -= pan_step
                 if ek == Qt.Key_Down:
                     self.dw_player[self.current_player].player.video_pan_y += pan_step
+
+                if ek in (48, Qt.Key_Plus, Qt.Key_Minus, Qt.Key_Left, Qt.Key_Right, Qt.Key_Up, Qt.Key_Down):
+                    self.update_project_zoom_pan_values()
 
         # frame-by-frame mode
         if ek == 47 or (ek == Qt.Key_Left and modifier != cfg.CTRL_KEY):  # / one frame back
