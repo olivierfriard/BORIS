@@ -53,8 +53,6 @@ except OSError:  # libmpv not found
 from PyQt5.QtWidgets import QLabel, QDockWidget, QWidget, QHBoxLayout, QSlider, QSizePolicy, QStackedWidget
 from PyQt5.QtCore import pyqtSignal, QEvent, Qt
 
-import logging
-
 
 class Clickable_label(QLabel):
     """
@@ -134,7 +132,7 @@ class DW_player(QDockWidget):
         self.stack.setCurrentIndex(0)
 
     def mpv_logger(self, loglevel, component, message):
-        print(f"MPV player #{self.id_}: [{loglevel}] {component}: {message}")
+        logging.debug(f"MPV player #{self.id_}: [{loglevel}] {component}: {message}")
 
     def volume_slider_moved(self):
         """
