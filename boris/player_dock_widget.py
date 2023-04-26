@@ -98,7 +98,7 @@ class DW_player(QDockWidget):
             wid=str(int(self.videoframe.winId())),
             # vo='x11', # You may not need this
             log_handler=self.mpv_logger,
-            loglevel="debug",
+            loglevel="info",
         )
 
         self.player.screenshot_format = "png"
