@@ -1430,7 +1430,10 @@ def initialize_new_media_observation(self) -> bool:
         if not flag_vm:
             self.dw_player[i].player.hwdec = self.config_param.get(cfg.MPV_HWDEC, cfg.MPV_HWDEC_DEFAULT_VALUE)
         else:
-            self.dw_player[i].player.hwdec = "no"
+            self.dw_player[i].player.hwdec = cfg.MPV_HWDEC_NO
+
+        logging.debug(f"Player hwdec of player #{i} set to: {self.dw_player[i].player.hwdec}")
+        self.config_param[cfg.MPV_HWDEC] = self.dw_player[i].player.hwdec
 
         self.dw_player[i].player.playlist_pos = 0
         self.dw_player[i].player.wait_until_playing()

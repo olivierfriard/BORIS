@@ -97,7 +97,7 @@ class DW_player(QDockWidget):
         self.player = mpv.MPV(
             wid=str(int(self.videoframe.winId())),
             # vo='x11', # You may not need this
-            log_handler=None,
+            log_handler=self.mpv_logger,
             loglevel="debug",
         )
 
@@ -132,6 +132,9 @@ class DW_player(QDockWidget):
         self.setWidget(self.stack)
 
         self.stack.setCurrentIndex(0)
+
+    def mpv_logger(self, loglevel, component, message):
+        print(f"MPV player #{self.id_}: [{loglevel}] {component}: {message}")
 
     def volume_slider_moved(self):
         """

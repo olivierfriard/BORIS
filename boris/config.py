@@ -393,9 +393,14 @@ OBSERVATIONS = "observations"
 
 CLOSE_BEHAVIORS_BETWEEN_VIDEOS = "close_behaviors_between_videos"
 
-MPV_HWDEC_OPTIONS = ("auto", "auto-safe", "no")
-MPV_HWDEC_DEFAULT_VALUE = "auto"
+# MPV hardware decode
 MPV_HWDEC = "mpv_hwdec"
+MPV_HWDEC_NO = "no"
+MPV_HWDEC_AUTO = "auto"
+MPV_HWDEC_AUTOSAFE = "auto-safe"
+MPV_HWDEC_OPTIONS = (MPV_HWDEC_AUTO", MPV_HWDEC_AUTOSAFE, MPV_HWDEC_NO)
+MPV_HWDEC_DEFAULT_VALUE = MPV_HWDEC_AUTO
+
 
 
 PROJECT_FILE_INDENTATION = "project file indentation"
