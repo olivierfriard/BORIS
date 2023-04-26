@@ -1432,6 +1432,9 @@ def initialize_new_media_observation(self) -> bool:
         else:
             self.dw_player[i].player.hwdec = cfg.MPV_HWDEC_NO
 
+        ### TESTING remove before release
+        self.dw_player[i].player.hwdec = self.config_param.get(cfg.MPV_HWDEC, cfg.MPV_HWDEC_DEFAULT_VALUE)
+
         logging.debug(f"Player hwdec of player #{i} set to: {self.dw_player[i].player.hwdec}")
         self.config_param[cfg.MPV_HWDEC] = self.dw_player[i].player.hwdec
 
