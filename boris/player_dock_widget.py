@@ -132,6 +132,9 @@ class DW_player(QDockWidget):
         self.stack.setCurrentIndex(0)
 
     def mpv_logger(self, loglevel, component, message):
+        """
+        redirect MPV log messages to general logging system
+        """
         logging.debug(f"MPV player #{self.id_}: [{loglevel}] {component}: {message}")
 
     def volume_slider_moved(self):
