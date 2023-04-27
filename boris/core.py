@@ -1709,6 +1709,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         if self.playerType not in (cfg.MEDIA):
             return
 
+        if not self.observationId:
+            return
+
         if not self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO].get(cfg.OVERLAY, {}):
             return
 
