@@ -95,8 +95,8 @@ class DW_player(QDockWidget):
         self.player = mpv.MPV(
             wid=str(int(self.videoframe.winId())),
             # vo='x11', # You may not need this
-            log_handler=self.mpv_logger,
-            loglevel="info",
+            # log_handler=self.mpv_logger,
+            # loglevel="info",
         )
 
         self.player.screenshot_format = "png"
@@ -146,15 +146,7 @@ class DW_player(QDockWidget):
         """
         self.key_pressed_signal.emit(event)
 
-    '''
-    def view_signal_triggered(self, msg, button):
-        """
-        transmit signal received by video frame
-        """
-        self.view_signal.emit(self.id_, msg, button)
-    '''
-
-    def resizeEvent(self, dummy):
+    def resizeEvent(self, _):
         """
         emits signal when dockwidget resized
         """
