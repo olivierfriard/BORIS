@@ -27,7 +27,6 @@ import traceback
 import platform
 import datetime as dt
 import subprocess
-from decimal import Decimal as dec
 
 from PyQt5.QtCore import Qt, pyqtSignal, QT_VERSION_STR, PYQT_VERSION_STR
 from PyQt5.QtWidgets import (

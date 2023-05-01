@@ -219,6 +219,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     mem_video: list = []  # memory of clicked points for measurement tool
     current_image_size = None
 
+    media_scan_sampling_mem: list = []
     behav_seq_separator: str = "|"
     # time laps
     fast = 10
@@ -3696,9 +3697,32 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     self.pause_video()
                     self.beep("beep")
 
+        # alarm
         if self.beep_every:
             if cumulative_time_pos % (self.beep_every) <= 1:
                 self.beep("beep")
+
+        # scan sampling
+        if self.pj[cfg.OBSERVATIONS][self.observationId].get(cfg.MEDIA_SCAN_SAMPLING_DURATION, 0):
+
+            if self.media_scan_sampling_mem:
+                while self.media_scan_sampling_mem[-1] > cumulative_time_pos:
+                    self.media_scan_sampling_mem.pop(-1)
+
+            if int(cumulative_time_pos) % self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_SCAN_SAMPLING_DURATION] == 0:
+                scan_sampling_step = (
+                    int(cumulative_time_pos / self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_SCAN_SAMPLING_DURATION])
+                    * self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_SCAN_SAMPLING_DURATION]
+                )
+
+                """print(f"scan sampling {cumulative_time_pos}")
+                print(f"{self.media_scan_sampling_mem=}")"""
+
+                if scan_sampling_step not in self.media_scan_sampling_mem:
+                    self.media_scan_sampling_mem.append(scan_sampling_step)
+                    self.media_scan_sampling_mem.sort()
+
+                    self.pause_video(msg=f"Player paused. Scan sampling at {scan_sampling_step} s")
 
         # highlight current event in tw events and scroll event list
         self.get_events_current_row()
@@ -3776,10 +3800,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     f"{util.convertTime(self.timeFormat, all_media_duration)}</b>"
                 )
 
-            # player rate
-            '''msg += f"<br>Play rate: <b>x{self.play_rate:.3f}</b>"'''
-
-            self.lb_player_status.setText("Player paused" if self.dw_player[0].player.pause else "")
+            # self.lb_player_status.setText("Player paused" if self.dw_player[0].player.pause else "")
 
             # msg += f"<br>media #{self.dw_player[0].player.playlist_pos + 1} / {playlist_length}"
 
@@ -4706,6 +4727,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             # if self.pj[cfg.OBSERVATIONS][self.observationId].get(cfg.VISUALIZE_WAVEFORM, False) \
             #    or self.pj[cfg.OBSERVATIONS][self.observationId].get(VISUALIZE_SPECTROGRAM, False):
 
+            self.statusbar.showMessage("", 0)
+
             self.plot_timer.start()
 
             # start all timer for plotting data
@@ -4717,7 +4740,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
             return True
 
-    def pause_video(self):
+    def pause_video(self, msg: str = "Player paused"):
         """
         pause media
         does not pause media if already paused (to prevent media played again)
@@ -4737,7 +4760,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
                         player.player.pause = True
 
-            self.lb_player_status.setText("Player paused")
+            self.lb_player_status.setText(msg)
 
             # adjust positions of plots
             self.plot_timer_out()

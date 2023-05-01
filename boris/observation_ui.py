@@ -187,6 +187,13 @@ class Ui_Form(object):
         self.verticalLayout.addLayout(self.horizontalLayout_15)
         self.horizontalLayout_12 = QtWidgets.QHBoxLayout()
         self.horizontalLayout_12.setObjectName("horizontalLayout_12")
+        self.label_5 = QtWidgets.QLabel(self.tab_player_1)
+        self.label_5.setObjectName("label_5")
+        self.horizontalLayout_12.addWidget(self.label_5)
+        self.sb_media_scan_sampling = QtWidgets.QSpinBox(self.tab_player_1)
+        self.sb_media_scan_sampling.setMaximum(1000000)
+        self.sb_media_scan_sampling.setObjectName("sb_media_scan_sampling")
+        self.horizontalLayout_12.addWidget(self.sb_media_scan_sampling)
         self.label_2 = QtWidgets.QLabel(self.tab_player_1)
         self.label_2.setObjectName("label_2")
         self.horizontalLayout_12.addWidget(self.label_2)
@@ -381,7 +388,7 @@ class Ui_Form(object):
 
         self.retranslateUi(Form)
         self.sw_observation_type.setCurrentIndex(1)
-        self.tabWidget.setCurrentIndex(1)
+        self.tabWidget.setCurrentIndex(0)
         QtCore.QMetaObject.connectSlotsByName(Form)
 
     def retranslateUi(self, Form):
@@ -424,6 +431,7 @@ class Ui_Form(object):
         self.pb_use_media_file_name_as_obsid.setText(_translate("Form", "Use media file name as observation id"))
         self.cbVisualizeSpectrogram.setText(_translate("Form", "Visualize the sound spectrogram for the player #1"))
         self.cb_visualize_waveform.setText(_translate("Form", "Visualize the waveform for the player #1"))
+        self.label_5.setText(_translate("Form", "Scan sampling every (s)"))
         self.label_2.setText(_translate("Form", "Image display duration (s)"))
         self.cbCloseCurrentBehaviorsBetweenVideo.setText(_translate("Form", "Stop ongoing state events between successive media files"))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab_player_1), _translate("Form", "Media files"))

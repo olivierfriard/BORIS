@@ -710,11 +710,11 @@ def new_observation(self, mode=cfg.NEW, obsId=""):
             # spectrogram
             observationWindow.cbVisualizeSpectrogram.setEnabled(True)
             observationWindow.cbVisualizeSpectrogram.setChecked(self.pj[cfg.OBSERVATIONS][obsId].get(cfg.VISUALIZE_SPECTROGRAM, False))
-
             # waveform
             observationWindow.cb_visualize_waveform.setEnabled(True)
             observationWindow.cb_visualize_waveform.setChecked(self.pj[cfg.OBSERVATIONS][obsId].get(cfg.VISUALIZE_WAVEFORM, False))
-
+            # scan sampling
+            observationWindow.sb_media_scan_sampling.setValue(self.pj[cfg.OBSERVATIONS][obsId].get(cfg.MEDIA_SCAN_SAMPLING_DURATION, 0))
             # image display duration
             observationWindow.sb_image_display_duration.setValue(self.pj[cfg.OBSERVATIONS][obsId].get(cfg.IMAGE_DISPLAY_DURATION, 1))
 
@@ -778,7 +778,7 @@ def new_observation(self, mode=cfg.NEW, obsId=""):
                 observationWindow.rb_time_lapse.setChecked(True)
                 observationWindow.sb_time_lapse.setValue(self.pj[cfg.OBSERVATIONS][obsId].get(cfg.TIME_LAPSE, 0))
 
-        if self.pj[cfg.OBSERVATIONS][obsId]["type"] in [cfg.LIVE]:
+        if self.pj[cfg.OBSERVATIONS][obsId]["type"] in (cfg.LIVE):
             observationWindow.rb_live.setChecked(True)
             # sampling time
             observationWindow.sbScanSampling.setValue(self.pj[cfg.OBSERVATIONS][obsId].get(cfg.SCAN_SAMPLING_TIME, 0))
@@ -878,6 +878,8 @@ def new_observation(self, mode=cfg.NEW, obsId=""):
         self.pj[cfg.OBSERVATIONS][new_obs_id][cfg.VISUALIZE_SPECTROGRAM] = observationWindow.cbVisualizeSpectrogram.isChecked()
         # visualize spectrogram
         self.pj[cfg.OBSERVATIONS][new_obs_id][cfg.VISUALIZE_WAVEFORM] = observationWindow.cb_visualize_waveform.isChecked()
+        # media scan sampling
+        self.pj[cfg.OBSERVATIONS][new_obs_id][cfg.MEDIA_SCAN_SAMPLING_DURATION] = observationWindow.sb_media_scan_sampling.value()
         # image display duration
         self.pj[cfg.OBSERVATIONS][new_obs_id][cfg.IMAGE_DISPLAY_DURATION] = observationWindow.sb_image_display_duration.value()
 
@@ -1050,6 +1052,7 @@ def close_observation(self):
 
     if self.playerType == cfg.MEDIA:
 
+        self.media_scan_sampling_mem = []
         logging.info(f"Stop plot timer")
         self.plot_timer.stop()
 

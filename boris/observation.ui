@@ -228,7 +228,7 @@
        <item>
         <widget class="QTabWidget" name="tabWidget">
          <property name="currentIndex">
-          <number>1</number>
+          <number>0</number>
          </property>
          <widget class="QWidget" name="tab_player_1">
           <attribute name="title">
@@ -364,6 +364,20 @@
            </item>
            <item>
             <layout class="QHBoxLayout" name="horizontalLayout_12">
+             <item>
+              <widget class="QLabel" name="label_5">
+               <property name="text">
+                <string>Scan sampling every (s)</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QSpinBox" name="sb_media_scan_sampling">
+               <property name="maximum">
+                <number>1000000</number>
+               </property>
+              </widget>
+             </item>
              <item>
               <widget class="QLabel" name="label_2">
                <property name="text">

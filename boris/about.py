@@ -55,8 +55,6 @@ def actionAbout_activated(self):
     About dialog
     """
 
-    1 / 0
-
     programs_versions = ["MPV media player"]
     try:
         python_mpv_version = mpv.__version__
