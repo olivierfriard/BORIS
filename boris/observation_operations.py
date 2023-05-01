@@ -998,9 +998,8 @@ def close_observation(self):
     close current observation
     """
 
-    logging.info(f"Close observation {self.playerType}")
+    logging.info(f"Close observation (player type: {self.playerType})")
 
-    logging.info(f"Check state events")
     # check observation events
     flag_ok, msg = project_functions.check_state_events_obs(
         self.observationId,
@@ -1047,11 +1046,10 @@ def close_observation(self):
             else:
                 return
 
-    logging.info(f"Check state events done")
-
     self.saved_state = self.saveState()
 
     if self.playerType == cfg.MEDIA:
+
         logging.info(f"Stop plot timer")
         self.plot_timer.stop()
 
@@ -1100,8 +1098,10 @@ def close_observation(self):
 
         for dw in self.dw_player:
             logging.info(f"remove dock widget")
-
+            dw.player.log_handler = None
             self.removeDockWidget(dw)
+
+            del dw
             # sip.delete(dw)
             # dw = None
 
@@ -1127,7 +1127,7 @@ def close_observation(self):
     for i in range(self.twSubjects.rowCount()):
         self.twSubjects.item(i, len(cfg.subjectsFields)).setText("")
 
-    for w in [self.lbTimeOffset, self.lb_obs_time_interval]:
+    for w in (self.lbTimeOffset, self.lb_obs_time_interval):
         w.clear()
     self.play_rate, self.playerType = 1, ""
 

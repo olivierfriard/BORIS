@@ -75,6 +75,17 @@ class Clickable_label(QLabel):
         self.mouse_pressed_signal.emit(self.id_, event)
 
 
+import functools
+
+
+def mpv_logger(player_id, loglevel, component, message):
+    """
+    redirect MPV log messages to general logging system
+    """
+
+    logging.debug(f"MPV player #{player_id}: [{loglevel}] {component}: {message}")
+
+
 class DW_player(QDockWidget):
     key_pressed_signal = pyqtSignal(QEvent)
     volume_slider_moved_signal = pyqtSignal(int, int)
@@ -95,8 +106,8 @@ class DW_player(QDockWidget):
         self.player = mpv.MPV(
             wid=str(int(self.videoframe.winId())),
             # vo='x11', # You may not need this
-            # log_handler=self.mpv_logger,
-            # loglevel="info",
+            log_handler=functools.partial(mpv_logger, self.id_),
+            loglevel="debug",
         )
 
         self.player.screenshot_format = "png"
@@ -130,12 +141,6 @@ class DW_player(QDockWidget):
         self.setWidget(self.stack)
 
         self.stack.setCurrentIndex(0)
-
-    def mpv_logger(self, loglevel, component, message):
-        """
-        redirect MPV log messages to general logging system
-        """
-        logging.debug(f"MPV player #{self.id_}: [{loglevel}] {component}: {message}")
 
     def volume_slider_moved(self):
         """

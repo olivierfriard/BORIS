@@ -147,7 +147,7 @@ if options.version:
     print(f"version {__version__} release date: {__version_date__}")
     sys.exit(0)
 
-logging.info("BORIS started")
+logging.debug("BORIS started")
 logging.info(f"BORIS version {__version__} release date: {__version_date__}")
 logging.info(f"Operating system: {platform.uname().system} {platform.uname().release} {platform.uname().version}")
 logging.info(f"CPU: {platform.uname().machine} {platform.uname().processor}")

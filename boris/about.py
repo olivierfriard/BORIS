@@ -55,6 +55,8 @@ def actionAbout_activated(self):
     About dialog
     """
 
+    1 / 0
+
     programs_versions = ["MPV media player"]
     try:
         python_mpv_version = mpv.__version__
@@ -95,9 +97,7 @@ def actionAbout_activated(self):
     # graphviz
     gv_result = subprocess.getoutput("dot -V")
 
-    programs_versions.extend(
-        ["\nGraphViz", gv_result if "graphviz" in gv_result else "not installed", "https://www.graphviz.org/"]
-    )
+    programs_versions.extend(["\nGraphViz", gv_result if "graphviz" in gv_result else "not installed", "https://www.graphviz.org/"])
 
     about_dialog = QMessageBox()
     about_dialog.setIconPixmap(QPixmap(":/boris_unito"))

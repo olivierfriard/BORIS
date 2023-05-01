@@ -203,8 +203,7 @@ def read(self):
 
         if self.checkForNewVersion:
             if settings.value("last_check_for_new_version") and (
-                int(time.mktime(time.localtime())) - int(settings.value("last_check_for_new_version"))
-                > cfg.CHECK_NEW_VERSION_DELAY
+                int(time.mktime(time.localtime())) - int(settings.value("last_check_for_new_version")) > cfg.CHECK_NEW_VERSION_DELAY
             ):
                 self.actionCheckUpdate_activated(flagMsgOnlyIfNew=True)
         logging.debug(f"last_check_for_new_version: {settings.value('last_check_for_new_version')}")
@@ -245,10 +244,7 @@ def read(self):
             if (
                 dialog.MessageDialog(
                     cfg.programName,
-                    (
-                        "The colors list contain colors that are very light.\n"
-                        "Do you want to reload the default colors list?"
-                    ),
+                    ("The colors list contain colors that are very light.\n" "Do you want to reload the default colors list?"),
                     [cfg.NO, cfg.YES],
                 )
                 == cfg.YES
@@ -261,18 +257,11 @@ def read(self):
         except Exception:
             self.behav_category_colors = cfg.CATEGORY_COLORS_LIST
 
-        if (
-            "white" in self.behav_category_colors
-            or "azure" in self.behav_category_colors
-            or "snow" in self.behav_category_colors
-        ):
+        if "white" in self.behav_category_colors or "azure" in self.behav_category_colors or "snow" in self.behav_category_colors:
             if (
                 dialog.MessageDialog(
                     cfg.programName,
-                    (
-                        "The colors list contain colors that are very light.\n"
-                        "Do you want to reload the default colors list?"
-                    ),
+                    ("The colors list contain colors that are very light.\n" "Do you want to reload the default colors list?"),
                     [cfg.NO, cfg.YES],
                 )
                 == cfg.YES
@@ -297,10 +286,10 @@ def read(self):
         )
 
     # recent projects
-    logging.info("read recent projects")
-    iniFilePath = str(pl.Path.home() / ".boris_recent_projects")
-    if os.path.isfile(iniFilePath):
-        settings = QSettings(iniFilePath, QSettings.IniFormat)
+    logging.debug("read recent projects")
+    recent_projects_file_path = pl.Path.home() / ".boris_recent_projects"
+    if recent_projects_file_path.is_file():
+        settings = QSettings(str(recent_projects_file_path), QSettings.IniFormat)
         try:
             self.recent_projects = settings.value("recent_projects").split("|||")
             while "" in self.recent_projects:
