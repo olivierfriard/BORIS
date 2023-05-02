@@ -34,5 +34,13 @@ def parse_arguments():
     parser.add_option("-n", "--nosplashscreen", action="store_true", default=False, help="No splash screen")
     parser.add_option("-p", "--project", action="store", default="", dest="project", help="Project file")
     parser.add_option("-o", "--observation", action="store", default="", dest="observation", help="Observation id")
+    parser.add_option(
+        "-f",
+        "--no-first-launch-dialog",
+        action="store_true",
+        default=False,
+        dest="no_first_launch_dialog",
+        help="No first launch dialog (for new version automatic check)",
+    )
 
     return parser.parse_args()

@@ -32,6 +32,7 @@ import PIL.Image
 import PIL.ImageEnhance
 import subprocess
 import sys
+import locale
 import tempfile
 import time
 import urllib.error
@@ -147,6 +148,7 @@ if options.version:
     print(f"version {__version__} release date: {__version_date__}")
     sys.exit(0)
 
+
 logging.debug("BORIS started")
 logging.info(f"BORIS version {__version__} release date: {__version_date__}")
 logging.info(f"Operating system: {platform.uname().system} {platform.uname().release} {platform.uname().version}")
@@ -168,6 +170,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     """
     Main BORIS window
     """
+
+    # check first launch dialog
+    no_first_launch_dialog = options.no_first_launch_dialog
 
     pj: dict = dict(cfg.EMPTY_PROJECT)
     project: bool = False  # project is loaded?
@@ -3704,7 +3709,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         # scan sampling
         if self.pj[cfg.OBSERVATIONS][self.observationId].get(cfg.MEDIA_SCAN_SAMPLING_DURATION, 0):
-
             if self.media_scan_sampling_mem:
                 while self.media_scan_sampling_mem[-1] > cumulative_time_pos:
                     self.media_scan_sampling_mem.pop(-1)
@@ -4859,20 +4863,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.image_idx = 0
             self.extract_frame(self.dw_player[0])
 
-    ''' 2019-12-12
-    def changedFocusSlot(self, old, now):
-        """
-        connect events filter when app gains focus
-        """
-        if window.focusWidget():
-            window.focusWidget().installEventFilter(self)
-    '''
-
 
 def main():
     app = QApplication(sys.argv)
-
-    import locale
 
     locale.setlocale(locale.LC_NUMERIC, "C")
 
@@ -4915,7 +4908,7 @@ def main():
         if sys.platform == "darwin" and "sn_0_" in project_to_open:
             project_to_open = ""
 
-    logging.debug(f"args: {args}")
+    logging.debug(f"command line arguments: {args}")
 
     if options.observation:
         if not project_to_open:
@@ -4948,23 +4941,11 @@ def main():
                 QMessageBox.NoButton,
             )
 
-    # connect events filter when app focus changes
-    """2019-12-12
-    app.focusChanged.connect(window.changedFocusSlot)
-    """
-
     if not options.nosplashscreen and (sys.platform != "darwin"):
         splash.finish(window)
 
-    """sys.exit(app.exec_())"""
     return_code = app.exec_()
 
     del window
 
     sys.exit(return_code)
-
-
-"""
-if __name__ == "__main__":
-    main()
-"""

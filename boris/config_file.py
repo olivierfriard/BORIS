@@ -27,7 +27,6 @@ Read and write the BORIS config file
 import pathlib as pl
 import logging
 import time
-import os
 
 from . import config as cfg
 from . import dialog
@@ -172,25 +171,29 @@ def read(self):
 
         # check for new version
         self.checkForNewVersion = False
-        try:
-            if settings.value("check_for_new_version") is None:
-                self.checkForNewVersion = (
-                    dialog.MessageDialog(
-                        cfg.programName,
-                        (
-                            "Allow BORIS to automatically check for new version and news?\n"
-                            "(An internet connection is required)\n"
-                            "You can change this option in the Preferences (File > Preferences)"
-                        ),
-                        [cfg.YES, cfg.NO],
+
+        # print(f"{self.no_first_launch_dialog=}")
+
+        if not self.no_first_launch_dialog:
+            try:
+                if settings.value("check_for_new_version") is None:
+                    self.checkForNewVersion = (
+                        dialog.MessageDialog(
+                            cfg.programName,
+                            (
+                                "Allow BORIS to automatically check for new version and news?\n"
+                                "(An internet connection is required)\n"
+                                "You can change this option in the Preferences (File > Preferences)"
+                            ),
+                            [cfg.YES, cfg.NO],
+                        )
+                        == cfg.YES
                     )
-                    == cfg.YES
-                )
-            else:
-                self.checkForNewVersion = settings.value("check_for_new_version") == "true"
-        except Exception:
-            self.checkForNewVersion = False
-        logging.debug(f"check_for_new_version: {self.checkForNewVersion}")
+                else:
+                    self.checkForNewVersion = settings.value("check_for_new_version") == "true"
+            except Exception:
+                self.checkForNewVersion = False
+        logging.debug(f"Automatic check for new version: {self.checkForNewVersion}")
 
         # pause before add event
         self.pause_before_addevent = False
@@ -206,7 +209,8 @@ def read(self):
                 int(time.mktime(time.localtime())) - int(settings.value("last_check_for_new_version")) > cfg.CHECK_NEW_VERSION_DELAY
             ):
                 self.actionCheckUpdate_activated(flagMsgOnlyIfNew=True)
-        logging.debug(f"last_check_for_new_version: {settings.value('last_check_for_new_version')}")
+
+        logging.debug(f"last check for new version: {settings.value('last_check_for_new_version')}")
 
         self.ffmpeg_cache_dir = ""
         try:
@@ -271,19 +275,22 @@ def read(self):
     else:  # no .boris file found
         logging.info("No config file found")
         # ask user for checking for new version
-        self.checkForNewVersion = (
-            dialog.MessageDialog(
-                cfg.programName,
-                (
-                    "Allow BORIS to automatically check for new version?\n"
-                    "(An internet connection is required)\n"
-                    "You can change this option in the"
-                    " Preferences (File > Preferences)"
-                ),
-                [cfg.NO, cfg.YES],
+        if not self.no_first_launch_dialog:
+            self.checkForNewVersion = (
+                dialog.MessageDialog(
+                    cfg.programName,
+                    (
+                        "Allow BORIS to automatically check for new version?\n"
+                        "(An internet connection is required)\n"
+                        "You can change this option in the"
+                        " Preferences (File > Preferences)"
+                    ),
+                    [cfg.NO, cfg.YES],
+                )
+                == cfg.YES
             )
-            == cfg.YES
-        )
+        else:
+            self.checkForNewVersion = False
 
     # recent projects
     logging.debug("read recent projects")

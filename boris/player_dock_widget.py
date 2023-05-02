@@ -24,8 +24,7 @@ This file is part of BORIS.
 import os
 import sys
 import logging
-import pathlib as pl
-import datetime as dt
+import functools
 
 os.environ["PATH"] = os.path.dirname(__file__) + os.sep + "misc" + os.pathsep + os.environ["PATH"]
 
@@ -73,9 +72,6 @@ class Clickable_label(QLabel):
         """logging.debug(f"mousepress event: label {self.id_} clicked")"""
 
         self.mouse_pressed_signal.emit(self.id_, event)
-
-
-import functools
 
 
 def mpv_logger(player_id, loglevel, component, message):
