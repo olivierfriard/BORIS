@@ -177,8 +177,8 @@ class Observation(QDialog, Ui_Form):
         self.cb_observation_time_interval.setEnabled(True)
 
         # disabled due to problem when video goes back
-        self.cbCloseCurrentBehaviorsBetweenVideo.setChecked(False)
-        self.cbCloseCurrentBehaviorsBetweenVideo.setEnabled(False)
+        # self.cbCloseCurrentBehaviorsBetweenVideo.setChecked(False)
+        # self.cbCloseCurrentBehaviorsBetweenVideo.setEnabled(False)
 
         self.cb_start_from_current_time.stateChanged.connect(self.cb_start_from_current_time_changed)
 
@@ -1053,8 +1053,7 @@ class Observation(QDialog, Ui_Form):
         ):
             w.setEnabled(self.twVideo1.rowCount() > 0)
 
-        # disabled for problems
-        self.cbCloseCurrentBehaviorsBetweenVideo.setEnabled(False)
+        # self.cbCloseCurrentBehaviorsBetweenVideo.setEnabled(False)
 
     def add_media_to_listview(self, file_name):
         """
@@ -1125,7 +1124,7 @@ class Observation(QDialog, Ui_Form):
                 w.setEnabled(self.twVideo1.rowCount() > 0)
 
             # disabled for problems
-            self.cbCloseCurrentBehaviorsBetweenVideo.setEnabled(False)
+            # self.cbCloseCurrentBehaviorsBetweenVideo.setEnabled(False)
 
         else:
             QMessageBox.warning(self, cfg.programName, "No media file selected")

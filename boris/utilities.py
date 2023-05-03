@@ -324,9 +324,7 @@ def txt2np_array(
         return False, f"{sys.exc_info()[1]}", np.array([])
 
     try:
-        data = np.loadtxt(
-            file_name, delimiter=dialect.delimiter, usecols=columns, skiprows=header_rows_nb, converters=np_converters
-        )
+        data = np.loadtxt(file_name, delimiter=dialect.delimiter, usecols=columns, skiprows=header_rows_nb, converters=np_converters)
 
     except Exception:
         return False, f"{sys.exc_info()[1]}", np.array([])
@@ -521,9 +519,7 @@ def get_current_states_modifiers_by_subject(
     return current_states
 
 
-def get_current_states_modifiers_by_subject_2(
-    state_behaviors_codes: list, events: list, subjects: dict, time: dec
-) -> dict:
+def get_current_states_modifiers_by_subject_2(state_behaviors_codes: list, events: list, subjects: dict, time: dec) -> dict:
     """
     get current states and modifiers for subjects at given time
     differs from get_current_states_modifiers_by_subject in the output format: [behavior, modifiers]
@@ -836,9 +832,7 @@ def mem_info():
             process = subprocess.run(["free", "-m"], stdout=subprocess.PIPE)
             # out, err = process.communicate()
             out = process.stdout
-            _, tot_mem, used_mem, _, _, _, available_mem = [
-                x.decode("utf-8") for x in out.split(b"\n")[1].split(b" ") if x != b""
-            ]
+            _, tot_mem, used_mem, _, _, _, available_mem = [x.decode("utf-8") for x in out.split(b"\n")[1].split(b" ") if x != b""]
             return False, {
                 "total_memory": int(tot_mem),
                 "used_memory": int(used_mem),
@@ -858,9 +852,7 @@ def mem_info():
 
     if sys.platform.startswith("win"):
         try:
-            output = subprocess.run(
-                ["wmic", "computersystem", "get", "TotalPhysicalMemory", "/", "Value"], stdout=subprocess.PIPE
-            )
+            output = subprocess.run(["wmic", "computersystem", "get", "TotalPhysicalMemory", "/", "Value"], stdout=subprocess.PIPE)
             tot_mem = int(output.stdout.strip().split(b"=")[-1].decode("utf-8")) / 1024 / 1024
 
             output = subprocess.run(["wmic", "OS", "get", "FreePhysicalMemory", "/", "Value"], stdout=subprocess.PIPE)
@@ -1014,9 +1006,7 @@ def test_ffmpeg_path(FFmpegPath):
         str: message
     """
 
-    out, error = subprocess.Popen(
-        f'"{FFmpegPath}" -version', stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True
-    ).communicate()
+    out, error = subprocess.Popen(f'"{FFmpegPath}" -version', stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True).communicate()
     logging.debug(f"test ffmpeg path output: {out}")
     logging.debug(f"test ffmpeg path error: {error}")
 
@@ -1124,7 +1114,7 @@ def ffprobe_media_analysis(ffmpeg_bin: str, file_name: str) -> dict:
     try:
         hasVideo = False
         hasAudio = False
-        '''bitrate = None'''
+        """bitrate = None"""
         video_bitrate = None
         audio_bitrate = []
         resolution = None
@@ -1192,6 +1182,16 @@ def ffprobe_media_analysis(ffmpeg_bin: str, file_name: str) -> dict:
         if video_bitrate is None and all_bitrate is not None:
             video_bitrate = all_bitrate - sum(audio_bitrate)
 
+        # extract format long name
+        format_long_name = video_param["format"]["format_long_name"] if "format_long_name" in video_param["format"] else cfg.NA
+
+        # extract creation time ("creation_time": "2023-03-22T16:50:32.000000Z")
+        creation_time = cfg.NA
+        if "tags" in video_param["format"] and "creation_time" in video_param["format"]["tags"]:
+            creation_time = video_param["format"]["tags"]["creation_time"].replace("T", " ")
+            if "." in creation_time:
+                creation_time = creation_time.split(".")[0]
+
         return {
             "analysis_program": "ffprobe",
             "frames_number": frames_number,
@@ -1206,6 +1206,8 @@ def ffprobe_media_analysis(ffmpeg_bin: str, file_name: str) -> dict:
             "file size": size,
             "audio_codec": audio_codec,
             "video_codec": video_codec,
+            "creation_time": creation_time,
+            "format_long_name": format_long_name,
         }
 
     except Exception as e:
@@ -1232,9 +1234,7 @@ def accurate_media_analysis(ffmpeg_bin: str, file_name: str) -> dict:
         return ffprobe_results
     else:
         # use ffmpeg
-        command = (
-            f'"{ffmpeg_bin}" -hide_banner -i "{file_name}" > {"NUL" if sys.platform.startswith("win") else "/dev/null"}'
-        )
+        command = f'"{ffmpeg_bin}" -hide_banner -i "{file_name}" > {"NUL" if sys.platform.startswith("win") else "/dev/null"}'
 
         p = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
 
@@ -1405,29 +1405,11 @@ def intersection(A, B, C, D):
             ym = slope * xm + intersept
         else:
             xm = (
-                (
-                    xd * xa * yc
-                    - xd * xb * yc
-                    - xd * xa * yb
-                    - xc * xa * yd
-                    + xc * xa * yb
-                    + xd * ya * xb
-                    + xc * xb * yd
-                    - xc * ya * xb
-                )
+                (xd * xa * yc - xd * xb * yc - xd * xa * yb - xc * xa * yd + xc * xa * yb + xd * ya * xb + xc * xb * yd - xc * ya * xb)
                 / (-yb * xd + yb * xc + ya * xd - ya * xc + xb * yd - xb * yc - xa * yd + xa * yc)
             ).quantize(dec(".001"), rounding=ROUND_DOWN)
             ym = (
-                (
-                    yb * xc * yd
-                    - yb * yc * xd
-                    - ya * xc * yd
-                    + ya * yc * xd
-                    - xa * yb * yd
-                    + xa * yb * yc
-                    + ya * xb * yd
-                    - ya * xb * yc
-                )
+                (yb * xc * yd - yb * yc * xd - ya * xc * yd + ya * yc * xd - xa * yb * yd + xa * yb * yc + ya * xb * yd - ya * xb * yc)
                 / (-yb * xd + yb * xc + ya * xd - ya * xc + xb * yd - xb * yc - xa * yd + xa * yc)
             ).quantize(dec(".001"), rounding=ROUND_DOWN)
 
@@ -1436,16 +1418,7 @@ def intersection(A, B, C, D):
         ymin1, ymax1 = min(ya, yb), max(ya, yb)
         ymin2, ymax2 = min(yc, yd), max(yc, yd)
 
-        return (
-            xm >= xmin1
-            and xm <= xmax1
-            and xm >= xmin2
-            and xm <= xmax2
-            and ym >= ymin1
-            and ym <= ymax1
-            and ym >= ymin2
-            and ym <= ymax2
-        )
+        return xm >= xmin1 and xm <= xmax1 and xm >= xmin2 and xm <= xmax2 and ym >= ymin1 and ym <= ymax1 and ym >= ymin2 and ym <= ymax2
 
     except Exception:  # for cases xa=xb=xc=xd
         return True

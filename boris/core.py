@@ -191,6 +191,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
     current_player: int = 0  # id of the selected (left click) video player
 
+    mem_media_name: str = ""  # record current media name. Use to check if media changed
     saved_state = None
     user_move_slider: bool = False
     observationId: str = ""  # current observation id
@@ -3770,19 +3771,58 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             current_media_name = pl.Path(self.dw_player[0].player.playlist[self.dw_player[0].player.playlist_pos]["filename"]).name
         else:
             current_media_name = ""
+
+        if (
+            self.pj[cfg.OBSERVATIONS][self.observationId][cfg.CLOSE_BEHAVIORS_BETWEEN_VIDEOS]
+            and self.mem_media_name != ""
+            and current_media_name != self.mem_media_name
+        ):
+            print("media changed")
+
+            print(f"{currentTimeOffset=}")
+
+            flag_states_ok, msg = project_functions.check_state_events_obs(
+                self.observationId, self.pj[cfg.ETHOGRAM], self.pj[cfg.OBSERVATIONS][self.observationId]
+            )
+            if not flag_states_ok:
+                self.pause_video()
+
+                print("state events not paired")
+
+                events = [event for event in self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS] if event[0] <= currentTimeOffset]
+
+                print(f"events to check: {events}")
+
+                events_to_add = project_functions.fix_unpaired_state_events2(self.pj[cfg.ETHOGRAM], events, currentTimeOffset)
+
+                print(f"{events_to_add=}")
+
+                print(f"{self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS]=}")
+
+                if events_to_add:
+                    self.statusbar.showMessage("The media changed. Some ongoing state events were stopped automatically", 0)
+
+                    self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS].extend(events_to_add)
+                    self.project_changed()
+                    self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS].sort()
+
+                    self.load_tw_events(self.observationId)
+                    """
+                    item = self.twEvents.item(
+                        [i for i, t in enumerate(self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS]) if t[0] == currentTimeOffset][
+                            0
+                        ],
+                        0,
+                    )
+                    self.twEvents.scrollToItem(item)
+                    """
+
+        self.mem_media_name = current_media_name
         playlist_length = len(self.dw_player[0].player.playlist)
 
         # update observation info
         msg = ""
         if self.dw_player[0].player.time_pos is not None:  # check if video
-            """
-            current_media_frame = (
-                (round(value * self.dw_player[0].player.container_fps) + 1)
-                if self.dw_player[0].player.container_fps is not None
-                else "NA"
-            )
-            """
-
             msg = f"Current media name: <b>{current_media_name}</b> (#{self.dw_player[0].player.playlist_pos + 1} / {playlist_length})<br>"
 
             msg += (

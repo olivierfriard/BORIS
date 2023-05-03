@@ -804,9 +804,10 @@ def new_observation(self, mode=cfg.NEW, obsId=""):
                 )
             )
 
-        # disabled due to problem when video goes back
-        # if CLOSE_BEHAVIORS_BETWEEN_VIDEOS in self.pj[OBSERVATIONS][obsId]:
-        #    observationWindow.cbCloseCurrentBehaviorsBetweenVideo.setChecked(self.pj[OBSERVATIONS][obsId][CLOSE_BEHAVIORS_BETWEEN_VIDEOS])
+        if cfg.CLOSE_BEHAVIORS_BETWEEN_VIDEOS in self.pj[cfg.OBSERVATIONS][obsId]:
+            observationWindow.cbCloseCurrentBehaviorsBetweenVideo.setChecked(
+                self.pj[cfg.OBSERVATIONS][obsId][cfg.CLOSE_BEHAVIORS_BETWEEN_VIDEOS]
+            )
 
     rv = observationWindow.exec_()
 
@@ -911,10 +912,9 @@ def new_observation(self, mode=cfg.NEW, obsId=""):
                         ] = observationWindow.tw_data_files.item(row, idx2).text()
 
         # Close current behaviors between video
-        # disabled due to problem when video goes back
-        # self.pj[OBSERVATIONS][new_obs_id][CLOSE_BEHAVIORS_BETWEEN_VIDEOS] =
-        # observationWindow.cbCloseCurrentBehaviorsBetweenVideo.isChecked()
-        self.pj[cfg.OBSERVATIONS][new_obs_id][cfg.CLOSE_BEHAVIORS_BETWEEN_VIDEOS] = False
+        self.pj[cfg.OBSERVATIONS][new_obs_id][
+            cfg.CLOSE_BEHAVIORS_BETWEEN_VIDEOS
+        ] = observationWindow.cbCloseCurrentBehaviorsBetweenVideo.isChecked()
 
         if self.pj[cfg.OBSERVATIONS][new_obs_id][cfg.TYPE] == cfg.LIVE:
             self.pj[cfg.OBSERVATIONS][new_obs_id][cfg.SCAN_SAMPLING_TIME] = observationWindow.sbScanSampling.value()
@@ -1051,7 +1051,6 @@ def close_observation(self):
     self.saved_state = self.saveState()
 
     if self.playerType == cfg.MEDIA:
-
         self.media_scan_sampling_mem = []
         logging.info(f"Stop plot timer")
         self.plot_timer.stop()

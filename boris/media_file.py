@@ -20,7 +20,6 @@ This file is part of BORIS.
 
 """
 
-import logging
 
 from . import config as cfg
 from . import utilities as util
@@ -35,8 +34,9 @@ def get_info(self) -> None:
     """
 
     def media_analysis_str(ffmpeg_bin, media_full_path):
-
         r = util.accurate_media_analysis(ffmpeg_bin, media_full_path)
+
+        print(r)
 
         if "error" in r:
             ffmpeg_output = f"File path: {media_full_path}<br><br>{r['error']}<br><br>"
@@ -46,6 +46,8 @@ def get_info(self) -> None:
             ffmpeg_output += (
                 f"File path: <b>{media_full_path}</b><br><br>"
                 f"Duration: {r['duration']} seconds ({util.convertTime(self.timeFormat, r['duration'])})<br>"
+                f"Format long name: {r.get('format_long_name', cfg.NA)}<br>"
+                f"Creation time: {r.get('creation_time', cfg.NA)}<br>"
                 f"Resolution: {r['resolution']}<br>"
                 f"Number of frames: {r['frames_number']}<br>"
                 f"Bitrate: {util.smart_size_format(r['bitrate'])}   <br>"
@@ -60,7 +62,6 @@ def get_info(self) -> None:
         return ffmpeg_output
 
     if self.observationId and self.playerType == cfg.MEDIA:
-
         tot_output: str = ""
 
         for i, dw in enumerate(self.dw_player):
@@ -79,7 +80,7 @@ def get_info(self) -> None:
                 # "Track: {}/{}<br>"
                 f"Number of media in media list: {dw.player.playlist_count}<br>"
                 f"Current time position: {dw.player.time_pos}<br>"
-                f"duration: {dw.player.duration}<br>"
+                f"Duration: {dw.player.duration}<br>"
                 # "Position: {} %<br>"
                 f"FPS: {dw.player.container_fps}<br>"
                 # "Rate: {}<br>"
@@ -101,7 +102,6 @@ def get_info(self) -> None:
             tot_output += mpv_output + ffmpeg_output + "<br><hr>"
 
     else:  # no open observation
-
         fn = QFileDialog().getOpenFileNames(self, "Select a media file", "", "Media files (*)")
         file_paths = fn[0] if type(fn) is tuple else fn
         if not file_paths:

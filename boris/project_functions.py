@@ -98,7 +98,6 @@ def check_observation_exhaustivity(
 
     total_duration = 0
     for subject in events_interval:
-
         tot_behav_for_subject = I.empty()
         for behav in events_interval[subject]:
             tot_behav_for_subject |= events_interval[subject][behav]
@@ -291,7 +290,6 @@ def check_state_events_obs(obsId: str, ethogram: dict, observation: dict, time_f
     ethogram_behaviors = {ethogram[idx][cfg.BEHAVIOR_CODE] for idx in ethogram}
 
     for subject in sorted(set(subjects)):
-
         behaviors = [
             event[cfg.EVENT_BEHAVIOR_FIELD_IDX] for event in observation[cfg.EVENTS] if event[cfg.EVENT_SUBJECT_FIELD_IDX] == subject
         ]
@@ -309,7 +307,6 @@ def check_state_events_obs(obsId: str, ethogram: dict, observation: dict, time_f
                         for event in observation[cfg.EVENTS]
                         if event[cfg.EVENT_BEHAVIOR_FIELD_IDX] == behavior and event[cfg.EVENT_SUBJECT_FIELD_IDX] == subject
                     ]:
-
                         behav_modif = [
                             event[cfg.EVENT_BEHAVIOR_FIELD_IDX],
                             event[cfg.EVENT_MODIFIER_FIELD_IDX],
@@ -445,7 +442,6 @@ def check_project_integrity(
 
     # check if media length available
     for obs_id in pj[cfg.OBSERVATIONS]:
-
         # TODO: add images observations
         if pj[cfg.OBSERVATIONS][obs_id][cfg.TYPE] in [cfg.LIVE]:
             continue
@@ -509,7 +505,6 @@ def check_project_integrity(
         for var_label in pj[cfg.OBSERVATIONS][obs_id][cfg.INDEPENDENT_VARIABLES]:
             if var_label in defined_set_var_label:
                 if pj[cfg.OBSERVATIONS][obs_id][cfg.INDEPENDENT_VARIABLES][var_label] not in defined_set_var_label[var_label].split(","):
-
                     out += (
                         f"{obs_id}: the <b>{pj[cfg.OBSERVATIONS][obs_id][cfg.INDEPENDENT_VARIABLES][var_label]}</b> value "
                         f" is not allowed for {var_label} (choose between {defined_set_var_label[var_label]})<br>"
@@ -657,7 +652,6 @@ def create_subtitles(pj: dict, selected_observations: list, parameters: dict, ex
                 msg += f"observation: {obs_id}\ngave the following error:\n{str(sys.exc_info()[1])}\n"
 
         if pj[cfg.OBSERVATIONS][obs_id][cfg.TYPE] == cfg.MEDIA:
-
             for nplayer in cfg.ALL_PLAYERS:
                 if not pj[cfg.OBSERVATIONS][obs_id][cfg.FILE][nplayer]:
                     continue
@@ -695,7 +689,6 @@ def create_subtitles(pj: dict, selected_observations: list, parameters: dict, ex
                         )
 
                     else:  # arbitrary 'time interval'
-
                         cursor.execute(
                             (
                                 "SELECT subject, behavior, type, start, stop, modifiers FROM aggregated_events "
@@ -799,7 +792,6 @@ def export_observations_list(pj: dict, selected_observations: list, file_name: s
     data.headers.extend(indep_var_header)
 
     for obs_id in selected_observations:
-
         subjects_list = sorted(list(set([x[cfg.EVENT_SUBJECT_FIELD_IDX] for x in pj[cfg.OBSERVATIONS][obs_id][cfg.EVENTS]])))
         if "" in subjects_list:
             subjects_list = [cfg.NO_FOCAL_SUBJECT] + subjects_list
@@ -871,7 +863,6 @@ def set_media_paths_relative_to_project_dir(pj: dict, project_file_name: str) ->
                     pl.Path(img_dir).relative_to(pl.Path(project_file_name).parent)
                 except ValueError:
                     if pl.Path(img_dir).is_absolute() or not (pl.Path(project_file_name).parent / pl.Path(img_dir)).is_dir():
-
                         QMessageBox.critical(
                             None,
                             cfg.programName,
@@ -886,9 +877,7 @@ def set_media_paths_relative_to_project_dir(pj: dict, project_file_name: str) ->
                         try:
                             pl.Path(media_file).relative_to(pl.Path(project_file_name).parent)
                         except ValueError:
-
                             if pl.Path(media_file).is_absolute() or not (pl.Path(project_file_name).parent / pl.Path(media_file)).is_file():
-
                                 QMessageBox.critical(
                                     None,
                                     cfg.programName,
@@ -902,7 +891,6 @@ def set_media_paths_relative_to_project_dir(pj: dict, project_file_name: str) ->
     # set media path and image dir relative to project dir
     flag_changed = False
     for obs_id in pj[cfg.OBSERVATIONS]:
-
         if pj[cfg.OBSERVATIONS][obs_id][cfg.TYPE] == cfg.IMAGES:
             new_dir_list = []
             for img_dir in pj[cfg.OBSERVATIONS][obs_id][cfg.DIRECTORIES_LIST]:
@@ -987,7 +975,6 @@ def set_data_paths_relative_to_project_dir(pj: dict, project_file_name: str) -> 
 
     flag_changed = False
     for obs_id in pj[cfg.OBSERVATIONS]:
-
         if pj[cfg.OBSERVATIONS][obs_id][cfg.TYPE] != cfg.MEDIA:
             continue
         for idx, v in pj[cfg.OBSERVATIONS][obs_id].get(cfg.PLOT_DATA, {}).items():
@@ -1021,7 +1008,6 @@ def remove_data_files_path(pj: dict) -> None:
     """
 
     for obs_id in pj[cfg.OBSERVATIONS]:
-
         if pj[cfg.OBSERVATIONS][obs_id][cfg.TYPE] != cfg.MEDIA:
             continue
         if cfg.PLOT_DATA in pj[cfg.OBSERVATIONS][obs_id]:
@@ -1047,7 +1033,6 @@ def remove_media_files_path(pj: dict, project_file_name: str) -> bool:
     file_not_found = []
     # check if media and images dir
     for obs_id in pj[cfg.OBSERVATIONS]:
-
         if pj[cfg.OBSERVATIONS][obs_id][cfg.TYPE] == cfg.IMAGES:
             for img_dir in pj[cfg.OBSERVATIONS][obs_id][cfg.DIRECTORIES_LIST]:
                 if full_path(pl.Path(img_dir).name, project_file_name) == "":
@@ -1078,7 +1063,6 @@ def remove_media_files_path(pj: dict, project_file_name: str) -> bool:
 
     flag_changed = False
     for obs_id in pj[cfg.OBSERVATIONS]:
-
         if pj[cfg.OBSERVATIONS][obs_id][cfg.TYPE] == cfg.IMAGES:
             new_img_dir_list = []
             for img_dir in pj[cfg.OBSERVATIONS][obs_id][cfg.DIRECTORIES_LIST]:
@@ -1179,7 +1163,6 @@ def events_start_stop(ethogram: dict, events: list, obs_type: str) -> List[tuple
 
     events_flagged: list = []
     for idx, event in enumerate(events):
-
         _, subject, code, modifier = event[: cfg.EVENT_MODIFIER_FIELD_IDX + 1]
 
         # check if code is state
@@ -1333,13 +1316,11 @@ def open_project_json(projectFileName: str) -> tuple:
 
     # check if old version  v. 0 *.obs
     if cfg.PROJECT_VERSION not in pj:
-
         # convert VIDEO, AUDIO -> MEDIA
         pj[cfg.PROJECT_VERSION] = cfg.project_format_version
         projectChanged = True
 
         for obs in [x for x in pj[cfg.OBSERVATIONS]]:
-
             # remove 'replace audio' key
             if "replace audio" in pj[cfg.OBSERVATIONS][obs]:
                 del pj[cfg.OBSERVATIONS][obs]["replace audio"]
@@ -1483,7 +1464,6 @@ def open_project_json(projectFileName: str) -> tuple:
             projectChanged = True
 
     if project_lowerthan7:
-
         msg = f"The project was updated to the current project version ({cfg.project_format_version})."
 
         try:
@@ -1521,7 +1501,6 @@ def fix_unpaired_state_events(ethogram: dict, observation: dict, fix_at_time: de
     fix unpaired state events in observation
 
     Args:
-        obsId (str): observation id
         ethogram (dict): ethogram dictionary
         observation (dict): observation dictionary
         fix_at_time (Decimal): time to fix the unpaired events
@@ -1530,26 +1509,23 @@ def fix_unpaired_state_events(ethogram: dict, observation: dict, fix_at_time: de
         list: list of events with state events fixed
     """
 
-    closing_events_to_add = []
-    subjects = [event[cfg.EVENT_SUBJECT_FIELD_IDX] for event in observation[cfg.EVENTS]]
-    ethogram_behaviors = {ethogram[idx][cfg.BEHAVIOR_CODE] for idx in ethogram}
+    closing_events_to_add: list = []
+    subjects: list = [event[cfg.EVENT_SUBJECT_FIELD_IDX] for event in observation[cfg.EVENTS]]
+    ethogram_behaviors: dict = {ethogram[idx][cfg.BEHAVIOR_CODE] for idx in ethogram}
 
     for subject in sorted(set(subjects)):
-
-        behaviors = [
+        behaviors: list = [
             event[cfg.EVENT_BEHAVIOR_FIELD_IDX] for event in observation[cfg.EVENTS] if event[cfg.EVENT_SUBJECT_FIELD_IDX] == subject
         ]
 
         for behavior in sorted(set(behaviors)):
             if (behavior in ethogram_behaviors) and (cfg.STATE in event_type(behavior, ethogram).upper()):
-
                 lst, memTime = [], {}
                 for event in [
                     event
                     for event in observation[cfg.EVENTS]
                     if event[cfg.EVENT_BEHAVIOR_FIELD_IDX] == behavior and event[cfg.EVENT_SUBJECT_FIELD_IDX] == subject
                 ]:
-
                     behav_modif = [
                         event[cfg.EVENT_BEHAVIOR_FIELD_IDX],
                         event[cfg.EVENT_MODIFIER_FIELD_IDX],
@@ -1563,7 +1539,6 @@ def fix_unpaired_state_events(ethogram: dict, observation: dict, fix_at_time: de
                         memTime[str(behav_modif)] = event[cfg.EVENT_TIME_FIELD_IDX]
 
                 for event in lst:
-
                     last_event_time = max([fix_at_time] + [x[0] for x in closing_events_to_add])
 
                     closing_events_to_add.append(
@@ -1571,9 +1546,68 @@ def fix_unpaired_state_events(ethogram: dict, observation: dict, fix_at_time: de
                             last_event_time + dec("0.001"),
                             subject,
                             behavior,
-                            event[1],
-                            "",
-                        ]  # modifiers  # comment
+                            event[1],  # modifiers
+                            "Event automatically added by the fix unpaired state events function",
+                            cfg.NA,  # frame index
+                        ]
+                    )
+
+    return closing_events_to_add
+
+
+def fix_unpaired_state_events2(ethogram: dict, events: list, fix_at_time: dec) -> list:
+    """
+    fix unpaired state events in observation
+
+    Args:
+        ethogram (dict): ethogram dictionary
+        observation (dict): observation dictionary
+        fix_at_time (Decimal): time to fix the unpaired events
+
+    Returns:
+        list: list of events with state events fixed
+    """
+
+    closing_events_to_add: list = []
+    subjects: list = [event[cfg.EVENT_SUBJECT_FIELD_IDX] for event in events]
+    ethogram_behaviors: dict = {ethogram[idx][cfg.BEHAVIOR_CODE] for idx in ethogram}
+
+    for subject in sorted(set(subjects)):
+        behaviors: list = [event[cfg.EVENT_BEHAVIOR_FIELD_IDX] for event in events if event[cfg.EVENT_SUBJECT_FIELD_IDX] == subject]
+
+        for behavior in sorted(set(behaviors)):
+            if (behavior in ethogram_behaviors) and (cfg.STATE in event_type(behavior, ethogram).upper()):
+                lst, memTime = [], {}
+                for event in [
+                    event
+                    for event in events
+                    if event[cfg.EVENT_BEHAVIOR_FIELD_IDX] == behavior and event[cfg.EVENT_SUBJECT_FIELD_IDX] == subject
+                ]:
+                    behav_modif = [
+                        event[cfg.EVENT_BEHAVIOR_FIELD_IDX],
+                        event[cfg.EVENT_MODIFIER_FIELD_IDX],
+                    ]
+
+                    if behav_modif in lst:
+                        lst.remove(behav_modif)
+                        del memTime[str(behav_modif)]
+                    else:
+                        lst.append(behav_modif)
+                        memTime[str(behav_modif)] = event[cfg.EVENT_TIME_FIELD_IDX]
+
+                for event in lst:
+                    last_event_time = max([fix_at_time] + [x[0] for x in closing_events_to_add])
+
+                    closing_events_to_add.append(
+                        [
+                            # last_event_time + dec("0.001"),
+                            last_event_time,
+                            subject,
+                            behavior,
+                            event[1],  # modifiers
+                            "Event automatically added by the fix unpaired state events function",
+                            cfg.NA,  # frame index
+                        ]
                     )
 
     return closing_events_to_add

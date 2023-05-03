@@ -412,6 +412,9 @@
            </item>
            <item>
             <widget class="QCheckBox" name="cbCloseCurrentBehaviorsBetweenVideo">
+             <property name="enabled">
+              <bool>true</bool>
+             </property>
              <property name="text">
               <string>Stop ongoing state events between successive media files</string>
              </property>
