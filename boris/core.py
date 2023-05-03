@@ -408,6 +408,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             w.setFont(font)
         self.lbFocalSubject.setText(cfg.NO_FOCAL_SUBJECT)
 
+        # statusbat font
+        self.statusBar().setFont(font)
+
         # observation time interval
         self.lb_obs_time_interval = QLabel()
         self.lb_obs_time_interval.setFrameStyle(QFrame.StyledPanel)
