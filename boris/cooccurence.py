@@ -158,8 +158,11 @@ def get_cooccurence(self):
 
     cooocurence_results: dict = {}
 
-    out = ""
     for obs_id in selected_observations:
+
+        print()
+        print(obs_id)
+
         for subject in parameters[cfg.SELECTED_SUBJECTS]:
             if subject == "No focal subject":
                 subj = ""
@@ -170,25 +173,47 @@ def get_cooccurence(self):
                 cooocurence_results[subject] = {}
 
             # out += f"Subject <b>{subject}</b><br><br>"
+            print()
+            print(subject)
 
             for n_combinations in range(2, len(parameters[cfg.SELECTED_BEHAVIORS]) + 1):
+                union = I.empty()
+
                 print(f"{n_combinations=}")
+
                 for combination in itertools.combinations(parameters[cfg.SELECTED_BEHAVIORS], n_combinations):
                     print(f"{combination=}")
-                    # init
-                    if combination[0] in events_interval[obs_id][subj]:
-                        union = events_interval[obs_id][subj][combination[0]]
+                    if subj in events_interval[obs_id]:
+                        # init
+                        if combination[0] in events_interval[obs_id][subj]:
+                            union = events_interval[obs_id][subj][combination[0]]
+                        else:
+                            union = I.empty()
+
+                        print(f"{combination[0]=} {union=}")
+
+                        for combination2 in combination[1:]:
+                            if combination2 in events_interval[obs_id][subj]:
+                                inter2 = events_interval[obs_id][subj][combination2]
+                            else:
+                                inter2 = I.empty()
+
+                            print(f"{combination2=} {inter2=}")
+
+                            union &= inter2
+
+                        if combination not in cooocurence_results[subject]:
+                            cooocurence_results[subject][combination] = 0
+
+                        print(f"{combination=} {union=}")
+                        cooocurence_results[subject][combination] += interval_len(union)
                     else:
-                        union = I.empty()
-                        continue
-                    for combination2 in combination[1:]:
-                        if combination2 in events_interval[obs_id][subj]:
-                            union &= events_interval[obs_id][subj][combination2]
+                        if combination not in cooocurence_results[subject]:
+                            cooocurence_results[subject][combination] = 0
+                        cooocurence_results[subject][combination] += 0
 
-                    if combination not in cooocurence_results[subject]:
-                        cooocurence_results[subject][combination] = 0
-
-                    cooocurence_results[subject][combination] += interval_len(union)
+                    print()
+                    print(f"{cooocurence_results[subject][combination]=}")
 
                     # duration = f"<b>{interval_len(union)}</b>" if interval_len(union) else "0"
                     # out += f"<b>{'</b> and <b>'.join(combination)}</b>: {duration} s<br>"
@@ -201,8 +226,9 @@ def get_cooccurence(self):
 
     print(cooocurence_results)
 
+    out = "<b>Co-occurence of behaviors</b><br><br>"
     for subject in parameters[cfg.SELECTED_SUBJECTS]:
-        out += f"Subject <b>{subject}</b><br><br>"
+        out += f"<br>Subject <b>{subject}</b><br><br>"
         for combination in cooocurence_results[subject]:
             out += f"<b>{'</b> and <b>'.join(combination)}</b>: {cooocurence_results[subject][combination]} s<br>"
 
