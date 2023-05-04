@@ -27,7 +27,6 @@ import traceback
 import platform
 import datetime as dt
 import subprocess
-from decimal import Decimal as dec
 
 from PyQt5.QtCore import Qt, pyqtSignal, QT_VERSION_STR, PYQT_VERSION_STR
 from PyQt5.QtWidgets import (
@@ -94,7 +93,7 @@ def error_message_box(task, error_type, error_file_name, error_lineno):
                                                  "Thank you for your collaboration!"))
 '''
 
-
+'''
 def error_message_box(error_traceback):
     # do NOT use this function directly, use error_message function
     """
@@ -127,6 +126,7 @@ def error_message() -> None:
 
     logging.critical(error_traceback)
     error_message_box(error_traceback)
+'''
 
 
 def global_error_message(exception_type, exception_value, traceback_object):
@@ -151,8 +151,19 @@ def global_error_message(exception_type, exception_value, traceback_object):
     if sys.platform.startswith("linux"):
         systeminfo = subprocess.getoutput("cat /etc/*rel*; uname -a")
 
+    # write to stdout
     logging.critical(error_text)
+    logging.critical("System info:")
     logging.critical(systeminfo)
+
+    # write to $HOME/boris_error.log
+    try:
+        with open(pl.Path.home() / "boris_error.log", "w") as f_error:
+            f_error.write(error_text)
+            f_error.write("\nSystem info:\n")
+            f_error.write(systeminfo + "\n")
+    except Exception:
+        logging.critical(f"Impossible to write to {pl.Path.home() / 'boris_error.log'}")
 
     # copy to clipboard
     cb = QApplication.clipboard()
@@ -187,15 +198,6 @@ def global_error_message(exception_type, exception_value, traceback_object):
     errorbox.ptText.appendHtml(text)
 
     errorbox.ptText.moveCursor(QTextCursor.Start)
-
-    """
-    errorbox = QMessageBox()
-    errorbox.setWindowTitle("BORIS error occured")
-    errorbox.setText(text)
-    errorbox.setTextFormat(Qt.RichText)
-    errorbox.setStandardButtons(QMessageBox.Abort)
-    _ = errorbox.addButton("Ignore and try to continue", QMessageBox.RejectRole)
-    """
 
     ret = errorbox.exec_()
 
@@ -365,7 +367,7 @@ class Input_dialog(QDialog):
                 # 3 - maximum value
                 # 4 - step
                 # 5 - initial value
-                # 6 - number of decimas
+                # 6 - number of decimals
 
                 lb = QLabel(element[1])
                 hbox.addWidget(lb)
@@ -384,9 +386,7 @@ class Input_dialog(QDialog):
                 self.elements[element[1]] = QComboBox()
                 self.elements[element[1]].addItems([x[0] for x in element[2]])  # take first element of tuple
                 try:
-                    self.elements[element[1]].setCurrentIndex(
-                        [idx for idx, x in enumerate(element[2]) if x[1] == "selected"][0]
-                    )
+                    self.elements[element[1]].setCurrentIndex([idx for idx, x in enumerate(element[2]) if x[1] == "selected"][0])
                 except:
                     self.elements[element[1]].setCurrentIndex(0)
                 hbox.addWidget(self.elements[element[1]])

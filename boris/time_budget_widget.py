@@ -146,7 +146,7 @@ class timeBudgetResults(QWidget):
 
         logging.debug("save time budget results to file")
 
-        file_formats = [cfg.TSV, cfg.CSV, cfg.ODS, cfg.XLSX, cfg.XLS, cfg.HTML, cfg.PANDAS_DF, cfg.RDS]
+        file_formats = (cfg.TSV, cfg.CSV, cfg.ODS, cfg.XLSX, cfg.XLS, cfg.HTML, cfg.TEXT_FILE, cfg.PANDAS_DF, cfg.RDS)
 
         file_name, filter_ = QFileDialog().getSaveFileName(
             self, "Save Time budget analysis", "", ";;".join(file_formats)
@@ -157,7 +157,10 @@ class timeBudgetResults(QWidget):
 
         # add correct file extension if not present
         if pl.Path(file_name).suffix != f".{cfg.FILE_NAME_SUFFIX[filter_]}":
-            file_name = str(pl.Path(file_name)) + "." + cfg.FILE_NAME_SUFFIX[filter_]
+            if cfg.FILE_NAME_SUFFIX[filter_] != "cli":
+                file_name = str(pl.Path(file_name)) + "." + cfg.FILE_NAME_SUFFIX[filter_]
+            else:
+                file_name = str(pl.Path(file_name))
             # check if file with new extension already exists
             if pl.Path(file_name).is_file():
                 if (
@@ -376,7 +379,7 @@ class timeBudgetResults(QWidget):
 
         # write results
         with open(file_name, "wb") as f:
-            if filter_ in (cfg.TSV, cfg.CSV, cfg.HTML):
+            if filter_ in (cfg.TSV, cfg.CSV, cfg.HTML, cfg.TEXT_FILE):
                 f.write(str.encode(data.export(cfg.FILE_NAME_SUFFIX[filter_])))
             if filter_ in (cfg.ODS, cfg.XLSX, cfg.XLS):
                 f.write(data.export(cfg.FILE_NAME_SUFFIX[filter_]))

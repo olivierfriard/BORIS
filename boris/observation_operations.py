@@ -78,9 +78,7 @@ def export_observations_list_clicked(self):
         cfg.HTML,
     ]
 
-    file_name, filter_ = QFileDialog().getSaveFileName(
-        self, "Export list of selected observations", "", ";;".join(file_formats)
-    )
+    file_name, filter_ = QFileDialog().getSaveFileName(self, "Export list of selected observations", "", ";;".join(file_formats))
 
     if not file_name:
         return
@@ -90,12 +88,7 @@ def export_observations_list_clicked(self):
         file_name = str(pl.Path(file_name)) + "." + output_format
         # check if file name with extension already exists
         if pl.Path(file_name).is_file():
-            if (
-                dialog.MessageDialog(
-                    cfg.programName, f"The file {file_name} already exists.", [cfg.CANCEL, cfg.OVERWRITE]
-                )
-                == cfg.CANCEL
-            ):
+            if dialog.MessageDialog(cfg.programName, f"The file {file_name} already exists.", [cfg.CANCEL, cfg.OVERWRITE]) == cfg.CANCEL:
                 return
 
     if not project_functions.export_observations_list(self.pj, selected_observations, file_name, output_format):
@@ -118,7 +111,6 @@ def observations_list(self):
         return
 
     if self.observationId:
-
         self.hide_data_files()
         response = dialog.MessageDialog(
             cfg.programName, "The current observation will be closed. Do you want to continue?", (cfg.YES, cfg.NO)
@@ -163,7 +155,6 @@ def open_observation(self, mode: str) -> str:
 
     # check if current observation must be closed to open a new one
     if self.observationId:
-
         self.hide_data_files()
         response = dialog.MessageDialog(
             cfg.programName, "The current observation will be closed. Do you want to continue?", (cfg.YES, cfg.NO)
@@ -206,7 +197,6 @@ def load_observation(self, obs_id: str, mode: str = cfg.OBS_START) -> str:
     self.observationId = obs_id
 
     if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE] == cfg.IMAGES:
-
         self.image_idx = 0
         self.images_list = []
 
@@ -219,7 +209,6 @@ def load_observation(self, obs_id: str, mode: str = cfg.OBS_START) -> str:
             self.dwEvents.setVisible(True)
 
     if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE] == cfg.LIVE:
-
         if mode == cfg.OBS_START:
             initialize_new_live_observation(self)
 
@@ -228,7 +217,6 @@ def load_observation(self, obs_id: str, mode: str = cfg.OBS_START) -> str:
             self.dwEvents.setVisible(True)
 
     if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE] == cfg.MEDIA:
-
         if mode == cfg.OBS_START:
             if not initialize_new_media_observation(self):
                 self.observationId = ""
@@ -260,9 +248,7 @@ def edit_observation(self):
         # hide data plot
         self.hide_data_files()
         if (
-            dialog.MessageDialog(
-                cfg.programName, "The current observation will be closed. Do you want to continue?", (cfg.YES, cfg.NO)
-            )
+            dialog.MessageDialog(cfg.programName, "The current observation will be closed. Do you want to continue?", (cfg.YES, cfg.NO))
             == cfg.NO
         ):
             # restore plots
@@ -271,9 +257,7 @@ def edit_observation(self):
         else:
             close_observation(self)
 
-    _, selected_observations = select_observations.select_observations2(
-        self, cfg.EDIT, windows_title="Edit observation"
-    )
+    _, selected_observations = select_observations.select_observations2(self, cfg.EDIT, windows_title="Edit observation")
 
     if selected_observations:
         new_observation(self, mode=cfg.EDIT, obsId=selected_observations[0])
@@ -284,9 +268,7 @@ def remove_observations(self):
     remove observations from project file
     """
 
-    _, selected_observations = select_observations.select_observations2(
-        self, cfg.MULTIPLE, windows_title="Remove observations"
-    )
+    _, selected_observations = select_observations.select_observations2(self, cfg.MULTIPLE, windows_title="Remove observations")
     if not selected_observations:
         return
 
@@ -329,11 +311,7 @@ def coding_time(observations: dict, observations_list: list) -> Tuple[Optional[d
         observation = observations[obs_id]
         if observation[cfg.EVENTS]:
             # check if events contain a NA timestamp
-            if [
-                event[cfg.EVENT_TIME_FIELD_IDX]
-                for event in observation[cfg.EVENTS]
-                if event[cfg.EVENT_TIME_FIELD_IDX].is_nan()
-            ]:
+            if [event[cfg.EVENT_TIME_FIELD_IDX] for event in observation[cfg.EVENTS] if event[cfg.EVENT_TIME_FIELD_IDX].is_nan()]:
                 return dec("NaN"), dec("NaN"), dec("NaN")
             start_coding_list.append(observation[cfg.EVENTS][0][cfg.EVENT_TIME_FIELD_IDX])
             end_coding_list.append(observation[cfg.EVENTS][-1][cfg.EVENT_TIME_FIELD_IDX])
@@ -510,10 +488,7 @@ def observation_length(pj: dict, selected_observations: list) -> tuple:
         if (
             dialog.MessageDialog(
                 cfg.programName,
-                (
-                    f"The observation length is not available (<b>{obs_id}</b>).<br>"
-                    "Use last event time as observation length?"
-                ),
+                (f"The observation length is not available (<b>{obs_id}</b>).<br>" "Use last event time as observation length?"),
                 (cfg.YES, cfg.NO),
             )
             == cfg.YES
@@ -559,12 +534,9 @@ def new_observation(self, mode=cfg.NEW, obsId=""):
         # hide data plot
         self.hide_data_files()
         if (
-            dialog.MessageDialog(
-                cfg.programName, "The current observation will be closed. Do you want to continue?", (cfg.YES, cfg.NO)
-            )
+            dialog.MessageDialog(cfg.programName, "The current observation will be closed. Do you want to continue?", (cfg.YES, cfg.NO))
             == cfg.NO
         ):
-
             # show data plot
             self.show_data_files()
             return
@@ -572,9 +544,7 @@ def new_observation(self, mode=cfg.NEW, obsId=""):
             close_observation(self)
 
     observationWindow = observation.Observation(
-        tmp_dir=self.ffmpeg_cache_dir
-        if (self.ffmpeg_cache_dir and pl.Path(self.ffmpeg_cache_dir).is_dir())
-        else tempfile.gettempdir(),
+        tmp_dir=self.ffmpeg_cache_dir if (self.ffmpeg_cache_dir and pl.Path(self.ffmpeg_cache_dir).is_dir()) else tempfile.gettempdir(),
         project_path=self.projectFileName,
         converters=self.pj.get(cfg.CONVERTERS, {}),
         time_format=self.timeFormat,
@@ -592,10 +562,8 @@ def new_observation(self, mode=cfg.NEW, obsId=""):
 
     # add independent variables
     if cfg.INDEPENDENT_VARIABLES in self.pj:
-
         observationWindow.twIndepVariables.setRowCount(0)
         for i in util.sorted_keys(self.pj[cfg.INDEPENDENT_VARIABLES]):
-
             observationWindow.twIndepVariables.setRowCount(observationWindow.twIndepVariables.rowCount() + 1)
 
             # label
@@ -630,12 +598,8 @@ def new_observation(self, mode=cfg.NEW, obsId=""):
                 comboBox = QComboBox()
                 comboBox.addItems(self.pj[cfg.INDEPENDENT_VARIABLES][i]["possible values"].split(","))
                 if txt in self.pj[cfg.INDEPENDENT_VARIABLES][i]["possible values"].split(","):
-                    comboBox.setCurrentIndex(
-                        self.pj[cfg.INDEPENDENT_VARIABLES][i]["possible values"].split(",").index(txt)
-                    )
-                observationWindow.twIndepVariables.setCellWidget(
-                    observationWindow.twIndepVariables.rowCount() - 1, 2, comboBox
-                )
+                    comboBox.setCurrentIndex(self.pj[cfg.INDEPENDENT_VARIABLES][i]["possible values"].split(",").index(txt))
+                observationWindow.twIndepVariables.setCellWidget(observationWindow.twIndepVariables.rowCount() - 1, 2, comboBox)
 
             elif self.pj[cfg.INDEPENDENT_VARIABLES][i]["type"] == cfg.TIMESTAMP:
                 cal = QDateTimeEdit()
@@ -643,9 +607,7 @@ def new_observation(self, mode=cfg.NEW, obsId=""):
                 cal.setCalendarPopup(True)
                 if txt:
                     cal.setDateTime(QDateTime.fromString(txt, "yyyy-MM-ddThh:mm:ss"))
-                observationWindow.twIndepVariables.setCellWidget(
-                    observationWindow.twIndepVariables.rowCount() - 1, 2, cal
-                )
+                observationWindow.twIndepVariables.setCellWidget(observationWindow.twIndepVariables.rowCount() - 1, 2, cal)
             else:
                 item.setText(txt)
                 observationWindow.twIndepVariables.setItem(observationWindow.twIndepVariables.rowCount() - 1, 2, item)
@@ -659,7 +621,6 @@ def new_observation(self, mode=cfg.NEW, obsId=""):
         observationWindow.obs_time_offset.set_format_hhmmss()
 
     if mode == cfg.EDIT:
-
         observationWindow.setWindowTitle(f'Edit observation "{obsId}"')
         mem_obs_id = obsId
         observationWindow.leObservationId.setText(obsId)
@@ -667,15 +628,11 @@ def new_observation(self, mode=cfg.NEW, obsId=""):
         # check date format for old versions of BORIS app
         try:
             time.strptime(self.pj[cfg.OBSERVATIONS][obsId]["date"], "%Y-%m-%d %H:%M")
-            self.pj[cfg.OBSERVATIONS][obsId]["date"] = (
-                self.pj[cfg.OBSERVATIONS][obsId]["date"].replace(" ", "T") + ":00"
-            )
+            self.pj[cfg.OBSERVATIONS][obsId]["date"] = self.pj[cfg.OBSERVATIONS][obsId]["date"].replace(" ", "T") + ":00"
         except ValueError:
             pass
 
-        observationWindow.dteDate.setDateTime(
-            QDateTime.fromString(self.pj[cfg.OBSERVATIONS][obsId]["date"], "yyyy-MM-ddThh:mm:ss")
-        )
+        observationWindow.dteDate.setDateTime(QDateTime.fromString(self.pj[cfg.OBSERVATIONS][obsId]["date"], "yyyy-MM-ddThh:mm:ss"))
         observationWindow.teDescription.setPlainText(self.pj[cfg.OBSERVATIONS][obsId][cfg.DESCRIPTION])
 
         try:
@@ -701,10 +658,7 @@ def new_observation(self, mode=cfg.NEW, obsId=""):
 
             observationWindow.twVideo1.setRowCount(0)
             for player in self.pj[cfg.OBSERVATIONS][obsId][cfg.FILE]:
-                if (
-                    player in self.pj[cfg.OBSERVATIONS][obsId][cfg.FILE]
-                    and self.pj[cfg.OBSERVATIONS][obsId][cfg.FILE][player]
-                ):
+                if player in self.pj[cfg.OBSERVATIONS][obsId][cfg.FILE] and self.pj[cfg.OBSERVATIONS][obsId][cfg.FILE][player]:
                     for mediaFile in self.pj[cfg.OBSERVATIONS][obsId][cfg.FILE][player]:
                         observationWindow.twVideo1.setRowCount(observationWindow.twVideo1.rowCount() + 1)
 
@@ -718,14 +672,10 @@ def new_observation(self, mode=cfg.NEW, obsId=""):
                             observationWindow.twVideo1.setItem(
                                 observationWindow.twVideo1.rowCount() - 1,
                                 1,
-                                QTableWidgetItem(
-                                    str(self.pj[cfg.OBSERVATIONS][obsId][cfg.MEDIA_INFO]["offset"][player])
-                                ),
+                                QTableWidgetItem(str(self.pj[cfg.OBSERVATIONS][obsId][cfg.MEDIA_INFO]["offset"][player])),
                             )
                         except Exception:
-                            observationWindow.twVideo1.setItem(
-                                observationWindow.twVideo1.rowCount() - 1, 1, QTableWidgetItem("0.0")
-                            )
+                            observationWindow.twVideo1.setItem(observationWindow.twVideo1.rowCount() - 1, 1, QTableWidgetItem("0.0"))
 
                         item = QTableWidgetItem(mediaFile)
                         item.setFlags(Qt.ItemIsEnabled | Qt.ItemIsSelectable)
@@ -734,16 +684,12 @@ def new_observation(self, mode=cfg.NEW, obsId=""):
                         # duration and FPS
                         try:
                             item = QTableWidgetItem(
-                                util.seconds2time(
-                                    self.pj[cfg.OBSERVATIONS][obsId][cfg.MEDIA_INFO][cfg.LENGTH][mediaFile]
-                                )
+                                util.seconds2time(self.pj[cfg.OBSERVATIONS][obsId][cfg.MEDIA_INFO][cfg.LENGTH][mediaFile])
                             )
                             item.setFlags(Qt.ItemIsEnabled | Qt.ItemIsSelectable)
                             observationWindow.twVideo1.setItem(observationWindow.twVideo1.rowCount() - 1, 3, item)
 
-                            item = QTableWidgetItem(
-                                f"{self.pj[cfg.OBSERVATIONS][obsId][cfg.MEDIA_INFO][cfg.FPS][mediaFile]:.2f}"
-                            )
+                            item = QTableWidgetItem(f"{self.pj[cfg.OBSERVATIONS][obsId][cfg.MEDIA_INFO][cfg.FPS][mediaFile]:.2f}")
                             item.setFlags(Qt.ItemIsEnabled | Qt.ItemIsSelectable)
                             observationWindow.twVideo1.setItem(observationWindow.twVideo1.rowCount() - 1, 4, item)
                         except Exception:
@@ -751,15 +697,11 @@ def new_observation(self, mode=cfg.NEW, obsId=""):
 
                         # has_video has_audio
                         try:
-                            item = QTableWidgetItem(
-                                str(self.pj[cfg.OBSERVATIONS][obsId][cfg.MEDIA_INFO][cfg.HAS_VIDEO][mediaFile])
-                            )
+                            item = QTableWidgetItem(str(self.pj[cfg.OBSERVATIONS][obsId][cfg.MEDIA_INFO][cfg.HAS_VIDEO][mediaFile]))
                             item.setFlags(Qt.ItemIsEnabled | Qt.ItemIsSelectable)
                             observationWindow.twVideo1.setItem(observationWindow.twVideo1.rowCount() - 1, 5, item)
 
-                            item = QTableWidgetItem(
-                                str(self.pj[cfg.OBSERVATIONS][obsId][cfg.MEDIA_INFO][cfg.HAS_AUDIO][mediaFile])
-                            )
+                            item = QTableWidgetItem(str(self.pj[cfg.OBSERVATIONS][obsId][cfg.MEDIA_INFO][cfg.HAS_AUDIO][mediaFile]))
                             item.setFlags(Qt.ItemIsEnabled | Qt.ItemIsSelectable)
                             observationWindow.twVideo1.setItem(observationWindow.twVideo1.rowCount() - 1, 6, item)
                         except Exception:
@@ -767,25 +709,18 @@ def new_observation(self, mode=cfg.NEW, obsId=""):
 
             # spectrogram
             observationWindow.cbVisualizeSpectrogram.setEnabled(True)
-            observationWindow.cbVisualizeSpectrogram.setChecked(
-                self.pj[cfg.OBSERVATIONS][obsId].get(cfg.VISUALIZE_SPECTROGRAM, False)
-            )
-
+            observationWindow.cbVisualizeSpectrogram.setChecked(self.pj[cfg.OBSERVATIONS][obsId].get(cfg.VISUALIZE_SPECTROGRAM, False))
             # waveform
             observationWindow.cb_visualize_waveform.setEnabled(True)
-            observationWindow.cb_visualize_waveform.setChecked(
-                self.pj[cfg.OBSERVATIONS][obsId].get(cfg.VISUALIZE_WAVEFORM, False)
-            )
-
+            observationWindow.cb_visualize_waveform.setChecked(self.pj[cfg.OBSERVATIONS][obsId].get(cfg.VISUALIZE_WAVEFORM, False))
+            # scan sampling
+            observationWindow.sb_media_scan_sampling.setValue(self.pj[cfg.OBSERVATIONS][obsId].get(cfg.MEDIA_SCAN_SAMPLING_DURATION, 0))
             # image display duration
-            observationWindow.sb_image_display_duration.setValue(
-                self.pj[cfg.OBSERVATIONS][obsId].get(cfg.IMAGE_DISPLAY_DURATION, 1)
-            )
+            observationWindow.sb_image_display_duration.setValue(self.pj[cfg.OBSERVATIONS][obsId].get(cfg.IMAGE_DISPLAY_DURATION, 1))
 
             # plot data
             if cfg.PLOT_DATA in self.pj[cfg.OBSERVATIONS][obsId]:
                 if self.pj[cfg.OBSERVATIONS][obsId][cfg.PLOT_DATA]:
-
                     observationWindow.tw_data_files.setRowCount(0)
                     for idx2 in util.sorted_keys(self.pj[cfg.OBSERVATIONS][obsId][cfg.PLOT_DATA]):
                         observationWindow.tw_data_files.setRowCount(observationWindow.tw_data_files.rowCount() + 1)
@@ -795,9 +730,7 @@ def new_observation(self, mode=cfg.NEW, obsId=""):
                                 combobox.addItems(cfg.DATA_PLOT_STYLES)
                                 combobox.setCurrentIndex(
                                     cfg.DATA_PLOT_STYLES.index(
-                                        self.pj[cfg.OBSERVATIONS][obsId][cfg.PLOT_DATA][idx2][
-                                            cfg.DATA_PLOT_FIELDS[idx3]
-                                        ]
+                                        self.pj[cfg.OBSERVATIONS][obsId][cfg.PLOT_DATA][idx2][cfg.DATA_PLOT_FIELDS[idx3]]
                                     )
                                 )
 
@@ -811,9 +744,7 @@ def new_observation(self, mode=cfg.NEW, obsId=""):
                                 combobox2.addItems(["False", "True"])
                                 combobox2.setCurrentIndex(
                                     ["False", "True"].index(
-                                        self.pj[cfg.OBSERVATIONS][obsId][cfg.PLOT_DATA][idx2][
-                                            cfg.DATA_PLOT_FIELDS[idx3]
-                                        ]
+                                        self.pj[cfg.OBSERVATIONS][obsId][cfg.PLOT_DATA][idx2][cfg.DATA_PLOT_FIELDS[idx3]]
                                     )
                                 )
 
@@ -828,11 +759,7 @@ def new_observation(self, mode=cfg.NEW, obsId=""):
                                     observationWindow.tw_data_files.rowCount() - 1,
                                     idx3,
                                     QTableWidgetItem(
-                                        str(
-                                            self.pj[cfg.OBSERVATIONS][obsId][cfg.PLOT_DATA][idx2][
-                                                cfg.DATA_PLOT_FIELDS[idx3]
-                                            ]
-                                        )
+                                        str(self.pj[cfg.OBSERVATIONS][obsId][cfg.PLOT_DATA][idx2][cfg.DATA_PLOT_FIELDS[idx3]])
                                     ),
                                 )
 
@@ -840,24 +767,18 @@ def new_observation(self, mode=cfg.NEW, obsId=""):
                                 observationWindow.tw_data_files.setItem(
                                     observationWindow.tw_data_files.rowCount() - 1,
                                     idx3,
-                                    QTableWidgetItem(
-                                        self.pj[cfg.OBSERVATIONS][obsId][cfg.PLOT_DATA][idx2][
-                                            cfg.DATA_PLOT_FIELDS[idx3]
-                                        ]
-                                    ),
+                                    QTableWidgetItem(self.pj[cfg.OBSERVATIONS][obsId][cfg.PLOT_DATA][idx2][cfg.DATA_PLOT_FIELDS[idx3]]),
                                 )
 
         if self.pj[cfg.OBSERVATIONS][obsId]["type"] == cfg.IMAGES:
             observationWindow.rb_images.setChecked(True)
-            observationWindow.lw_images_directory.addItems(
-                self.pj[cfg.OBSERVATIONS][obsId].get(cfg.DIRECTORIES_LIST, [])
-            )
+            observationWindow.lw_images_directory.addItems(self.pj[cfg.OBSERVATIONS][obsId].get(cfg.DIRECTORIES_LIST, []))
             observationWindow.rb_use_exif.setChecked(self.pj[cfg.OBSERVATIONS][obsId].get(cfg.USE_EXIF_DATE, False))
             if self.pj[cfg.OBSERVATIONS][obsId].get(cfg.TIME_LAPSE, 0):
                 observationWindow.rb_time_lapse.setChecked(True)
                 observationWindow.sb_time_lapse.setValue(self.pj[cfg.OBSERVATIONS][obsId].get(cfg.TIME_LAPSE, 0))
 
-        if self.pj[cfg.OBSERVATIONS][obsId]["type"] in [cfg.LIVE]:
+        if self.pj[cfg.OBSERVATIONS][obsId]["type"] in (cfg.LIVE):
             observationWindow.rb_live.setChecked(True)
             # sampling time
             observationWindow.sbScanSampling.setValue(self.pj[cfg.OBSERVATIONS][obsId].get(cfg.SCAN_SAMPLING_TIME, 0))
@@ -867,20 +788,14 @@ def new_observation(self, mode=cfg.NEW, obsId=""):
                 or self.pj[cfg.OBSERVATIONS][obsId].get(cfg.START_FROM_CURRENT_EPOCH_TIME, False)
             )
             # day/epoch time
-            observationWindow.rb_day_time.setChecked(
-                self.pj[cfg.OBSERVATIONS][obsId].get(cfg.START_FROM_CURRENT_TIME, False)
-            )
-            observationWindow.rb_epoch_time.setChecked(
-                self.pj[cfg.OBSERVATIONS][obsId].get(cfg.START_FROM_CURRENT_EPOCH_TIME, False)
-            )
+            observationWindow.rb_day_time.setChecked(self.pj[cfg.OBSERVATIONS][obsId].get(cfg.START_FROM_CURRENT_TIME, False))
+            observationWindow.rb_epoch_time.setChecked(self.pj[cfg.OBSERVATIONS][obsId].get(cfg.START_FROM_CURRENT_EPOCH_TIME, False))
 
         # observation time interval
         observationWindow.cb_observation_time_interval.setEnabled(True)
         if self.pj[cfg.OBSERVATIONS][obsId].get(cfg.OBSERVATION_TIME_INTERVAL, [0, 0]) != [0, 0]:
             observationWindow.cb_observation_time_interval.setChecked(True)
-            observationWindow.observation_time_interval = self.pj[cfg.OBSERVATIONS][obsId].get(
-                cfg.OBSERVATION_TIME_INTERVAL, [0, 0]
-            )
+            observationWindow.observation_time_interval = self.pj[cfg.OBSERVATIONS][obsId].get(cfg.OBSERVATION_TIME_INTERVAL, [0, 0])
             observationWindow.cb_observation_time_interval.setText(
                 (
                     "Limit observation to a time interval: "
@@ -889,9 +804,10 @@ def new_observation(self, mode=cfg.NEW, obsId=""):
                 )
             )
 
-        # disabled due to problem when video goes back
-        # if CLOSE_BEHAVIORS_BETWEEN_VIDEOS in self.pj[OBSERVATIONS][obsId]:
-        #    observationWindow.cbCloseCurrentBehaviorsBetweenVideo.setChecked(self.pj[OBSERVATIONS][obsId][CLOSE_BEHAVIORS_BETWEEN_VIDEOS])
+        if cfg.CLOSE_BEHAVIORS_BETWEEN_VIDEOS in self.pj[cfg.OBSERVATIONS][obsId]:
+            observationWindow.cbCloseCurrentBehaviorsBetweenVideo.setChecked(
+                self.pj[cfg.OBSERVATIONS][obsId][cfg.CLOSE_BEHAVIORS_BETWEEN_VIDEOS]
+            )
 
     rv = observationWindow.exec_()
 
@@ -899,7 +815,6 @@ def new_observation(self, mode=cfg.NEW, obsId=""):
     gui_utilities.save_geometry(observationWindow, "new observation")
 
     if rv:
-
         self.project_changed()
 
         new_obs_id = observationWindow.leObservationId.text().strip()
@@ -918,7 +833,6 @@ def new_observation(self, mode=cfg.NEW, obsId=""):
 
         # check if id changed
         if mode == cfg.EDIT and new_obs_id != obsId:
-
             logging.info(f"observation id {obsId} changed in {new_obs_id}")
 
             self.pj[cfg.OBSERVATIONS][new_obs_id] = dict(self.pj[cfg.OBSERVATIONS][obsId])
@@ -939,16 +853,15 @@ def new_observation(self, mode=cfg.NEW, obsId=""):
         # independent variables for observation
         self.pj[cfg.OBSERVATIONS][new_obs_id][cfg.INDEPENDENT_VARIABLES] = {}
         for r in range(observationWindow.twIndepVariables.rowCount()):
-
             # set dictionary as label (col 0) => value (col 2)
             if observationWindow.twIndepVariables.item(r, 1).text() == cfg.SET_OF_VALUES:
                 self.pj[cfg.OBSERVATIONS][new_obs_id][cfg.INDEPENDENT_VARIABLES][
                     observationWindow.twIndepVariables.item(r, 0).text()
                 ] = observationWindow.twIndepVariables.cellWidget(r, 2).currentText()
             elif observationWindow.twIndepVariables.item(r, 1).text() == cfg.TIMESTAMP:
-                self.pj[cfg.OBSERVATIONS][new_obs_id][cfg.INDEPENDENT_VARIABLES][
-                    observationWindow.twIndepVariables.item(r, 0).text()
-                ] = (observationWindow.twIndepVariables.cellWidget(r, 2).dateTime().toString(Qt.ISODate))
+                self.pj[cfg.OBSERVATIONS][new_obs_id][cfg.INDEPENDENT_VARIABLES][observationWindow.twIndepVariables.item(r, 0).text()] = (
+                    observationWindow.twIndepVariables.cellWidget(r, 2).dateTime().toString(Qt.ISODate)
+                )
             else:
                 self.pj[cfg.OBSERVATIONS][new_obs_id][cfg.INDEPENDENT_VARIABLES][
                     observationWindow.twIndepVariables.item(r, 0).text()
@@ -958,29 +871,21 @@ def new_observation(self, mode=cfg.NEW, obsId=""):
         self.pj[cfg.OBSERVATIONS][new_obs_id][cfg.TIME_OFFSET] = observationWindow.obs_time_offset.get_time()
 
         if observationWindow.cb_observation_time_interval.isChecked():
-            self.pj[cfg.OBSERVATIONS][new_obs_id][
-                cfg.OBSERVATION_TIME_INTERVAL
-            ] = observationWindow.observation_time_interval
+            self.pj[cfg.OBSERVATIONS][new_obs_id][cfg.OBSERVATION_TIME_INTERVAL] = observationWindow.observation_time_interval
 
         self.display_statusbar_info(new_obs_id)
 
         # visualize spectrogram
-        self.pj[cfg.OBSERVATIONS][new_obs_id][
-            cfg.VISUALIZE_SPECTROGRAM
-        ] = observationWindow.cbVisualizeSpectrogram.isChecked()
+        self.pj[cfg.OBSERVATIONS][new_obs_id][cfg.VISUALIZE_SPECTROGRAM] = observationWindow.cbVisualizeSpectrogram.isChecked()
         # visualize spectrogram
-        self.pj[cfg.OBSERVATIONS][new_obs_id][
-            cfg.VISUALIZE_WAVEFORM
-        ] = observationWindow.cb_visualize_waveform.isChecked()
+        self.pj[cfg.OBSERVATIONS][new_obs_id][cfg.VISUALIZE_WAVEFORM] = observationWindow.cb_visualize_waveform.isChecked()
+        # media scan sampling
+        self.pj[cfg.OBSERVATIONS][new_obs_id][cfg.MEDIA_SCAN_SAMPLING_DURATION] = observationWindow.sb_media_scan_sampling.value()
         # image display duration
-        self.pj[cfg.OBSERVATIONS][new_obs_id][
-            cfg.IMAGE_DISPLAY_DURATION
-        ] = observationWindow.sb_image_display_duration.value()
+        self.pj[cfg.OBSERVATIONS][new_obs_id][cfg.IMAGE_DISPLAY_DURATION] = observationWindow.sb_image_display_duration.value()
 
         # time interval for observation
-        self.pj[cfg.OBSERVATIONS][new_obs_id][
-            cfg.OBSERVATION_TIME_INTERVAL
-        ] = observationWindow.observation_time_interval
+        self.pj[cfg.OBSERVATIONS][new_obs_id][cfg.OBSERVATION_TIME_INTERVAL] = observationWindow.observation_time_interval
 
         # plot data
         if observationWindow.tw_data_files.rowCount():
@@ -995,13 +900,11 @@ def new_observation(self, mode=cfg.NEW, obsId=""):
 
                     elif idx2 == cfg.PLOT_DATA_CONVERTERS_IDX:
                         if observationWindow.tw_data_files.item(row, idx2).text():
-                            self.pj[cfg.OBSERVATIONS][new_obs_id][cfg.PLOT_DATA][str(row)][
-                                cfg.DATA_PLOT_FIELDS[idx2]
-                            ] = eval(observationWindow.tw_data_files.item(row, idx2).text())
+                            self.pj[cfg.OBSERVATIONS][new_obs_id][cfg.PLOT_DATA][str(row)][cfg.DATA_PLOT_FIELDS[idx2]] = eval(
+                                observationWindow.tw_data_files.item(row, idx2).text()
+                            )
                         else:
-                            self.pj[cfg.OBSERVATIONS][new_obs_id][cfg.PLOT_DATA][str(row)][
-                                cfg.DATA_PLOT_FIELDS[idx2]
-                            ] = {}
+                            self.pj[cfg.OBSERVATIONS][new_obs_id][cfg.PLOT_DATA][str(row)][cfg.DATA_PLOT_FIELDS[idx2]] = {}
 
                     else:
                         self.pj[cfg.OBSERVATIONS][new_obs_id][cfg.PLOT_DATA][str(row)][
@@ -1009,10 +912,9 @@ def new_observation(self, mode=cfg.NEW, obsId=""):
                         ] = observationWindow.tw_data_files.item(row, idx2).text()
 
         # Close current behaviors between video
-        # disabled due to problem when video goes back
-        # self.pj[OBSERVATIONS][new_obs_id][CLOSE_BEHAVIORS_BETWEEN_VIDEOS] =
-        # observationWindow.cbCloseCurrentBehaviorsBetweenVideo.isChecked()
-        self.pj[cfg.OBSERVATIONS][new_obs_id][cfg.CLOSE_BEHAVIORS_BETWEEN_VIDEOS] = False
+        self.pj[cfg.OBSERVATIONS][new_obs_id][
+            cfg.CLOSE_BEHAVIORS_BETWEEN_VIDEOS
+        ] = observationWindow.cbCloseCurrentBehaviorsBetweenVideo.isChecked()
 
         if self.pj[cfg.OBSERVATIONS][new_obs_id][cfg.TYPE] == cfg.LIVE:
             self.pj[cfg.OBSERVATIONS][new_obs_id][cfg.SCAN_SAMPLING_TIME] = observationWindow.sbScanSampling.value()
@@ -1026,8 +928,7 @@ def new_observation(self, mode=cfg.NEW, obsId=""):
         # images dir
         if self.pj[cfg.OBSERVATIONS][new_obs_id][cfg.TYPE] == cfg.IMAGES:
             self.pj[cfg.OBSERVATIONS][new_obs_id][cfg.DIRECTORIES_LIST] = [
-                observationWindow.lw_images_directory.item(i).text()
-                for i in range(observationWindow.lw_images_directory.count())
+                observationWindow.lw_images_directory.item(i).text() for i in range(observationWindow.lw_images_directory.count())
             ]
             self.pj[cfg.OBSERVATIONS][new_obs_id][cfg.USE_EXIF_DATE] = observationWindow.rb_use_exif.isChecked()
             if observationWindow.rb_time_lapse.isChecked():
@@ -1040,7 +941,6 @@ def new_observation(self, mode=cfg.NEW, obsId=""):
 
         # media
         if self.pj[cfg.OBSERVATIONS][new_obs_id][cfg.TYPE] == cfg.MEDIA:
-
             self.pj[cfg.OBSERVATIONS][new_obs_id][cfg.MEDIA_INFO] = {
                 cfg.LENGTH: observationWindow.mediaDurations,
                 cfg.FPS: observationWindow.mediaFPS,
@@ -1060,9 +960,9 @@ def new_observation(self, mode=cfg.NEW, obsId=""):
                 self.pj[cfg.OBSERVATIONS][new_obs_id][cfg.FILE][str(i + 1)] = []
 
             for row in range(observationWindow.twVideo1.rowCount()):
-                self.pj[cfg.OBSERVATIONS][new_obs_id][cfg.FILE][
-                    observationWindow.twVideo1.cellWidget(row, 0).currentText()
-                ].append(observationWindow.twVideo1.item(row, 2).text())
+                self.pj[cfg.OBSERVATIONS][new_obs_id][cfg.FILE][observationWindow.twVideo1.cellWidget(row, 0).currentText()].append(
+                    observationWindow.twVideo1.item(row, 2).text()
+                )
                 # store offset for media player
                 self.pj[cfg.OBSERVATIONS][new_obs_id][cfg.MEDIA_INFO]["offset"][
                     observationWindow.twVideo1.cellWidget(row, 0).currentText()
@@ -1100,9 +1000,8 @@ def close_observation(self):
     close current observation
     """
 
-    logging.info(f"Close observation {self.playerType}")
+    logging.info(f"Close observation (player type: {self.playerType})")
 
-    logging.info(f"Check state events")
     # check observation events
     flag_ok, msg = project_functions.check_state_events_obs(
         self.observationId,
@@ -1112,7 +1011,6 @@ def close_observation(self):
     )
 
     if not flag_ok:
-
         out = f"The current observation has state event(s) that are not PAIRED:<br><br>{msg}"
         results = dialog.Results_dialog()
         results.setWindowTitle(f"{cfg.programName} - Check selected observations")
@@ -1124,7 +1022,6 @@ def close_observation(self):
         results.pbOK.setText("Fix unpaired state events")
 
         if results.exec_():  # fix events
-
             w = dialog.Ask_time(self.timeFormat)
             w.setWindowTitle("Fix UNPAIRED state events")
             w.label.setText("Fix UNPAIRED events at time")
@@ -1143,11 +1040,7 @@ def close_observation(self):
 
                     self.load_tw_events(self.observationId)
                     item = self.twEvents.item(
-                        [
-                            i
-                            for i, t in enumerate(self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS])
-                            if t[0] == fix_at_time
-                        ][0],
+                        [i for i, t in enumerate(self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS]) if t[0] == fix_at_time][0],
                         0,
                     )
                     self.twEvents.scrollToItem(item)
@@ -1155,12 +1048,10 @@ def close_observation(self):
             else:
                 return
 
-    logging.info(f"Check state events done")
-
     self.saved_state = self.saveState()
 
     if self.playerType == cfg.MEDIA:
-
+        self.media_scan_sampling_mem = []
         logging.info(f"Stop plot timer")
         self.plot_timer.stop()
 
@@ -1186,10 +1077,7 @@ def close_observation(self):
         self.liveObservationStarted = False
         self.liveStartTime = None
 
-    if (
-        cfg.PLOT_DATA in self.pj[cfg.OBSERVATIONS][self.observationId]
-        and self.pj[cfg.OBSERVATIONS][self.observationId][cfg.PLOT_DATA]
-    ):
+    if cfg.PLOT_DATA in self.pj[cfg.OBSERVATIONS][self.observationId] and self.pj[cfg.OBSERVATIONS][self.observationId][cfg.PLOT_DATA]:
         for x in self.ext_data_timer_list:
             x.stop()
         for pd in self.plot_data:
@@ -1211,10 +1099,11 @@ def close_observation(self):
         """
 
         for dw in self.dw_player:
-
             logging.info(f"remove dock widget")
-
+            dw.player.log_handler = None
             self.removeDockWidget(dw)
+
+            del dw
             # sip.delete(dw)
             # dw = None
 
@@ -1230,6 +1119,8 @@ def close_observation(self):
 
     self.lb_current_media_time.clear()
     self.lb_player_status.clear()
+    self.lb_video_info.clear()
+    self.lb_zoom_level.clear()
 
     self.currentSubject = ""
     self.lbFocalSubject.setText(cfg.NO_FOCAL_SUBJECT)
@@ -1238,7 +1129,7 @@ def close_observation(self):
     for i in range(self.twSubjects.rowCount()):
         self.twSubjects.item(i, len(cfg.subjectsFields)).setText("")
 
-    for w in [self.lbTimeOffset, self.lbSpeed, self.lb_obs_time_interval]:
+    for w in (self.lbTimeOffset, self.lb_obs_time_interval):
         w.clear()
     self.play_rate, self.playerType = 1, ""
 
@@ -1257,9 +1148,7 @@ def initialize_new_media_observation(self) -> bool:
     for dw in [self.dwEthogram, self.dwSubjects, self.dwEvents]:
         dw.setVisible(True)
 
-    ok, msg = project_functions.check_if_media_available(
-        self.pj[cfg.OBSERVATIONS][self.observationId], self.projectFileName
-    )
+    ok, msg = project_functions.check_if_media_available(self.pj[cfg.OBSERVATIONS][self.observationId], self.projectFileName)
 
     if not ok:
         QMessageBox.critical(
@@ -1287,6 +1176,8 @@ def initialize_new_media_observation(self) -> bool:
     font = QFont()
     font.setPointSize(15)
     self.lb_current_media_time.setFont(font)
+    self.lb_video_info.setFont(font)
+    self.lb_zoom_level.setFont(font)
 
     # initialize video slider
     self.video_slider = QSlider(Qt.Horizontal, self)
@@ -1309,6 +1200,126 @@ def initialize_new_media_observation(self) -> bool:
         ):
             continue
 
+        # Not pretty but the unique solution I have found to capture the click signal for each player
+
+        if i == 0:  # first player
+            p0 = player_dock_widget.DW_player(i, self)
+
+            @p0.player.property_observer("time-pos")
+            def time_observer(_name, value):
+                if value is not None:
+                    self.time_observer_signal.emit(value)
+
+            @p0.player.on_key_press("MBTN_LEFT")
+            def mbtn_left():
+                self.video_click_signal.emit(0, "MBTN_LEFT")
+
+            @p0.player.on_key_press("MBTN_RIGHT")
+            def mbtn_right():
+                # no zoom
+                self.video_click_signal.emit(0, "MBTN_RIGHT")
+
+            self.dw_player.append(p0)
+
+        if i == 1:  # second player
+            p1 = player_dock_widget.DW_player(i, self)
+
+            @p1.player.on_key_press("MBTN_LEFT")
+            def mbtn_left():
+                self.video_click_signal.emit(1, "MBTN_LEFT")
+
+            @p1.player.on_key_press("MBTN_RIGHT")
+            def mbtn_right():
+                # no zoom
+                self.video_click_signal.emit(1, "MBTN_RIGHT")
+
+            self.dw_player.append(p1)
+
+        if i == 2:
+            p2 = player_dock_widget.DW_player(i, self)
+
+            @p2.player.on_key_press("MBTN_LEFT")
+            def mbtn_left():
+                self.video_click_signal.emit(2, "MBTN_LEFT")
+
+            @p2.player.on_key_press("MBTN_RIGHT")
+            def mbtn_right():
+                # no zoom
+                self.video_click_signal.emit(2, "MBTN_RIGHT")
+
+            self.dw_player.append(p2)
+
+        if i == 3:
+            p3 = player_dock_widget.DW_player(i, self)
+
+            @p3.player.on_key_press("MBTN_LEFT")
+            def mbtn_left():
+                self.video_click_signal.emit(3, "MBTN_LEFT")
+
+            @p3.player.on_key_press("MBTN_RIGHT")
+            def mbtn_right():
+                # no zoom
+                self.video_click_signal.emit(3, "MBTN_RIGHT")
+
+            self.dw_player.append(p3)
+
+        if i == 4:
+            p4 = player_dock_widget.DW_player(i, self)
+
+            @p4.player.on_key_press("MBTN_LEFT")
+            def mbtn_left():
+                self.video_click_signal.emit(4, "MBTN_LEFT")
+
+            @p4.player.on_key_press("MBTN_RIGHT")
+            def mbtn_right():
+                # no zoom
+                self.video_click_signal.emit(4, "MBTN_RIGHT")
+
+            self.dw_player.append(p4)
+
+        if i == 5:
+            p5 = player_dock_widget.DW_player(i, self)
+
+            @p5.player.on_key_press("MBTN_LEFT")
+            def mbtn_left():
+                self.video_click_signal.emit(5, "MBTN_LEFT")
+
+            @p5.player.on_key_press("MBTN_RIGHT")
+            def mbtn_right():
+                # no zoom
+                self.video_click_signal.emit(5, "MBTN_RIGHT")
+
+            self.dw_player.append(p5)
+
+        if i == 6:
+            p6 = player_dock_widget.DW_player(i, self)
+
+            @p6.player.on_key_press("MBTN_LEFT")
+            def mbtn_left():
+                self.video_click_signal.emit(6, "MBTN_LEFT")
+
+            @p6.player.on_key_press("MBTN_RIGHT")
+            def mbtn_right():
+                # no zoom
+                self.video_click_signal.emit(6, "MBTN_RIGHT")
+
+            self.dw_player.append(p6)
+
+        if i == 7:
+            p7 = player_dock_widget.DW_player(i, self)
+
+            @p7.player.on_key_press("MBTN_LEFT")
+            def mbtn_left():
+                self.video_click_signal.emit(7, "MBTN_LEFT")
+
+            @p7.player.on_key_press("MBTN_RIGHT")
+            def mbtn_right():
+                # no zoom
+                self.video_click_signal.emit(7, "MBTN_RIGHT")
+
+            self.dw_player.append(p7)
+
+        """
         if i == 0:  # first player
             p = player_dock_widget.DW_player(i, self)
             self.dw_player.append(p)
@@ -1318,8 +1329,18 @@ def initialize_new_media_observation(self) -> bool:
                 if value is not None:
                     self.time_observer_signal.emit(value)
 
+            @p.player.on_key_press("MBTN_LEFT")
+            def mbtn_left():
+                self.video_click_signal.emit(1, 2)
+
+            @p.player.on_key_press("MBTN_RIGHT")
+            def mbtn_right():
+                # no zoom
+                self.video_click_signal.emit(-1, -1)
+
         else:
             self.dw_player.append(player_dock_widget.DW_player(i, self))
+        """
 
         self.dw_player[-1].setFloating(False)
         self.dw_player[-1].setVisible(False)
@@ -1341,10 +1362,6 @@ def initialize_new_media_observation(self) -> bool:
 
         # for receiving resize event from dock widget
         self.dw_player[i].resize_signal.connect(self.resize_dw)
-        """
-        # for receiving event resize and clicked (Zoom - crop)
-        self.dw_player[i].view_signal.connect(self.signal_from_dw)
-        """
 
         # add durations list
         self.dw_player[i].media_durations = []
@@ -1354,7 +1371,6 @@ def initialize_new_media_observation(self) -> bool:
         self.dw_player[i].fps = {}
 
         for mediaFile in self.pj[cfg.OBSERVATIONS][self.observationId][cfg.FILE][n_player]:
-
             logging.debug(f"media file: {mediaFile}")
 
             media_full_path = project_functions.full_path(mediaFile, self.projectFileName)
@@ -1363,12 +1379,9 @@ def initialize_new_media_observation(self) -> bool:
 
             # media duration
             try:
-                mediaLength = (
-                    self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO][cfg.LENGTH][mediaFile] * 1000
-                )
+                mediaLength = self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO][cfg.LENGTH][mediaFile] * 1000
                 mediaFPS = self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO][cfg.FPS][mediaFile]
             except Exception:
-
                 logging.debug("media_info key not found")
 
                 r = util.accurate_media_analysis(self.ffmpeg_bin, media_full_path)
@@ -1392,9 +1405,7 @@ def initialize_new_media_observation(self) -> bool:
                     self.project_changed()
 
             self.dw_player[i].media_durations.append(int(mediaLength))
-            self.dw_player[i].cumul_media_durations.append(
-                self.dw_player[i].cumul_media_durations[-1] + int(mediaLength)
-            )
+            self.dw_player[i].cumul_media_durations.append(self.dw_player[i].cumul_media_durations[-1] + int(mediaLength))
 
             self.dw_player[i].fps[mediaFile] = mediaFPS
 
@@ -1421,38 +1432,44 @@ def initialize_new_media_observation(self) -> bool:
         if not flag_vm:
             self.dw_player[i].player.hwdec = self.config_param.get(cfg.MPV_HWDEC, cfg.MPV_HWDEC_DEFAULT_VALUE)
         else:
-            self.dw_player[i].player.hwdec = "no"
+            self.dw_player[i].player.hwdec = cfg.MPV_HWDEC_NO
+
+        logging.debug(f"Player hwdec of player #{i} set to: {self.dw_player[i].player.hwdec}")
+        self.config_param[cfg.MPV_HWDEC] = self.dw_player[i].player.hwdec
 
         self.dw_player[i].player.playlist_pos = 0
         self.dw_player[i].player.wait_until_playing()
         self.dw_player[i].player.pause = True
-        self.dw_player[i].player.wait_until_paused()
+        time.sleep(0.2)
+        # self.dw_player[i].player.wait_until_paused()
         self.dw_player[i].player.seek(0, "absolute")
         # do not close when playing finished
         self.dw_player[i].player.keep_open = True
         self.dw_player[i].player.keep_open_pause = False
 
-        self.dw_player[i].player.image_display_duration = self.pj[cfg.OBSERVATIONS][self.observationId].get(
-            cfg.IMAGE_DISPLAY_DURATION, 1
-        )
+        self.dw_player[i].player.image_display_duration = self.pj[cfg.OBSERVATIONS][self.observationId].get(cfg.IMAGE_DISPLAY_DURATION, 1)
 
         # position media
         if cfg.OBSERVATION_TIME_INTERVAL in self.pj[cfg.OBSERVATIONS][self.observationId]:
-            self.seek_mediaplayer(
-                int(self.pj[cfg.OBSERVATIONS][self.observationId][cfg.OBSERVATION_TIME_INTERVAL][0]), player=i
-            )
+            self.seek_mediaplayer(int(self.pj[cfg.OBSERVATIONS][self.observationId][cfg.OBSERVATION_TIME_INTERVAL][0]), player=i)
 
-        # restore zoom level
+        # restore video zoom level
         if cfg.ZOOM_LEVEL in self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO]:
             self.dw_player[i].player.video_zoom = log2(
                 self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO][cfg.ZOOM_LEVEL].get(n_player, 0)
             )
 
+        # restore video pan
+        if cfg.PAN_X in self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO]:
+            self.dw_player[i].player.video_pan_x = self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO][cfg.PAN_X].get(n_player, 0)
+        if cfg.PAN_Y in self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO]:
+            self.dw_player[i].player.video_pan_y = self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO][cfg.PAN_Y].get(n_player, 0)
+
         # restore rotation angle
         if cfg.ROTATION_ANGLE in self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO]:
-            self.dw_player[i].player.video_rotate = self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO][
-                cfg.ROTATION_ANGLE
-            ].get(n_player, 0)
+            self.dw_player[i].player.video_rotate = self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO][cfg.ROTATION_ANGLE].get(
+                n_player, 0
+            )
 
         # restore subtitle visibility
         if cfg.DISPLAY_MEDIA_SUBTITLES in self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO]:
@@ -1461,7 +1478,6 @@ def initialize_new_media_observation(self) -> bool:
             ].get(n_player, True)
 
         # restore overlays
-
         if cfg.OVERLAY in self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO]:
             if n_player in self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO][cfg.OVERLAY]:
                 self.overlays[i] = self.dw_player[i].player.create_image_overlay()
@@ -1470,6 +1486,7 @@ def initialize_new_media_observation(self) -> bool:
     menu_options.update_menu(self)
 
     self.time_observer_signal.connect(self.mpv_timer_out)
+    self.video_click_signal.connect(self.player_clicked)
 
     self.actionPlay.setIcon(QIcon(":/play"))
 
@@ -1480,24 +1497,17 @@ def initialize_new_media_observation(self) -> bool:
     self.state_behaviors_codes = tuple(util.state_behavior_codes(self.pj[cfg.ETHOGRAM]))
 
     video_operations.display_play_rate(self)
+    video_operations.display_zoom_level(self)
 
     # spectrogram
     if (
         cfg.VISUALIZE_SPECTROGRAM in self.pj[cfg.OBSERVATIONS][self.observationId]
         and self.pj[cfg.OBSERVATIONS][self.observationId][cfg.VISUALIZE_SPECTROGRAM]
     ):
-
-        tmp_dir = (
-            self.ffmpeg_cache_dir
-            if self.ffmpeg_cache_dir and os.path.isdir(self.ffmpeg_cache_dir)
-            else tempfile.gettempdir()
-        )
+        tmp_dir = self.ffmpeg_cache_dir if self.ffmpeg_cache_dir and os.path.isdir(self.ffmpeg_cache_dir) else tempfile.gettempdir()
 
         wav_file_path = (
-            pl.Path(tmp_dir)
-            / pl.Path(
-                self.dw_player[0].player.playlist[self.dw_player[0].player.playlist_pos]["filename"] + ".wav"
-            ).name
+            pl.Path(tmp_dir) / pl.Path(self.dw_player[0].player.playlist[self.dw_player[0].player.playlist_pos]["filename"] + ".wav").name
         )
 
         if not wav_file_path.is_file():
@@ -1510,18 +1520,10 @@ def initialize_new_media_observation(self) -> bool:
         cfg.VISUALIZE_WAVEFORM in self.pj[cfg.OBSERVATIONS][self.observationId]
         and self.pj[cfg.OBSERVATIONS][self.observationId][cfg.VISUALIZE_WAVEFORM]
     ):
-
-        tmp_dir = (
-            self.ffmpeg_cache_dir
-            if self.ffmpeg_cache_dir and os.path.isdir(self.ffmpeg_cache_dir)
-            else tempfile.gettempdir()
-        )
+        tmp_dir = self.ffmpeg_cache_dir if self.ffmpeg_cache_dir and os.path.isdir(self.ffmpeg_cache_dir) else tempfile.gettempdir()
 
         wav_file_path = (
-            pl.Path(tmp_dir)
-            / pl.Path(
-                self.dw_player[0].player.playlist[self.dw_player[0].player.playlist_pos]["filename"] + ".wav"
-            ).name
+            pl.Path(tmp_dir) / pl.Path(self.dw_player[0].player.playlist[self.dw_player[0].player.playlist_pos]["filename"] + ".wav").name
         )
 
         if not wav_file_path.is_file():
@@ -1530,11 +1532,7 @@ def initialize_new_media_observation(self) -> bool:
         self.show_plot_widget("waveform", warning=False)
 
     # external data plot
-    if (
-        cfg.PLOT_DATA in self.pj[cfg.OBSERVATIONS][self.observationId]
-        and self.pj[cfg.OBSERVATIONS][self.observationId][cfg.PLOT_DATA]
-    ):
-
+    if cfg.PLOT_DATA in self.pj[cfg.OBSERVATIONS][self.observationId] and self.pj[cfg.OBSERVATIONS][self.observationId][cfg.PLOT_DATA]:
         self.plot_data = {}
         self.ext_data_timer_list = []
         count = 0
@@ -1549,9 +1547,7 @@ def initialize_new_media_observation(self) -> bool:
                     QMessageBox.critical(
                         self,
                         cfg.programName,
-                        "Data file not found:\n{}".format(
-                            self.pj[cfg.OBSERVATIONS][self.observationId][cfg.PLOT_DATA][idx]["file_path"]
-                        ),
+                        "Data file not found:\n{}".format(self.pj[cfg.OBSERVATIONS][self.observationId][cfg.PLOT_DATA][idx]["file_path"]),
                     )
                     data_ok = False
                     # return False
@@ -1606,9 +1602,7 @@ def initialize_new_media_observation(self) -> bool:
                     QMessageBox.critical(
                         self,
                         cfg.programName,
-                        "Data file not found:\n{}".format(
-                            self.pj[cfg.OBSERVATIONS][self.observationId][cfg.PLOT_DATA][idx]["file_path"]
-                        ),
+                        "Data file not found:\n{}".format(self.pj[cfg.OBSERVATIONS][self.observationId][cfg.PLOT_DATA][idx]["file_path"]),
                     )
                     data_ok = False
                     # return False
@@ -1755,9 +1749,7 @@ def initialize_new_images_observation(self):
     self.w_live.setVisible(False)
 
     # check if directories are available
-    ok, msg = project_functions.check_directories_availability(
-        self.pj[cfg.OBSERVATIONS][self.observationId], self.projectFileName
-    )
+    ok, msg = project_functions.check_directories_availability(self.pj[cfg.OBSERVATIONS][self.observationId], self.projectFileName)
 
     if not ok:
         QMessageBox.critical(
@@ -1804,12 +1796,7 @@ def initialize_new_images_observation(self):
         for pattern in cfg.IMAGE_EXTENSIONS:
             self.images_list.extend(
                 sorted(
-                    list(
-                        set(
-                            [str(x) for x in pl.Path(dir_path).glob(pattern)]
-                            + [str(x) for x in pl.Path(dir_path).glob(pattern.upper())]
-                        )
-                    )
+                    list(set([str(x) for x in pl.Path(dir_path).glob(pattern)] + [str(x) for x in pl.Path(dir_path).glob(pattern.upper())]))
                 )
             )
 

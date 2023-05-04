@@ -54,7 +54,7 @@ def write_event(self, event: dict, mem_time: dec) -> int:
     logging.debug(f"write event - event: {event}  memtime: {mem_time}")
 
     if event is None:
-        return
+        return 1
 
     # live observation finished (end of time interval reached)
     if not self.liveObservationStarted and mem_time.is_nan():
@@ -68,7 +68,7 @@ def write_event(self, event: dict, mem_time: dec) -> int:
             ),
             (cfg.OK,),
         )
-        return
+        return 1
 
     if (
         self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE] == cfg.LIVE
@@ -84,7 +84,7 @@ def write_event(self, event: dict, mem_time: dec) -> int:
             ),
             (cfg.OK,),
         )
-        return
+        return 1
 
     editing_event = "row" in event
 
@@ -93,6 +93,15 @@ def write_event(self, event: dict, mem_time: dec) -> int:
         # add offset
         if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE] in (cfg.MEDIA, cfg.LIVE):
             mem_time += dec(self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TIME_OFFSET]).quantize(dec(".001"))
+
+    # check if time > 2**31 - 1 (2147483647)
+    if (mem_time < -2147483647) or (mem_time > 2147483647):
+        _ = dialog.MessageDialog(
+            cfg.programName,
+            ("The timestamp must be between -2147483647 and 2147483647.<br>" f"The current timestamp is {mem_time}"),
+            (cfg.OK,),
+        )
+        return 1
 
     # remove key code from modifiers
     subject = event.get(cfg.SUBJECT, self.currentSubject)
@@ -115,9 +124,7 @@ def write_event(self, event: dict, mem_time: dec) -> int:
             subject,
             event[cfg.BEHAVIOR_CODE],
         ):
-            _ = dialog.MessageDialog(
-                cfg.programName, "The same event already exists (same time, behavior code and subject).", (cfg.OK,)
-            )
+            _ = dialog.MessageDialog(cfg.programName, "The same event already exists (same time, behavior code and subject).", (cfg.OK,))
             return 1
 
         # modifying event and time was changed
@@ -154,9 +161,7 @@ def write_event(self, event: dict, mem_time: dec) -> int:
         if (
             editing_event
             and image_idx
-            != self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS][event["row"]][
-                cfg.PJ_OBS_FIELDS[cfg.IMAGES][cfg.IMAGE_INDEX]
-            ]
+            != self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS][event["row"]][cfg.PJ_OBS_FIELDS[cfg.IMAGES][cfg.IMAGE_INDEX]]
         ):
             if self.checkSameEvent(
                 self.observationId,
@@ -207,9 +212,7 @@ def write_event(self, event: dict, mem_time: dec) -> int:
                 # check if editing (original_modifiers key)
                 currentModifiers = event.get("original_modifiers", "")
 
-                modifiers_selector = select_modifiers.ModifiersList(
-                    event["code"], eval(str(event[cfg.MODIFIERS])), currentModifiers
-                )
+                modifiers_selector = select_modifiers.ModifiersList(event["code"], eval(str(event[cfg.MODIFIERS])), currentModifiers)
 
                 r = modifiers_selector.exec_()
                 if r:
@@ -265,9 +268,7 @@ def write_event(self, event: dict, mem_time: dec) -> int:
     # logging.debug(f"current_states {current_states}")
 
     # fill the undo list
-    event_operations.fill_events_undo_list(
-        self, "Undo last event edition" if editing_event else "Undo last event insertion"
-    )
+    event_operations.fill_events_undo_list(self, "Undo last event edition" if editing_event else "Undo last event insertion")
 
     logging.debug("save list of events for undo operation")
 
@@ -312,9 +313,7 @@ def write_event(self, event: dict, mem_time: dec) -> int:
                 modifier_str = cm[cs]
                 continue
 
-            if (event["excluded"] and cs in event["excluded"].split(",")) or (
-                event[cfg.BEHAVIOR_CODE] == cs and cm[cs] != modifier_str
-            ):
+            if (event["excluded"] and cs in event["excluded"].split(",")) or (event[cfg.BEHAVIOR_CODE] == cs and cm[cs] != modifier_str):
                 # add excluded state event to observations (= STOP them)
                 if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE] in (cfg.LIVE):
                     bisect.insort(
@@ -403,9 +402,7 @@ def write_event(self, event: dict, mem_time: dec) -> int:
     self.load_tw_events(self.observationId)
 
     if self.playerType in (cfg.MEDIA, cfg.LIVE):
-        position_in_events = [
-            i for i, t in enumerate(self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS]) if t[0] == mem_time
-        ][0]
+        position_in_events = [i for i, t in enumerate(self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS]) if t[0] == mem_time][0]
 
         if position_in_events == len(self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS]) - 1:
             self.twEvents.scrollToBottom()

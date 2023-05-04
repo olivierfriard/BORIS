@@ -158,7 +158,6 @@ def update_menu(self):
         self.actionAdd_image_overlay_on_video,
         self.actionRemove_image_overlay,
     ):
-
         action.setEnabled(self.playerType == cfg.MEDIA)
 
     # geometric measurements
@@ -197,7 +196,7 @@ def update_menu(self):
         w.setEnabled(project_contains_obs)
 
     # statusbar labels
-    for w in [self.lbTimeOffset, self.lbSpeed, self.lb_obs_time_interval]:
+    for w in (self.lbTimeOffset, self.lb_obs_time_interval):
         w.setVisible(self.playerType == cfg.MEDIA)
 
     logging.debug("function: menu_options finished")

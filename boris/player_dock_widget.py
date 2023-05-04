@@ -24,8 +24,7 @@ This file is part of BORIS.
 import os
 import sys
 import logging
-import pathlib as pl
-import datetime as dt
+import functools
 
 os.environ["PATH"] = os.path.dirname(__file__) + os.sep + "misc" + os.pathsep + os.environ["PATH"]
 
@@ -53,8 +52,6 @@ except OSError:  # libmpv not found
 from PyQt5.QtWidgets import QLabel, QDockWidget, QWidget, QHBoxLayout, QSlider, QSizePolicy, QStackedWidget
 from PyQt5.QtCore import pyqtSignal, QEvent, Qt
 
-import logging
-
 
 class Clickable_label(QLabel):
     """
@@ -77,8 +74,15 @@ class Clickable_label(QLabel):
         self.mouse_pressed_signal.emit(self.id_, event)
 
 
-class DW_player(QDockWidget):
+def mpv_logger(player_id, loglevel, component, message):
+    """
+    redirect MPV log messages to general logging system
+    """
 
+    logging.debug(f"MPV player #{player_id}: [{loglevel}] {component}: {message}")
+
+
+class DW_player(QDockWidget):
     key_pressed_signal = pyqtSignal(QEvent)
     volume_slider_moved_signal = pyqtSignal(int, int)
     view_signal = pyqtSignal(int, str, int)
@@ -87,7 +91,6 @@ class DW_player(QDockWidget):
     def __init__(self, id_, parent=None):
         super().__init__(parent)
         self.id_ = id_
-        self.zoomed = False
         self.setWindowTitle(f"Player #{id_ + 1}")
         self.setObjectName(f"player{id_ + 1}")
 
@@ -99,7 +102,7 @@ class DW_player(QDockWidget):
         self.player = mpv.MPV(
             wid=str(int(self.videoframe.winId())),
             # vo='x11', # You may not need this
-            log_handler=None,
+            log_handler=functools.partial(mpv_logger, self.id_),
             loglevel="debug",
         )
 
@@ -147,15 +150,7 @@ class DW_player(QDockWidget):
         """
         self.key_pressed_signal.emit(event)
 
-    '''
-    def view_signal_triggered(self, msg, button):
-        """
-        transmit signal received by video frame
-        """
-        self.view_signal.emit(self.id_, msg, button)
-    '''
-
-    def resizeEvent(self, dummy):
+    def resizeEvent(self, _):
         """
         emits signal when dockwidget resized
         """

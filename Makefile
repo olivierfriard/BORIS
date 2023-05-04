@@ -1,5 +1,8 @@
 create_wheel:
-	git commit -am "new wheel"; git push; rm -rf *.egg-info build dist; python3 setup.py sdist bdist_wheel; twine check dist/*
+    #sed 's/###VERSION###/8.18.1/g' pyproject_template.toml > pyproject.toml
+	git commit -am "new wheel"; git push; rm -rf *.egg-info build dist
+	python3 -m build
+	twine check dist/*
 
 
 upload_pip_test:

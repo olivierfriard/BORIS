@@ -42,6 +42,7 @@ REALTIME_PLOT_CURSOR_COLOR = "red"
 DYNAMIC_TIME_CUTOFF_DEFAULT = 300
 
 CTRL_KEY: str = "Ctrl"
+ALT_KEY: str = "Alt"
 
 SPECTRO_TIMER: int = 500
 
@@ -188,6 +189,8 @@ IMAGE_PATH = "image path"
 FRAME_INDEX = "frame index"
 
 ZOOM_LEVEL = "zoom level"
+PAN_X = "pan-x"
+PAN_Y = "pan-y"
 ROTATION_ANGLE = "rotation angle"
 DISPLAY_MEDIA_SUBTITLES = "display subtitles"
 OVERLAY = "video overlay"
@@ -390,9 +393,13 @@ OBSERVATIONS = "observations"
 
 CLOSE_BEHAVIORS_BETWEEN_VIDEOS = "close_behaviors_between_videos"
 
-MPV_HWDEC_OPTIONS = ("auto", "auto-safe", "no")
-MPV_HWDEC_DEFAULT_VALUE = "auto"
+# MPV hardware decode
 MPV_HWDEC = "mpv_hwdec"
+MPV_HWDEC_NO = "no"
+MPV_HWDEC_AUTO = "auto"
+MPV_HWDEC_AUTOSAFE = "auto-safe"
+MPV_HWDEC_OPTIONS = (MPV_HWDEC_AUTO, MPV_HWDEC_AUTOSAFE, MPV_HWDEC_NO)
+MPV_HWDEC_DEFAULT_VALUE = MPV_HWDEC_AUTO
 
 
 PROJECT_FILE_INDENTATION = "project file indentation"
@@ -429,6 +436,7 @@ ALL_PLAYERS = [str(x + 1) for x in range(N_PLAYER)]
 VISUALIZE_SPECTROGRAM = "visualize_spectrogram"
 VISUALIZE_WAVEFORM = "visualize_waveform"
 
+MEDIA_SCAN_SAMPLING_DURATION = "media_scan_sampling_duration"
 IMAGE_DISPLAY_DURATION = "image_display_duration"
 
 # plot type
