@@ -92,7 +92,8 @@ def check_observation_exhaustivity(
 
     if events:
         # coding duration
-        obs_theo_dur = max(events)[cfg.EVENT_TIME_FIELD_IDX] - min(events)[cfg.EVENT_TIME_FIELD_IDX]
+        event_timestamps = [event[cfg.EVENT_TIME_FIELD_IDX] for event in events]
+        obs_theo_dur = max(event_timestamps) - min(event_timestamps)
     else:
         obs_theo_dur = dec("0")
 
@@ -378,6 +379,7 @@ def check_project_integrity(
     check project integrity
     check if behaviors in observations are in ethogram
     check unpaired state events
+    check if timestamp between -2147483647 and 2147483647 (2**31 - 1)
     check if behavior belong to behavioral category that do not more exist
     check for leading and trailing spaces and special chars in modifiers
     check if media file are available
@@ -440,12 +442,15 @@ def check_project_integrity(
                 out += "<br><br>" if out else ""
                 out += f"Observation: <b>{obs_id}</b><br>{msg}"
 
-    # check if media length available
+    out_events = ""
     for obs_id in pj[cfg.OBSERVATIONS]:
-        # TODO: add images observations
-        if pj[cfg.OBSERVATIONS][obs_id][cfg.TYPE] in [cfg.LIVE]:
-            continue
+        # check if timestamp between -2147483647 and 2147483647
+        for event in pj[cfg.OBSERVATIONS][obs_id][cfg.EVENTS]:
+            timestamp = event[cfg.PJ_OBS_FIELDS[pj[cfg.OBSERVATIONS][obs_id][cfg.TYPE]][cfg.TIME]]
+            if not timestamp.is_nan() and not (-2147483647 <= timestamp <= 2147483647):
+                out_events += f"Observation: <b>{obs_id}</b><br>The timestamp {timestamp} is not between -2147483647 and 2147483647.<br>"
 
+        # check if media length available
         if pj[cfg.OBSERVATIONS][obs_id][cfg.TYPE] == cfg.MEDIA:
             for nplayer in cfg.ALL_PLAYERS:
                 if nplayer in pj[cfg.OBSERVATIONS][obs_id][cfg.FILE]:
@@ -455,6 +460,9 @@ def check_project_integrity(
                         except KeyError:
                             out += "<br><br>" if out else ""
                             out += f"Observation: <b>{obs_id}</b><br>Length not available for media file <b>{media_file}</b>"
+
+    out += "<br><br>" if out else ""
+    out += out_events
 
     # check for leading/trailing spaces/special chars in observation id
     for obs_id in pj[cfg.OBSERVATIONS]:
@@ -1138,9 +1146,18 @@ def observed_interval(observation: dict) -> Tuple[dec, dec]:
     if not observation[cfg.EVENTS]:
         return (dec("0.0"), dec("0.0"))
     if observation[cfg.TYPE] in (cfg.MEDIA, cfg.LIVE):
+
+        """
+        print("=" * 120)
+        print(observation[cfg.EVENTS])
+        print("=" * 120)
+        """
+
+        event_timestamp = [event[cfg.PJ_OBS_FIELDS[observation[cfg.TYPE]][cfg.TIME]] for event in observation[cfg.EVENTS]]
+
         return (
-            min(observation[cfg.EVENTS])[cfg.PJ_OBS_FIELDS[observation[cfg.TYPE]][cfg.TIME]],
-            max(observation[cfg.EVENTS])[cfg.PJ_OBS_FIELDS[observation[cfg.TYPE]][cfg.TIME]],
+            min(event_timestamp),
+            max(event_timestamp),
         )
     if observation[cfg.TYPE] == cfg.IMAGES:
         events = [x[cfg.PJ_OBS_FIELDS[observation[cfg.TYPE]][cfg.IMAGE_INDEX]] for x in observation[cfg.EVENTS]]
