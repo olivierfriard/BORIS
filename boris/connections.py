@@ -37,6 +37,7 @@ from . import (
     import_observations,
     irr,
     latency,
+    cooccurence,
     media_file,
     observation_operations,
     preferences,
@@ -69,9 +70,7 @@ def connections(self):
     self.actionExport_project.triggered.connect(lambda: project_import_export.export_project_as_pickle_object(self.pj))
     self.actionClose_project.triggered.connect(self.close_project)
 
-    self.action_media_file_and_images_directories_relative_path.triggered.connect(
-        self.set_media_files_path_relative_to_project_dir
-    )
+    self.action_media_file_and_images_directories_relative_path.triggered.connect(self.set_media_files_path_relative_to_project_dir)
     self.action_data_files_relative_path.triggered.connect(self.set_data_files_path_relative_to_project_dir)
 
     self.action_remove_media_files_and_images_directories_path.triggered.connect(self.remove_media_files_path)
@@ -84,13 +83,9 @@ def connections(self):
     self.actionQuit.triggered.connect(self.actionQuit_activated)
 
     # menu observations
-    self.actionNew_observation.triggered.connect(
-        lambda: observation_operations.new_observation(self, mode=cfg.NEW, obsId="")
-    )
+    self.actionNew_observation.triggered.connect(lambda: observation_operations.new_observation(self, mode=cfg.NEW, obsId=""))
 
-    self.actionOpen_observation.triggered.connect(
-        lambda: observation_operations.open_observation(self, mode=cfg.OBS_START)
-    )
+    self.actionOpen_observation.triggered.connect(lambda: observation_operations.open_observation(self, mode=cfg.OBS_START))
     self.actionView_observation.triggered.connect(lambda: observation_operations.open_observation(self, mode=cfg.VIEW))
     self.actionEdit_observation_2.triggered.connect(lambda: observation_operations.edit_observation(self))
     self.actionObservationsList.triggered.connect(lambda: observation_operations.observations_list(self))
@@ -109,14 +104,10 @@ def connections(self):
     # twevent header
     self.actionConfigure_twEvents_columns.triggered.connect(self.configure_twevents_columns)
 
-    self.actionExport_observations_list.triggered.connect(
-        lambda: observation_operations.export_observations_list_clicked(self)
-    )
+    self.actionExport_observations_list.triggered.connect(lambda: observation_operations.export_observations_list_clicked(self))
 
     self.actionCheckStateEvents.triggered.connect(lambda: state_events.check_state_events(self, mode="all"))
-    self.actionCheckStateEventsSingleObs.triggered.connect(
-        lambda: state_events.check_state_events(self, mode="current")
-    )
+    self.actionCheckStateEventsSingleObs.triggered.connect(lambda: state_events.check_state_events(self, mode="current"))
     self.actionClose_unpaired_events.triggered.connect(lambda: state_events.fix_unpaired_events(self))
     self.actionRunEventOutside.triggered.connect(self.run_event_outside)
 
@@ -162,9 +153,7 @@ def connections(self):
     self.actionAll_transitions.triggered.connect(lambda: transitions.transitions_matrix(self, "frequency"))
     self.actionNumber_of_transitions.triggered.connect(lambda: transitions.transitions_matrix(self, "number"))
 
-    self.actionFrequencies_of_transitions_after_behaviors.triggered.connect(
-        lambda: self.transitions_matrix("frequencies_after_behaviors")
-    )
+    self.actionFrequencies_of_transitions_after_behaviors.triggered.connect(lambda: self.transitions_matrix("frequencies_after_behaviors"))
 
     # menu playback
     self.actionJumpTo.triggered.connect(self.jump_to)
@@ -178,9 +167,7 @@ def connections(self):
     self.action_block_dockwidgets.triggered.connect(self.block_dockwidgets)
 
     self.action_create_modifiers_coding_map.triggered.connect(self.modifiers_coding_map_creator)
-    self.action_create_behaviors_coding_map.triggered.connect(
-        lambda: behav_coding_map_creator.behaviors_coding_map_creator(self)
-    )
+    self.action_create_behaviors_coding_map.triggered.connect(lambda: behav_coding_map_creator.behaviors_coding_map_creator(self))
 
     self.actionShow_spectrogram.triggered.connect(lambda: self.show_plot_widget("spectrogram", warning=True))
     self.actionShow_the_sound_waveform.triggered.connect(lambda: self.show_plot_widget("waveform", warning=True))
@@ -208,14 +195,10 @@ def connections(self):
 
     # menu Analysis
     self.actionTime_budget.triggered.connect(lambda: time_budget_widget.time_budget(self, mode="by_behavior"))
-    self.actionTime_budget_by_behaviors_category.triggered.connect(
-        lambda: time_budget_widget.time_budget(self, mode="by_category")
-    )
+    self.actionTime_budget_by_behaviors_category.triggered.connect(lambda: time_budget_widget.time_budget(self, mode="by_category"))
 
     self.actionTime_budget_report.triggered.connect(lambda: synthetic_time_budget.synthetic_time_budget(self))
-    self.actionSynthetic_binned_time_budget.triggered.connect(
-        lambda: synthetic_time_budget.synthetic_binned_time_budget(self)
-    )
+    self.actionSynthetic_binned_time_budget.triggered.connect(lambda: synthetic_time_budget.synthetic_binned_time_budget(self))
 
     self.actionBehavior_bar_plot.triggered.connect(lambda: self.behaviors_bar_plot(mode="list"))
     self.actionBehavior_bar_plot.setVisible(True)
@@ -228,6 +211,8 @@ def connections(self):
     self.action_advanced_event_filtering.triggered.connect(self.advanced_event_filtering)
 
     self.action_latency.triggered.connect(lambda: latency.get_latency(self))
+
+    self.action_cooccurence.triggered.connect(lambda: cooccurence.get_cooccurence(self))
 
     # menu Help
     self.actionUser_guide.triggered.connect(self.actionUser_guide_triggered)
@@ -254,9 +239,7 @@ def connections(self):
     self.actionFrame_forward.triggered.connect(self.next_frame)
 
     self.actionCloseObs.triggered.connect(lambda: observation_operations.close_observation(self))
-    self.actionCurrent_Time_Budget.triggered.connect(
-        lambda: time_budget_widget.time_budget(self, mode="by_behavior", mode2="current")
-    )
+    self.actionCurrent_Time_Budget.triggered.connect(lambda: time_budget_widget.time_budget(self, mode="by_behavior", mode2="current"))
     self.actionPlot_current_observation.triggered.connect(lambda: self.plot_events_triggered(mode="current"))
 
     self.actionPlot_current_time_budget.triggered.connect(lambda: self.behaviors_bar_plot(mode="current"))

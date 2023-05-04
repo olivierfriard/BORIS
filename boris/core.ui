@@ -334,6 +334,7 @@
     <addaction name="menuSimilarities"/>
     <addaction name="action_advanced_event_filtering"/>
     <addaction name="action_latency"/>
+    <addaction name="action_cooccurence"/>
    </widget>
    <widget class="QMenu" name="menuPlayback">
     <property name="title">
@@ -1577,6 +1578,11 @@
    </property>
    <property name="text">
     <string>Deinterlace</string>
+   </property>
+  </action>
+  <action name="action_cooccurence">
+   <property name="text">
+    <string>Co-occurence</string>
    </property>
   </action>
  </widget>

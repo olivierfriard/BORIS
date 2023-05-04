@@ -56,6 +56,9 @@ def check_observation_exhaustivity(
     """
 
     def interval_len(interval: I) -> dec:
+        """ "
+        returns duration of an interval or a set of intervals
+        """
         if interval.empty:
             return dec(0)
         else:
