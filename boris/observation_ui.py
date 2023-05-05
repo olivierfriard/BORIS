@@ -206,7 +206,7 @@ class Ui_Form(object):
         self.horizontalLayout_12.addItem(spacerItem4)
         self.verticalLayout.addLayout(self.horizontalLayout_12)
         self.cbCloseCurrentBehaviorsBetweenVideo = QtWidgets.QCheckBox(self.tab_player_1)
-        self.cbCloseCurrentBehaviorsBetweenVideo.setEnabled(True)
+        self.cbCloseCurrentBehaviorsBetweenVideo.setEnabled(False)
         self.cbCloseCurrentBehaviorsBetweenVideo.setObjectName("cbCloseCurrentBehaviorsBetweenVideo")
         self.verticalLayout.addWidget(self.cbCloseCurrentBehaviorsBetweenVideo)
         self.tabWidget.addTab(self.tab_player_1, "")
