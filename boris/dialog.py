@@ -61,7 +61,6 @@ from . import version
 
 
 def MessageDialog(title: str, text: str, buttons: tuple) -> str:
-
     message = QMessageBox()
     message.setWindowTitle(title)
     message.setText(text)
@@ -72,61 +71,6 @@ def MessageDialog(title: str, text: str, buttons: tuple) -> str:
     # message.setWindowFlags(Qt.WindowStaysOnTopHint)
     message.exec_()
     return message.clickedButton().text()
-
-
-'''
-def error_message_box(task, error_type, error_file_name, error_lineno):
-    # do NOT use this function directly, use error_message function
-    """
-    show a critical dialog
-
-    """
-    QMessageBox.critical(None, cfg.programName, (f"BORIS version: {version.__version__}<br>"
-                                                 f"An error occured during the execution of <b>{task}</b>.<br>"
-                                                 f"Error: {error_type}<br>"
-                                                 f"in {error_file_name} "
-                                                 f"at line # {error_lineno}<br><br>"
-                                                 "to improve the software please report this problem at:<br>"
-                                                 '<a href="https://github.com/olivierfriard/BORIS/issues">'
-                                                 'https://github.com/olivierfriard/BORIS/issues</a><br>'
-                                                 "or by email (See the About page on the BORIS web site.<br><br>"
-                                                 "Thank you for your collaboration!"))
-'''
-
-'''
-def error_message_box(error_traceback):
-    # do NOT use this function directly, use error_message function
-    """
-    show a critical dialog
-
-    """
-    QMessageBox.critical(
-        None,
-        cfg.programName,
-        (
-            f"BORIS version: {version.__version__}<br><br>"
-            f"<b>An error has occured</b>:<br>"
-            f"{error_traceback}<br><br>"
-            "to improve the software please report this problem at:<br>"
-            '<a href="https://github.com/olivierfriard/BORIS/issues">'
-            "https://github.com/olivierfriard/BORIS/issues</a><br>"
-            "or by email (See the About page on the BORIS web site.<br><br>"
-            "Thank you for your collaboration!"
-        ),
-    )
-
-
-def error_message() -> None:
-    """
-    Show details about the error in a message box
-    write entry to log as CRITICAL
-    """
-
-    error_traceback = traceback.format_exc().replace("Traceback (most recent call last):", "").replace("\n", " ")
-
-    logging.critical(error_traceback)
-    error_message_box(error_traceback)
-'''
 
 
 def global_error_message(exception_type, exception_value, traceback_object):
@@ -334,7 +278,6 @@ class Input_dialog(QDialog):
 
         self.elements: dict = {}
         for element in elements_list:
-
             if element[0] == "cb":  # checkbox
                 self.elements[element[1]] = QCheckBox(element[1])
                 self.elements[element[1]].setChecked(element[2])
@@ -412,7 +355,6 @@ class DuplicateBehaviorCode(QDialog):
     """
 
     def __init__(self, text, codes_list):
-
         super(DuplicateBehaviorCode, self).__init__()
 
         self.setWindowTitle(cfg.programName)
@@ -468,7 +410,6 @@ class ChooseObservationsToImport(QDialog):
     """
 
     def __init__(self, text, observations_list):
-
         super(ChooseObservationsToImport, self).__init__()
 
         self.setWindowTitle(cfg.programName)
@@ -885,5 +826,4 @@ class View_explore_project_results(QWidget):
         # self.resize(540, 640)
 
     def tw_cellDoubleClicked(self, r, c):
-
         self.double_click_signal.emit(self.tw.item(r, 0).text(), int(self.tw.item(r, 1).text()))
