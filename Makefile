@@ -1,5 +1,15 @@
+update_version:
+
+	$(eval VER := $(grep '__version__' boris/version.py | awk -F'"' '{print $2}'))
+	echo ${VER}
+
+xxx:
+	export x=$(grep '__version__' boris/version.py | awk -F'"' '{print $2}')
+	echo $x
+	#sed 's/###VERSION###/$(version)/g' pyproject_template.toml > pyproject.toml
+
+
 create_wheel:
-    #sed 's/###VERSION###/8.18.1/g' pyproject_template.toml > pyproject.toml
 	git commit -am "new wheel"; git push; rm -rf *.egg-info build dist
 	python3 -m build
 	twine check dist/*
