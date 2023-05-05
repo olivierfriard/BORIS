@@ -46,7 +46,6 @@ def get_latency(self):
             f"This function is experimental. Please test it and report any bug at <br>"
             '<a href="https://github.com/olivierfriard/BORIS/issues">'
             "https://github.com/olivierfriard/BORIS/issues</a><br>"
-            "or by email (See the About page on the BORIS web site.<br><br>"
             "Thank you for your collaboration!"
         ),
         QMessageBox.Ok | QMessageBox.Default,
@@ -138,7 +137,6 @@ def get_latency(self):
                     ),
                 )
             ):
-
                 if include_marker_modifiers:
                     marker = event[cfg.EVENT_TIME_FIELD_IDX : cfg.EVENT_MODIFIER_FIELD_IDX + 1]
                 else:
@@ -164,7 +162,6 @@ def get_latency(self):
                             ),
                         )
                     ):
-
                         # print(event, event2)
                         if include_latency_modifiers:
                             latency = event2[cfg.EVENT_SUBJECT_FIELD_IDX : cfg.EVENT_MODIFIER_FIELD_IDX + 1]
@@ -175,9 +172,7 @@ def get_latency(self):
                         # print(f"{latency=}")
                         if not latency in results[marker]:
                             results[marker][latency] = []
-                        results[marker][latency].append(
-                            event2[cfg.EVENT_TIME_FIELD_IDX] - event[cfg.EVENT_TIME_FIELD_IDX]
-                        )
+                        results[marker][latency].append(event2[cfg.EVENT_TIME_FIELD_IDX] - event[cfg.EVENT_TIME_FIELD_IDX])
 
                     # check if new marker
                     if all(
@@ -208,7 +203,6 @@ def get_latency(self):
     out = ""
 
     for marker in sorted(results.keys()):
-
         subject = cfg.NO_FOCAL_SUBJECT if marker[cfg.EVENT_SUBJECT_FIELD_IDX] == "" else marker[1]
         if include_marker_modifiers:
             out += f"Marker: <b>{marker[cfg.EVENT_BEHAVIOR_FIELD_IDX]}</b> at {marker[cfg.EVENT_TIME_FIELD_IDX]} s (subject: {subject} - modifiers: {marker[cfg.EVENT_MODIFIER_FIELD_IDX]})<br><br>"

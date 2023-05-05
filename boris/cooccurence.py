@@ -45,21 +45,18 @@ def get_cooccurence(self):
     get co-occurence of selected behaviors
     """
 
-    """
     QMessageBox.warning(
         None,
         cfg.programName,
         (
-            f"This function is experimental. Please test it and report any bug at <br>"
+            f"This function is experimental. Please test it and report any bug and suggestions at <br>"
             '<a href="https://github.com/olivierfriard/BORIS/issues">'
             "https://github.com/olivierfriard/BORIS/issues</a><br>"
-            "or by email (See the About page on the BORIS web site.<br><br>"
             "Thank you for your collaboration!"
         ),
         QMessageBox.Ok | QMessageBox.Default,
         QMessageBox.NoButton,
     )
-    """
 
     def interval_len(interval: I) -> dec:
         """ "
@@ -124,7 +121,6 @@ def get_cooccurence(self):
     mem_events_interval: dict = {}
 
     for obs_id in selected_observations:
-
         events_interval[obs_id] = {}
         mem_events_interval[obs_id] = {}
 
@@ -159,7 +155,6 @@ def get_cooccurence(self):
     cooocurence_results: dict = {}
 
     for obs_id in selected_observations:
-
         print()
         print(obs_id)
 
