@@ -1423,7 +1423,7 @@ def initialize_new_media_observation(self) -> bool:
             # self.dw_player[i].player.loadfile(media_full_path)
             # self.dw_player[i].player.pause = True
 
-        # check if BORIS is running on a Windows VM with WMIC COMPUTERSYSTEM GET SERIALNUMBER
+        # check if BORIS is running on a Windows VM with the 'WMIC COMPUTERSYSTEM GET SERIALNUMBER' command
         # because "auto" or "auto-safe" crash in Windows VM
         # see https://superuser.com/questions/1128339/how-can-i-detect-if-im-within-a-vm-or-not
 
