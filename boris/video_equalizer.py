@@ -56,9 +56,11 @@ class Video_equalizer(QDialog, Ui_Equalizer):
 
         self.initialize(0)
 
-    def initialize(self, n_player):
+    def initialize(self, n_player: int) -> None:
         if n_player not in self.equalizer:
             return
+
+        print(self.equalizer)
 
         self.hs_brightness.setValue(self.equalizer[n_player]["hs_brightness"])
         self.lb_brightness.setText(str(self.equalizer[n_player]["hs_brightness"]))
@@ -76,7 +78,6 @@ class Video_equalizer(QDialog, Ui_Equalizer):
         self.lb_hue.setText(str(self.equalizer[n_player]["hs_hue"]))
 
     def player_changed(self, index):
-
         self.initialize(index)
 
     def reset(self):
@@ -102,8 +103,11 @@ class Video_equalizer(QDialog, Ui_Equalizer):
         """
         if self.cb_player.currentIndex() not in self.equalizer:
             return
-        self.equalizer[self.cb_player.currentIndex()][self.sender().objectName()] = self.sender().value()
-        self.sendEventSignal.emit(self.cb_player.currentIndex(), self.sender().objectName(), self.sender().value())
+
+        print(type(self.sender().value()))
+
+        self.equalizer[self.cb_player.currentIndex()][self.sender().objectName()] = round(self.sender().value())
+        self.sendEventSignal.emit(self.cb_player.currentIndex(), self.sender().objectName(), round(self.sender().value()))
 
         self.initialize(self.cb_player.currentIndex())
 
@@ -142,11 +146,11 @@ def video_equalizer_show(self):
     equalizer = {}
     for n_player, _ in enumerate(self.dw_player):
         equalizer[n_player] = {
-            "hs_brightness": self.dw_player[n_player].player.brightness,
-            "hs_contrast": self.dw_player[n_player].player.contrast,
-            "hs_saturation": self.dw_player[n_player].player.saturation,
-            "hs_gamma": self.dw_player[n_player].player.gamma,
-            "hs_hue": self.dw_player[n_player].player.hue,
+            "hs_brightness": round(self.dw_player[n_player].player.brightness),
+            "hs_contrast": round(self.dw_player[n_player].player.contrast),
+            "hs_saturation": round(self.dw_player[n_player].player.saturation),
+            "hs_gamma": round(self.dw_player[n_player].player.gamma),
+            "hs_hue": round(self.dw_player[n_player].player.hue),
         }
 
     self.video_equalizer_wgt = Video_equalizer(equalizer)

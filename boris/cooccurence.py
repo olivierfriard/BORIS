@@ -37,6 +37,7 @@ from PyQt5.QtWidgets import QMessageBox
 from PyQt5.QtGui import QFont, QTextOption
 from . import portion as I
 import itertools
+import logging
 from decimal import Decimal as dec
 
 
@@ -95,25 +96,38 @@ def get_cooccurence(self):
         )
         return
 
-    parameters = select_subj_behav.choose_obs_subj_behav_category(
-        self,
-        selected_observations,
-        flagShowExcludeBehaviorsWoEvents=False,
-        window_title="Select the behaviors",
-        n_observations=len(selected_observations),
-    )
+    while True:
+        flag_ok: bool = True
+        parameters = select_subj_behav.choose_obs_subj_behav_category(
+            self,
+            selected_observations,
+            window_title="Select the behaviors",
+            n_observations=len(selected_observations),
+            flagShowIncludeModifiers=False,
+            flagShowExcludeBehaviorsWoEvents=True,
+        )
 
-    if parameters == {}:
-        return
+        if parameters == {}:  # cancel button pressed
+            return
 
-    if not parameters[cfg.SELECTED_SUBJECTS] or not parameters[cfg.SELECTED_BEHAVIORS]:
-        QMessageBox.warning(None, cfg.programName, "Select subject(s) and behavior(s) to analyze")
-        return
+        if not parameters[cfg.SELECTED_SUBJECTS]:
+            QMessageBox.warning(None, cfg.programName, "Select the subject(s) to analyze")
+            flag_ok = False
 
-    print(f"{parameters[cfg.SELECTED_BEHAVIORS]=}")
+        # check number of behaviors (must be <=4)
+        if flag_ok and len(parameters[cfg.SELECTED_BEHAVIORS]) > 4:
+            QMessageBox.warning(None, cfg.programName, "You cannot select more than 4 behaviors")
+            flag_ok = False
 
-    marker_subjects = parameters[cfg.SELECTED_SUBJECTS]
-    include_marker_modifiers = parameters[cfg.INCLUDE_MODIFIERS]
+        # check number of behaviors (must be > 1)
+        if flag_ok and len(parameters[cfg.SELECTED_BEHAVIORS]) < 2:
+            QMessageBox.warning(None, cfg.programName, "You must select almost 2 behaviors")
+            flag_ok = False
+
+        if flag_ok:
+            break
+
+    logging.debug(f"{parameters[cfg.SELECTED_BEHAVIORS]}")
 
     state_events_list = util.state_behavior_codes(self.pj[cfg.ETHOGRAM])
 
@@ -150,13 +164,12 @@ def get_cooccurence(self):
                     event[cfg.EVENT_TIME_FIELD_IDX]
                 )
 
-    print(events_interval)
+    logging.debug(f"events_interval: {events_interval}")
 
     cooocurence_results: dict = {}
 
     for obs_id in selected_observations:
-        print()
-        print(obs_id)
+        logging.debug(f"obs_id: {obs_id}")
 
         for subject in parameters[cfg.SELECTED_SUBJECTS]:
             if subject == "No focal subject":
@@ -167,17 +180,15 @@ def get_cooccurence(self):
             if subject not in cooocurence_results:
                 cooocurence_results[subject] = {}
 
-            # out += f"Subject <b>{subject}</b><br><br>"
-            print()
-            print(subject)
+            logging.debug(f"subject {subject}")
 
             for n_combinations in range(2, len(parameters[cfg.SELECTED_BEHAVIORS]) + 1):
                 union = I.empty()
 
-                print(f"{n_combinations=}")
+                logging.debug(f"{n_combinations=}")
 
                 for combination in itertools.combinations(parameters[cfg.SELECTED_BEHAVIORS], n_combinations):
-                    print(f"{combination=}")
+                    logging.debug(f"{combination=}")
                     if subj in events_interval[obs_id]:
                         # init
                         if combination[0] in events_interval[obs_id][subj]:
@@ -185,7 +196,7 @@ def get_cooccurence(self):
                         else:
                             union = I.empty()
 
-                        print(f"{combination[0]=} {union=}")
+                        logging.debug(f"{combination[0]=} {union=}")
 
                         for combination2 in combination[1:]:
                             if combination2 in events_interval[obs_id][subj]:
@@ -193,39 +204,32 @@ def get_cooccurence(self):
                             else:
                                 inter2 = I.empty()
 
-                            print(f"{combination2=} {inter2=}")
+                            logging.debug(f"{combination2=} {inter2=}")
 
                             union &= inter2
 
                         if combination not in cooocurence_results[subject]:
                             cooocurence_results[subject][combination] = 0
 
-                        print(f"{combination=} {union=}")
+                        logging.debug(f"{combination=} {union=}")
                         cooocurence_results[subject][combination] += interval_len(union)
                     else:
                         if combination not in cooocurence_results[subject]:
                             cooocurence_results[subject][combination] = 0
                         cooocurence_results[subject][combination] += 0
 
-                    print()
-                    print(f"{cooocurence_results[subject][combination]=}")
+                    logging.debug(f"{cooocurence_results[subject][combination]=}")
 
-                    # duration = f"<b>{interval_len(union)}</b>" if interval_len(union) else "0"
-                    # out += f"<b>{'</b> and <b>'.join(combination)}</b>: {duration} s<br>"
+    logging.debug(cooocurence_results)
 
-                    # print(f"Subject: {subject}    Behaviors {' and '.join(combination)}: {interval_len(union)} s")
-
-                # out += "<br>"
-
-            # out += "<br>"
-
-    print(cooocurence_results)
-
-    out = "<b>Co-occurence of behaviors</b><br><br>"
+    out = f"<b>Co-occurence of behaviors: {','.join(parameters[cfg.SELECTED_BEHAVIORS])}</b><br><br>"
     for subject in parameters[cfg.SELECTED_SUBJECTS]:
         out += f"<br>Subject <b>{subject}</b><br><br>"
         for combination in cooocurence_results[subject]:
-            out += f"<b>{'</b> and <b>'.join(combination)}</b>: {cooocurence_results[subject][combination]} s<br>"
+            if parameters[cfg.EXCLUDE_BEHAVIORS] and not cooocurence_results[subject][combination]:
+                continue
+            duration = f"<b>{cooocurence_results[subject][combination]}</b>" if cooocurence_results[subject][combination] else "0"
+            out += f"<b>{'</b> and <b>'.join(combination)}</b>: {duration} s<br>"
 
     self.results = dialog.Results_dialog()
     self.results.setWindowTitle("Behaviors co-occurence")
