@@ -1,7 +1,7 @@
 
 [project]
 name = "boris-behav-obs"
-#version = "8.19"
+version = "8.19"
 description = "BORIS - Behavioral Observation Research Interactive Software"
 authors = [{ name="Olivier Friard", email="olivier.friard@unito.it" }]
 readme = "README.rst"

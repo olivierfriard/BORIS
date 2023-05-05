@@ -3775,7 +3775,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         else:
             current_media_name = ""
 
-        '''
+        # check for ongoing state events between media
         if (
             self.pj[cfg.OBSERVATIONS][self.observationId][cfg.CLOSE_BEHAVIORS_BETWEEN_VIDEOS]
             and self.mem_media_name != ""
@@ -3822,7 +3822,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     """
 
         self.mem_media_name = current_media_name
-        '''
+
         playlist_length = len(self.dw_player[0].player.playlist)
 
         # update observation info

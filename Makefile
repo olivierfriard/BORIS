@@ -1,12 +1,7 @@
-update_version:
 
-	$(eval VER := $(grep '__version__' boris/version.py | awk -F'"' '{print $2}'))
-	echo ${VER}
 
-xxx:
-	export x=$(grep '__version__' boris/version.py | awk -F'"' '{print $2}')
-	echo $x
-	#sed 's/###VERSION###/$(version)/g' pyproject_template.toml > pyproject.toml
+# export x=$(grep '__version__' boris/version.py | awk -F'"' '{print $2}')
+# sed "s|###VERSION###|${x}|g" pyproject_template.toml > pyproject.toml
 
 
 create_wheel:

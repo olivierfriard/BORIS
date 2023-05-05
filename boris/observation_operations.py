@@ -713,6 +713,11 @@ def new_observation(self, mode=cfg.NEW, obsId=""):
             # waveform
             observationWindow.cb_visualize_waveform.setEnabled(True)
             observationWindow.cb_visualize_waveform.setChecked(self.pj[cfg.OBSERVATIONS][obsId].get(cfg.VISUALIZE_WAVEFORM, False))
+            # use Creation date metadata tag as offset
+            observationWindow.cb_media_creation_date_as_offset.setEnabled(True)
+            observationWindow.cb_media_creation_date_as_offset.setChecked(
+                self.pj[cfg.OBSERVATIONS][obsId].get(cfg.MEDIA_CREATION_DATE_AS_OFFSET, False)
+            )
             # scan sampling
             observationWindow.sb_media_scan_sampling.setValue(self.pj[cfg.OBSERVATIONS][obsId].get(cfg.MEDIA_SCAN_SAMPLING_DURATION, 0))
             # image display duration
@@ -778,7 +783,7 @@ def new_observation(self, mode=cfg.NEW, obsId=""):
                 observationWindow.rb_time_lapse.setChecked(True)
                 observationWindow.sb_time_lapse.setValue(self.pj[cfg.OBSERVATIONS][obsId].get(cfg.TIME_LAPSE, 0))
 
-        if self.pj[cfg.OBSERVATIONS][obsId]["type"] in (cfg.LIVE):
+        if self.pj[cfg.OBSERVATIONS][obsId]["type"] == cfg.LIVE:
             observationWindow.rb_live.setChecked(True)
             # sampling time
             observationWindow.sbScanSampling.setValue(self.pj[cfg.OBSERVATIONS][obsId].get(cfg.SCAN_SAMPLING_TIME, 0))
@@ -879,6 +884,11 @@ def new_observation(self, mode=cfg.NEW, obsId=""):
         self.pj[cfg.OBSERVATIONS][new_obs_id][cfg.VISUALIZE_SPECTROGRAM] = observationWindow.cbVisualizeSpectrogram.isChecked()
         # visualize spectrogram
         self.pj[cfg.OBSERVATIONS][new_obs_id][cfg.VISUALIZE_WAVEFORM] = observationWindow.cb_visualize_waveform.isChecked()
+        # use Creation date metadata tag as offset
+        self.pj[cfg.OBSERVATIONS][new_obs_id][
+            cfg.MEDIA_CREATION_DATE_AS_OFFSET
+        ] = observationWindow.cb_media_creation_date_as_offset.isChecked()
+
         # media scan sampling
         self.pj[cfg.OBSERVATIONS][new_obs_id][cfg.MEDIA_SCAN_SAMPLING_DURATION] = observationWindow.sb_media_scan_sampling.value()
         # image display duration

@@ -435,6 +435,7 @@ ALL_PLAYERS = [str(x + 1) for x in range(N_PLAYER)]
 
 VISUALIZE_SPECTROGRAM = "visualize_spectrogram"
 VISUALIZE_WAVEFORM = "visualize_waveform"
+MEDIA_CREATION_DATE_AS_OFFSET = "media_creation_date_as_offset"
 
 MEDIA_SCAN_SAMPLING_DURATION = "media_scan_sampling_duration"
 IMAGE_DISPLAY_DURATION = "image_display_duration"

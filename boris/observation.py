@@ -162,6 +162,9 @@ class Observation(QDialog, Ui_Form):
 
         self.cbVisualizeSpectrogram.clicked.connect(self.extract_wav)
         self.cb_visualize_waveform.clicked.connect(self.extract_wav)
+
+        self.cb_media_creation_date_as_offset.clicked.connect(self.check_creation_date)
+
         self.cb_observation_time_interval.clicked.connect(self.limit_time_interval)
 
         self.pbSave.clicked.connect(self.pbSave_clicked)
@@ -172,13 +175,16 @@ class Observation(QDialog, Ui_Form):
 
         self.mediaDurations, self.mediaFPS, self.mediaHasVideo, self.mediaHasAudio = {}, {}, {}, {}
 
-        self.cbVisualizeSpectrogram.setEnabled(False)
-        self.cb_visualize_waveform.setEnabled(False)
-        self.cb_observation_time_interval.setEnabled(True)
+        for w in (
+            self.cbVisualizeSpectrogram,
+            self.cb_visualize_waveform,
+            self.cb_observation_time_interval,
+            self.cb_media_creation_date_as_offset,
+            self.cbCloseCurrentBehaviorsBetweenVideo,
+        ):
+            w.setEnabled(False)
 
-        # disabled due to problem when video goes back
-        # self.cbCloseCurrentBehaviorsBetweenVideo.setChecked(False)
-        # self.cbCloseCurrentBehaviorsBetweenVideo.setEnabled(False)
+        self.cb_observation_time_interval.setEnabled(True)
 
         self.cb_start_from_current_time.stateChanged.connect(self.cb_start_from_current_time_changed)
 
@@ -656,70 +662,90 @@ class Observation(QDialog, Ui_Form):
         extract wav of all media files loaded in player #1
         """
 
-        if self.cbVisualizeSpectrogram.isChecked() or self.cb_visualize_waveform.isChecked():
-            flag_wav_produced = False
-            # check if player 1 is selected
-            flag_player1 = False
+        if not self.cbVisualizeSpectrogram.isChecked() and not self.cb_visualize_waveform.isChecked():
+            return
+
+        flag_wav_produced = False
+        # check if player 1 is selected
+        flag_player1 = False
+        for row in range(self.twVideo1.rowCount()):
+            if self.twVideo1.cellWidget(row, 0).currentText() == "1":
+                flag_player1 = True
+
+        if not flag_player1:
+            QMessageBox.critical(self, cfg.programName, "The player #1 is not selected")
+            self.cbVisualizeSpectrogram.setChecked(False)
+            self.cb_visualize_waveform.setChecked(False)
+            return
+
+        if True:
+            w = dialog.Info_widget()
+            w.resize(350, 100)
+            # w.setWindowFlags(Qt.WindowStaysOnTopHint)
+            w.setWindowTitle("BORIS")
+            w.label.setText("Extracting WAV from media files...")
+
             for row in range(self.twVideo1.rowCount()):
-                if self.twVideo1.cellWidget(row, 0).currentText() == "1":
-                    flag_player1 = True
+                # check if player 1
+                if self.twVideo1.cellWidget(row, 0).currentText() != "1":
+                    continue
 
-            if not flag_player1:
-                QMessageBox.critical(self, cfg.programName, "The player #1 is not selected")
-                self.cbVisualizeSpectrogram.setChecked(False)
-                self.cb_visualize_waveform.setChecked(False)
-                return
-            """
-            if dialog.MessageDialog(programName, ("You choose to visualize the spectrogram or waveform for the media in player #1.<br>"
-                                                  "The WAV will be extracted from the media files, be patient"), [YES, NO]) == YES:
-            """
-            if True:
-                w = dialog.Info_widget()
-                w.resize(350, 100)
-                # w.setWindowFlags(Qt.WindowStaysOnTopHint)
-                w.setWindowTitle("BORIS")
-                w.label.setText("Extracting WAV from media files...")
+                media_file_path = project_functions.full_path(self.twVideo1.item(row, cfg.MEDIA_FILE_PATH_IDX).text(), self.project_path)
+                if self.twVideo1.item(row, cfg.HAS_AUDIO_IDX).text() == "False":
+                    QMessageBox.critical(self, cfg.programName, f"The media file {media_file_path} does not seem to have audio")
+                    flag_wav_produced = False
+                    break
 
-                for row in range(self.twVideo1.rowCount()):
-                    # check if player 1
-                    if self.twVideo1.cellWidget(row, 0).currentText() != "1":
-                        continue
+                if os.path.isfile(media_file_path):
+                    w.show()
+                    QApplication.processEvents()
 
-                    media_file_path = project_functions.full_path(
-                        self.twVideo1.item(row, cfg.MEDIA_FILE_PATH_IDX).text(), self.project_path
-                    )
-                    if self.twVideo1.item(row, cfg.HAS_AUDIO_IDX).text() == "False":
-                        QMessageBox.critical(self, cfg.programName, f"The media file {media_file_path} does not seem to have audio")
+                    if util.extract_wav(self.ffmpeg_bin, media_file_path, self.tmp_dir) == "":
+                        QMessageBox.critical(
+                            self,
+                            cfg.programName,
+                            f"Error during extracting WAV of the media file {media_file_path}",
+                        )
                         flag_wav_produced = False
                         break
 
-                    if os.path.isfile(media_file_path):
-                        w.show()
-                        QApplication.processEvents()
+                    w.hide()
 
-                        if util.extract_wav(self.ffmpeg_bin, media_file_path, self.tmp_dir) == "":
-                            QMessageBox.critical(
-                                self,
-                                cfg.programName,
-                                f"Error during extracting WAV of the media file {media_file_path}",
-                            )
-                            flag_wav_produced = False
-                            break
+                    flag_wav_produced = True
+                else:
+                    QMessageBox.warning(self, cfg.programName, f"<b>{media_file_path}</b> file not found")
 
-                        w.hide()
-
-                        flag_wav_produced = True
-                    else:
-                        QMessageBox.warning(self, cfg.programName, f"<b>{media_file_path}</b> file not found")
-
-                if not flag_wav_produced:
-                    self.cbVisualizeSpectrogram.setChecked(False)
-                    self.cb_visualize_waveform.setChecked(False)
-            """
-            else:
+            if not flag_wav_produced:
                 self.cbVisualizeSpectrogram.setChecked(False)
                 self.cb_visualize_waveform.setChecked(False)
-            """
+
+    def check_creation_date(self):
+        """
+        check on Creation Dtae tag is present in metadata of media file
+        """
+        if not self.cb_media_creation_date_as_offset.isChecked():
+            return
+
+        media_list: list = []
+        for row in range(self.twVideo1.rowCount()):
+            media_info = util.accurate_media_analysis(self.ffmpeg_bin, self.twVideo1.item(row, 2).text())
+            if "creation_time" not in media_info or media_info["creation_time"] == cfg.NA:
+                media_list.append(self.twVideo1.item(row, 2).text())
+
+        if media_list:
+            if (
+                dialog.MessageDialog(
+                    cfg.programName,
+                    (
+                        "Some media file does not contain the <b>Creation date/time</b> metadata tag:<br>"
+                        f"{', '.join(media_list)}<br><br>"
+                        "Use the file date/time instead?"
+                    ),
+                    [cfg.YES, cfg.NO],
+                )
+                == cfg.NO
+            ):
+                self.cb_media_creation_date_as_offset.setChecked(False)
 
     def closeEvent(self, event):
         """
@@ -950,22 +976,41 @@ class Observation(QDialog, Ui_Form):
         """
 
         media_info = util.accurate_media_analysis(self.ffmpeg_bin, file_path)
-        if "error" in media_info:
-            return False, media_info["error"]
-        else:
-            if media_info["duration"] > 0:
-                if " rel " in mode:
-                    # convert to relative path (relative to BORIS project file)
-                    file_path = str(pl.Path(file_path).relative_to(pl.Path(self.project_path).parent))
 
-                self.mediaDurations[file_path] = float(media_info["duration"])
-                self.mediaFPS[file_path] = float(media_info["fps"])
-                self.mediaHasVideo[file_path] = media_info["has_video"]
-                self.mediaHasAudio[file_path] = media_info["has_audio"]
-                self.add_media_to_listview(file_path)
-                return (False, "")
-            else:
-                return (True, "Media duration not available")
+        if "error" in media_info:
+            return (False, media_info["error"])
+
+        if media_info["format_long_name"] == "Tele-typewriter":
+            return (False, "Text file")
+
+        if media_info["duration"] > 0:
+            if " rel " in mode:
+                # convert to relative path (relative to BORIS project file)
+                file_path = str(pl.Path(file_path).relative_to(pl.Path(self.project_path).parent))
+
+            self.mediaDurations[file_path] = float(media_info["duration"])
+            self.mediaFPS[file_path] = float(media_info["fps"])
+            self.mediaHasVideo[file_path] = media_info["has_video"]
+            self.mediaHasAudio[file_path] = media_info["has_audio"]
+            self.add_media_to_listview(file_path)
+            return (False, "")
+        else:
+            return (True, "Media duration not available")
+
+    def update_media_options(self):
+        """
+        update the media options
+        """
+        for w in (
+            self.cbVisualizeSpectrogram,
+            self.cb_visualize_waveform,
+            self.cb_observation_time_interval,
+            self.cb_media_creation_date_as_offset,
+        ):
+            w.setEnabled(self.twVideo1.rowCount() > 0)
+
+        # enable stop ongoing state events if n. media > 1
+        self.cbCloseCurrentBehaviorsBetweenVideo.setEnabled(self.twVideo1.rowCount() > 1)
 
     def add_media(self, mode: str):
         """
@@ -1027,7 +1072,7 @@ class Observation(QDialog, Ui_Form):
                     if error:
                         QMessageBox.critical(self, cfg.programName, f"<b>{file_path}</b>. {msg}")
 
-        if "dir " in mode:
+        if "dir " in mode:  # add media from dir
             dir_name = fd.getExistingDirectory(self, "Select directory")
             if dir_name:
                 response = ""
@@ -1045,21 +1090,13 @@ class Observation(QDialog, Ui_Form):
                             if response == cfg.CANCEL:
                                 break
 
-        for w in (
-            self.cbVisualizeSpectrogram,
-            self.cb_visualize_waveform,
-            self.cb_observation_time_interval,
-            self.cbCloseCurrentBehaviorsBetweenVideo,
-        ):
-            w.setEnabled(self.twVideo1.rowCount() > 0)
-
-        # self.cbCloseCurrentBehaviorsBetweenVideo.setEnabled(False)
+        self.update_media_options()
 
     def add_media_to_listview(self, file_name):
         """
         add media file path to list widget
         """
-
+        # add a row
         self.twVideo1.setRowCount(self.twVideo1.rowCount() + 1)
 
         for col_idx, s in enumerate(
@@ -1100,31 +1137,22 @@ class Observation(QDialog, Ui_Form):
         remove all selected media files from list widget
         """
 
-        if self.twVideo1.selectedIndexes():
-            rows_to_delete = set([x.row() for x in self.twVideo1.selectedIndexes()])
-            for row in sorted(rows_to_delete, reverse=True):
-                media_path = self.twVideo1.item(row, cfg.MEDIA_FILE_PATH_IDX).text()
-                self.twVideo1.removeRow(row)
-                if media_path not in [self.twVideo1.item(idx, cfg.MEDIA_FILE_PATH_IDX).text() for idx in range(self.twVideo1.rowCount())]:
-                    try:
-                        del self.mediaDurations[media_path]
-                    except NameError:
-                        pass
-                    try:
-                        del self.mediaFPS[media_path]
-                    except NameError:
-                        pass
-
-            for w in [
-                self.cbVisualizeSpectrogram,
-                self.cb_visualize_waveform,
-                self.cb_observation_time_interval,
-                self.cbCloseCurrentBehaviorsBetweenVideo,
-            ]:
-                w.setEnabled(self.twVideo1.rowCount() > 0)
-
-            # disabled for problems
-            # self.cbCloseCurrentBehaviorsBetweenVideo.setEnabled(False)
-
-        else:
+        if not self.twVideo1.selectedIndexes():
             QMessageBox.warning(self, cfg.programName, "No media file selected")
+            return
+
+        rows_to_delete = set([x.row() for x in self.twVideo1.selectedIndexes()])
+        for row in sorted(rows_to_delete, reverse=True):
+            media_path = self.twVideo1.item(row, cfg.MEDIA_FILE_PATH_IDX).text()
+            self.twVideo1.removeRow(row)
+            if media_path not in [self.twVideo1.item(idx, cfg.MEDIA_FILE_PATH_IDX).text() for idx in range(self.twVideo1.rowCount())]:
+                try:
+                    del self.mediaDurations[media_path]
+                except NameError:
+                    pass
+                try:
+                    del self.mediaFPS[media_path]
+                except NameError:
+                    pass
+
+        self.update_media_options()
