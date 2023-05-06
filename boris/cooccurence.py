@@ -166,7 +166,7 @@ def get_cooccurence(self):
 
     logging.debug(f"events_interval: {events_interval}")
 
-    cooocurence_results: dict = {}
+    cooccurence_results: dict = {}
 
     for obs_id in selected_observations:
         logging.debug(f"obs_id: {obs_id}")
@@ -177,8 +177,8 @@ def get_cooccurence(self):
             else:
                 subj = subject
 
-            if subject not in cooocurence_results:
-                cooocurence_results[subject] = {}
+            if subject not in cooccurence_results:
+                cooccurence_results[subject] = {}
 
             logging.debug(f"subject {subject}")
 
@@ -208,27 +208,27 @@ def get_cooccurence(self):
 
                             union &= inter2
 
-                        if combination not in cooocurence_results[subject]:
-                            cooocurence_results[subject][combination] = 0
+                        if combination not in cooccurence_results[subject]:
+                            cooccurence_results[subject][combination] = 0
 
                         logging.debug(f"{combination=} {union=}")
-                        cooocurence_results[subject][combination] += interval_len(union)
+                        cooccurence_results[subject][combination] += interval_len(union)
                     else:
-                        if combination not in cooocurence_results[subject]:
-                            cooocurence_results[subject][combination] = 0
-                        cooocurence_results[subject][combination] += 0
+                        if combination not in cooccurence_results[subject]:
+                            cooccurence_results[subject][combination] = 0
+                        cooccurence_results[subject][combination] += 0
 
-                    logging.debug(f"{cooocurence_results[subject][combination]=}")
+                    logging.debug(f"{cooccurence_results[subject][combination]=}")
 
-    logging.debug(cooocurence_results)
+    logging.debug(cooccurence_results)
 
     out = f"<b>Co-occurence of behaviors: {','.join(parameters[cfg.SELECTED_BEHAVIORS])}</b><br><br>"
     for subject in parameters[cfg.SELECTED_SUBJECTS]:
         out += f"<br>Subject <b>{subject}</b><br><br>"
-        for combination in cooocurence_results[subject]:
-            if parameters[cfg.EXCLUDE_BEHAVIORS] and not cooocurence_results[subject][combination]:
+        for combination in cooccurence_results[subject]:
+            if parameters[cfg.EXCLUDE_BEHAVIORS] and not cooccurence_results[subject][combination]:
                 continue
-            duration = f"<b>{cooocurence_results[subject][combination]}</b>" if cooocurence_results[subject][combination] else "0"
+            duration = f"<b>{cooccurence_results[subject][combination]}</b>" if cooccurence_results[subject][combination] else "0"
             out += f"<b>{'</b> and <b>'.join(combination)}</b>: {duration} s<br>"
 
     self.results = dialog.Results_dialog()
