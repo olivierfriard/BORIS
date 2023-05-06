@@ -24,6 +24,7 @@ import logging
 import os
 import pandas as pd
 import pathlib as pl
+import datetime as dt
 
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QColor
@@ -173,7 +174,7 @@ class Observation(QDialog, Ui_Form):
 
         self.tw_data_files.cellDoubleClicked[int, int].connect(self.tw_data_files_cellDoubleClicked)
 
-        self.mediaDurations, self.mediaFPS, self.mediaHasVideo, self.mediaHasAudio = {}, {}, {}, {}
+        self.mediaDurations, self.mediaFPS, self.mediaHasVideo, self.mediaHasAudio, self.media_creation_time = {}, {}, {}, {}, {}
 
         for w in (
             self.cbVisualizeSpectrogram,
@@ -721,7 +722,7 @@ class Observation(QDialog, Ui_Form):
 
     def check_creation_date(self):
         """
-        check on Creation Dtae tag is present in metadata of media file
+        check on Creation Date tag is present in metadata of media file
         """
         if not self.cb_media_creation_date_as_offset.isChecked():
             return
@@ -731,6 +732,9 @@ class Observation(QDialog, Ui_Form):
             media_info = util.accurate_media_analysis(self.ffmpeg_bin, self.twVideo1.item(row, 2).text())
             if "creation_time" not in media_info or media_info["creation_time"] == cfg.NA:
                 media_list.append(self.twVideo1.item(row, 2).text())
+            else:
+                creation_time_epoch = int(dt.datetime.strptime(media_info["creation_time"], "%Y-%m-%d %H:%M:%S").timestamp())
+                self.media_creation_time[self.twVideo1.item(row, 2).text()] = creation_time_epoch
 
         if media_list:
             if (
@@ -746,6 +750,10 @@ class Observation(QDialog, Ui_Form):
                 == cfg.NO
             ):
                 self.cb_media_creation_date_as_offset.setChecked(False)
+                self.media_creation_time = {}
+            else:  # use file creation time
+                for media in media_list:
+                    self.media_creation_time[media] = pl.Path(media).stat().st_ctime
 
     def closeEvent(self, event):
         """

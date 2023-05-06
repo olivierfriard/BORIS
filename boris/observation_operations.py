@@ -956,11 +956,14 @@ def new_observation(self, mode=cfg.NEW, obsId=""):
                 cfg.FPS: observationWindow.mediaFPS,
             }
 
+            if self.pj[cfg.OBSERVATIONS][new_obs_id][cfg.MEDIA_CREATION_DATE_AS_OFFSET]:
+                self.pj[cfg.OBSERVATIONS][new_obs_id][cfg.MEDIA_INFO]["media_creation_time"] = observationWindow.media_creation_time
+
             try:
                 self.pj[cfg.OBSERVATIONS][new_obs_id][cfg.MEDIA_INFO][cfg.HAS_VIDEO] = observationWindow.mediaHasVideo
                 self.pj[cfg.OBSERVATIONS][new_obs_id][cfg.MEDIA_INFO][cfg.HAS_AUDIO] = observationWindow.mediaHasAudio
             except Exception:
-                logging.info("error with media_info information")
+                logging.warning("error with media_info information")
 
             self.pj[cfg.OBSERVATIONS][new_obs_id][cfg.MEDIA_INFO]["offset"] = {}
 
@@ -1374,8 +1377,8 @@ def initialize_new_media_observation(self) -> bool:
         self.dw_player[i].resize_signal.connect(self.resize_dw)
 
         # add durations list
-        self.dw_player[i].media_durations = []
-        self.dw_player[i].cumul_media_durations = [0]  # [idx for idx,x in enumerate(l) if l[idx-1]<pos<=x]
+        self.dw_player[i].media_durations: list = []
+        self.dw_player[i].cumul_media_durations: list = [0]  # [idx for idx,x in enumerate(l) if l[idx-1]<pos<=x]
 
         # add fps list
         self.dw_player[i].fps = {}

@@ -911,14 +911,20 @@ def time2seconds(time_: str) -> dec:
         Decimal: time in seconds
     """
 
-    try:
-        flag_neg = "-" in time_
-        time_ = time_.replace("-", "")
-        tsplit = time_.split(":")
-        h, m, s = int(tsplit[0]), int(tsplit[1]), dec(tsplit[2])
-        return dec(-(h * 3600 + m * 60 + s)) if flag_neg else dec(h * 3600 + m * 60 + s)
-    except Exception:
-        return dec("0.000")
+    if " " in time_:
+        try:
+            return dec(str(datetime.datetime.strptime(time_, "%Y-%m-%d %H:%M:%S.%f").timestamp()))
+        except Exception:
+            return dec("0.000")
+    else:
+        try:
+            flag_neg = "-" in time_
+            time_ = time_.replace("-", "")
+            tsplit = time_.split(":")
+            h, m, s = int(tsplit[0]), int(tsplit[1]), dec(tsplit[2])
+            return dec(-(h * 3600 + m * 60 + s)) if flag_neg else dec(h * 3600 + m * 60 + s)
+        except Exception:
+            return dec("0.000")
 
 
 def seconds2time(sec: dec) -> str:

@@ -4488,11 +4488,25 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         row = self.twEvents.selectedIndexes()[0].row()  # first row selected
 
         if self.playerType == cfg.MEDIA:
+
             time_str = self.twEvents.item(row, cfg.TW_OBS_FIELD[self.playerType]["time"]).text()
             time_ = util.time2seconds(time_str) if ":" in time_str else dec(time_str)
 
             # substract time offset
             time_ -= self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TIME_OFFSET]
+
+            # substract media creation time
+            if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_CREATION_DATE_AS_OFFSET]:
+                if len(self.dw_player[0].player.playlist) > 1:
+                    QMessageBox.information(
+                        self,
+                        cfg.programName,
+                        "This function is not yet implemented for this type of observation (media time creation as offset with many media files)",
+                    )
+                    return
+                media_file_name = self.dw_player[0].player.playlist[self.dw_player[0].player.playlist_pos]["filename"]
+
+                time_ -= self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO]["media_creation_time"][media_file_name]
 
             if time_ + self.repositioningTimeOffset >= 0:
                 new_time = time_ + self.repositioningTimeOffset

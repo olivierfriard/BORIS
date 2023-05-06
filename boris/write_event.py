@@ -94,6 +94,12 @@ def write_event(self, event: dict, mem_time: dec) -> int:
         if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE] in (cfg.MEDIA, cfg.LIVE):
             mem_time += dec(self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TIME_OFFSET]).quantize(dec(".001"))
 
+        # add media creation time
+        if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE] in (cfg.MEDIA):
+            if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_CREATION_DATE_AS_OFFSET]:
+                media_file_name = self.dw_player[0].player.playlist[self.dw_player[0].player.playlist_pos]["filename"]
+                mem_time += self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO]["media_creation_time"][media_file_name]
+
     # check if time > 2**31 - 1 (2147483647)
     if (mem_time < -2147483647) or (mem_time > 2147483647):
         _ = dialog.MessageDialog(
