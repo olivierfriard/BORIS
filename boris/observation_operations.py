@@ -958,7 +958,7 @@ def new_observation(self, mode=cfg.NEW, obsId=""):
             }
 
             if self.pj[cfg.OBSERVATIONS][new_obs_id][cfg.MEDIA_CREATION_DATE_AS_OFFSET]:
-                self.pj[cfg.OBSERVATIONS][new_obs_id][cfg.MEDIA_INFO]["media_creation_time"] = observationWindow.media_creation_time
+                self.pj[cfg.OBSERVATIONS][new_obs_id][cfg.MEDIA_INFO][cfg.MEDIA_CREATION_TIME] = observationWindow.media_creation_time
 
             try:
                 self.pj[cfg.OBSERVATIONS][new_obs_id][cfg.MEDIA_INFO][cfg.HAS_VIDEO] = observationWindow.mediaHasVideo
@@ -1153,7 +1153,7 @@ def close_observation(self):
     logging.info(f"Observation {self.playerType} closed")
 
 
-def check_creation_date(self) -> int:
+def check_creation_date(self) -> Tuple[int, dict]:
     """
     check if media file exists
     check if Creation Date tag is present in metadata of media file
@@ -1234,12 +1234,12 @@ def check_creation_date(self) -> int:
 
         if ret == 1:  #  use file creation time
             for media in not_tagged_media_list:
-                self.media_creation_time[media] = pl.Path(media).stat().st_ctime
-            return 0  # OK use media file creation date/time
+                media_creation_time[media] = pl.Path(media).stat().st_ctime
+            return (0, media_creation_time)  # OK use media file creation date/time
         else:
-            return 1
+            return (1, {})
     else:
-        return 0  # OK all media have a 'creation time' tag
+        return (0, media_creation_time)  # OK all media have a 'creation time' tag
 
 
 def initialize_new_media_observation(self) -> bool:
@@ -1297,8 +1297,10 @@ def initialize_new_media_observation(self) -> bool:
 
     # check if media creation time used as offset
     if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_CREATION_DATE_AS_OFFSET]:
-        if check_creation_date(self):
+        r, media_creation_time = check_creation_date(self)
+        if r:
             return False
+        self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO][cfg.MEDIA_CREATION_TIME] = dict(media_creation_time)
 
     # create dock widgets for players
     for i in range(cfg.N_PLAYER):
