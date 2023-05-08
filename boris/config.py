@@ -423,6 +423,7 @@ LENGTH = "length"
 FPS = "fps"
 HAS_AUDIO = "hasAudio"
 HAS_VIDEO = "hasVideo"
+MEDIA_CREATION_TIME = "creation_time"
 
 STATE = "STATE"
 POINT = "POINT"

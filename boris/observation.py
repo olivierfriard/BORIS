@@ -27,7 +27,7 @@ import pathlib as pl
 import datetime as dt
 
 from PyQt5.QtCore import Qt
-from PyQt5.QtGui import QColor
+from PyQt5.QtGui import QColor, QTextCursor
 from PyQt5.QtWidgets import (
     QDialog,
     QVBoxLayout,
@@ -164,7 +164,7 @@ class Observation(QDialog, Ui_Form):
         self.cbVisualizeSpectrogram.clicked.connect(self.extract_wav)
         self.cb_visualize_waveform.clicked.connect(self.extract_wav)
 
-        self.cb_media_creation_date_as_offset.clicked.connect(self.check_creation_date)
+        # self.cb_media_creation_date_as_offset.clicked.connect(self.check_creation_date)
 
         self.cb_observation_time_interval.clicked.connect(self.limit_time_interval)
 
@@ -720,40 +720,79 @@ class Observation(QDialog, Ui_Form):
                 self.cbVisualizeSpectrogram.setChecked(False)
                 self.cb_visualize_waveform.setChecked(False)
 
-    def check_creation_date(self):
+    def check_creation_date(self) -> int:
         """
-        check on Creation Date tag is present in metadata of media file
-        """
-        if not self.cb_media_creation_date_as_offset.isChecked():
-            return
+        check if media file exists
+        check if Creation Date tag is present in metadata of media file
 
-        media_list: list = []
+        Returns:
+            int: 0 if OK else error code: 1 -> media file date not used, 2 -> media file not found
+
+        """
+
+        # check if media files exist
+
+        media_not_found_list: list = []
         for row in range(self.twVideo1.rowCount()):
-            media_info = util.accurate_media_analysis(self.ffmpeg_bin, self.twVideo1.item(row, 2).text())
-            if "creation_time" not in media_info or media_info["creation_time"] == cfg.NA:
-                media_list.append(self.twVideo1.item(row, 2).text())
-            else:
-                creation_time_epoch = int(dt.datetime.strptime(media_info["creation_time"], "%Y-%m-%d %H:%M:%S").timestamp())
-                self.media_creation_time[self.twVideo1.item(row, 2).text()] = creation_time_epoch
+            if not pl.Path(self.twVideo1.item(row, 2).text()).is_file():
+                media_not_found_list.append(self.twVideo1.item(row, 2).text())
 
+        """
         if media_list:
-            if (
-                dialog.MessageDialog(
-                    cfg.programName,
-                    (
-                        "Some media file does not contain the <b>Creation date/time</b> metadata tag:<br>"
-                        f"{', '.join(media_list)}<br><br>"
-                        "Use the file date/time instead?"
-                    ),
-                    [cfg.YES, cfg.NO],
+            dlg = dialog.Results_dialog()
+            dlg.setWindowTitle("BORIS")
+            dlg.pbOK.setText("OK")
+            dlg.pbCancel.setVisible(False)
+            dlg.ptText.clear()
+            dlg.ptText.appendHtml(
+                (
+                    "Some media file(s) were not found:<br>"
+                    f"{'<br>'.join(media_list)}<br><br>"
+                    "You cannot select the <b>Use the media creation date/time option</b>."
                 )
-                == cfg.NO
-            ):
+            )
+            dlg.ptText.moveCursor(QTextCursor.Start)
+            ret = dlg.exec_()
+        """
+
+        not_tagged_media_list: list = []
+        for row in range(self.twVideo1.rowCount()):
+            if self.twVideo1.item(row, 2).text() not in media_not_found_list:
+                media_info = util.accurate_media_analysis(self.ffmpeg_bin, self.twVideo1.item(row, 2).text())
+                if cfg.MEDIA_CREATION_TIME not in media_info or media_info[cfg.MEDIA_CREATION_TIME] == cfg.NA:
+                    not_tagged_media_list.append(self.twVideo1.item(row, 2).text())
+                else:
+                    creation_time_epoch = int(dt.datetime.strptime(media_info[cfg.MEDIA_CREATION_TIME], "%Y-%m-%d %H:%M:%S").timestamp())
+                    self.media_creation_time[self.twVideo1.item(row, 2).text()] = creation_time_epoch
+
+        if not_tagged_media_list:
+            dlg = dialog.Results_dialog()
+            dlg.setWindowTitle("BORIS")
+            dlg.pbOK.setText("Yes")
+            dlg.pbCancel.setVisible(True)
+            dlg.pbCancel.setText("No")
+
+            dlg.ptText.clear()
+            dlg.ptText.appendHtml(
+                (
+                    "Some media file does not contain the <b>Creation date/time</b> metadata tag:<br>"
+                    f"{'<br>'.join(not_tagged_media_list)}<br><br>"
+                    "Use the media file date/time instead?"
+                )
+            )
+            dlg.ptText.moveCursor(QTextCursor.Start)
+            ret = dlg.exec_()
+
+            if ret == 1:  #  use file creation time
+                for media in not_tagged_media_list:
+                    self.media_creation_time[media] = pl.Path(media).stat().st_ctime
+                return 0  # OK use media file creation date/time
+            else:
                 self.cb_media_creation_date_as_offset.setChecked(False)
                 self.media_creation_time = {}
-            else:  # use file creation time
-                for media in media_list:
-                    self.media_creation_time[media] = pl.Path(media).stat().st_ctime
+                return 1
+        else:
+            return 0  # OK all media have a 'creation time' tag
 
     def closeEvent(self, event):
         """
@@ -812,6 +851,13 @@ class Observation(QDialog, Ui_Form):
             return False
 
         if self.rb_media_files.isChecked():  # observation based on media file(s)
+            # check if media file exists
+            media_file_not_found: list = []
+            for row in range(self.twVideo1.rowCount()):
+                # check if media file exists
+                if not pl.Path(self.twVideo1.item(row, 2).text()).is_file():
+                    media_file_not_found.append(self.twVideo1.item(row, 2).text())
+
             # check player number
             players_list: list = []
             players: dict = {}  # for storing duration
@@ -904,6 +950,14 @@ class Observation(QDialog, Ui_Form):
                     )
                     return False
 
+            # check media creation time tag in metadata
+            # Disable because the check will be made at the oservation start
+            """
+            if self.cb_media_creation_date_as_offset.isChecked():
+                if self.check_creation_date():
+                    return False
+            """
+
         if self.rb_images.isChecked():  # observation based on images directory
             if not self.lw_images_directory.count():
                 QMessageBox.critical(self, cfg.programName, "You have to select at least one images directory")
@@ -948,7 +1002,7 @@ class Observation(QDialog, Ui_Form):
 
     def pbLaunch_clicked(self):
         """
-        Close window and start observation
+        Close dialog and start the observation
         """
 
         if self.check_parameters():
@@ -987,6 +1041,8 @@ class Observation(QDialog, Ui_Form):
 
         if "error" in media_info:
             return (False, media_info["error"])
+
+        print(f"{media_info=}")
 
         if media_info["format_long_name"] == "Tele-typewriter":
             return (False, "Text file")

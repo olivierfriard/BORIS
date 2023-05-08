@@ -1110,8 +1110,6 @@ def ffprobe_media_analysis(ffmpeg_bin: str, file_name: str) -> dict:
 
     command = f'"{ffprobe_bin}" -hide_banner -v error -print_format json -show_format -show_streams "{file_name}"'
 
-    # print(command)
-
     p = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
     out, error = p.communicate()
     if error:
@@ -1138,6 +1136,10 @@ def ffprobe_media_analysis(ffmpeg_bin: str, file_name: str) -> dict:
 
         for stream in video_param["streams"]:
             if stream["codec_type"] == "video":
+                print(stream)
+
+                print(stream["duration"])
+
                 hasVideo = True
                 video_bitrate = int(stream["bit_rate"]) if "bit_rate" in stream else None
                 resolution = f"{stream['width']}x{stream['height']}"
@@ -1162,7 +1164,6 @@ def ffprobe_media_analysis(ffmpeg_bin: str, file_name: str) -> dict:
                             fps = 0
 
                 duration = float(stream["duration"])
-                # frames_number = int(stream["nb_frames"]) if "nb_frames" in stream else None
                 if "duration_ts" in stream:
                     frames_number = int(stream["duration_ts"])
                 elif "nb_frames" in stream:
@@ -1174,8 +1175,8 @@ def ffprobe_media_analysis(ffmpeg_bin: str, file_name: str) -> dict:
 
             if stream["codec_type"] == "audio":
                 hasAudio = True
-                sample_rate = float(stream["sample_rate"])
-                duration = float(stream["duration"])
+                sample_rate = float(stream["sample_rate"]) if "sample_rate" in stream else cfg.NA
+                audio_duration = float(stream["duration"]) if "duration" in stream else cfg.NA
                 audio_codec = stream["codec_long_name"]
                 audio_bitrate.append(int(stream.get("bit_rate", 0)))
 
@@ -1203,6 +1204,7 @@ def ffprobe_media_analysis(ffmpeg_bin: str, file_name: str) -> dict:
             "frames_number": frames_number,
             "duration_ms": duration * 1000,
             "duration": duration,
+            "audio_duration": audio_duration,
             "fps": fps,
             "has_video": hasVideo,
             "has_audio": hasAudio,
@@ -1217,6 +1219,7 @@ def ffprobe_media_analysis(ffmpeg_bin: str, file_name: str) -> dict:
         }
 
     except Exception as e:
+        raise
         return {"error": str(e)}
 
 
@@ -1235,6 +1238,9 @@ def accurate_media_analysis(ffmpeg_bin: str, file_name: str) -> dict:
     """
 
     ffprobe_results = ffprobe_media_analysis(ffmpeg_bin, file_name)
+
+    logging.debug(f"file_name: {file_name}")
+    logging.debug(f"ffprobe_results: {ffprobe_results}")
 
     if ("error" not in ffprobe_results) and (ffprobe_results["bitrate"] is not None):
         return ffprobe_results
@@ -1328,6 +1334,7 @@ def accurate_media_analysis(ffmpeg_bin: str, file_name: str) -> dict:
             "has_audio": hasAudio,
             "bitrate": bitrate,
             "resolution": resolution,
+            "format_long_name": "",
         }
 
 

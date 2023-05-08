@@ -28,7 +28,7 @@ import subprocess
 import sys
 from decimal import Decimal as dec
 import pathlib as pl
-import datetime
+import datetime as dt
 from typing import List, Tuple, Dict, Optional
 
 
@@ -43,7 +43,7 @@ from PyQt5.QtWidgets import (
     QDockWidget,
 )
 from PyQt5.QtCore import Qt, QDateTime, QTimer
-from PyQt5.QtGui import QFont, QIcon
+from PyQt5.QtGui import QFont, QIcon, QTextCursor
 
 from PyQt5 import QtTest
 
@@ -219,9 +219,10 @@ def load_observation(self, obs_id: str, mode: str = cfg.OBS_START) -> str:
     if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE] == cfg.MEDIA:
         if mode == cfg.OBS_START:
             if not initialize_new_media_observation(self):
-                self.observationId = ""
-                self.twEvents.setRowCount(0)
-                menu_options.update_menu(self)
+                close_observation(self)
+                # self.observationId = ""
+                # self.twEvents.setRowCount(0)
+                # menu_options.update_menu(self)
                 return "Error: loading observation problem"
 
         if mode == cfg.VIEW:
@@ -997,8 +998,9 @@ def new_observation(self, mode=cfg.NEW, obsId=""):
 
             if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE] == cfg.MEDIA:
                 self.playerType = cfg.MEDIA
-                # load events in table widget
-                initialize_new_media_observation(self)
+                if not initialize_new_media_observation(self):
+                    close_observation(self)
+                    return "Observation not launched"
 
             if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE] == cfg.IMAGES:
                 # QMessageBox.critical(self, cfg.programName, "Observation from images directory is not yet implemented")
@@ -1151,6 +1153,95 @@ def close_observation(self):
     logging.info(f"Observation {self.playerType} closed")
 
 
+def check_creation_date(self) -> int:
+    """
+    check if media file exists
+    check if Creation Date tag is present in metadata of media file
+
+    Returns:
+        int: 0 if OK else error code: 1 -> media file date not used, 2 -> media file not found
+
+    """
+
+    # check if media files exist
+
+    """
+    media_not_found_list: list = []
+    for row in range(self.twVideo1.rowCount()):
+        if not pl.Path(self.twVideo1.item(row, 2).text()).is_file():
+            media_not_found_list.append(self.twVideo1.item(row, 2).text())
+
+    if media_list:
+        dlg = dialog.Results_dialog()
+        dlg.setWindowTitle("BORIS")
+        dlg.pbOK.setText("OK")
+        dlg.pbCancel.setVisible(False)
+        dlg.ptText.clear()
+        dlg.ptText.appendHtml(
+            (
+                "Some media file(s) were not found:<br>"
+                f"{'<br>'.join(media_list)}<br><br>"
+                "You cannot select the <b>Use the media creation date/time option</b>."
+            )
+        )
+        dlg.ptText.moveCursor(QTextCursor.Start)
+        ret = dlg.exec_()
+    """
+
+    not_tagged_media_list: list = []
+    media_creation_time: dict = {}
+
+    for nplayer in cfg.ALL_PLAYERS:
+        if nplayer in self.pj[cfg.OBSERVATIONS][self.observationId].get(cfg.FILE, {}):
+            for media_file in self.pj[cfg.OBSERVATIONS][self.observationId][cfg.FILE][nplayer]:
+                media_path = project_functions.full_path(media_file, self.projectFileName)
+                media_info = util.accurate_media_analysis(self.ffmpeg_bin, media_path)
+
+                if cfg.MEDIA_CREATION_TIME not in media_info or media_info[cfg.MEDIA_CREATION_TIME] == cfg.NA:
+                    not_tagged_media_list.append(media_path)
+                else:
+                    creation_time_epoch = int(dt.datetime.strptime(media_info[cfg.MEDIA_CREATION_TIME], "%Y-%m-%d %H:%M:%S").timestamp())
+                    media_creation_time[media_path] = creation_time_epoch
+
+    """
+    for row in range(self.twVideo1.rowCount()):
+        if self.twVideo1.item(row, 2).text() not in media_not_found_list:
+            media_info = util.accurate_media_analysis(self.ffmpeg_bin, self.twVideo1.item(row, 2).text())
+            if cfg.MEDIA_CREATION_TIME not in media_info or media_info[cfg.MEDIA_CREATION_TIME] == cfg.NA:
+                not_tagged_media_list.append(self.twVideo1.item(row, 2).text())
+            else:
+                creation_time_epoch = int(dt.datetime.strptime(media_info[cfg.MEDIA_CREATION_TIME], "%Y-%m-%d %H:%M:%S").timestamp())
+                self.media_creation_time[self.twVideo1.item(row, 2).text()] = creation_time_epoch
+    """
+
+    if not_tagged_media_list:
+        dlg = dialog.Results_dialog()
+        dlg.setWindowTitle("BORIS")
+        dlg.pbOK.setText("Yes")
+        dlg.pbCancel.setVisible(True)
+        dlg.pbCancel.setText("No")
+
+        dlg.ptText.clear()
+        dlg.ptText.appendHtml(
+            (
+                "Some media file does not contain the <b>Creation date/time</b> metadata tag:<br>"
+                f"{'<br>'.join(not_tagged_media_list)}<br><br>"
+                "Use the media file date/time instead?"
+            )
+        )
+        dlg.ptText.moveCursor(QTextCursor.Start)
+        ret = dlg.exec_()
+
+        if ret == 1:  #  use file creation time
+            for media in not_tagged_media_list:
+                self.media_creation_time[media] = pl.Path(media).stat().st_ctime
+            return 0  # OK use media file creation date/time
+        else:
+            return 1
+    else:
+        return 0  # OK all media have a 'creation time' tag
+
+
 def initialize_new_media_observation(self) -> bool:
     """
     initialize new observation from media file(s)
@@ -1203,8 +1294,13 @@ def initialize_new_media_observation(self) -> bool:
     # add all media files to media lists
     self.setDockOptions(QMainWindow.AnimatedDocks | QMainWindow.AllowNestedDocks)
     self.dw_player: list = []
-    # create dock widgets for players
 
+    # check if media creation time used as offset
+    if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_CREATION_DATE_AS_OFFSET]:
+        if check_creation_date(self):
+            return False
+
+    # create dock widgets for players
     for i in range(cfg.N_PLAYER):
         n_player = str(i + 1)
         if (
@@ -1395,7 +1491,7 @@ def initialize_new_media_observation(self) -> bool:
                 mediaLength = self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO][cfg.LENGTH][mediaFile] * 1000
                 mediaFPS = self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO][cfg.FPS][mediaFile]
             except Exception:
-                logging.debug("media_info key not found")
+                logging.debug("media_info key not found in project")
 
                 r = util.accurate_media_analysis(self.ffmpeg_bin, media_full_path)
                 if "error" not in r:
@@ -1726,9 +1822,9 @@ def initialize_new_live_observation(self):
     self.pb_live_obs.setText("Start live observation")
 
     if self.pj[cfg.OBSERVATIONS][self.observationId].get(cfg.START_FROM_CURRENT_TIME, False):
-        current_time = util.seconds_of_day(datetime.datetime.now())
+        current_time = util.seconds_of_day(dt.datetime.now())
     elif self.pj[cfg.OBSERVATIONS][self.observationId].get(cfg.START_FROM_CURRENT_EPOCH_TIME, False):
-        current_time = time.mktime(datetime.datetime.now().timetuple())
+        current_time = time.mktime(dt.datetime.now().timetuple())
     else:
         current_time = 0
 
