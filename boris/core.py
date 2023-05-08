@@ -3785,25 +3785,41 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
             print(f"{currentTimeOffset=}")
 
+            print(f"{self.dw_player[0].player.playlist_pos=}")
+
             flag_states_ok, msg = project_functions.check_state_events_obs(
                 self.observationId, self.pj[cfg.ETHOGRAM], self.pj[cfg.OBSERVATIONS][self.observationId]
             )
             if not flag_states_ok:
-                self.pause_video()
-
                 print("state events not paired")
 
-                events = [event for event in self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS] if event[0] <= currentTimeOffset]
+                print(f"{self.dw_player[0].cumul_media_durations=}")
+
+                cmd = [round(dec(x / 1000), 3) for x in self.dw_player[0].cumul_media_durations]
+
+                print(f"{cmd=}")
+
+                min_ = round(dec((self.dw_player[0].cumul_media_durations[self.dw_player[0].player.playlist_pos - 1]) / 1000), 3)
+                max_ = round(dec((self.dw_player[0].cumul_media_durations[self.dw_player[0].player.playlist_pos]) / 1000), 3)
+
+                print(f"{min_=}    {max_=}")
+
+                events = [event for event in self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS] if min_ <= event[0] < max_]
+
+                # events = [event for event in self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS] if event[0] <= currentTimeOffset]
 
                 print(f"events to check: {events}")
 
-                events_to_add = project_functions.fix_unpaired_state_events2(self.pj[cfg.ETHOGRAM], events, currentTimeOffset)
+                time_to_stop = dec(round((self.dw_player[0].cumul_media_durations[self.dw_player[0].player.playlist_pos] - 1) / 1000, 3))
+
+                events_to_add = project_functions.fix_unpaired_state_events2(self.pj[cfg.ETHOGRAM], events, time_to_stop)
 
                 print(f"{events_to_add=}")
 
-                print(f"{self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS]=}")
+                # print(f"{self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS]=}")
 
                 if events_to_add:
+                    self.pause_video()
                     self.statusbar.showMessage("The media changed. Some ongoing state events were stopped automatically", 0)
 
                     self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS].extend(events_to_add)
@@ -4488,7 +4504,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         row = self.twEvents.selectedIndexes()[0].row()  # first row selected
 
         if self.playerType == cfg.MEDIA:
-
             time_str = self.twEvents.item(row, cfg.TW_OBS_FIELD[self.playerType]["time"]).text()
             time_ = util.time2seconds(time_str) if ":" in time_str else dec(time_str)
 
@@ -4496,7 +4511,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             time_ -= self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TIME_OFFSET]
 
             # substract media creation time
-            if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_CREATION_DATE_AS_OFFSET]:
+            if self.pj[cfg.OBSERVATIONS][self.observationId].get(cfg.MEDIA_CREATION_DATE_AS_OFFSET, False):
                 if len(self.dw_player[0].player.playlist) > 1:
                     QMessageBox.information(
                         self,

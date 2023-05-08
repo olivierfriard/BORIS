@@ -1176,6 +1176,7 @@ def ffprobe_media_analysis(ffmpeg_bin: str, file_name: str) -> dict:
             if stream["codec_type"] == "audio":
                 hasAudio = True
                 sample_rate = float(stream["sample_rate"]) if "sample_rate" in stream else cfg.NA
+                # TODO manage audio_duration parameter
                 audio_duration = float(stream["duration"]) if "duration" in stream else cfg.NA
                 audio_codec = stream["codec_long_name"]
                 audio_bitrate.append(int(stream.get("bit_rate", 0)))
@@ -1329,6 +1330,7 @@ def accurate_media_analysis(ffmpeg_bin: str, file_name: str) -> dict:
             "frames_number": int(fps * duration),
             "duration_ms": duration * 1000,
             "duration": duration,
+            "audio_duration": cfg.NA,
             "fps": fps,
             "has_video": hasVideo,
             "has_audio": hasAudio,

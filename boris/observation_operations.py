@@ -623,7 +623,7 @@ def new_observation(self, mode=cfg.NEW, obsId=""):
 
     if mode == cfg.EDIT:
         observationWindow.setWindowTitle(f'Edit observation "{obsId}"')
-        mem_obs_id = obsId
+        """mem_obs_id = obsId"""
         observationWindow.leObservationId.setText(obsId)
 
         # check date format for old versions of BORIS app
@@ -708,6 +708,7 @@ def new_observation(self, mode=cfg.NEW, obsId=""):
                         except Exception:
                             pass
 
+            observationWindow.cbCloseCurrentBehaviorsBetweenVideo.setEnabled(observationWindow.twVideo1.rowCount() > 1)
             # spectrogram
             observationWindow.cbVisualizeSpectrogram.setEnabled(True)
             observationWindow.cbVisualizeSpectrogram.setChecked(self.pj[cfg.OBSERVATIONS][obsId].get(cfg.VISUALIZE_SPECTROGRAM, False))
@@ -1296,8 +1297,9 @@ def initialize_new_media_observation(self) -> bool:
     self.dw_player: list = []
 
     # check if media creation time used as offset
-    if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_CREATION_DATE_AS_OFFSET]:
+    if self.pj[cfg.OBSERVATIONS][self.observationId].get(cfg.MEDIA_CREATION_DATE_AS_OFFSET, False):
         r, media_creation_time = check_creation_date(self)
+
         if r:
             return False
         self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO][cfg.MEDIA_CREATION_TIME] = dict(media_creation_time)
