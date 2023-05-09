@@ -181,6 +181,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     state_behaviors_codes: tuple = tuple()
 
     time_observer_signal = pyqtSignal(float)
+    mpv_eof_reached_signal = pyqtSignal(float)
     video_click_signal = pyqtSignal(int, str)
 
     processes: list = []  # list of QProcess processes
@@ -192,6 +193,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     current_player: int = 0  # id of the selected (left click) video player
 
     mem_media_name: str = ""  # record current media name. Use to check if media changed
+    mem_playlist_index: Union[int, None] = None
     saved_state = None
     user_move_slider: bool = False
     observationId: str = ""  # current observation id
@@ -1198,48 +1200,50 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         self.update_realtime_plot()
 
-        if self.playerType == cfg.MEDIA:
-            current_media_time = self.dw_player[0].player.time_pos
+        if self.playerType != cfg.MEDIA:
+            return
 
-            tmp_dir = self.ffmpeg_cache_dir if self.ffmpeg_cache_dir and os.path.isdir(self.ffmpeg_cache_dir) else tempfile.gettempdir()
+        current_media_time = self.dw_player[0].player.time_pos
 
-            try:
-                wav_file_path = str(
-                    pl.Path(tmp_dir)
-                    / pl.Path(self.dw_player[0].player.playlist[self.dw_player[0].player.playlist_pos]["filename"] + ".wav").name
-                )
-            except TypeError:
+        tmp_dir = self.ffmpeg_cache_dir if self.ffmpeg_cache_dir and os.path.isdir(self.ffmpeg_cache_dir) else tempfile.gettempdir()
+
+        try:
+            wav_file_path = str(
+                pl.Path(tmp_dir)
+                / pl.Path(self.dw_player[0].player.playlist[self.dw_player[0].player.playlist_pos]["filename"] + ".wav").name
+            )
+        except TypeError:
+            return
+
+        # waveform
+        if self.pj[cfg.OBSERVATIONS][self.observationId].get(cfg.VISUALIZE_WAVEFORM, False):
+            if not hasattr(self, "waveform"):
                 return
 
-            # waveform
-            if self.pj[cfg.OBSERVATIONS][self.observationId].get(cfg.VISUALIZE_WAVEFORM, False):
-                if not hasattr(self, "waveform"):
-                    return
-
-                if not self.waveform.visibleRegion().isEmpty():
-                    if self.waveform.wav_file_path == wav_file_path:
+            if not self.waveform.visibleRegion().isEmpty():
+                if self.waveform.wav_file_path == wav_file_path:
+                    self.waveform.plot_waveform(current_media_time)
+                else:
+                    r = self.waveform.load_wav(wav_file_path)
+                    if "error" not in r:
                         self.waveform.plot_waveform(current_media_time)
                     else:
-                        r = self.waveform.load_wav(wav_file_path)
-                        if "error" not in r:
-                            self.waveform.plot_waveform(current_media_time)
-                        else:
-                            logging.warning("waveform_load_wav error: {}".format(r["error"]))
+                        logging.warning("waveform_load_wav error: {}".format(r["error"]))
 
-            # spectrogram
-            if self.pj[cfg.OBSERVATIONS][self.observationId].get(cfg.VISUALIZE_SPECTROGRAM, False):
-                if not hasattr(self, "spectro"):
-                    return
+        # spectrogram
+        if self.pj[cfg.OBSERVATIONS][self.observationId].get(cfg.VISUALIZE_SPECTROGRAM, False):
+            if not hasattr(self, "spectro"):
+                return
 
-                if not self.spectro.visibleRegion().isEmpty():
-                    if self.spectro.wav_file_path == wav_file_path:
+            if not self.spectro.visibleRegion().isEmpty():
+                if self.spectro.wav_file_path == wav_file_path:
+                    self.spectro.plot_spectro(current_media_time)
+                else:
+                    r = self.spectro.load_wav(wav_file_path)
+                    if "error" not in r:
                         self.spectro.plot_spectro(current_media_time)
                     else:
-                        r = self.spectro.load_wav(wav_file_path)
-                        if "error" not in r:
-                            self.spectro.plot_spectro(current_media_time)
-                        else:
-                            logging.warning("spectro_load_wav error: {}".format(r["error"]))
+                        logging.warning("spectro_load_wav error: {}".format(r["error"]))
 
     def show_data_files(self):
         """
@@ -1364,31 +1368,40 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         logging.debug(f"paused? {flag_paused}")
 
+        if not self.dw_player[player].player.playlist_count:
+            return
+
+        # one media
         if self.dw_player[player].player.playlist_count == 1:
             if new_time < self.dw_player[player].player.duration:
                 self.dw_player[player].player.seek(new_time, "absolute+exact")
 
                 if player == 0 and not self.user_move_slider:
-                    try:
-                        self.video_slider.setValue(
-                            self.dw_player[0].player.time_pos / self.dw_player[0].player.duration * (cfg.SLIDER_MAXIMUM - 1)
-                        )
-                    except Exception:
-                        pass
-            else:
-                pass
+                    self.video_slider.setValue(
+                        round(self.dw_player[0].player.time_pos / self.dw_player[0].player.duration * (cfg.SLIDER_MAXIMUM - 1))
+                    )
 
-        elif self.dw_player[player].player.playlist_count > 1:
-            if new_time < sum(self.dw_player[player].media_durations) / 1000:
-                tot = 0
-                for idx, d in enumerate(self.dw_player[player].media_durations):
-                    if tot <= new_time < tot + d / 1000:
+        # many media
+        else:
+            # if new_time < sum(self.dw_player[player].media_durations) / 1000:
+            if new_time < self.dw_player[player].cumul_media_durations_sec[-1]:
+                """tot = 0
+                for idx, d in enumerate(self.dw_player[player].media_durations):"""
+
+                for idx, d in enumerate(self.dw_player[player].cumul_media_durations_sec[:-1]):
+                    """if tot <= new_time < tot + d / 1000:"""
+                    if d <= new_time < self.dw_player[player].cumul_media_durations_sec[idx + 1]:
+                        self.dw_player[player].player.playlist_pos = idx
+                        time.sleep(0.5)
+
+                        """
                         if idx == self.dw_player[player].player.playlist_pos + 1:
                             self.dw_player[player].player.playlist_next()
                             time.sleep(1)
                         if idx == self.dw_player[player].player.playlist_pos - 1:
                             self.dw_player[player].player.playlist_prev()
                             time.sleep(1)
+                        """
 
                         self.dw_player[player].player.seek(
                             round(
@@ -1403,12 +1416,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     tot += d / 1000
 
                 if player == 0 and not self.user_move_slider:
-                    try:
-                        self.video_slider.setValue(
-                            self.dw_player[0].player.time_pos / self.dw_player[0].player.duration * (cfg.SLIDER_MAXIMUM - 1)
-                        )
-                    except Exception:
-                        pass
+                    self.video_slider.setValue(
+                        round(self.dw_player[0].player.time_pos / self.dw_player[0].player.duration * (cfg.SLIDER_MAXIMUM - 1))
+                    )
 
             else:
                 QMessageBox.warning(
@@ -1416,7 +1426,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     cfg.programName,
                     (
                         "The indicated position is behind the total media duration "
-                        f"({util.seconds2time(sum(self.dw_player[player].media_durations))})"
+                        f"({util.seconds2time(self.dw_player[player].cumul_media_durations_sec[-1])})"
                     ),
                 )
 
@@ -3752,7 +3762,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.mediaTotalLength = current_media_duration
 
         # current state(s)
-        self.currentStates = {}
+        self.currentStates: dict = {}
 
         # index of current subject selected by observer
         subject_idx = self.subject_name_index[self.currentSubject] if self.currentSubject else ""
@@ -3772,72 +3782,85 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         # current media name
         if self.dw_player[0].player.playlist_pos is not None:
             current_media_name = pl.Path(self.dw_player[0].player.playlist[self.dw_player[0].player.playlist_pos]["filename"]).name
+            current_playlist_index = self.dw_player[0].player.playlist_pos
         else:
             current_media_name = ""
+            current_playlist_index = None
 
-        # check for ongoing state events between media
+        # print(f"{self.dw_player[0].player.time_pos=}")
+
+        # check for ongoing state events between media or at the end of last media
         if (
             self.pj[cfg.OBSERVATIONS][self.observationId][cfg.CLOSE_BEHAVIORS_BETWEEN_VIDEOS]
+            and self.mem_playlist_index is not None
+            and current_playlist_index != self.mem_playlist_index
+        ):
+            """
             and self.mem_media_name != ""
             and current_media_name != self.mem_media_name
-        ):
-            print("media changed")
+            """
+            print(f"\n\nmedia changed to {current_media_name}")
 
             print(f"{currentTimeOffset=}")
 
             print(f"{self.dw_player[0].player.playlist_pos=}")
 
+            """
             flag_states_ok, msg = project_functions.check_state_events_obs(
                 self.observationId, self.pj[cfg.ETHOGRAM], self.pj[cfg.OBSERVATIONS][self.observationId]
             )
-            if not flag_states_ok:
-                print("state events not paired")
+            """
 
-                print(f"{self.dw_player[0].cumul_media_durations=}")
+            """if not flag_states_ok:"""
 
-                cmd = [round(dec(x / 1000), 3) for x in self.dw_player[0].cumul_media_durations]
+            """print(f"{self.dw_player[0].cumul_media_durations=}")"""
 
-                print(f"{cmd=}")
+            """cmd = [round(dec(x / 1000), 3) for x in self.dw_player[0].cumul_media_durations]"""
 
-                min_ = round(dec((self.dw_player[0].cumul_media_durations[self.dw_player[0].player.playlist_pos - 1]) / 1000), 3)
-                max_ = round(dec((self.dw_player[0].cumul_media_durations[self.dw_player[0].player.playlist_pos]) / 1000), 3)
+            min_ = self.dw_player[0].cumul_media_durations_sec[self.dw_player[0].player.playlist_pos - 1]
+            max_ = self.dw_player[0].cumul_media_durations_sec[self.dw_player[0].player.playlist_pos]
 
-                print(f"{min_=}    {max_=}")
+            print(f"{min_=}   {max_=}")
 
-                events = [event for event in self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS] if min_ <= event[0] < max_]
+            events = [event for event in self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS] if min_ <= event[0] < max_]
 
-                # events = [event for event in self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS] if event[0] <= currentTimeOffset]
+            print(f"events to check: {events}")
 
-                print(f"events to check: {events}")
+            """time_to_stop = dec(round((self.dw_player[0].cumul_media_durations[self.dw_player[0].player.playlist_pos] - 1) / 1000, 3))"""
+            time_to_stop = self.dw_player[0].cumul_media_durations_sec[self.dw_player[0].player.playlist_pos] - dec("0.001")
 
-                time_to_stop = dec(round((self.dw_player[0].cumul_media_durations[self.dw_player[0].player.playlist_pos] - 1) / 1000, 3))
+            events_to_add = project_functions.fix_unpaired_state_events2(self.pj[cfg.ETHOGRAM], events, time_to_stop)
 
-                events_to_add = project_functions.fix_unpaired_state_events2(self.pj[cfg.ETHOGRAM], events, time_to_stop)
+            print(f"{events_to_add=}")
 
-                print(f"{events_to_add=}")
+            # print(f"{self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS]=}")
 
-                # print(f"{self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS]=}")
+            if events_to_add:
+                self.statusbar.showMessage("The media changed. Some ongoing state events were stopped automatically", 0)
 
-                if events_to_add:
-                    self.pause_video()
-                    self.statusbar.showMessage("The media changed. Some ongoing state events were stopped automatically", 0)
+                self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS].extend(events_to_add)
+                self.project_changed()
+                self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS].sort()
 
-                    self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS].extend(events_to_add)
-                    self.project_changed()
-                    self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS].sort()
+                print(f"{self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS]=}")
 
-                    self.load_tw_events(self.observationId)
-                    """
-                    item = self.twEvents.item(
-                        [i for i, t in enumerate(self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS]) if t[0] == currentTimeOffset][
-                            0
-                        ],
-                        0,
-                    )
-                    self.twEvents.scrollToItem(item)
-                    """
+                self.load_tw_events(self.observationId)
+
+                self.pause_video()
+
+                self.update_visualizations()
+                """
+                item = self.twEvents.item(
+                    [i for i, t in enumerate(self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS]) if t[0] == currentTimeOffset][
+                        0
+                    ],
+                    0,
+                )
+                self.twEvents.scrollToItem(item)
+                """
 
         self.mem_media_name = current_media_name
+        self.mem_playlist_index = current_playlist_index
 
         playlist_length = len(self.dw_player[0].player.playlist)
 
@@ -3884,6 +3907,59 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             # set video scroll bar
             if scroll_slider and not self.user_move_slider:
                 self.video_slider.setValue(round(current_media_time_pos / current_media_duration * (cfg.SLIDER_MAXIMUM - 1)))
+
+    def mpv_eof_reached(self):
+        """
+        mpv file or playlist is at end
+        close all started state events if option activated
+        """
+
+        logging.info("\n\nmedia end reached")
+
+        print(f"{self.dw_player[0].player.time_pos=}")
+        print(f"{self.dw_player[0].player.pause=}")
+        print(f"{self.dw_player[0].player.core_idle=}")
+        print(f"{self.dw_player[0].player.eof_reached=}")
+        print(f"{self.dw_player[0].player.playlist_pos=}")
+
+        if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.CLOSE_BEHAVIORS_BETWEEN_VIDEOS]:
+            if self.dw_player[0].player.eof_reached and self.dw_player[0].player.core_idle:
+                if self.dw_player[0].player.playlist_pos == len(self.dw_player[0].player.playlist) - 1:
+                    logging.info("End of playlist reached")
+                    self.pause_video()
+
+                    self.lb_player_status.setText("End of playlist reached")
+
+                    """
+                    cmd = [round(dec(x / 1000), 3) for x in self.dw_player[0].cumul_media_durations]
+                    print(f"{cmd=}")
+                    """
+
+                    min_ = self.dw_player[0].cumul_media_durations_sec[self.dw_player[0].player.playlist_pos]
+                    """max_ =  self.dw_player[0].cumul_media_durations_sec[self.dw_player[0].player.playlist_pos + 1]"""
+
+                    print(f"{min_=} ")
+
+                    events = [event for event in self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS] if min_ <= event[0]]
+
+                    print(f"{events=}")
+
+                    time_to_stop = self.dw_player[0].cumul_media_durations_sec[-1]
+
+                    events_to_add = project_functions.fix_unpaired_state_events2(self.pj[cfg.ETHOGRAM], events, time_to_stop)
+
+                    print(f"{events_to_add=}")
+
+                    if events_to_add:
+                        self.statusbar.showMessage("The playlist has finished. Some ongoing state events were stopped automatically", 0)
+
+                        self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS].extend(events_to_add)
+                        self.project_changed()
+                        self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS].sort()
+
+                        self.load_tw_events(self.observationId)
+
+                        self.update_visualizations()
 
     def load_behaviors_in_twEthogram(self, behaviors_to_show: list) -> None:
         """
@@ -4153,14 +4229,12 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             bool: True if playing else False
         """
 
-        if self.playerType == cfg.MEDIA:
-            if self.dw_player[0].player.pause:
-                return False
-            elif self.dw_player[0].player.time_pos is not None:
-                return True
-            else:
-                return False
-
+        if self.playerType != cfg.MEDIA:
+            return False
+        if self.dw_player[0].player.pause:
+            return False
+        elif self.dw_player[0].player.time_pos is not None:
+            return True
         else:
             return False
 
@@ -4521,7 +4595,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     return
                 media_file_name = self.dw_player[0].player.playlist[self.dw_player[0].player.playlist_pos]["filename"]
 
-                time_ -= self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO]["media_creation_time"][media_file_name]
+                time_ -= self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO][cfg.MEDIA_CREATION_TIME][media_file_name]
 
             if time_ + self.repositioningTimeOffset >= 0:
                 new_time = time_ + self.repositioningTimeOffset
@@ -4824,29 +4898,31 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         does not pause media if already paused (to prevent media played again)
         """
 
-        if self.playerType == cfg.MEDIA:
-            for i, player in enumerate(self.dw_player):
-                if (
-                    str(i + 1) in self.pj[cfg.OBSERVATIONS][self.observationId][cfg.FILE]
-                    and self.pj[cfg.OBSERVATIONS][self.observationId][cfg.FILE][str(i + 1)]
-                ):
-                    if not player.player.pause:
-                        self.plot_timer.stop()
-                        # stop all timer for plotting data
-                        for data_timer in self.ext_data_timer_list:
-                            data_timer.stop()
+        if self.playerType != cfg.MEDIA:
+            return
 
-                        player.player.pause = True
+        for i, player in enumerate(self.dw_player):
+            if (
+                str(i + 1) in self.pj[cfg.OBSERVATIONS][self.observationId][cfg.FILE]
+                and self.pj[cfg.OBSERVATIONS][self.observationId][cfg.FILE][str(i + 1)]
+            ):
+                if not player.player.pause:
+                    self.plot_timer.stop()
+                    # stop all timer for plotting data
+                    for data_timer in self.ext_data_timer_list:
+                        data_timer.stop()
 
-            self.lb_player_status.setText(msg)
+                    player.player.pause = True
 
-            # adjust positions of plots
-            self.plot_timer_out()
-            for idx in self.plot_data:
-                self.timer_plot_data_out(self.plot_data[idx])
+        self.lb_player_status.setText(msg)
 
-            self.actionPlay.setIcon(QIcon(":/play"))
-            self.actionPlay.setText("Play")
+        # adjust positions of plots
+        self.plot_timer_out()
+        for idx in self.plot_data:
+            self.timer_plot_data_out(self.plot_data[idx])
+
+        self.actionPlay.setIcon(QIcon(":/play"))
+        self.actionPlay.setText("Play")
 
     def play_activated(self):
         """
@@ -4913,7 +4989,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         update visualization of video position, spectrogram, waveform, plot events and data
         """
 
-        self.plot_timer_out()
+        self.plot_timer_out()  # real-time, waveform, spectrogram
         for idx in self.plot_data:
             self.timer_plot_data_out(self.plot_data[idx])
 

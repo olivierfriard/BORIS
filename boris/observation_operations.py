@@ -708,7 +708,7 @@ def new_observation(self, mode=cfg.NEW, obsId=""):
                         except Exception:
                             pass
 
-            observationWindow.cbCloseCurrentBehaviorsBetweenVideo.setEnabled(observationWindow.twVideo1.rowCount() > 1)
+            observationWindow.cbCloseCurrentBehaviorsBetweenVideo.setEnabled(observationWindow.twVideo1.rowCount() > 0)
             # spectrogram
             observationWindow.cbVisualizeSpectrogram.setEnabled(True)
             observationWindow.cbVisualizeSpectrogram.setChecked(self.pj[cfg.OBSERVATIONS][obsId].get(cfg.VISUALIZE_SPECTROGRAM, False))
@@ -1323,6 +1323,11 @@ def initialize_new_media_observation(self) -> bool:
                 if value is not None:
                     self.time_observer_signal.emit(value)
 
+            @p0.player.property_observer("eof-reached")
+            def eof_reached(_name, value):
+                if value is not None:
+                    self.mpv_eof_reached_signal.emit(value)
+
             @p0.player.on_key_press("MBTN_LEFT")
             def mbtn_left():
                 self.video_click_signal.emit(0, "MBTN_LEFT")
@@ -1478,7 +1483,7 @@ def initialize_new_media_observation(self) -> bool:
 
         # add durations list
         self.dw_player[i].media_durations: list = []
-        self.dw_player[i].cumul_media_durations: list = [0]  # [idx for idx,x in enumerate(l) if l[idx-1]<pos<=x]
+        self.dw_player[i].cumul_media_durations: List[int] = [0]  # [idx for idx,x in enumerate(l) if l[idx-1]<pos<=x]
 
         # add fps list
         self.dw_player[i].fps = {}
@@ -1525,6 +1530,9 @@ def initialize_new_media_observation(self) -> bool:
             self.dw_player[i].player.playlist_append(media_full_path)
             # self.dw_player[i].player.loadfile(media_full_path)
             # self.dw_player[i].player.pause = True
+
+        # media duration cumuled in seconds
+        self.dw_player[i].cumul_media_durations_sec: List[dec] = [round(dec(x / 1000), 3) for x in self.dw_player[i].cumul_media_durations]
 
         # check if BORIS is running on a Windows VM with the 'WMIC COMPUTERSYSTEM GET SERIALNUMBER' command
         # because "auto" or "auto-safe" crash in Windows VM
@@ -1599,6 +1607,7 @@ def initialize_new_media_observation(self) -> bool:
     menu_options.update_menu(self)
 
     self.time_observer_signal.connect(self.mpv_timer_out)
+    self.mpv_eof_reached_signal.connect(self.mpv_eof_reached)
     self.video_click_signal.connect(self.player_clicked)
 
     self.actionPlay.setIcon(QIcon(":/play"))
@@ -1971,6 +1980,10 @@ def initialize_new_images_observation(self):
 def event2media_file_name(observation: dict, timestamp: dec) -> Optional[str]:
     """
     returns the media file name corresponding to the event (start time in case of state event)
+
+    Args:
+        observation (dict): observation
+        timestamp (dec): time stamp
 
     Returns:
         str: name of media file containing the event
