@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>800</width>
+    <width>959</width>
     <height>650</height>
    </rect>
   </property>
@@ -349,6 +349,9 @@
              </item>
              <item>
               <widget class="QCheckBox" name="cb_media_creation_date_as_offset">
+               <property name="enabled">
+                <bool>false</bool>
+               </property>
                <property name="text">
                 <string>Use the media creation date/time metadata as offset</string>
                </property>

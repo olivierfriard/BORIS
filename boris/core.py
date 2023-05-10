@@ -3795,23 +3795,14 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             and self.mem_playlist_index is not None
             and current_playlist_index != self.mem_playlist_index
         ):
-            """
-            and self.mem_media_name != ""
-            and current_media_name != self.mem_media_name
-            """
+
+            '''
             print(f"\n\nmedia changed to {current_media_name}")
 
             print(f"{currentTimeOffset=}")
 
             print(f"{self.dw_player[0].player.playlist_pos=}")
-
-            """
-            flag_states_ok, msg = project_functions.check_state_events_obs(
-                self.observationId, self.pj[cfg.ETHOGRAM], self.pj[cfg.OBSERVATIONS][self.observationId]
-            )
-            """
-
-            """if not flag_states_ok:"""
+            '''
 
             """print(f"{self.dw_player[0].cumul_media_durations=}")"""
 
@@ -3820,18 +3811,18 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             min_ = self.dw_player[0].cumul_media_durations_sec[self.dw_player[0].player.playlist_pos - 1]
             max_ = self.dw_player[0].cumul_media_durations_sec[self.dw_player[0].player.playlist_pos]
 
-            print(f"{min_=}   {max_=}")
+            '''print(f"{min_=}   {max_=}")'''
 
             events = [event for event in self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS] if min_ <= event[0] < max_]
 
-            print(f"events to check: {events}")
+            '''print(f"events to check: {events}")'''
 
             """time_to_stop = dec(round((self.dw_player[0].cumul_media_durations[self.dw_player[0].player.playlist_pos] - 1) / 1000, 3))"""
             time_to_stop = self.dw_player[0].cumul_media_durations_sec[self.dw_player[0].player.playlist_pos] - dec("0.001")
 
             events_to_add = project_functions.fix_unpaired_state_events2(self.pj[cfg.ETHOGRAM], events, time_to_stop)
 
-            print(f"{events_to_add=}")
+            '''print(f"{events_to_add=}")'''
 
             # print(f"{self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS]=}")
 
@@ -3842,7 +3833,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 self.project_changed()
                 self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS].sort()
 
-                print(f"{self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS]=}")
+                '''print(f"{self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS]=}")'''
 
                 self.load_tw_events(self.observationId)
 
@@ -3916,11 +3907,13 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         logging.info("\n\nmedia end reached")
 
+        '''
         print(f"{self.dw_player[0].player.time_pos=}")
         print(f"{self.dw_player[0].player.pause=}")
         print(f"{self.dw_player[0].player.core_idle=}")
         print(f"{self.dw_player[0].player.eof_reached=}")
         print(f"{self.dw_player[0].player.playlist_pos=}")
+        '''
 
         if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.CLOSE_BEHAVIORS_BETWEEN_VIDEOS]:
             if self.dw_player[0].player.eof_reached and self.dw_player[0].player.core_idle:
@@ -3938,17 +3931,17 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     min_ = self.dw_player[0].cumul_media_durations_sec[self.dw_player[0].player.playlist_pos]
                     """max_ =  self.dw_player[0].cumul_media_durations_sec[self.dw_player[0].player.playlist_pos + 1]"""
 
-                    print(f"{min_=} ")
+                    #print(f"{min_=} ")
 
                     events = [event for event in self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS] if min_ <= event[0]]
 
-                    print(f"{events=}")
+                    #print(f"{events=}")
 
                     time_to_stop = self.dw_player[0].cumul_media_durations_sec[-1]
 
                     events_to_add = project_functions.fix_unpaired_state_events2(self.pj[cfg.ETHOGRAM], events, time_to_stop)
 
-                    print(f"{events_to_add=}")
+                    #print(f"{events_to_add=}")
 
                     if events_to_add:
                         self.statusbar.showMessage("The playlist has finished. Some ongoing state events were stopped automatically", 0)

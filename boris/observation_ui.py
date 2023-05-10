@@ -14,7 +14,7 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 class Ui_Form(object):
     def setupUi(self, Form):
         Form.setObjectName("Form")
-        Form.resize(800, 650)
+        Form.resize(959, 650)
         self.verticalLayout_6 = QtWidgets.QVBoxLayout(Form)
         self.verticalLayout_6.setObjectName("verticalLayout_6")
         self.horizontalLayout_2 = QtWidgets.QHBoxLayout()
@@ -183,6 +183,7 @@ class Ui_Form(object):
         self.cb_visualize_waveform.setObjectName("cb_visualize_waveform")
         self.horizontalLayout_15.addWidget(self.cb_visualize_waveform)
         self.cb_media_creation_date_as_offset = QtWidgets.QCheckBox(self.tab_player_1)
+        self.cb_media_creation_date_as_offset.setEnabled(False)
         self.cb_media_creation_date_as_offset.setObjectName("cb_media_creation_date_as_offset")
         self.horizontalLayout_15.addWidget(self.cb_media_creation_date_as_offset)
         spacerItem3 = QtWidgets.QSpacerItem(40, 20, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)

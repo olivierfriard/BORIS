@@ -1076,6 +1076,9 @@ class Observation(QDialog, Ui_Form):
         # enable stop ongoing state events if n. media > 1
         self.cbCloseCurrentBehaviorsBetweenVideo.setEnabled(self.twVideo1.rowCount() > 0)
 
+        # DEVELOPEMENT
+        self.cb_media_creation_date_as_offset.setEnabled(False)
+
     def add_media(self, mode: str):
         """
         add media
