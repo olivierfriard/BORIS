@@ -5,6 +5,7 @@
 
 
 create_wheel:
+	rst_exe pyproject.toml
 	git commit -am "new wheel"; git push; rm -rf *.egg-info build dist
 	python3 -m build
 	twine check dist/*
