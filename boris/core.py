@@ -1385,23 +1385,12 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         else:
             # if new_time < sum(self.dw_player[player].media_durations) / 1000:
             if new_time < self.dw_player[player].cumul_media_durations_sec[-1]:
-                """tot = 0
-                for idx, d in enumerate(self.dw_player[player].media_durations):"""
 
                 for idx, d in enumerate(self.dw_player[player].cumul_media_durations_sec[:-1]):
-                    """if tot <= new_time < tot + d / 1000:"""
+
                     if d <= new_time < self.dw_player[player].cumul_media_durations_sec[idx + 1]:
                         self.dw_player[player].player.playlist_pos = idx
                         time.sleep(0.5)
-
-                        """
-                        if idx == self.dw_player[player].player.playlist_pos + 1:
-                            self.dw_player[player].player.playlist_next()
-                            time.sleep(1)
-                        if idx == self.dw_player[player].player.playlist_pos - 1:
-                            self.dw_player[player].player.playlist_prev()
-                            time.sleep(1)
-                        """
 
                         self.dw_player[player].player.seek(
                             round(
@@ -1413,7 +1402,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                         )
 
                         break
-                    tot += d / 1000
+                    
 
                 if player == 0 and not self.user_move_slider:
                     self.video_slider.setValue(
@@ -3713,7 +3702,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         if self.pj[cfg.OBSERVATIONS][self.observationId].get(cfg.OBSERVATION_TIME_INTERVAL, [0, 0])[1]:
             if cumulative_time_pos >= self.pj[cfg.OBSERVATIONS][self.observationId].get(cfg.OBSERVATION_TIME_INTERVAL, [0, 0])[1]:
                 if self.is_playing():
-                    self.pause_video()
+                    self.pause_video("End of observation interval reached. Player paused")
                     self.beep("beep")
 
         # alarm
@@ -3723,9 +3712,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         # scan sampling
         if self.pj[cfg.OBSERVATIONS][self.observationId].get(cfg.MEDIA_SCAN_SAMPLING_DURATION, 0):
-            if self.media_scan_sampling_mem:
-                while self.media_scan_sampling_mem[-1] > cumulative_time_pos:
-                    self.media_scan_sampling_mem.pop(-1)
+
+            while self.media_scan_sampling_mem and (self.media_scan_sampling_mem[-1] > cumulative_time_pos):
+                self.media_scan_sampling_mem.pop(-1)
 
             if int(cumulative_time_pos) % self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_SCAN_SAMPLING_DURATION] == 0:
                 scan_sampling_step = (
@@ -3905,7 +3894,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         close all started state events if option activated
         """
 
-        logging.info("\n\nmedia end reached")
+        logging.info("Media end reached")
 
         '''
         print(f"{self.dw_player[0].player.time_pos=}")
@@ -3918,7 +3907,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.CLOSE_BEHAVIORS_BETWEEN_VIDEOS]:
             if self.dw_player[0].player.eof_reached and self.dw_player[0].player.core_idle:
                 if self.dw_player[0].player.playlist_pos == len(self.dw_player[0].player.playlist) - 1:
-                    logging.info("End of playlist reached")
+
+                    logging.debug("End of playlist reached")
+
                     self.pause_video()
 
                     self.lb_player_status.setText("End of playlist reached")
@@ -4345,8 +4336,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
             # jump forward
             if modifier != cfg.CTRL_KEY and ek == Qt.Key_Up:
-                logging.debug("jump forward")
-
                 self.jumpForward_activated()
                 return
 
@@ -4963,9 +4952,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         """
 
         if self.playerType == cfg.MEDIA:
-            logging.debug("jump forward")
-
             increment = self.fast * self.play_rate if self.config_param.get(cfg.ADAPT_FAST_JUMP, cfg.ADAPT_FAST_JUMP_DEFAULT) else self.fast
+
+            logging.info(f"Jump forward for {increment} seconds")
 
             new_time = (
                 sum(self.dw_player[0].media_durations[0 : self.dw_player[0].player.playlist_pos]) / 1000
@@ -4990,7 +4979,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         """
         reset video to beginning
         """
-        logging.debug("Reset activated")
+        logging.info("Video reset activated")
 
         if self.playerType == cfg.MEDIA:
             self.pause_video()

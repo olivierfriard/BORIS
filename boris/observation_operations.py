@@ -717,9 +717,15 @@ def new_observation(self, mode=cfg.NEW, obsId=""):
             observationWindow.cb_visualize_waveform.setChecked(self.pj[cfg.OBSERVATIONS][obsId].get(cfg.VISUALIZE_WAVEFORM, False))
             # use Creation date metadata tag as offset
             observationWindow.cb_media_creation_date_as_offset.setEnabled(True)
+            
+            # DEVELOPMENT (REMOVE BEFORE RELEASE)
+            observationWindow.cb_media_creation_date_as_offset.setEnabled(False)
+
             observationWindow.cb_media_creation_date_as_offset.setChecked(
                 self.pj[cfg.OBSERVATIONS][obsId].get(cfg.MEDIA_CREATION_DATE_AS_OFFSET, False)
             )
+
+
             # scan sampling
             observationWindow.sb_media_scan_sampling.setValue(self.pj[cfg.OBSERVATIONS][obsId].get(cfg.MEDIA_SCAN_SAMPLING_DURATION, 0))
             # image display duration
