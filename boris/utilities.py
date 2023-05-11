@@ -1125,6 +1125,7 @@ def ffprobe_media_analysis(ffmpeg_bin: str, file_name: str) -> dict:
         fps = 0
         sample_rate = None
         duration = 0
+        audio_duration = cfg.NA
         frames_number = None
         size = None
         audio_codec = None
