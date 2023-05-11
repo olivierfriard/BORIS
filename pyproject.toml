@@ -11,7 +11,7 @@
 [project]
 name = "boris-behav-obs"
 # BEGIN_OUTPUT TAG=version
-version = "8.19.2"
+version = "8.19.3"
 # END_OUTPUT
 description = "BORIS - Behavioral Observation Research Interactive Software"
 authors = [{ name="Olivier Friard", email="olivier.friard@unito.it" }]
@@ -70,7 +70,7 @@ exclude = ["*_ui.py", "mpv*"]
 
 [tool.bumpver]
 # BEGIN_OUTPUT TAG=current_version
-current_version = "8.19.2"
+current_version = "8.19.3"
 # END_OUTPUT
 version_pattern = "MAJOR.MINOR.PATCH"
 
