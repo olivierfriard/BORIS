@@ -83,43 +83,6 @@ def export_ethogram(self) -> None:
     if pl.Path(file_name).suffix != "." + output_format:
         file_name = str(pl.Path(file_name)) + "." + output_format
 
-    ethogram_data = tablib.Dataset()
-    ethogram_data.title = "Ethogram"
-    if self.leProjectName.text():
-        ethogram_data.title = f"Ethogram of {self.leProjectName.text()} project"
-
-    ethogram_data.headers = [
-        "Behavior code",
-        "Behavior type",
-        "Description",
-        "Key",
-        "Behavioral category",
-        "Excluded behaviors",
-        "modifiers",
-        # "modifiers (JSON)",
-    ]
-
-    for r in range(self.twBehaviors.rowCount()):
-        row = []
-        for field in ("code", cfg.TYPE, "description", "key", cfg.COLOR, "category", "excluded"):
-            row.append(self.twBehaviors.item(r, cfg.behavioursFields[field]).text())
-
-        # modifiers
-        if self.twBehaviors.item(r, cfg.behavioursFields[cfg.MODIFIERS]).text():
-            modifiers_dict = eval(self.twBehaviors.item(r, cfg.behavioursFields[cfg.MODIFIERS]).text())
-            modifiers_list = []
-            for key in modifiers_dict:
-                if modifiers_dict[key]["values"]:
-                    values = ", ".join(modifiers_dict[key]["values"])
-                    modifiers_list.append(f"{modifiers_dict[key]['name']} ({values})")
-                else:
-                    modifiers_list.append(modifiers_dict[key]["name"])
-
-            row.append(", ".join(modifiers_list))
-        else:
-            row.append("")
-
-        ethogram_data.append(row)
 
     if output_format == "boris":
         r = self.check_ethogram()
@@ -148,6 +111,46 @@ def export_ethogram(self) -> None:
             )
 
     else:
+
+        ethogram_data = tablib.Dataset()
+        ethogram_data.title = "Ethogram"
+        if self.leProjectName.text():
+            ethogram_data.title = f"Ethogram of {self.leProjectName.text()} project"
+
+        ethogram_data.headers = [
+            "Behavior code",
+            "Behavior type",
+            "Description",
+            "Key",
+            "Color",
+            "Behavioral category",
+            "Excluded behaviors",
+            "modifiers",
+            # "modifiers (JSON)",
+        ]
+
+        for r in range(self.twBehaviors.rowCount()):
+            row = []
+            for field in ("code", cfg.TYPE, "description", "key", cfg.COLOR, "category", "excluded"):
+                row.append(self.twBehaviors.item(r, cfg.behavioursFields[field]).text())
+
+            # modifiers
+            if self.twBehaviors.item(r, cfg.behavioursFields[cfg.MODIFIERS]).text():
+                modifiers_dict = eval(self.twBehaviors.item(r, cfg.behavioursFields[cfg.MODIFIERS]).text())
+                modifiers_list = []
+                for key in modifiers_dict:
+                    if modifiers_dict[key]["values"]:
+                        values = ", ".join(modifiers_dict[key]["values"])
+                        modifiers_list.append(f"{modifiers_dict[key]['name']} ({values})")
+                    else:
+                        modifiers_list.append(modifiers_dict[key]["name"])
+
+                row.append(", ".join(modifiers_list))
+            else:
+                row.append("")
+
+            ethogram_data.append(row)
+
         ok, msg = export_observation.dataset_write(ethogram_data, file_name, output_format)
         if not ok:
             QMessageBox.critical(None, cfg.programName, msg, QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
@@ -165,7 +168,7 @@ def export_subjects(self) -> None:
         cfg.XLS,
         cfg.HMTL,
     ]
-    file_formats = [cfg.TSV_EXT, "csv", "ods", "xlsx", "xls", "html"]
+    file_formats = [cfg.TSV_EXT, cfg.CSV_EXT, cfg.ODS_EXT, cfg.XLSX_EXT, cfg.XLS_EXT, cfg.HMTL_EXT]
 
     filediag_func = QFileDialog().getSaveFileName
 
