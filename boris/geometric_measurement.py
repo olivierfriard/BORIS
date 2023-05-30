@@ -210,7 +210,7 @@ class wgMeasurement(QWidget):
 
             if frame_idx in self.draw_mem:
                 for idx, element in enumerate(self.draw_mem[frame_idx]):
-                    if element['player'] == player - 1 and element['object_type']  == obj_type and element['coordinates'] == coord:
+                    if (element['player'] == player - 1) and (element['object_type']  == obj_type) and (element['coordinates'] == coord):
                         elements_to_delete.append((frame_idx, idx))
 
             self.pte.removeRow(row)
