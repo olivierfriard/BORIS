@@ -183,20 +183,47 @@ class wgMeasurement(QWidget):
 
     def delete_measurement(self):
         """
-        delete the selected measurement
+        delete the selected measurement(s)
         """
+        print(self.draw_mem)
+
         if not self.pte.selectedItems():
             return
+
         rows_to_delete = []
         for item in self.pte.selectedItems():
             if item.row() not in rows_to_delete:
                 rows_to_delete.append(item.row())
 
+        elements_to_delete = []
         for row in sorted(rows_to_delete, reverse=True):
+
+            player = int(self.pte.item(row, 0).text())
+            frame_idx = int(self.pte.item(row, 2).text())
+            obj_type = self.pte.item(row, 3).text()
+            coord = eval(self.pte.item(row, 9).text())
+
+            print(f"{player=}")
+            print(f"{frame_idx=}")
+            print(f"{obj_type=}")
+            print(f"{coord=}")
+
+            if frame_idx in self.draw_mem:
+                for idx, element in enumerate(self.draw_mem[frame_idx]):
+                    if element['player'] == player - 1 and element['object_type']  == obj_type and element['coordinates'] == coord:
+                        elements_to_delete.append((frame_idx, idx))
+
             self.pte.removeRow(row)
             self.pte.flag_saved = False
 
-        # TODO: re-create draw_mem from pte before redraw
+        print(f"{elements_to_delete=}")
+
+        print(f"{sorted(elements_to_delete, reverse=True)=}")
+
+        for frame_idx, idx in sorted(elements_to_delete, reverse=True):
+            self.draw_mem[frame_idx].pop(idx)
+
+        print(self.draw_mem)
         redraw_measurements(self)
 
     def choose_marks_color(self):
@@ -484,7 +511,9 @@ def image_clicked(self, n_player: int, event) -> None:
             if current_frame not in self.measurement_w.draw_mem:
                 self.measurement_w.draw_mem[current_frame] = []
 
-            self.measurement_w.draw_mem[current_frame].append([n_player, "point", self.measurement_w.mark_color, x_video, y_video])
+            self.measurement_w.draw_mem[current_frame].append(
+                {'player': n_player, 'object_type': cfg.POINT_OBJECT, "color": self.measurement_w.mark_color, "coordinates": [(x_video, y_video)]}
+                )
 
             append_results(
                 self,
@@ -492,7 +521,7 @@ def image_clicked(self, n_player: int, event) -> None:
                     n_player + 1,
                     f"{self.getLaps():.03f}",
                     current_frame,
-                    "Point",
+                    cfg.POINT_OBJECT,
                     x_video,
                     y_video,
                     cfg.NA,
@@ -519,7 +548,8 @@ def image_clicked(self, n_player: int, event) -> None:
                 self.measurement_w.draw_mem[current_frame] = []
 
             self.measurement_w.draw_mem[current_frame].append(
-                [n_player, "line", self.measurement_w.mark_color, self.memx_video, self.memy_video, x_video, y_video]
+                {'player': n_player, 'object_type': cfg.SEGMENT_OBJECT, "color": self.measurement_w.mark_color, "coordinates": [(self.memx_video, self.memy_video), (x_video, y_video)]}
+                
             )
 
             distance = ((x_video - self.memx_video) ** 2 + (y_video - self.memy_video) ** 2) ** 0.5
@@ -540,7 +570,7 @@ def image_clicked(self, n_player: int, event) -> None:
                     n_player + 1,
                     f"{self.getLaps():.03f}",
                     current_frame,
-                    "Distance",
+                    cfg.SEGMENT_OBJECT,
                     cfg.NA,
                     cfg.NA,
                     round(distance, 3),
@@ -582,7 +612,7 @@ def image_clicked(self, n_player: int, event) -> None:
                         n_player + 1,
                         f"{self.getLaps():.03f}",
                         current_frame,
-                        "Angle",
+                        cfg.ANGLE_OBJECT,
                         cfg.NA,
                         cfg.NA,
                         cfg.NA,
@@ -596,7 +626,9 @@ def image_clicked(self, n_player: int, event) -> None:
                 if current_frame not in self.measurement_w.draw_mem:
                     self.measurement_w.draw_mem[current_frame] = []
 
-                self.measurement_w.draw_mem[current_frame].append([n_player, "angle", self.measurement_w.mark_color, self.mem_video])
+                self.measurement_w.draw_mem[current_frame].append(
+                    {'player': n_player, 'object_type': cfg.ANGLE_OBJECT, "color": self.measurement_w.mark_color, "coordinates": self.mem_video}
+                    )
 
                 self.memPoints, self.mem_video = [], []
 
@@ -644,7 +676,10 @@ def image_clicked(self, n_player: int, event) -> None:
             if current_frame not in self.measurement_w.draw_mem:
                 self.measurement_w.draw_mem[current_frame] = []
 
-            self.measurement_w.draw_mem[current_frame].append([n_player, "polygon", self.measurement_w.mark_color, self.mem_video])
+            self.measurement_w.draw_mem[current_frame].append(
+                {'player': n_player, 'object_type': cfg.POLYGON_OBJECT, "color": self.measurement_w.mark_color, "coordinates": self.mem_video}
+                #[n_player, "polygon", self.measurement_w.mark_color, self.mem_video]
+                )
 
             area = util.polygon_area(self.mem_video)
             try:
@@ -676,7 +711,7 @@ def image_clicked(self, n_player: int, event) -> None:
                     n_player + 1,
                     f"{self.getLaps():.03f}",
                     current_frame,
-                    "Area",
+                    cfg.POLYGON_OBJECT,
                     cfg.NA,
                     cfg.NA,
                     round(length, 1),
@@ -710,7 +745,10 @@ def image_clicked(self, n_player: int, event) -> None:
             if current_frame not in self.measurement_w.draw_mem:
                 self.measurement_w.draw_mem[current_frame] = []
 
-            self.measurement_w.draw_mem[current_frame].append([n_player, "polyline", self.measurement_w.mark_color, self.mem_video])
+            self.measurement_w.draw_mem[current_frame].append(
+                {'player': n_player, 'object_type': cfg.POLYLINE_OBJECT, "color": self.measurement_w.mark_color, "coordinates": self.mem_video}
+                #[n_player, "polyline", self.measurement_w.mark_color, self.mem_video]
+                )
 
             length = util.polyline_length(self.mem_video)
             try:
@@ -730,7 +768,7 @@ def image_clicked(self, n_player: int, event) -> None:
                     n_player + 1,
                     f"{self.getLaps():.03f}",
                     current_frame,
-                    "Polyline",
+                    cfg.POLYLINE_OBJECT,
                     cfg.NA,
                     cfg.NA,
                     round(length, 1),
@@ -794,52 +832,52 @@ def redraw_measurements(self):
         for frame in self.measurement_w.draw_mem:
             for element in self.measurement_w.draw_mem[frame]:
                 if frame == current_frame:
-                    elementsColor = element[2]  # color
+                    elements_color = element['color']  
                 else:
-                    elementsColor = cfg.PASSIVE_MEASUREMENTS_COLOR
+                    elements_color = cfg.PASSIVE_MEASUREMENTS_COLOR
 
-                if element[0] == idx:
-                    if element[1] == "point":
-                        x, y = scale_coord(element[3:])
+                if element['player'] == idx:
+                    if element['object_type'] == cfg.POINT_OBJECT:
+                        x, y = scale_coord(element['coordinates'][0])
+                        draw_point(self, int(x), int(y), elements_color, n_player=idx)
 
-                        draw_point(self, int(x), int(y), elementsColor, n_player=idx)
+                    if element['object_type'] == cfg.SEGMENT_OBJECT:
+                        x1, y1 = scale_coord(element['coordinates'][0])
+                        x2, y2 = scale_coord(element['coordinates'][1])
+                        draw_line(self, x1, y1, x2, y2, elements_color, n_player=idx)
+                        draw_point(self, x1, y1, elements_color, n_player=idx)
+                        draw_point(self, x2, y2, elements_color, n_player=idx)
 
-                    if element[1] == "line":
-                        x1, y1, x2, y2 = scale_coord(element[3:])
-                        draw_line(self, x1, y1, x2, y2, elementsColor, n_player=idx)
-                        draw_point(self, x1, y1, elementsColor, n_player=idx)
-                        draw_point(self, x2, y2, elementsColor, n_player=idx)
+                    if element['object_type'] == cfg.ANGLE_OBJECT:
+                        x1, y1 = scale_coord(element['coordinates'][0])
+                        x2, y2 = scale_coord(element['coordinates'][1])
+                        x3, y3 = scale_coord(element['coordinates'][2])
+                        draw_line(self, x1, y1, x2, y2, elements_color, n_player=idx)
+                        draw_line(self, x1, y1, x3, y3, elements_color, n_player=idx)
+                        draw_point(self, x1, y1, elements_color, n_player=idx)
+                        draw_point(self, x2, y2, elements_color, n_player=idx)
+                        draw_point(self, x3, y3, elements_color, n_player=idx)
 
-                    if element[1] == "angle":
-                        x1, y1 = scale_coord(element[3][0])
-                        x2, y2 = scale_coord(element[3][1])
-                        x3, y3 = scale_coord(element[3][2])
-                        draw_line(self, x1, y1, x2, y2, elementsColor, n_player=idx)
-                        draw_line(self, x1, y1, x3, y3, elementsColor, n_player=idx)
-                        draw_point(self, x1, y1, elementsColor, n_player=idx)
-                        draw_point(self, x2, y2, elementsColor, n_player=idx)
-                        draw_point(self, x3, y3, elementsColor, n_player=idx)
-
-                    if element[1] == "polygon":
+                    if element['object_type'] == cfg.POLYGON_OBJECT:
                         polygon = QPolygon()
 
-                        for x, y in element[3]:
+                        for x, y in element['coordinates']:
                             x, y = scale_coord([x, y])
                             polygon.append(QPoint(x, y))
                         painter = QPainter()
                         painter.begin(self.dw_player[idx].frame_viewer.pixmap())
-                        painter.setPen(QColor(elementsColor))
+                        painter.setPen(QColor(elements_color))
                         painter.drawPolygon(polygon)
                         painter.end()
                         dw.frame_viewer.update()
 
-                    if element[1] == "polyline":
-                        for idx1, p1 in enumerate(element[3][:-1]):
+                    if element['object_type'] == cfg.POLYLINE_OBJECT:
+                        for idx1, p1 in enumerate(element['coordinates'][:-1]):
                             x1, y1 = scale_coord(p1)
-                            p2 = element[3][idx1 + 1]
+                            p2 = element['coordinates'][idx1 + 1]
                             x2, y2 = scale_coord(p2)
 
-                            draw_line(self, x1, y1, x2, y2, elementsColor, n_player=idx)
+                            draw_line(self, x1, y1, x2, y2, elements_color, n_player=idx)
 
 
 if __name__ == "__main__":

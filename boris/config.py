@@ -348,6 +348,13 @@ START_FROM_CURRENT_EPOCH_TIME = "start_from_current_epoch_time"
 
 SCAN_SAMPLING_TIME = "scan_sampling_time"
 
+POINT_OBJECT = "Point"
+SEGMENT_OBJECT = "Segment"
+ANGLE_OBJECT = "Angle"
+POLYGON_OBJECT = "Polygon"
+POLYLINE_OBJECT = "Polyline"
+
+
 NEW = "new"
 LIST = "list"
 EDIT = "edit"
