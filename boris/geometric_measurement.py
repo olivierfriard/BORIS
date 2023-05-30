@@ -106,6 +106,8 @@ class wgMeasurement(QWidget):
         self.bt_color_chooser.setStyleSheet(f"QWidget {{background-color:{self.mark_color}}}")
         hbox.addWidget(self.bt_color_chooser)
 
+        hbox.addItem(QSpacerItem(40, 20, QSizePolicy.Expanding, QSizePolicy.Minimum))
+
         vbox.addLayout(hbox)
 
         vbox.addWidget(QLabel("<b>Scale</b>"))
