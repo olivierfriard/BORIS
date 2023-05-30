@@ -69,6 +69,7 @@ class wgMeasurement(QWidget):
 
     closeSignal = pyqtSignal()
     send_event_signal = pyqtSignal(QEvent)
+    reload_image_signal  = pyqtSignal(int)
     mark_color: str = cfg.ACTIVE_MEASUREMENTS_COLOR
     flag_saved = True  # store if measurements are saved
     draw_mem: dict = {}
@@ -203,11 +204,6 @@ class wgMeasurement(QWidget):
             obj_type = self.pte.item(row, 3).text()
             coord = eval(self.pte.item(row, 9).text())
 
-            print(f"{player=}")
-            print(f"{frame_idx=}")
-            print(f"{obj_type=}")
-            print(f"{coord=}")
-
             if frame_idx in self.draw_mem:
                 for idx, element in enumerate(self.draw_mem[frame_idx]):
                     if (element['player'] == player - 1) and (element['object_type']  == obj_type) and (element['coordinates'] == coord):
@@ -216,15 +212,13 @@ class wgMeasurement(QWidget):
             self.pte.removeRow(row)
             self.pte.flag_saved = False
 
-        print(f"{elements_to_delete=}")
-
-        print(f"{sorted(elements_to_delete, reverse=True)=}")
-
         for frame_idx, idx in sorted(elements_to_delete, reverse=True):
             self.draw_mem[frame_idx].pop(idx)
 
-        print(self.draw_mem)
-        redraw_measurements(self)
+        print(f"after deletion {self.draw_mem=}")
+
+        self.reload_image_signal.emit(1)
+        #redraw_measurements(self.mw)
 
     def choose_marks_color(self):
         """
@@ -391,6 +385,7 @@ def show_widget(self):
     self.measurement_w.setWindowFlags(Qt.WindowStaysOnTopHint)
     self.measurement_w.closeSignal.connect(close_measurement_widget)
     self.measurement_w.send_event_signal.connect(self.signal_from_widget)
+    self.measurement_w.reload_image_signal.connect(self.reload_frame)
     self.measurement_w.draw_mem = {}
 
     self.measurement_w.show()
@@ -819,6 +814,8 @@ def redraw_measurements(self):
     if not self.measurement_w.cbPersistentMeasurements.isChecked():
         self.measurement_w.draw_mem = {}
         return
+
+
 
     for idx, dw in enumerate(self.dw_player):
         if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE] == cfg.MEDIA:

@@ -513,7 +513,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             QMessageBox.information(self, cfg.programName, "The current project has no issues")
 
     def project_changed(self):
-        """ """
+        """
+        project was changed
+        """
         self.projectChanged = True
         menu_options.update_windows_title(self)
 
@@ -1611,6 +1613,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         for MEDIA obs: extract frame from video and visualize it in frame_viewer
         for IMAGES obs: load picture and visualize it in frame_viewer, extract EXIF Date/Time Original tag if available
         """
+
         if self.playerType == cfg.MEDIA:
             time.sleep(0.3)  # required for correct frame number
 
@@ -1691,6 +1694,22 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         receive signal from widget
         """
         self.keyPressEvent(event)
+
+    def reload_frame(self, value: int):
+        """
+        receive signal to reload frames from geometric measurements
+        """
+
+        # reload frame
+        if self.playerType == cfg.IMAGES:
+            if self.image_idx < len(self.images_list) - 1:
+                self.extract_frame(self.dw_player[0])
+
+        if self.playerType == cfg.MEDIA:
+            for dw in self.dw_player:
+                self.extract_frame(dw)
+
+        geometric_measurement.redraw_measurements(self)
 
     def resize_dw(self, dw_id):
         """
@@ -2828,6 +2847,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             if mode == cfg.EDIT:
                 if not self.projectChanged:
                     self.projectChanged = dict(self.pj) != dict(newProjectWindow.pj)
+
+            print(f"{self.projectChanged=}")
 
             # retrieve project dict from window
             self.pj = dict(newProjectWindow.pj)
