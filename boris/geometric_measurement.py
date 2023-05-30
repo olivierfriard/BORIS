@@ -196,7 +196,7 @@ class wgMeasurement(QWidget):
             self.pte.removeRow(row)
             self.pte.flag_saved = False
 
-        print(f"{self.draw_mem=}")
+        # TODO: re-create draw_mem from pte before redraw
         redraw_measurements(self)
 
     def choose_marks_color(self):
