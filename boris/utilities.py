@@ -880,6 +880,19 @@ def polygon_area(poly):
     return abs(tot / 2)
 
 
+def polyline_length(poly):
+    """
+    length of polyline
+    """
+    tot = 0
+    for p in range(1, len(poly)):
+        x1, y1 = poly[p - 1]
+        x2, y2 = poly[p]
+        tot += ((x1 - x2) ** 2 + (y1 - y2) ** 2) ** 0.5
+
+    return tot
+
+
 def url2path(url):
     """
     convert URL in local path name

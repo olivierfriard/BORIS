@@ -43,7 +43,8 @@ from PyQt5.QtWidgets import (
     QLabel,
     QLineEdit,
     QMessageBox,
-    QPlainTextEdit,
+    QTableWidget,
+    QTableWidgetItem,
     QPushButton,
     QRadioButton,
     QVBoxLayout,
@@ -87,8 +88,11 @@ class wgMeasurement(QWidget):
         self.rbArea = QRadioButton("Area (left click for area vertices, right click to close area)")
         vbox.addWidget(self.rbArea)
 
-        self.rbAngle = QRadioButton("Angle (vertex: left click, segments: right click)")
-        vbox.addWidget(self.rbAngle)
+        self.rb_angle = QRadioButton("Angle (vertex: left click, segments: right click)")
+        vbox.addWidget(self.rb_angle)
+
+        self.rb_polygon = QRadioButton("Polyline (left click for vertices, right click to finish)")
+        vbox.addWidget(self.rb_polygon)
 
         hbox = QHBoxLayout()
         self.cbPersistentMeasurements = QCheckBox("Measurements are persistent")
@@ -120,12 +124,28 @@ class wgMeasurement(QWidget):
         hbox2.addWidget(self.lePx)
         vbox.addLayout(hbox2)
 
-        self.pte = QPlainTextEdit()
+        self.pte = QTableWidget()
+        self.pte.verticalHeader().hide()
         vbox.addWidget(self.pte)
-        self.pte.setReadOnly(True)
-        self.pte.setLineWrapMode(QPlainTextEdit.NoWrap)
+        # self.pte.setReadOnly(True)
+        # self.pte.setLineWrapMode(QPlainTextEdit.NoWrap)
         # header
-        self.pte.setPlainText("Player\tTime\tFrame index\ttype of measurement\tx\ty\tdistance\tarea\tangle")
+        self.measurements_header = [
+            "Player",
+            "Time",
+            "Frame index",
+            "Type of measurement",
+            "x",
+            "y",
+            "Distance",
+            "Area",
+            "Angle",
+            "Coordinates",
+        ]
+        self.pte.setColumnCount(len(self.measurements_header))
+        self.pte.setHorizontalHeaderLabels(self.measurements_header)
+
+        # self.pte.setPlainText("Player\tTime\tFrame index\ttype of measurement\tx\ty\tdistance\tarea\tangle\tCoordinates")
 
         self.status_lb = QLabel()
         vbox.addWidget(self.status_lb)
@@ -205,6 +225,9 @@ class wgMeasurement(QWidget):
 
         self.draw_mem = {}
         self.pte.clear()
+        self.pte.setColumnCount(len(self.measurements_header))
+        self.pte.setRowCount(0)
+        self.pte.setHorizontalHeaderLabels(self.measurements_header)
         self.flag_saved = True
 
     def pbClose_clicked(self):
@@ -216,16 +239,14 @@ class wgMeasurement(QWidget):
 
     def pbSave_clicked(self):
         """
-        Save measurements results in plain text file
+        Save measurements results
         """
 
         file_formats = [cfg.TSV, cfg.CSV, cfg.ODS, cfg.XLSX, cfg.HTML, cfg.PANDAS_DF]
         if flag_pyreadr_loaded:
             file_formats.append(cfg.RDS)
 
-        file_name, filter_ = QFileDialog().getSaveFileName(
-            self, "Save geometric measurements", "", ";;".join(file_formats)
-        )
+        file_name, filter_ = QFileDialog().getSaveFileName(self, "Save geometric measurements", "", ";;".join(file_formats))
         if not file_name:
             return
 
@@ -235,14 +256,21 @@ class wgMeasurement(QWidget):
             # check if file with new extension already exists
             if pl.Path(file_name).is_file():
                 if (
-                    dialog.MessageDialog(
-                        cfg.programName, f"The file {file_name} already exists.", (cfg.CANCEL, cfg.OVERWRITE)
-                    )
+                    dialog.MessageDialog(cfg.programName, f"The file {file_name} already exists.", (cfg.CANCEL, cfg.OVERWRITE))
                     == cfg.CANCEL
                 ):
                     return
 
-        df = pd.read_csv(io.StringIO(self.pte.toPlainText()), sep="\t")
+        plain_text: str = "\t".join(self.measurements_header) + "\n"
+        for row in range(self.pte.rowCount()):
+            row_content: list = []
+            for col in range(self.pte.columnCount()):
+                row_content.append(self.pte.item(row, col).text())
+            plain_text += "\t".join(row_content) + "\n"
+
+        plain_text = plain_text[:-1]
+
+        df = pd.read_csv(io.StringIO(plain_text), sep="\t")
 
         try:
             if filter_ == cfg.ODS:
@@ -351,7 +379,15 @@ def append_results(self, results: List):
     """
     append results to plain text widget
     """
-    self.measurement_w.pte.appendPlainText("\t".join([str(x) for x in results]))
+    self.measurement_w.pte.setRowCount(self.measurement_w.pte.rowCount() + 1)
+    print(f"{self.measurement_w.pte.rowCount()=}")
+    for idx, x in enumerate(results):
+        item = QTableWidgetItem()
+        item.setText(str(x))
+        # item.setFlags(Qt.ItemIsEnabled)
+        self.measurement_w.pte.setItem(self.measurement_w.pte.rowCount() - 1, idx, item)
+
+        # self.measurement_w.pte.appendPlainText("\t".join([str(x) for x in results]))
 
 
 def image_clicked(self, n_player: int, event) -> None:
@@ -395,23 +431,13 @@ def image_clicked(self, n_player: int, event) -> None:
     x, y = event.pos().x(), event.pos().y()
 
     # convert label coordinates in pixmap coordinates
-    pixmap_x = int(
-        x - (self.dw_player[n_player].frame_viewer.width() - self.dw_player[n_player].frame_viewer.pixmap().width()) / 2
-    )
-    pixmap_y = int(
-        y
-        - (self.dw_player[n_player].frame_viewer.height() - self.dw_player[n_player].frame_viewer.pixmap().height()) / 2
-    )
+    pixmap_x = int(x - (self.dw_player[n_player].frame_viewer.width() - self.dw_player[n_player].frame_viewer.pixmap().width()) / 2)
+    pixmap_y = int(y - (self.dw_player[n_player].frame_viewer.height() - self.dw_player[n_player].frame_viewer.pixmap().height()) / 2)
 
     if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE] == cfg.MEDIA:
         # convert pixmap coordinates in video coordinates
-        x_video = round(
-            (pixmap_x / self.dw_player[n_player].frame_viewer.pixmap().width()) * self.dw_player[n_player].player.width
-        )
-        y_video = round(
-            (pixmap_y / self.dw_player[n_player].frame_viewer.pixmap().height())
-            * self.dw_player[n_player].player.height
-        )
+        x_video = round((pixmap_x / self.dw_player[n_player].frame_viewer.pixmap().width()) * self.dw_player[n_player].player.width)
+        y_video = round((pixmap_y / self.dw_player[n_player].frame_viewer.pixmap().height()) * self.dw_player[n_player].player.height)
     elif self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE] == cfg.IMAGES:
         original_width = QPixmap(self.images_list[self.image_idx]).size().width()
         original_height = QPixmap(self.images_list[self.image_idx]).size().height()
@@ -429,14 +455,12 @@ def image_clicked(self, n_player: int, event) -> None:
 
     # point
     if self.measurement_w.rbPoint.isChecked():
-        if event.button() == 1:  # left click
+        if event.button() == Qt.LeftButton:
             draw_point(self, pixmap_x, pixmap_y, self.measurement_w.mark_color, n_player)
             if current_frame not in self.measurement_w.draw_mem:
                 self.measurement_w.draw_mem[current_frame] = []
 
-            self.measurement_w.draw_mem[current_frame].append(
-                [n_player, "point", self.measurement_w.mark_color, x_video, y_video]
-            )
+            self.measurement_w.draw_mem[current_frame].append([n_player, "point", self.measurement_w.mark_color, x_video, y_video])
 
             append_results(
                 self,
@@ -450,6 +474,7 @@ def image_clicked(self, n_player: int, event) -> None:
                     cfg.NA,
                     cfg.NA,
                     cfg.NA,
+                    str([(x_video, y_video)]),
                 ),
             )
 
@@ -457,12 +482,12 @@ def image_clicked(self, n_player: int, event) -> None:
 
     # distance
     elif self.measurement_w.rbDistance.isChecked():
-        if event.button() == 1:  # left
+        if event.button() == Qt.LeftButton:
             draw_point(self, pixmap_x, pixmap_y, self.measurement_w.mark_color, n_player)
             self.memx, self.memy = round(pixmap_x), round(pixmap_y)
             self.memx_video, self.memy_video = round(x_video), round(y_video)
 
-        if event.button() == 2 and self.memx != -1 and self.memy != -1:
+        if event.button() == Qt.RightButton and self.memx != -1 and self.memy != -1:
             draw_point(self, pixmap_x, pixmap_y, self.measurement_w.mark_color, n_player)
             draw_line(self, self.memx, self.memy, pixmap_x, pixmap_y, self.measurement_w.mark_color, n_player)
 
@@ -497,6 +522,7 @@ def image_clicked(self, n_player: int, event) -> None:
                     round(distance, 3),
                     cfg.NA,
                     cfg.NA,
+                    str([(self.memx_video, self.memy_video), (x_video, y_video)]),
                 ),
             )
 
@@ -504,13 +530,13 @@ def image_clicked(self, n_player: int, event) -> None:
             self.memx, self.memy = -1, -1
 
     # angle 1st clic -> vertex
-    elif self.measurement_w.rbAngle.isChecked():
-        if event.button() == 1:  # left for vertex
+    elif self.measurement_w.rb_angle.isChecked():
+        if event.button() == Qt.LeftButton:
             draw_point(self, pixmap_x, pixmap_y, self.measurement_w.mark_color, n_player)
             self.memPoints = [(pixmap_x, pixmap_y)]
             self.mem_video = [(x_video, y_video)]
 
-        if event.button() == 2 and len(self.memPoints):
+        if event.button() == Qt.RightButton and len(self.memPoints):
             draw_point(self, pixmap_x, pixmap_y, self.measurement_w.mark_color, n_player)
             draw_line(
                 self,
@@ -538,6 +564,7 @@ def image_clicked(self, n_player: int, event) -> None:
                         cfg.NA,
                         cfg.NA,
                         round(util.angle(self.memPoints[0], self.memPoints[1], self.memPoints[2]), 1),
+                        str(self.mem_video),
                     ),
                 )
 
@@ -545,15 +572,13 @@ def image_clicked(self, n_player: int, event) -> None:
                 if current_frame not in self.measurement_w.draw_mem:
                     self.measurement_w.draw_mem[current_frame] = []
 
-                self.measurement_w.draw_mem[current_frame].append(
-                    [n_player, "angle", self.measurement_w.mark_color, self.mem_video]
-                )
+                self.measurement_w.draw_mem[current_frame].append([n_player, "angle", self.measurement_w.mark_color, self.mem_video])
 
                 self.memPoints, self.mem_video = [], []
 
     # Area
     elif self.measurement_w.rbArea.isChecked():
-        if event.button() == 1:  # left
+        if event.button() == Qt.LeftButton:
             draw_point(self, pixmap_x, pixmap_y, self.measurement_w.mark_color)
             if len(self.memPoints):
                 draw_line(
@@ -568,7 +593,7 @@ def image_clicked(self, n_player: int, event) -> None:
             self.memPoints.append((pixmap_x, pixmap_y))
             self.mem_video.append((x_video, y_video))
 
-        if event.button() == 2 and len(self.memPoints) >= 2:
+        if event.button() == Qt.RightButton and len(self.memPoints) >= 2:
             draw_point(self, pixmap_x, pixmap_y, self.measurement_w.mark_color, n_player)
             draw_line(
                 self,
@@ -592,17 +617,26 @@ def image_clicked(self, n_player: int, event) -> None:
                 self.measurement_w.mark_color,
                 n_player,
             )
-            area = util.polygon_area(self.mem_video)
-
             if current_frame not in self.measurement_w.draw_mem:
                 self.measurement_w.draw_mem[current_frame] = []
 
-            self.measurement_w.draw_mem[current_frame].append(
-                [n_player, "polygon", self.measurement_w.mark_color, self.mem_video]
-            )
+            self.measurement_w.draw_mem[current_frame].append([n_player, "polygon", self.measurement_w.mark_color, self.mem_video])
 
+            area = util.polygon_area(self.mem_video)
             try:
                 area = area / (float(self.measurement_w.lePx.text()) ** 2) * float(self.measurement_w.leRef.text()) ** 2
+            except Exception:
+                QMessageBox.critical(
+                    None,
+                    cfg.programName,
+                    "Check reference and pixel values! Values must be numeric.",
+                    QMessageBox.Ok | QMessageBox.Default,
+                    QMessageBox.NoButton,
+                )
+
+            length = util.polyline_length(self.mem_video)
+            try:
+                length = length / float(self.measurement_w.lePx.text()) * float(self.measurement_w.leRef.text())
             except Exception:
                 QMessageBox.critical(
                     None,
@@ -621,13 +655,66 @@ def image_clicked(self, n_player: int, event) -> None:
                     "Area",
                     cfg.NA,
                     cfg.NA,
+                    round(length, 1),
+                    round(area, 1),
                     cfg.NA,
-                    round(area, 3),
-                    cfg.NA,
+                    str(self.mem_video),
                 ),
             )
 
             self.measurement_w.flag_saved = False
+            self.memPoints, self.mem_video = [], []
+
+    # polyline
+    elif self.measurement_w.rb_polygon.isChecked():
+        if event.button() == Qt.LeftButton:
+            draw_point(self, pixmap_x, pixmap_y, self.measurement_w.mark_color)
+            if len(self.memPoints):
+                draw_line(
+                    self,
+                    self.memPoints[-1][0],
+                    self.memPoints[-1][1],
+                    pixmap_x,
+                    pixmap_y,
+                    self.measurement_w.mark_color,
+                    n_player,
+                )
+            self.memPoints.append((pixmap_x, pixmap_y))
+            self.mem_video.append((x_video, y_video))
+
+        if event.button() == Qt.RightButton:
+            if current_frame not in self.measurement_w.draw_mem:
+                self.measurement_w.draw_mem[current_frame] = []
+
+            self.measurement_w.draw_mem[current_frame].append([n_player, "polyline", self.measurement_w.mark_color, self.mem_video])
+
+            length = util.polyline_length(self.mem_video)
+            try:
+                length = length / float(self.measurement_w.lePx.text()) * float(self.measurement_w.leRef.text())
+            except Exception:
+                QMessageBox.critical(
+                    None,
+                    cfg.programName,
+                    "Check reference and pixel values! Values must be numeric.",
+                    QMessageBox.Ok | QMessageBox.Default,
+                    QMessageBox.NoButton,
+                )
+
+            append_results(
+                self,
+                (
+                    n_player + 1,
+                    f"{self.getLaps():.03f}",
+                    current_frame,
+                    "Polyline",
+                    cfg.NA,
+                    cfg.NA,
+                    round(length, 1),
+                    cfg.NA,
+                    cfg.NA,
+                    str(self.mem_video),
+                ),
+            )
             self.memPoints, self.mem_video = [], []
 
     else:
