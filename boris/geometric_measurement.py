@@ -52,6 +52,7 @@ from PyQt5.QtWidgets import (
     QColorDialog,
     QSpacerItem,
     QSizePolicy,
+    QAction,
 )
 
 from typing import Union, Optional, List, Tuple, Dict
@@ -126,9 +127,7 @@ class wgMeasurement(QWidget):
 
         self.pte = QTableWidget()
         self.pte.verticalHeader().hide()
-        vbox.addWidget(self.pte)
-        # self.pte.setReadOnly(True)
-        # self.pte.setLineWrapMode(QPlainTextEdit.NoWrap)
+
         # header
         self.measurements_header = [
             "Player",
@@ -145,7 +144,17 @@ class wgMeasurement(QWidget):
         self.pte.setColumnCount(len(self.measurements_header))
         self.pte.setHorizontalHeaderLabels(self.measurements_header)
 
-        # self.pte.setPlainText("Player\tTime\tFrame index\ttype of measurement\tx\ty\tdistance\tarea\tangle\tCoordinates")
+        self.pte.setSelectionBehavior(QTableWidget.SelectRows)
+        self.pte.setSelectionMode(QTableWidget.MultiSelection)
+
+        self.pte.setContextMenuPolicy(Qt.ActionsContextMenu)
+
+        self.action = QAction("Delete measurement")
+        self.action.triggered.connect(self.delete_measurement)
+
+        self.pte.addAction(self.action)
+
+        vbox.addWidget(self.pte)
 
         self.status_lb = QLabel()
         vbox.addWidget(self.status_lb)
@@ -171,6 +180,23 @@ class wgMeasurement(QWidget):
             return True
         else:
             return False
+
+    def delete_measurement(self):
+        """
+        delete the selected measurement
+        """
+        if not self.pte.selectedItems():
+            return
+        rows_to_delete = []
+        for item in self.pte.selectedItems():
+            if item.row() not in rows_to_delete:
+                rows_to_delete.append(item.row())
+
+        for row in sorted(rows_to_delete, reverse=True):
+            self.pte.removeRow(row)
+            self.pte.flag_saved = False
+
+        redraw_measurements(self)
 
     def choose_marks_color(self):
         """
@@ -380,14 +406,11 @@ def append_results(self, results: List):
     append results to plain text widget
     """
     self.measurement_w.pte.setRowCount(self.measurement_w.pte.rowCount() + 1)
-    print(f"{self.measurement_w.pte.rowCount()=}")
     for idx, x in enumerate(results):
         item = QTableWidgetItem()
         item.setText(str(x))
-        # item.setFlags(Qt.ItemIsEnabled)
+        item.setFlags(Qt.ItemIsSelectable | Qt.ItemIsEnabled)
         self.measurement_w.pte.setItem(self.measurement_w.pte.rowCount() - 1, idx, item)
-
-        # self.measurement_w.pte.appendPlainText("\t".join([str(x) for x in results]))
 
 
 def image_clicked(self, n_player: int, event) -> None:
@@ -716,6 +739,7 @@ def image_clicked(self, n_player: int, event) -> None:
                 ),
             )
             self.memPoints, self.mem_video = [], []
+            self.measurement_w.flag_saved = False
 
     else:
         self.measurement_w.status_lb.setText("<b>Choose a measurement type!</b>")
@@ -807,6 +831,14 @@ def redraw_measurements(self):
                         painter.drawPolygon(polygon)
                         painter.end()
                         dw.frame_viewer.update()
+
+                    if element[1] == "polyline":
+                        for idx1, p1 in enumerate(element[3][:-1]):
+                            x1, y1 = scale_coord(p1)
+                            p2 = element[3][idx1 + 1]
+                            x2, y2 = scale_coord(p2)
+
+                            draw_line(self, x1, y1, x2, y2, elementsColor, n_player=idx)
 
 
 if __name__ == "__main__":
