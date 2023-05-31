@@ -70,6 +70,7 @@ class wgMeasurement(QWidget):
     closeSignal = pyqtSignal()
     send_event_signal = pyqtSignal(QEvent)
     reload_image_signal  = pyqtSignal(int)
+    save_picture_signal  = pyqtSignal(int)
     mark_color: str = cfg.ACTIVE_MEASUREMENTS_COLOR
     flag_saved = True  # store if measurements are saved
     draw_mem: dict = {}
@@ -84,8 +85,12 @@ class wgMeasurement(QWidget):
         self.rbPoint = QRadioButton("Point (left click)")
         vbox.addWidget(self.rbPoint)
 
-        self.rbDistance = QRadioButton("Distance (start: left click, end: right click)")
-        vbox.addWidget(self.rbDistance)
+        self.rb_polygon = QRadioButton("Polyline (left click for vertices, right click to finish)")
+        vbox.addWidget(self.rb_polygon)
+
+
+        #self.rbDistance = QRadioButton("Distance (start: left click, end: right click)")
+        #vbox.addWidget(self.rbDistance)
 
         self.rbArea = QRadioButton("Area (left click for area vertices, right click to close area)")
         vbox.addWidget(self.rbArea)
@@ -93,8 +98,6 @@ class wgMeasurement(QWidget):
         self.rb_angle = QRadioButton("Angle (vertex: left click, segments: right click)")
         vbox.addWidget(self.rb_angle)
 
-        self.rb_polygon = QRadioButton("Polyline (left click for vertices, right click to finish)")
-        vbox.addWidget(self.rb_polygon)
 
         hbox = QHBoxLayout()
         self.cbPersistentMeasurements = QCheckBox("Measurements are persistent")
@@ -105,6 +108,10 @@ class wgMeasurement(QWidget):
         self.bt_color_chooser = QPushButton("Choose color of marks", clicked=self.choose_marks_color)
         self.bt_color_chooser.setStyleSheet(f"QWidget {{background-color:{self.mark_color}}}")
         hbox.addWidget(self.bt_color_chooser)
+
+        self.pb_save_picture = QPushButton("Save picture", clicked=self.pb_save_picture_clicked)
+        hbox.addWidget(self.pb_save_picture)
+
 
         hbox.addItem(QSpacerItem(40, 20, QSizePolicy.Expanding, QSizePolicy.Minimum))
 
@@ -183,6 +190,9 @@ class wgMeasurement(QWidget):
             return True
         else:
             return False
+
+    def pb_save_picture_clicked(self):
+        self.save_picture_signal.emit(1)
 
     def delete_measurement(self):
         """
@@ -388,6 +398,7 @@ def show_widget(self):
     self.measurement_w.closeSignal.connect(close_measurement_widget)
     self.measurement_w.send_event_signal.connect(self.signal_from_widget)
     self.measurement_w.reload_image_signal.connect(self.reload_frame)
+    self.measurement_w.save_picture_signal.connect(self.save_picture_with_measurements)
     self.measurement_w.draw_mem = {}
 
     self.measurement_w.show()
@@ -449,6 +460,10 @@ def image_clicked(self, n_player: int, event) -> None:
 
     logging.debug("function image_clicked")
 
+
+
+
+
     if not self.geometric_measurements_mode:
         return
 
@@ -467,15 +482,7 @@ def image_clicked(self, n_player: int, event) -> None:
 
     if not (hasattr(self, "measurement_w") and (self.measurement_w is not None) and (self.measurement_w.isVisible())):
         return
-        """
-        QMessageBox.warning(
-            self,
-            cfg.programName,
-            "The Focus area function is not yet available in frame-by-frame mode.",
-            QMessageBox.Ok | QMessageBox.Default,
-            QMessageBox.NoButton,
-        )"""
-
+ 
     x, y = event.pos().x(), event.pos().y()
 
     # convert label coordinates in pixmap coordinates
@@ -530,55 +537,57 @@ def image_clicked(self, n_player: int, event) -> None:
 
             self.measurement_w.flag_saved = False
 
-    # distance
-    elif self.measurement_w.rbDistance.isChecked():
-        if event.button() == Qt.LeftButton:
-            draw_point(self, pixmap_x, pixmap_y, self.measurement_w.mark_color, n_player)
-            self.memx, self.memy = round(pixmap_x), round(pixmap_y)
-            self.memx_video, self.memy_video = round(x_video), round(y_video)
+        # distance
+        '''
+        elif self.measurement_w.rbDistance.isChecked():
+            if event.button() == Qt.LeftButton:
+                draw_point(self, pixmap_x, pixmap_y, self.measurement_w.mark_color, n_player)
+                self.memx, self.memy = round(pixmap_x), round(pixmap_y)
+                self.memx_video, self.memy_video = round(x_video), round(y_video)
 
-        if event.button() == Qt.RightButton and self.memx != -1 and self.memy != -1:
-            draw_point(self, pixmap_x, pixmap_y, self.measurement_w.mark_color, n_player)
-            draw_line(self, self.memx, self.memy, pixmap_x, pixmap_y, self.measurement_w.mark_color, n_player)
+            if event.button() == Qt.RightButton and self.memx != -1 and self.memy != -1:
+                draw_point(self, pixmap_x, pixmap_y, self.measurement_w.mark_color, n_player)
+                draw_line(self, self.memx, self.memy, pixmap_x, pixmap_y, self.measurement_w.mark_color, n_player)
 
-            if current_frame not in self.measurement_w.draw_mem:
-                self.measurement_w.draw_mem[current_frame] = []
+                if current_frame not in self.measurement_w.draw_mem:
+                    self.measurement_w.draw_mem[current_frame] = []
 
-            self.measurement_w.draw_mem[current_frame].append(
-                {'player': n_player, 'object_type': cfg.SEGMENT_OBJECT, "color": self.measurement_w.mark_color, "coordinates": [(self.memx_video, self.memy_video), (x_video, y_video)]}
-                
-            )
-
-            distance = ((x_video - self.memx_video) ** 2 + (y_video - self.memy_video) ** 2) ** 0.5
-            try:
-                distance = distance / float(self.measurement_w.lePx.text()) * float(self.measurement_w.leRef.text())
-            except Exception:
-                QMessageBox.critical(
-                    None,
-                    cfg.programName,
-                    "Check reference and pixel values! Values must be numeric.",
-                    QMessageBox.Ok | QMessageBox.Default,
-                    QMessageBox.NoButton,
+                self.measurement_w.draw_mem[current_frame].append(
+                    {'player': n_player, 'object_type': cfg.SEGMENT_OBJECT, "color": self.measurement_w.mark_color, "coordinates": [(self.memx_video, self.memy_video), (x_video, y_video)]}
+                    
                 )
 
-            append_results(
-                self,
-                (
-                    n_player + 1,
-                    f"{self.getLaps():.03f}",
-                    current_frame,
-                    cfg.SEGMENT_OBJECT,
-                    cfg.NA,
-                    cfg.NA,
-                    round(distance, 3),
-                    cfg.NA,
-                    cfg.NA,
-                    str([(self.memx_video, self.memy_video), (x_video, y_video)]),
-                ),
-            )
+                distance = ((x_video - self.memx_video) ** 2 + (y_video - self.memy_video) ** 2) ** 0.5
+                try:
+                    distance = distance / float(self.measurement_w.lePx.text()) * float(self.measurement_w.leRef.text())
+                except Exception:
+                    QMessageBox.critical(
+                        None,
+                        cfg.programName,
+                        "Check reference and pixel values! Values must be numeric.",
+                        QMessageBox.Ok | QMessageBox.Default,
+                        QMessageBox.NoButton,
+                    )
 
-            self.measurement_w.flag_saved = False
-            self.memx, self.memy = -1, -1
+                append_results(
+                    self,
+                    (
+                        n_player + 1,
+                        f"{self.getLaps():.03f}",
+                        current_frame,
+                        cfg.SEGMENT_OBJECT,
+                        cfg.NA,
+                        cfg.NA,
+                        round(distance, 3),
+                        cfg.NA,
+                        cfg.NA,
+                        str([(self.memx_video, self.memy_video), (x_video, y_video)]),
+                    ),
+                )
+
+                self.measurement_w.flag_saved = False
+                self.memx, self.memy = -1, -1
+        '''
 
     # angle 1st clic -> vertex
     elif self.measurement_w.rb_angle.isChecked():
@@ -647,6 +656,8 @@ def image_clicked(self, n_player: int, event) -> None:
             self.mem_video.append((x_video, y_video))
 
         if event.button() == Qt.RightButton and len(self.memPoints) >= 2:
+
+            '''
             draw_point(self, pixmap_x, pixmap_y, self.measurement_w.mark_color, n_player)
             draw_line(
                 self,
@@ -659,6 +670,7 @@ def image_clicked(self, n_player: int, event) -> None:
             )
             self.memPoints.append((pixmap_x, pixmap_y))
             self.mem_video.append((x_video, y_video))
+            '''
 
             # close polygon
             draw_line(

@@ -1711,6 +1711,16 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         geometric_measurement.redraw_measurements(self)
 
+    def save_picture_with_measurements(self):
+        """
+        receive signal to reload frames from geometric measurements
+        """
+        
+        for dw in self.dw_player:
+            pixmap = util.pil2pixmap(dw.player.screenshot_raw())
+            pixmap.save("/tmp/capture.jpg", "JPG")
+
+
     def resize_dw(self, dw_id):
         """
         dockwidget was resized. Adapt overlay if any
