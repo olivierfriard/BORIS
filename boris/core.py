@@ -1747,7 +1747,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 pixmap.save(image_file_path, "JPG")
 
         if mode == "all":
-            d = {}
+            d: dict = {}
             for frame_idx in self.measurement_w.draw_mem:
                 if frame_idx not in d:
                     d[frame_idx] = {}
@@ -1779,20 +1779,27 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     out, error = p.communicate()
 
                     pixmap = QPixmap(str(pl.Path(output_dir) / file_name.with_suffix(".jpg")))
+                    RADIUS = 6
+                    painter = QPainter()
+                    painter.begin(pixmap)
 
                     for element in d[frame_idx][n_player]:
                         if element["object_type"] == cfg.POINT_OBJECT:
-                            RADIUS = 6
-                            painter = QPainter()
-                            painter.begin(pixmap)
                             painter.setPen(QColor(element["color"]))
                             x, y = element["coordinates"][0]
                             painter.drawEllipse(QPoint(x, y), RADIUS, RADIUS)
                             # cross inside circle
                             painter.drawLine(x - RADIUS, y, x + RADIUS, y)
                             painter.drawLine(x, y - RADIUS, x, y + RADIUS)
-                            painter.end()
 
+                        if element["object_type"] == cfg.SEGMENT_OBJECT:
+                            x1, y1 = element["coordinates"][0]
+                            x2, y2 = element["coordinates"][1]
+                            painter.draw_line(x1, y1, x2, y2)
+                            painter.draw_point(x1, y1)
+                            painter.draw_point(x2, y2)
+
+                    painter.end()
                     pixmap.save(str(pl.Path(output_dir) / file_name.with_suffix(".jpg")), "JPG")
 
     def resize_dw(self, dw_id):
