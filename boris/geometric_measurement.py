@@ -69,8 +69,8 @@ class wgMeasurement(QWidget):
 
     closeSignal = pyqtSignal()
     send_event_signal = pyqtSignal(QEvent)
-    reload_image_signal  = pyqtSignal(int)
-    save_picture_signal  = pyqtSignal(int)
+    reload_image_signal = pyqtSignal()
+    save_picture_signal = pyqtSignal(str)
     mark_color: str = cfg.ACTIVE_MEASUREMENTS_COLOR
     flag_saved = True  # store if measurements are saved
     draw_mem: dict = {}
@@ -88,16 +88,14 @@ class wgMeasurement(QWidget):
         self.rb_polygon = QRadioButton("Polyline (left click for vertices, right click to finish)")
         vbox.addWidget(self.rb_polygon)
 
-
-        #self.rbDistance = QRadioButton("Distance (start: left click, end: right click)")
-        #vbox.addWidget(self.rbDistance)
+        # self.rbDistance = QRadioButton("Distance (start: left click, end: right click)")
+        # vbox.addWidget(self.rbDistance)
 
         self.rbArea = QRadioButton("Area (left click for area vertices, right click to close area)")
         vbox.addWidget(self.rbArea)
 
         self.rb_angle = QRadioButton("Angle (vertex: left click, segments: right click)")
         vbox.addWidget(self.rb_angle)
-
 
         hbox = QHBoxLayout()
         self.cbPersistentMeasurements = QCheckBox("Measurements are persistent")
@@ -108,10 +106,6 @@ class wgMeasurement(QWidget):
         self.bt_color_chooser = QPushButton("Choose color of marks", clicked=self.choose_marks_color)
         self.bt_color_chooser.setStyleSheet(f"QWidget {{background-color:{self.mark_color}}}")
         hbox.addWidget(self.bt_color_chooser)
-
-        self.pb_save_picture = QPushButton("Save picture", clicked=self.pb_save_picture_clicked)
-        hbox.addWidget(self.pb_save_picture)
-
 
         hbox.addItem(QSpacerItem(40, 20, QSizePolicy.Expanding, QSizePolicy.Minimum))
 
@@ -173,6 +167,14 @@ class wgMeasurement(QWidget):
         hbox3.addItem(QSpacerItem(40, 20, QSizePolicy.Expanding, QSizePolicy.Minimum))
         self.pbClear = QPushButton("Clear measurements", clicked=self.pbClear_clicked)
         hbox3.addWidget(self.pbClear)
+
+        self.pb_save_picture = QPushButton("Save current picture", clicked=self.pb_save_picture_clicked)
+        hbox3.addWidget(self.pb_save_picture)
+
+        # disabled for now
+        self.pb_save_all_pictures = QPushButton("Save all pictures", clicked=self.pb_save_all_pictures_clicked)
+        hbox3.addWidget(self.pb_save_all_pictures)
+
         self.pbSave = QPushButton("Save results", clicked=self.pbSave_clicked)
         hbox3.addWidget(self.pbSave)
         self.pbClose = QPushButton("Close", clicked=self.pbClose_clicked)
@@ -192,13 +194,15 @@ class wgMeasurement(QWidget):
             return False
 
     def pb_save_picture_clicked(self):
-        self.save_picture_signal.emit(1)
+        self.save_picture_signal.emit("current")
+
+    def pb_save_all_pictures_clicked(self):
+        self.save_picture_signal.emit("all")
 
     def delete_measurement(self):
         """
         delete the selected measurement(s)
         """
-        print(self.draw_mem)
 
         if not self.pte.selectedItems():
             return
@@ -210,7 +214,6 @@ class wgMeasurement(QWidget):
 
         elements_to_delete = []
         for row in sorted(rows_to_delete, reverse=True):
-
             player = int(self.pte.item(row, 0).text())
             frame_idx = int(self.pte.item(row, 2).text())
             obj_type = self.pte.item(row, 3).text()
@@ -218,7 +221,7 @@ class wgMeasurement(QWidget):
 
             if frame_idx in self.draw_mem:
                 for idx, element in enumerate(self.draw_mem[frame_idx]):
-                    if (element['player'] == player - 1) and (element['object_type']  == obj_type) and (element['coordinates'] == coord):
+                    if (element["player"] == player - 1) and (element["object_type"] == obj_type) and (element["coordinates"] == coord):
                         elements_to_delete.append((frame_idx, idx))
 
             self.pte.removeRow(row)
@@ -227,10 +230,7 @@ class wgMeasurement(QWidget):
         for frame_idx, idx in sorted(elements_to_delete, reverse=True):
             self.draw_mem[frame_idx].pop(idx)
 
-        print(f"after deletion {self.draw_mem=}")
-
-        self.reload_image_signal.emit(1)
-        #redraw_measurements(self.mw)
+        self.reload_image_signal.emit()
 
     def choose_marks_color(self):
         """
@@ -460,10 +460,6 @@ def image_clicked(self, n_player: int, event) -> None:
 
     logging.debug("function image_clicked")
 
-
-
-
-
     if not self.geometric_measurements_mode:
         return
 
@@ -474,7 +470,7 @@ def image_clicked(self, n_player: int, event) -> None:
     self.mem_player = n_player
     if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE] == cfg.MEDIA:
         if self.dw_player[n_player].player.estimated_frame_number is not None:
-            current_frame = self.dw_player[n_player].player.estimated_frame_number + 1
+            current_frame = self.dw_player[n_player].player.estimated_frame_number
         else:
             current_frame = cfg.NA
     elif self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE] == cfg.IMAGES:
@@ -482,7 +478,7 @@ def image_clicked(self, n_player: int, event) -> None:
 
     if not (hasattr(self, "measurement_w") and (self.measurement_w is not None) and (self.measurement_w.isVisible())):
         return
- 
+
     x, y = event.pos().x(), event.pos().y()
 
     # convert label coordinates in pixmap coordinates
@@ -516,8 +512,13 @@ def image_clicked(self, n_player: int, event) -> None:
                 self.measurement_w.draw_mem[current_frame] = []
 
             self.measurement_w.draw_mem[current_frame].append(
-                {'player': n_player, 'object_type': cfg.POINT_OBJECT, "color": self.measurement_w.mark_color, "coordinates": [(x_video, y_video)]}
-                )
+                {
+                    "player": n_player,
+                    "object_type": cfg.POINT_OBJECT,
+                    "color": self.measurement_w.mark_color,
+                    "coordinates": [(x_video, y_video)],
+                }
+            )
 
             append_results(
                 self,
@@ -538,7 +539,7 @@ def image_clicked(self, n_player: int, event) -> None:
             self.measurement_w.flag_saved = False
 
         # distance
-        '''
+        """
         elif self.measurement_w.rbDistance.isChecked():
             if event.button() == Qt.LeftButton:
                 draw_point(self, pixmap_x, pixmap_y, self.measurement_w.mark_color, n_player)
@@ -587,7 +588,7 @@ def image_clicked(self, n_player: int, event) -> None:
 
                 self.measurement_w.flag_saved = False
                 self.memx, self.memy = -1, -1
-        '''
+        """
 
     # angle 1st clic -> vertex
     elif self.measurement_w.rb_angle.isChecked():
@@ -633,8 +634,13 @@ def image_clicked(self, n_player: int, event) -> None:
                     self.measurement_w.draw_mem[current_frame] = []
 
                 self.measurement_w.draw_mem[current_frame].append(
-                    {'player': n_player, 'object_type': cfg.ANGLE_OBJECT, "color": self.measurement_w.mark_color, "coordinates": self.mem_video}
-                    )
+                    {
+                        "player": n_player,
+                        "object_type": cfg.ANGLE_OBJECT,
+                        "color": self.measurement_w.mark_color,
+                        "coordinates": self.mem_video,
+                    }
+                )
 
                 self.memPoints, self.mem_video = [], []
 
@@ -656,8 +662,7 @@ def image_clicked(self, n_player: int, event) -> None:
             self.mem_video.append((x_video, y_video))
 
         if event.button() == Qt.RightButton and len(self.memPoints) >= 2:
-
-            '''
+            """
             draw_point(self, pixmap_x, pixmap_y, self.measurement_w.mark_color, n_player)
             draw_line(
                 self,
@@ -670,7 +675,7 @@ def image_clicked(self, n_player: int, event) -> None:
             )
             self.memPoints.append((pixmap_x, pixmap_y))
             self.mem_video.append((x_video, y_video))
-            '''
+            """
 
             # close polygon
             draw_line(
@@ -686,9 +691,14 @@ def image_clicked(self, n_player: int, event) -> None:
                 self.measurement_w.draw_mem[current_frame] = []
 
             self.measurement_w.draw_mem[current_frame].append(
-                {'player': n_player, 'object_type': cfg.POLYGON_OBJECT, "color": self.measurement_w.mark_color, "coordinates": self.mem_video}
-                #[n_player, "polygon", self.measurement_w.mark_color, self.mem_video]
-                )
+                {
+                    "player": n_player,
+                    "object_type": cfg.POLYGON_OBJECT,
+                    "color": self.measurement_w.mark_color,
+                    "coordinates": self.mem_video,
+                }
+                # [n_player, "polygon", self.measurement_w.mark_color, self.mem_video]
+            )
 
             area = util.polygon_area(self.mem_video)
             try:
@@ -755,9 +765,14 @@ def image_clicked(self, n_player: int, event) -> None:
                 self.measurement_w.draw_mem[current_frame] = []
 
             self.measurement_w.draw_mem[current_frame].append(
-                {'player': n_player, 'object_type': cfg.POLYLINE_OBJECT, "color": self.measurement_w.mark_color, "coordinates": self.mem_video}
-                #[n_player, "polyline", self.measurement_w.mark_color, self.mem_video]
-                )
+                {
+                    "player": n_player,
+                    "object_type": cfg.POLYLINE_OBJECT,
+                    "color": self.measurement_w.mark_color,
+                    "coordinates": self.mem_video,
+                }
+                # [n_player, "polyline", self.measurement_w.mark_color, self.mem_video]
+            )
 
             length = util.polyline_length(self.mem_video)
             try:
@@ -829,12 +844,10 @@ def redraw_measurements(self):
         self.measurement_w.draw_mem = {}
         return
 
-
-
     for idx, dw in enumerate(self.dw_player):
         if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE] == cfg.MEDIA:
             if dw.player.estimated_frame_number is not None:
-                current_frame = dw.player.estimated_frame_number + 1
+                current_frame = dw.player.estimated_frame_number
             else:
                 current_frame = cfg.NA
         if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE] == cfg.IMAGES:
@@ -843,36 +856,36 @@ def redraw_measurements(self):
         for frame in self.measurement_w.draw_mem:
             for element in self.measurement_w.draw_mem[frame]:
                 if frame == current_frame:
-                    elements_color = element['color']  
+                    elements_color = element["color"]
                 else:
                     elements_color = cfg.PASSIVE_MEASUREMENTS_COLOR
 
-                if element['player'] == idx:
-                    if element['object_type'] == cfg.POINT_OBJECT:
-                        x, y = scale_coord(element['coordinates'][0])
+                if element["player"] == idx:
+                    if element["object_type"] == cfg.POINT_OBJECT:
+                        x, y = scale_coord(element["coordinates"][0])
                         draw_point(self, int(x), int(y), elements_color, n_player=idx)
 
-                    if element['object_type'] == cfg.SEGMENT_OBJECT:
-                        x1, y1 = scale_coord(element['coordinates'][0])
-                        x2, y2 = scale_coord(element['coordinates'][1])
+                    if element["object_type"] == cfg.SEGMENT_OBJECT:
+                        x1, y1 = scale_coord(element["coordinates"][0])
+                        x2, y2 = scale_coord(element["coordinates"][1])
                         draw_line(self, x1, y1, x2, y2, elements_color, n_player=idx)
                         draw_point(self, x1, y1, elements_color, n_player=idx)
                         draw_point(self, x2, y2, elements_color, n_player=idx)
 
-                    if element['object_type'] == cfg.ANGLE_OBJECT:
-                        x1, y1 = scale_coord(element['coordinates'][0])
-                        x2, y2 = scale_coord(element['coordinates'][1])
-                        x3, y3 = scale_coord(element['coordinates'][2])
+                    if element["object_type"] == cfg.ANGLE_OBJECT:
+                        x1, y1 = scale_coord(element["coordinates"][0])
+                        x2, y2 = scale_coord(element["coordinates"][1])
+                        x3, y3 = scale_coord(element["coordinates"][2])
                         draw_line(self, x1, y1, x2, y2, elements_color, n_player=idx)
                         draw_line(self, x1, y1, x3, y3, elements_color, n_player=idx)
                         draw_point(self, x1, y1, elements_color, n_player=idx)
                         draw_point(self, x2, y2, elements_color, n_player=idx)
                         draw_point(self, x3, y3, elements_color, n_player=idx)
 
-                    if element['object_type'] == cfg.POLYGON_OBJECT:
+                    if element["object_type"] == cfg.POLYGON_OBJECT:
                         polygon = QPolygon()
 
-                        for x, y in element['coordinates']:
+                        for x, y in element["coordinates"]:
                             x, y = scale_coord([x, y])
                             polygon.append(QPoint(x, y))
                         painter = QPainter()
@@ -882,10 +895,10 @@ def redraw_measurements(self):
                         painter.end()
                         dw.frame_viewer.update()
 
-                    if element['object_type'] == cfg.POLYLINE_OBJECT:
-                        for idx1, p1 in enumerate(element['coordinates'][:-1]):
+                    if element["object_type"] == cfg.POLYLINE_OBJECT:
+                        for idx1, p1 in enumerate(element["coordinates"][:-1]):
                             x1, y1 = scale_coord(p1)
-                            p2 = element['coordinates'][idx1 + 1]
+                            p2 = element["coordinates"][idx1 + 1]
                             x2, y2 = scale_coord(p2)
 
                             draw_line(self, x1, y1, x2, y2, elements_color, n_player=idx)

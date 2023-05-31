@@ -50,6 +50,7 @@ import matplotlib
 matplotlib.use("Qt5Agg")
 from PyQt5.QtCore import (
     Qt,
+    QPoint,
     pyqtSignal,
     QEvent,
     QDateTime,
@@ -58,7 +59,8 @@ from PyQt5.QtCore import (
     QT_VERSION_STR,
     PYQT_VERSION_STR,
 )
-from PyQt5.QtGui import QIcon, QPixmap, QFont, QKeyEvent, QDesktopServices, QColor
+from PyQt5.QtGui import QIcon, QPixmap, QFont, QKeyEvent, QDesktopServices, QColor, QPainter, QPolygon, QPixmap
+
 from PyQt5.QtMultimedia import QSound
 from PyQt5.QtWidgets import (
     QLabel,
@@ -1214,7 +1216,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 pl.Path(tmp_dir)
                 / pl.Path(self.dw_player[0].player.playlist[self.dw_player[0].player.playlist_pos]["filename"] + ".wav").name
             )
-        except TypeError:
+        except Exception:
             return
 
         # waveform
@@ -1387,9 +1389,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         else:
             # if new_time < sum(self.dw_player[player].media_durations) / 1000:
             if new_time < self.dw_player[player].cumul_media_durations_sec[-1]:
-
                 for idx, d in enumerate(self.dw_player[player].cumul_media_durations_sec[:-1]):
-
                     if d <= new_time < self.dw_player[player].cumul_media_durations_sec[idx + 1]:
                         self.dw_player[player].player.playlist_pos = idx
                         time.sleep(0.5)
@@ -1404,7 +1404,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                         )
 
                         break
-                    
 
                 if player == 0 and not self.user_move_slider:
                     self.video_slider.setValue(
@@ -1695,7 +1694,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         """
         self.keyPressEvent(event)
 
-    def reload_frame(self, value: int):
+    def reload_frame(self):
         """
         receive signal to reload frames from geometric measurements
         """
@@ -1711,15 +1710,90 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         geometric_measurement.redraw_measurements(self)
 
-    def save_picture_with_measurements(self):
+    def save_picture_with_measurements(self, mode: str):
         """
-        receive signal to reload frames from geometric measurements
+        receive signal to save picture from geometric measurements
         """
-        
-        for dw in self.dw_player:
-            pixmap = util.pil2pixmap(dw.player.screenshot_raw())
-            pixmap.save("/tmp/capture.jpg", "JPG")
+        output_dir = QFileDialog().getExistingDirectory(
+            self,
+            "Select a directory to save the frames",
+            os.path.expanduser("~"),
+            options=QFileDialog().ShowDirsOnly,
+        )
+        if not output_dir:
+            return
 
+        if mode == "current":
+            for dw in self.dw_player:
+                pixmap = util.pil2pixmap(dw.player.screenshot_raw())
+
+                p = pl.Path(dw.player.playlist[dw.player.playlist_pos]["filename"])
+                image_file_path = str(pl.Path(output_dir) / f"{p.stem}_{dw.player.time_pos:0.3f}.jpg")
+
+                # draw measurements
+                for element in self.measurement_w.draw_mem.get(dw.player.estimated_frame_number, []):
+                    if element["object_type"] == cfg.POINT_OBJECT:
+                        RADIUS = 6
+                        painter = QPainter()
+                        painter.begin(pixmap)
+                        painter.setPen(QColor(element["color"]))
+                        x, y = element["coordinates"][0]
+                        painter.drawEllipse(QPoint(x, y), RADIUS, RADIUS)
+                        # cross inside circle
+                        painter.drawLine(x - RADIUS, y, x + RADIUS, y)
+                        painter.drawLine(x, y - RADIUS, x, y + RADIUS)
+                        painter.end()
+
+                pixmap.save(image_file_path, "JPG")
+
+        if mode == "all":
+            d = {}
+            for frame_idx in self.measurement_w.draw_mem:
+                if frame_idx not in d:
+                    d[frame_idx] = {}
+                for element in self.measurement_w.draw_mem[frame_idx]:
+                    if element["player"] not in d[frame_idx]:
+                        d[frame_idx][element["player"]] = []
+                    d[frame_idx][element["player"]].append(element)
+
+            for frame_idx in d:
+                for n_player in d[frame_idx]:
+                    media_path = pl.Path(
+                        self.dw_player[n_player - 1].player.playlist[self.dw_player[n_player - 1].player.playlist_pos]["filename"]
+                    )
+                    file_name = pl.Path(f"{media_path.stem}_{element['player']}_{frame_idx:06}")
+
+                    ffmpeg_command = [
+                        self.ffmpeg_bin,
+                        "-y",
+                        "-i",
+                        str(media_path),
+                        "-vf",
+                        rf"select=gte(n\, {frame_idx})",
+                        "-frames:v",
+                        "1",
+                        str(pl.Path(output_dir) / file_name.with_suffix(".jpg")),
+                    ]
+
+                    p = subprocess.Popen(ffmpeg_command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)  # do not use shell=True!
+                    out, error = p.communicate()
+
+                    pixmap = QPixmap(str(pl.Path(output_dir) / file_name.with_suffix(".jpg")))
+
+                    for element in d[frame_idx][n_player]:
+                        if element["object_type"] == cfg.POINT_OBJECT:
+                            RADIUS = 6
+                            painter = QPainter()
+                            painter.begin(pixmap)
+                            painter.setPen(QColor(element["color"]))
+                            x, y = element["coordinates"][0]
+                            painter.drawEllipse(QPoint(x, y), RADIUS, RADIUS)
+                            # cross inside circle
+                            painter.drawLine(x - RADIUS, y, x + RADIUS, y)
+                            painter.drawLine(x, y - RADIUS, x, y + RADIUS)
+                            painter.end()
+
+                    pixmap.save(str(pl.Path(output_dir) / file_name.with_suffix(".jpg")), "JPG")
 
     def resize_dw(self, dw_id):
         """
@@ -3466,7 +3540,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         """
         estimated_frame_number = self.dw_player[player_idx].player.estimated_frame_number
         if estimated_frame_number is not None:
-            return estimated_frame_number + 1
+            return estimated_frame_number
         else:
             return cfg.NA
 
@@ -3743,7 +3817,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         # scan sampling
         if self.pj[cfg.OBSERVATIONS][self.observationId].get(cfg.MEDIA_SCAN_SAMPLING_DURATION, 0):
-
             while self.media_scan_sampling_mem and (self.media_scan_sampling_mem[-1] > cumulative_time_pos):
                 self.media_scan_sampling_mem.pop(-1)
 
@@ -3815,14 +3888,13 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             and self.mem_playlist_index is not None
             and current_playlist_index != self.mem_playlist_index
         ):
-
-            '''
+            """
             print(f"\n\nmedia changed to {current_media_name}")
 
             print(f"{currentTimeOffset=}")
 
             print(f"{self.dw_player[0].player.playlist_pos=}")
-            '''
+            """
 
             """print(f"{self.dw_player[0].cumul_media_durations=}")"""
 
@@ -3831,18 +3903,18 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             min_ = self.dw_player[0].cumul_media_durations_sec[self.dw_player[0].player.playlist_pos - 1]
             max_ = self.dw_player[0].cumul_media_durations_sec[self.dw_player[0].player.playlist_pos]
 
-            '''print(f"{min_=}   {max_=}")'''
+            """print(f"{min_=}   {max_=}")"""
 
             events = [event for event in self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS] if min_ <= event[0] < max_]
 
-            '''print(f"events to check: {events}")'''
+            """print(f"events to check: {events}")"""
 
             """time_to_stop = dec(round((self.dw_player[0].cumul_media_durations[self.dw_player[0].player.playlist_pos] - 1) / 1000, 3))"""
             time_to_stop = self.dw_player[0].cumul_media_durations_sec[self.dw_player[0].player.playlist_pos] - dec("0.001")
 
             events_to_add = project_functions.fix_unpaired_state_events2(self.pj[cfg.ETHOGRAM], events, time_to_stop)
 
-            '''print(f"{events_to_add=}")'''
+            """print(f"{events_to_add=}")"""
 
             # print(f"{self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS]=}")
 
@@ -3853,7 +3925,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 self.project_changed()
                 self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS].sort()
 
-                '''print(f"{self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS]=}")'''
+                """print(f"{self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS]=}")"""
 
                 self.load_tw_events(self.observationId)
 
@@ -3927,18 +3999,17 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         logging.info("Media end reached")
 
-        '''
+        """
         print(f"{self.dw_player[0].player.time_pos=}")
         print(f"{self.dw_player[0].player.pause=}")
         print(f"{self.dw_player[0].player.core_idle=}")
         print(f"{self.dw_player[0].player.eof_reached=}")
         print(f"{self.dw_player[0].player.playlist_pos=}")
-        '''
+        """
 
         if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.CLOSE_BEHAVIORS_BETWEEN_VIDEOS]:
             if self.dw_player[0].player.eof_reached and self.dw_player[0].player.core_idle:
                 if self.dw_player[0].player.playlist_pos == len(self.dw_player[0].player.playlist) - 1:
-
                     logging.debug("End of playlist reached")
 
                     self.pause_video()
@@ -3953,17 +4024,17 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     min_ = self.dw_player[0].cumul_media_durations_sec[self.dw_player[0].player.playlist_pos]
                     """max_ =  self.dw_player[0].cumul_media_durations_sec[self.dw_player[0].player.playlist_pos + 1]"""
 
-                    #print(f"{min_=} ")
+                    # print(f"{min_=} ")
 
                     events = [event for event in self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS] if min_ <= event[0]]
 
-                    #print(f"{events=}")
+                    # print(f"{events=}")
 
                     time_to_stop = self.dw_player[0].cumul_media_durations_sec[-1]
 
                     events_to_add = project_functions.fix_unpaired_state_events2(self.pj[cfg.ETHOGRAM], events, time_to_stop)
 
-                    #print(f"{events_to_add=}")
+                    # print(f"{events_to_add=}")
 
                     if events_to_add:
                         self.statusbar.showMessage("The playlist has finished. Some ongoing state events were stopped automatically", 0)
