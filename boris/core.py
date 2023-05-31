@@ -1714,6 +1714,54 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         """
         receive signal to save picture from geometric measurements
         """
+
+        def draw_element(painter, element):
+            RADIUS = 6
+
+            def draw_point(x, y, RADIUS):
+                painter.drawEllipse(QPoint(x, y), RADIUS, RADIUS)
+                # cross inside circle
+                painter.drawLine(x - RADIUS, y, x + RADIUS, y)
+                painter.drawLine(x, y - RADIUS, x, y + RADIUS)
+
+            painter.setPen(QColor(element["color"]))
+
+            if element["object_type"] == cfg.POINT_OBJECT:
+                x, y = element["coordinates"][0]
+                draw_point(x, y, RADIUS)
+
+            if element["object_type"] == cfg.SEGMENT_OBJECT:
+                x1, y1 = element["coordinates"][0]
+                x2, y2 = element["coordinates"][1]
+                painter.drawLine(x1, y1, x2, y2)
+                draw_point(x1, y1, RADIUS)
+                draw_point(x2, y2, RADIUS)
+
+            if element["object_type"] == cfg.ANGLE_OBJECT:
+                x1, y1 = element["coordinates"][0]
+                x2, y2 = element["coordinates"][1]
+                x3, y3 = element["coordinates"][2]
+                painter.drawLine(x1, y1, x2, y2)
+                painter.drawLine(x1, y1, x3, y3)
+                draw_point(x1, y1, RADIUS)
+                draw_point(x2, y2, RADIUS)
+                draw_point(x3, y3, RADIUS)
+
+            if element["object_type"] == cfg.POLYGON_OBJECT:
+                polygon = QPolygon()
+                for x, y in element["coordinates"]:
+                    x, y = [x, y]
+                    polygon.append(QPoint(x, y))
+                painter.drawPolygon(polygon)
+
+            if element["object_type"] == cfg.POLYLINE_OBJECT:
+                for idx1, p1 in enumerate(element["coordinates"][:-1]):
+                    x1, y1 = p1
+                    x2, y2 = element["coordinates"][idx1 + 1]
+                    painter.drawLine(x1, y1, x2, y2)
+
+            return painter
+
         output_dir = QFileDialog().getExistingDirectory(
             self,
             "Select a directory to save the frames",
@@ -1724,26 +1772,23 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             return
 
         if mode == "current":
-            for dw in self.dw_player:
+            for n_player, dw in enumerate(self.dw_player):
                 pixmap = util.pil2pixmap(dw.player.screenshot_raw())
 
                 p = pl.Path(dw.player.playlist[dw.player.playlist_pos]["filename"])
-                image_file_path = str(pl.Path(output_dir) / f"{p.stem}_{dw.player.time_pos:0.3f}.jpg")
+                image_file_path = str(pl.Path(output_dir) / f"{p.stem}_{n_player}_{dw.player.estimated_frame_number:06}.jpg")
 
                 # draw measurements
-                for element in self.measurement_w.draw_mem.get(dw.player.estimated_frame_number, []):
-                    if element["object_type"] == cfg.POINT_OBJECT:
-                        RADIUS = 6
-                        painter = QPainter()
-                        painter.begin(pixmap)
-                        painter.setPen(QColor(element["color"]))
-                        x, y = element["coordinates"][0]
-                        painter.drawEllipse(QPoint(x, y), RADIUS, RADIUS)
-                        # cross inside circle
-                        painter.drawLine(x - RADIUS, y, x + RADIUS, y)
-                        painter.drawLine(x, y - RADIUS, x, y + RADIUS)
-                        painter.end()
+                RADIUS = 6
+                painter = QPainter()
+                painter.begin(pixmap)
 
+                for element in self.measurement_w.draw_mem.get(dw.player.estimated_frame_number, []):
+                    if element["player"] != n_player:
+                        continue
+                    painter = draw_element(painter, element)
+
+                painter.end()
                 pixmap.save(image_file_path, "JPG")
 
         if mode == "all":
@@ -1784,20 +1829,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     painter.begin(pixmap)
 
                     for element in d[frame_idx][n_player]:
-                        if element["object_type"] == cfg.POINT_OBJECT:
-                            painter.setPen(QColor(element["color"]))
-                            x, y = element["coordinates"][0]
-                            painter.drawEllipse(QPoint(x, y), RADIUS, RADIUS)
-                            # cross inside circle
-                            painter.drawLine(x - RADIUS, y, x + RADIUS, y)
-                            painter.drawLine(x, y - RADIUS, x, y + RADIUS)
-
-                        if element["object_type"] == cfg.SEGMENT_OBJECT:
-                            x1, y1 = element["coordinates"][0]
-                            x2, y2 = element["coordinates"][1]
-                            painter.draw_line(x1, y1, x2, y2)
-                            painter.draw_point(x1, y1)
-                            painter.draw_point(x2, y2)
+                        painter = draw_element(painter, element)
 
                     painter.end()
                     pixmap.save(str(pl.Path(output_dir) / file_name.with_suffix(".jpg")), "JPG")

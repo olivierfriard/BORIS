@@ -647,7 +647,7 @@ def image_clicked(self, n_player: int, event) -> None:
     # Area
     elif self.measurement_w.rbArea.isChecked():
         if event.button() == Qt.LeftButton:
-            draw_point(self, pixmap_x, pixmap_y, self.measurement_w.mark_color)
+            draw_point(self, pixmap_x, pixmap_y, self.measurement_w.mark_color, n_player)
             if len(self.memPoints):
                 draw_line(
                     self,
@@ -746,7 +746,7 @@ def image_clicked(self, n_player: int, event) -> None:
     # polyline
     elif self.measurement_w.rb_polygon.isChecked():
         if event.button() == Qt.LeftButton:
-            draw_point(self, pixmap_x, pixmap_y, self.measurement_w.mark_color)
+            draw_point(self, pixmap_x, pixmap_y, self.measurement_w.mark_color, n_player)
             if len(self.memPoints):
                 draw_line(
                     self,
@@ -771,7 +771,6 @@ def image_clicked(self, n_player: int, event) -> None:
                     "color": self.measurement_w.mark_color,
                     "coordinates": self.mem_video,
                 }
-                # [n_player, "polyline", self.measurement_w.mark_color, self.mem_video]
             )
 
             length = util.polyline_length(self.mem_video)
@@ -884,7 +883,6 @@ def redraw_measurements(self):
 
                     if element["object_type"] == cfg.POLYGON_OBJECT:
                         polygon = QPolygon()
-
                         for x, y in element["coordinates"]:
                             x, y = scale_coord([x, y])
                             polygon.append(QPoint(x, y))
