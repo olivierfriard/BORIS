@@ -2669,69 +2669,71 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         else:  # recent project
             file_name = action.text()
 
-        if file_name:
-            (
-                project_path,
-                project_changed,
-                pj,
-                msg,
-            ) = project_functions.open_project_json(file_name)
+        if not file_name:
+            return
 
-            if "error" in pj:
-                logging.debug(pj["error"])
-                QMessageBox.critical(self, cfg.programName, pj["error"])
-            else:
-                if msg:
-                    QMessageBox.information(self, cfg.programName, msg)
+        (
+            project_path,
+            project_changed,
+            pj,
+            msg,
+        ) = project_functions.open_project_json(file_name)
 
-                # check behavior keys
-                if project_changed:
-                    flag_all_upper = True
-                    if pj[cfg.ETHOGRAM]:
-                        for idx in pj[cfg.ETHOGRAM]:
-                            if pj[cfg.ETHOGRAM][idx]["key"].islower():
-                                flag_all_upper = False
+        if "error" in pj:
+            logging.debug(pj["error"])
+            QMessageBox.critical(self, cfg.programName, pj["error"])
+        else:
+            if msg:
+                QMessageBox.information(self, cfg.programName, msg)
 
-                    if pj[cfg.SUBJECTS]:
-                        for idx in pj[cfg.SUBJECTS]:
-                            if pj[cfg.SUBJECTS][idx]["key"].islower():
-                                flag_all_upper = False
+            # check behavior keys
+            if project_changed:
+                flag_all_upper = True
+                if pj[cfg.ETHOGRAM]:
+                    for idx in pj[cfg.ETHOGRAM]:
+                        if pj[cfg.ETHOGRAM][idx]["key"].islower():
+                            flag_all_upper = False
 
-                    if (
-                        flag_all_upper
-                        and dialog.MessageDialog(
-                            cfg.programName,
-                            (
-                                "It is now possible to use <b>lower keys</b> to code behaviors, subjects and modifiers.<br><br>"
-                                "In this project all the behavior and subject keys are upper case.<br>"
-                                "Do you want to convert them in lower case?"
-                            ),
-                            [cfg.YES, cfg.NO],
-                        )
-                        == cfg.YES
-                    ):
-                        for idx in pj[cfg.ETHOGRAM]:
-                            pj[cfg.ETHOGRAM][idx]["key"] = pj[cfg.ETHOGRAM][idx]["key"].lower()
-                            # convert modifier short cuts to lower case
-                            for modifier_set in pj[cfg.ETHOGRAM][idx][cfg.MODIFIERS]:
-                                try:
-                                    for idx2, value in enumerate(pj[cfg.ETHOGRAM][idx][cfg.MODIFIERS][modifier_set]["values"]):
-                                        if re.findall(r"\((\w+)\)", value):
-                                            pj[cfg.ETHOGRAM][idx][cfg.MODIFIERS][modifier_set]["values"][idx2] = (
-                                                value.split("(")[0]
-                                                + "("
-                                                + re.findall(r"\((\w+)\)", value)[0].lower()
-                                                + ")"
-                                                + value.split(")")[-1]
-                                            )
-                                except Exception:
-                                    logging.warning("error during converion of modifier short cut to lower case")
+                if pj[cfg.SUBJECTS]:
+                    for idx in pj[cfg.SUBJECTS]:
+                        if pj[cfg.SUBJECTS][idx]["key"].islower():
+                            flag_all_upper = False
 
-                        for idx in pj[cfg.SUBJECTS]:
-                            pj[cfg.SUBJECTS][idx]["key"] = pj[cfg.SUBJECTS][idx]["key"].lower()
+                if (
+                    flag_all_upper
+                    and dialog.MessageDialog(
+                        cfg.programName,
+                        (
+                            "It is now possible to use <b>lower keys</b> to code behaviors, subjects and modifiers.<br><br>"
+                            "In this project all the behavior and subject keys are upper case.<br>"
+                            "Do you want to convert them in lower case?"
+                        ),
+                        [cfg.YES, cfg.NO],
+                    )
+                    == cfg.YES
+                ):
+                    for idx in pj[cfg.ETHOGRAM]:
+                        pj[cfg.ETHOGRAM][idx]["key"] = pj[cfg.ETHOGRAM][idx]["key"].lower()
+                        # convert modifier short cuts to lower case
+                        for modifier_set in pj[cfg.ETHOGRAM][idx][cfg.MODIFIERS]:
+                            try:
+                                for idx2, value in enumerate(pj[cfg.ETHOGRAM][idx][cfg.MODIFIERS][modifier_set]["values"]):
+                                    if re.findall(r"\((\w+)\)", value):
+                                        pj[cfg.ETHOGRAM][idx][cfg.MODIFIERS][modifier_set]["values"][idx2] = (
+                                            value.split("(")[0]
+                                            + "("
+                                            + re.findall(r"\((\w+)\)", value)[0].lower()
+                                            + ")"
+                                            + value.split(")")[-1]
+                                        )
+                            except Exception:
+                                logging.warning("error during convertion of modifier short cut to lower case")
 
-                self.load_project(project_path, project_changed, pj)
-                del pj
+                    for idx in pj[cfg.SUBJECTS]:
+                        pj[cfg.SUBJECTS][idx]["key"] = pj[cfg.SUBJECTS][idx]["key"].lower()
+
+            self.load_project(project_path, project_changed, pj)
+            del pj
 
     def import_project_from_observer_template(self):
         """
@@ -3033,8 +3035,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             if mode == cfg.EDIT:
                 if not self.projectChanged:
                     self.projectChanged = dict(self.pj) != dict(newProjectWindow.pj)
-
-            print(f"{self.projectChanged=}")
 
             # retrieve project dict from window
             self.pj = dict(newProjectWindow.pj)

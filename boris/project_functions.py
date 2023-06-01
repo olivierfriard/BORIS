@@ -1149,7 +1149,6 @@ def observed_interval(observation: dict) -> Tuple[dec, dec]:
     if not observation[cfg.EVENTS]:
         return (dec("0.0"), dec("0.0"))
     if observation[cfg.TYPE] in (cfg.MEDIA, cfg.LIVE):
-
         """
         print("=" * 120)
         print(observation[cfg.EVENTS])
@@ -1408,14 +1407,14 @@ def open_project_json(projectFileName: str) -> tuple:
                 cfg.HAS_VIDEO: {},
                 cfg.HAS_AUDIO: {},
             }
-            for player in [cfg.PLAYER1, cfg.PLAYER2]:
+            for player in (cfg.PLAYER1, cfg.PLAYER2):
                 # fix bug Anne Maijer 2017-07-17
                 if pj[cfg.OBSERVATIONS][obs][cfg.FILE] == []:
                     pj[cfg.OBSERVATIONS][obs][cfg.FILE] = {"1": [], "2": []}
 
                 for media_file_path in pj[cfg.OBSERVATIONS][obs]["file"][player]:
                     # FIX: ffmpeg path
-                    ret, msg = util.check_ffmpeg_path()
+                    ret, ffmpeg_bin = util.check_ffmpeg_path()
                     if not ret:
                         return (
                             projectFileName,

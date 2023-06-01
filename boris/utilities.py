@@ -336,7 +336,7 @@ def txt2np_array(
     return True, "", data
 
 
-def versiontuple(version_str: str):
+def versiontuple(version_str: str) -> tuple:
     """
     Convert version from str to tuple of str
 
@@ -865,7 +865,7 @@ def mem_info():
     return True, {"msg": "Unknown operating system"}
 
 
-def polygon_area(poly):
+def polygon_area(poly: list) -> float:
     """
     area of polygon
     from http://www.mathopenref.com/coordpolygonarea.html
@@ -880,7 +880,7 @@ def polygon_area(poly):
     return abs(tot / 2)
 
 
-def polyline_length(poly):
+def polyline_length(poly: list) -> float:
     """
     length of polyline
     """
@@ -893,7 +893,7 @@ def polyline_length(poly):
     return tot
 
 
-def url2path(url):
+def url2path(url: str) -> str:
     """
     convert URL in local path name
     under windows, check if path name begin with /
@@ -1013,7 +1013,7 @@ def eol2space(s: str) -> str:
     return s.replace("\r\n", " ").replace("\n", " ").replace("\r", " ")
 
 
-def test_ffmpeg_path(FFmpegPath):
+def test_ffmpeg_path(FFmpegPath: str) -> Tuple[bool, str]:
     """
     test if ffmpeg has valid path
 
@@ -1033,12 +1033,12 @@ def test_ffmpeg_path(FFmpegPath):
         return False, "Please use FFmpeg from https://www.ffmpeg.org in place of FFmpeg from Libav project."
 
     if (b"ffmpeg version" not in out) and (b"ffmpeg version" not in error):
-        return False, "FFmpeg is required but it was not found...<br>See https://www.ffmpeg.org"
+        return False, "FFmpeg is required but it was not found.<br>See https://www.ffmpeg.org"
 
     return True, ""
 
 
-def check_ffmpeg_path():
+def check_ffmpeg_path() -> Tuple[bool, str]:
     """
     check for ffmpeg path
     firstly search for embedded version

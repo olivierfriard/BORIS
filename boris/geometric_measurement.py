@@ -378,7 +378,7 @@ class wgMeasurement(QWidget):
             QMessageBox.warning(self, cfg.programName, "An error occured during saving the measurement results")
 
 
-def show_widget(self):
+def show_widget(self) -> None:
     """
     active the geometric measurement widget
     """
@@ -458,7 +458,7 @@ def draw_line(self, x1: int, y1: int, x2: int, y2: int, color: str, n_player: in
     self.dw_player[n_player].frame_viewer.update()
 
 
-def append_results(self, results: List):
+def append_results(self, results: List) -> None:
     """
     append results to plain text widget
     """
@@ -705,7 +705,6 @@ def image_clicked(self, n_player: int, event) -> None:
     elif self.measurement_w.rb_polyline.isChecked():
         if event.button() == Qt.LeftButton:
             draw_point(self, pixmap_x, pixmap_y, self.measurement_w.mark_color, n_player)
-            print(f"{self.measurement_w.mem_points=}")
             if len(self.measurement_w.mem_points):
                 draw_line(
                     self,
