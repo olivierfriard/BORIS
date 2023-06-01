@@ -1751,6 +1751,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
             return painter
 
+        if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE] == cfg.IMAGES:
+            QMessageBox.warning(self, cfg.programName, "Function not yet implemented for observation from pictures")
+            return
+
         output_dir = QFileDialog().getExistingDirectory(
             self,
             "Select a directory to save the frames",
@@ -1761,10 +1765,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             return
 
         if mode == "current":
-            if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE] == cfg.IMAGES:
-                QMessageBox.warning(self, cfg.programName, "Function not yet implemented for observation from pictures")
-                return
-
             if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE] == cfg.MEDIA:
                 for n_player, dw in enumerate(self.dw_player):
                     pixmap = util.pil2pixmap(dw.player.screenshot_raw())
@@ -1796,10 +1796,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     pixmap.save(image_file_path, "JPG")
 
         if mode == "all":
-            if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE] == cfg.IMAGES:
-                QMessageBox.warning(self, cfg.programName, "Function not yet implemented for observation from pictures")
-                return
-
             d: dict = {}
             for frame_idx in self.measurement_w.draw_mem:
                 if frame_idx not in d:
