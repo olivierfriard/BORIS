@@ -330,7 +330,7 @@ class Input_dialog(QDialog):
                 self.elements[element[1]].addItems([x[0] for x in element[2]])  # take first element of tuple
                 try:
                     self.elements[element[1]].setCurrentIndex([idx for idx, x in enumerate(element[2]) if x[1] == "selected"][0])
-                except:
+                except Exception:
                     self.elements[element[1]].setCurrentIndex(0)
                 hbox.addWidget(self.elements[element[1]])
 

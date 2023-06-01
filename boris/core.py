@@ -225,8 +225,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     behav_category_colors = cfg.CATEGORY_COLORS_LIST
 
     measurement_w = None
-    memPoints: list = []  # memory of clicked points for measurement tool
-    mem_video: list = []  # memory of clicked points for measurement tool
     current_image_size = None
 
     media_scan_sampling_mem: list = []

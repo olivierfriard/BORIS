@@ -1150,10 +1150,6 @@ def ffprobe_media_analysis(ffmpeg_bin: str, file_name: str) -> dict:
 
         for stream in video_param["streams"]:
             if stream["codec_type"] == "video":
-                print(stream)
-
-                print(stream["duration"])
-
                 hasVideo = True
                 video_bitrate = int(stream["bit_rate"]) if "bit_rate" in stream else None
                 resolution = f"{stream['width']}x{stream['height']}"
@@ -1177,7 +1173,8 @@ def ffprobe_media_analysis(ffmpeg_bin: str, file_name: str) -> dict:
                         except Exception:
                             fps = 0
 
-                duration = float(stream["duration"])
+                if "duration" in stream:
+                    duration = float(stream["duration"])
                 if "duration_ts" in stream:
                     frames_number = int(stream["duration_ts"])
                 elif "nb_frames" in stream:

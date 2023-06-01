@@ -25,7 +25,7 @@ import logging
 from decimal import Decimal as dec
 from decimal import InvalidOperation
 from decimal import ROUND_DOWN
-from typing import Union, Optional, List, Tuple, Dict
+from typing import Union
 
 from . import config as cfg
 from . import utilities as util
@@ -229,7 +229,7 @@ def fill_events_undo_list(self, operation_description: str) -> None:
     if len(self.undo_queue) > cfg.MAX_UNDO_QUEUE:
         self.undo_queue.popleft()
         self.undo_description.popleft()
-        logging.debug(f"Max events undo ")
+        logging.debug("Max events undo ")
 
 
 def undo_event_operation(self) -> None:
@@ -237,7 +237,7 @@ def undo_event_operation(self) -> None:
     undo operation on event(s)
     """
     if len(self.undo_queue) == 0:
-        self.statusbar.showMessage(f"The Undo buffer is empty", 5000)
+        self.statusbar.showMessage("The Undo buffer is empty", 5000)
         return
     events = self.undo_queue.pop()
     operation_description = self.undo_description.pop()
@@ -573,7 +573,8 @@ def edit_event(self):
             self,
             cfg.programName,
             (
-                f"The subject <b>{self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS][pj_event_idx][cfg.EVENT_SUBJECT_FIELD_IDX]}</b> "
+                "The subject "
+                f"<b>{self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS][pj_event_idx][cfg.EVENT_SUBJECT_FIELD_IDX]}</b> "
                 "does not exist more in the subject's list"
             ),
         )
@@ -598,7 +599,8 @@ def edit_event(self):
             self,
             cfg.programName,
             (
-                f"The behaviour <b>{self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS][pj_event_idx][cfg.EVENT_BEHAVIOR_FIELD_IDX]}</b> "
+                "The behaviour "
+                f"<b>{self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS][pj_event_idx][cfg.EVENT_BEHAVIOR_FIELD_IDX]}</b> "
                 "does not exist more in the ethogram"
             ),
         )
@@ -831,9 +833,9 @@ def paste_clipboard_to_events(self):
     cb_text_splitted = cb_text.split("\n")
     length: list = []
     content: list = []
-    for l in cb_text_splitted:
-        length.append(len(l.split("\t")))
-        content.append(l.split("\t"))
+    for line in cb_text_splitted:
+        length.append(len(line.split("\t")))
+        content.append(line.split("\t"))
 
     if set(length) != set([len(cfg.PJ_EVENTS_FIELDS[self.playerType])]):
         QMessageBox.warning(
