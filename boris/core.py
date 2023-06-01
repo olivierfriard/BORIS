@@ -1751,9 +1751,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
             return painter
 
-        if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE] == cfg.IMAGES:
-            QMessageBox.warning(self, cfg.programName, "Function not yet implemented for observation from pictures")
-            return
+        # if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE] == cfg.IMAGES:
+        #    QMessageBox.warning(self, cfg.programName, "Function not yet implemented for observation from pictures")
+        #    return
 
         output_dir = QFileDialog().getExistingDirectory(
             self,
@@ -1765,6 +1765,27 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             return
 
         if mode == "current":
+            if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE] == cfg.IMAGES:
+                pixmap = QPixmap(self.images_list[self.image_idx])
+                # draw measurements
+                RADIUS = 6
+                painter = QPainter()
+                painter.begin(pixmap)
+                for element in self.measurement_w.draw_mem.get(self.image_idx, []):
+                    painter = draw_element(painter, element)
+                painter.end()
+
+                image_file_path = str(pl.Path(output_dir) / f"{pl.Path(self.images_list[self.image_idx]).stem}.jpg")
+                # check if file already exists
+                if pl.Path(image_file_path).is_file():
+                    if (
+                        dialog.MessageDialog(cfg.programName, f"The file {image_file_path} already exists.", (cfg.CANCEL, cfg.OVERWRITE))
+                        == cfg.CANCEL
+                    ):
+                        return
+
+                pixmap.save(image_file_path, "JPG")
+
             if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE] == cfg.MEDIA:
                 for n_player, dw in enumerate(self.dw_player):
                     pixmap = util.pil2pixmap(dw.player.screenshot_raw())
@@ -1796,16 +1817,41 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     pixmap.save(image_file_path, "JPG")
 
         if mode == "all":
-            d: dict = {}
-            for frame_idx in self.measurement_w.draw_mem:
-                if frame_idx not in d:
-                    d[frame_idx] = {}
-                for element in self.measurement_w.draw_mem[frame_idx]:
-                    if element["player"] not in d[frame_idx]:
-                        d[frame_idx][element["player"]] = []
-                    d[frame_idx][element["player"]].append(element)
+            if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE] == cfg.IMAGES:
+                for frame_idx in self.measurement_w.draw_mem:
+                    pixmap = QPixmap(self.images_list[frame_idx])
+
+                    # draw measurements
+                    RADIUS = 6
+                    painter = QPainter()
+                    painter.begin(pixmap)
+                    for element in self.measurement_w.draw_mem.get(frame_idx, []):
+                        painter = draw_element(painter, element)
+                    painter.end()
+
+                    image_file_path = str(pl.Path(output_dir) / f"{pl.Path(self.images_list[frame_idx]).stem}.jpg")
+                    # check if file already exists
+                    if pl.Path(image_file_path).is_file():
+                        if (
+                            dialog.MessageDialog(
+                                cfg.programName, f"The file {image_file_path} already exists.", (cfg.CANCEL, cfg.OVERWRITE)
+                            )
+                            == cfg.CANCEL
+                        ):
+                            return
+
+                    pixmap.save(image_file_path, "JPG")
 
             if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE] == cfg.MEDIA:
+                d: dict = {}
+                for frame_idx in self.measurement_w.draw_mem:
+                    if frame_idx not in d:
+                        d[frame_idx] = {}
+                    for element in self.measurement_w.draw_mem[frame_idx]:
+                        if element["player"] not in d[frame_idx]:
+                            d[frame_idx][element["player"]] = []
+                        d[frame_idx][element["player"]].append(element)
+
                 for frame_idx in d:
                     for n_player in d[frame_idx]:
                         media_path = pl.Path(
