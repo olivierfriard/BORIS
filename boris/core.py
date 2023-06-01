@@ -1761,34 +1761,45 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             return
 
         if mode == "current":
-            for n_player, dw in enumerate(self.dw_player):
-                pixmap = util.pil2pixmap(dw.player.screenshot_raw())
+            if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE] == cfg.IMAGES:
+                QMessageBox.warning(self, cfg.programName, "Function not yet implemented for observation from pictures")
+                return
 
-                p = pl.Path(dw.player.playlist[dw.player.playlist_pos]["filename"])
-                image_file_path = str(pl.Path(output_dir) / f"{p.stem}_{n_player}_{dw.player.estimated_frame_number:06}.jpg")
+            if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE] == cfg.MEDIA:
+                for n_player, dw in enumerate(self.dw_player):
+                    pixmap = util.pil2pixmap(dw.player.screenshot_raw())
 
-                # draw measurements
-                RADIUS = 6
-                painter = QPainter()
-                painter.begin(pixmap)
+                    p = pl.Path(dw.player.playlist[dw.player.playlist_pos]["filename"])
+                    image_file_path = str(pl.Path(output_dir) / f"{p.stem}_{n_player}_{dw.player.estimated_frame_number:06}.jpg")
 
-                for element in self.measurement_w.draw_mem.get(dw.player.estimated_frame_number, []):
-                    if element["player"] != n_player:
-                        continue
-                    painter = draw_element(painter, element)
+                    # draw measurements
+                    RADIUS = 6
+                    painter = QPainter()
+                    painter.begin(pixmap)
 
-                painter.end()
-                # check if file already exists
-                if pl.Path(image_file_path).is_file():
-                    if (
-                        dialog.MessageDialog(cfg.programName, f"The file {image_file_path} already exists.", (cfg.CANCEL, cfg.OVERWRITE))
-                        == cfg.CANCEL
-                    ):
-                        return
+                    for element in self.measurement_w.draw_mem.get(dw.player.estimated_frame_number, []):
+                        if element["player"] != n_player:
+                            continue
+                        painter = draw_element(painter, element)
 
-                pixmap.save(image_file_path, "JPG")
+                    painter.end()
+                    # check if file already exists
+                    if pl.Path(image_file_path).is_file():
+                        if (
+                            dialog.MessageDialog(
+                                cfg.programName, f"The file {image_file_path} already exists.", (cfg.CANCEL, cfg.OVERWRITE)
+                            )
+                            == cfg.CANCEL
+                        ):
+                            return
+
+                    pixmap.save(image_file_path, "JPG")
 
         if mode == "all":
+            if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE] == cfg.IMAGES:
+                QMessageBox.warning(self, cfg.programName, "Function not yet implemented for observation from pictures")
+                return
+
             d: dict = {}
             for frame_idx in self.measurement_w.draw_mem:
                 if frame_idx not in d:
@@ -1798,50 +1809,51 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                         d[frame_idx][element["player"]] = []
                     d[frame_idx][element["player"]].append(element)
 
-            for frame_idx in d:
-                for n_player in d[frame_idx]:
-                    media_path = pl.Path(
-                        self.dw_player[n_player - 1].player.playlist[self.dw_player[n_player - 1].player.playlist_pos]["filename"]
-                    )
-                    file_name = pl.Path(f"{media_path.stem}_{element['player']}_{frame_idx:06}")
-
-                    ffmpeg_command = [
-                        self.ffmpeg_bin,
-                        "-y",
-                        "-i",
-                        str(media_path),
-                        "-vf",
-                        rf"select=gte(n\, {frame_idx})",
-                        "-frames:v",
-                        "1",
-                        str(pl.Path(output_dir) / file_name.with_suffix(".jpg")),
-                    ]
-
-                    p = subprocess.Popen(ffmpeg_command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)  # do not use shell=True!
-                    out, error = p.communicate()
-
-                    pixmap = QPixmap(str(pl.Path(output_dir) / file_name.with_suffix(".jpg")))
-                    RADIUS = 6
-                    painter = QPainter()
-                    painter.begin(pixmap)
-
-                    for element in d[frame_idx][n_player]:
-                        painter = draw_element(painter, element)
-
-                    painter.end()
-                    # check if file already exists
-                    if (pl.Path(output_dir) / file_name.with_suffix(".jpg")).is_file():
-                        answer = dialog.MessageDialog(
-                            cfg.programName,
-                            f"The file {pl.Path(output_dir) / file_name.with_suffix('.jpg')} already exists.",
-                            (cfg.CANCEL, cfg.OVERWRITE, "Abort"),
+            if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE] == cfg.MEDIA:
+                for frame_idx in d:
+                    for n_player in d[frame_idx]:
+                        media_path = pl.Path(
+                            self.dw_player[n_player - 1].player.playlist[self.dw_player[n_player - 1].player.playlist_pos]["filename"]
                         )
-                        if answer == cfg.CANCEL:
-                            continue
-                        if answer == "Abort":
-                            return
+                        file_name = pl.Path(f"{media_path.stem}_{element['player']}_{frame_idx:06}")
 
-                    pixmap.save(str(pl.Path(output_dir) / file_name.with_suffix(".jpg")), "JPG")
+                        ffmpeg_command = [
+                            self.ffmpeg_bin,
+                            "-y",
+                            "-i",
+                            str(media_path),
+                            "-vf",
+                            rf"select=gte(n\, {frame_idx})",
+                            "-frames:v",
+                            "1",
+                            str(pl.Path(output_dir) / file_name.with_suffix(".jpg")),
+                        ]
+
+                        p = subprocess.Popen(ffmpeg_command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)  # do not use shell=True!
+                        out, error = p.communicate()
+
+                        pixmap = QPixmap(str(pl.Path(output_dir) / file_name.with_suffix(".jpg")))
+                        RADIUS = 6
+                        painter = QPainter()
+                        painter.begin(pixmap)
+
+                        for element in d[frame_idx][n_player]:
+                            painter = draw_element(painter, element)
+
+                        painter.end()
+                        # check if file already exists
+                        if (pl.Path(output_dir) / file_name.with_suffix(".jpg")).is_file():
+                            answer = dialog.MessageDialog(
+                                cfg.programName,
+                                f"The file {pl.Path(output_dir) / file_name.with_suffix('.jpg')} already exists.",
+                                (cfg.CANCEL, cfg.OVERWRITE, "Abort"),
+                            )
+                            if answer == cfg.CANCEL:
+                                continue
+                            if answer == "Abort":
+                                return
+
+                        pixmap.save(str(pl.Path(output_dir) / file_name.with_suffix(".jpg")), "JPG")
 
     def resize_dw(self, dw_id):
         """
