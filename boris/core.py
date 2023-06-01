@@ -1735,8 +1735,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 painter.drawLine(x1, y1, x2, y2)
                 painter.drawLine(x1, y1, x3, y3)
                 draw_point(x1, y1, RADIUS)
-                # draw_point(x2, y2, RADIUS)
-                # draw_point(x3, y3, RADIUS)
 
             if element["object_type"] == cfg.POLYGON_OBJECT:
                 polygon = QPolygon()
