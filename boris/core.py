@@ -1728,13 +1728,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 x, y = element["coordinates"][0]
                 draw_point(x, y, RADIUS)
 
-            if element["object_type"] == cfg.SEGMENT_OBJECT:
-                x1, y1 = element["coordinates"][0]
-                x2, y2 = element["coordinates"][1]
-                painter.drawLine(x1, y1, x2, y2)
-                draw_point(x1, y1, RADIUS)
-                draw_point(x2, y2, RADIUS)
-
             if element["object_type"] == cfg.ANGLE_OBJECT:
                 x1, y1 = element["coordinates"][0]
                 x2, y2 = element["coordinates"][1]
@@ -1742,8 +1735,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 painter.drawLine(x1, y1, x2, y2)
                 painter.drawLine(x1, y1, x3, y3)
                 draw_point(x1, y1, RADIUS)
-                draw_point(x2, y2, RADIUS)
-                draw_point(x3, y3, RADIUS)
+                # draw_point(x2, y2, RADIUS)
+                # draw_point(x3, y3, RADIUS)
 
             if element["object_type"] == cfg.POLYGON_OBJECT:
                 polygon = QPolygon()
@@ -1787,6 +1780,14 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     painter = draw_element(painter, element)
 
                 painter.end()
+                # check if file already exists
+                if pl.Path(image_file_path).is_file():
+                    if (
+                        dialog.MessageDialog(cfg.programName, f"The file {image_file_path} already exists.", (cfg.CANCEL, cfg.OVERWRITE))
+                        == cfg.CANCEL
+                    ):
+                        return
+
                 pixmap.save(image_file_path, "JPG")
 
         if mode == "all":
@@ -1830,6 +1831,18 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                         painter = draw_element(painter, element)
 
                     painter.end()
+                    # check if file already exists
+                    if (pl.Path(output_dir) / file_name.with_suffix(".jpg")).is_file():
+                        answer = dialog.MessageDialog(
+                            cfg.programName,
+                            f"The file {pl.Path(output_dir) / file_name.with_suffix('.jpg')} already exists.",
+                            (cfg.CANCEL, cfg.OVERWRITE, "Abort"),
+                        )
+                        if answer == cfg.CANCEL:
+                            continue
+                        if answer == "Abort":
+                            return
+
                     pixmap.save(str(pl.Path(output_dir) / file_name.with_suffix(".jpg")), "JPG")
 
     def resize_dw(self, dw_id):
