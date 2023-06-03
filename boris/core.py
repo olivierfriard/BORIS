@@ -1728,7 +1728,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 x, y = element["coordinates"][0]
                 draw_point(x, y, RADIUS)
 
-            if element["object_type"] == cfg.ANGLE_OBJECT:
+            if element["object_type"] in (cfg.ANGLE_OBJECT, cfg.ORIENTED_ANGLE_OBJECT):
                 x1, y1 = element["coordinates"][0]
                 x2, y2 = element["coordinates"][1]
                 x3, y3 = element["coordinates"][2]
