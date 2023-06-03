@@ -53,6 +53,7 @@ from PyQt5.QtWidgets import (
     QSpacerItem,
     QSizePolicy,
     QAction,
+    QDialog,
 )
 
 from typing import List
@@ -62,7 +63,7 @@ from . import dialog, menu_options
 from . import utilities as util
 
 
-class wgMeasurement(QWidget):
+class wgMeasurement(QDialog):
     """
     widget for geometric measurements
     """
@@ -415,7 +416,7 @@ def show_widget(self) -> None:
     self.actionPlay.setEnabled(False)
 
     self.measurement_w = wgMeasurement()
-    self.measurement_w.setWindowFlags(Qt.WindowStaysOnTopHint)
+    # self.measurement_w.setWindowFlags(Qt.WindowStaysOnTopHint)
     self.measurement_w.closeSignal.connect(close_measurement_widget)
     self.measurement_w.send_event_signal.connect(self.signal_from_widget)
     self.measurement_w.reload_image_signal.connect(self.reload_frame)

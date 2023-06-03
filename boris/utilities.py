@@ -815,6 +815,32 @@ def angle(vertex: tuple, side1: tuple, side2: tuple) -> float:
     )
 
 
+def oriented_angle(P1: tuple, P2: tuple, P3: tuple) -> float:
+    """
+    Calculate the oriented angle between two segments.
+
+    Args:
+        P1: Coordinates of the vertex
+        P2: Coordinates of the first point
+        P3: Coordinates of the second point
+
+    Returns:
+        The oriented angle between the two segments in degrees.
+    """
+
+    x1, y1 = P1
+    x2, y2 = P2
+    x3, y3 = P1
+    x4, y4 = P3
+
+    angle_AB = math.atan2(y2 - y1, x2 - x1)
+    angle_CD = math.atan2(y4 - y3, x4 - x3)
+
+    oriented_angle = math.degrees(angle_AB - angle_CD)
+
+    return oriented_angle
+
+
 def mem_info():
     """
     get info about total mem, used mem and available mem using:
