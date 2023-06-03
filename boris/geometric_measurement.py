@@ -99,6 +99,9 @@ class wgMeasurement(QDialog):
         self.rb_angle = QRadioButton("Angle (vertex: left click, segments: right click)", clicked=self.rb_clicked)
         vbox.addWidget(self.rb_angle)
 
+        self.rb_oriented_angle = QRadioButton("Oriented angle (vertex: left click, segments: right click)", clicked=self.rb_clicked)
+        vbox.addWidget(self.rb_oriented_angle)
+
         hbox = QHBoxLayout()
         self.cbPersistentMeasurements = QCheckBox("Measurements are persistent")
         self.cbPersistentMeasurements.setChecked(True)
@@ -561,7 +564,7 @@ def image_clicked(self, n_player: int, event) -> None:
             self.measurement_w.flag_saved = False
 
     # angle
-    elif self.measurement_w.rb_angle.isChecked():
+    elif self.measurement_w.rb_angle.isChecked() or self.measurement_w.rb_oriented_angle.isChecked():
         if event.button() == Qt.LeftButton:
             draw_point(self, pixmap_x, pixmap_y, self.measurement_w.mark_color, n_player)
             self.measurement_w.mem_points = [(pixmap_x, pixmap_y)]
@@ -583,21 +586,28 @@ def image_clicked(self, n_player: int, event) -> None:
             self.measurement_w.mem_video.append((x_video, y_video))
 
             if len(self.measurement_w.mem_points) == 3:
+                if self.measurement_w.rb_angle.isChecked():
+                    angle = util.angle(self.measurement_w.mem_points[0], self.measurement_w.mem_points[1], self.measurement_w.mem_points[2])
+                    object_type = cfg.ANGLE_OBJECT
+                else:  # oriented angle
+                    angle = util.oriented_angle(
+                        self.measurement_w.mem_points[0], self.measurement_w.mem_points[1], self.measurement_w.mem_points[2]
+                    )
+                    object_type = cfg.ORIENTED_ANGLE_OBJECT
+
                 append_results(
                     self,
                     (
                         n_player + 1,
                         f"{self.getLaps():.03f}",
                         current_frame,
-                        cfg.ANGLE_OBJECT,
+                        object_type,
                         cfg.NA,
                         cfg.NA,
                         cfg.NA,
                         cfg.NA,
                         round(
-                            util.angle(
-                                self.measurement_w.mem_points[0], self.measurement_w.mem_points[1], self.measurement_w.mem_points[2]
-                            ),
+                            angle,
                             1,
                         ),
                         str(self.measurement_w.mem_video),
@@ -611,7 +621,7 @@ def image_clicked(self, n_player: int, event) -> None:
                 self.measurement_w.draw_mem[current_frame].append(
                     {
                         "player": n_player,
-                        "object_type": cfg.ANGLE_OBJECT,
+                        "object_type": object_type,
                         "color": self.measurement_w.mark_color,
                         "coordinates": self.measurement_w.mem_video,
                     }
@@ -830,7 +840,7 @@ def redraw_measurements(self):
                         draw_point(self, x1, y1, elements_color, n_player=idx)
                         draw_point(self, x2, y2, elements_color, n_player=idx)
 
-                    if element["object_type"] == cfg.ANGLE_OBJECT:
+                    if element["object_type"] in (cfg.ANGLE_OBJECT, cfg.ORIENTED_ANGLE_OBJECT):
                         x1, y1 = scale_coord(element["coordinates"][0])
                         x2, y2 = scale_coord(element["coordinates"][1])
                         x3, y3 = scale_coord(element["coordinates"][2])

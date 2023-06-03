@@ -351,6 +351,7 @@ SCAN_SAMPLING_TIME = "scan_sampling_time"
 POINT_OBJECT = "Point"
 SEGMENT_OBJECT = "Segment"
 ANGLE_OBJECT = "Angle"
+ORIENTED_ANGLE_OBJECT = "Oriented angle"
 POLYGON_OBJECT = "Polygon"
 POLYLINE_OBJECT = "Polyline"
 
