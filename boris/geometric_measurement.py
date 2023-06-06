@@ -140,6 +140,7 @@ class wgMeasurement(QDialog):
         # header
         self.measurements_header = [
             "Player",
+            "media file name",
             "Time",
             "Frame index",
             "Type of measurement",
@@ -170,8 +171,8 @@ class wgMeasurement(QDialog):
 
         hbox3 = QHBoxLayout()
         hbox3.addItem(QSpacerItem(40, 20, QSizePolicy.Expanding, QSizePolicy.Minimum))
-        self.pbClear = QPushButton("Clear measurements", clicked=self.pbClear_clicked)
-        hbox3.addWidget(self.pbClear)
+        self.pb_clear = QPushButton("Clear measurements", clicked=self.pbClear_clicked)
+        hbox3.addWidget(self.pb_clear)
 
         self.pb_save_picture = QPushButton("Save current picture", clicked=self.pb_save_picture_clicked)
         hbox3.addWidget(self.pb_save_picture)
@@ -180,10 +181,10 @@ class wgMeasurement(QDialog):
         self.pb_save_all_pictures = QPushButton("Save all pictures", clicked=self.pb_save_all_pictures_clicked)
         hbox3.addWidget(self.pb_save_all_pictures)
 
-        self.pbSave = QPushButton("Save results", clicked=self.pbSave_clicked)
-        hbox3.addWidget(self.pbSave)
-        self.pbClose = QPushButton("Close", clicked=self.pbClose_clicked)
-        hbox3.addWidget(self.pbClose)
+        self.pb_save = QPushButton("Save results", clicked=self.pb_save_clicked)
+        hbox3.addWidget(self.pb_save)
+        self.pb_close = QPushButton("Close", clicked=self.pbClose_clicked)
+        hbox3.addWidget(self.pb_close)
         vbox.addLayout(hbox3)
 
         self.installEventFilter(self)
@@ -280,7 +281,7 @@ class wgMeasurement(QDialog):
                 (cfg.YES, cfg.NO, cfg.CANCEL),
             )
             if response == cfg.YES:
-                self.pbSave_clicked()
+                self.pb_save_clicked()
             if response == cfg.CANCEL:
                 event.ignore()
                 return
@@ -322,7 +323,7 @@ class wgMeasurement(QDialog):
         logging.debug("close function")
         self.close()
 
-    def pbSave_clicked(self):
+    def pb_save_clicked(self):
         """
         Save measurements results
         """
@@ -331,7 +332,17 @@ class wgMeasurement(QDialog):
         if flag_pyreadr_loaded:
             file_formats.append(cfg.RDS)
 
-        file_name, filter_ = QFileDialog().getSaveFileName(self, "Save geometric measurements", "", ";;".join(file_formats))
+        # default file name
+        media_file_list = []
+        for row in range(self.pte.rowCount()):
+            media_file_list.append(self.pte.item(row, 1).text())
+
+        if len(set(media_file_list)) == 1:
+            default_file_name = str(pl.Path(media_file_list[0]).with_suffix(""))
+        else:
+            default_file_name = ""
+
+        file_name, filter_ = QFileDialog().getSaveFileName(self, "Save geometric measurements", default_file_name, ";;".join(file_formats))
         if not file_name:
             return
 
@@ -462,7 +473,7 @@ def draw_line(self, x1: int, y1: int, x2: int, y2: int, color: str, n_player: in
     self.dw_player[n_player].frame_viewer.update()
 
 
-def append_results(self, results: List) -> None:
+def append_results(self, results: list) -> None:
     """
     append results to plain text widget
     """
@@ -529,6 +540,12 @@ def image_clicked(self, n_player: int, event) -> None:
 
     self.measurement_w.status_lb.clear()
 
+    # media file name
+    if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE] == cfg.MEDIA:
+        media_file_name = self.dw_player[n_player - 1].player.playlist[self.dw_player[n_player - 1].player.playlist_pos]["filename"]
+    if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE] == cfg.IMAGES:
+        media_file_name = self.images_list[current_frame]
+
     # point
     if self.measurement_w.rb_point.isChecked():
         if event.button() == Qt.LeftButton:
@@ -549,6 +566,7 @@ def image_clicked(self, n_player: int, event) -> None:
                 self,
                 (
                     n_player + 1,
+                    media_file_name,
                     f"{self.getLaps():.03f}",
                     current_frame,
                     cfg.POINT_OBJECT,
@@ -599,6 +617,7 @@ def image_clicked(self, n_player: int, event) -> None:
                     self,
                     (
                         n_player + 1,
+                        media_file_name,
                         f"{self.getLaps():.03f}",
                         current_frame,
                         object_type,
@@ -697,6 +716,7 @@ def image_clicked(self, n_player: int, event) -> None:
                 self,
                 (
                     n_player + 1,
+                    media_file_name,
                     f"{self.getLaps():.03f}",
                     current_frame,
                     cfg.POLYGON_OBJECT,
@@ -758,6 +778,7 @@ def image_clicked(self, n_player: int, event) -> None:
                 self,
                 (
                     n_player + 1,
+                    media_file_name,
                     f"{self.getLaps():.03f}",
                     current_frame,
                     cfg.POLYLINE_OBJECT,

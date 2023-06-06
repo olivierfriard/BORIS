@@ -1751,10 +1751,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
             return painter
 
-        # if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE] == cfg.IMAGES:
-        #    QMessageBox.warning(self, cfg.programName, "Function not yet implemented for observation from pictures")
-        #    return
-
         output_dir = QFileDialog().getExistingDirectory(
             self,
             "Select a directory to save the frames",
@@ -3705,11 +3701,13 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         logging.debug(f"video_slider moved: {self.video_slider.value() / (cfg.SLIDER_MAXIMUM - 1)}")
 
-        if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE] in [cfg.MEDIA]:
+        if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE] == cfg.MEDIA:
             self.user_move_slider = True
-            sliderPos = self.video_slider.value() / (cfg.SLIDER_MAXIMUM - 1)
-            videoPosition = sliderPos * self.dw_player[0].player.duration
-            self.dw_player[0].player.command("seek", str(videoPosition), "absolute")
+            slider_position = self.video_slider.value() / (cfg.SLIDER_MAXIMUM - 1)
+            if self.dw_player[0].player.duration is None:
+                return
+            video_position = slider_position * self.dw_player[0].player.duration
+            self.dw_player[0].player.command("seek", str(video_position), "absolute")
 
             self.plot_timer_out()
 
