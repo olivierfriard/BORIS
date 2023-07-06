@@ -3132,9 +3132,15 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.save_project_json_started = False
             return 1
 
-        except Exception:
-            dialog.error_message()
+        except OSError:
+            _, value, _ = sys.exc_info()
+            QMessageBox.critical(None, cfg.programName, f"Error saving the project file: {value}", QMessageBox.Ok)
+            self.save_project_json_started = False
+            return 4
 
+        except Exception:
+            _, value, _ = sys.exc_info()
+            QMessageBox.critical(None, cfg.programName, f"Error saving the project file: {value}", QMessageBox.Ok)
             self.save_project_json_started = False
             return 2
 
