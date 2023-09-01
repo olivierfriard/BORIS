@@ -56,35 +56,33 @@ def write_event(self, event: dict, mem_time: dec) -> int:
     if event is None:
         return 1
 
-    # live observation finished (end of time interval reached)
-    if not self.liveObservationStarted and mem_time.is_nan():
-        _ = dialog.MessageDialog(
-            cfg.programName,
-            (
-                "The live observation is finished.<br>"
-                "The observation interval is "
-                f"{self.pj[cfg.OBSERVATIONS][self.observationId].get(cfg.OBSERVATION_TIME_INTERVAL, [0, 0])[0]} - "
-                f"{self.pj[cfg.OBSERVATIONS][self.observationId].get(cfg.OBSERVATION_TIME_INTERVAL, [0, 0])[1]}"
-            ),
-            (cfg.OK,),
-        )
-        return 1
+    if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE] == cfg.LIVE:
+        # live observation finished (end of time interval reached)
+        if not self.liveObservationStarted and mem_time.is_nan():
+            _ = dialog.MessageDialog(
+                cfg.programName,
+                (
+                    "The live observation is finished.<br>"
+                    "The observation interval is "
+                    f"{self.pj[cfg.OBSERVATIONS][self.observationId].get(cfg.OBSERVATION_TIME_INTERVAL, [0, 0])[0]} - "
+                    f"{self.pj[cfg.OBSERVATIONS][self.observationId].get(cfg.OBSERVATION_TIME_INTERVAL, [0, 0])[1]}"
+                ),
+                (cfg.OK,),
+            )
+            return 1
 
-    if (
-        self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE] == cfg.LIVE
-        and mem_time < self.pj[cfg.OBSERVATIONS][self.observationId].get(cfg.OBSERVATION_TIME_INTERVAL, [0, 0])[0]
-    ):
-        _ = dialog.MessageDialog(
-            cfg.programName,
-            (
-                "The live observation has not began.<br>"
-                "The observation interval is "
-                f"{self.pj[cfg.OBSERVATIONS][self.observationId].get(cfg.OBSERVATION_TIME_INTERVAL, [0, 0])[0]} - "
-                f"{self.pj[cfg.OBSERVATIONS][self.observationId].get(cfg.OBSERVATION_TIME_INTERVAL, [0, 0])[1]}"
-            ),
-            (cfg.OK,),
-        )
-        return 1
+        if mem_time < self.pj[cfg.OBSERVATIONS][self.observationId].get(cfg.OBSERVATION_TIME_INTERVAL, [0, 0])[0]:
+            _ = dialog.MessageDialog(
+                cfg.programName,
+                (
+                    "The live observation has not began.<br>"
+                    "The observation interval is "
+                    f"{self.pj[cfg.OBSERVATIONS][self.observationId].get(cfg.OBSERVATION_TIME_INTERVAL, [0, 0])[0]} - "
+                    f"{self.pj[cfg.OBSERVATIONS][self.observationId].get(cfg.OBSERVATION_TIME_INTERVAL, [0, 0])[1]}"
+                ),
+                (cfg.OK,),
+            )
+            return 1
 
     editing_event = "row" in event
 
@@ -101,13 +99,14 @@ def write_event(self, event: dict, mem_time: dec) -> int:
                 mem_time += dec(self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO][cfg.MEDIA_CREATION_TIME][media_file_name])
 
     # check if time > 2**31 - 1 (2147483647)
-    if (mem_time < -2147483647) or (mem_time > 2147483647):
-        _ = dialog.MessageDialog(
-            cfg.programName,
-            ("The timestamp must be between -2147483647 and 2147483647.<br>" f"The current timestamp is {mem_time}"),
-            (cfg.OK,),
-        )
-        return 1
+    if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE] in (cfg.MEDIA, cfg.VIEWER_MEDIA, cfg.LIVE, cfg.VIEWER_LIVE):
+        if (mem_time < -2147483647) or (mem_time > 2147483647):
+            _ = dialog.MessageDialog(
+                cfg.programName,
+                ("The timestamp must be between -2147483647 and 2147483647.<br>" f"The current timestamp is {mem_time}"),
+                (cfg.OK,),
+            )
+            return 1
 
     # remove key code from modifiers
     subject = event.get(cfg.SUBJECT, self.currentSubject)
