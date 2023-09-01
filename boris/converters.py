@@ -113,12 +113,8 @@ def modify_converter(self):
         w.setEnabled(False)
 
     self.le_converter_name.setText(self.tw_converters.item(self.tw_converters.selectedIndexes()[0].row(), 0).text())
-    self.le_converter_description.setText(
-        self.tw_converters.item(self.tw_converters.selectedIndexes()[0].row(), 1).text()
-    )
-    self.pteCode.setPlainText(
-        self.tw_converters.item(self.tw_converters.selectedIndexes()[0].row(), 2).text().replace("@", "\n")
-    )
+    self.le_converter_description.setText(self.tw_converters.item(self.tw_converters.selectedIndexes()[0].row(), 1).text())
+    self.pteCode.setPlainText(self.tw_converters.item(self.tw_converters.selectedIndexes()[0].row(), 2).text().replace("@", "\n"))
 
     self.row_in_modification = self.tw_converters.selectedIndexes()[0].row()
 
@@ -153,9 +149,7 @@ def save_converter(self):
         return
 
     if not self.le_converter_name.text().replace("_", "a").isalnum():
-        QMessageBox.critical(
-            self, "BORIS", "Forbidden characters are used in converter name.<br>Use a..z, A..Z, 0..9 _"
-        )
+        QMessageBox.critical(self, "BORIS", "Forbidden characters are used in converter name.<br>Use a..z, A..Z, 0..9 _")
         return
 
     # test code with exec
@@ -164,7 +158,7 @@ def save_converter(self):
         QMessageBox.critical(self, "BORIS", "The converter must have Python code")
         return
 
-    function = code_2_func(self, self.le_converter_name.text(), code)
+    function = code_2_func(self, name=self.le_converter_name.text(), code=code)
 
     try:
         exec(function)
@@ -259,35 +253,25 @@ def load_converters_from_file_repo(self, mode: str):
                     return
 
     if mode == "repo":
-
         converters_repo_URL = "http://www.boris.unito.it/archive/converters.json"
         try:
             converters_from_repo = urllib.request.urlopen(converters_repo_URL).read().strip().decode("utf-8")
         except Exception:
-            QMessageBox.critical(
-                self, cfg.programName, "An error occured during retrieving converters from BORIS remote repository"
-            )
+            QMessageBox.critical(self, cfg.programName, "An error occured during retrieving converters from BORIS remote repository")
             return
 
         try:
             converters_from_file = eval(converters_from_repo)["BORIS converters"]
         except Exception:
-            QMessageBox.critical(
-                self, cfg.programName, "An error occured during retrieving converters from BORIS remote repository"
-            )
+            QMessageBox.critical(self, cfg.programName, "An error occured during retrieving converters from BORIS remote repository")
             return
 
     if converters_from_file:
-
-        diag_choose_conv = dialog.ChooseObservationsToImport(
-            "Choose the converters to load:", sorted(list(converters_from_file.keys()))
-        )
+        diag_choose_conv = dialog.ChooseObservationsToImport("Choose the converters to load:", sorted(list(converters_from_file.keys())))
 
         if diag_choose_conv.exec_():
-
             selected_converters = diag_choose_conv.get_selected_observations()
             if selected_converters:
-
                 # extract converter names from table
                 converter_names = []
                 for row in range(self.tw_converters.rowCount()):
@@ -325,7 +309,7 @@ def load_converters_from_file_repo(self, mode: str):
                         else:
                             continue
                     # test if code does not produce error
-                    function = self.code_2_func(converter_name, converters_from_file[converter]["code"])
+                    function = code_2_func(self, name=converter_name, code=converters_from_file[converter]["code"])
 
                     try:
                         exec(function)
@@ -333,10 +317,7 @@ def load_converters_from_file_repo(self, mode: str):
                         QMessageBox.critical(
                             self,
                             "BORIS",
-                            (
-                                f"The code of {converter_name} converter produces an error: "
-                                f"<br><b>{sys.exc_info()[1]}</b>"
-                            ),
+                            (f"The code of {converter_name} converter produces an error: " f"<br><b>{sys.exc_info()[1]}</b>"),
                         )
 
                     self.tw_converters.setRowCount(self.tw_converters.rowCount() + 1)
