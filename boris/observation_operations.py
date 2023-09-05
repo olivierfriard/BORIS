@@ -717,14 +717,13 @@ def new_observation(self, mode=cfg.NEW, obsId=""):
             observationWindow.cb_visualize_waveform.setChecked(self.pj[cfg.OBSERVATIONS][obsId].get(cfg.VISUALIZE_WAVEFORM, False))
             # use Creation date metadata tag as offset
             observationWindow.cb_media_creation_date_as_offset.setEnabled(True)
-            
+
             # DEVELOPMENT (REMOVE BEFORE RELEASE)
             observationWindow.cb_media_creation_date_as_offset.setEnabled(False)
 
             observationWindow.cb_media_creation_date_as_offset.setChecked(
                 self.pj[cfg.OBSERVATIONS][obsId].get(cfg.MEDIA_CREATION_DATE_AS_OFFSET, False)
             )
-
 
             # scan sampling
             observationWindow.sb_media_scan_sampling.setValue(self.pj[cfg.OBSERVATIONS][obsId].get(cfg.MEDIA_SCAN_SAMPLING_DURATION, 0))
@@ -2019,3 +2018,43 @@ def event2media_file_name(observation: dict, timestamp: dec) -> Optional[str]:
         video_file_name = None
 
     return video_file_name
+
+
+def create_observations(self):
+    """
+    Create observations from a media file directory
+    """
+    print(self.pj[cfg.OBSERVATIONS])
+    dir_path = QFileDialog.getExistingDirectory(None, "Select directory", os.getenv("HOME"))
+    for file in pl.Path(dir_path).glob("*"):
+        if not file.is_file():
+            continue
+        r = util.accurate_media_analysis(ffmpeg_bin=self.ffmpeg_bin, file_name=file)
+        if "error" not in r:
+            if not r.get("frames_number", 0):
+                continue
+            print(file)
+            print(r)
+
+            self.pj[cfg.OBSERVATIONS][file.name] = {
+                "file": {"1": [str(file)], "2": [], "3": [], "4": [], "5": [], "6": [], "7": [], "8": []},
+                "type": "MEDIA",
+                "date": dt.datetime.now().replace(microsecond=0).isoformat(),
+                "description": "",
+                "time offset": dec("0.0"),
+                "events": [],
+                "observation time interval": [0, 0],
+                "independent_variables": {},
+                "visualize_spectrogram": False,
+                "visualize_waveform": False,
+                "close_behaviors_between_videos": False,
+                "media_info": {
+                    "length": {str(file): r["duration"]},
+                    "fps": {str(file): r["duration"]},
+                    "hasVideo": {str(file): r["has_video"]},
+                    "hasAudio": {str(file): r["has_audio"]},
+                    "offset": {"1": 0.0},
+                },
+            }
+            self.project_changed()
+        print("-" * 60)

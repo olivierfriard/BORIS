@@ -92,6 +92,7 @@ def connections(self):
 
     self.actionClose_observation.triggered.connect(lambda: observation_operations.close_observation(self))
 
+    self.action_create_observations.triggered.connect(lambda: observation_operations.create_observations(self))
     self.actionRemove_observations.triggered.connect(lambda: observation_operations.remove_observations(self))
 
     self.actionAdd_event.triggered.connect(lambda: event_operations.add_event(self))

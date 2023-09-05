@@ -274,6 +274,7 @@
     <addaction name="separator"/>
     <addaction name="actionClose_observation"/>
     <addaction name="separator"/>
+    <addaction name="action_create_observations"/>
     <addaction name="actionRemove_observations"/>
     <addaction name="separator"/>
     <addaction name="actionLoad_observations_file"/>
@@ -1583,6 +1584,11 @@
   <action name="action_cooccurence">
    <property name="text">
     <string>Co-occurence</string>
+   </property>
+  </action>
+  <action name="action_create_observations">
+   <property name="text">
+    <string>Create observations</string>
    </property>
   </action>
  </widget>
