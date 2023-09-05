@@ -71,7 +71,7 @@ def export_ethogram(self) -> None:
         "Legacy Microsoft Excel Spreadsheet XLS (*.xls)",
         "HTML (*.html)",
     ]
-    file_formats = ["boris", cfg.TSV_EXT, "csv", "ods", "xlsx", "xls", "html"]
+    file_formats = ["boris", cfg.TSV_EXT, "csv", "ods", "xlsx", cfg.XLS_EXT, cfg.HMTL_EXT]
 
     filediag_func = QFileDialog().getSaveFileName
 
@@ -82,7 +82,6 @@ def export_ethogram(self) -> None:
     output_format = file_formats[extended_file_formats.index(filter_)]
     if pl.Path(file_name).suffix != "." + output_format:
         file_name = str(pl.Path(file_name)) + "." + output_format
-
 
     if output_format == "boris":
         r = self.check_ethogram()
@@ -95,9 +94,7 @@ def export_ethogram(self) -> None:
         pj[cfg.BEHAVIORAL_CATEGORIES] = list(self.pj[cfg.BEHAVIORAL_CATEGORIES])
 
         # project file indentation
-        file_indentation = self.config_param.get(
-            cfg.PROJECT_FILE_INDENTATION, cfg.PROJECT_FILE_INDENTATION_DEFAULT_VALUE
-        )
+        file_indentation = self.config_param.get(cfg.PROJECT_FILE_INDENTATION, cfg.PROJECT_FILE_INDENTATION_DEFAULT_VALUE)
         try:
             with open(file_name, "w") as f_out:
                 f_out.write(json.dumps(pj, indent=file_indentation))
@@ -111,7 +108,6 @@ def export_ethogram(self) -> None:
             )
 
     else:
-
         ethogram_data = tablib.Dataset()
         ethogram_data.title = "Ethogram"
         if self.leProjectName.text():
@@ -166,7 +162,7 @@ def export_subjects(self) -> None:
         cfg.ODS,
         cfg.XLSX,
         cfg.XLS,
-        cfg.HMTL,
+        cfg.HTML,
     ]
     file_formats = [cfg.TSV_EXT, cfg.CSV_EXT, cfg.ODS_EXT, cfg.XLSX_EXT, cfg.XLS_EXT, cfg.HMTL_EXT]
 
@@ -192,7 +188,6 @@ def export_subjects(self) -> None:
     ]
 
     for r in range(self.twSubjects.rowCount()):
-
         row = []
         for idx, _ in enumerate(("Key", "Subject name", "Description")):
             row.append(self.twSubjects.item(r, idx).text())
@@ -248,9 +243,7 @@ def select_behaviors(
         categories = ["###no category###"]
 
     for category in categories:
-
         if category != "###no category###":
-
             if category == "":
                 paramPanelWindow.item = QListWidgetItem("No category")
                 paramPanelWindow.item.setData(34, "No category")
@@ -268,7 +261,6 @@ def select_behaviors(
 
         # check if behavior type must be shown
         for behavior in [ethogram[x][cfg.BEHAVIOR_CODE] for x in util.sorted_keys(ethogram)]:
-
             if (categories == ["###no category###"]) or (
                 behavior
                 in [
@@ -277,7 +269,6 @@ def select_behaviors(
                     if cfg.BEHAVIOR_CATEGORY in ethogram[x] and ethogram[x][cfg.BEHAVIOR_CATEGORY] == category
                 ]
             ):
-
                 paramPanelWindow.item = QListWidgetItem(behavior)
                 paramPanelWindow.item.setCheckState(Qt.Unchecked)
 
@@ -343,14 +334,12 @@ def import_ethogram_from_dict(self, project: dict):
     )
 
     for i in util.sorted_keys(project[cfg.ETHOGRAM]):
-
         if project[cfg.ETHOGRAM][i][cfg.BEHAVIOR_CODE] not in behaviors_to_import:
             continue
 
         self.twBehaviors.setRowCount(self.twBehaviors.rowCount() + 1)
 
         for field in project[cfg.ETHOGRAM][i]:
-
             item = QTableWidgetItem()
 
             if field == cfg.TYPE:
@@ -416,7 +405,6 @@ def load_dataframe_into_behaviors_tablewidget(self, df: pd.DataFrame) -> int:
             return 1
 
     for _, row in df.iterrows():
-
         behavior = {
             "key": row["Key"] if str(row["Key"]) != "nan" else "",
             "code": row["Behavior code"] if str(row["Behavior code"]) != "nan" else "",
@@ -460,7 +448,6 @@ def load_dataframe_into_behaviors_tablewidget(self, df: pd.DataFrame) -> int:
 
 
 def import_behaviors_from_project(self):
-
     fn = QFileDialog().getOpenFileName(
         self, "Import behaviors from project file", "", ("Project files (*.boris *.boris.gz);;" "All files (*)")
     )
@@ -541,9 +528,7 @@ def import_behaviors_from_spreadsheet(self):
         if response == cfg.CANCEL:
             return
 
-    fn = QFileDialog().getOpenFileName(
-        self, "Import behaviors from a spreadsheet file", "", "Spreadsheet files (*.xlsx);;All files (*)"
-    )
+    fn = QFileDialog().getOpenFileName(self, "Import behaviors from a spreadsheet file", "", "Spreadsheet files (*.xlsx);;All files (*)")
     file_name = fn[0] if type(fn) is tuple else fn
 
     if not file_name:
@@ -635,9 +620,7 @@ def import_behaviors_from_clipboard(self):
             for idx, field in enumerate(row.split("\t")):
                 if idx == 0:
                     behavior["type"] = (
-                        cfg.STATE_EVENT
-                        if cfg.STATE in field.upper()
-                        else (cfg.POINT_EVENT if cfg.POINT in field.upper() else "")
+                        cfg.STATE_EVENT if cfg.STATE in field.upper() else (cfg.POINT_EVENT if cfg.POINT in field.upper() else "")
                     )
                 if idx == 1:
                     behavior["key"] = field.strip() if len(field.strip()) == 1 else ""
@@ -656,9 +639,7 @@ def import_behaviors_from_clipboard(self):
                 else:
                     item = QTableWidgetItem(behavior.get(field_type, ""))
 
-                if (
-                    field_type not in cfg.ETHOGRAM_EDITABLE_FIELDS
-                ):  # [TYPE, "excluded", "coding map", "modifiers", "category"]:
+                if field_type not in cfg.ETHOGRAM_EDITABLE_FIELDS:  # [TYPE, "excluded", "coding map", "modifiers", "category"]:
                     item.setFlags(Qt.ItemIsEnabled)
                     item.setBackground(QColor(230, 230, 230))
 
@@ -679,9 +660,7 @@ def import_behaviors_from_JWatcher(self):
         if response == cfg.CANCEL:
             return
 
-    fn = QFileDialog().getOpenFileName(
-        self, "Import behaviors from JWatcher", "", "Global Definition File (*.gdf);;All files (*)"
-    )
+    fn = QFileDialog().getOpenFileName(self, "Import behaviors from JWatcher", "", "Global Definition File (*.gdf);;All files (*)")
     fileName = fn[0] if type(fn) is tuple else fn
 
     if fileName:
@@ -735,18 +714,13 @@ def import_behaviors_from_repository(self):
     try:
         ethogram_list = urllib.request.urlopen(ethogram_repository_URL).read().strip().decode("utf-8")
     except Exception:
-
-        QMessageBox.critical(
-            self, cfg.programName, "An error occured during retrieving the ethogram list from BORIS repository"
-        )
+        QMessageBox.critical(self, cfg.programName, "An error occured during retrieving the ethogram list from BORIS repository")
         return
 
     try:
         ethogram_list_list = json.loads(ethogram_list)
     except Exception:
-        QMessageBox.critical(
-            self, cfg.programName, "An error occured during loading ethogram list from BORIS repository"
-        )
+        QMessageBox.critical(self, cfg.programName, "An error occured during loading ethogram list from BORIS repository")
         return
 
     choice_dialog = dialog.ChooseObservationsToImport(
@@ -772,17 +746,9 @@ def import_behaviors_from_repository(self):
             break
 
     try:
-        boris_project_str = (
-            urllib.request.urlopen(f"http://www.boris.unito.it/static/ethograms/{file_name}")
-            .read()
-            .strip()
-            .decode("utf-8")
-        )
+        boris_project_str = urllib.request.urlopen(f"http://www.boris.unito.it/static/ethograms/{file_name}").read().strip().decode("utf-8")
     except Exception:
-
-        QMessageBox.critical(
-            self, cfg.programName, f"An error occured during retrieving {file_name} from BORIS repository"
-        )
+        QMessageBox.critical(self, cfg.programName, f"An error occured during retrieving {file_name} from BORIS repository")
         return
     boris_project = json.loads(boris_project_str)
 
@@ -809,7 +775,6 @@ def load_dataframe_into_subjects_tablewidget(self, df: pd.DataFrame) -> int:
             return 1
 
     for _, row in df.iterrows():
-
         self.twSubjects.setRowCount(self.twSubjects.rowCount() + 1)
 
         for idx, field in enumerate(("Key", "Subject name", "Description")):
@@ -922,11 +887,9 @@ def import_subjects_from_project(self):
             return
 
     for idx in util.sorted_keys(project[cfg.SUBJECTS]):
-
         self.twSubjects.setRowCount(self.twSubjects.rowCount() + 1)
 
         for idx2, sbjField in enumerate(cfg.subjectsFields):
-
             if sbjField in project[cfg.SUBJECTS][idx]:
                 self.twSubjects.setItem(
                     self.twSubjects.rowCount() - 1,
@@ -1009,9 +972,7 @@ def import_subjects_from_spreadsheet(self):
         if response == cfg.CANCEL:
             return
 
-    fn = QFileDialog().getOpenFileName(
-        self, "Import subjects from a spreadsheet file", "", "Spreadsheet files (*.xlsx);;All files (*)"
-    )
+    fn = QFileDialog().getOpenFileName(self, "Import subjects from a spreadsheet file", "", "Spreadsheet files (*.xlsx);;All files (*)")
     file_name = fn[0] if type(fn) is tuple else fn
 
     if not file_name:
@@ -1085,7 +1046,6 @@ def import_indep_variables_from_project(self):
         existing_var.append(self.twVariables.item(r, 0).text().strip().upper())
 
     for i in util.sorted_keys(project[cfg.INDEPENDENT_VARIABLES]):
-
         self.twVariables.setRowCount(self.twVariables.rowCount() + 1)
         flag_renamed = False
         for idx, field in enumerate(cfg.tw_indVarFields):
