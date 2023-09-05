@@ -333,9 +333,9 @@
     <addaction name="menuPlot_events"/>
     <addaction name="menuInter_rater_reliability"/>
     <addaction name="menuSimilarities"/>
+    <addaction name="action_cooccurence"/>
     <addaction name="action_advanced_event_filtering"/>
     <addaction name="action_latency"/>
-    <addaction name="action_cooccurence"/>
    </widget>
    <widget class="QMenu" name="menuPlayback">
     <property name="title">
