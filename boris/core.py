@@ -2101,6 +2101,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         """
 
         logging.debug(f"begin load events from obs: {obs_id}")
+
         self.twEvents.clear()
 
         self.twEvents.setColumnCount(len(cfg.TW_EVENTS_FIELDS[self.playerType]))

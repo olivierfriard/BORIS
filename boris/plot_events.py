@@ -23,9 +23,10 @@ This file is part of BORIS.
 import datetime as dt
 import pathlib as pl
 
-# import matplotlib
+import matplotlib
 
-# matplotlib.use("Qt5Agg")
+matplotlib.use("Qt5Agg")
+
 import matplotlib.dates
 
 import matplotlib.pyplot as plt
@@ -38,7 +39,7 @@ from . import config as cfg
 from . import db_functions, project_functions, observation_operations
 from . import utilities as util
 
-matplotlib.pyplot.switch_backend("Qt5Agg")
+# matplotlib.pyplot.switch_backend("Qt5Agg")
 
 
 def default_value(ethogram, behavior, parameter):
