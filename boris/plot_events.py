@@ -23,10 +23,11 @@ This file is part of BORIS.
 import datetime as dt
 import pathlib as pl
 
-import matplotlib
+# import matplotlib
 
 # matplotlib.use("Qt5Agg")
 import matplotlib.dates
+
 import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib.dates import (
