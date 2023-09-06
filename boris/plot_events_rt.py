@@ -25,7 +25,7 @@ Plot events in real time
 
 import matplotlib
 
-matplotlib.use("Qt5Agg")
+# matplotlib.use("Qt5Agg")
 import numpy as np
 from PyQt5.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QPushButton, QLabel
 from PyQt5.QtCore import pyqtSignal, QEvent
@@ -36,9 +36,10 @@ from matplotlib.figure import Figure
 
 from . import config as cfg
 
+matplotlib.pyplot.switch_backend("Qt5Agg")
+
 
 class Plot_events_RT(QWidget):
-
     # send keypress event to mainwindow
     sendEvent = pyqtSignal(QEvent)
 
@@ -65,12 +66,8 @@ class Plot_events_RT(QWidget):
 
         hlayout1 = QHBoxLayout()
         hlayout1.addWidget(QLabel("Time interval"))
-        hlayout1.addWidget(
-            QPushButton("+", self, clicked=lambda: self.time_interval_changed(1), focusPolicy=Qt.Qt.NoFocus)
-        )
-        hlayout1.addWidget(
-            QPushButton("-", self, clicked=lambda: self.time_interval_changed(-1), focusPolicy=Qt.Qt.NoFocus)
-        )
+        hlayout1.addWidget(QPushButton("+", self, clicked=lambda: self.time_interval_changed(1), focusPolicy=Qt.Qt.NoFocus))
+        hlayout1.addWidget(QPushButton("-", self, clicked=lambda: self.time_interval_changed(-1), focusPolicy=Qt.Qt.NoFocus))
         self.pb_mode = QPushButton("Include modifiers", self, clicked=self.change_mode, focusPolicy=Qt.Qt.NoFocus)
         hlayout1.addWidget(self.pb_mode)
         layout.addLayout(hlayout1)
@@ -147,13 +144,11 @@ class Plot_events_RT(QWidget):
             intervals_behav[group(event[1], event[2], event[3])] = [(0, 0)]
 
         for event in events:
-
             time_, subject, code, modifier = event[:4]
             key = group(subject, code, modifier)
 
             # check if code is state
             if code in self.state_events_list:
-
                 if key in mem_behav and mem_behav[key] is not None:
                     # stop interval
 
@@ -172,22 +167,16 @@ class Plot_events_RT(QWidget):
                     mem_behav[key] = time_
 
             else:  # point event
-
                 if start <= time_ <= end:
-                    intervals_behav[key].append(
-                        (float(time_), float(time_) + self.point_event_plot_duration * 50)
-                    )  # point event -> 1 s
+                    intervals_behav[key].append((float(time_), float(time_) + self.point_event_plot_duration * 50))  # point event -> 1 s
 
         # check if intervals are closed
         for k in mem_behav:
             if mem_behav[k] is not None:  # interval open
                 if self.observation_type == cfg.LIVE:
-                    intervals_behav[k].append(
-                        (float(mem_behav[k]), float((end + start) / 2))
-                    )  # close interval with current time
+                    intervals_behav[k].append((float(mem_behav[k]), float((end + start) / 2)))  # close interval with current time
 
                 elif self.observation_type == cfg.MEDIA:
-
                     intervals_behav[k].append((float(mem_behav[k]), float(end)))  # close interval with end value
 
         return intervals_behav
@@ -201,9 +190,7 @@ class Plot_events_RT(QWidget):
             force_plot (bool): force plot even if media paused
         """
 
-        self.events = self.aggregate_events(
-            self.events_list, current_time - self.interval / 2, current_time + self.interval / 2
-        )
+        self.events = self.aggregate_events(self.events_list, current_time - self.interval / 2, current_time + self.interval / 2)
 
         if not force_plot and current_time == self.time_mem:
             return
@@ -211,7 +198,6 @@ class Plot_events_RT(QWidget):
         self.time_mem = current_time
 
         if self.events != self.events_mem:
-
             left, duration = {}, {}
             for k in self.events:
                 left[k] = []

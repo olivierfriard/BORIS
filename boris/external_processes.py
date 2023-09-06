@@ -168,7 +168,10 @@ def ffmpeg_process(self, action: str):
                 QMessageBox.warning(
                     self,
                     cfg.programName,
-                    f"The extension of output file must be the same than the extension of input files (<b>{file_extensions[0]}</b>).<br>You selected a {pl.Path(output_file_name).suffix} file.",
+                    (
+                        "The extension of output file must be the same than the extension of input files "
+                        f"(<b>{file_extensions[0]}</b>).<br>You selected a {pl.Path(output_file_name).suffix} file."
+                    ),
                 )
             else:
                 break

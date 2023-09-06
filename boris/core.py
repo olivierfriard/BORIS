@@ -38,7 +38,7 @@ import time
 import urllib.error
 import urllib.parse
 import urllib.request
-from typing import Union, Optional, List, Tuple, Dict
+from typing import Union
 
 from decimal import Decimal as dec
 from decimal import ROUND_DOWN
@@ -47,7 +47,7 @@ from collections import deque
 
 import matplotlib
 
-matplotlib.use("Qt5Agg")
+# matplotlib.use("Qt5Agg")
 from PyQt5.QtCore import (
     Qt,
     QPoint,
@@ -115,6 +115,9 @@ from . import config_file
 from . import select_subj_behav
 from . import observation_operations
 from . import write_event
+
+
+matplotlib.pyplot.switch_backend("Qt5Agg")
 
 __version__ = version.__version__
 __version_date__ = version.__version_date__

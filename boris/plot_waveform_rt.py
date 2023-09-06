@@ -25,7 +25,7 @@ import wave
 from . import config as cfg
 import matplotlib
 
-matplotlib.use("Qt5Agg")
+# matplotlib.use("Qt5Agg")
 import numpy as np
 from PyQt5.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QPushButton, QLabel
 from PyQt5.QtCore import pyqtSignal, QEvent
@@ -34,9 +34,10 @@ from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.figure import Figure
 import matplotlib.ticker as mticker
 
+matplotlib.pyplot.switch_backend("Qt5Agg")
+
 
 class Plot_waveform_RT(QWidget):
-
     # send keypress event to mainwindow
     sendEvent = pyqtSignal(QEvent)
 
@@ -172,26 +173,19 @@ class Plot_waveform_RT(QWidget):
 
         # start
         if current_time <= self.interval / 2:
-
             time_ = np.linspace(
                 0,
-                len(self.sound_info[: int((self.interval) * self.frame_rate)])
-                / self.frame_rate,
+                len(self.sound_info[: int((self.interval) * self.frame_rate)]) / self.frame_rate,
                 num=len(self.sound_info[: int((self.interval) * self.frame_rate)]),
             )
-            self.ax.plot(
-                time_, self.sound_info[: int((self.interval) * self.frame_rate)]
-            )
+            self.ax.plot(time_, self.sound_info[: int((self.interval) * self.frame_rate)])
 
-            self.ax.set_xlim(
-                current_time - self.interval / 2, current_time + self.interval / 2
-            )
+            self.ax.set_xlim(current_time - self.interval / 2, current_time + self.interval / 2)
 
             # cursor
             self.ax.axvline(x=current_time, color=self.cursor_color, linestyle="-")
 
         elif current_time >= self.media_length - self.interval / 2:
-
             i = int(round(len(self.sound_info) - (self.interval * self.frame_rate), 0))
 
             time_ = np.linspace(
@@ -206,47 +200,27 @@ class Plot_waveform_RT(QWidget):
 
             self.ax.set_xlim(lim1, lim2)
 
-            self.ax.xaxis.set_major_locator(
-                mticker.FixedLocator(self.ax.get_xticks().tolist())
-            )
-            self.ax.set_xticklabels(
-                [
-                    str(round(w + self.media_length - self.interval, 1))
-                    for w in self.ax.get_xticks()
-                ]
-            )
+            self.ax.xaxis.set_major_locator(mticker.FixedLocator(self.ax.get_xticks().tolist()))
+            self.ax.set_xticklabels([str(round(w + self.media_length - self.interval, 1)) for w in self.ax.get_xticks()])
 
             # cursor
-            self.ax.axvline(
-                x=lim1 + self.interval / 2, color=self.cursor_color, linestyle="-"
-            )
+            self.ax.axvline(x=lim1 + self.interval / 2, color=self.cursor_color, linestyle="-")
 
         # middle
         else:
-
             start = (current_time - self.interval / 2) * self.frame_rate
             end = (current_time + self.interval / 2) * self.frame_rate
 
             time_ = np.linspace(
                 0,
-                len(self.sound_info[int(round(start, 0)) : int(round(end, 0))])
-                / self.frame_rate,
+                len(self.sound_info[int(round(start, 0)) : int(round(end, 0))]) / self.frame_rate,
                 num=len(self.sound_info[int(round(start, 0)) : int(round(end, 0))]),
             )
 
-            self.ax.plot(
-                time_, self.sound_info[int(round(start, 0)) : int(round(end, 0))]
-            )
+            self.ax.plot(time_, self.sound_info[int(round(start, 0)) : int(round(end, 0))])
 
-            self.ax.xaxis.set_major_locator(
-                mticker.FixedLocator(self.ax.get_xticks().tolist())
-            )
-            self.ax.set_xticklabels(
-                [
-                    str(round(current_time + w - self.interval / 2, 1))
-                    for w in self.ax.get_xticks()
-                ]
-            )
+            self.ax.xaxis.set_major_locator(mticker.FixedLocator(self.ax.get_xticks().tolist()))
+            self.ax.set_xticklabels([str(round(current_time + w - self.interval / 2, 1)) for w in self.ax.get_xticks()])
 
             # cursor
             self.ax.axvline(x=self.interval / 2, color=self.cursor_color, linestyle="-")
