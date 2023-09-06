@@ -2080,6 +2080,14 @@ def create_observations(self):
                     )
                     return
 
+            if media_file in self.pj[cfg.OBSERVATIONS]:
+                QMessageBox.critical(
+                    self,
+                    cfg.programName,
+                    (f"The observation <b>{media_file}</b> alreadt exists." "<br>Aborting the creation of observations"),
+                )
+                return
+
             self.pj[cfg.OBSERVATIONS][media_file] = {
                 "file": {"1": [media_file], "2": [], "3": [], "4": [], "5": [], "6": [], "7": [], "8": []},
                 "type": "MEDIA",
