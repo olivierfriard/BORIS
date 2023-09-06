@@ -2075,7 +2075,7 @@ def create_observations(self):
                         (
                             f"the media file <b>{file}</b> can not be relative to the project directory "
                             f"(<b>{pl.Path(self.projectFileName).parent}</b>)"
-                            "<br>Aborting the creation of observations"
+                            "<br><br>Aborting the creation of observations"
                         ),
                     )
                     return
@@ -2084,7 +2084,7 @@ def create_observations(self):
                 QMessageBox.critical(
                     self,
                     cfg.programName,
-                    (f"The observation <b>{media_file}</b> alreadt exists." "<br>Aborting the creation of observations"),
+                    (f"The observation <b>{media_file}</b> already exists." "<br><br>Aborting the creation of observations"),
                 )
                 return
 
