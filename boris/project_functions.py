@@ -340,7 +340,7 @@ def check_state_events(pj: dict, observations_list: list) -> Tuple[bool, tuple]:
     use check_state_events_obs function
     """
 
-    logging.info(f"Check state events")
+    logging.info("Check state events")
 
     out = ""
     not_paired_obs_list = []
@@ -367,7 +367,7 @@ def check_state_events(pj: dict, observations_list: list) -> Tuple[bool, tuple]:
     if not new_observations_list:
         QMessageBox.warning(None, cfg.programName, "The observation list is empty")
 
-    logging.info(f"Check state events done")
+    logging.info("Check state events done")
 
     return False, new_observations_list  # no state events are unpaired
 
@@ -1490,7 +1490,7 @@ def open_project_json(projectFileName: str) -> tuple:
             copyfile(projectFileName, old_project_file_name)
             msg += f"\n\nThe old file project was saved as {old_project_file_name}"
         except Exception:
-            pass
+            QMessageBox.critical(cfg.programName, f"Error saving old project to {old_project_file_name}")
 
         pj[cfg.PROJECT_VERSION] = cfg.project_format_version
 

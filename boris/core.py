@@ -59,8 +59,7 @@ from PyQt5.QtCore import (
     QT_VERSION_STR,
     PYQT_VERSION_STR,
 )
-from PyQt5.QtGui import QIcon, QPixmap, QFont, QKeyEvent, QDesktopServices, QColor, QPainter, QPolygon, QPixmap
-
+from PyQt5.QtGui import QIcon, QPixmap, QFont, QKeyEvent, QDesktopServices, QColor, QPainter, QPolygon
 from PyQt5.QtMultimedia import QSound
 from PyQt5.QtWidgets import (
     QLabel,
@@ -491,7 +490,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             [
                 ("cb", "Test media file accessibility", True),
             ],
-            f"Check project integrity",
+            "Check project integrity",
         )
         if not ib.exec_():
             return
@@ -1630,7 +1629,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 if date_time_original != -1:
                     msg += f"<br>EXIF Date/Time Original: <b>{datetime.datetime.fromtimestamp(date_time_original):%Y-%m-%d %H:%M:%S}</b>"
                 else:
-                    msg += f"<br>EXIF Date/Time Original: <b>NA</b>"
+                    msg += "<br>EXIF Date/Time Original: <b>NA</b>"
 
                 # self.image_time_ref = 0
                 if self.image_idx == 0 and date_time_original != -1:
@@ -1973,7 +1972,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     .strip()
                 )
             except Exception:
-                logging.warning(f"error in overlay position")
+                logging.warning("error in overlay position")
 
         try:
             self.overlays[dw_id].remove()
@@ -3075,7 +3074,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         logging.debug(f"init save_project_json function {projectFileName}")
 
         if self.save_project_json_started:
-            logging.warning(f"Function save_project_json already launched")
+            logging.warning("Function save_project_json already launched")
             return
 
         self.save_project_json_started = True
@@ -3118,14 +3117,14 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             menu_options.update_windows_title(self)
             self.save_project_json_started = False
 
-            logging.debug(f"end save_project_json function")
+            logging.debug("end save_project_json function")
             return 0
 
         except PermissionError:
             QMessageBox.critical(
                 None,
                 cfg.programName,
-                f"Permission denied to save the project file. Try another directory",
+                "Permission denied to save the project file. Try another directory",
                 QMessageBox.Ok | QMessageBox.Default,
                 QMessageBox.NoButton,
             )
@@ -4066,7 +4065,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             # with time offset
             if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TIME_OFFSET]:
                 msg += (
-                    f"<br>Media position with offset: <b>{util.convertTime(self.timeFormat, current_media_time_pos + float(self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TIME_OFFSET]))}</b> / "
+                    "<br>Media position with offset: "
+                    f"<b>{util.convertTime(self.timeFormat, current_media_time_pos + float(self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TIME_OFFSET]))}</b> / "
                     f"{util.convertTime(self.timeFormat, current_media_duration + float(self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TIME_OFFSET]))}"
                 )
 
@@ -4780,7 +4780,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     QMessageBox.information(
                         self,
                         cfg.programName,
-                        "This function is not yet implemented for this type of observation (media time creation as offset with many media files)",
+                        (
+                            "This function is not yet implemented for this type of observation "
+                            "(media time creation as offset with many media files)"
+                        ),
                     )
                     return
                 media_file_name = self.dw_player[0].player.playlist[self.dw_player[0].player.playlist_pos]["filename"]
@@ -4811,7 +4814,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         else:
             self.no_observation()
 
-    def click_signal_find_in_events(self, msg):
+    def click_signal_find_in_events(self, msg: str):
         """
         find in events when "Find" button of find dialog box is pressed
         """
@@ -4879,7 +4882,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             if self.find_dialog.currentIdx == -1:
                 self.find_dialog.lb_message.setText(f"<b>{self.find_dialog.findText.text()}</b> not found")
 
-    def click_signal_find_replace_in_events(self, msg):
+    def click_signal_find_replace_in_events(self, msg: str):
         """
         find/replace in events when "Find" button of find dialog box is pressed
         """

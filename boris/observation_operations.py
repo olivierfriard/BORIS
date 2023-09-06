@@ -29,7 +29,7 @@ import sys
 from decimal import Decimal as dec
 import pathlib as pl
 import datetime as dt
-from typing import List, Tuple, Dict, Optional
+from typing import List, Tuple, Optional
 
 
 from PyQt5.QtWidgets import (
@@ -100,7 +100,7 @@ def observations_list(self):
     show list of all observations of current project
     """
 
-    logging.debug(f"observations list")
+    logging.debug("observations list")
 
     if self.playerType in cfg.VIEWERS:
         close_observation(self)
@@ -139,7 +139,7 @@ def observations_list(self):
                 (f"The observation <b>{self.observationId}</b> is running!<br>" "Close it before editing."),
             )
 
-    logging.debug(f"end observations list")
+    logging.debug("end observations list")
 
 
 def open_observation(self, mode: str) -> str:
@@ -151,7 +151,7 @@ def open_observation(self, mode: str) -> str:
                     "view" to view observation
     """
 
-    logging.debug(f"open observation")
+    logging.debug("open observation")
 
     # check if current observation must be closed to open a new one
     if self.observationId:
@@ -186,7 +186,7 @@ def load_observation(self, obs_id: str, mode: str = cfg.OBS_START) -> str:
                     "view"  to view observation
     """
 
-    logging.debug(f"load observation")
+    logging.debug("load observation")
 
     if obs_id not in self.pj[cfg.OBSERVATIONS]:
         return "Error: Observation not found"
@@ -235,7 +235,7 @@ def load_observation(self, obs_id: str, mode: str = cfg.OBS_START) -> str:
     # title of dock widget  “  ”
     self.dwEvents.setWindowTitle(f"Events for “{self.observationId}” observation")
 
-    logging.debug(f"end load observation")
+    logging.debug("end load observation")
     return ""
 
 
@@ -373,7 +373,7 @@ def observation_total_length(observation: dict) -> dec:
                 last_event = obs_length = max(observation[cfg.EVENTS])[cfg.TW_OBS_FIELD[cfg.IMAGES]["time"]]
                 obs_length = last_event - first_event
             except Exception:
-                logging.critical(f"Length of observation from images not available")
+                logging.critical("Length of observation from images not available")
                 obs_length = dec(-2)
         else:
             obs_length = dec(0)
@@ -1073,7 +1073,7 @@ def close_observation(self):
 
     if self.playerType == cfg.MEDIA:
         self.media_scan_sampling_mem = []
-        logging.info(f"Stop plot timer")
+        logging.info("Stop plot timer")
         self.plot_timer.stop()
 
         for i, player in enumerate(self.dw_player):
@@ -1104,7 +1104,7 @@ def close_observation(self):
         for pd in self.plot_data:
             self.plot_data[pd].close_plot()
 
-    logging.info(f"close tool window")
+    logging.info("close tool window")
 
     self.close_tool_windows()
 
@@ -1120,7 +1120,7 @@ def close_observation(self):
         """
 
         for dw in self.dw_player:
-            logging.info(f"remove dock widget")
+            logging.info("remove dock widget")
             dw.player.log_handler = None
             self.removeDockWidget(dw)
 
@@ -1698,7 +1698,8 @@ def initialize_new_media_observation(self) -> bool:
                         self,
                         cfg.programName,
                         (
-                            f"Impossible to plot data from file {os.path.basename(self.pj[cfg.OBSERVATIONS][self.observationId][cfg.PLOT_DATA][idx]['file_path'])}:\n"
+                            "Impossible to plot data from file "
+                            f"{os.path.basename(self.pj[cfg.OBSERVATIONS][self.observationId][cfg.PLOT_DATA][idx]['file_path'])}:\n"
                             f"{w1.error_msg}"
                         ),
                     )
@@ -1904,7 +1905,7 @@ def initialize_new_images_observation(self):
             self,
             cfg.programName,
             (
-                f"No images were found in directory(ies).<br><br>The observation will be opened in VIEW mode.<br>"
+                "No images were found in directory(ies).<br><br>The observation will be opened in VIEW mode.<br>"
                 "It will not be possible to log events.<br>"
                 "Modify the directoriy path(s) to point existing directory "
             ),
@@ -2024,37 +2025,90 @@ def create_observations(self):
     """
     Create observations from a media file directory
     """
-    print(self.pj[cfg.OBSERVATIONS])
+    # print(self.pj[cfg.OBSERVATIONS])
+
     dir_path = QFileDialog.getExistingDirectory(None, "Select directory", os.getenv("HOME"))
-    for file in pl.Path(dir_path).glob("*"):
+    if not dir_path:
+        return
+
+    dlg = dialog.Input_dialog(
+        label_caption="Set the following observation parameters",
+        elements_list=[
+            ("cb", "Recurse the subdirectories", False),
+            ("cb", "Save the absolute media file path", True),
+            ("cb", "Visualize spectrogram", False),
+            ("cb", "Visualize waveform", False),
+            ("cb", "Media creation date as offset", False),
+            ("cb", "Close behaviors between videos", False),
+            ("dsb", "Time offset (in seconds)", 0.0, 86400, 1, 0, 3),
+            ("dsb", "Media scan sampling duration (in seconds)", 0.0, 86400, 1, 0, 3),
+        ],
+        title="Observation parameters",
+    )
+    if not dlg.exec_():
+        return
+
+    file_count: int = 0
+
+    if dlg.elements["Recurse the subdirectories"].isChecked():
+        files_list = pl.Path(dir_path).rglob("*")
+    else:
+        files_list = pl.Path(dir_path).glob("*")
+
+    for file in files_list:
         if not file.is_file():
             continue
         r = util.accurate_media_analysis(ffmpeg_bin=self.ffmpeg_bin, file_name=file)
         if "error" not in r:
             if not r.get("frames_number", 0):
                 continue
-            print(file)
-            print(r)
+
+            if dlg.elements["Save the absolute media file path"].isChecked():
+                media_file = str(file)
+            else:
+                try:
+                    media_file = str(file.relative_to(pl.Path(self.projectFileName).parent))
+                except ValueError:
+                    QMessageBox.critical(
+                        self,
+                        cfg.programName,
+                        (
+                            f"the media file <b>{file}</b> can not be relative to the project directory "
+                            f"(<b>{pl.Path(self.projectFileName).parent}</b>)"
+                            "<br>Aborting the creation of observations"
+                        ),
+                    )
+                    return
 
             self.pj[cfg.OBSERVATIONS][file.name] = {
-                "file": {"1": [str(file)], "2": [], "3": [], "4": [], "5": [], "6": [], "7": [], "8": []},
+                "file": {"1": [media_file], "2": [], "3": [], "4": [], "5": [], "6": [], "7": [], "8": []},
                 "type": "MEDIA",
                 "date": dt.datetime.now().replace(microsecond=0).isoformat(),
                 "description": "",
-                "time offset": dec("0.0"),
+                "time offset": dec(str(round(dlg.elements["Time offset (in seconds)"].value(), 3))),
                 "events": [],
                 "observation time interval": [0, 0],
                 "independent_variables": {},
-                "visualize_spectrogram": False,
-                "visualize_waveform": False,
-                "close_behaviors_between_videos": False,
+                "visualize_spectrogram": dlg.elements["Visualize spectrogram"].isChecked(),
+                "visualize_waveform": dlg.elements["Visualize waveform"].isChecked(),
+                "media_creation_date_as_offset": dlg.elements["Media creation date as offset"].isChecked(),
+                "media_scan_sampling_duration": dec(str(round(dlg.elements["Media scan sampling duration (in seconds)"].value(), 3))),
+                "image_display_duration": 1,
+                "close_behaviors_between_videos": dlg.elements["Close behaviors between videos"].isChecked(),
                 "media_info": {
-                    "length": {str(file): r["duration"]},
-                    "fps": {str(file): r["duration"]},
-                    "hasVideo": {str(file): r["has_video"]},
-                    "hasAudio": {str(file): r["has_audio"]},
+                    "length": {media_file: r["duration"]},
+                    "fps": {media_file: r["duration"]},
+                    "hasVideo": {media_file: r["has_video"]},
+                    "hasAudio": {media_file: r["has_audio"]},
                     "offset": {"1": 0.0},
                 },
             }
+            file_count += 1
             self.project_changed()
-        print("-" * 60)
+
+    if file_count:
+        message: str = f"{file_count} observation(s) were created" if file_count > 1 else "One observation was created"
+    else:
+        message: str = f"No media file were found in {dir_path}"
+
+    QMessageBox.information(self, cfg.programName, message)

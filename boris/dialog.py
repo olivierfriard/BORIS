@@ -261,7 +261,8 @@ class Input_dialog(QDialog):
     dialog for user input. Elements can be:
         checkbox (cb): Tuple(str, str, bool)
         lineedit (le): Tuple(str, str)
-        spinbox (sp)
+        spinbox (sb)
+        doubleSpinbox (dsb)
         items list (il)
 
     """

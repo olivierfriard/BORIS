@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """
 BORIS
 Behavioral Observation Research Interactive Software
@@ -40,8 +39,8 @@ from PyQt5.QtWidgets import (
     QFileDialog,
     QMessageBox,
 )
-from boris import dialog
-from boris.config import YES, NO, CANCEL, programName
+from . import dialog
+from . import config as cfg
 
 
 class wgMeasurement(QWidget):
@@ -128,13 +127,13 @@ class wgMeasurement(QWidget):
     def pbClose_clicked(self):
         if not self.flagSaved:
             response = dialog.MessageDialog(
-                programName,
+                cfg.programName,
                 "The current results are not saved. Do you want to save results before closing?",
-                [YES, NO, CANCEL],
+                [cfg.YES, cfg.NO, cfg.CANCEL],
             )
-            if response == YES:
+            if response == cfg.YES:
                 self.pbSave_clicked()
-            if response == CANCEL:
+            if response == cfg.CANCEL:
                 return
         self.closeSignal.emit()
 
@@ -143,19 +142,16 @@ class wgMeasurement(QWidget):
         save results
         """
         if self.pte.toPlainText():
-            fileName, _ = QFileDialog().getSaveFileName(
-                self, "Save measurement results", "", "Text files (*.txt);;All files (*)"
-            )
+            fileName, _ = QFileDialog().getSaveFileName(self, "Save measurement results", "", "Text files (*.txt);;All files (*)")
             if fileName:
                 with open(fileName, "w") as f:
                     f.write(self.pte.toPlainText())
                 self.flagSaved = True
         else:
-            QMessageBox.information(self, programName, "There are no results to save")
+            QMessageBox.information(self, cfg.programName, "There are no results to save")
 
 
 if __name__ == "__main__":
-
     import sys
 
     app = QApplication(sys.argv)
