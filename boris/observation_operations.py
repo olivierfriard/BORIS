@@ -2080,7 +2080,7 @@ def create_observations(self):
                     )
                     return
 
-            self.pj[cfg.OBSERVATIONS][file.name] = {
+            self.pj[cfg.OBSERVATIONS][media_file] = {
                 "file": {"1": [media_file], "2": [], "3": [], "4": [], "5": [], "6": [], "7": [], "8": []},
                 "type": "MEDIA",
                 "date": dt.datetime.now().replace(microsecond=0).isoformat(),
