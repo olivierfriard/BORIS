@@ -24,7 +24,8 @@ Copyright 2012-2023 Olivier Friard
 import wave
 import matplotlib
 
-# matplotlib.use("Qt5Agg")
+matplotlib.use("Qt5Agg")
+
 import numpy as np
 
 from . import config as cfg
@@ -43,7 +44,7 @@ from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.figure import Figure
 import matplotlib.ticker as mticker
 
-matplotlib.pyplot.switch_backend("Qt5Agg")
+# matplotlib.pyplot.switch_backend("Qt5Agg")
 
 
 class Plot_spectrogram_RT(QWidget):

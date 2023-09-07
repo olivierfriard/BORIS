@@ -25,7 +25,8 @@ import wave
 from . import config as cfg
 import matplotlib
 
-# matplotlib.use("Qt5Agg")
+matplotlib.use("Qt5Agg")
+
 import numpy as np
 from PyQt5.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QPushButton, QLabel
 from PyQt5.QtCore import pyqtSignal, QEvent
@@ -34,7 +35,7 @@ from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.figure import Figure
 import matplotlib.ticker as mticker
 
-matplotlib.pyplot.switch_backend("Qt5Agg")
+# matplotlib.pyplot.switch_backend("Qt5Agg")
 
 
 class Plot_waveform_RT(QWidget):

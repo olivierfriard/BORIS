@@ -47,7 +47,8 @@ from collections import deque
 
 import matplotlib
 
-# matplotlib.use("Qt5Agg")
+matplotlib.use("Qt5Agg")
+
 from PyQt5.QtCore import (
     Qt,
     QPoint,
@@ -117,7 +118,7 @@ from . import observation_operations
 from . import write_event
 
 
-matplotlib.pyplot.switch_backend("Qt5Agg")
+# matplotlib.pyplot.switch_backend("Qt5Agg")
 
 __version__ = version.__version__
 __version_date__ = version.__version_date__
