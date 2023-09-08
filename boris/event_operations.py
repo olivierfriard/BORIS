@@ -808,14 +808,17 @@ def copy_selected_events(self):
 
     logging.debug("Copy selected events to clipboard")
 
-    twEvents_rows_to_copy = set([item.row() for item in self.twEvents.selectedIndexes()])
-    if not len(twEvents_rows_to_copy):
+    """twEvents_rows_to_copy = set([item.row() for item in self.twEvents.selectedIndexes()])"""
+    tvevents_rows_to_copy = set([index.row() for index in self.tv_events.selectionModel().selectedIndexes()])
+    if not len(tvevents_rows_to_copy):
         QMessageBox.warning(self, cfg.programName, "No event selected!")
         return
 
     pj_event_idx_to_copy: list = []
-    for row in twEvents_rows_to_copy:
-        pj_event_idx_to_copy.append(self.twEvents.item(row, cfg.TW_OBS_FIELD[self.playerType][cfg.TIME]).data(Qt.UserRole))
+    for row in tvevents_rows_to_copy:
+        """pj_event_idx_to_copy.append(self.twEvents.item(row, cfg.TW_OBS_FIELD[self.playerType][cfg.TIME]).data(Qt.UserRole))"""
+
+        pj_event_idx_to_copy.append(self.tv_idx2events_idx[row])
 
     copied_events: list = []
     for idx, event in enumerate(self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS]):
