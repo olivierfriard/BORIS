@@ -174,17 +174,16 @@ if not r:
 
 class TableModel(QAbstractTableModel):
     """
-    class for population the events table view
+    class for populating table view with events
     """
 
-    def __init__(self, data, header, parent=None):
+    def __init__(self, data, header, time_format, parent=None):
         super(TableModel, self).__init__(parent)
         self._data = data
         self.header = header
+        self.time_format = time_format
 
     def headerData(self, section: int, orientation: Qt.Orientation, role: int):
-        # HEADER = ["time", "Subject", "Code", "Type", "Modifiers", "Comment"]
-
         if role == Qt.DisplayRole:
             if orientation == Qt.Horizontal:
                 return self.header[section]
@@ -203,7 +202,7 @@ class TableModel(QAbstractTableModel):
             if 0 <= row < self.rowCount():
                 column = index.column()
                 if column == 0:  # time
-                    return str(self._data[row][column])
+                    return util.convertTime(self.time_format, self._data[row][column])
                 elif 0 < column < self.columnCount():
                     return self._data[row][column]
 
@@ -2127,7 +2126,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         self.load_tw_events(self.observationId)
 
-    def populate_tv_events(self, obs_id, header):
+    def populate_tv_events(self, obs_id: str, header: list, time_format: str) -> None:
         """
         populate table view with events
         """
@@ -2159,27 +2158,19 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 else:
                     mem_behav[f"{subject}|{code}|{modifier}"] = 1
 
-        """print(f"{state[:20]=}")"""
-
         self.event_state = []
         for idx, row in enumerate(self.pj[cfg.OBSERVATIONS][obs_id][cfg.EVENTS]):
             r = row[:]
             r.insert(3, state[idx])
             self.event_state.append(r)
-            # row.insert(3, state[idx])
-            # self.event_state.append(row)
-
-        """
-        print()
-        print(f"{len(self.event_state)=}")
-        print()
-        print(f"{self.event_state[:10]=}")
-        print()
-        print(f"{self.events[:10]=}")
-        """
 
         self.tv_events.setSortingEnabled(False)
-        model = TableModel(self.event_state, header, self.tv_events)
+        model = TableModel(
+            self.event_state,
+            header,
+            time_format,
+            self.tv_events,
+        )
         self.tv_events.setModel(model)
         # self.table.setSortingEnabled(True)
         # self.table.sortByColumn(0, Qt.AscendingOrder)
@@ -2198,7 +2189,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         logging.debug(f"begin load events from obs in tableView: {obs_id}")
 
         t1 = time.time()
-        self.populate_tv_events(obs_id, [s.capitalize() for s in cfg.TW_EVENTS_FIELDS[self.playerType]])
+        self.populate_tv_events(obs_id, [s.capitalize() for s in cfg.TW_EVENTS_FIELDS[self.playerType]], self.timeFormat)
+
         print("load table view:", time.time() - t1)
 
         logging.debug(f"begin load events from obs in tablewidget: {obs_id}")

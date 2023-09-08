@@ -175,7 +175,7 @@ def bytes_to_str(b: bytes) -> str:
         return b
 
 
-def convertTime(time_format: str, sec: Union[float, dec]) -> str:
+def convertTime(time_format: str, sec: Union[float, dec]) -> Union[str, None]:
     """
     convert time in base at the current format (S or HHMMSS)
 

@@ -407,12 +407,16 @@ def write_event(self, event: dict, mem_time: dec) -> int:
     self.load_tw_events(self.observationId)
 
     if self.playerType in (cfg.MEDIA, cfg.LIVE):
+        # TODO: improve
         position_in_events = [i for i, t in enumerate(self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS]) if t[0] == mem_time][0]
 
         if position_in_events == len(self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS]) - 1:
             self.twEvents.scrollToBottom()
+            self.tv_events.scrollToBottom()
         else:
             self.twEvents.scrollToItem(self.twEvents.item(position_in_events, 0), QAbstractItemView.EnsureVisible)
+            index = self.tv_events.model().index(position_in_events, 0)
+            self.tv_events.scrollTo(index, QAbstractItemView.EnsureVisible)
 
     self.project_changed()
 
