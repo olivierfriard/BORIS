@@ -105,6 +105,9 @@ def connections(self):
     # twevent header
     self.actionConfigure_twEvents_columns.triggered.connect(self.configure_twevents_columns)
 
+    # tv_events header
+    self.actionConfigure_tvevents_columns.triggered.connect(self.configure_tvevents_columns)
+
     self.actionExport_observations_list.triggered.connect(lambda: observation_operations.export_observations_list_clicked(self))
 
     self.actionCheckStateEvents.triggered.connect(lambda: state_events.check_state_events(self, mode="all"))
@@ -252,6 +255,9 @@ def connections(self):
     self.twEthogram.itemDoubleClicked.connect(self.twEthogram_doubleClicked)
     self.twSubjects.itemDoubleClicked.connect(self.twSubjects_doubleClicked)
 
+    # events tableview
+    self.tv_events.doubleClicked.connect(self.tv_events_doubleClicked)
+
     # Actions for twEthogram context menu
     self.twEthogram.setContextMenuPolicy(Qt.ActionsContextMenu)
     self.twEthogram.horizontalHeader().sortIndicatorChanged.connect(self.twEthogram_sorted)
@@ -278,6 +284,10 @@ def connections(self):
     tw_headers = self.twEvents.horizontalHeader()
     tw_headers.setContextMenuPolicy(Qt.ActionsContextMenu)
     tw_headers.addAction(self.actionConfigure_twEvents_columns)
+
+    tv_headers = self.tv_events.horizontalHeader()
+    tv_headers.setContextMenuPolicy(Qt.ActionsContextMenu)
+    tv_headers.addAction(self.actionConfigure_tvevents_columns)
 
     # Actions for twEvents menu
     self.twEvents.setContextMenuPolicy(Qt.ActionsContextMenu)
@@ -317,7 +327,45 @@ def connections(self):
     self.twEvents.addAction(separator2)
 
     self.twEvents.addAction(self.actionDelete_selected_events)
-    # self.twEvents.addAction(self.actionDelete_all_events)
+
+    # Actions for tv_events menu
+    self.tv_events.setContextMenuPolicy(Qt.ActionsContextMenu)
+
+    self.tv_events.addAction(self.actionAdd_event)
+    self.tv_events.addAction(self.actionEdit_selected_events)
+    self.tv_events.addAction(self.actionEdit_event_time)
+
+    self.tv_events.addAction(self.actionCopy_events)
+    self.tv_events.addAction(self.actionPaste_events)
+
+    separator2 = QAction(self)
+    separator2.setSeparator(True)
+    self.tv_events.addAction(separator2)
+
+    self.tv_events.addAction(self.actionFind_events)
+    self.tv_events.addAction(self.actionFind_replace_events)
+
+    separator2 = QAction(self)
+    separator2.setSeparator(True)
+    self.tv_events.addAction(separator2)
+
+    self.tv_events.addAction(self.actionFilter_events)
+    self.tv_events.addAction(self.actionShow_all_events)
+
+    separator2 = QAction(self)
+    separator2.setSeparator(True)
+    self.tv_events.addAction(separator2)
+
+    self.tv_events.addAction(self.actionCheckStateEventsSingleObs)
+    self.tv_events.addAction(self.actionClose_unpaired_events)
+
+    self.tv_events.addAction(self.actionRunEventOutside)
+
+    separator2 = QAction(self)
+    separator2.setSeparator(True)
+    self.tv_events.addAction(separator2)
+
+    self.tv_events.addAction(self.actionDelete_selected_events)
 
     # Actions for twSubjects context menu
     self.actionDeselectCurrentSubject.triggered.connect(lambda: self.update_subject(""))

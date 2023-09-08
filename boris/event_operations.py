@@ -407,10 +407,17 @@ def edit_selected_events(self):
     # list of rows to edit
     twEvents_rows_to_edit = set([item.row() for item in self.twEvents.selectedIndexes()])
 
+    print(f"{twEvents_rows_to_edit=}")
+
+    tvevents_rows_to_edit = set([index.row() for index in self.tv_events.selectionModel().selectedIndexes()])
+    print(f"{tvevents_rows_to_edit=}")
+
     if not len(twEvents_rows_to_edit):
         QMessageBox.warning(self, cfg.programName, "No event selected!")
+
     elif len(twEvents_rows_to_edit) == 1:  # 1 event selected
         edit_event(self)
+
     else:  # editing of more events
         dialog_window = EditSelectedEvents()
         dialog_window.all_behaviors = sorted([self.pj[cfg.ETHOGRAM][x][cfg.BEHAVIOR_CODE] for x in self.pj[cfg.ETHOGRAM]])

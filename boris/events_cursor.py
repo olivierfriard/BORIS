@@ -36,18 +36,18 @@ class StyledItemDelegateTriangle(QStyledItemDelegate):
         self.row = row
 
     def paint(self, painter, option, index):
-
         super(StyledItemDelegateTriangle, self).paint(painter, option, index)
 
-        if self.row != -1:
-            if index.row() == self.row:
-                polygonTriangle = QPolygon(3)
-                polygonTriangle.setPoint(0, QPoint(option.rect.x() + 15, option.rect.y()))
-                polygonTriangle.setPoint(1, QPoint(option.rect.x(), option.rect.y() - 5))
-                polygonTriangle.setPoint(2, QPoint(option.rect.x(), option.rect.y() + 5))
-                painter.save()
-                painter.setRenderHint(painter.Antialiasing)
-                painter.setBrush(QBrush(QColor(Qt.red)))
-                painter.setPen(QPen(QColor(Qt.red)))
-                painter.drawPolygon(polygonTriangle)
-                painter.restore()
+        if self.row == -1:
+            return
+        if index.row() == self.row:
+            polygonTriangle = QPolygon(3)
+            polygonTriangle.setPoint(0, QPoint(option.rect.x() + 15, option.rect.y()))
+            polygonTriangle.setPoint(1, QPoint(option.rect.x(), option.rect.y() - 5))
+            polygonTriangle.setPoint(2, QPoint(option.rect.x(), option.rect.y() + 5))
+            painter.save()
+            painter.setRenderHint(painter.Antialiasing)
+            painter.setBrush(QBrush(QColor(Qt.red)))
+            painter.setPen(QPen(QColor(Qt.red)))
+            painter.drawPolygon(polygonTriangle)
+            painter.restore()

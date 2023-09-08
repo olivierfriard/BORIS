@@ -177,7 +177,7 @@ class TableModel(QAbstractTableModel):
     class for populating table view with events
     """
 
-    def __init__(self, data, header, time_format, parent=None):
+    def __init__(self, data, header: list, time_format: str, parent=None):
         super(TableModel, self).__init__(parent)
         self._data = data
         self.header = header
@@ -188,7 +188,7 @@ class TableModel(QAbstractTableModel):
             if orientation == Qt.Horizontal:
                 return self.header[section]
             else:
-                return str(section)
+                return str(section + 1)
 
     def rowCount(self, parent=None):
         return len(self._data)
@@ -203,8 +203,10 @@ class TableModel(QAbstractTableModel):
                 column = index.column()
                 if column == 0:  # time
                     return util.convertTime(self.time_format, self._data[row][column])
-                elif 0 < column < self.columnCount():
-                    return self._data[row][column]
+                elif column == 1:  # frame index
+                    return self._data[row][-1]  # last field
+                elif column < self.columnCount():
+                    return self._data[row][column - 1]
 
 
 class MainWindow(QMainWindow, Ui_MainWindow):
@@ -2126,7 +2128,39 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         self.load_tw_events(self.observationId)
 
-    def populate_tv_events(self, obs_id: str, header: list, time_format: str) -> None:
+    def configure_tvevents_columns(self):
+        """
+        configure the visible columns of tv_events tableview
+        configuration for playerType is recorded in self.config_param[f"{self.playerType} tw fields"]
+        """
+        # TODO: implement
+        dlg = dialog.Input_dialog(
+            label_caption="Select the columns to show",
+            elements_list=[
+                (
+                    "cb",
+                    x,
+                    # default state
+                    x
+                    in self.config_param.get(
+                        f"{self.playerType} tw fields",
+                        cfg.TW_EVENTS_FIELDS[self.playerType],
+                    ),
+                )
+                for x in cfg.TW_EVENTS_FIELDS[self.playerType]
+            ],
+            title="Select the column to show",
+        )
+        if not dlg.exec_():
+            return
+
+        self.config_param[f"{self.playerType} tw fields"] = tuple(
+            field for field in cfg.TW_EVENTS_FIELDS[self.playerType] if dlg.elements[field].isChecked()
+        )
+
+        self.load_tw_events(self.observationId)
+
+    def populate_tv_events(self, obs_id: str, header: list, time_format: str, behaviors_filter=tuple(), subjects_filter=tuple()) -> None:
         """
         populate table view with events
         """
@@ -2159,10 +2193,18 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     mem_behav[f"{subject}|{code}|{modifier}"] = 1
 
         self.event_state = []
+        self.tv_idx2events_idx = []
         for idx, row in enumerate(self.pj[cfg.OBSERVATIONS][obs_id][cfg.EVENTS]):
+            # filter
+            if subjects_filter and row[1] not in subjects_filter:
+                continue
+            if behaviors_filter and row[1] not in behaviors_filter:
+                continue
+
             r = row[:]
             r.insert(3, state[idx])
             self.event_state.append(r)
+            self.tv_idx2events_idx.append(idx)
 
         self.tv_events.setSortingEnabled(False)
         model = TableModel(
@@ -2189,7 +2231,13 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         logging.debug(f"begin load events from obs in tableView: {obs_id}")
 
         t1 = time.time()
-        self.populate_tv_events(obs_id, [s.capitalize() for s in cfg.TW_EVENTS_FIELDS[self.playerType]], self.timeFormat)
+        self.populate_tv_events(
+            obs_id,
+            [s.capitalize() for s in cfg.TW_EVENTS_FIELDS[self.playerType]],
+            self.timeFormat,
+            self.filtered_behaviors,
+            self.filtered_subjects,
+        )
 
         print("load table view:", time.time() - t1)
 
@@ -3828,13 +3876,18 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     def get_events_current_row(self):
         """
         get events current row corresponding to video/frame-by-frame position
-        paint twEvents with tracking cursor
+        paint twEvents with tracking cursor (red triangle)
         scroll to corresponding event
         """
+
+        logging.debug("get_events_current_row")
 
         if not self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS]:
             return
         ct = self.getLaps()
+
+        print()
+        print(f"{ct=}")
 
         if ct.is_nan():
             self.events_current_row = -1
@@ -3851,6 +3904,13 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         if ct >= self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS][-1][cfg.TW_OBS_FIELD[self.playerType][cfg.TIME]]:
             self.events_current_row = len(self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS])
+            print(f"ct > len {self.events_current_row=}")
+            self.twEvents.scrollToBottom()
+            self.twEvents.setItemDelegate(events_cursor.StyledItemDelegateTriangle(self.twEvents.rowCount()))
+
+            self.tv_events.scrollToBottom()
+
+            return
         else:
             cr_list = [
                 idx
@@ -3866,13 +3926,22 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             else:
                 self.events_current_row = -1
 
+        print(f"{self.events_current_row=}")
+
         self.twEvents.setItemDelegate(events_cursor.StyledItemDelegateTriangle(self.events_current_row))
+
+        self.tv_events.setItemDelegate(events_cursor.StyledItemDelegateTriangle(self.events_current_row))
+
+        print(f"{self.twEvents.item(self.events_current_row, 0)=}")
 
         if self.twEvents.item(self.events_current_row, 0):
             self.twEvents.scrollToItem(
                 self.twEvents.item(self.events_current_row, 0),
                 QAbstractItemView.EnsureVisible,
             )
+
+        index = self.tv_events.model().index(self.events_current_row, 0)
+        self.tv_events.scrollTo(index, QAbstractItemView.EnsureVisible)
 
     def show_current_states_in_subjects_table(self):
         """
@@ -4901,6 +4970,53 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         if self.playerType == cfg.IMAGES:
             index_str = self.twEvents.item(row, cfg.TW_OBS_FIELD[self.playerType][cfg.IMAGE_INDEX]).text()
+            self.image_idx = int(index_str) - 1
+            self.extract_frame(self.dw_player[0])
+
+    def tv_events_doubleClicked(self):
+        if not self.tv_events.selectionModel().selectedIndexes():
+            return
+
+        if self.playerType == cfg.MEDIA:
+            # get tv_events cell content
+            index = self.tv_events.selectionModel().selectedIndexes()[0]
+            time_str = index.sibling(index.row(), cfg.TW_OBS_FIELD[self.playerType]["time"]).data()
+
+            """time_str = self.twEvents.item(row, cfg.TW_OBS_FIELD[self.playerType]["time"]).text()"""
+            time_ = util.time2seconds(time_str) if ":" in time_str else dec(time_str)
+
+            # substract time offset
+            time_ -= self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TIME_OFFSET]
+
+            # substract media creation time
+            if self.pj[cfg.OBSERVATIONS][self.observationId].get(cfg.MEDIA_CREATION_DATE_AS_OFFSET, False):
+                if len(self.dw_player[0].player.playlist) > 1:
+                    QMessageBox.information(
+                        self,
+                        cfg.programName,
+                        (
+                            "This function is not yet implemented for this type of observation "
+                            "(media time creation as offset with many media files)"
+                        ),
+                    )
+                    return
+                media_file_name = self.dw_player[0].player.playlist[self.dw_player[0].player.playlist_pos]["filename"]
+
+                time_ -= self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO][cfg.MEDIA_CREATION_TIME][media_file_name]
+
+            if time_ + self.repositioningTimeOffset >= 0:
+                new_time = time_ + self.repositioningTimeOffset
+            else:
+                new_time = 0
+
+            self.seek_mediaplayer(new_time)
+            self.update_visualizations()
+
+        if self.playerType == cfg.IMAGES:
+            index = self.tv_events.selectionModel().selectedIndexes()[0]
+            index_str = index.sibling(index.row(), cfg.TW_OBS_FIELD[self.playerType][cfg.IMAGE_INDEX]).data()
+
+            """index_str = self.twEvents.item(row, cfg.TW_OBS_FIELD[self.playerType][cfg.IMAGE_INDEX]).text()"""
             self.image_idx = int(index_str) - 1
             self.extract_frame(self.dw_player[0])
 
