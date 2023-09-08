@@ -410,12 +410,13 @@ def edit_selected_events(self):
     print(f"{twEvents_rows_to_edit=}")
 
     tvevents_rows_to_edit = set([index.row() for index in self.tv_events.selectionModel().selectedIndexes()])
+
     print(f"{tvevents_rows_to_edit=}")
 
-    if not len(twEvents_rows_to_edit):
+    if not len(tvevents_rows_to_edit):
         QMessageBox.warning(self, cfg.programName, "No event selected!")
 
-    elif len(twEvents_rows_to_edit) == 1:  # 1 event selected
+    elif len(tvevents_rows_to_edit) == 1:  # 1 event selected
         edit_event(self)
 
     else:  # editing of more events
@@ -430,9 +431,15 @@ def edit_selected_events(self):
             # fill the undo list
             fill_events_undo_list(self, "Undo 'Edit selected event(s)'")
 
-            tsb_to_edit: list = []
+            tsb_to_edit1: list = []
             for row in twEvents_rows_to_edit:
-                tsb_to_edit.append(self.twEvents.item(row, cfg.TW_OBS_FIELD[self.playerType][cfg.TIME]).data(Qt.UserRole))
+                tsb_to_edit1.append(self.twEvents.item(row, cfg.TW_OBS_FIELD[self.playerType][cfg.TIME]).data(Qt.UserRole))
+            print(f"{tsb_to_edit1=}")
+
+            tsb_to_edit: list = []
+            for row in tvevents_rows_to_edit:
+                tsb_to_edit.append(self.tv_idx2events_idx[row])
+            print(f"{tsb_to_edit=}")
 
             behavior_codes: list = []
             modifiers_mem: list = []
