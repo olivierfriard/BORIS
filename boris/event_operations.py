@@ -184,9 +184,7 @@ def find_replace_events(self):
     self.find_replace_dialog.currentIdx = -1
     self.find_replace_dialog.currentIdx_idx = -1
     # list of rows to find/replace
-    self.find_replace_dialog.rowsToFind = set(
-        [self.tv_idx2events_idx[item.row()] for item in self.tv_events.selectedIndexes()]
-    )  # set([item.row() for item in self.twEvents.selectedIndexes()])
+    self.find_replace_dialog.rowsToFind = set([self.tv_idx2events_idx[item.row()] for item in self.tv_events.selectedIndexes()])
     self.find_replace_dialog.clickSignal.connect(self.click_signal_find_replace_in_events)
     self.find_replace_dialog.setWindowFlags(Qt.WindowStaysOnTopHint)
     self.find_replace_dialog.show()
@@ -286,7 +284,6 @@ def delete_all_events(self):
         self.no_observation()
         return
 
-    # if not self.twEvents.rowCount():
     if not self.tv_idx2events_idx:
         QMessageBox.warning(self, cfg.programName, "No events to delete")
         return
@@ -334,7 +331,6 @@ def delete_selected_events(self):
 
         rows_to_delete: list = []
         for row in set([item.row() for item in self.tv_events.selectedIndexes()]):
-            # rows_to_delete.append(self.twEvents.item(row, cfg.TW_OBS_FIELD[self.playerType][cfg.TIME]).data(Qt.UserRole))
             rows_to_delete.append(self.tv_idx2events_idx[row])
 
         self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS] = [
@@ -405,8 +401,6 @@ def select_events_between_activated(self):
             QMessageBox.critical(self, cfg.programName, "The initial time is greater than the final time")
             return
 
-        # self.twEvents.clearSelection()
-        # self.twEvents.setSelectionMode(QAbstractItemView.MultiSelection)
         self.tv_events.clearSelection()
         self.tv_events.setSelectionMode(QAbstractItemView.MultiSelection)
 
@@ -428,14 +422,8 @@ def edit_selected_events(self):
     edit one or more selected events for subject, behavior and/or comment
     """
     # list of rows to edit
-    """
-    twEvents_rows_to_edit = set([item.row() for item in self.twEvents.selectedIndexes()])
-    print(f"{twEvents_rows_to_edit=}")
-    """
 
     tvevents_rows_to_edit = set([index.row() for index in self.tv_events.selectionModel().selectedIndexes()])
-
-    """print(f"{tvevents_rows_to_edit=}")"""
 
     if not len(tvevents_rows_to_edit):
         QMessageBox.warning(self, cfg.programName, "No event selected!")
@@ -454,13 +442,6 @@ def edit_selected_events(self):
         if dialog_window.exec_():
             # fill the undo list
             fill_events_undo_list(self, "Undo 'Edit selected event(s)'")
-
-            """
-            tsb_to_edit1: list = []
-            for row in twEvents_rows_to_edit:
-                tsb_to_edit1.append(self.twEvents.item(row, cfg.TW_OBS_FIELD[self.playerType][cfg.TIME]).data(Qt.UserRole))
-            print(f"{tsb_to_edit1=}")
-            """
 
             tsb_to_edit: list = []
             for row in tvevents_rows_to_edit:
@@ -539,27 +520,18 @@ def edit_selected_events(self):
 
 def edit_event(self):
     """
-    edit event corresponding to the selected row in twEvents
+    edit event corresponding to the selected row in tv_events
     """
 
     if not self.observationId:
         self.no_observation()
         return
 
-    """
-    if not self.twEvents.selectedItems():
-        QMessageBox.warning(self, cfg.programName, "Select an event to edit")
-        return
-    twEvents_row = self.twEvents.selectedItems()[0].row()
-    """
-
     if not self.tv_events.selectionModel().selectedIndexes():
         QMessageBox.warning(self, cfg.programName, "Select an event to edit")
         return
 
     tvevents_row = self.tv_events.selectionModel().selectedIndexes()[0].row()
-
-    """pj_event_idx1 = self.twEvents.item(twEvents_row, cfg.TW_OBS_FIELD[self.playerType][cfg.TIME]).data(Qt.UserRole)"""
 
     pj_event_idx = self.tv_idx2events_idx[tvevents_row]
 
@@ -572,20 +544,6 @@ def edit_event(self):
         image_idx = self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS][pj_event_idx][
             cfg.PJ_OBS_FIELDS[self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE]][cfg.IMAGE_INDEX]
         ]
-
-    """
-    elif self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE] in (cfg.LIVE, cfg.MEDIA):
-        value = self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS][pj_event_idx][
-            cfg.PJ_OBS_FIELDS[self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE]][cfg.TIME]
-        ]
-    else:
-        QMessageBox.warning(
-            self,
-            cfg.programName,
-            f"Observation type {self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE]} not recognized",
-        )
-        return
-    """
 
     if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE] == cfg.IMAGES:
         current_value = self.image_idx + 1
@@ -778,12 +736,6 @@ def edit_time_selected_events(self):
     edit time of one or more selected events
     """
     # list of rows to edit
-    """
-    twEvents_rows_to_shift = set([item.row() for item in self.twEvents.selectedIndexes()])
-    if not len(twEvents_rows_to_shift):
-        QMessageBox.warning(self, cfg.programName, "No event selected!")
-        return
-    """
 
     tvevents_rows_to_shift = set([index.row() for index in self.tv_events.selectionModel().selectedIndexes()])
     if not len(tvevents_rows_to_shift):
@@ -809,8 +761,6 @@ def edit_time_selected_events(self):
         fill_events_undo_list(self, "Undo 'Edit time'")
 
         for tw_event_idx in tvevents_rows_to_shift:
-            """pj_event_idx = self.twEvents.item(tw_event_idx, cfg.TW_OBS_FIELD[self.playerType][cfg.TIME]).data(Qt.UserRole)"""
-
             pj_event_idx = self.tv_idx2events_idx[tw_event_idx]
 
             self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS][pj_event_idx][cfg.PJ_OBS_FIELDS[self.playerType][cfg.TIME]] += dec(
@@ -831,7 +781,6 @@ def copy_selected_events(self):
 
     logging.debug("Copy selected events to clipboard")
 
-    """twEvents_rows_to_copy = set([item.row() for item in self.twEvents.selectedIndexes()])"""
     tvevents_rows_to_copy = set([index.row() for index in self.tv_events.selectionModel().selectedIndexes()])
     if not len(tvevents_rows_to_copy):
         QMessageBox.warning(self, cfg.programName, "No event selected!")
@@ -839,8 +788,6 @@ def copy_selected_events(self):
 
     pj_event_idx_to_copy: list = []
     for row in tvevents_rows_to_copy:
-        """pj_event_idx_to_copy.append(self.twEvents.item(row, cfg.TW_OBS_FIELD[self.playerType][cfg.TIME]).data(Qt.UserRole))"""
-
         pj_event_idx_to_copy.append(self.tv_idx2events_idx[row])
 
     copied_events: list = []

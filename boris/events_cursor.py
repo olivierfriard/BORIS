@@ -28,7 +28,7 @@ from PyQt5.QtWidgets import QStyledItemDelegate
 
 class StyledItemDelegateTriangle(QStyledItemDelegate):
     """
-    painter for twEvents with current time highlighting
+    painter for tv_events with current time highlighting
     """
 
     def __init__(self, row, parent=None):
