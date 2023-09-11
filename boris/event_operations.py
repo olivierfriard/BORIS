@@ -392,10 +392,10 @@ def select_events_between_activated(self):
         self.twEvents.clearSelection()
         self.twEvents.setSelectionMode(QAbstractItemView.MultiSelection)
         for r in range(self.twEvents.rowCount()):
-            if ":" in self.twEvents.item(r, cfg.TW_EVENTS_FIELDS[self.playerType][cfg.TIME]).text():
-                time = util.time2seconds(self.twEvents.item(r, cfg.TW_EVENTS_FIELDS[self.playerType][cfg.TIME]).text())
+            if ":" in self.twEvents.item(r, cfg.TW_OBS_FIELD[self.playerType][cfg.TIME]).text():
+                time = util.time2seconds(self.twEvents.item(r, cfg.TW_OBS_FIELD[self.playerType][cfg.TIME]).text())
             else:
-                time = dec(self.twEvents.item(r, cfg.TW_EVENTS_FIELDS[self.playerType][cfg.TIME]).text())
+                time = dec(self.twEvents.item(r, cfg.TW_OBS_FIELD[self.playerType][cfg.TIME]).text())
             if from_sec <= time <= to_sec:
                 self.twEvents.selectRow(r)
 
