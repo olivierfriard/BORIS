@@ -399,6 +399,8 @@ def select_events_between_activated(self):
             if from_sec <= time <= to_sec:
                 self.twEvents.selectRow(r)
 
+        self.twEvents.setSelectionMode(QAbstractItemView.ExtendedSelection)
+
 
 def edit_selected_events(self):
     """
