@@ -168,7 +168,8 @@ def find_events(self):
 
     self.find_dialog = dialog.FindInEvents()
     # list of rows to find
-    self.find_dialog.rowsToFind = set([item.row() for item in self.twEvents.selectedIndexes()])
+    print(f"{self.tv_idx2events_idx=}")
+    self.find_dialog.rowsToFind = set([self.tv_idx2events_idx[item.row()] for item in self.tv_events.selectedIndexes()])
     self.find_dialog.currentIdx = -1
     self.find_dialog.clickSignal.connect(self.click_signal_find_in_events)
     self.find_dialog.setWindowFlags(Qt.WindowStaysOnTopHint)

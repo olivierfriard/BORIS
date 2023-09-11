@@ -2181,10 +2181,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 modifier = row[4]  # self.twEvents.item(row, cfg.TW_OBS_FIELD[self.playerType][cfg.MODIFIER]).text()
 
                 if f"{subject}|{code}|{modifier}" in mem_behav and mem_behav[f"{subject}|{code}|{modifier}"]:
-                    state[idx] = "STOP"
+                    state[idx] = cfg.STOP
                     # self.twEvents.item(row, cfg.TW_OBS_FIELD[self.playerType][cfg.TYPE]).setText(cfg.STOP)
                 else:
-                    state[idx] = "START"
+                    state[idx] = cfg.START
                     # self.twEvents.item(row, cfg.TW_OBS_FIELD[self.playerType][cfg.TYPE]).setText(cfg.START)
 
                 if f"{subject}|{code}|{modifier}" in mem_behav:
@@ -5041,19 +5041,19 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             return
 
         self.find_dialog.lb_message.setText("")
-        fields_list = []
+        fields_list: list = []
 
         if self.find_dialog.cbSubject.isChecked():
-            fields_list.append(cfg.TW_OBS_FIELD[self.playerType][cfg.SUBJECT])
+            fields_list.append(cfg.PJ_OBS_FIELDS[self.playerType][cfg.SUBJECT])
 
         if self.find_dialog.cbBehavior.isChecked():
-            fields_list.append(cfg.TW_OBS_FIELD[self.playerType][cfg.BEHAVIOR_CODE])
+            fields_list.append(cfg.PJ_OBS_FIELDS[self.playerType][cfg.BEHAVIOR_CODE])
 
         if self.find_dialog.cbModifier.isChecked():
-            fields_list.append(cfg.TW_OBS_FIELD[self.playerType][cfg.MODIFIER])
+            fields_list.append(cfg.PJ_OBS_FIELDS[self.playerType][cfg.MODIFIER])
 
         if self.find_dialog.cbComment.isChecked():
-            fields_list.append(cfg.TW_OBS_FIELD[self.playerType][cfg.COMMENT])
+            fields_list.append(cfg.PJ_OBS_FIELDS[self.playerType][cfg.COMMENT])
 
         if not fields_list:
             self.find_dialog.lb_message.setText('<font color="red">No fields selected!</font>')
@@ -5061,7 +5061,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         if not self.find_dialog.findText.text():
             self.find_dialog.lb_message.setText('<font color="red">Nothing to search!</font>')
             return
-        """for event_idx, event in enumerate(self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS]):"""
+
+        print(f"{fields_list=}")
+
+        # search in twevents
+        """       
         for event_idx in range(self.twEvents.rowCount()):
             if event_idx <= self.find_dialog.currentIdx:
                 continue
@@ -5080,6 +5084,35 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                         self.find_dialog.currentIdx = event_idx
                         self.twEvents.scrollToItem(self.twEvents.item(event_idx, 0))
                         self.twEvents.selectRow(event_idx)
+                        return
+        """
+
+        for event_idx, event in enumerate(self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS]):
+            if event_idx <= self.find_dialog.currentIdx:
+                continue
+
+            if (not self.find_dialog.cbFindInSelectedEvents.isChecked()) or (
+                self.find_dialog.cbFindInSelectedEvents.isChecked() and event_idx in self.find_dialog.rowsToFind
+            ):
+                print(f"{event=}")
+
+                if event_idx not in self.tv_idx2events_idx:
+                    continue
+
+                for idx in fields_list:
+                    print(f"{idx=}")
+                    if (self.find_dialog.cb_case_sensitive.isChecked() and self.find_dialog.findText.text() in event[idx]) or (
+                        not self.find_dialog.cb_case_sensitive.isChecked()
+                        and self.find_dialog.findText.text().upper() in event[idx].upper()
+                    ):
+                        self.find_dialog.currentIdx = event_idx
+
+                        index = self.tv_events.model().index(event_idx, 0)
+
+                        # self.twEvents.scrollToItem(self.twEvents.item(event_idx, 0))
+                        self.tv_events.scrollTo(index, QAbstractItemView.EnsureVisible)
+                        self.tv_events.selectRow(event_idx)
+                        # self.twEvents.selectRow(event_idx)
                         return
 
         if msg != "FIND_FROM_BEGINING":

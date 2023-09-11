@@ -197,6 +197,7 @@ class Ui_MainWindow(object):
         self.splitter.setObjectName("splitter")
         self.tv_events = QtWidgets.QTableView(self.splitter)
         self.tv_events.setFocusPolicy(QtCore.Qt.NoFocus)
+        self.tv_events.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectRows)
         self.tv_events.setObjectName("tv_events")
         self.twEvents = QtWidgets.QTableWidget(self.splitter)
         self.twEvents.setEnabled(True)

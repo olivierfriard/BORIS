@@ -1795,6 +1795,8 @@ def initialize_new_media_observation(self) -> bool:
     for player in self.dw_player:
         player.setVisible(True)
 
+    self.load_tw_events(self.observationId)
+
     # initial synchro
     for n_player in range(1, len(self.dw_player)):
         self.sync_time(n_player, 0)

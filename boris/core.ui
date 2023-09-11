@@ -570,6 +570,9 @@
         <property name="focusPolicy">
          <enum>Qt::NoFocus</enum>
         </property>
+        <property name="selectionBehavior">
+         <enum>QAbstractItemView::SelectRows</enum>
+        </property>
        </widget>
        <widget class="QTableWidget" name="twEvents">
         <property name="enabled">
