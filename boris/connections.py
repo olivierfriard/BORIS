@@ -125,7 +125,7 @@ def connections(self):
 
     self.actionExplore_project.triggered.connect(lambda: project_functions.explore_project(self))
     self.actionFind_events.triggered.connect(lambda: event_operations.find_events(self))
-    self.actionFind_replace_events.triggered.connect(self.find_replace_events)
+    self.actionFind_replace_events.triggered.connect(lambda: event_operations.find_replace_events(self))
     self.actionDelete_all_events.triggered.connect(lambda: event_operations.delete_all_events(self))
     self.actionDelete_selected_events.triggered.connect(lambda: event_operations.delete_selected_events(self))
 

@@ -176,6 +176,22 @@ def find_events(self):
     self.find_dialog.show()
 
 
+def find_replace_events(self):
+    """
+    find and replace in events
+    """
+    self.find_replace_dialog = dialog.FindReplaceEvents()
+    self.find_replace_dialog.currentIdx = -1
+    self.find_replace_dialog.currentIdx_idx = -1
+    # list of rows to find/replace
+    self.find_replace_dialog.rowsToFind = set(
+        [self.tv_idx2events_idx[item.row()] for item in self.tv_events.selectedIndexes()]
+    )  # set([item.row() for item in self.twEvents.selectedIndexes()])
+    self.find_replace_dialog.clickSignal.connect(self.click_signal_find_replace_in_events)
+    self.find_replace_dialog.setWindowFlags(Qt.WindowStaysOnTopHint)
+    self.find_replace_dialog.show()
+
+
 def filter_events(self):
     """
     filter coded events and subjects
@@ -270,7 +286,8 @@ def delete_all_events(self):
         self.no_observation()
         return
 
-    if not self.twEvents.rowCount():
+    # if not self.twEvents.rowCount():
+    if not self.tv_idx2events_idx:
         QMessageBox.warning(self, cfg.programName, "No events to delete")
         return
 
@@ -285,14 +302,10 @@ def delete_all_events(self):
         # fill the undo list
         fill_events_undo_list(self, "Undo 'Delete all events'")
 
-        rows_to_delete: list = []
-        for row in range(self.twEvents.rowCount()):
-            rows_to_delete.append(self.twEvents.item(row, cfg.TW_OBS_FIELD[self.playerType][cfg.TIME]).data(Qt.UserRole))
-
         self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS] = [
             event
             for event_idx, event in enumerate(self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS])
-            if event_idx not in rows_to_delete
+            if event_idx not in self.tv_idx2events_idx
         ]
 
         self.update_realtime_plot(force_plot=True)
@@ -312,7 +325,7 @@ def delete_selected_events(self):
 
     logging.debug("begin function delete_selected_events")
 
-    if not self.twEvents.selectedIndexes():
+    if not self.tv_events.selectedIndexes():
         QMessageBox.warning(self, cfg.programName, "No event selected!")
     else:
         # list of rows to delete (set for unique)
@@ -320,8 +333,9 @@ def delete_selected_events(self):
         fill_events_undo_list(self, "Undo 'Delete selected events'")
 
         rows_to_delete: list = []
-        for row in set([item.row() for item in self.twEvents.selectedIndexes()]):
-            rows_to_delete.append(self.twEvents.item(row, cfg.TW_OBS_FIELD[self.playerType][cfg.TIME]).data(Qt.UserRole))
+        for row in set([item.row() for item in self.tv_events.selectedIndexes()]):
+            # rows_to_delete.append(self.twEvents.item(row, cfg.TW_OBS_FIELD[self.playerType][cfg.TIME]).data(Qt.UserRole))
+            rows_to_delete.append(self.tv_idx2events_idx[row])
 
         self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS] = [
             event
@@ -358,7 +372,7 @@ def select_events_between_activated(self):
                 return None
         return timeSeconds
 
-    if not self.twEvents.rowCount():
+    if not self.tv_idx2events_idx:
         QMessageBox.warning(self, cfg.programName, "There are no events to select")
         return
 
@@ -390,15 +404,21 @@ def select_events_between_activated(self):
         if to_sec < from_sec:
             QMessageBox.critical(self, cfg.programName, "The initial time is greater than the final time")
             return
-        self.twEvents.clearSelection()
-        self.twEvents.setSelectionMode(QAbstractItemView.MultiSelection)
-        for r in range(self.twEvents.rowCount()):
-            if ":" in self.twEvents.item(r, cfg.TW_EVENTS_FIELDS[self.playerType][cfg.TIME]).text():
-                time = util.time2seconds(self.twEvents.item(r, cfg.TW_EVENTS_FIELDS[self.playerType][cfg.TIME]).text())
-            else:
-                time = dec(self.twEvents.item(r, cfg.TW_EVENTS_FIELDS[self.playerType][cfg.TIME]).text())
+
+        # self.twEvents.clearSelection()
+        # self.twEvents.setSelectionMode(QAbstractItemView.MultiSelection)
+        self.tv_events.clearSelection()
+        self.tv_events.setSelectionMode(QAbstractItemView.MultiSelection)
+
+        # for r in range(self.tv_events.rowCount()):
+        # for idx, event in enumerate(self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS]):
+        for tv_idx in range(len(self.tv_idx2events_idx)):
+            time = self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS][self.tv_idx2events_idx[tv_idx]][
+                cfg.PJ_OBS_FIELDS[self.playerType][cfg.TIME]
+            ]
+
             if from_sec <= time <= to_sec:
-                self.twEvents.selectRow(r)
+                self.tv_events.selectRow(tv_idx)
 
 
 def edit_selected_events(self):

@@ -5041,20 +5041,16 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             return
 
         self.find_dialog.lb_message.setText("")
-        fields_list: list = []
 
+        fields_list: list = []
         if self.find_dialog.cbSubject.isChecked():
             fields_list.append(cfg.PJ_OBS_FIELDS[self.playerType][cfg.SUBJECT])
-
         if self.find_dialog.cbBehavior.isChecked():
             fields_list.append(cfg.PJ_OBS_FIELDS[self.playerType][cfg.BEHAVIOR_CODE])
-
         if self.find_dialog.cbModifier.isChecked():
             fields_list.append(cfg.PJ_OBS_FIELDS[self.playerType][cfg.MODIFIER])
-
         if self.find_dialog.cbComment.isChecked():
             fields_list.append(cfg.PJ_OBS_FIELDS[self.playerType][cfg.COMMENT])
-
         if not fields_list:
             self.find_dialog.lb_message.setText('<font color="red">No fields selected!</font>')
             return
@@ -5096,6 +5092,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             ):
                 print(f"{event=}")
 
+                # search only on filtered events
                 if event_idx not in self.tv_idx2events_idx:
                     continue
 
@@ -5107,9 +5104,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     ):
                         self.find_dialog.currentIdx = event_idx
 
-                        index = self.tv_events.model().index(event_idx, 0)
-
                         # self.twEvents.scrollToItem(self.twEvents.item(event_idx, 0))
+                        index = self.tv_events.model().index(event_idx, 0)
                         self.tv_events.scrollTo(index, QAbstractItemView.EnsureVisible)
                         self.tv_events.selectRow(event_idx)
                         # self.twEvents.selectRow(event_idx)
@@ -5148,17 +5144,17 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             dialog.MessageDialog(cfg.programName, "There are no selected events", [cfg.OK])
             return
 
-        fields_list = []
+        fields_list: list = []
         if self.find_replace_dialog.cbSubject.isChecked():
-            fields_list.append(cfg.EVENT_SUBJECT_FIELD_IDX)
+            fields_list.append(cfg.PJ_OBS_FIELDS[self.playerType][cfg.SUBJECT])
         if self.find_replace_dialog.cbBehavior.isChecked():
-            fields_list.append(cfg.EVENT_BEHAVIOR_FIELD_IDX)
+            fields_list.append(cfg.PJ_OBS_FIELDS[self.playerType][cfg.BEHAVIOR_CODE])
         if self.find_replace_dialog.cbModifier.isChecked():
-            fields_list.append(cfg.EVENT_MODIFIER_FIELD_IDX)
+            fields_list.append(cfg.PJ_OBS_FIELDS[self.playerType][cfg.MODIFIER])
         if self.find_replace_dialog.cbComment.isChecked():
-            fields_list.append(cfg.EVENT_COMMENT_FIELD_IDX)
+            fields_list.append(cfg.PJ_OBS_FIELDS[self.playerType][cfg.COMMENT])
 
-        number_replacement = 0
+        number_replacement: int = 0
         insensitive_re = re.compile(re.escape(self.find_replace_dialog.findText.text()), re.IGNORECASE)
         for event_idx, event in enumerate(self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS]):
             # apply modif only to filtered subjects
@@ -5182,6 +5178,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             if (not self.find_replace_dialog.cbFindInSelectedEvents.isChecked()) or (
                 self.find_replace_dialog.cbFindInSelectedEvents.isChecked() and event_idx in self.find_replace_dialog.rowsToFind
             ):
+                # search only on filtered events
+                if event_idx not in self.tv_idx2events_idx:
+                    continue
+
                 for idx1 in fields_list:
                     if idx1 <= self.find_replace_dialog.currentIdx_idx:
                         continue
@@ -5207,6 +5207,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                         self.load_tw_events(self.observationId)
                         self.twEvents.scrollToItem(self.twEvents.item(event_idx, 0))
                         self.twEvents.selectRow(event_idx)
+
+                        index = self.tv_events.model().index(event_idx, 0)
+                        self.tv_events.scrollTo(index, QAbstractItemView.EnsureVisible)
+                        self.tv_events.selectRow(event_idx)
+
                         self.project_changed()
 
                         if msg == "FIND_REPLACE":
@@ -5229,19 +5234,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         if msg == "FIND_REPLACE_ALL":
             dialog.MessageDialog(cfg.programName, f"{number_replacement} substitution(s).", [cfg.OK])
             self.find_replace_dialog.close()
-
-    def find_replace_events(self):
-        """
-        find and replace in events
-        """
-        self.find_replace_dialog = dialog.FindReplaceEvents()
-        self.find_replace_dialog.currentIdx = -1
-        self.find_replace_dialog.currentIdx_idx = -1
-        # list of rows to find/replace
-        self.find_replace_dialog.rowsToFind = set([item.row() for item in self.twEvents.selectedIndexes()])
-        self.find_replace_dialog.clickSignal.connect(self.click_signal_find_replace_in_events)
-        self.find_replace_dialog.setWindowFlags(Qt.WindowStaysOnTopHint)
-        self.find_replace_dialog.show()
 
     def closeEvent(self, event):
         """
