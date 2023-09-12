@@ -77,8 +77,6 @@ from PyQt5.QtWidgets import (
     QAction,
     QAbstractItemView,
     QSplashScreen,
-    # QToolButton,
-    # QMenu,
 )
 from PIL.ImageQt import Image
 
