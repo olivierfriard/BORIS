@@ -1042,7 +1042,7 @@ class Observation(QDialog, Ui_Form):
         if "error" in media_info:
             return (False, media_info["error"])
 
-        print(f"{media_info=}")
+        # print(f"{media_info=}")
 
         if media_info["format_long_name"] == "Tele-typewriter":
             return (False, "Text file")
@@ -1051,15 +1051,17 @@ class Observation(QDialog, Ui_Form):
             if " rel " in mode:
                 # convert to relative path (relative to BORIS project file)
                 file_path = str(pl.Path(file_path).relative_to(pl.Path(self.project_path).parent))
-
             self.mediaDurations[file_path] = float(media_info["duration"])
-            self.mediaFPS[file_path] = float(media_info["fps"])
-            self.mediaHasVideo[file_path] = media_info["has_video"]
-            self.mediaHasAudio[file_path] = media_info["has_audio"]
-            self.add_media_to_listview(file_path)
-            return (False, "")
+        elif media_info["has_video"] == False and media_info["audio_duration"]:
+            self.mediaDurations[file_path] = float(media_info["audio_duration"])
         else:
             return (True, "Media duration not available")
+
+        self.mediaFPS[file_path] = float(media_info["fps"])
+        self.mediaHasVideo[file_path] = media_info["has_video"]
+        self.mediaHasAudio[file_path] = media_info["has_audio"]
+        self.add_media_to_listview(file_path)
+        return (False, "")
 
     def update_media_options(self):
         """

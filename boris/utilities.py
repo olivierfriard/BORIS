@@ -1136,6 +1136,7 @@ def smart_size_format(n: Union[float, int, str, None]) -> str:
 def ffprobe_media_analysis(ffmpeg_bin: str, file_name: str) -> dict:
     """
     analyse video parameters with ffprobe (if available)
+    ffprobe program must be installed in the same directory than ffmpeg
 
     Args:
         ffmpeg_bin (str): ffmpeg path
