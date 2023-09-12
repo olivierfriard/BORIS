@@ -103,7 +103,7 @@ def connections(self):
     self.actionShow_all_events.triggered.connect(lambda: event_operations.show_all_events(self))
 
     # twevent header
-    self.actionConfigure_twEvents_columns.triggered.connect(self.configure_twevents_columns)
+    # self.actionConfigure_twEvents_columns.triggered.connect(self.configure_twevents_columns)
 
     # tv_events header
     self.actionConfigure_tvevents_columns.triggered.connect(self.configure_tvevents_columns)
@@ -251,7 +251,7 @@ def connections(self):
     self.actionFind_in_current_obs.triggered.connect(lambda: event_operations.find_events(self))
 
     # table Widget double click
-    self.twEvents.itemDoubleClicked.connect(self.twEvents_doubleClicked)
+    # self.twEvents.itemDoubleClicked.connect(self.twEvents_doubleClicked)
     self.twEthogram.itemDoubleClicked.connect(self.twEthogram_doubleClicked)
     self.twSubjects.itemDoubleClicked.connect(self.twSubjects_doubleClicked)
 
@@ -281,52 +281,52 @@ def connections(self):
     self.twSubjects.addAction(self.actionShowAllSubjects)
 
     # actions for twEvents horizontal header menu
-    tw_headers = self.twEvents.horizontalHeader()
-    tw_headers.setContextMenuPolicy(Qt.ActionsContextMenu)
-    tw_headers.addAction(self.actionConfigure_twEvents_columns)
+    # tw_headers = self.twEvents.horizontalHeader()
+    # tw_headers.setContextMenuPolicy(Qt.ActionsContextMenu)
+    # tw_headers.addAction(self.actionConfigure_twEvents_columns)
 
     tv_headers = self.tv_events.horizontalHeader()
     tv_headers.setContextMenuPolicy(Qt.ActionsContextMenu)
     tv_headers.addAction(self.actionConfigure_tvevents_columns)
 
     # Actions for twEvents menu
-    self.twEvents.setContextMenuPolicy(Qt.ActionsContextMenu)
+    # self.twEvents.setContextMenuPolicy(Qt.ActionsContextMenu)
 
-    self.twEvents.addAction(self.actionAdd_event)
-    self.twEvents.addAction(self.actionEdit_selected_events)
-    self.twEvents.addAction(self.actionEdit_event_time)
+    # self.twEvents.addAction(self.actionAdd_event)
+    # self.twEvents.addAction(self.actionEdit_selected_events)
+    # self.twEvents.addAction(self.actionEdit_event_time)
 
-    self.twEvents.addAction(self.actionCopy_events)
-    self.twEvents.addAction(self.actionPaste_events)
+    # self.twEvents.addAction(self.actionCopy_events)
+    # self.twEvents.addAction(self.actionPaste_events)
 
-    separator2 = QAction(self)
-    separator2.setSeparator(True)
-    self.twEvents.addAction(separator2)
+    # separator2 = QAction(self)
+    # separator2.setSeparator(True)
+    # self.twEvents.addAction(separator2)
 
-    self.twEvents.addAction(self.actionFind_events)
-    self.twEvents.addAction(self.actionFind_replace_events)
+    # self.twEvents.addAction(self.actionFind_events)
+    # self.twEvents.addAction(self.actionFind_replace_events)
 
-    separator2 = QAction(self)
-    separator2.setSeparator(True)
-    self.twEvents.addAction(separator2)
+    # separator2 = QAction(self)
+    # separator2.setSeparator(True)
+    # self.twEvents.addAction(separator2)
 
-    self.twEvents.addAction(self.actionFilter_events)
-    self.twEvents.addAction(self.actionShow_all_events)
+    # self.twEvents.addAction(self.actionFilter_events)
+    # self.twEvents.addAction(self.actionShow_all_events)
 
-    separator2 = QAction(self)
-    separator2.setSeparator(True)
-    self.twEvents.addAction(separator2)
+    # separator2 = QAction(self)
+    # separator2.setSeparator(True)
+    # self.twEvents.addAction(separator2)
 
-    self.twEvents.addAction(self.actionCheckStateEventsSingleObs)
-    self.twEvents.addAction(self.actionClose_unpaired_events)
+    # self.twEvents.addAction(self.actionCheckStateEventsSingleObs)
+    # self.twEvents.addAction(self.actionClose_unpaired_events)
 
-    self.twEvents.addAction(self.actionRunEventOutside)
+    # self.twEvents.addAction(self.actionRunEventOutside)
 
-    separator2 = QAction(self)
-    separator2.setSeparator(True)
-    self.twEvents.addAction(separator2)
+    # separator2 = QAction(self)
+    # separator2.setSeparator(True)
+    # self.twEvents.addAction(separator2)
 
-    self.twEvents.addAction(self.actionDelete_selected_events)
+    # self.twEvents.addAction(self.actionDelete_selected_events)
 
     # Actions for tv_events menu
     self.tv_events.setContextMenuPolicy(Qt.ActionsContextMenu)

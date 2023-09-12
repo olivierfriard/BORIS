@@ -197,8 +197,8 @@ def load_observation(self, obs_id: str, mode: str = cfg.OBS_START) -> str:
     self.observationId = obs_id
 
     if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE] == cfg.IMAGES:
-        self.image_idx = 0
-        self.images_list = []
+        self.image_idx: int = 0
+        self.images_list: list = []
 
         if mode == cfg.OBS_START:
             self.playerType = cfg.IMAGES
@@ -1060,11 +1060,11 @@ def close_observation(self):
                     self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS].sort()
 
                     self.load_tw_events(self.observationId)
-                    item = self.twEvents.item(
+                    index = self.tv_events.model().index(
                         [i for i, t in enumerate(self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS]) if t[0] == fix_at_time][0],
                         0,
                     )
-                    self.twEvents.scrollToItem(item)
+                    self.tv_events.scrollTo(index)
                     return
             else:
                 return
@@ -1136,7 +1136,7 @@ def close_observation(self):
 
     self.w_obs_info.setVisible(False)
 
-    self.twEvents.setRowCount(0)
+    # self.twEvents.setRowCount(0)
 
     self.lb_current_media_time.clear()
     self.lb_player_status.clear()
@@ -1863,6 +1863,8 @@ def initialize_new_live_observation(self):
 
     self.liveStartTime = None
     self.liveTimer.stop()
+
+    self.load_tw_events(self.observationId)
 
     self.get_events_current_row()
 

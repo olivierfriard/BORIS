@@ -30,7 +30,7 @@ from shutil import copyfile
 from typing import List, Tuple, Dict
 
 import tablib
-from PyQt5.QtWidgets import QMessageBox, QTableWidgetItem
+from PyQt5.QtWidgets import QMessageBox, QTableWidgetItem, QAbstractItemView
 from PyQt5.QtCore import Qt
 
 from . import config as cfg
@@ -1653,8 +1653,11 @@ def explore_project(self) -> None:
         manage double-click on tablewidget of explore project results
         """
         observation_operations.load_observation(self, obs_id, cfg.VIEW)
-        self.twEvents.selectRow(event_idx - 1)
-        self.twEvents.scrollToItem(self.twEvents.item(event_idx - 1, 0))
+
+        self.tv_events.selectRow(event_idx - 1)
+        index = self.tv_events.model().index(event_idx - 1, 0)
+        self.tv_events.scrollTo(index, QAbstractItemView.EnsureVisible)
+        # self.twEvents.scrollToItem(self.twEvents.item(event_idx - 1, 0))
 
     elements_list = ("Subject", "Behavior", "Modifier", "Comment")
     elements = []

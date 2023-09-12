@@ -308,15 +308,17 @@ PJ_EVENTS_FIELDS = {
     VIEWER_IMAGES: IMAGES_PJ_EVENTS_FIELDS,
 }
 
-# fields for independent variable definition
-tw_indVarFields = ["label", "description", "type", "default value", "possible values"]
-
 
 PJ_OBS_FIELDS = {}
 for observation_type in PJ_EVENTS_FIELDS:
     PJ_OBS_FIELDS[observation_type] = {}
     for idx, field in enumerate(PJ_EVENTS_FIELDS[observation_type]):
         PJ_OBS_FIELDS[observation_type][field] = idx
+
+
+# fields for independent variable definition
+tw_indVarFields = ["label", "description", "type", "default value", "possible values"]
+
 
 EVENT_TIME_FIELD_IDX = 0
 EVENT_SUBJECT_FIELD_IDX = 1
