@@ -3692,7 +3692,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE] == cfg.MEDIA:
                 event[cfg.FRAME_INDEX] = self.get_frame_index()
 
-            write_event.write_event(self.event, self.getLaps())
+            write_event.write_event(self, self.event, self.getLaps())
 
     def keypress_signal_from_behaviors_coding_map(self, event):
         """
