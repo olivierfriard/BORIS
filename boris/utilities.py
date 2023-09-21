@@ -30,6 +30,7 @@ import pathlib as pl
 import re
 import socket
 import subprocess
+import time
 import sys
 import urllib.parse
 import wave
@@ -456,7 +457,7 @@ def group_events(pj: dict, obs_id: str, include_modifiers: bool = False) -> dict
 
 
 def get_current_states_modifiers_by_subject(
-    state_behaviors_codes: list, events: list, subjects: dict, time: dec, include_modifiers: bool = False
+    state_behaviors_codes: list, events: list, subjects: dict, time_: dec, include_modifiers: bool = False
 ) -> dict:
     """
     get current states and modifiers (if requested) for subjects at given time
@@ -472,7 +473,7 @@ def get_current_states_modifiers_by_subject(
         dict: current states by subject. dict of list
     """
     current_states: dict = {}
-    if time.is_nan():
+    if time_.is_nan():
         for idx in subjects:
             current_states[idx] = []
         return current_states
@@ -483,6 +484,7 @@ def get_current_states_modifiers_by_subject(
     else:
         check_index = cfg.EVENT_TIME_FIELD_IDX
 
+    t1 = time.time()
     if include_modifiers:
         for idx in subjects:
             current_states[idx] = []
@@ -492,7 +494,7 @@ def get_current_states_modifiers_by_subject(
                     for x in events
                     if x[cfg.EVENT_SUBJECT_FIELD_IDX] == subjects[idx][cfg.SUBJECT_NAME]
                     and x[cfg.EVENT_BEHAVIOR_FIELD_IDX] == sbc
-                    and x[check_index] <= time
+                    and x[check_index] <= time_
                 ]
 
                 if len(bl) % 2:  # test if odd
@@ -500,6 +502,31 @@ def get_current_states_modifiers_by_subject(
 
     else:
         for idx in subjects:
+            current_states[subjects[idx]["name"]] = {}
+            for b in state_behaviors_codes:
+                current_states[subjects[idx]["name"]][b] = False
+        for x in events:
+            if x[check_index] > time_:
+                break
+            if x[cfg.EVENT_BEHAVIOR_FIELD_IDX] in state_behaviors_codes:
+                current_states[x[cfg.EVENT_SUBJECT_FIELD_IDX]][x[cfg.EVENT_BEHAVIOR_FIELD_IDX]] = not current_states[
+                    x[cfg.EVENT_SUBJECT_FIELD_IDX]
+                ][x[cfg.EVENT_BEHAVIOR_FIELD_IDX]]
+
+        r = {}
+        for idx in subjects:
+            r[idx] = [b for b in state_behaviors_codes if current_states[subjects[idx]["name"]][b]]
+            """
+            for b in state_behaviors_codes:
+                if current_states[subjects[idx]["name"]][b]:
+                    r[idx].append(b)
+            """
+
+        print("main:", time.time() - t1)
+
+        return r
+
+        """for idx in subjects:
             current_states[idx] = []
             for sbc in state_behaviors_codes:
                 if (
@@ -509,13 +536,15 @@ def get_current_states_modifiers_by_subject(
                             for x in events
                             if x[cfg.EVENT_SUBJECT_FIELD_IDX] == subjects[idx][cfg.SUBJECT_NAME]
                             and x[cfg.EVENT_BEHAVIOR_FIELD_IDX] == sbc
-                            and x[check_index] <= time
+                            and x[check_index] <= time_
                         ]
                     )
                     % 2
                 ):  # test if odd
                     current_states[idx].append(sbc)
+        """
 
+    print("main:", time.time() - t1)
     return current_states
 
 
