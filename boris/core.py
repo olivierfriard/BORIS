@@ -3891,9 +3891,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             return
         ct = self.getLaps()
 
-        # print()
-        # print(f"{ct=}")
-
         if ct.is_nan():
             self.events_current_row = -1
             return
@@ -3909,11 +3906,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         if ct >= self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS][-1][cfg.TW_OBS_FIELD[self.playerType][cfg.TIME]]:
             self.events_current_row = len(self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS])
-
-            # print(f"ct > len {self.events_current_row=}")
-
-            # self.twEvents.scrollToBottom()
-            # self.twEvents.setItemDelegate(events_cursor.StyledItemDelegateTriangle(self.twEvents.rowCount()))
 
             self.tv_events.scrollToBottom()
             self.tv_events.setItemDelegate(events_cursor.StyledItemDelegateTriangle(len(self.tv_idx2events_idx)))
@@ -4065,25 +4057,20 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         Time offset is NOT added!
         """
 
+        print(value)
+
         if not self.observationId:
             return
 
         cumulative_time_pos = self.getLaps()
         # get frame index
-        frame_idx = self.get_frame_index()
+        # frame_idx = self.get_frame_index()
+        frame_idx = 0
 
         if value is None:
             current_media_time_pos = 0
         else:
             current_media_time_pos = value
-
-        """
-        CRITICAL:root:Traceback (most recent call last):
-        File "core.py", line 4086, in timer_out2
-            current_media_frame = round(value * self.dw_player[0].player.container_fps) + 1
-        IndexError: list index out of range
-
-        """
 
         # observation time interval
         if self.pj[cfg.OBSERVATIONS][self.observationId].get(cfg.OBSERVATION_TIME_INTERVAL, [0, 0])[1]:
@@ -4107,9 +4094,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     int(cumulative_time_pos / self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_SCAN_SAMPLING_DURATION])
                     * self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_SCAN_SAMPLING_DURATION]
                 )
-
-                """print(f"scan sampling {cumulative_time_pos}")
-                print(f"{self.media_scan_sampling_mem=}")"""
 
                 if scan_sampling_step not in self.media_scan_sampling_mem:
                     self.media_scan_sampling_mem.append(scan_sampling_step)
@@ -4142,6 +4126,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         # index of current subject selected by observer
         subject_idx = self.subject_name_index[self.currentSubject] if self.currentSubject else ""
 
+        """t1 = time.time()
         self.currentStates = util.get_current_states_modifiers_by_subject(
             self.state_behaviors_codes,
             self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS],
@@ -4149,8 +4134,31 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             currentTimeOffset,
             include_modifiers=True,
         )
-
+        print("get_current_states_modifiers_by_subject:", time.time() - t1)
         self.lbCurrentStates.setText(f"Observed behaviors: {', '.join(self.currentStates[subject_idx])}")
+        """
+
+        t1 = time.time()
+        self.currentStates = util.get_current_states_modifiers_by_subject(
+            self.state_behaviors_codes,
+            self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS],
+            {
+                "0": {"key": "1", "name": "subject 1", "description": ""},
+                "1": {"key": "2", "name": "subject 2", "description": ""},
+                "2": {"key": "3", "name": "subject 3", "description": ""},
+                "3": {"key": "4", "name": "subject 4", "description": ""},
+                "4": {"key": "5", "name": "subject 5", "description": ""},
+                "": {"name": ""},
+            },
+            currentTimeOffset,
+            include_modifiers=True,
+        )
+        print("get_current_states_modifiers_by_subject:", time.time() - t1)
+
+        print(f"{subject_idx=}")
+        print(f"{self.currentStates[subject_idx]=}")
+        self.lbCurrentStates.setText(f"Observed behaviors: {', '.join(self.currentStates[subject_idx])}")
+
         # show current states in subjects table
         self.show_current_states_in_subjects_table()
 
@@ -4162,43 +4170,21 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             current_media_name = ""
             current_playlist_index = None
 
-        # print(f"{self.dw_player[0].player.time_pos=}")
-
         # check for ongoing state events between media or at the end of last media
+
         if (
             self.pj[cfg.OBSERVATIONS][self.observationId][cfg.CLOSE_BEHAVIORS_BETWEEN_VIDEOS]
             and self.mem_playlist_index is not None
             and current_playlist_index != self.mem_playlist_index
         ):
-            """
-            print(f"\n\nmedia changed to {current_media_name}")
-
-            print(f"{currentTimeOffset=}")
-
-            print(f"{self.dw_player[0].player.playlist_pos=}")
-            """
-
-            """print(f"{self.dw_player[0].cumul_media_durations=}")"""
-
-            """cmd = [round(dec(x / 1000), 3) for x in self.dw_player[0].cumul_media_durations]"""
-
             min_ = self.dw_player[0].cumul_media_durations_sec[self.dw_player[0].player.playlist_pos - 1]
             max_ = self.dw_player[0].cumul_media_durations_sec[self.dw_player[0].player.playlist_pos]
 
-            """print(f"{min_=}   {max_=}")"""
-
             events = [event for event in self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS] if min_ <= event[0] < max_]
 
-            """print(f"events to check: {events}")"""
-
-            """time_to_stop = dec(round((self.dw_player[0].cumul_media_durations[self.dw_player[0].player.playlist_pos] - 1) / 1000, 3))"""
             time_to_stop = self.dw_player[0].cumul_media_durations_sec[self.dw_player[0].player.playlist_pos] - dec("0.001")
 
             events_to_add = project_functions.fix_unpaired_state_events2(self.pj[cfg.ETHOGRAM], events, time_to_stop)
-
-            """print(f"{events_to_add=}")"""
-
-            # print(f"{self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS]=}")
 
             if events_to_add:
                 self.statusbar.showMessage("The media changed. Some ongoing state events were stopped automatically", 0)
@@ -4207,20 +4193,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 self.project_changed()
                 self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS].sort()
 
-                """print(f"{self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS]=}")"""
-
                 self.load_tw_events(self.observationId)
 
                 self.pause_video()
 
                 self.update_visualizations()
-                # item = self.twEvents.item(
-                #    [i for i, t in enumerate(self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS]) if t[0] == currentTimeOffset][
-                #        0
-                #    ],
-                #    0,
-                # )
-                # self.twEvents.scrollToItem(item)
 
         self.mem_media_name = current_media_name
         self.mem_playlist_index = current_playlist_index
@@ -4252,10 +4229,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     f"{util.convertTime(self.timeFormat, all_media_duration)}</b>"
                 )
 
-            # self.lb_player_status.setText("Player paused" if self.dw_player[0].player.pause else "")
-
-            # msg += f"<br>media #{self.dw_player[0].player.playlist_pos + 1} / {playlist_length}"
-
         else:  # player ended
             self.plot_timer.stop()
 
@@ -4269,6 +4242,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.lb_current_media_time.setText(msg)
 
             # set video scroll bar
+
             if scroll_slider and not self.user_move_slider:
                 self.video_slider.setValue(round(current_media_time_pos / current_media_duration * (cfg.SLIDER_MAXIMUM - 1)))
 
