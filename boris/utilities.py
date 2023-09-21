@@ -484,8 +484,30 @@ def get_current_states_modifiers_by_subject(
     else:
         check_index = cfg.EVENT_TIME_FIELD_IDX
 
-    t1 = time.time()
     if include_modifiers:
+        for idx in subjects:
+            current_states[subjects[idx]["name"]] = {}
+            """for b in state_behaviors_codes:
+                current_states[subjects[idx]["name"]][b] = False
+            """
+        for x in events:
+            if x[check_index] > time_:
+                break
+            if x[cfg.EVENT_BEHAVIOR_FIELD_IDX] in state_behaviors_codes:
+                if (x[cfg.EVENT_BEHAVIOR_FIELD_IDX], x[cfg.EVENT_MODIFIER_FIELD_IDX]) not in current_states[x[cfg.EVENT_SUBJECT_FIELD_IDX]]:
+                    current_states[x[cfg.EVENT_SUBJECT_FIELD_IDX]][
+                        (x[cfg.EVENT_BEHAVIOR_FIELD_IDX], x[cfg.EVENT_MODIFIER_FIELD_IDX])
+                    ] = False
+
+                current_states[x[cfg.EVENT_SUBJECT_FIELD_IDX]][
+                    (x[cfg.EVENT_BEHAVIOR_FIELD_IDX], x[cfg.EVENT_MODIFIER_FIELD_IDX])
+                ] = not current_states[x[cfg.EVENT_SUBJECT_FIELD_IDX]][(x[cfg.EVENT_BEHAVIOR_FIELD_IDX], x[cfg.EVENT_MODIFIER_FIELD_IDX])]
+
+        r = {}
+        for idx in subjects:
+            r[idx] = [bm for bm in current_states[subjects[idx]["name"]] if current_states[subjects[idx]["name"]][bm]]
+
+        """
         for idx in subjects:
             current_states[idx] = []
             for sbc in state_behaviors_codes:
@@ -499,6 +521,7 @@ def get_current_states_modifiers_by_subject(
 
                 if len(bl) % 2:  # test if odd
                     current_states[idx].append(bl[-1][0] + f" ({bl[-1][1]})" * (bl[-1][1] != ""))
+        """
 
     else:
         for idx in subjects:
@@ -522,10 +545,6 @@ def get_current_states_modifiers_by_subject(
                     r[idx].append(b)
             """
 
-        print("main:", time.time() - t1)
-
-        return r
-
         """for idx in subjects:
             current_states[idx] = []
             for sbc in state_behaviors_codes:
@@ -544,8 +563,8 @@ def get_current_states_modifiers_by_subject(
                     current_states[idx].append(sbc)
         """
 
-    print("main:", time.time() - t1)
-    return current_states
+    # return current_states
+    return r
 
 
 def get_current_states_modifiers_by_subject_2(state_behaviors_codes: list, events: list, subjects: dict, time: dec) -> dict:

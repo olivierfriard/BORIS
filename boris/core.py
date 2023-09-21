@@ -4138,7 +4138,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.lbCurrentStates.setText(f"Observed behaviors: {', '.join(self.currentStates[subject_idx])}")
         """
 
-        # t1 = time.time()
+        t1 = time.time()
         self.currentStates = util.get_current_states_modifiers_by_subject(
             self.state_behaviors_codes,
             self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS],
@@ -4151,9 +4151,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 "": {"name": ""},
             },
             currentTimeOffset,
-            include_modifiers=False,
+            include_modifiers=True,
         )
-        # print("get_current_states_modifiers_by_subject:", time.time() - t1)
+        print("get_current_states_modifiers_by_subject:", time.time() - t1)
 
         # print(f"{subject_idx=}")
         # print(f"{self.currentStates[subject_idx]=}")
