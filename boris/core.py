@@ -4057,15 +4057,15 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         Time offset is NOT added!
         """
 
-        print(value)
+        # print(value)
 
         if not self.observationId:
             return
 
         cumulative_time_pos = self.getLaps()
         # get frame index
-        # frame_idx = self.get_frame_index()
-        frame_idx = 0
+        frame_idx = self.get_frame_index()
+        # frame_idx = 0
 
         if value is None:
             current_media_time_pos = 0
@@ -4126,7 +4126,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         # index of current subject selected by observer
         subject_idx = self.subject_name_index[self.currentSubject] if self.currentSubject else ""
 
-        """t1 = time.time()
+        # t1 = time.time()
         self.currentStates = util.get_current_states_modifiers_by_subject(
             self.state_behaviors_codes,
             self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS],
@@ -4134,32 +4134,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             currentTimeOffset,
             include_modifiers=True,
         )
-        print("get_current_states_modifiers_by_subject:", time.time() - t1)
+        # print("get_current_states_modifiers_by_subject:", time.time() - t1)
+
         self.lbCurrentStates.setText(f"Observed behaviors: {', '.join(self.currentStates[subject_idx])}")
-        """
-
-        t1 = time.time()
-        self.currentStates = util.get_current_states_modifiers_by_subject(
-            self.state_behaviors_codes,
-            self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS],
-            {
-                "0": {"key": "1", "name": "subject 1", "description": ""},
-                "1": {"key": "2", "name": "subject 2", "description": ""},
-                "2": {"key": "3", "name": "subject 3", "description": ""},
-                "3": {"key": "4", "name": "subject 4", "description": ""},
-                "4": {"key": "5", "name": "subject 5", "description": ""},
-                "": {"name": ""},
-            },
-            currentTimeOffset,
-            include_modifiers=True,
-        )
-        print("get_current_states_modifiers_by_subject:", time.time() - t1)
-
-        # print(f"{subject_idx=}")
-        # print(f"{self.currentStates[subject_idx]=}")
-        self.lbCurrentStates.setText(f"Observed behaviors: {', '.join(self.currentStates[subject_idx])}")
-
-        # self.lbCurrentStates.setText(f"Observed behaviors: {', '.join(self.currentStates[self.pj[cfg.SUBJECTS]])}")
 
         # show current states in subjects table
         self.show_current_states_in_subjects_table()

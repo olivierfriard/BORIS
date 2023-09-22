@@ -487,9 +487,6 @@ def get_current_states_modifiers_by_subject(
     if include_modifiers:
         for idx in subjects:
             current_states[subjects[idx]["name"]] = {}
-            """for b in state_behaviors_codes:
-                current_states[subjects[idx]["name"]][b] = False
-            """
         for x in events:
             if x[check_index] > time_:
                 break
@@ -503,25 +500,9 @@ def get_current_states_modifiers_by_subject(
                     (x[cfg.EVENT_BEHAVIOR_FIELD_IDX], x[cfg.EVENT_MODIFIER_FIELD_IDX])
                 ] = not current_states[x[cfg.EVENT_SUBJECT_FIELD_IDX]][(x[cfg.EVENT_BEHAVIOR_FIELD_IDX], x[cfg.EVENT_MODIFIER_FIELD_IDX])]
 
-        r = {}
+        r: dict = {}
         for idx in subjects:
-            r[idx] = [bm for bm in current_states[subjects[idx]["name"]] if current_states[subjects[idx]["name"]][bm]]
-
-        """
-        for idx in subjects:
-            current_states[idx] = []
-            for sbc in state_behaviors_codes:
-                bl = [
-                    (x[cfg.EVENT_BEHAVIOR_FIELD_IDX], x[cfg.EVENT_MODIFIER_FIELD_IDX])
-                    for x in events
-                    if x[cfg.EVENT_SUBJECT_FIELD_IDX] == subjects[idx][cfg.SUBJECT_NAME]
-                    and x[cfg.EVENT_BEHAVIOR_FIELD_IDX] == sbc
-                    and x[check_index] <= time_
-                ]
-
-                if len(bl) % 2:  # test if odd
-                    current_states[idx].append(bl[-1][0] + f" ({bl[-1][1]})" * (bl[-1][1] != ""))
-        """
+            r[idx] = [f"{bm[0]} ({bm[1]})" for bm in current_states[subjects[idx]["name"]] if current_states[subjects[idx]["name"]][bm]]
 
     else:
         for idx in subjects:
@@ -536,34 +517,11 @@ def get_current_states_modifiers_by_subject(
                     x[cfg.EVENT_SUBJECT_FIELD_IDX]
                 ][x[cfg.EVENT_BEHAVIOR_FIELD_IDX]]
 
-        r = {}
+        r: dict = {}
         for idx in subjects:
             r[idx] = [b for b in state_behaviors_codes if current_states[subjects[idx]["name"]][b]]
-            """
-            for b in state_behaviors_codes:
-                if current_states[subjects[idx]["name"]][b]:
-                    r[idx].append(b)
-            """
 
-        """for idx in subjects:
-            current_states[idx] = []
-            for sbc in state_behaviors_codes:
-                if (
-                    len(
-                        [
-                            x[cfg.EVENT_BEHAVIOR_FIELD_IDX]
-                            for x in events
-                            if x[cfg.EVENT_SUBJECT_FIELD_IDX] == subjects[idx][cfg.SUBJECT_NAME]
-                            and x[cfg.EVENT_BEHAVIOR_FIELD_IDX] == sbc
-                            and x[check_index] <= time_
-                        ]
-                    )
-                    % 2
-                ):  # test if odd
-                    current_states[idx].append(sbc)
-        """
-
-    # return current_states
+    # print(f"{r=}")
     return r
 
 
