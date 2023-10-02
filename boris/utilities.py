@@ -456,6 +456,75 @@ def group_events(pj: dict, obs_id: str, include_modifiers: bool = False) -> dict
 
 
 def get_current_states_modifiers_by_subject(
+    state_behaviors_codes: list, events: list, subjects: dict, time_: dec, include_modifiers: bool = False
+) -> dict:
+    """
+    get current states and modifiers (if requested) for subjects at given time
+
+    Args:
+        state_behaviors_codes (list): list of behavior codes defined as STATE event
+        events (list): list of events
+        subjects (dict): dictionary of subjects
+        time (Decimal): time or image index for an observation from images
+        include_modifiers (bool): include modifier if True (default: False)
+
+    Returns:
+        dict: current states by subject. dict of list
+    """
+    current_states: dict = {}
+    if time_.is_nan():
+        for idx in subjects:
+            current_states[idx] = []
+        return current_states
+
+    # check if time contains NA
+    if [x for x in events if x[cfg.EVENT_TIME_FIELD_IDX].is_nan()]:
+        check_index = cfg.PJ_OBS_FIELDS[cfg.IMAGES][cfg.IMAGE_INDEX]
+    else:
+        check_index = cfg.EVENT_TIME_FIELD_IDX
+
+    if include_modifiers:
+        for idx in subjects:
+            current_states[subjects[idx]["name"]] = {}
+        for x in events:
+            if x[check_index] > time_:
+                break
+            if x[cfg.EVENT_BEHAVIOR_FIELD_IDX] in state_behaviors_codes:
+                if (x[cfg.EVENT_BEHAVIOR_FIELD_IDX], x[cfg.EVENT_MODIFIER_FIELD_IDX]) not in current_states[x[cfg.EVENT_SUBJECT_FIELD_IDX]]:
+                    current_states[x[cfg.EVENT_SUBJECT_FIELD_IDX]][
+                        (x[cfg.EVENT_BEHAVIOR_FIELD_IDX], x[cfg.EVENT_MODIFIER_FIELD_IDX])
+                    ] = False
+
+                current_states[x[cfg.EVENT_SUBJECT_FIELD_IDX]][
+                    (x[cfg.EVENT_BEHAVIOR_FIELD_IDX], x[cfg.EVENT_MODIFIER_FIELD_IDX])
+                ] = not current_states[x[cfg.EVENT_SUBJECT_FIELD_IDX]][(x[cfg.EVENT_BEHAVIOR_FIELD_IDX], x[cfg.EVENT_MODIFIER_FIELD_IDX])]
+
+        r: dict = {}
+        for idx in subjects:
+            r[idx] = [f"{bm[0]} ({bm[1]})" for bm in current_states[subjects[idx]["name"]] if current_states[subjects[idx]["name"]][bm]]
+
+    else:
+        for idx in subjects:
+            current_states[subjects[idx]["name"]] = {}
+            for b in state_behaviors_codes:
+                current_states[subjects[idx]["name"]][b] = False
+        for x in events:
+            if x[check_index] > time_:
+                break
+            if x[cfg.EVENT_BEHAVIOR_FIELD_IDX] in state_behaviors_codes:
+                current_states[x[cfg.EVENT_SUBJECT_FIELD_IDX]][x[cfg.EVENT_BEHAVIOR_FIELD_IDX]] = not current_states[
+                    x[cfg.EVENT_SUBJECT_FIELD_IDX]
+                ][x[cfg.EVENT_BEHAVIOR_FIELD_IDX]]
+
+        r: dict = {}
+        for idx in subjects:
+            r[idx] = [b for b in state_behaviors_codes if current_states[subjects[idx]["name"]][b]]
+
+    return r
+
+
+'''
+def get_current_states_modifiers_by_subject(
     state_behaviors_codes: list, events: list, subjects: dict, time: dec, include_modifiers: bool = False
 ) -> dict:
     """
@@ -517,6 +586,7 @@ def get_current_states_modifiers_by_subject(
                     current_states[idx].append(sbc)
 
     return current_states
+'''
 
 
 def get_current_states_modifiers_by_subject_2(state_behaviors_codes: list, events: list, subjects: dict, time: dec) -> dict:

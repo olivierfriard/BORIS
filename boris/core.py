@@ -640,7 +640,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         """
         handle click received from coding pad
         """
-        sendEventSignal = pyqtSignal(QEvent)
+        """sendEventSignal = pyqtSignal(QEvent)"""
         q = QKeyEvent(QEvent.KeyPress, Qt.Key_Enter, Qt.NoModifier, text=behaviorCode)
         self.keyPressEvent(q)
 
@@ -655,7 +655,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         """
         handle click received from subjects pad
         """
-        sendEventSignal = pyqtSignal(QEvent)
+        """sendEventSignal = pyqtSignal(QEvent)"""
         q = QKeyEvent(QEvent.KeyPress, Qt.Key_Enter, Qt.NoModifier, text="#subject#" + subject)
         self.keyPressEvent(q)
 
@@ -718,7 +718,14 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         """
         show all behaviors in ethogram
         """
+        if self.twEthogram.rowCount() != len(self.pj[cfg.ETHOGRAM]):
+            self.project_changed()
+
         self.load_behaviors_in_twEthogram([self.pj[cfg.ETHOGRAM][x][cfg.BEHAVIOR_CODE] for x in self.pj[cfg.ETHOGRAM]])
+        # update coding pad
+        if hasattr(self, "codingpad"):
+            self.codingpad.filtered_behaviors = [self.twEthogram.item(i, 1).text() for i in range(self.twEthogram.rowCount())]
+            self.codingpad.compose()
 
     def show_all_subjects(self):
         """
@@ -775,9 +782,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         # behaviors filtered
         if table == cfg.ETHOGRAM:
-            filtered_behaviors = [self.twEthogram.item(i, 1).text() for i in range(self.twEthogram.rowCount())]
+            filtered_behaviors: list = [self.twEthogram.item(i, 1).text() for i in range(self.twEthogram.rowCount())]
         else:
-            filtered_behaviors = []
+            filtered_behaviors: list = []
 
         if cfg.BEHAVIORAL_CATEGORIES in self.pj:
             categories = self.pj[cfg.BEHAVIORAL_CATEGORIES][:]
@@ -848,6 +855,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 if hasattr(self, "codingpad"):
                     self.codingpad.filtered_behaviors = [self.twEthogram.item(i, 1).text() for i in range(self.twEthogram.rowCount())]
                     self.codingpad.compose()
+
                 return None
             else:
                 return False, paramPanelWindow.selectedBehaviors
@@ -863,7 +871,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         paramPanelWindow.setWindowTitle("Select the subjects to show in the subjects list")
         paramPanelWindow.lbBehaviors.setText("Subjects")
 
-        for w in [
+        for w in (
             paramPanelWindow.lwSubjects,
             paramPanelWindow.pbSelectAllSubjects,
             paramPanelWindow.pbUnselectAllSubjects,
@@ -873,7 +881,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             paramPanelWindow.cbExcludeBehaviors,
             paramPanelWindow.frm_time,
             paramPanelWindow.frm_time_bin_size,
-        ]:
+        ):
             w.setVisible(False)
 
         gui_utilities.restore_geometry(paramPanelWindow, "filter subjects", (800, 600))
@@ -1693,6 +1701,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         """
         receive signal from widget
         """
+
         self.keyPressEvent(event)
 
     def reload_frame(self):
@@ -4110,14 +4119,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         logging.info("Media end reached")
 
-        """
-        print(f"{self.dw_player[0].player.time_pos=}")
-        print(f"{self.dw_player[0].player.pause=}")
-        print(f"{self.dw_player[0].player.core_idle=}")
-        print(f"{self.dw_player[0].player.eof_reached=}")
-        print(f"{self.dw_player[0].player.playlist_pos=}")
-        """
-
         if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.CLOSE_BEHAVIORS_BETWEEN_VIDEOS]:
             if self.dw_player[0].player.eof_reached and self.dw_player[0].player.core_idle:
                 if self.dw_player[0].player.playlist_pos == len(self.dw_player[0].player.playlist) - 1:
@@ -4184,10 +4185,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         if self.twEthogram.rowCount() < len(self.pj[cfg.ETHOGRAM].keys()):
             self.dwEthogram.setWindowTitle(f"Ethogram (filtered {self.twEthogram.rowCount()}/{len(self.pj[cfg.ETHOGRAM].keys())})")
 
-            if self.observationId:
-                self.pj[cfg.OBSERVATIONS][self.observationId]["filtered behaviors"] = behaviors_to_show
         else:
             self.dwEthogram.setWindowTitle("Ethogram")
+
+        if self.observationId:
+            self.pj[cfg.OBSERVATIONS][self.observationId][cfg.FILTERED_BEHAVIORS] = behaviors_to_show
 
     def load_subjects_in_twSubjects(self, subjects_to_show):
         """
