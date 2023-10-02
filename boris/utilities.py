@@ -30,7 +30,6 @@ import pathlib as pl
 import re
 import socket
 import subprocess
-import time
 import sys
 import urllib.parse
 import wave
@@ -521,7 +520,6 @@ def get_current_states_modifiers_by_subject(
         for idx in subjects:
             r[idx] = [b for b in state_behaviors_codes if current_states[subjects[idx]["name"]][b]]
 
-    # print(f"{r=}")
     return r
 
 
@@ -535,7 +533,6 @@ def get_current_states_modifiers_by_subject_2(state_behaviors_codes: list, event
         events (list): list of events
         subjects (dict): dictionary of subjects
         time (Decimal): time
-        include_modifiers (bool): include modifier if True (default: False)
 
     Returns:
         dict: current states by subject. dict of list
