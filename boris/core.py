@@ -682,7 +682,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         """
         handle click received from coding pad
         """
-        sendEventSignal = pyqtSignal(QEvent)
         q = QKeyEvent(QEvent.KeyPress, Qt.Key_Enter, Qt.NoModifier, text=behaviorCode)
         self.keyPressEvent(q)
 
@@ -697,7 +696,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         """
         handle click received from subjects pad
         """
-        sendEventSignal = pyqtSignal(QEvent)
         q = QKeyEvent(QEvent.KeyPress, Qt.Key_Enter, Qt.NoModifier, text="#subject#" + subject)
         self.keyPressEvent(q)
 
@@ -760,7 +758,16 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         """
         show all behaviors in ethogram
         """
+
+        if self.twEthogram.rowCount() != len(self.pj[cfg.ETHOGRAM]):
+            self.project_changed()
+
         self.load_behaviors_in_twEthogram([self.pj[cfg.ETHOGRAM][x][cfg.BEHAVIOR_CODE] for x in self.pj[cfg.ETHOGRAM]])
+
+        # update coding pad
+        if hasattr(self, "codingpad"):
+            self.codingpad.filtered_behaviors = [self.twEthogram.item(i, 1).text() for i in range(self.twEthogram.rowCount())]
+            self.codingpad.compose()
 
     def show_all_subjects(self):
         """
@@ -774,7 +781,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         text="Behaviors to show in ethogram list",
         table=cfg.ETHOGRAM,
         behavior_type=[cfg.STATE_EVENT, cfg.POINT_EVENT],
-    ):
+    ) -> tuple(bool, list):
         """
         allow user to:
             filter behaviors in ethogram widget
@@ -793,7 +800,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         """
 
         if not self.pj[cfg.ETHOGRAM]:
-            return
+            True, []
 
         behavior_type = [x.upper() for x in behavior_type]
 
@@ -890,7 +897,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 if hasattr(self, "codingpad"):
                     self.codingpad.filtered_behaviors = [self.twEthogram.item(i, 1).text() for i in range(self.twEthogram.rowCount())]
                     self.codingpad.compose()
-                return None
+                return False, []
             else:
                 return False, paramPanelWindow.selectedBehaviors
         else:
