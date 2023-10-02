@@ -252,6 +252,14 @@ def connections(self):
     self.twEthogram.itemDoubleClicked.connect(self.twEthogram_doubleClicked)
     self.twSubjects.itemDoubleClicked.connect(self.twSubjects_doubleClicked)
 
+    # action for twEthogram header
+    twEthogram_headers = self.twEthogram.horizontalHeader()
+    twEthogram_headers.setContextMenuPolicy(Qt.ActionsContextMenu)
+    self.actionFilterBehaviors.triggered.connect(lambda: self.filter_behaviors(table=cfg.ETHOGRAM))
+    twEthogram_headers.addAction(self.actionFilterBehaviors)
+    self.actionShowAllBehaviors.triggered.connect(self.show_all_behaviors)
+    twEthogram_headers.addAction(self.actionShowAllBehaviors)
+
     # Actions for twEthogram context menu
     self.twEthogram.setContextMenuPolicy(Qt.ActionsContextMenu)
     self.twEthogram.horizontalHeader().sortIndicatorChanged.connect(self.twEthogram_sorted)
@@ -259,20 +267,19 @@ def connections(self):
     self.actionViewBehavior.triggered.connect(self.view_behavior)
     self.twEthogram.addAction(self.actionViewBehavior)
 
-    self.actionFilterBehaviors.triggered.connect(lambda: self.filter_behaviors(table=cfg.ETHOGRAM))
-    self.twEthogram.addAction(self.actionFilterBehaviors)
+    # action for twSubjects header
+    twSubjects_headers = self.twSubjects.horizontalHeader()
+    twSubjects_headers.setContextMenuPolicy(Qt.ActionsContextMenu)
 
-    self.actionShowAllBehaviors.triggered.connect(self.show_all_behaviors)
-    self.twEthogram.addAction(self.actionShowAllBehaviors)
+    self.actionFilterSubjects.triggered.connect(self.filter_subjects)
+    twSubjects_headers.addAction(self.actionFilterSubjects)
+
+    self.actionShowAllSubjects.triggered.connect(self.show_all_subjects)
+    twSubjects_headers.addAction(self.actionShowAllSubjects)
 
     # Actions for twSubjects context menu
     self.twSubjects.setContextMenuPolicy(Qt.ActionsContextMenu)
     self.twSubjects.horizontalHeader().sortIndicatorChanged.connect(self.sort_twSubjects)
-    self.actionFilterSubjects.triggered.connect(self.filter_subjects)
-    self.twSubjects.addAction(self.actionFilterSubjects)
-
-    self.actionShowAllSubjects.triggered.connect(self.show_all_subjects)
-    self.twSubjects.addAction(self.actionShowAllSubjects)
 
     # actions for twEvents horizontal header menu
     tw_headers = self.twEvents.horizontalHeader()
