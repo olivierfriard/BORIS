@@ -739,7 +739,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         text="Behaviors to show in ethogram list",
         table=cfg.ETHOGRAM,
         behavior_type=[cfg.STATE_EVENT, cfg.POINT_EVENT],
-    ) -> Tuple(bool, list):
+    ) -> Tuple[bool, list]:
         """
         allow user to:
             filter behaviors in ethogram widget
