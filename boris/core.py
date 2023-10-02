@@ -38,7 +38,7 @@ import time
 import urllib.error
 import urllib.parse
 import urllib.request
-from typing import Union
+from typing import Union, Tuple
 
 from decimal import Decimal as dec
 from decimal import ROUND_DOWN
@@ -739,7 +739,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         text="Behaviors to show in ethogram list",
         table=cfg.ETHOGRAM,
         behavior_type=[cfg.STATE_EVENT, cfg.POINT_EVENT],
-    ):
+    ) -> Tuple(bool, list):
         """
         allow user to:
             filter behaviors in ethogram widget
@@ -758,7 +758,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         """
 
         if not self.pj[cfg.ETHOGRAM]:
-            return
+            True, []
 
         behavior_type = [x.upper() for x in behavior_type]
 
@@ -856,7 +856,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     self.codingpad.filtered_behaviors = [self.twEthogram.item(i, 1).text() for i in range(self.twEthogram.rowCount())]
                     self.codingpad.compose()
 
-                return None
+                return False, []
             else:
                 return False, paramPanelWindow.selectedBehaviors
         else:
