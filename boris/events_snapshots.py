@@ -128,9 +128,7 @@ def events_snapshots(self):
     )
 
     for obs_id in selected_observations:
-
         for nplayer in self.pj[cfg.OBSERVATIONS][obs_id][cfg.FILE]:
-
             if not self.pj[cfg.OBSERVATIONS][obs_id][cfg.FILE][nplayer]:
                 continue
             duration1 = []  # in seconds
@@ -138,9 +136,7 @@ def events_snapshots(self):
                 duration1.append(self.pj[cfg.OBSERVATIONS][obs_id][cfg.MEDIA_INFO][cfg.LENGTH][mediaFile])
 
             for subject in parameters[cfg.SELECTED_SUBJECTS]:
-
                 for behavior in parameters[cfg.SELECTED_BEHAVIORS]:
-
                     cursor.execute(
                         "SELECT occurence FROM events WHERE observation = ? AND subject = ? AND code = ?",
                         (obs_id, subject, behavior),
@@ -150,10 +146,7 @@ def events_snapshots(self):
                     behavior_state = project_functions.event_type(behavior, self.pj[cfg.ETHOGRAM])
 
                     for idx, row in enumerate(rows):
-
-                        mediaFileIdx = [
-                            idx1 for idx1, x in enumerate(duration1) if row["occurence"] >= sum(duration1[0:idx1])
-                        ][-1]
+                        mediaFileIdx = [idx1 for idx1, x in enumerate(duration1) if row["occurence"] >= sum(duration1[0:idx1])][-1]
 
                         # check if media has video
                         flag_no_video = False
@@ -165,9 +158,7 @@ def events_snapshots(self):
                             flag_no_video = True
 
                         if flag_no_video:
-                            logging.debug(
-                                f"Media {self.pj[cfg.OBSERVATIONS][obs_id][cfg.FILE][nplayer][mediaFileIdx]} does not have video"
-                            )
+                            logging.debug(f"Media {self.pj[cfg.OBSERVATIONS][obs_id][cfg.FILE][nplayer][mediaFileIdx]} does not have video")
                             flag_no_video = True
                             response = dialog.MessageDialog(
                                 cfg.programName,
@@ -197,9 +188,7 @@ def events_snapshots(self):
                             mediafile_fps = 0
 
                         if not mediafile_fps:
-                            logging.debug(
-                                f"FPS not found for {self.pj[cfg.OBSERVATIONS][obs_id][cfg.FILE][nplayer][mediaFileIdx]}"
-                            )
+                            logging.debug(f"FPS not found for {self.pj[cfg.OBSERVATIONS][obs_id][cfg.FILE][nplayer][mediaFileIdx]}")
                             response = dialog.MessageDialog(
                                 cfg.programName,
                                 (
@@ -213,11 +202,7 @@ def events_snapshots(self):
                             if response == "Abort":
                                 return
 
-                        global_start = (
-                            dec("0.000")
-                            if row["occurence"] < time_interval
-                            else round(row["occurence"] - time_interval, 3)
-                        )
+                        global_start = dec("0.000") if row["occurence"] < time_interval else round(row["occurence"] - time_interval, 3)
                         start = round(
                             row["occurence"]
                             - time_interval
@@ -229,7 +214,6 @@ def events_snapshots(self):
                             start = dec("0.000")
 
                         if cfg.POINT in behavior_state:
-
                             media_path = project_functions.full_path(
                                 self.pj[cfg.OBSERVATIONS][obs_id][cfg.FILE][nplayer][mediaFileIdx],
                                 self.projectFileName,
@@ -241,15 +225,12 @@ def events_snapshots(self):
 
                         if cfg.STATE in behavior_state:
                             if idx % 2 == 0:
-
                                 # check if stop is on same media file
                                 if (
                                     mediaFileIdx
-                                    != [
-                                        idx1
-                                        for idx1, x in enumerate(duration1)
-                                        if rows[idx + 1]["occurence"] >= sum(duration1[0:idx1])
-                                    ][-1]
+                                    != [idx1 for idx1, x in enumerate(duration1) if rows[idx + 1]["occurence"] >= sum(duration1[0:idx1])][
+                                        -1
+                                    ]
                                 ):
                                     response = dialog.MessageDialog(
                                         cfg.programName,
@@ -377,9 +358,7 @@ def extract_events(self):
 
     # Ask for time interval around the event
     while True:
-        text, ok = QInputDialog.getDouble(
-            self, "Time interval around the events", "Time (in seconds):", 0.0, 0.0, 86400, 1
-        )
+        text, ok = QInputDialog.getDouble(self, "Time interval around the events", "Time (in seconds):", 0.0, 0.0, 86400, 1)
         if not ok:
             return
         try:
@@ -412,19 +391,13 @@ def extract_events(self):
         time_interval=cfg.TIME_FULL_OBS,
     )
 
-    """
-    ffmpeg_extract_command = (
-        '"{ffmpeg_bin}" -i "{input_}" -y -ss {start} -to {stop} {codecs} '
-        ' "{dir_}{sep}{obsId}_{player}_{subject}_{behavior}_{globalStart}'
-        '-{globalStop}{extension}" '
-    )
-    """
+    self.statusBar().showMessage("Extracting sequences from media files")
+    QApplication.processEvents()
+
     ffmpeg_extract_command: str = '"{ffmpeg_bin}" -ss {start} -i "{input_}" -y -t {duration} {codecs} '
     mem_command: str = ""
     for obs_id in selected_observations:
-
         for nplayer in self.pj[cfg.OBSERVATIONS][obs_id][cfg.FILE]:
-
             if not self.pj[cfg.OBSERVATIONS][obs_id][cfg.FILE][nplayer]:
                 continue
 
@@ -433,9 +406,7 @@ def extract_events(self):
                 duration1.append(self.pj[cfg.OBSERVATIONS][obs_id][cfg.MEDIA_INFO][cfg.LENGTH][mediaFile])
 
             for subject in parameters[cfg.SELECTED_SUBJECTS]:
-
                 for behavior in parameters[cfg.SELECTED_BEHAVIORS]:
-
                     cursor.execute(
                         "SELECT occurence FROM events WHERE observation = ? AND subject = ? AND code = ?",
                         (obs_id, subject, behavior),
@@ -447,10 +418,7 @@ def extract_events(self):
                         continue
 
                     for idx, row in enumerate(rows):
-
-                        mediaFileIdx = [
-                            idx1 for idx1, x in enumerate(duration1) if row["occurence"] >= sum(duration1[0:idx1])
-                        ][-1]
+                        mediaFileIdx = [idx1 for idx1, x in enumerate(duration1) if row["occurence"] >= sum(duration1[0:idx1])][-1]
 
                         if "VIDEO" in items_to_extract.upper():
                             # check if media has video
@@ -490,7 +458,6 @@ def extract_events(self):
                             except:
                                 has_audio = False
                             if not has_audio:
-
                                 if (
                                     dialog.MessageDialog(
                                         cfg.programName,
@@ -507,12 +474,7 @@ def extract_events(self):
                             codecs = "-vn"
 
                         if cfg.POINT in behavior_state:
-
-                            globalStart = (
-                                dec("0.000")
-                                if row["occurence"] < timeOffset
-                                else round(row["occurence"] - timeOffset, 3)
-                            )
+                            globalStart = dec("0.000") if row["occurence"] < timeOffset else round(row["occurence"] - timeOffset, 3)
                             start = round(
                                 row["occurence"]
                                 - (timeOffset if timeOffset else 1)  # if time offset is not set default = 1 s
@@ -534,16 +496,13 @@ def extract_events(self):
                             )
 
                         if cfg.STATE in behavior_state:
-
                             if idx % 2 == 0:
                                 # check if stop is on same media file
                                 if (
                                     mediaFileIdx
-                                    != [
-                                        idx1
-                                        for idx1, x in enumerate(duration1)
-                                        if rows[idx + 1]["occurence"] >= sum(duration1[0:idx1])
-                                    ][-1]
+                                    != [idx1 for idx1, x in enumerate(duration1) if rows[idx + 1]["occurence"] >= sum(duration1[0:idx1])][
+                                        -1
+                                    ]
                                 ):
                                     response = dialog.MessageDialog(
                                         cfg.programName,
@@ -558,11 +517,7 @@ def extract_events(self):
                                     if response == "Abort":
                                         return
 
-                                globalStart = (
-                                    dec("0.000")
-                                    if row["occurence"] < timeOffset
-                                    else round(row["occurence"] - timeOffset, 3)
-                                )
+                                globalStart = dec("0.000") if row["occurence"] < timeOffset else round(row["occurence"] - timeOffset, 3)
                                 start = round(
                                     row["occurence"]
                                     - timeOffset
@@ -629,10 +584,10 @@ def extract_events(self):
                             codecs=codecs,
                         )
 
-                        logging.debug(f"ffmpeg command: {ffmpeg_command} '{new_file_name}'")
+                        logging.debug(f'ffmpeg command: {ffmpeg_command} "{new_file_name}"')
 
                         p = subprocess.Popen(
-                            f"{ffmpeg_command} '{new_file_name}'",
+                            f'{ffmpeg_command} "{new_file_name}"',
                             stdout=subprocess.PIPE,
                             stderr=subprocess.PIPE,
                             shell=True,
