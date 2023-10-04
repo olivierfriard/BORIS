@@ -28,7 +28,7 @@ import pathlib as pl
 import subprocess
 from decimal import Decimal as dec
 
-from PyQt5.QtWidgets import QFileDialog, QInputDialog, QMessageBox
+from PyQt5.QtWidgets import QApplication, QFileDialog, QInputDialog, QMessageBox
 
 from . import config as cfg
 from . import db_functions, dialog, project_functions, select_observations, select_subj_behav
