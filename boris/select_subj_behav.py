@@ -98,6 +98,7 @@ def choose_obs_subj_behav_category(
     else:
         if (start_coding is None) or (start_coding.is_nan()):
             paramPanelWindow.frm_time_interval.setVisible(False)
+            paramPanelWindow.rb_observed_events.setEnabled(False)
             paramPanelWindow.rb_user_defined.setVisible(False)
             paramPanelWindow.rb_media_duration.setVisible(False)
         else:
@@ -162,7 +163,6 @@ def choose_obs_subj_behav_category(
         categories = ["###no category###"]
 
     for category in categories:
-
         if category != "###no category###":
             if category == "":
                 paramPanelWindow.item = QListWidgetItem("No category")
@@ -180,17 +180,14 @@ def choose_obs_subj_behav_category(
             paramPanelWindow.lwBehaviors.addItem(paramPanelWindow.item)
 
         for behavior in [self.pj[cfg.ETHOGRAM][x][cfg.BEHAVIOR_CODE] for x in util.sorted_keys(self.pj[cfg.ETHOGRAM])]:
-
             if (categories == ["###no category###"]) or (
                 behavior
                 in [
                     self.pj[cfg.ETHOGRAM][x][cfg.BEHAVIOR_CODE]
                     for x in self.pj[cfg.ETHOGRAM]
-                    if cfg.BEHAVIOR_CATEGORY in self.pj[cfg.ETHOGRAM][x]
-                    and self.pj[cfg.ETHOGRAM][x][cfg.BEHAVIOR_CATEGORY] == category
+                    if cfg.BEHAVIOR_CATEGORY in self.pj[cfg.ETHOGRAM][x] and self.pj[cfg.ETHOGRAM][x][cfg.BEHAVIOR_CATEGORY] == category
                 ]
             ):
-
                 paramPanelWindow.item = QListWidgetItem(behavior)
                 if behavior in observedBehaviors:
                     paramPanelWindow.item.setCheckState(Qt.Checked)
