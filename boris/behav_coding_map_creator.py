@@ -1046,6 +1046,7 @@ class BehaviorsMapCreatorWindow(QMainWindow):
             self.pixmap.load(self.bitmapFileName)
 
             # scale image
+            """
             if (
                 self.pixmap.size().width() > cfg.CODING_MAP_RESIZE_W
                 or self.pixmap.size().height() > cfg.CODING_MAP_RESIZE_H
@@ -1059,6 +1060,7 @@ class BehaviorsMapCreatorWindow(QMainWindow):
                         "The original file was not modified"
                     ),
                 )
+            """
 
             self.view.setSceneRect(0, 0, self.pixmap.size().width(), self.pixmap.size().height())
             pixitem = QGraphicsPixmapItem(self.pixmap)

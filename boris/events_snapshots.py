@@ -391,15 +391,9 @@ def extract_events(self):
         time_interval=cfg.TIME_FULL_OBS,
     )
 
-    """
-    ffmpeg_extract_command = (
-        '"{ffmpeg_bin}" -i "{input_}" -y -ss {start} -to {stop} {codecs} '
-        ' "{dir_}{sep}{obsId}_{player}_{subject}_{behavior}_{globalStart}'
-        '-{globalStop}{extension}" '
-    )
-    """
-    self.statusbar.showMessage("Extraction sequences from media files")
+    self.statusBar().showMessage("Extracting sequences from media files")
     QApplication.processEvents()
+
     ffmpeg_extract_command: str = '"{ffmpeg_bin}" -ss {start} -i "{input_}" -y -t {duration} {codecs} '
     mem_command: str = ""
     for obs_id in selected_observations:
