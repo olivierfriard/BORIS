@@ -501,7 +501,7 @@ class FindInEvents(QWidget):
 
     clickSignal = pyqtSignal(str)
 
-    currentIdx = -1
+    currentIdx: int = -1
 
     def __init__(self):
         super().__init__()

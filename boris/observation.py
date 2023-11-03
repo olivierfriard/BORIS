@@ -1051,6 +1051,7 @@ class Observation(QDialog, Ui_Form):
             if " rel " in mode:
                 # convert to relative path (relative to BORIS project file)
                 file_path = str(pl.Path(file_path).relative_to(pl.Path(self.project_path).parent))
+
             self.mediaDurations[file_path] = float(media_info["duration"])
         elif media_info["has_video"] == False and media_info["audio_duration"]:
             self.mediaDurations[file_path] = float(media_info["audio_duration"])

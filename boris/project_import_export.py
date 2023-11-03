@@ -409,6 +409,7 @@ def load_dataframe_into_behaviors_tablewidget(self, df: pd.DataFrame) -> int:
             "key": row["Key"] if str(row["Key"]) != "nan" else "",
             "code": row["Behavior code"] if str(row["Behavior code"]) != "nan" else "",
             "description": row["Description"] if str(row["Description"]) != "nan" else "",
+            "color": row["Color"] if ("Color" in row) and (str(row["Color"]) != "nan") else "",
             "modifiers": "",
             "excluded": row["Excluded behaviors"] if str(row["Excluded behaviors"]) != "nan" else "",
             "coding map": "",
