@@ -2216,7 +2216,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             # r = row[:]
             # r.insert(3, state[idx])
             # self.event_state.append(r)
-            self.event_state.append(row[:] + [state[idx]])
+            if self.playerType in (cfg.MEDIA, cfg.VIEWER_MEDIA) and len(row) == 5:
+                self.event_state.append(row[:] + [dec("NaN")] + [state[idx]])
+            else:
+                self.event_state.append(row[:] + [state[idx]])
             self.tv_idx2events_idx.append(idx)
 
         print(self.event_state)
