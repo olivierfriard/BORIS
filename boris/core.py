@@ -2183,9 +2183,12 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         # add behavior type (POINT, START, STOP)
         mem_behav: dict = {}
         state_events_list = util.state_behavior_codes(self.pj[cfg.ETHOGRAM])
+
         state = [""] * len(self.pj[cfg.OBSERVATIONS][obs_id][cfg.EVENTS])
+
         for idx, row in enumerate(self.pj[cfg.OBSERVATIONS][obs_id][cfg.EVENTS]):
             code = row[cfg.PJ_OBS_FIELDS[self.playerType][cfg.BEHAVIOR_CODE]]
+
             # check if code is state
             if code in state_events_list:
                 subject = row[cfg.PJ_OBS_FIELDS[self.playerType][cfg.SUBJECT]]
@@ -2201,13 +2204,13 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 else:
                     mem_behav[f"{subject}|{code}|{modifier}"] = 1
 
-        self.event_state = []
-        self.tv_idx2events_idx = []
+        self.event_state: list = []
+        self.tv_idx2events_idx: list = []
         for idx, row in enumerate(self.pj[cfg.OBSERVATIONS][obs_id][cfg.EVENTS]):
             # filter
-            if subjects_filter and row[1] not in subjects_filter:
+            if subjects_filter and row[cfg.PJ_OBS_FIELDS[self.playerType][cfg.SUBJECT]] not in subjects_filter:
                 continue
-            if behaviors_filter and row[1] not in behaviors_filter:
+            if behaviors_filter and row[cfg.PJ_OBS_FIELDS[self.playerType][cfg.BEHAVIOR_CODE]] not in behaviors_filter:
                 continue
 
             # r = row[:]
@@ -2215,6 +2218,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             # self.event_state.append(r)
             self.event_state.append(row[:] + [state[idx]])
             self.tv_idx2events_idx.append(idx)
+
+        print(self.event_state)
 
         self.tv_events.setSortingEnabled(False)
         model = TableModel(
@@ -2230,7 +2235,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
     def load_tw_events(self, obs_id):
         """
-        load events in table widget and update START/STOP
+        load events in table view and update START/STOP
 
         if self.filtered_behaviors is populated and event not in self.filtered_behaviors then the event is not shown
         if self.filtered_subjects is populated and event not in self.filtered_subjects then the event is not shown

@@ -21,15 +21,16 @@ This file is part of BORIS.
 """
 
 import logging
+from decimal import Decimal as dec
+from typing import Optional
 
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QFont
 from PyQt5.QtWidgets import QCheckBox, QListWidgetItem, QMessageBox
-from decimal import Decimal as dec
+
 from . import config as cfg
 from . import gui_utilities, param_panel, project_functions
 from . import utilities as util
-from typing import Optional
 
 
 def choose_obs_subj_behav_category(
