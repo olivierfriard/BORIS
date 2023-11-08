@@ -47,7 +47,6 @@ class MyTableWidgetItem(QTableWidgetItem):
     def __init__(self, text, sortKey):
         QTableWidgetItem.__init__(self, text, QTableWidgetItem.UserType)
         self.sortKey = sortKey
-        print(f"{sortKey=}")
 
     # Qt uses a simple < check for sorting items, override this to use the sortKey
     def __lt__(self, other):

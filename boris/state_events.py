@@ -123,7 +123,7 @@ def fix_unpaired_events(self):
                     [
                         event_idx
                         for event_idx, event in enumerate(self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS])
-                        if event[cfg.TIME] == fix_at_time
+                        if event[cfg.PJ_OBS_FIELDS[self.playerType][cfg.TIME]] == fix_at_time
                     ][0],
                     0,
                 )

@@ -97,7 +97,7 @@ class AssignConverter(QDialog):
 
 
 class Observation(QDialog, Ui_Form):
-    def __init__(self, tmp_dir, project_path="", converters={}, time_format=cfg.S, parent=None):
+    def __init__(self, tmp_dir: str, project_path: str = "", converters: dict = {}, time_format: str = cfg.S, parent=None):
         """
         Args:
             tmp_dir (str): path of temporary directory
@@ -126,6 +126,7 @@ class Observation(QDialog, Ui_Form):
         self.rb_live.toggled.connect(self.obs_type_changed)
         self.rb_images.toggled.connect(self.obs_type_changed)
 
+        # button menu for media
         menu_items = [
             "media abs path|with absolute path",
             "media rel path|with relative path",
@@ -143,7 +144,7 @@ class Observation(QDialog, Ui_Form):
 
         self.pbRemoveVideo.clicked.connect(self.remove_media)
 
-        # add data file
+        # button menu for data file
         data_menu_items = [
             "data abs path|with absolute path",
             "data rel path|with relative path",
@@ -153,6 +154,17 @@ class Observation(QDialog, Ui_Form):
         menu_data.triggered.connect(lambda x: self.add_data_file(mode=x.statusTip()))
         self.add_button_menu(data_menu_items, menu_data)
         self.pb_add_data_file.setMenu(menu_data)
+
+        # button menu for images
+        images_menu_items = [
+            "images abs path|with absolute path",
+            "images rel path|with relative path",
+        ]
+
+        menu_images = QMenu()
+        menu_images.triggered.connect(lambda x: self.add_images_directory(mode=x.statusTip()))
+        self.add_button_menu(images_menu_items, menu_images)
+        self.pb_add_directory.setMenu(menu_images)
 
         self.pb_remove_data_file.clicked.connect(self.remove_data_file)
         self.pb_view_data_head.clicked.connect(self.view_data_file_head_tail)
@@ -190,7 +202,7 @@ class Observation(QDialog, Ui_Form):
         self.cb_start_from_current_time.stateChanged.connect(self.cb_start_from_current_time_changed)
 
         # images
-        self.pb_add_directory.clicked.connect(self.add_images_directory)
+        # self.pb_add_directory.clicked.connect(self.add_images_directory)
         self.pb_remove_directory.clicked.connect(self.remove_images_directory)
 
         self.tabWidget.setCurrentIndex(0)
@@ -241,11 +253,39 @@ class Observation(QDialog, Ui_Form):
         # hide 'limit observation to time interval' for images
         self.cb_observation_time_interval.setEnabled(not self.rb_images.isChecked())
 
-    def add_images_directory(self):
+    def add_images_directory(self, mode: str):
         """
         add path to images directory
         """
-        dir_path = QFileDialog.getExistingDirectory(None, "Select directory", os.getenv("HOME"))
+
+        if mode.split("|")[0] not in (
+            "images abs path",
+            "images rel path",
+        ):
+            QMessageBox.critical(
+                self,
+                cfg.programName,
+                (f"Wrong mode to add a pictures directory {mode}"),
+            )
+            return
+
+        # check if project saved
+        if (" w/o" in mode or " rel " in mode) and (not self.project_file_name):
+            QMessageBox.critical(
+                self,
+                cfg.programName,
+                ("It is not possible to add a pictures directory with a relative path if the project is not already saved"),
+            )
+            return
+
+        fd = QFileDialog()
+        fd.setDirectory(os.path.expanduser("~") if (" abs " in mode) else str(pl.Path(self.project_path).parent))
+
+        dir_path = fd.getExistingDirectory(None, "Select directory")
+
+        if not dir_path:
+            return
+
         result = util.dir_images_number(dir_path)
         if not result.get("number of images", 0):
             response = dialog.MessageDialog(
@@ -256,7 +296,25 @@ class Observation(QDialog, Ui_Form):
             if response == "Cancel":
                 return
 
-        self.lw_images_directory.addItem(QListWidgetItem(dir_path))
+        # store directory for next usage
+        self.mem_dir = str(pl.Path(dir_path))
+
+        if " rel " in mode:
+            try:
+                pl.Path(dir_path).parent.relative_to(pl.Path(self.project_path).parent)
+            except ValueError:
+                QMessageBox.critical(
+                    self,
+                    cfg.programName,
+                    f"The directory <b>{pl.Path(dir_path).parent}</b> is not contained in <b>{pl.Path(self.project_path).parent}</b>.",
+                )
+                return
+
+        if " rel " in mode:
+            # convert to relative path (relative to BORIS project file)
+            self.lw_images_directory.addItem(QListWidgetItem(str(pl.Path(dir_path).relative_to(pl.Path(self.project_path).parent))))
+        else:
+            self.lw_images_directory.addItem(QListWidgetItem(dir_path))
         self.lb_images_info.setText(f"Number of images in {dir_path}: {result.get('number of images', 0)}")
 
     def remove_images_directory(self):
@@ -493,7 +551,7 @@ class Observation(QDialog, Ui_Form):
             return
 
         w = dialog.View_data()
-        w.setWindowTitle(f"View data")
+        w.setWindowTitle("View data")
         w.lb.setText(f"View first and last rows of <b>{pl.Path(file_name).name}</b> file")
 
         w.tw.setColumnCount(file_parameters["fields number"])
@@ -1042,8 +1100,6 @@ class Observation(QDialog, Ui_Form):
         if "error" in media_info:
             return (False, media_info["error"])
 
-        # print(f"{media_info=}")
-
         if media_info["format_long_name"] == "Tele-typewriter":
             return (False, "Text file")
 
@@ -1053,7 +1109,7 @@ class Observation(QDialog, Ui_Form):
                 file_path = str(pl.Path(file_path).relative_to(pl.Path(self.project_path).parent))
 
             self.mediaDurations[file_path] = float(media_info["duration"])
-        elif media_info["has_video"] == False and media_info["audio_duration"]:
+        elif media_info["has_video"] is False and media_info["audio_duration"]:
             self.mediaDurations[file_path] = float(media_info["audio_duration"])
         else:
             return (True, "Media duration not available")
