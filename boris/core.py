@@ -2144,6 +2144,15 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         configure the visible columns of tv_events tableview
         configuration for playerType is recorded in self.config_param[f"{self.playerType} tw fields"]
         """
+        QMessageBox.information(
+            None,
+            cfg.programName,
+            ("This function is not yet implemented"),
+            QMessageBox.Ok | QMessageBox.Default,
+            QMessageBox.NoButton,
+        )
+
+        return
         # TODO: implement
         dlg = dialog.Input_dialog(
             label_caption="Select the columns to show",
@@ -2245,7 +2254,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         logging.debug(f"begin load events from obs in tableView: {obs_id}")
 
-        #t1 = time.time()
+        # t1 = time.time()
         self.populate_tv_events(
             obs_id,
             [s.capitalize() for s in cfg.TW_EVENTS_FIELDS[self.playerType]],
@@ -2254,11 +2263,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.filtered_subjects,
         )
 
-        #print("load table view:", time.time() - t1)
+        # print("load table view:", time.time() - t1)
 
         return
 
-        '''
+        """
         DISABLED tableview component is used
         
         logging.debug(f"begin load events from obs in tablewidget: {obs_id}")
@@ -2326,7 +2335,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         print("load twevent:", time.time() - t1)
 
         logging.debug("end load events from obs")
-        '''
+        """
 
     def close_tool_windows(self):
         """
