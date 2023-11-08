@@ -85,7 +85,6 @@ def zoom_level(self):
 
     players_list: list = []
     for idx, dw in enumerate(self.dw_player):
-
         players_list.append(("dsb", f"Player #{idx + 1}", 0.1, 12, 0.1, 2**dw.player.video_zoom, 1))
 
         """
@@ -107,7 +106,6 @@ def zoom_level(self):
             self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO][cfg.ZOOM_LEVEL].get(str(idx + 1), dw.player.video_zoom)
             != zl.elements[f"Player #{idx + 1}"].value()
         ):
-
             dw.player.video_zoom = log2(float(zl.elements[f"Player #{idx + 1}"].value()))
 
             logging.debug(f"video zoom changed in {dw.player.video_zoom} for player {idx + 1}")

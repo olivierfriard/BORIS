@@ -1114,7 +1114,7 @@ def remove_media_files_path(pj: dict, project_file_name: str) -> bool:
 def full_path(path: str, project_file_name: str) -> str:
     """
     returns the media/data full path or the images directory full path
-    add path of BORIS project if media/data with relative path
+    add path of BORIS project if media/data/pictures dir with relative path
 
     Args:
         path (str): file path or images directory path

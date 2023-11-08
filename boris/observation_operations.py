@@ -1874,7 +1874,7 @@ def initialize_new_images_observation(self):
     initialize a new observation from directories of images
     """
 
-    for dw in [self.dwEthogram, self.dwSubjects, self.dwEvents]:
+    for dw in (self.dwEthogram, self.dwSubjects, self.dwEvents):
         dw.setVisible(True)
     # disable start live button
     self.pb_live_obs.setEnabled(False)
@@ -1901,7 +1901,8 @@ def initialize_new_images_observation(self):
     # count number of images in all directories
     tot_images_number = 0
     for dir_path in self.pj[cfg.OBSERVATIONS][self.observationId].get(cfg.DIRECTORIES_LIST, []):
-        result = util.dir_images_number(dir_path)
+        full_dir_path = project_functions.full_path(dir_path, self.projectFileName)
+        result = util.dir_images_number(full_dir_path)
         tot_images_number += result.get("number of images", 0)
 
     if not tot_images_number:
@@ -1923,12 +1924,18 @@ def initialize_new_images_observation(self):
     # load image paths
     # directories user order is maintained
     # images are sorted inside each directory
-    self.images_list = []
+    self.images_list: list = []
     for dir_path in self.pj[cfg.OBSERVATIONS][self.observationId].get(cfg.DIRECTORIES_LIST, []):
+        full_dir_path = project_functions.full_path(dir_path, self.projectFileName)
         for pattern in cfg.IMAGE_EXTENSIONS:
             self.images_list.extend(
                 sorted(
-                    list(set([str(x) for x in pl.Path(dir_path).glob(pattern)] + [str(x) for x in pl.Path(dir_path).glob(pattern.upper())]))
+                    list(
+                        set(
+                            [str(x) for x in pl.Path(full_dir_path).glob(pattern)]
+                            + [str(x) for x in pl.Path(full_dir_path).glob(pattern.upper())]
+                        )
+                    )
                 )
             )
 

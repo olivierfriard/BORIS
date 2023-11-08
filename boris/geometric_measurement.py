@@ -281,13 +281,15 @@ class wgMeasurement(QDialog):
                 (cfg.YES, cfg.NO, cfg.CANCEL),
             )
             if response == cfg.YES:
-                self.pb_save_clicked()
+                if self.pb_save_clicked():
+                    event.ignore()
+                    return
             if response == cfg.CANCEL:
                 event.ignore()
                 return
 
-        self.flag_saved = True
-        self.draw_mem = {}
+        self.flag_saved: bool = True
+        self.draw_mem: dict = {}
         self.closeSignal.emit()
 
     def pbClear_clicked(self):
@@ -323,7 +325,7 @@ class wgMeasurement(QDialog):
         logging.debug("close function")
         self.close()
 
-    def pb_save_clicked(self):
+    def pb_save_clicked(self) -> bool:
         """
         Save measurements results
         """
@@ -333,7 +335,7 @@ class wgMeasurement(QDialog):
             file_formats.append(cfg.RDS)
 
         # default file name
-        media_file_list = []
+        media_file_list: list = []
         for row in range(self.pte.rowCount()):
             media_file_list.append(self.pte.item(row, 1).text())
 
@@ -344,7 +346,7 @@ class wgMeasurement(QDialog):
 
         file_name, filter_ = QFileDialog().getSaveFileName(self, "Save geometric measurements", default_file_name, ";;".join(file_formats))
         if not file_name:
-            return
+            return True
 
         # add correct file extension if not present
         if pl.Path(file_name).suffix != f".{cfg.FILE_NAME_SUFFIX[filter_]}":
@@ -355,7 +357,7 @@ class wgMeasurement(QDialog):
                     dialog.MessageDialog(cfg.programName, f"The file {file_name} already exists.", (cfg.CANCEL, cfg.OVERWRITE))
                     == cfg.CANCEL
                 ):
-                    return
+                    return True
 
         plain_text: str = "\t".join(self.measurements_header) + "\n"
         for row in range(self.pte.rowCount()):
@@ -391,6 +393,8 @@ class wgMeasurement(QDialog):
 
         except Exception:
             QMessageBox.warning(self, cfg.programName, "An error occured during saving the measurement results")
+            return True
+        return False  # everything OK
 
 
 def show_widget(self) -> None:
@@ -475,7 +479,7 @@ def draw_line(self, x1: int, y1: int, x2: int, y2: int, color: str, n_player: in
 
 def append_results(self, results: list) -> None:
     """
-    append results to plain text widget
+    append results to measurements table
     """
     self.measurement_w.pte.setRowCount(self.measurement_w.pte.rowCount() + 1)
     for idx, x in enumerate(results):
@@ -544,7 +548,12 @@ def image_clicked(self, n_player: int, event) -> None:
     if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE] == cfg.MEDIA:
         media_file_name = self.dw_player[n_player - 1].player.playlist[self.dw_player[n_player - 1].player.playlist_pos]["filename"]
     if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE] == cfg.IMAGES:
-        media_file_name = self.images_list[current_frame]
+        if str(pl.Path(self.images_list[current_frame]).parent) not in self.pj[cfg.OBSERVATIONS][self.observationId].get(
+            cfg.DIRECTORIES_LIST, []
+        ):
+            media_file_name = str(pl.Path(self.images_list[current_frame]).relative_to(pl.Path(self.projectFileName).parent))
+        else:
+            media_file_name = self.images_list[current_frame]
 
     # point
     if self.measurement_w.rb_point.isChecked():
