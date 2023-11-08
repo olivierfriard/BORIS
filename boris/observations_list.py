@@ -50,7 +50,10 @@ class MyTableWidgetItem(QTableWidgetItem):
 
     # Qt uses a simple < check for sorting items, override this to use the sortKey
     def __lt__(self, other):
-        return self.sortKey < other.sortKey
+        if isinstance(self.sortKey, str) and isinstance(other.sortKey, str):
+            return self.sortKey.lower() < other.sortKey.lower()
+        else:
+            return self.sortKey < other.sortKey
 
 
 class observationsList_widget(QDialog):
@@ -62,7 +65,6 @@ class observationsList_widget(QDialog):
         not_paired: list = [],
         parent=None,
     ):
-
         super(observationsList_widget, self).__init__(parent)
 
         self.data = data
@@ -156,12 +158,9 @@ class observationsList_widget(QDialog):
         self.comboBox.addItems(header)
 
         self.view.setEditTriggers(QAbstractItemView.NoEditTriggers)
-        self.label.setText(
-            f"{self.view.rowCount()} observation{'s' * (self.view.rowCount() > 1)}"
-        )
+        self.label.setText(f"{self.view.rowCount()} observation{'s' * (self.view.rowCount() > 1)}")
 
     def view_doubleClicked(self, index):
-
         if self.mode == cfg.MULTIPLE:
             return
 
@@ -208,7 +207,6 @@ class observationsList_widget(QDialog):
         self.done(4)
 
     def set_item(self, r, c):
-
         if self.column_type[c] == cfg.NUMERIC:
             try:
                 item = MyTableWidgetItem(self.data[r][c], float(self.data[r][c]))
@@ -307,7 +305,6 @@ class observationsList_widget(QDialog):
                     self.view.setItem(r, c, self.set_item(r, c))
 
         else:
-
             if self.cbLogic.currentText() == "contains":
                 logic = in_
             if self.cbLogic.currentText() == "does not contain":
@@ -334,11 +331,7 @@ class observationsList_widget(QDialog):
                     if logic(search, row[self.comboBox.currentIndex()].upper()):
                         self.view.setRowCount(self.view.rowCount() + 1)
                         for c, _ in enumerate(row):
-                            self.view.setItem(
-                                self.view.rowCount() - 1, c, self.set_item(r, c)
-                            )
+                            self.view.setItem(self.view.rowCount() - 1, c, self.set_item(r, c))
             except Exception:
                 pass
-        self.label.setText(
-            f"{self.view.rowCount()} observation{'s' * (self.view.rowCount() > 1)}"
-        )
+        self.label.setText(f"{self.view.rowCount()} observation{'s' * (self.view.rowCount() > 1)}")
