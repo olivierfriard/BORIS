@@ -24,7 +24,6 @@ from decimal import Decimal as dec
 
 from PyQt5.QtWidgets import (
     QDialog,
-    QSpinBox,
     QHBoxLayout,
     QLabel,
     QLineEdit,
@@ -51,7 +50,6 @@ class DlgEditEvent(QDialog, Ui_Form):
         show_set_current_time: bool = False,
         parent=None,
     ):
-
         super().__init__(parent)
         self.setupUi(self)
         self.time_value = time_value
@@ -65,10 +63,11 @@ class DlgEditEvent(QDialog, Ui_Form):
         if observation_type in (cfg.LIVE, cfg.MEDIA):
             for w in (self.lb_image_idx, self.sb_image_idx, self.cb_set_time_na):
                 w.setVisible(False)
+            # hide frame index because frame index is automatically extracted
+            for w in (self.lb_frame_idx, self.sb_frame_idx, self.cb_set_frame_idx_na):
+                w.setVisible(False)
 
-        if (observation_type in (cfg.LIVE, cfg.MEDIA)) or (
-            observation_type == cfg.IMAGES and self.time_value != cfg.NA
-        ):
+        if (observation_type in (cfg.LIVE, cfg.MEDIA)) or (observation_type == cfg.IMAGES and self.time_value != cfg.NA):
             self.time_widget = duration_widget.Duration_widget(self.time_value)
             if time_format == cfg.S:
                 self.time_widget.set_format_s()
@@ -168,7 +167,6 @@ class EditSelectedEvents(QDialog):
         self.setLayout(hbox)
 
     def rb_changed(self):
-
         self.newText.setEnabled(not self.rbComment.isChecked())
         self.commentText.setEnabled(self.rbComment.isChecked())
 

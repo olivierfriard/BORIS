@@ -306,9 +306,9 @@ class wgMeasurement(QDialog):
             if response == cfg.CANCEL:
                 return
 
-        self.draw_mem = {}
-        self.mem_points = []
-        self.mem_video = []
+        self.draw_mem: dict = {}
+        self.mem_points: list = []
+        self.mem_video: list = []
 
         self.pte.clear()
         self.pte.setColumnCount(len(self.measurements_header))

@@ -32,7 +32,6 @@ from . import dialog
 from . import utilities as util
 from . import select_modifiers
 from . import event_operations
-from . import project_functions
 
 
 def write_event(self, event: dict, mem_time: dec) -> int:

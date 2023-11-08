@@ -1410,12 +1410,17 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         except Exception:
             QMessageBox.warning(self, cfg.programName, "Can not check for updates...")
 
-    def seek_mediaplayer(self, new_time: int, player=0):
+    def seek_mediaplayer(self, new_time: dec, player=0) -> int:
         """
         change media position in player
 
         Args:
-            new_time (int): time in seconds
+            new_time (dec): time in seconds
+
+        Returns:
+            int: error code:
+                0 OK
+                1 time greater than duration
 
         """
         flag_paused = self.is_playing()
@@ -1434,10 +1439,12 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     self.video_slider.setValue(
                         round(self.dw_player[0].player.time_pos / self.dw_player[0].player.duration * (cfg.SLIDER_MAXIMUM - 1))
                     )
+                return 0
+            else:
+                return 1
 
         # many media
         else:
-            # if new_time < sum(self.dw_player[player].media_durations) / 1000:
             if new_time < self.dw_player[player].cumul_media_durations_sec[-1]:
                 for idx, d in enumerate(self.dw_player[player].cumul_media_durations_sec[:-1]):
                     if d <= new_time < self.dw_player[player].cumul_media_durations_sec[idx + 1]:
@@ -1459,7 +1466,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     self.video_slider.setValue(
                         round(self.dw_player[0].player.time_pos / self.dw_player[0].player.duration * (cfg.SLIDER_MAXIMUM - 1))
                     )
-
+                return 0
             else:
                 QMessageBox.warning(
                     self,
@@ -1469,11 +1476,15 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                         f"({util.seconds2time(self.dw_player[player].cumul_media_durations_sec[-1])})"
                     ),
                 )
+                return 1
 
-    def jump_to(self):
+    def jump_to(self) -> None:
         """
         jump to the user specified media position
         """
+
+        if self.playerType != cfg.MEDIA:
+            return
 
         jt = dialog.Ask_time(self.timeFormat)
         jt.setWindowTitle("Jump to specific time")
@@ -1483,10 +1494,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             new_time = int(jt.time_widget.get_time())
             if new_time < 0:
                 return
-
-            if self.playerType == cfg.MEDIA:
-                self.seek_mediaplayer(new_time)
-                self.update_visualizations()
+            self.seek_mediaplayer(new_time)
+            self.update_visualizations()
 
     def previous_media_file(self):
         """

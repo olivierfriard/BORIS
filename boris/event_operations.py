@@ -97,6 +97,13 @@ def add_event(self):
                     if editWindow.leComment.toPlainText():
                         event[cfg.COMMENT] = editWindow.leComment.toPlainText()
 
+                    if self.playerType == cfg.MEDIA:
+                        mem_time = self.getLaps()
+                        if not self.seek_mediaplayer(newTime):
+                            frame_idx = self.get_frame_index()
+                            event[cfg.FRAME_INDEX] = frame_idx
+                            self.seek_mediaplayer(mem_time)
+
                     write_event.write_event(self, event, newTime)
                     break
 
@@ -598,7 +605,7 @@ def edit_event(self):
         logging.warning(
             (
                 f"The behaviour {self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS][pj_event_idx][cfg.EVENT_BEHAVIOR_FIELD_IDX]} "
-                "does not exist more in the ethogram"
+                "does not exist longer in the ethogram"
             )
         )
         QMessageBox.warning(
@@ -652,7 +659,14 @@ def edit_event(self):
                             if not edit_window.sb_frame_idx.value() or edit_window.cb_set_frame_idx_na.isChecked():
                                 event[cfg.FRAME_INDEX] = cfg.NA
                             else:
-                                event[cfg.FRAME_INDEX] = edit_window.sb_frame_idx.value()
+                                if self.playerType == cfg.MEDIA:
+                                    mem_time = self.getLaps()
+                                    if not self.seek_mediaplayer(new_time):
+                                        frame_idx = self.get_frame_index()
+                                        event[cfg.FRAME_INDEX] = frame_idx
+                                        self.seek_mediaplayer(mem_time)
+
+                                # event[cfg.FRAME_INDEX] = edit_window.sb_frame_idx.value()
 
                         event["row"] = pj_event_idx
                         event["original_modifiers"] = self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS][pj_event_idx][
@@ -760,13 +774,26 @@ def edit_time_selected_events(self):
         # fill the undo list
         fill_events_undo_list(self, "Undo 'Edit time'")
 
+        mem_time = self.getLaps()
         for tw_event_idx in tvevents_rows_to_shift:
             pj_event_idx = self.tv_idx2events_idx[tw_event_idx]
 
             self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS][pj_event_idx][cfg.PJ_OBS_FIELDS[self.playerType][cfg.TIME]] += dec(
                 f"{d:.3f}"
             )
+            # set new frame index
+            if self.playerType == cfg.MEDIA:
+                
+                if not self.seek_mediaplayer(self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS][pj_event_idx][cfg.PJ_OBS_FIELDS[self.playerType][cfg.TIME]]):
+                    frame_idx = self.get_frame_index()
+                    if len(self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS][pj_event_idx]) == 6:
+                        self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS][pj_event_idx][-1] = frame_idx
+                    elif len(self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS][pj_event_idx]) == 5:
+                        self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS][pj_event_idx].append(frame_idx)
+
             self.project_changed()
+
+        self.seek_mediaplayer(mem_time)
 
         self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS] = sorted(self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS])
         self.load_tw_events(self.observationId)
