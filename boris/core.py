@@ -2213,16 +2213,12 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             if behaviors_filter and row[cfg.PJ_OBS_FIELDS[self.playerType][cfg.BEHAVIOR_CODE]] not in behaviors_filter:
                 continue
 
-            # r = row[:]
-            # r.insert(3, state[idx])
-            # self.event_state.append(r)
             if self.playerType in (cfg.MEDIA, cfg.VIEWER_MEDIA) and len(row) == 5:
+                # add frame index if not present
                 self.event_state.append(row[:] + [dec("NaN")] + [state[idx]])
             else:
                 self.event_state.append(row[:] + [state[idx]])
             self.tv_idx2events_idx.append(idx)
-
-        print(self.event_state)
 
         self.tv_events.setSortingEnabled(False)
         model = TableModel(
@@ -2249,7 +2245,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         logging.debug(f"begin load events from obs in tableView: {obs_id}")
 
-        t1 = time.time()
+        #t1 = time.time()
         self.populate_tv_events(
             obs_id,
             [s.capitalize() for s in cfg.TW_EVENTS_FIELDS[self.playerType]],
@@ -2258,10 +2254,13 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.filtered_subjects,
         )
 
-        print("load table view:", time.time() - t1)
+        #print("load table view:", time.time() - t1)
 
         return
 
+        '''
+        DISABLED tableview component is used
+        
         logging.debug(f"begin load events from obs in tablewidget: {obs_id}")
 
         t1 = time.time()
@@ -2327,6 +2326,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         print("load twevent:", time.time() - t1)
 
         logging.debug("end load events from obs")
+        '''
 
     def close_tool_windows(self):
         """
