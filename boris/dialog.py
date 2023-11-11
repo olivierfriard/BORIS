@@ -125,7 +125,7 @@ def global_error_message(exception_type, exception_value, traceback_object):
         "Thank you for your collaboration!"
         "<br><br>"
         "<pre>"
-        f"{error_text}"
+        f"{error_text.replace('<', '&lt;').replace('>', '&gt;')}"
         "<hr>"
         "<b>System info</b><br>"
         f"{systeminfo}"

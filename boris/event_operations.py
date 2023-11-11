@@ -861,6 +861,9 @@ def paste_clipboard_to_events(self):
 
         self.project_changed()
 
+    print("sorted")
+    print(self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS])
+
     self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS] = sorted(self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS])
     self.load_tw_events(self.observationId)
 
