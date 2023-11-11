@@ -783,8 +783,9 @@ def edit_time_selected_events(self):
             )
             # set new frame index
             if self.playerType == cfg.MEDIA:
-                
-                if not self.seek_mediaplayer(self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS][pj_event_idx][cfg.PJ_OBS_FIELDS[self.playerType][cfg.TIME]]):
+                if not self.seek_mediaplayer(
+                    self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS][pj_event_idx][cfg.PJ_OBS_FIELDS[self.playerType][cfg.TIME]]
+                ):
                     frame_idx = self.get_frame_index()
                     if len(self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS][pj_event_idx]) == 6:
                         self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS][pj_event_idx][-1] = frame_idx
@@ -813,9 +814,7 @@ def copy_selected_events(self):
         QMessageBox.warning(self, cfg.programName, "No event selected!")
         return
 
-    pj_event_idx_to_copy: list = []
-    for row in tvevents_rows_to_copy:
-        pj_event_idx_to_copy.append(self.tv_idx2events_idx[row])
+    pj_event_idx_to_copy: list = [self.tv_idx2events_idx[row] for row in tvevents_rows_to_copy]
 
     copied_events: list = []
     for idx, event in enumerate(self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS]):
@@ -824,6 +823,8 @@ def copy_selected_events(self):
                 copied_events.append("\t".join([str(x) for x in event + [cfg.NA]]))
             else:
                 copied_events.append("\t".join([str(x) for x in event]))
+
+    print(f"{copied_events=}")
 
     cb = QApplication.clipboard()
     cb.clear(mode=cb.Clipboard)
@@ -853,13 +854,21 @@ def paste_clipboard_to_events(self):
             (
                 "The clipboard does not contain events!\n"
                 f"For an observation from <b>{self.playerType}</b> "
-                f"the events must be organized in {len(cfg.PJ_EVENTS_FIELDS[self.playerType])} columns separated by TAB character"
+                f"the events must be organized in {len(cfg.PJ_EVENTS_FIELDS[self.playerType])} columns separated by <TAB> character"
             ),
         )
         return
 
     for event in content:
+        # convert time in decimal
         event[cfg.EVENT_TIME_FIELD_IDX] = dec(event[cfg.EVENT_TIME_FIELD_IDX])
+        for idx, _ in enumerate(event):
+            if cfg.PJ_EVENTS_FIELDS[self.playerType][idx] in (cfg.FRAME_INDEX, cfg.IMAGE_INDEX):
+                try:
+                    event[idx] = int(event[idx])
+                except ValueError:
+                    pass
+
         # skip if event already present
         if event in self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS]:
             continue
@@ -867,6 +876,8 @@ def paste_clipboard_to_events(self):
         self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS].append(event)
 
         self.project_changed()
+
+    print(self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS])
 
     self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS] = sorted(self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS])
     self.load_tw_events(self.observationId)
