@@ -5155,7 +5155,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             if (not self.find_replace_dialog.cbFindInSelectedEvents.isChecked()) or (
                 self.find_replace_dialog.cbFindInSelectedEvents.isChecked() and event_idx in self.find_replace_dialog.rowsToFind
             ):
-                # search only on filtered events
+                # search only on selected events
                 if event_idx not in self.tv_idx2events_idx:
                     continue
 
@@ -5209,9 +5209,12 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 self.find_replace_dialog.currentIdx = -1
             else:
                 self.find_replace_dialog.close()
+
         if msg == "FIND_REPLACE_ALL":
             dialog.MessageDialog(cfg.programName, f"{number_replacement} substitution(s).", [cfg.OK])
             self.find_replace_dialog.close()
+
+        print(f"{self.undo_queue=}")
 
     def closeEvent(self, event):
         """

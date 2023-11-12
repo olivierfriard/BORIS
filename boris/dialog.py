@@ -620,6 +620,10 @@ class FindReplaceEvents(QWidget):
         hbox2.addWidget(self.pbFindReplaceAll)
 
         hbox.addLayout(hbox2)
+
+        self.lb_results = QLabel(" ")
+        hbox.addWidget(self.lb_results)
+
         self.setLayout(hbox)
 
     def click(self, msg):

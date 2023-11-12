@@ -22,10 +22,12 @@ Copyright 2012-2023 Olivier Friard
 """
 
 import logging
+import copy
 from decimal import Decimal as dec
 from decimal import InvalidOperation
 from decimal import ROUND_DOWN
 from typing import Union
+
 
 from . import config as cfg
 from . import utilities as util
@@ -175,7 +177,6 @@ def find_events(self):
 
     self.find_dialog = dialog.FindInEvents()
     # list of rows to find
-    print(f"{self.tv_idx2events_idx=}")
     self.find_dialog.rowsToFind = set([self.tv_idx2events_idx[item.row()] for item in self.tv_events.selectedIndexes()])
     self.find_dialog.currentIdx = -1
     self.find_dialog.clickSignal.connect(self.click_signal_find_in_events)
@@ -187,6 +188,7 @@ def find_replace_events(self):
     """
     find and replace in events
     """
+    fill_events_undo_list(self, "Undo Find/Replace operations")
     self.find_replace_dialog = dialog.FindReplaceEvents()
     self.find_replace_dialog.currentIdx = -1
     self.find_replace_dialog.currentIdx_idx = -1
@@ -240,7 +242,12 @@ def fill_events_undo_list(self, operation_description: str) -> None:
     """
     fill the undo events list for Undo function (CTRL + Z)
     """
-    self.undo_queue.append(self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS][:])
+    logging.debug("fill_events_undo_list function")
+
+    self.undo_queue.append(copy.deepcopy(self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS]))
+
+    print(f"{self.undo_queue=}")
+
     self.undo_description.append(operation_description)
 
     self.actionUndo.setText(operation_description)
@@ -258,10 +265,19 @@ def undo_event_operation(self) -> None:
     """
     undo operation on event(s)
     """
+
+    logging.debug("Undo event operation function")
+
     if len(self.undo_queue) == 0:
         self.statusbar.showMessage("The Undo buffer is empty", 5000)
         return
+
+    print(self.undo_queue)
+
     events = self.undo_queue.pop()
+
+    print(f"{events=}")
+
     operation_description = self.undo_description.pop()
     self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS] = events[:]
     self.project_changed()
@@ -876,8 +892,6 @@ def paste_clipboard_to_events(self):
         self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS].append(event)
 
         self.project_changed()
-
-    print(self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS])
 
     self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS] = sorted(self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS])
     self.load_tw_events(self.observationId)
