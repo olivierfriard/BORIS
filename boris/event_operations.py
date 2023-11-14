@@ -246,8 +246,6 @@ def fill_events_undo_list(self, operation_description: str) -> None:
 
     self.undo_queue.append(copy.deepcopy(self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS]))
 
-    print(f"{self.undo_queue=}")
-
     self.undo_description.append(operation_description)
 
     self.actionUndo.setText(operation_description)
@@ -672,6 +670,14 @@ def edit_event(self):
                         event[cfg.COMMENT] = edit_window.leComment.toPlainText()
 
                         if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE] == cfg.MEDIA:
+                            if self.playerType == cfg.MEDIA:
+                                mem_time = self.getLaps()
+                                if not self.seek_mediaplayer(new_time):
+                                    frame_idx = self.get_frame_index()
+                                    event[cfg.FRAME_INDEX] = frame_idx
+                                    self.seek_mediaplayer(mem_time)
+
+                            """
                             if not edit_window.sb_frame_idx.value() or edit_window.cb_set_frame_idx_na.isChecked():
                                 event[cfg.FRAME_INDEX] = cfg.NA
                             else:
@@ -683,6 +689,7 @@ def edit_event(self):
                                         self.seek_mediaplayer(mem_time)
 
                                 # event[cfg.FRAME_INDEX] = edit_window.sb_frame_idx.value()
+                            """
 
                         event["row"] = pj_event_idx
                         event["original_modifiers"] = self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS][pj_event_idx][
