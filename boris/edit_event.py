@@ -61,7 +61,7 @@ class DlgEditEvent(QDialog, Ui_Form):
 
         # hide image index
         if observation_type in (cfg.LIVE, cfg.MEDIA):
-            for w in (self.lb_image_idx, self.sb_image_idx, self.cb_set_time_na):
+            for w in (self.lb_image_idx, self.sb_image_idx, self.cb_set_time_na, self.pb_set_to_current_image_index):
                 w.setVisible(False)
             # hide frame index because frame index is automatically extracted
             for w in (self.lb_frame_idx, self.sb_frame_idx, self.cb_set_frame_idx_na):
@@ -78,18 +78,37 @@ class DlgEditEvent(QDialog, Ui_Form):
 
         if observation_type == cfg.IMAGES:
             # hide frame index widgets
-            for w in (self.lb_frame_idx, self.sb_frame_idx, self.cb_set_frame_idx_na):
+            for w in (self.lb_frame_idx, self.sb_frame_idx, self.cb_set_frame_idx_na, self.pb_set_to_current_time):
                 w.setVisible(False)
             self.sb_image_idx.setValue(self.image_idx)
 
-            self.pb_set_to_current_time.setText("Set to current image index")
+            # self.pb_set_to_current_time.setText("Set to current image index")
 
         self.pb_set_to_current_time.clicked.connect(self.set_to_current_time)
+        self.pb_set_to_current_image_index.clicked.connect(self.set_to_current_image_index)
+
         self.cb_set_time_na.stateChanged.connect(self.time_na)
 
         self.cb_set_frame_idx_na.stateChanged.connect(self.frame_idx_na)
-        self.pbOK.clicked.connect(self.accept)
+        self.pbOK.clicked.connect(self.close_widget)
         self.pbCancel.clicked.connect(self.reject)
+
+    def close_widget(self):
+        """
+        close the widget
+        """
+        if self.observation_type in (cfg.IMAGES):
+            if self.sb_image_idx.value() == 0:
+                QMessageBox.warning(self, cfg.programName, "The image index cannot be null")
+                return
+        self.accept()
+
+    def set_to_current_image_index(self):
+        """
+        set image index to current image index
+        """
+        if self.observation_type in (cfg.IMAGES):
+            self.sb_image_idx.setValue(int(self.current_time))
 
     def set_to_current_time(self):
         """
@@ -97,9 +116,6 @@ class DlgEditEvent(QDialog, Ui_Form):
         """
         if self.observation_type in (cfg.LIVE, cfg.MEDIA):
             self.time_widget.set_time(float(self.current_time))
-
-        if self.observation_type in (cfg.IMAGES):
-            self.sb_image_idx.setValue(int(self.current_time))
 
     def frame_idx_na(self):
         """

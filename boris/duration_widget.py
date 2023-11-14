@@ -26,7 +26,6 @@ from . import config as cfg
 
 
 class Widget_hhmmss(QWidget):
-
     time_changed_signal = pyqtSignal(float)
 
     def __init__(self, parent=None):
@@ -84,12 +83,7 @@ class Widget_hhmmss(QWidget):
         self.update_time_value()
 
     def update_time_value(self):
-        new_time = (
-            self.hours.value() * 3600
-            + self.minutes.value() * 60
-            + self.seconds.value()
-            + self.milliseconds.value() / 1000
-        )
+        new_time = self.hours.value() * 3600 + self.minutes.value() * 60 + self.seconds.value() + self.milliseconds.value() / 1000
         if self.sign.text() == "-":
             new_time = -new_time
 
@@ -123,7 +117,6 @@ class Widget_hhmmss(QWidget):
 
 
 class Widget_seconds(QWidget):
-
     time_changed_signal = pyqtSignal(float)
 
     def __init__(self, parent=None):
@@ -151,7 +144,6 @@ class Widget_seconds(QWidget):
 
 class Duration_widget(QWidget):
     def __init__(self, time_value=0, parent=None):
-
         super().__init__()
 
         self.time_value = dec(time_value).quantize(dec(".001"))
@@ -192,6 +184,8 @@ class Duration_widget(QWidget):
         self.time_value = x
 
     def set_time(self, new_time):
+        if new_time.is_nan():
+            return
 
         self.w1.sign.setText("-" if new_time < 0 else "+")
 

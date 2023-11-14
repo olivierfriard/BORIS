@@ -52,11 +52,10 @@ def add_event(self):
 
     if self.pause_before_addevent:
         # pause media
-        if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE] == cfg.MEDIA:
-            if self.playerType == cfg.MEDIA:
-                memState = self.is_playing()
-                if memState:
-                    self.pause_video()
+        if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE] == cfg.MEDIA and self.playerType == cfg.MEDIA:
+            memState = self.is_playing()
+            if memState:
+                self.pause_video()
 
     if not self.pj[cfg.ETHOGRAM]:
         QMessageBox.warning(self, cfg.programName, "The ethogram is not set!")
@@ -134,6 +133,9 @@ def add_event(self):
         # IMAGES
         if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE] == cfg.IMAGES:
             new_index = editWindow.sb_image_idx.value()
+            if new_index == 0:
+                QMessageBox.warning(self, cfg.programName, "The image index cannot be null")
+                return
 
             for idx in self.pj[cfg.ETHOGRAM]:
                 if self.pj[cfg.ETHOGRAM][idx][cfg.BEHAVIOR_CODE] == editWindow.cobCode.currentText():
@@ -552,6 +554,13 @@ def edit_event(self):
         QMessageBox.warning(self, cfg.programName, "Select an event to edit")
         return
 
+    if self.pause_before_addevent:
+        # pause media
+        if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE] == cfg.MEDIA and self.playerType == cfg.MEDIA:
+            player_mem_state = self.is_playing()
+            if player_mem_state:
+                self.pause_video()
+
     tvevents_row = self.tv_events.selectionModel().selectedIndexes()[0].row()
 
     pj_event_idx = self.tv_idx2events_idx[tvevents_row]
@@ -581,14 +590,15 @@ def edit_event(self):
     )
     edit_window.setWindowTitle("Edit event")
 
+    # time
+    if time_value.is_nan():
+        edit_window.cb_set_time_na.setChecked(True)
     if self.playerType in (cfg.VIEWER_MEDIA, cfg.VIEWER_LIVE, cfg.VIEWER_IMAGES):
         edit_window.pb_set_to_current_time.setVisible(False)
 
     # subjects
     sorted_subjects = [cfg.NO_FOCAL_SUBJECT] + sorted([self.pj[cfg.SUBJECTS][x][cfg.SUBJECT_NAME] for x in self.pj[cfg.SUBJECTS]])
-
     edit_window.cobSubject.addItems(sorted_subjects)
-
     if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS][pj_event_idx][cfg.EVENT_SUBJECT_FIELD_IDX] == "":  # no focal subject
         edit_window.cobSubject.setCurrentIndex(sorted_subjects.index(cfg.NO_FOCAL_SUBJECT))
     elif self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS][pj_event_idx][cfg.EVENT_SUBJECT_FIELD_IDX] in sorted_subjects:
@@ -607,9 +617,9 @@ def edit_event(self):
         )
         edit_window.cobSubject.setCurrentIndex(0)
 
+    # behaviors
     sortedCodes = sorted([self.pj[cfg.ETHOGRAM][x][cfg.BEHAVIOR_CODE] for x in self.pj[cfg.ETHOGRAM]])
     edit_window.cobCode.addItems(sortedCodes)
-
     # check if selected code is in code's list (no modification of codes)
     if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS][pj_event_idx][cfg.EVENT_BEHAVIOR_FIELD_IDX] in sortedCodes:
         edit_window.cobCode.setCurrentIndex(
@@ -766,6 +776,12 @@ def edit_event(self):
 
         if flag_ok:
             break
+
+    if self.pause_before_addevent:
+        # restart media
+        if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE] == cfg.MEDIA and self.playerType == cfg.MEDIA:
+            if player_mem_state:
+                self.play_video()
 
 
 def edit_time_selected_events(self):
