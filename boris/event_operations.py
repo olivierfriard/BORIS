@@ -23,6 +23,7 @@ Copyright 2012-2023 Olivier Friard
 
 import logging
 import copy
+import time
 from decimal import Decimal as dec
 from decimal import InvalidOperation
 from decimal import ROUND_DOWN
@@ -98,9 +99,11 @@ def add_event(self):
                     if editWindow.leComment.toPlainText():
                         event[cfg.COMMENT] = editWindow.leComment.toPlainText()
 
+                    # determine the frame index
                     if self.playerType == cfg.MEDIA:
                         mem_time = self.getLaps()
                         if not self.seek_mediaplayer(newTime):
+                            time.sleep(0.1)
                             frame_idx = self.get_frame_index()
                             event[cfg.FRAME_INDEX] = frame_idx
                             self.seek_mediaplayer(mem_time)
@@ -679,8 +682,10 @@ def edit_event(self):
 
                         event[cfg.COMMENT] = edit_window.leComment.toPlainText()
 
+                        # determine the new frame index
                         if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE] == cfg.MEDIA:
                             if self.playerType == cfg.MEDIA:
+                                time.sleep(0.1)
                                 mem_time = self.getLaps()
                                 if not self.seek_mediaplayer(new_time):
                                     frame_idx = self.get_frame_index()
@@ -825,6 +830,8 @@ def edit_time_selected_events(self):
                 if not self.seek_mediaplayer(
                     self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS][pj_event_idx][cfg.PJ_OBS_FIELDS[self.playerType][cfg.TIME]]
                 ):
+                    # determine the new frame index
+                    time.sleep(0.1)
                     frame_idx = self.get_frame_index()
                     if len(self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS][pj_event_idx]) == 6:
                         self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS][pj_event_idx][-1] = frame_idx
