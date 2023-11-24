@@ -1417,6 +1417,20 @@ def all_behaviors(ethogram: dict) -> list:
     return [ethogram[x][cfg.BEHAVIOR_CODE] for x in sorted_keys(ethogram)]
 
 
+def all_subjects(subjects: dict) -> list:
+    """
+    extract all subjects from the subject configuration dictionary
+
+    Args:
+        subject configuration (dict)
+
+    Returns:
+        list: subjects name
+    """
+
+    return [subjects[x][cfg.SUBJECT_NAME] for x in sorted_keys(subjects)]
+
+
 def dir_images_number(dir_path_str: str) -> dict:
     """
     return number of images in dir_path (see cfg.IMAGE_EXTENSIONS)

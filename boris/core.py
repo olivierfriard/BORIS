@@ -5113,6 +5113,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         if msg == "CANCEL":
             self.find_replace_dialog.close()
             return
+        if self.find_replace_dialog.combo_fields.currentIndex() == 0:  # choose a field
+            dialog.MessageDialog(cfg.programName, "Choose a field.", ["OK"])
+            return
+
         if not self.find_replace_dialog.findText.text():
             dialog.MessageDialog(cfg.programName, "There is nothing to find.", ["OK"])
             return
@@ -5122,14 +5126,35 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             return
 
         fields_list: list = []
-        if self.find_replace_dialog.cbSubject.isChecked():
+        if self.find_replace_dialog.combo_fields.currentText() == "Subject":
+            # check if find and replace contain valid behavior codes
+            for bh in (self.find_replace_dialog.findText.text(), self.find_replace_dialog.replaceText.text()):
+                if bh not in util.all_subjects(self.pj[cfg.SUBJECTS]):
+                    dialog.MessageDialog(cfg.programName, f"<b>{bh}</b> is not a valid subject name", [cfg.OK])
+                    return
             fields_list.append(cfg.PJ_OBS_FIELDS[self.playerType][cfg.SUBJECT])
-        if self.find_replace_dialog.cbBehavior.isChecked():
+
+        if self.find_replace_dialog.combo_fields.currentText() == "Behavior":
+            # check if find and replace contain valid behavior codes
+            for bh in (self.find_replace_dialog.findText.text(), self.find_replace_dialog.replaceText.text()):
+                if bh not in util.all_behaviors(self.pj[cfg.ETHOGRAM]):
+                    dialog.MessageDialog(cfg.programName, f"<b>{bh}</b> is not a valid behavior code", [cfg.OK])
+                    return
             fields_list.append(cfg.PJ_OBS_FIELDS[self.playerType][cfg.BEHAVIOR_CODE])
-        if self.find_replace_dialog.cbModifier.isChecked():
+
+        if self.find_replace_dialog.combo_fields.currentText() == "Modifiers":
             fields_list.append(cfg.PJ_OBS_FIELDS[self.playerType][cfg.MODIFIER])
-        if self.find_replace_dialog.cbComment.isChecked():
+        if self.find_replace_dialog.combo_fields.currentText() == "Comment":
             fields_list.append(cfg.PJ_OBS_FIELDS[self.playerType][cfg.COMMENT])
+
+        # if self.find_replace_dialog.cbSubject.isChecked():
+        #    fields_list.append(cfg.PJ_OBS_FIELDS[self.playerType][cfg.SUBJECT])
+        # if self.find_replace_dialog.cbBehavior.isChecked():
+        #    fields_list.append(cfg.PJ_OBS_FIELDS[self.playerType][cfg.BEHAVIOR_CODE])
+        # if self.find_replace_dialog.cbModifier.isChecked():
+        #    fields_list.append(cfg.PJ_OBS_FIELDS[self.playerType][cfg.MODIFIER])
+        # if self.find_replace_dialog.cbComment.isChecked():
+        #    fields_list.append(cfg.PJ_OBS_FIELDS[self.playerType][cfg.COMMENT])
 
         number_replacement: int = 0
         insensitive_re = re.compile(re.escape(self.find_replace_dialog.findText.text()), re.IGNORECASE)
@@ -5213,8 +5238,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         if msg == "FIND_REPLACE_ALL":
             dialog.MessageDialog(cfg.programName, f"{number_replacement} substitution(s).", [cfg.OK])
             self.find_replace_dialog.close()
-
-        print(f"{self.undo_queue=}")
 
     def closeEvent(self, event):
         """
