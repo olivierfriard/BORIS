@@ -22,6 +22,7 @@ Module containing functions for state events
 
 """
 
+import time
 from decimal import Decimal as dec
 
 from PyQt5.QtWidgets import QMessageBox, QAbstractItemView
@@ -114,6 +115,16 @@ def fix_unpaired_events(self):
             )
 
             if events_to_add:
+                # determine the new frame index
+                if (self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE] == cfg.MEDIA) and self.playerType == cfg.MEDIA:
+                    mem_time = self.getLaps()
+                    for event in events_to_add:
+                        if not self.seek_mediaplayer(event[0]):
+                            time.sleep(0.1)
+                            frame_idx = self.get_frame_index()
+                            event[cfg.PJ_OBS_FIELDS[cfg.MEDIA][cfg.FRAME_INDEX]] = frame_idx
+                    self.seek_mediaplayer(mem_time)
+
                 self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS].extend(events_to_add)
                 self.project_changed()
                 self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS].sort()

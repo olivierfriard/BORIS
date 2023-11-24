@@ -685,9 +685,9 @@ def edit_event(self):
                         # determine the new frame index
                         if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE] == cfg.MEDIA:
                             if self.playerType == cfg.MEDIA:
-                                time.sleep(0.1)
                                 mem_time = self.getLaps()
                                 if not self.seek_mediaplayer(new_time):
+                                    time.sleep(0.1)
                                     frame_idx = self.get_frame_index()
                                     event[cfg.FRAME_INDEX] = frame_idx
                                     self.seek_mediaplayer(mem_time)

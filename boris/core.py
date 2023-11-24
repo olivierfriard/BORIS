@@ -1472,7 +1472,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     self,
                     cfg.programName,
                     (
-                        "The indicated position is behind the total media duration "
+                        "The indicated position is greater than the total media duration "
                         f"({util.seconds2time(self.dw_player[player].cumul_media_durations_sec[-1])})"
                     ),
                 )

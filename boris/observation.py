@@ -971,7 +971,7 @@ class Observation(QDialog, Ui_Form):
                     return False
 
             # check that the longuest media is in player #1
-            durations = []
+            durations: list = []
             for i in sorted(list(players.keys())):
                 durations.append(sum(players[i]))
             if [x for x in durations[1:] if x > durations[0]]:
@@ -992,6 +992,20 @@ class Observation(QDialog, Ui_Form):
                         ),
                     )
                     return False
+
+            # check if offset set and only player #1 is used
+            if min(players_list) == 1:
+                for row in range(self.twVideo1.rowCount()):
+                    if float(self.twVideo1.item(row, 1).text()):
+                        QMessageBox.critical(
+                            self,
+                            cfg.programName,
+                            (
+                                "It is not possible to use offset value(s) with only one player,<br>"
+                                "The offset values are use to synchronise various players."
+                            ),
+                        )
+                        return False
 
             # check offset for external data files
             for row in range(self.tw_data_files.rowCount()):
@@ -1046,6 +1060,7 @@ class Observation(QDialog, Ui_Form):
                 )
                 return False
 
+        # check if numeric indep variable values are numeric
         for row in range(self.twIndepVariables.rowCount()):
             if self.twIndepVariables.item(row, 1).text() == cfg.NUMERIC:
                 if self.twIndepVariables.item(row, 2).text() and not is_numeric(self.twIndepVariables.item(row, 2).text()):

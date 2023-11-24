@@ -1576,11 +1576,11 @@ def fix_unpaired_state_events(ethogram: dict, observation: dict, fix_at_time: de
 
 def fix_unpaired_state_events2(ethogram: dict, events: list, fix_at_time: dec) -> list:
     """
-    fix unpaired state events in observation
+    fix unpaired state events in events list
 
     Args:
         ethogram (dict): ethogram dictionary
-        observation (dict): observation dictionary
+        events (list): list of events
         fix_at_time (Decimal): time to fix the unpaired events
 
     Returns:
