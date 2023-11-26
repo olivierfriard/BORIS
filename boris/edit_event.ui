@@ -73,6 +73,13 @@
       </widget>
      </item>
      <item>
+      <widget class="QPushButton" name="pb_set_to_current_image_index">
+       <property name="text">
+        <string>Set to current image index</string>
+       </property>
+      </widget>
+     </item>
+     <item>
       <spacer name="horizontalSpacer_6">
        <property name="orientation">
         <enum>Qt::Horizontal</enum>

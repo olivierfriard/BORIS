@@ -153,6 +153,7 @@ class Duration_widget(QWidget):
         lay.setContentsMargins(0, 0, 0, 0)
 
         self.Stack = QStackedWidget()
+
         self.w1 = Widget_hhmmss()
         self.w1.time_changed_signal.connect(self.time_changed)
         self.Stack.addWidget(self.w1)
@@ -184,6 +185,9 @@ class Duration_widget(QWidget):
         self.time_value = x
 
     def set_time(self, new_time):
+        if new_time.is_nan():
+            return
+
         self.w1.sign.setText("-" if new_time < 0 else "+")
 
         h = int(abs(new_time) // 3600)

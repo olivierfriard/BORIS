@@ -25,16 +25,13 @@ import bisect
 import logging
 from decimal import Decimal as dec
 import re
+import pathlib as pl
 
 from . import config as cfg
 from . import dialog
 from . import utilities as util
 from . import select_modifiers
 from . import event_operations
-
-from PyQt5.QtWidgets import (
-    QAbstractItemView,
-)
 
 
 def write_event(self, event: dict, mem_time: dec) -> int:
@@ -115,6 +112,9 @@ def write_event(self, event: dict, mem_time: dec) -> int:
     if self.playerType in (cfg.IMAGES, cfg.VIEWER_IMAGES):
         image_idx = event.get(cfg.IMAGE_INDEX, "")
         image_path = event.get(cfg.IMAGE_PATH, "")
+        # check if pictures dir is relative
+        if str(pl.Path(image_path).parent) not in self.pj[cfg.OBSERVATIONS][self.observationId].get(cfg.DIRECTORIES_LIST, []):
+            image_path = str(pl.Path(image_path).relative_to(pl.Path(self.projectFileName).parent))
 
     if self.playerType in (cfg.MEDIA, cfg.VIEWER_MEDIA):
         frame_idx = event.get(cfg.FRAME_INDEX, cfg.NA)
@@ -405,14 +405,6 @@ def write_event(self, event: dict, mem_time: dec) -> int:
 
     # reload all events in tw
     self.load_tw_events(self.observationId)
-
-    if self.playerType in (cfg.MEDIA, cfg.LIVE):
-        position_in_events = [i for i, t in enumerate(self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS]) if t[0] == mem_time][0]
-
-        if position_in_events == len(self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS]) - 1:
-            self.twEvents.scrollToBottom()
-        else:
-            self.twEvents.scrollToItem(self.twEvents.item(position_in_events, 0), QAbstractItemView.EnsureVisible)
 
     self.project_changed()
 

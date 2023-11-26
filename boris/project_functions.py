@@ -30,7 +30,7 @@ from shutil import copyfile
 from typing import List, Tuple, Dict
 
 import tablib
-from PyQt5.QtWidgets import QMessageBox, QTableWidgetItem
+from PyQt5.QtWidgets import QMessageBox, QTableWidgetItem, QAbstractItemView
 from PyQt5.QtCore import Qt
 
 from . import config as cfg
@@ -1114,7 +1114,7 @@ def remove_media_files_path(pj: dict, project_file_name: str) -> bool:
 def full_path(path: str, project_file_name: str) -> str:
     """
     returns the media/data full path or the images directory full path
-    add path of BORIS project if media/data with relative path
+    add path of BORIS project if media/data/pictures dir with relative path
 
     Args:
         path (str): file path or images directory path
@@ -1576,11 +1576,11 @@ def fix_unpaired_state_events(ethogram: dict, observation: dict, fix_at_time: de
 
 def fix_unpaired_state_events2(ethogram: dict, events: list, fix_at_time: dec) -> list:
     """
-    fix unpaired state events in observation
+    fix unpaired state events in events list
 
     Args:
         ethogram (dict): ethogram dictionary
-        observation (dict): observation dictionary
+        events (list): list of events
         fix_at_time (Decimal): time to fix the unpaired events
 
     Returns:
@@ -1653,8 +1653,11 @@ def explore_project(self) -> None:
         manage double-click on tablewidget of explore project results
         """
         observation_operations.load_observation(self, obs_id, cfg.VIEW)
-        self.twEvents.selectRow(event_idx - 1)
-        self.twEvents.scrollToItem(self.twEvents.item(event_idx - 1, 0))
+
+        self.tv_events.selectRow(event_idx - 1)
+        index = self.tv_events.model().index(event_idx - 1, 0)
+        self.tv_events.scrollTo(index, QAbstractItemView.EnsureVisible)
+        # self.twEvents.scrollToItem(self.twEvents.item(event_idx - 1, 0))
 
     elements_list = ("Subject", "Behavior", "Modifier", "Comment")
     elements = []

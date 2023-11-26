@@ -125,7 +125,7 @@ def global_error_message(exception_type, exception_value, traceback_object):
         "Thank you for your collaboration!"
         "<br><br>"
         "<pre>"
-        f"{error_text.replace('<', '&lt;').replace('>', '&gt;')}"
+        f"{error_text}"
         "<hr>"
         "<b>System info</b><br>"
         f"{systeminfo}"
@@ -564,9 +564,6 @@ class FindReplaceEvents(QWidget):
     """
 
     clickSignal = pyqtSignal(str)
-    """
-    sendEventSignal = pyqtSignal(QEvent)
-    """
 
     def __init__(self):
         super().__init__()
@@ -575,21 +572,25 @@ class FindReplaceEvents(QWidget):
 
         hbox = QVBoxLayout()
 
-        self.cbSubject = QCheckBox("Subject")
-        self.cbSubject.setChecked(False)
-        hbox.addWidget(self.cbSubject)
+        self.combo_fields = QComboBox()
+        self.combo_fields.addItems(("Choose a field", "Subject", "Behavior", "Modifiers", "Comment"))
+        hbox.addWidget(self.combo_fields)
 
-        self.cbBehavior = QCheckBox("Behavior")
-        self.cbBehavior.setChecked(False)
-        hbox.addWidget(self.cbBehavior)
+        # self.cbSubject = QCheckBox("Subject")
+        # self.cbSubject.setChecked(False)
+        # hbox.addWidget(self.cbSubject)
 
-        self.cbModifier = QCheckBox("Modifiers")
-        self.cbModifier.setChecked(False)
-        hbox.addWidget(self.cbModifier)
+        # self.cbBehavior = QCheckBox("Behavior")
+        # self.cbBehavior.setChecked(False)
+        # hbox.addWidget(self.cbBehavior)
 
-        self.cbComment = QCheckBox("Comment")
-        self.cbComment.setChecked(False)
-        hbox.addWidget(self.cbComment)
+        # self.cbModifier = QCheckBox("Modifiers")
+        # self.cbModifier.setChecked(False)
+        # hbox.addWidget(self.cbModifier)
+
+        # self.cbComment = QCheckBox("Comment")
+        # self.cbComment.setChecked(False)
+        # hbox.addWidget(self.cbComment)
 
         self.lbFind = QLabel("Find")
         hbox.addWidget(self.lbFind)
@@ -603,7 +604,7 @@ class FindReplaceEvents(QWidget):
         self.replaceText = QLineEdit()
         hbox.addWidget(self.replaceText)
 
-        self.cbFindInSelectedEvents = QCheckBox("Find/Replace in selected events")
+        self.cbFindInSelectedEvents = QCheckBox("Find/Replace only in selected events")
         self.cbFindInSelectedEvents.setChecked(False)
         hbox.addWidget(self.cbFindInSelectedEvents)
 
@@ -623,6 +624,10 @@ class FindReplaceEvents(QWidget):
         hbox2.addWidget(self.pbFindReplaceAll)
 
         hbox.addLayout(hbox2)
+
+        self.lb_results = QLabel(" ")
+        hbox.addWidget(self.lb_results)
+
         self.setLayout(hbox)
 
     def click(self, msg):

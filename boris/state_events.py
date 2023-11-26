@@ -22,9 +22,10 @@ Module containing functions for state events
 
 """
 
+import time
 from decimal import Decimal as dec
 
-from PyQt5.QtWidgets import QMessageBox
+from PyQt5.QtWidgets import QMessageBox, QAbstractItemView
 
 from . import config as cfg
 from . import dialog, project_functions, select_observations
@@ -81,7 +82,7 @@ def check_state_events(self, mode: str = "all") -> None:
     results.exec_()
 
 
-def fix_unpaired_events(self):
+def fix_unpaired_events(self, silent_mode: bool = False):
     """
     fix unpaired state events
     """
@@ -90,7 +91,7 @@ def fix_unpaired_events(self):
         r, msg = project_functions.check_state_events_obs(
             self.observationId, self.pj[cfg.ETHOGRAM], self.pj[cfg.OBSERVATIONS][self.observationId]
         )
-        if "not PAIRED" not in msg:
+        if not silent_mode and "not PAIRED" not in msg:
             QMessageBox.information(
                 None,
                 cfg.programName,
@@ -114,11 +115,22 @@ def fix_unpaired_events(self):
             )
 
             if events_to_add:
+                # determine the new frame index
+                if (self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE] == cfg.MEDIA) and self.playerType == cfg.MEDIA:
+                    mem_time = self.getLaps()
+                    for event in events_to_add:
+                        if not self.seek_mediaplayer(event[0]):
+                            time.sleep(0.1)
+                            frame_idx = self.get_frame_index()
+                            event[cfg.PJ_OBS_FIELDS[cfg.MEDIA][cfg.FRAME_INDEX]] = frame_idx
+                    self.seek_mediaplayer(mem_time)
+
                 self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS].extend(events_to_add)
                 self.project_changed()
                 self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS].sort()
                 self.load_tw_events(self.observationId)
-                item = self.twEvents.item(
+
+                index = self.tv_events.model().index(
                     [
                         event_idx
                         for event_idx, event in enumerate(self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS])
@@ -126,7 +138,7 @@ def fix_unpaired_events(self):
                     ][0],
                     0,
                 )
-                self.twEvents.scrollToItem(item)
+                self.tv_events.scrollTo(index, QAbstractItemView.EnsureVisible)
 
     # selected observations
     else:
@@ -139,7 +151,9 @@ def fix_unpaired_events(self):
         for obs_id in selected_observations:
             r, msg = project_functions.check_state_events_obs(obs_id, self.pj[cfg.ETHOGRAM], self.pj[cfg.OBSERVATIONS][obs_id])
             if "NOT PAIRED" in msg.upper():
+                # determine max time of events
                 fix_at_time = max(x[0] for x in self.pj[cfg.OBSERVATIONS][obs_id][cfg.EVENTS])
+                # list of events to add to fix unpaired events
                 events_to_add = project_functions.fix_unpaired_state_events(
                     self.pj[cfg.ETHOGRAM], self.pj[cfg.OBSERVATIONS][obs_id], fix_at_time
                 )

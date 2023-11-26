@@ -57,6 +57,7 @@ from PyQt5.QtCore import (
     QDateTime,
     QTime,
     QUrl,
+    QAbstractTableModel,
     QT_VERSION_STR,
     PYQT_VERSION_STR,
 )
@@ -76,8 +77,6 @@ from PyQt5.QtWidgets import (
     QAction,
     QAbstractItemView,
     QSplashScreen,
-    # QToolButton,
-    # QMenu,
 )
 from PIL.ImageQt import Image
 
@@ -169,6 +168,48 @@ if not r:
             f"Free: {memory.get('free_memory', 'Not available'):.2f} Mb"
         )
     )
+
+
+class TableModel(QAbstractTableModel):
+    """
+    class for populating table view with events
+    """
+
+    def __init__(self, data, header: list, time_format: str, observation_type: str, parent=None):
+        super(TableModel, self).__init__(parent)
+        self._data = data
+        self.header = header
+        self.time_format = time_format
+        self.observation_type = observation_type
+
+    def headerData(self, section: int, orientation: Qt.Orientation, role: int):
+        if role == Qt.DisplayRole:
+            if orientation == Qt.Horizontal:
+                return self.header[section]
+            else:
+                return str(section + 1)
+
+    def rowCount(self, parent=None):
+        return len(self._data)
+
+    def columnCount(self, parent=None):
+        return len(self._data[0]) if self.rowCount() else 0
+
+    def data(self, index, role=Qt.DisplayRole):
+        if role == Qt.DisplayRole:
+            row = index.row()
+            if 0 <= row < self.rowCount():
+                column = index.column()
+
+                # print(self._data[:3])
+                if cfg.TW_EVENTS_FIELDS[self.observation_type][column] == "type":
+                    return self._data[row][-1]
+                else:
+                    event_idx = cfg.PJ_OBS_FIELDS[self.observation_type][cfg.TW_EVENTS_FIELDS[self.observation_type][column]]
+                    if column == 0:  # time
+                        return util.convertTime(self.time_format, self._data[row][event_idx])
+                    elif column < self.columnCount():
+                        return self._data[row][event_idx]
 
 
 class MainWindow(QMainWindow, Ui_MainWindow):
@@ -438,7 +479,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         """
 
         # set painter for twEvents to highlight current row
-        self.twEvents.setItemDelegate(events_cursor.StyledItemDelegateTriangle(self.events_current_row))
+        # self.twEvents.setItemDelegate(events_cursor.StyledItemDelegateTriangle(self.events_current_row))
+        self.tv_events.setItemDelegate(events_cursor.StyledItemDelegateTriangle(self.events_current_row))
 
         self.config_param = cfg.INIT_PARAM
 
@@ -640,7 +682,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         """
         handle click received from coding pad
         """
-        """sendEventSignal = pyqtSignal(QEvent)"""
         q = QKeyEvent(QEvent.KeyPress, Qt.Key_Enter, Qt.NoModifier, text=behaviorCode)
         self.keyPressEvent(q)
 
@@ -655,7 +696,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         """
         handle click received from subjects pad
         """
-        """sendEventSignal = pyqtSignal(QEvent)"""
         q = QKeyEvent(QEvent.KeyPress, Qt.Key_Enter, Qt.NoModifier, text="#subject#" + subject)
         self.keyPressEvent(q)
 
@@ -718,10 +758,12 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         """
         show all behaviors in ethogram
         """
+
         if self.twEthogram.rowCount() != len(self.pj[cfg.ETHOGRAM]):
             self.project_changed()
 
         self.load_behaviors_in_twEthogram([self.pj[cfg.ETHOGRAM][x][cfg.BEHAVIOR_CODE] for x in self.pj[cfg.ETHOGRAM]])
+
         # update coding pad
         if hasattr(self, "codingpad"):
             self.codingpad.filtered_behaviors = [self.twEthogram.item(i, 1).text() for i in range(self.twEthogram.rowCount())]
@@ -782,9 +824,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         # behaviors filtered
         if table == cfg.ETHOGRAM:
-            filtered_behaviors: list = [self.twEthogram.item(i, 1).text() for i in range(self.twEthogram.rowCount())]
+            filtered_behaviors = [self.twEthogram.item(i, 1).text() for i in range(self.twEthogram.rowCount())]
         else:
-            filtered_behaviors: list = []
+            filtered_behaviors = []
 
         if cfg.BEHAVIORAL_CATEGORIES in self.pj:
             categories = self.pj[cfg.BEHAVIORAL_CATEGORIES][:]
@@ -855,7 +897,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 if hasattr(self, "codingpad"):
                     self.codingpad.filtered_behaviors = [self.twEthogram.item(i, 1).text() for i in range(self.twEthogram.rowCount())]
                     self.codingpad.compose()
-
                 return False, []
             else:
                 return False, paramPanelWindow.selectedBehaviors
@@ -871,7 +912,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         paramPanelWindow.setWindowTitle("Select the subjects to show in the subjects list")
         paramPanelWindow.lbBehaviors.setText("Subjects")
 
-        for w in (
+        for w in [
             paramPanelWindow.lwSubjects,
             paramPanelWindow.pbSelectAllSubjects,
             paramPanelWindow.pbUnselectAllSubjects,
@@ -881,7 +922,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             paramPanelWindow.cbExcludeBehaviors,
             paramPanelWindow.frm_time,
             paramPanelWindow.frm_time_bin_size,
-        ):
+        ]:
             w.setVisible(False)
 
         gui_utilities.restore_geometry(paramPanelWindow, "filter subjects", (800, 600))
@@ -1369,12 +1410,17 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         except Exception:
             QMessageBox.warning(self, cfg.programName, "Can not check for updates...")
 
-    def seek_mediaplayer(self, new_time: int, player=0):
+    def seek_mediaplayer(self, new_time: dec, player=0) -> int:
         """
         change media position in player
 
         Args:
-            new_time (int): time in seconds
+            new_time (dec): time in seconds
+
+        Returns:
+            int: error code:
+                0 OK
+                1 time greater than duration
 
         """
         flag_paused = self.is_playing()
@@ -1393,10 +1439,12 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     self.video_slider.setValue(
                         round(self.dw_player[0].player.time_pos / self.dw_player[0].player.duration * (cfg.SLIDER_MAXIMUM - 1))
                     )
+                return 0
+            else:
+                return 1
 
         # many media
         else:
-            # if new_time < sum(self.dw_player[player].media_durations) / 1000:
             if new_time < self.dw_player[player].cumul_media_durations_sec[-1]:
                 for idx, d in enumerate(self.dw_player[player].cumul_media_durations_sec[:-1]):
                     if d <= new_time < self.dw_player[player].cumul_media_durations_sec[idx + 1]:
@@ -1418,21 +1466,25 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     self.video_slider.setValue(
                         round(self.dw_player[0].player.time_pos / self.dw_player[0].player.duration * (cfg.SLIDER_MAXIMUM - 1))
                     )
-
+                return 0
             else:
                 QMessageBox.warning(
                     self,
                     cfg.programName,
                     (
-                        "The indicated position is behind the total media duration "
+                        "The indicated position is greater than the total media duration "
                         f"({util.seconds2time(self.dw_player[player].cumul_media_durations_sec[-1])})"
                     ),
                 )
+                return 1
 
-    def jump_to(self):
+    def jump_to(self) -> None:
         """
         jump to the user specified media position
         """
+
+        if self.playerType != cfg.MEDIA:
+            return
 
         jt = dialog.Ask_time(self.timeFormat)
         jt.setWindowTitle("Jump to specific time")
@@ -1442,10 +1494,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             new_time = int(jt.time_widget.get_time())
             if new_time < 0:
                 return
-
-            if self.playerType == cfg.MEDIA:
-                self.seek_mediaplayer(new_time)
-                self.update_visualizations()
+            self.seek_mediaplayer(new_time)
+            self.update_visualizations()
 
     def previous_media_file(self):
         """
@@ -1701,7 +1751,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         """
         receive signal from widget
         """
-
         self.keyPressEvent(event)
 
     def reload_frame(self):
@@ -2058,21 +2107,62 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             return
         """
 
-    def read_tw_event_field(self, row_idx: int, player_type: str, field_type: str) -> Union[str, None, int, dec]:
-        """
-        return value of field for event in TW or NA if not available
-        """
-        if field_type not in cfg.TW_EVENTS_FIELDS[player_type]:
-            return None
+    # def read_tw_event_field(self, row_idx: int, player_type: str, field_type: str) -> Union[str, None, int, dec]:
+    #    """
+    #    return value of field for event in TW or NA if not available
+    #    """
+    #    if field_type not in cfg.TW_EVENTS_FIELDS[player_type]:
+    #        return None
+    #
+    #    return self.twEvents.item(row_idx, cfg.TW_OBS_FIELD[player_type][field_type]).text()
 
-        return self.twEvents.item(row_idx, cfg.TW_OBS_FIELD[player_type][field_type]).text()
+    # def configure_twevents_columns(self):
+    #    """
+    #    configure the visible columns of twEvent tablewidget
+    #    configuration for playerType is recorded in self.config_param[f"{self.playerType} tw fields"]
+    #    """
 
-    def configure_twevents_columns(self):
+    #    dlg = dialog.Input_dialog(
+    #        label_caption="Select the columns to show",
+    #        elements_list=[
+    #            (
+    #                "cb",
+    #                x,
+    #                # default state
+    #                x
+    #                in self.config_param.get(
+    #                    f"{self.playerType} tw fields",
+    #                    cfg.TW_EVENTS_FIELDS[self.playerType],
+    #                ),
+    #            )
+    #            for x in cfg.TW_EVENTS_FIELDS[self.playerType]
+    #        ],
+    #        title="Select the column to show",
+    #    )
+    #    if not dlg.exec_():
+    #        return
+
+    #    self.config_param[f"{self.playerType} tw fields"] = tuple(
+    #        field for field in cfg.TW_EVENTS_FIELDS[self.playerType] if dlg.elements[field].isChecked()
+    #    )
+
+    #    self.load_tw_events(self.observationId)
+
+    def configure_tvevents_columns(self):
         """
-        configure the visible columns of twEvent tablewidget
+        configure the visible columns of tv_events tableview
         configuration for playerType is recorded in self.config_param[f"{self.playerType} tw fields"]
         """
+        QMessageBox.information(
+            None,
+            cfg.programName,
+            ("This function is not yet implemented"),
+            QMessageBox.Ok | QMessageBox.Default,
+            QMessageBox.NoButton,
+        )
 
+        return
+        # TODO: implement
         dlg = dialog.Input_dialog(
             label_caption="Select the columns to show",
             elements_list=[
@@ -2099,9 +2189,70 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         self.load_tw_events(self.observationId)
 
+    def populate_tv_events(self, obs_id: str, header: list, time_format: str, behaviors_filter=tuple(), subjects_filter=tuple()) -> None:
+        """
+        populate table view with events
+        """
+        model = self.tv_events.model()
+        if model is not None:
+            self.tv_events.setModel(None)
+            model.deleteLater()
+
+        # add behavior type (POINT, START, STOP)
+        mem_behav: dict = {}
+        state_events_list = util.state_behavior_codes(self.pj[cfg.ETHOGRAM])
+
+        state = [""] * len(self.pj[cfg.OBSERVATIONS][obs_id][cfg.EVENTS])
+
+        for idx, row in enumerate(self.pj[cfg.OBSERVATIONS][obs_id][cfg.EVENTS]):
+            code = row[cfg.PJ_OBS_FIELDS[self.playerType][cfg.BEHAVIOR_CODE]]
+
+            # check if code is state
+            if code in state_events_list:
+                subject = row[cfg.PJ_OBS_FIELDS[self.playerType][cfg.SUBJECT]]
+                modifier = row[cfg.PJ_OBS_FIELDS[self.playerType][cfg.MODIFIER]]
+
+                if f"{subject}|{code}|{modifier}" in mem_behav and mem_behav[f"{subject}|{code}|{modifier}"]:
+                    state[idx] = cfg.STOP
+                else:
+                    state[idx] = cfg.START
+
+                if f"{subject}|{code}|{modifier}" in mem_behav:
+                    mem_behav[f"{subject}|{code}|{modifier}"] = not mem_behav[f"{subject}|{code}|{modifier}"]
+                else:
+                    mem_behav[f"{subject}|{code}|{modifier}"] = 1
+
+        self.event_state: list = []
+        self.tv_idx2events_idx: list = []
+        for idx, row in enumerate(self.pj[cfg.OBSERVATIONS][obs_id][cfg.EVENTS]):
+            # filter
+            if subjects_filter and row[cfg.PJ_OBS_FIELDS[self.playerType][cfg.SUBJECT]] not in subjects_filter:
+                continue
+            if behaviors_filter and row[cfg.PJ_OBS_FIELDS[self.playerType][cfg.BEHAVIOR_CODE]] not in behaviors_filter:
+                continue
+
+            if self.playerType in (cfg.MEDIA, cfg.VIEWER_MEDIA) and len(row) == 5:
+                # add frame index if not present
+                self.event_state.append(row[:] + [dec("NaN")] + [state[idx]])
+            else:
+                self.event_state.append(row[:] + [state[idx]])
+            self.tv_idx2events_idx.append(idx)
+
+        self.tv_events.setSortingEnabled(False)
+        model = TableModel(
+            self.event_state,
+            header,
+            time_format,
+            self.playerType,
+            self.tv_events,
+        )
+        self.tv_events.setModel(model)
+        # self.table.setSortingEnabled(True)
+        # self.table.sortByColumn(0, Qt.AscendingOrder)
+
     def load_tw_events(self, obs_id):
         """
-        load events in table widget and update START/STOP
+        load events in table view and update START/STOP
 
         if self.filtered_behaviors is populated and event not in self.filtered_behaviors then the event is not shown
         if self.filtered_subjects is populated and event not in self.filtered_subjects then the event is not shown
@@ -2110,7 +2261,27 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             obsId (str): observation to load
         """
 
-        logging.debug(f"begin load events from obs: {obs_id}")
+        logging.debug(f"begin load events from obs in tableView: {obs_id}")
+
+        # t1 = time.time()
+        self.populate_tv_events(
+            obs_id,
+            [s.capitalize() for s in cfg.TW_EVENTS_FIELDS[self.playerType]],
+            self.timeFormat,
+            self.filtered_behaviors,
+            self.filtered_subjects,
+        )
+
+        # print("load table view:", time.time() - t1)
+
+        return
+
+        """
+        DISABLED tableview component is used
+        
+        logging.debug(f"begin load events from obs in tablewidget: {obs_id}")
+
+        t1 = time.time()
 
         self.twEvents.clear()
 
@@ -2170,7 +2341,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         self.update_events_start_stop()
 
+        print("load twevent:", time.time() - t1)
+
         logging.debug("end load events from obs")
+        """
 
     def close_tool_windows(self):
         """
@@ -2885,8 +3059,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     return
 
             # empty main window tables
-            for w in [self.twEthogram, self.twSubjects, self.twEvents]:
-                w.setRowCount(0)  # behaviors
+            for w in (self.twEthogram, self.twSubjects):
+                w.setRowCount(0)
 
         newProjectWindow = project.projectDialog()
 
@@ -3362,9 +3536,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 self.lb_current_media_time.setText("0.000")
 
         else:
-            if self.twEvents.rowCount():
-                if dialog.MessageDialog(cfg.programName, "Delete the current events?", [cfg.YES, cfg.NO]) == cfg.YES:
-                    self.twEvents.setRowCount(0)
+            if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS]:
+                if dialog.MessageDialog(cfg.programName, "Delete the current events?", (cfg.YES, cfg.NO)) == cfg.YES:
                     self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS] = []
                 self.project_changed()
 
@@ -3701,7 +3874,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE] == cfg.MEDIA:
                 event[cfg.FRAME_INDEX] = self.get_frame_index()
 
-            write_event.write_event(self, event, self.getLaps())
+            write_event.write_event(self.event, self.getLaps())
 
     def keypress_signal_from_behaviors_coding_map(self, event):
         """
@@ -3741,9 +3914,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     def get_events_current_row(self):
         """
         get events current row corresponding to video/frame-by-frame position
-        paint twEvents with tracking cursor
+        paint tv_events with tracking cursor (red triangle)
         scroll to corresponding event
         """
+
+        logging.debug("get_events_current_row")
 
         if not self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS]:
             return
@@ -3764,6 +3939,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         if ct >= self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS][-1][cfg.TW_OBS_FIELD[self.playerType][cfg.TIME]]:
             self.events_current_row = len(self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS])
+
+            self.tv_events.scrollToBottom()
+            self.tv_events.setItemDelegate(events_cursor.StyledItemDelegateTriangle(len(self.tv_idx2events_idx)))
+
+            return
         else:
             cr_list = [
                 idx
@@ -3779,13 +3959,21 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             else:
                 self.events_current_row = -1
 
-        self.twEvents.setItemDelegate(events_cursor.StyledItemDelegateTriangle(self.events_current_row))
+        # print(f"{self.events_current_row=}")
 
-        if self.twEvents.item(self.events_current_row, 0):
-            self.twEvents.scrollToItem(
-                self.twEvents.item(self.events_current_row, 0),
-                QAbstractItemView.EnsureVisible,
-            )
+        # self.twEvents.setItemDelegate(events_cursor.StyledItemDelegateTriangle(self.events_current_row))
+        self.tv_events.setItemDelegate(events_cursor.StyledItemDelegateTriangle(self.events_current_row))
+
+        # print(f"{self.twEvents.item(self.events_current_row, 0)=}")
+
+        # if self.twEvents.item(self.events_current_row, 0):
+        #    self.twEvents.scrollToItem(
+        #        self.twEvents.item(self.events_current_row, 0),
+        #        QAbstractItemView.EnsureVisible,
+        #    )
+
+        index = self.tv_events.model().index(self.events_current_row, 0)
+        self.tv_events.scrollTo(index, QAbstractItemView.EnsureVisible)
 
     def show_current_states_in_subjects_table(self):
         """
@@ -3902,25 +4090,20 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         Time offset is NOT added!
         """
 
+        # print(value)
+
         if not self.observationId:
             return
 
         cumulative_time_pos = self.getLaps()
         # get frame index
         frame_idx = self.get_frame_index()
+        # frame_idx = 0
 
         if value is None:
             current_media_time_pos = 0
         else:
             current_media_time_pos = value
-
-        """
-        CRITICAL:root:Traceback (most recent call last):
-        File "core.py", line 4086, in timer_out2
-            current_media_frame = round(value * self.dw_player[0].player.container_fps) + 1
-        IndexError: list index out of range
-
-        """
 
         # observation time interval
         if self.pj[cfg.OBSERVATIONS][self.observationId].get(cfg.OBSERVATION_TIME_INTERVAL, [0, 0])[1]:
@@ -3944,9 +4127,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     int(cumulative_time_pos / self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_SCAN_SAMPLING_DURATION])
                     * self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_SCAN_SAMPLING_DURATION]
                 )
-
-                """print(f"scan sampling {cumulative_time_pos}")
-                print(f"{self.media_scan_sampling_mem=}")"""
 
                 if scan_sampling_step not in self.media_scan_sampling_mem:
                     self.media_scan_sampling_mem.append(scan_sampling_step)
@@ -3979,6 +4159,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         # index of current subject selected by observer
         subject_idx = self.subject_name_index[self.currentSubject] if self.currentSubject else ""
 
+        # t1 = time.time()
         self.currentStates = util.get_current_states_modifiers_by_subject(
             self.state_behaviors_codes,
             self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS],
@@ -3986,8 +4167,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             currentTimeOffset,
             include_modifiers=True,
         )
+        # print("get_current_states_modifiers_by_subject:", time.time() - t1)
 
         self.lbCurrentStates.setText(f"Observed behaviors: {', '.join(self.currentStates[subject_idx])}")
+
         # show current states in subjects table
         self.show_current_states_in_subjects_table()
 
@@ -3999,43 +4182,21 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             current_media_name = ""
             current_playlist_index = None
 
-        # print(f"{self.dw_player[0].player.time_pos=}")
-
         # check for ongoing state events between media or at the end of last media
+
         if (
             self.pj[cfg.OBSERVATIONS][self.observationId][cfg.CLOSE_BEHAVIORS_BETWEEN_VIDEOS]
             and self.mem_playlist_index is not None
             and current_playlist_index != self.mem_playlist_index
         ):
-            """
-            print(f"\n\nmedia changed to {current_media_name}")
-
-            print(f"{currentTimeOffset=}")
-
-            print(f"{self.dw_player[0].player.playlist_pos=}")
-            """
-
-            """print(f"{self.dw_player[0].cumul_media_durations=}")"""
-
-            """cmd = [round(dec(x / 1000), 3) for x in self.dw_player[0].cumul_media_durations]"""
-
             min_ = self.dw_player[0].cumul_media_durations_sec[self.dw_player[0].player.playlist_pos - 1]
             max_ = self.dw_player[0].cumul_media_durations_sec[self.dw_player[0].player.playlist_pos]
 
-            """print(f"{min_=}   {max_=}")"""
-
             events = [event for event in self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS] if min_ <= event[0] < max_]
 
-            """print(f"events to check: {events}")"""
-
-            """time_to_stop = dec(round((self.dw_player[0].cumul_media_durations[self.dw_player[0].player.playlist_pos] - 1) / 1000, 3))"""
             time_to_stop = self.dw_player[0].cumul_media_durations_sec[self.dw_player[0].player.playlist_pos] - dec("0.001")
 
             events_to_add = project_functions.fix_unpaired_state_events2(self.pj[cfg.ETHOGRAM], events, time_to_stop)
-
-            """print(f"{events_to_add=}")"""
-
-            # print(f"{self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS]=}")
 
             if events_to_add:
                 self.statusbar.showMessage("The media changed. Some ongoing state events were stopped automatically", 0)
@@ -4044,22 +4205,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 self.project_changed()
                 self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS].sort()
 
-                """print(f"{self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS]=}")"""
-
                 self.load_tw_events(self.observationId)
 
                 self.pause_video()
 
                 self.update_visualizations()
-                """
-                item = self.twEvents.item(
-                    [i for i, t in enumerate(self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS]) if t[0] == currentTimeOffset][
-                        0
-                    ],
-                    0,
-                )
-                self.twEvents.scrollToItem(item)
-                """
 
         self.mem_media_name = current_media_name
         self.mem_playlist_index = current_playlist_index
@@ -4091,10 +4241,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     f"{util.convertTime(self.timeFormat, all_media_duration)}</b>"
                 )
 
-            # self.lb_player_status.setText("Player paused" if self.dw_player[0].player.pause else "")
-
-            # msg += f"<br>media #{self.dw_player[0].player.playlist_pos + 1} / {playlist_length}"
-
         else:  # player ended
             self.plot_timer.stop()
 
@@ -4108,6 +4254,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.lb_current_media_time.setText(msg)
 
             # set video scroll bar
+
             if scroll_slider and not self.user_move_slider:
                 self.video_slider.setValue(round(current_media_time_pos / current_media_duration * (cfg.SLIDER_MAXIMUM - 1)))
 
@@ -4118,6 +4265,14 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         """
 
         logging.info("Media end reached")
+
+        """
+        print(f"{self.dw_player[0].player.time_pos=}")
+        print(f"{self.dw_player[0].player.pause=}")
+        print(f"{self.dw_player[0].player.core_idle=}")
+        print(f"{self.dw_player[0].player.eof_reached=}")
+        print(f"{self.dw_player[0].player.playlist_pos=}")
+        """
 
         if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.CLOSE_BEHAVIORS_BETWEEN_VIDEOS]:
             if self.dw_player[0].player.eof_reached and self.dw_player[0].player.core_idle:
@@ -4185,11 +4340,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         if self.twEthogram.rowCount() < len(self.pj[cfg.ETHOGRAM].keys()):
             self.dwEthogram.setWindowTitle(f"Ethogram (filtered {self.twEthogram.rowCount()}/{len(self.pj[cfg.ETHOGRAM].keys())})")
 
+            if self.observationId:
+                self.pj[cfg.OBSERVATIONS][self.observationId]["filtered behaviors"] = behaviors_to_show
         else:
             self.dwEthogram.setWindowTitle("Ethogram")
-
-        if self.observationId:
-            self.pj[cfg.OBSERVATIONS][self.observationId][cfg.FILTERED_BEHAVIORS] = behaviors_to_show
 
     def load_subjects_in_twSubjects(self, subjects_to_show):
         """
@@ -4227,34 +4381,30 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                         QTableWidgetItem(""),
                     )
 
-    def update_events_start_stop(self) -> None:
-        """
-        update status start/stop of state events in Events table
-        take consideration of subject and modifiers
-        twEvents must be ordered by time asc
-
-        does not return value
-        """
-
-        state_events_list = util.state_behavior_codes(self.pj[cfg.ETHOGRAM])
-        mem_behav: dict = {}
-
-        for row in range(self.twEvents.rowCount()):
-            code = self.twEvents.item(row, cfg.TW_OBS_FIELD[self.playerType][cfg.BEHAVIOR_CODE]).text()
-            # check if code is state
-            if code in state_events_list:
-                subject = self.twEvents.item(row, cfg.TW_OBS_FIELD[self.playerType][cfg.SUBJECT]).text()
-                modifier = self.twEvents.item(row, cfg.TW_OBS_FIELD[self.playerType][cfg.MODIFIER]).text()
-
-                if f"{subject}|{code}|{modifier}" in mem_behav and mem_behav[f"{subject}|{code}|{modifier}"]:
-                    self.twEvents.item(row, cfg.TW_OBS_FIELD[self.playerType][cfg.TYPE]).setText(cfg.STOP)
-                else:
-                    self.twEvents.item(row, cfg.TW_OBS_FIELD[self.playerType][cfg.TYPE]).setText(cfg.START)
-
-                if f"{subject}|{code}|{modifier}" in mem_behav:
-                    mem_behav[f"{subject}|{code}|{modifier}"] = not mem_behav[f"{subject}|{code}|{modifier}"]
-                else:
-                    mem_behav[f"{subject}|{code}|{modifier}"] = 1
+    # def update_events_start_stop(self) -> None:
+    #    """
+    #    update status start/stop of state events in Events table
+    #    take consideration of subject and modifiers
+    #    twEvents must be ordered by time asc
+    #
+    #    does not return value
+    #    """
+    #    state_events_list = util.state_behavior_codes(self.pj[cfg.ETHOGRAM])
+    #    mem_behav: dict = {}
+    #    for row in range(self.twEvents.rowCount()):
+    #        code = self.twEvents.item(row, cfg.TW_OBS_FIELD[self.playerType][cfg.BEHAVIOR_CODE]).text()
+    #        # check if code is state
+    #        if code in state_events_list:
+    #            subject = self.twEvents.item(row, cfg.TW_OBS_FIELD[self.playerType][cfg.SUBJECT]).text()
+    #            modifier = self.twEvents.item(row, cfg.TW_OBS_FIELD[self.playerType][cfg.MODIFIER]).text()
+    #            if f"{subject}|{code}|{modifier}" in mem_behav and mem_behav[f"{subject}|{code}|{modifier}"]:
+    #                self.twEvents.item(row, cfg.TW_OBS_FIELD[self.playerType][cfg.TYPE]).setText(cfg.STOP)
+    #            else:
+    #                self.twEvents.item(row, cfg.TW_OBS_FIELD[self.playerType][cfg.TYPE]).setText(cfg.START)
+    #            if f"{subject}|{code}|{modifier}" in mem_behav:
+    #                mem_behav[f"{subject}|{code}|{modifier}"] = not mem_behav[f"{subject}|{code}|{modifier}"]
+    #            else:
+    #                mem_behav[f"{subject}|{code}|{modifier}"] = 1
 
     def checkSameEvent(self, obs_id: str, time: dec, subject: str, code: str) -> bool:
         """
@@ -4763,19 +4913,54 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     logging.debug(f"Key not assigned ({ek_unichr})")
                     self.statusbar.showMessage(f"Key not assigned ({ek_unichr})", 5000)
 
-    def twEvents_doubleClicked(self):
-        """
-        seek media to double clicked position (add self.repositioningTimeOffset value)
-        substract time offset if defined
-        """
+    # def twEvents_doubleClicked(self):
+    #    """
+    #    seek media to double clicked position (add self.repositioningTimeOffset value)
+    #    substract time offset if defined
+    #    """
+    #    if not self.twEvents.selectedIndexes():
+    #        return
+    #    row = self.twEvents.selectedIndexes()[0].row()  # first row selected
+    #    if self.playerType == cfg.MEDIA:
+    #        time_str = self.twEvents.item(row, cfg.TW_OBS_FIELD[self.playerType]["time"]).text()
+    #        time_ = util.time2seconds(time_str) if ":" in time_str else dec(time_str)
+    #        # substract time offset
+    #        time_ -= self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TIME_OFFSET]
+    #        # substract media creation time
+    #        if self.pj[cfg.OBSERVATIONS][self.observationId].get(cfg.MEDIA_CREATION_DATE_AS_OFFSET, False):
+    #            if len(self.dw_player[0].player.playlist) > 1:
+    #                QMessageBox.information(
+    #                    self,
+    #                    cfg.programName,
+    #                    (
+    #                        "This function is not yet implemented for this type of observation "
+    #                        "(media time creation as offset with many media files)"
+    #                    ),
+    #                )
+    #                return
+    #            media_file_name = self.dw_player[0].player.playlist[self.dw_player[0].player.playlist_pos]["filename"]
+    #            time_ -= self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO][cfg.MEDIA_CREATION_TIME][media_file_name]
+    #        if time_ + self.repositioningTimeOffset >= 0:
+    #            new_time = time_ + self.repositioningTimeOffset
+    #        else:
+    #            new_time = 0
+    #        self.seek_mediaplayer(new_time)
+    #        self.update_visualizations()
+    #    if self.playerType == cfg.IMAGES:
+    #        index_str = self.twEvents.item(row, cfg.TW_OBS_FIELD[self.playerType][cfg.IMAGE_INDEX]).text()
+    #        self.image_idx = int(index_str) - 1
+    #        self.extract_frame(self.dw_player[0])
 
-        if not self.twEvents.selectedIndexes():
+    def tv_events_doubleClicked(self):
+        if not self.tv_events.selectionModel().selectedIndexes():
             return
 
-        row = self.twEvents.selectedIndexes()[0].row()  # first row selected
-
         if self.playerType == cfg.MEDIA:
-            time_str = self.twEvents.item(row, cfg.TW_OBS_FIELD[self.playerType]["time"]).text()
+            # get tv_events cell content
+            index = self.tv_events.selectionModel().selectedIndexes()[0]
+            time_str = index.sibling(index.row(), cfg.TW_OBS_FIELD[self.playerType]["time"]).data()
+
+            """time_str = self.twEvents.item(row, cfg.TW_OBS_FIELD[self.playerType]["time"]).text()"""
             time_ = util.time2seconds(time_str) if ":" in time_str else dec(time_str)
 
             # substract time offset
@@ -4806,7 +4991,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.update_visualizations()
 
         if self.playerType == cfg.IMAGES:
-            index_str = self.twEvents.item(row, cfg.TW_OBS_FIELD[self.playerType][cfg.IMAGE_INDEX]).text()
+            index = self.tv_events.selectionModel().selectedIndexes()[0]
+            index_str = index.sibling(index.row(), cfg.TW_OBS_FIELD[self.playerType][cfg.IMAGE_INDEX]).data()
+
+            """index_str = self.twEvents.item(row, cfg.TW_OBS_FIELD[self.playerType][cfg.IMAGE_INDEX]).text()"""
             self.image_idx = int(index_str) - 1
             self.extract_frame(self.dw_player[0])
 
@@ -4831,45 +5019,73 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             return
 
         self.find_dialog.lb_message.setText("")
-        fields_list = []
 
+        fields_list: list = []
         if self.find_dialog.cbSubject.isChecked():
-            fields_list.append(cfg.TW_OBS_FIELD[self.playerType][cfg.SUBJECT])
-
+            fields_list.append(cfg.PJ_OBS_FIELDS[self.playerType][cfg.SUBJECT])
         if self.find_dialog.cbBehavior.isChecked():
-            fields_list.append(cfg.TW_OBS_FIELD[self.playerType][cfg.BEHAVIOR_CODE])
-
+            fields_list.append(cfg.PJ_OBS_FIELDS[self.playerType][cfg.BEHAVIOR_CODE])
         if self.find_dialog.cbModifier.isChecked():
-            fields_list.append(cfg.TW_OBS_FIELD[self.playerType][cfg.MODIFIER])
-
+            fields_list.append(cfg.PJ_OBS_FIELDS[self.playerType][cfg.MODIFIER])
         if self.find_dialog.cbComment.isChecked():
-            fields_list.append(cfg.TW_OBS_FIELD[self.playerType][cfg.COMMENT])
-
+            fields_list.append(cfg.PJ_OBS_FIELDS[self.playerType][cfg.COMMENT])
         if not fields_list:
             self.find_dialog.lb_message.setText('<font color="red">No fields selected!</font>')
             return
         if not self.find_dialog.findText.text():
             self.find_dialog.lb_message.setText('<font color="red">Nothing to search!</font>')
             return
-        """for event_idx, event in enumerate(self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS]):"""
-        for event_idx in range(self.twEvents.rowCount()):
+
+        # print(f"{fields_list=}")
+
+        # search in twevents
+
+        # for event_idx in range(self.twEvents.rowCount()):
+        #    if event_idx <= self.find_dialog.currentIdx:
+        #        continue
+        #
+        #    if (not self.find_dialog.cbFindInSelectedEvents.isChecked()) or (
+        #        self.find_dialog.cbFindInSelectedEvents.isChecked() and event_idx in self.find_dialog.rowsToFind
+        #    ):
+        #        for idx in fields_list:
+        #            if (
+        #                self.find_dialog.cb_case_sensitive.isChecked()
+        #                and self.find_dialog.findText.text() in self.twEvents.item(event_idx, idx).text()
+        #            ) or (
+        #                not self.find_dialog.cb_case_sensitive.isChecked()
+        #                and self.find_dialog.findText.text().upper() in self.twEvents.item(event_idx, idx).text().upper()
+        #            ):
+        #                self.find_dialog.currentIdx = event_idx
+        #                self.twEvents.scrollToItem(self.twEvents.item(event_idx, 0))
+        #                self.twEvents.selectRow(event_idx)
+        #                return
+
+        for event_idx, event in enumerate(self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS]):
             if event_idx <= self.find_dialog.currentIdx:
                 continue
 
             if (not self.find_dialog.cbFindInSelectedEvents.isChecked()) or (
                 self.find_dialog.cbFindInSelectedEvents.isChecked() and event_idx in self.find_dialog.rowsToFind
             ):
+                print(f"{event=}")
+
+                # search only on filtered events
+                if event_idx not in self.tv_idx2events_idx:
+                    continue
+
                 for idx in fields_list:
-                    if (
-                        self.find_dialog.cb_case_sensitive.isChecked()
-                        and self.find_dialog.findText.text() in self.twEvents.item(event_idx, idx).text()
-                    ) or (
+                    print(f"{idx=}")
+                    if (self.find_dialog.cb_case_sensitive.isChecked() and self.find_dialog.findText.text() in event[idx]) or (
                         not self.find_dialog.cb_case_sensitive.isChecked()
-                        and self.find_dialog.findText.text().upper() in self.twEvents.item(event_idx, idx).text().upper()
+                        and self.find_dialog.findText.text().upper() in event[idx].upper()
                     ):
                         self.find_dialog.currentIdx = event_idx
-                        self.twEvents.scrollToItem(self.twEvents.item(event_idx, 0))
-                        self.twEvents.selectRow(event_idx)
+
+                        # self.twEvents.scrollToItem(self.twEvents.item(event_idx, 0))
+                        index = self.tv_events.model().index(event_idx, 0)
+                        self.tv_events.scrollTo(index, QAbstractItemView.EnsureVisible)
+                        self.tv_events.selectRow(event_idx)
+                        # self.twEvents.selectRow(event_idx)
                         return
 
         if msg != "FIND_FROM_BEGINING":
@@ -4897,6 +5113,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         if msg == "CANCEL":
             self.find_replace_dialog.close()
             return
+        if self.find_replace_dialog.combo_fields.currentIndex() == 0:  # choose a field
+            dialog.MessageDialog(cfg.programName, "Choose a field.", ["OK"])
+            return
+
         if not self.find_replace_dialog.findText.text():
             dialog.MessageDialog(cfg.programName, "There is nothing to find.", ["OK"])
             return
@@ -4905,17 +5125,38 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             dialog.MessageDialog(cfg.programName, "There are no selected events", [cfg.OK])
             return
 
-        fields_list = []
-        if self.find_replace_dialog.cbSubject.isChecked():
-            fields_list.append(cfg.EVENT_SUBJECT_FIELD_IDX)
-        if self.find_replace_dialog.cbBehavior.isChecked():
-            fields_list.append(cfg.EVENT_BEHAVIOR_FIELD_IDX)
-        if self.find_replace_dialog.cbModifier.isChecked():
-            fields_list.append(cfg.EVENT_MODIFIER_FIELD_IDX)
-        if self.find_replace_dialog.cbComment.isChecked():
-            fields_list.append(cfg.EVENT_COMMENT_FIELD_IDX)
+        fields_list: list = []
+        if self.find_replace_dialog.combo_fields.currentText() == "Subject":
+            # check if find and replace contain valid behavior codes
+            for bh in (self.find_replace_dialog.findText.text(), self.find_replace_dialog.replaceText.text()):
+                if bh not in util.all_subjects(self.pj[cfg.SUBJECTS]):
+                    dialog.MessageDialog(cfg.programName, f"<b>{bh}</b> is not a valid subject name", [cfg.OK])
+                    return
+            fields_list.append(cfg.PJ_OBS_FIELDS[self.playerType][cfg.SUBJECT])
 
-        number_replacement = 0
+        if self.find_replace_dialog.combo_fields.currentText() == "Behavior":
+            # check if find and replace contain valid behavior codes
+            for bh in (self.find_replace_dialog.findText.text(), self.find_replace_dialog.replaceText.text()):
+                if bh not in util.all_behaviors(self.pj[cfg.ETHOGRAM]):
+                    dialog.MessageDialog(cfg.programName, f"<b>{bh}</b> is not a valid behavior code", [cfg.OK])
+                    return
+            fields_list.append(cfg.PJ_OBS_FIELDS[self.playerType][cfg.BEHAVIOR_CODE])
+
+        if self.find_replace_dialog.combo_fields.currentText() == "Modifiers":
+            fields_list.append(cfg.PJ_OBS_FIELDS[self.playerType][cfg.MODIFIER])
+        if self.find_replace_dialog.combo_fields.currentText() == "Comment":
+            fields_list.append(cfg.PJ_OBS_FIELDS[self.playerType][cfg.COMMENT])
+
+        # if self.find_replace_dialog.cbSubject.isChecked():
+        #    fields_list.append(cfg.PJ_OBS_FIELDS[self.playerType][cfg.SUBJECT])
+        # if self.find_replace_dialog.cbBehavior.isChecked():
+        #    fields_list.append(cfg.PJ_OBS_FIELDS[self.playerType][cfg.BEHAVIOR_CODE])
+        # if self.find_replace_dialog.cbModifier.isChecked():
+        #    fields_list.append(cfg.PJ_OBS_FIELDS[self.playerType][cfg.MODIFIER])
+        # if self.find_replace_dialog.cbComment.isChecked():
+        #    fields_list.append(cfg.PJ_OBS_FIELDS[self.playerType][cfg.COMMENT])
+
+        number_replacement: int = 0
         insensitive_re = re.compile(re.escape(self.find_replace_dialog.findText.text()), re.IGNORECASE)
         for event_idx, event in enumerate(self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS]):
             # apply modif only to filtered subjects
@@ -4939,6 +5180,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             if (not self.find_replace_dialog.cbFindInSelectedEvents.isChecked()) or (
                 self.find_replace_dialog.cbFindInSelectedEvents.isChecked() and event_idx in self.find_replace_dialog.rowsToFind
             ):
+                # search only on selected events
+                if event_idx not in self.tv_idx2events_idx:
+                    continue
+
                 for idx1 in fields_list:
                     if idx1 <= self.find_replace_dialog.currentIdx_idx:
                         continue
@@ -4961,9 +5206,15 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                             event[idx1] = insensitive_re.sub(self.find_replace_dialog.replaceText.text(), event[idx1])
 
                         self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS][event_idx] = event
+
                         self.load_tw_events(self.observationId)
-                        self.twEvents.scrollToItem(self.twEvents.item(event_idx, 0))
-                        self.twEvents.selectRow(event_idx)
+                        # self.twEvents.scrollToItem(self.twEvents.item(event_idx, 0))
+                        # self.twEvents.selectRow(event_idx)
+
+                        index = self.tv_events.model().index(event_idx, 0)
+                        self.tv_events.scrollTo(index, QAbstractItemView.EnsureVisible)
+                        self.tv_events.selectRow(event_idx)
+
                         self.project_changed()
 
                         if msg == "FIND_REPLACE":
@@ -4983,22 +5234,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 self.find_replace_dialog.currentIdx = -1
             else:
                 self.find_replace_dialog.close()
+
         if msg == "FIND_REPLACE_ALL":
             dialog.MessageDialog(cfg.programName, f"{number_replacement} substitution(s).", [cfg.OK])
             self.find_replace_dialog.close()
-
-    def find_replace_events(self):
-        """
-        find and replace in events
-        """
-        self.find_replace_dialog = dialog.FindReplaceEvents()
-        self.find_replace_dialog.currentIdx = -1
-        self.find_replace_dialog.currentIdx_idx = -1
-        # list of rows to find/replace
-        self.find_replace_dialog.rowsToFind = set([item.row() for item in self.twEvents.selectedIndexes()])
-        self.find_replace_dialog.clickSignal.connect(self.click_signal_find_replace_in_events)
-        self.find_replace_dialog.setWindowFlags(Qt.WindowStaysOnTopHint)
-        self.find_replace_dialog.show()
 
     def closeEvent(self, event):
         """

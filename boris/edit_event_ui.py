@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'boris/edit_event.ui'
+# Form implementation generated from reading ui file 'edit_event.ui'
 #
 # Created by: PyQt5 UI code generator 5.15.9
 #
@@ -43,6 +43,9 @@ class Ui_Form(object):
         self.sb_image_idx.setMaximum(10000000)
         self.sb_image_idx.setObjectName("sb_image_idx")
         self.horizontalLayout_7.addWidget(self.sb_image_idx)
+        self.pb_set_to_current_image_index = QtWidgets.QPushButton(Form)
+        self.pb_set_to_current_image_index.setObjectName("pb_set_to_current_image_index")
+        self.horizontalLayout_7.addWidget(self.pb_set_to_current_image_index)
         spacerItem1 = QtWidgets.QSpacerItem(40, 20, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
         self.horizontalLayout_7.addItem(spacerItem1)
         self.verticalLayout.addLayout(self.horizontalLayout_7)
@@ -113,6 +116,7 @@ class Ui_Form(object):
         self.pb_set_to_current_time.setText(_translate("Form", "Set to current time"))
         self.cb_set_time_na.setText(_translate("Form", "Set NA"))
         self.lb_image_idx.setText(_translate("Form", "Image index"))
+        self.pb_set_to_current_image_index.setText(_translate("Form", "Set to current image index"))
         self.lbSubject.setText(_translate("Form", "Subject"))
         self.label_2.setText(_translate("Form", "Code"))
         self.lb_frame_idx.setText(_translate("Form", "Frame index"))

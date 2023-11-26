@@ -21,15 +21,16 @@ This file is part of BORIS.
 """
 
 import logging
+from decimal import Decimal as dec
+from typing import Optional
 
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QFont
 from PyQt5.QtWidgets import QCheckBox, QListWidgetItem, QMessageBox
-from decimal import Decimal as dec
+
 from . import config as cfg
 from . import gui_utilities, param_panel, project_functions
 from . import utilities as util
-from typing import Optional
 
 
 def choose_obs_subj_behav_category(
@@ -97,8 +98,8 @@ def choose_obs_subj_behav_category(
         paramPanelWindow.frm_time_interval.setVisible(False)
     else:
         if (start_coding is None) or (start_coding.is_nan()):
-            paramPanelWindow.frm_time_interval.setVisible(False)
             paramPanelWindow.rb_observed_events.setEnabled(False)
+            paramPanelWindow.frm_time_interval.setVisible(False)
             paramPanelWindow.rb_user_defined.setVisible(False)
             paramPanelWindow.rb_media_duration.setVisible(False)
         else:

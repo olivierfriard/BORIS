@@ -275,7 +275,7 @@ MEDIA_TW_EVENTS_FIELDS_DEFAULT = ("time", FRAME_INDEX, "subject", "code", "type"
 MEDIA_TW_EVENTS_FIELDS = ("time", FRAME_INDEX, "subject", "code", "type", "modifier", "comment")
 # MEDIA_TW_EVENTS_FIELDS = ("time", "subject", "code", "type", "modifier", "comment")
 LIVE_TW_EVENTS_FIELDS = ("time", "subject", "code", "type", "modifier", "comment")
-IMAGES_TW_EVENTS_FIELDS = ("time", "subject", "code", "type", "modifier", "comment", IMAGE_INDEX, "image path")
+IMAGES_TW_EVENTS_FIELDS = ("time", "subject", "code", "type", "modifier", "comment", IMAGE_INDEX, IMAGE_PATH)
 
 TW_EVENTS_FIELDS = {
     MEDIA: MEDIA_TW_EVENTS_FIELDS,
@@ -297,7 +297,7 @@ for observation_type in TW_EVENTS_FIELDS:
 # fields for project events list
 MEDIA_PJ_EVENTS_FIELDS = (TIME, "subject", "code", "modifier", "comment", FRAME_INDEX)
 LIVE_PJ_EVENTS_FIELDS = (TIME, "subject", "code", "modifier", "comment")
-IMAGES_PJ_EVENTS_FIELDS = (TIME, "subject", "code", "modifier", "comment", "image index", "image path")
+IMAGES_PJ_EVENTS_FIELDS = (TIME, "subject", "code", "modifier", "comment", IMAGE_INDEX, IMAGE_PATH)
 
 PJ_EVENTS_FIELDS = {
     MEDIA: MEDIA_PJ_EVENTS_FIELDS,
@@ -308,15 +308,17 @@ PJ_EVENTS_FIELDS = {
     VIEWER_IMAGES: IMAGES_PJ_EVENTS_FIELDS,
 }
 
-# fields for independent variable definition
-tw_indVarFields = ["label", "description", "type", "default value", "possible values"]
-
 
 PJ_OBS_FIELDS = {}
 for observation_type in PJ_EVENTS_FIELDS:
     PJ_OBS_FIELDS[observation_type] = {}
     for idx, field in enumerate(PJ_EVENTS_FIELDS[observation_type]):
         PJ_OBS_FIELDS[observation_type][field] = idx
+
+
+# fields for independent variable definition
+tw_indVarFields = ["label", "description", "type", "default value", "possible values"]
+
 
 EVENT_TIME_FIELD_IDX = 0
 EVENT_SUBJECT_FIELD_IDX = 1

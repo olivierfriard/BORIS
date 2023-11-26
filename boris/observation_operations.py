@@ -58,6 +58,7 @@ from . import plot_data_module
 from . import player_dock_widget
 from . import gui_utilities
 from . import video_operations
+from . import state_events
 
 
 def export_observations_list_clicked(self):
@@ -1024,6 +1025,7 @@ def close_observation(self):
     logging.info(f"Close observation (player type: {self.playerType})")
 
     # check observation events
+
     flag_ok, msg = project_functions.check_state_events_obs(
         self.observationId,
         self.pj[cfg.ETHOGRAM],
@@ -1043,6 +1045,10 @@ def close_observation(self):
         results.pbOK.setText("Fix unpaired state events")
 
         if results.exec_():  # fix events
+            state_events.fix_unpaired_events(self, silent_mode=True)
+
+            """
+            to delete 2023-11-25
             w = dialog.Ask_time(self.timeFormat)
             w.setWindowTitle("Fix UNPAIRED state events")
             w.label.setText("Fix UNPAIRED events at time")
@@ -1060,19 +1066,20 @@ def close_observation(self):
                     self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS].sort()
 
                     self.load_tw_events(self.observationId)
-                    item = self.twEvents.item(
+                    index = self.tv_events.model().index(
                         [i for i, t in enumerate(self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS]) if t[0] == fix_at_time][0],
                         0,
                     )
-                    self.twEvents.scrollToItem(item)
+                    self.tv_events.scrollTo(index)
                     return
             else:
                 return
+            """
 
     self.saved_state = self.saveState()
 
     if self.playerType == cfg.MEDIA:
-        self.media_scan_sampling_mem = []
+        self.media_scan_sampling_mem: list = []
         logging.info("Stop plot timer")
         self.plot_timer.stop()
 
@@ -1136,7 +1143,7 @@ def close_observation(self):
 
     self.w_obs_info.setVisible(False)
 
-    self.twEvents.setRowCount(0)
+    # self.twEvents.setRowCount(0)
 
     self.lb_current_media_time.clear()
     self.lb_player_status.clear()
@@ -1795,6 +1802,8 @@ def initialize_new_media_observation(self) -> bool:
     for player in self.dw_player:
         player.setVisible(True)
 
+    self.load_tw_events(self.observationId)
+
     # initial synchro
     for n_player in range(1, len(self.dw_player)):
         self.sync_time(n_player, 0)
@@ -1862,6 +1871,8 @@ def initialize_new_live_observation(self):
     self.liveStartTime = None
     self.liveTimer.stop()
 
+    self.load_tw_events(self.observationId)
+
     self.get_events_current_row()
 
 
@@ -1870,7 +1881,7 @@ def initialize_new_images_observation(self):
     initialize a new observation from directories of images
     """
 
-    for dw in [self.dwEthogram, self.dwSubjects, self.dwEvents]:
+    for dw in (self.dwEthogram, self.dwSubjects, self.dwEvents):
         dw.setVisible(True)
     # disable start live button
     self.pb_live_obs.setEnabled(False)
@@ -1897,7 +1908,8 @@ def initialize_new_images_observation(self):
     # count number of images in all directories
     tot_images_number = 0
     for dir_path in self.pj[cfg.OBSERVATIONS][self.observationId].get(cfg.DIRECTORIES_LIST, []):
-        result = util.dir_images_number(dir_path)
+        full_dir_path = project_functions.full_path(dir_path, self.projectFileName)
+        result = util.dir_images_number(full_dir_path)
         tot_images_number += result.get("number of images", 0)
 
     if not tot_images_number:
@@ -1919,12 +1931,18 @@ def initialize_new_images_observation(self):
     # load image paths
     # directories user order is maintained
     # images are sorted inside each directory
-    self.images_list = []
+    self.images_list: list = []
     for dir_path in self.pj[cfg.OBSERVATIONS][self.observationId].get(cfg.DIRECTORIES_LIST, []):
+        full_dir_path = project_functions.full_path(dir_path, self.projectFileName)
         for pattern in cfg.IMAGE_EXTENSIONS:
             self.images_list.extend(
                 sorted(
-                    list(set([str(x) for x in pl.Path(dir_path).glob(pattern)] + [str(x) for x in pl.Path(dir_path).glob(pattern.upper())]))
+                    list(
+                        set(
+                            [str(x) for x in pl.Path(full_dir_path).glob(pattern)]
+                            + [str(x) for x in pl.Path(full_dir_path).glob(pattern.upper())]
+                        )
+                    )
                 )
             )
 

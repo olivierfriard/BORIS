@@ -391,7 +391,7 @@ def load_dataframe_into_behaviors_tablewidget(self, df: pd.DataFrame) -> int:
                 None,
                 cfg.programName,
                 (
-                    f"The {column} column was not found in the file header.<br>"
+                    f"The {column } column was not found in the file header.<br>"
                     "For information the current file header contains the following labels:<br>"
                     f"{'<br>'.join(['<b>' + util.replace_leading_trailing_chars(x, ' ', '&#9608;') + '</b>' for x in df.columns])}<br>"
                     "<br>"

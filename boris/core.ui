@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>2018</width>
-    <height>725</height>
+    <width>1509</width>
+    <height>813</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -165,7 +165,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>2018</width>
+     <width>1509</width>
      <height>22</height>
     </rect>
    </property>
@@ -560,44 +560,21 @@
     <number>2</number>
    </attribute>
    <widget class="QWidget" name="dockWidgetContents_2">
-    <layout class="QVBoxLayout" name="verticalLayout_7">
+    <layout class="QVBoxLayout" name="verticalLayout">
      <item>
-      <layout class="QVBoxLayout" name="verticalLayout">
-       <item>
-        <widget class="QTableWidget" name="twEvents">
-         <property name="enabled">
-          <bool>true</bool>
-         </property>
-         <property name="focusPolicy">
-          <enum>Qt::NoFocus</enum>
-         </property>
-         <property name="autoScroll">
-          <bool>false</bool>
-         </property>
-         <property name="editTriggers">
-          <set>QAbstractItemView::NoEditTriggers</set>
-         </property>
-         <property name="tabKeyNavigation">
-          <bool>false</bool>
-         </property>
-         <property name="showDropIndicator" stdset="0">
-          <bool>false</bool>
-         </property>
-         <property name="dragDropOverwriteMode">
-          <bool>false</bool>
-         </property>
-         <property name="alternatingRowColors">
-          <bool>true</bool>
-         </property>
-         <property name="selectionMode">
-          <enum>QAbstractItemView::ExtendedSelection</enum>
-         </property>
-         <property name="selectionBehavior">
-          <enum>QAbstractItemView::SelectRows</enum>
-         </property>
-        </widget>
-       </item>
-      </layout>
+      <widget class="QSplitter" name="splitter">
+       <property name="orientation">
+        <enum>Qt::Vertical</enum>
+       </property>
+       <widget class="QTableView" name="tv_events">
+        <property name="focusPolicy">
+         <enum>Qt::NoFocus</enum>
+        </property>
+        <property name="selectionBehavior">
+         <enum>QAbstractItemView::SelectRows</enum>
+        </property>
+       </widget>
+      </widget>
      </item>
     </layout>
    </widget>
@@ -1589,6 +1566,11 @@
   <action name="action_create_observations">
    <property name="text">
     <string>Create observations</string>
+   </property>
+  </action>
+  <action name="actionConfigure_tvevents_columns">
+   <property name="text">
+    <string>Configure columns</string>
    </property>
   </action>
  </widget>
