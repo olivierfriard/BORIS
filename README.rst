@@ -80,6 +80,8 @@ following BibTex entry
     }
 
 
+You can also send us a nice postcard! See the `user testimonials <http://www.boris.unito.it/pages/postcards.html>`_
+
 
 
 
