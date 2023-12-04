@@ -586,7 +586,8 @@ def get_current_points_by_subject(
             point_events = [
                 (x[cfg.EVENT_BEHAVIOR_FIELD_IDX], x[cfg.EVENT_MODIFIER_FIELD_IDX])
                 for x in events
-                if x[cfg.EVENT_SUBJECT_FIELD_IDX] == subjects[idx]["name"] and x[cfg.EVENT_BEHAVIOR_FIELD_IDX] == sbc
+                if x[cfg.EVENT_SUBJECT_FIELD_IDX] == subjects[idx]["name"]
+                and x[cfg.EVENT_BEHAVIOR_FIELD_IDX] == sbc
                 # and abs(x[EVENT_TIME_FIELD_IDX] - time) <= tolerance
                 and time <= x[cfg.EVENT_TIME_FIELD_IDX] < (time + tolerance)
             ]
@@ -982,7 +983,8 @@ def seconds2time(sec: dec) -> str:
     if math.isnan(sec):
         return cfg.NA
 
-    if sec > 1_600_000_000:  # epoch time
+    # if sec > one day treat as date
+    if sec > cfg.SECONDS_PER_DAY:
         t = datetime.datetime.fromtimestamp(float(sec))
         return f"{t:%Y-%m-%d %H:%M:%S}.{t.microsecond / 1000:03.0f}"
 

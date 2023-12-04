@@ -24,6 +24,8 @@ programName: str = "BORIS"
 
 project_format_version: str = "7.0"
 
+SECONDS_PER_DAY = 86_400
+
 # minimal project version for handling observations from images
 IMAGES_OBS_PROJECT_MIN_VERSION: tuple = (8, 6)
 

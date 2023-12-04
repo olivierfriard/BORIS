@@ -103,11 +103,18 @@
         </widget>
        </item>
        <item>
+        <widget class="QCheckBox" name="cb_time_offset">
+         <property name="text">
+          <string>Time offset</string>
+         </property>
+        </widget>
+       </item>
+       <item>
         <layout class="QHBoxLayout" name="horizontalLayout_6">
          <item>
           <widget class="QLabel" name="lbTimeOffset">
            <property name="text">
-            <string>Time offset</string>
+            <string>Time value</string>
            </property>
           </widget>
          </item>
@@ -125,6 +132,26 @@
           </spacer>
          </item>
         </layout>
+       </item>
+       <item>
+        <widget class="QCheckBox" name="cb_date_offset">
+         <property name="text">
+          <string>Date offset</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QDateEdit" name="de_date_offset">
+         <property name="enabled">
+          <bool>false</bool>
+         </property>
+         <property name="displayFormat">
+          <string>yyyy-MM-dd</string>
+         </property>
+         <property name="calendarPopup">
+          <bool>true</bool>
+         </property>
+        </widget>
        </item>
        <item>
         <widget class="QCheckBox" name="cb_observation_time_interval">
@@ -220,7 +247,7 @@
    <item>
     <widget class="QStackedWidget" name="sw_observation_type">
      <property name="currentIndex">
-      <number>1</number>
+      <number>2</number>
      </property>
      <widget class="QWidget" name="page"/>
      <widget class="QWidget" name="pg_media_files">

@@ -29,6 +29,7 @@ import sys
 from decimal import Decimal as dec
 import pathlib as pl
 import datetime as dt
+import pytz
 from typing import List, Tuple, Optional
 
 
@@ -558,6 +559,7 @@ def new_observation(self, mode=cfg.NEW, obsId=""):
     observationWindow.mem_obs_id = obsId
     observationWindow.chunk_length = self.chunk_length
     observationWindow.dteDate.setDateTime(QDateTime.currentDateTime())
+    observationWindow.de_date_offset.setDateTime(QDateTime.currentDateTime())
     observationWindow.ffmpeg_bin = self.ffmpeg_bin
     observationWindow.project_file_name = self.projectFileName
     observationWindow.rb_no_time.setChecked(True)
@@ -638,11 +640,11 @@ def new_observation(self, mode=cfg.NEW, obsId=""):
         observationWindow.teDescription.setPlainText(self.pj[cfg.OBSERVATIONS][obsId][cfg.DESCRIPTION])
 
         try:
-            observationWindow.mediaDurations = self.pj[cfg.OBSERVATIONS][obsId][cfg.MEDIA_INFO][cfg.LENGTH]
-            observationWindow.mediaFPS = self.pj[cfg.OBSERVATIONS][obsId][cfg.MEDIA_INFO][cfg.FPS]
+            observationWindow.mediaDurations: dict = self.pj[cfg.OBSERVATIONS][obsId][cfg.MEDIA_INFO][cfg.LENGTH]
+            observationWindow.mediaFPS: dict = self.pj[cfg.OBSERVATIONS][obsId][cfg.MEDIA_INFO][cfg.FPS]
         except Exception:
-            observationWindow.mediaDurations = {}
-            observationWindow.mediaFPS = {}
+            observationWindow.mediaDurations: dict = {}
+            observationWindow.mediaFPS: dict = {}
 
         try:
             if cfg.HAS_VIDEO in self.pj[cfg.OBSERVATIONS][obsId][cfg.MEDIA_INFO]:
@@ -652,8 +654,34 @@ def new_observation(self, mode=cfg.NEW, obsId=""):
         except Exception:
             logging.info("No Video/Audio information")
 
-        # offset
-        observationWindow.obs_time_offset.set_time(self.pj[cfg.OBSERVATIONS][obsId][cfg.TIME_OFFSET])
+        # date offset
+        if self.pj[cfg.OBSERVATIONS][obsId][cfg.TIME_OFFSET] >= cfg.SECONDS_PER_DAY:
+            observationWindow.cb_date_offset.setChecked(True)
+            datetime_offset_iso = (
+                dt.datetime.utcfromtimestamp(float(self.pj[cfg.OBSERVATIONS][obsId][cfg.TIME_OFFSET]))
+                .replace(tzinfo=pytz.utc)
+                .astimezone(dt.datetime.now().astimezone().tzinfo)
+                .isoformat()
+            )
+            date_offset_iso, time_offset_iso = datetime_offset_iso.split("T")
+            observationWindow.de_date_offset.setDateTime(QDateTime.fromString(date_offset_iso, "yyyy-MM-dd"))
+
+            print(f"{time_offset_iso=}")
+
+            time_offset = QDateTime.fromString(time_offset_iso.split("+")[0], "hh:mm:ss").time()
+
+            print(f"{time_offset=}")
+
+            if time_offset != QDateTime.fromString("00:00:00", "hh:mm:ss").time():
+                observationWindow.cb_time_offset.setChecked(True)
+                observationWindow.obs_time_offset.set_time(
+                    dec(time_offset.hour() * 3600 + time_offset.minute() * 60 + time_offset.second())
+                )
+
+        else:
+            # time offset
+            observationWindow.cb_time_offset.setChecked(True)
+            observationWindow.obs_time_offset.set_time(self.pj[cfg.OBSERVATIONS][obsId][cfg.TIME_OFFSET])
 
         if self.pj[cfg.OBSERVATIONS][obsId]["type"] == cfg.MEDIA:
             observationWindow.rb_media_files.setChecked(True)
@@ -669,7 +697,7 @@ def new_observation(self, mode=cfg.NEW, obsId=""):
                         combobox.setCurrentIndex(int(player) - 1)
                         observationWindow.twVideo1.setCellWidget(observationWindow.twVideo1.rowCount() - 1, 0, combobox)
 
-                        # set offset
+                        # set media file offset
                         try:
                             observationWindow.twVideo1.setItem(
                                 observationWindow.twVideo1.rowCount() - 1,
@@ -881,7 +909,15 @@ def new_observation(self, mode=cfg.NEW, obsId=""):
                 ] = observationWindow.twIndepVariables.item(r, 2).text()
 
         # observation time offset
-        self.pj[cfg.OBSERVATIONS][new_obs_id][cfg.TIME_OFFSET] = observationWindow.obs_time_offset.get_time()
+        if observationWindow.cb_time_offset.isChecked():
+            self.pj[cfg.OBSERVATIONS][new_obs_id][cfg.TIME_OFFSET] = observationWindow.obs_time_offset.get_time()
+        else:
+            self.pj[cfg.OBSERVATIONS][new_obs_id][cfg.TIME_OFFSET] = dec("0.0")
+
+        # add date (epoch) if date offset checked
+        if observationWindow.cb_date_offset.isChecked():
+            date_timestamp = dec(dt.datetime.strptime(observationWindow.de_date_offset.date().toString(Qt.ISODate), "%Y-%m-%d").timestamp())
+            self.pj[cfg.OBSERVATIONS][new_obs_id][cfg.TIME_OFFSET] += date_timestamp
 
         if observationWindow.cb_observation_time_interval.isChecked():
             self.pj[cfg.OBSERVATIONS][new_obs_id][cfg.OBSERVATION_TIME_INTERVAL] = observationWindow.observation_time_interval
@@ -890,7 +926,7 @@ def new_observation(self, mode=cfg.NEW, obsId=""):
 
         # visualize spectrogram
         self.pj[cfg.OBSERVATIONS][new_obs_id][cfg.VISUALIZE_SPECTROGRAM] = observationWindow.cbVisualizeSpectrogram.isChecked()
-        # visualize spectrogram
+        # visualize waveform
         self.pj[cfg.OBSERVATIONS][new_obs_id][cfg.VISUALIZE_WAVEFORM] = observationWindow.cb_visualize_waveform.isChecked()
         # use Creation date metadata tag as offset
         self.pj[cfg.OBSERVATIONS][new_obs_id][

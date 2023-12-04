@@ -111,7 +111,7 @@ class Observation(QDialog, Ui_Form):
         self.project_path = project_path
         self.converters = converters
         self.time_format = time_format
-        self.observation_time_interval = [0, 0]
+        self.observation_time_interval: tuple = [0, 0]
         self.mem_dir = ""
         self.test = None
 
@@ -120,6 +120,12 @@ class Observation(QDialog, Ui_Form):
         # insert duration widget for time offset
         self.obs_time_offset = duration_widget.Duration_widget(0)
         self.horizontalLayout_6.insertWidget(1, self.obs_time_offset)
+        self.obs_time_offset.setEnabled(False)
+
+        # time offset
+        self.cb_time_offset.stateChanged.connect(self.cb_time_offset_changed)
+        # date offset
+        self.cb_date_offset.stateChanged.connect(self.cb_date_offset_changed)
 
         # observation type
         self.rb_media_files.toggled.connect(self.obs_type_changed)
@@ -209,6 +215,18 @@ class Observation(QDialog, Ui_Form):
 
         # geometry
         gui_utilities.restore_geometry(self, "new observation", (800, 650))
+
+    def cb_date_offset_changed(self):
+        """
+        activate/desactivate time value
+        """
+        self.de_date_offset.setEnabled(self.cb_date_offset.isChecked())
+
+    def cb_time_offset_changed(self):
+        """
+        activate/desactivate date value
+        """
+        self.obs_time_offset.setEnabled(self.cb_time_offset.isChecked())
 
     def use_media_file_name_as_obsid(self) -> None:
         """
