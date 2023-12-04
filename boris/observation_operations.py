@@ -661,21 +661,24 @@ def new_observation(self, mode=cfg.NEW, obsId=""):
                 dt.datetime.utcfromtimestamp(float(self.pj[cfg.OBSERVATIONS][obsId][cfg.TIME_OFFSET]))
                 .replace(tzinfo=pytz.utc)
                 .astimezone(dt.datetime.now().astimezone().tzinfo)
-                .isoformat()
+                .isoformat(timespec="milliseconds")
             )
+
+            print(f"{datetime_offset_iso=}")
+
             date_offset_iso, time_offset_iso = datetime_offset_iso.split("T")
             observationWindow.de_date_offset.setDateTime(QDateTime.fromString(date_offset_iso, "yyyy-MM-dd"))
 
             print(f"{time_offset_iso=}")
 
-            time_offset = QDateTime.fromString(time_offset_iso.split("+")[0], "hh:mm:ss").time()
+            time_offset = QDateTime.fromString(time_offset_iso.split("+")[0], "hh:mm:ss.zzz").time()
 
             print(f"{time_offset=}")
 
             if time_offset != QDateTime.fromString("00:00:00", "hh:mm:ss").time():
                 observationWindow.cb_time_offset.setChecked(True)
                 observationWindow.obs_time_offset.set_time(
-                    dec(time_offset.hour() * 3600 + time_offset.minute() * 60 + time_offset.second())
+                    dec(time_offset.hour() * 3600 + time_offset.minute() * 60 + time_offset.second() + time_offset.msec() / 1000)
                 )
 
         else:
@@ -914,8 +917,12 @@ def new_observation(self, mode=cfg.NEW, obsId=""):
         else:
             self.pj[cfg.OBSERVATIONS][new_obs_id][cfg.TIME_OFFSET] = dec("0.0")
 
+        print(f"{self.pj[cfg.OBSERVATIONS][new_obs_id][cfg.TIME_OFFSET]=}")
+
         # add date (epoch) if date offset checked
         if observationWindow.cb_date_offset.isChecked():
+            print(f"{observationWindow.de_date_offset.date().toString(Qt.ISODate)=}")
+
             date_timestamp = dec(dt.datetime.strptime(observationWindow.de_date_offset.date().toString(Qt.ISODate), "%Y-%m-%d").timestamp())
             self.pj[cfg.OBSERVATIONS][new_obs_id][cfg.TIME_OFFSET] += date_timestamp
 
