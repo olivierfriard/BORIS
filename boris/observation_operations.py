@@ -675,7 +675,7 @@ def new_observation(self, mode=cfg.NEW, obsId=""):
 
             print(f"{time_offset=}")
 
-            if time_offset != QDateTime.fromString("00:00:00", "hh:mm:ss").time():
+            if time_offset != QDateTime.fromString("00:00:00.000", "hh:mm:ss.zzz").time():
                 observationWindow.cb_time_offset.setChecked(True)
                 observationWindow.obs_time_offset.set_time(
                     dec(time_offset.hour() * 3600 + time_offset.minute() * 60 + time_offset.second() + time_offset.msec() / 1000)

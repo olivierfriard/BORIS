@@ -77,6 +77,7 @@ from PyQt5.QtWidgets import (
     QAction,
     QAbstractItemView,
     QSplashScreen,
+    QHeaderView,
 )
 from PIL.ImageQt import Image
 
@@ -2247,6 +2248,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.tv_events,
         )
         self.tv_events.setModel(model)
+
+        # column width
+        self.tv_events.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeToContents)
+
         # self.table.setSortingEnabled(True)
         # self.table.sortByColumn(0, Qt.AscendingOrder)
 
