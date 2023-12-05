@@ -2250,6 +2250,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.tv_events.setModel(model)
 
         # column width
+        # https://doc.qt.io/qtforpython-5/PySide2/QtWidgets/QHeaderView.html#more
         self.tv_events.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeToContents)
 
         # self.table.setSortingEnabled(True)
