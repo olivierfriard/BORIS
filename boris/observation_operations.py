@@ -607,10 +607,12 @@ def new_observation(self, mode=cfg.NEW, obsId=""):
 
             elif self.pj[cfg.INDEPENDENT_VARIABLES][i]["type"] == cfg.TIMESTAMP:
                 cal = QDateTimeEdit()
-                cal.setDisplayFormat("yyyy-MM-dd hh:mm:ss")
+                cal.setDisplayFormat("yyyy-MM-dd hh:mm:ss.zzz")
                 cal.setCalendarPopup(True)
-                if txt:
-                    cal.setDateTime(QDateTime.fromString(txt, "yyyy-MM-ddThh:mm:ss"))
+                if len(txt) == len("yyyy-MM-ddThh:mm:ss"):
+                    txt += ".000"
+                cal.setDateTime(QDateTime.fromString(txt, "yyyy-MM-ddThh:mm:ss.zzz"))
+
                 observationWindow.twIndepVariables.setCellWidget(observationWindow.twIndepVariables.rowCount() - 1, 2, cal)
             else:
                 item.setText(txt)
@@ -632,11 +634,19 @@ def new_observation(self, mode=cfg.NEW, obsId=""):
         # check date format for old versions of BORIS app
         try:
             time.strptime(self.pj[cfg.OBSERVATIONS][obsId]["date"], "%Y-%m-%d %H:%M")
-            self.pj[cfg.OBSERVATIONS][obsId]["date"] = self.pj[cfg.OBSERVATIONS][obsId]["date"].replace(" ", "T") + ":00"
+            self.pj[cfg.OBSERVATIONS][obsId]["date"] = self.pj[cfg.OBSERVATIONS][obsId]["date"].replace(" ", "T") + ":00.000"
+            logging.info("Old observation date/time format was converted")
         except ValueError:
             pass
 
-        observationWindow.dteDate.setDateTime(QDateTime.fromString(self.pj[cfg.OBSERVATIONS][obsId]["date"], "yyyy-MM-ddThh:mm:ss"))
+        # print(f"{self.pj[cfg.OBSERVATIONS][obsId]['date']=}")
+
+        # test new date (with msec)
+        if len(self.pj[cfg.OBSERVATIONS][obsId]["date"]) == len("yyyy-MM-ddThh:mm:ss.zzz"):
+            observationWindow.dteDate.setDateTime(QDateTime.fromString(self.pj[cfg.OBSERVATIONS][obsId]["date"], "yyyy-MM-ddThh:mm:ss.zzz"))
+        elif len(self.pj[cfg.OBSERVATIONS][obsId]["date"]) == len("yyyy-MM-ddThh:mm:ss"):
+            observationWindow.dteDate.setDateTime(QDateTime.fromString(self.pj[cfg.OBSERVATIONS][obsId]["date"], "yyyy-MM-ddThh:mm:ss"))
+
         observationWindow.teDescription.setPlainText(self.pj[cfg.OBSERVATIONS][obsId][cfg.DESCRIPTION])
 
         try:
@@ -883,7 +893,8 @@ def new_observation(self, mode=cfg.NEW, obsId=""):
             del self.pj[cfg.OBSERVATIONS][obsId]
 
         # observation date
-        self.pj[cfg.OBSERVATIONS][new_obs_id]["date"] = observationWindow.dteDate.dateTime().toString(Qt.ISODate)
+        self.pj[cfg.OBSERVATIONS][new_obs_id]["date"] = observationWindow.dteDate.dateTime().toString("yyyy-MM-ddTHH:mm:ss.zzz")
+        # observation description
         self.pj[cfg.OBSERVATIONS][new_obs_id][cfg.DESCRIPTION] = observationWindow.teDescription.toPlainText()
 
         # observation type: read project type from radio buttons

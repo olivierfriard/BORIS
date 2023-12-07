@@ -14,7 +14,7 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 class Ui_Form(object):
     def setupUi(self, Form):
         Form.setObjectName("Form")
-        Form.resize(959, 650)
+        Form.resize(959, 677)
         self.verticalLayout_6 = QtWidgets.QVBoxLayout(Form)
         self.verticalLayout_6.setObjectName("verticalLayout_6")
         self.horizontalLayout_2 = QtWidgets.QHBoxLayout()
@@ -413,7 +413,7 @@ class Ui_Form(object):
         self.label.setText(_translate("Form", "Observation id"))
         self.lb_star.setText(_translate("Form", "*"))
         self.label_8.setText(_translate("Form", "Date and time"))
-        self.dteDate.setDisplayFormat(_translate("Form", "yyyy-MM-dd hh:mm:ss"))
+        self.dteDate.setDisplayFormat(_translate("Form", "yyyy-MM-dd hh:mm:ss.zzz"))
         self.label_9.setText(_translate("Form", "Description"))
         self.cb_time_offset.setText(_translate("Form", "Time offset"))
         self.lbTimeOffset.setText(_translate("Form", "Time value"))

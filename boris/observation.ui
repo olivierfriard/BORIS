@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>959</width>
-    <height>650</height>
+    <height>677</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -51,7 +51,7 @@
      <item>
       <widget class="QDateTimeEdit" name="dteDate">
        <property name="displayFormat">
-        <string>yyyy-MM-dd hh:mm:ss</string>
+        <string>yyyy-MM-dd hh:mm:ss.zzz</string>
        </property>
        <property name="calendarPopup">
         <bool>true</bool>

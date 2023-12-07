@@ -19,7 +19,7 @@
      <item>
       <widget class="QTabWidget" name="tabProject">
        <property name="currentIndex">
-        <number>1</number>
+        <number>3</number>
        </property>
        <widget class="QWidget" name="tabInformation">
         <attribute name="title">
@@ -609,14 +609,14 @@
                   </size>
                  </property>
                  <property name="text">
-                  <string>Predefined date</string>
+                  <string>Predefined timestamp</string>
                  </property>
                 </widget>
                </item>
                <item>
                 <widget class="QDateTimeEdit" name="dte_default_date">
                  <property name="displayFormat">
-                  <string>yyyy-MM-dd hh:mm</string>
+                  <string>yyyy-MM-dd hh:mm:ss.zzz</string>
                  </property>
                 </widget>
                </item>
