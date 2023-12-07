@@ -2088,25 +2088,132 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
             return px, py
         '''
+        
+        def video_clicked_coord(player, videoframe, zoom, pan_x, pan_y):
+            """
+            returns the x, y coordinates of the click into the video expressed in video coordinates
+            """
+            # video width and height
+            vw = player.width  
+            vh = player.height  
 
-        if cmd == "MBTN_LEFT":
-            self.current_player = player_id
+            # dockable window width and height
+            dw = videoframe.size().width()
+            dh = videoframe.size().height()
+
+            # click coordinates in dialog reference frame
+            dx = player.mouse_pos["x"]
+            dy = player.mouse_pos["y"]
+
+            # convert to float for operations
+            vw = float(vw)
+            vh = float(vh)
+            dw = float(dw)
+            dh = float(dh)
+            dx = float(dx)
+            dy = float(dy)
+
+            if dw / dh >= vw / vh:  # vertical black lanes
+                dialog_to_video_ratio = dh / vh
+            else: # horizontal black lanes
+                dialog_to_video_ratio = dw / vw
+
+            # coordinates in video reference frame
+            actual_zoom = 2**zoom
+            vx = (dx - dw/2)/dialog_to_video_ratio/actual_zoom - pan_x*vw + vw/2
+            vy = (dy - dh/2)/dialog_to_video_ratio/actual_zoom - pan_y*vh + vh/2
+            
+            return vx, vy
+        
+
+        def get_pan_for_zoom_in_clicked_coordinates(player, videoframe, zoom, pan_x, pan_y, new_zoom):
+            """
+            returns the pan (pan_x, pan_y) necessary to zoom in or zoom out in the clicked coordinates 
+            actual zoom is 2**zoom
+            """
+            # video width and height
+            vw = player.width  
+            vh = player.height  
+
+            # dockable window width and height
+            dw = videoframe.size().width()
+            dh = videoframe.size().height()
+
+            # click coordinates in dialog reference frame
+            dx = player.mouse_pos["x"]
+            dy = player.mouse_pos["y"]
+
+            # convert to float for operations
+            vw = float(vw)
+            vh = float(vh)
+            dw = float(dw)
+            dh = float(dh)
+            dx = float(dx)
+            dy = float(dy)
+
+            if dw / dh >= vw / vh:  # vertical black lanes
+                dialog_to_video_ratio = dh / vh
+            else: # horizontal black lanes
+                dialog_to_video_ratio = dw / vw
+
+            # clicked coordinates in video reference frame for the current zoom/pan
+            actual_zoom = 2**zoom
+            vx = (dx - dw/2)/dialog_to_video_ratio/actual_zoom - pan_x*vw + vw/2
+            vy = (dy - dh/2)/dialog_to_video_ratio/actual_zoom - pan_y*vh + vh/2
+
+            # new pan to zoom in or out in the clicked coordinates
+            actual_zoom = 2**new_zoom
+            pan_x = ((dx - dw/2)/dialog_to_video_ratio/actual_zoom - vx + vw/2) / vw
+            pan_y = ((dy - dh/2)/dialog_to_video_ratio/actual_zoom - vy + vh/2) / vh 
+
+            return pan_x, pan_y
+        
+
+        if cmd == "MBTN_LEFT":            
+            # CURRENT PAN/ZOOM
+            pan_x = self.dw_player[player_id].player.video_pan_x
+            pan_y = self.dw_player[player_id].player.video_pan_y
+            zoom = self.dw_player[player_id].player.video_zoom
+
+            # NEW ZOOM (ZOOM IN by a factor of 1.5)
+            new_zoom = zoom + 0.58496250072   # log2(1.5)
+
+            # COMPUTE NEW PAN
+            new_pan_x, new_pan_y = get_pan_for_zoom_in_clicked_coordinates(self.dw_player[player_id].player, 
+                                                           self.dw_player[player_id].videoframe,
+                                                           zoom, pan_x, pan_y, new_zoom)
+            self.dw_player[player_id].player.video_pan_x = new_pan_x
+            self.dw_player[player_id].player.video_pan_y = new_pan_y
+            self.dw_player[player_id].player.video_zoom = new_zoom
+
+            # UPDATE
+            self.update_project_zoom_pan_values()
+            
             return
 
         if cmd == "MBTN_RIGHT":
-            self.dw_player[player_id].player.video_pan_x = 0
-            self.dw_player[player_id].player.video_pan_y = 0
-            self.dw_player[player_id].player.video_zoom = 0
+            # CURRENT PAN/ZOOM
+            pan_x = self.dw_player[player_id].player.video_pan_x
+            pan_y = self.dw_player[player_id].player.video_pan_y
+            zoom = self.dw_player[player_id].player.video_zoom
 
+            # NEW ZOOM (ZOOM OUT by a factor of 1.5)
+            new_zoom = zoom - 0.58496250072   # log2(1.5)
+
+            # COMPUTE NEW PAN
+            new_pan_x, new_pan_y = get_pan_for_zoom_in_clicked_coordinates(self.dw_player[player_id].player, 
+                                                           self.dw_player[player_id].videoframe,
+                                                           zoom, pan_x, pan_y, new_zoom)
+            self.dw_player[player_id].player.video_pan_x = new_pan_x
+            self.dw_player[player_id].player.video_pan_y = new_pan_y
+            self.dw_player[player_id].player.video_zoom = new_zoom
+
+            # UPDATE
             self.update_project_zoom_pan_values()
+            
             return
 
-        """
-        x, y = video_clicked_coord(self.dw_player[player_id].player, self.dw_player[player_id].videoframe)
-
-        if x == -2 or y == -2:
-            return
-        """
+        
 
     # def read_tw_event_field(self, row_idx: int, player_type: str, field_type: str) -> Union[str, None, int, dec]:
     #    """
