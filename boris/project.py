@@ -685,8 +685,13 @@ class projectDialog(QDialog, Ui_dlgProject):
             self.twVariables.item(self.selected_twvariables_row, 4).setText(self.leSetValues.text())
 
     def dte_default_date_changed(self):
+        """
+        default timestamp changed
+        """
         if self.selected_twvariables_row != -1:
-            self.twVariables.item(self.selected_twvariables_row, 3).setText(self.dte_default_date.dateTime().toString(Qt.ISODate))
+            self.twVariables.item(self.selected_twvariables_row, 3).setText(
+                self.dte_default_date.dateTime().toString("yyyy-MM-ddTHH:mm:ss.zzz")
+            )
 
     def pbBehaviorsCategories_clicked(self):
         """
@@ -955,7 +960,9 @@ class projectDialog(QDialog, Ui_dlgProject):
 
     def cbtype_activated(self):
         if self.cbType.currentText() == cfg.TIMESTAMP:
-            self.twVariables.item(self.selected_twvariables_row, 3).setText(self.dte_default_date.dateTime().toString(Qt.ISODate))
+            self.twVariables.item(self.selected_twvariables_row, 3).setText(
+                self.dte_default_date.dateTime().toString("yyyy-MM-ddTHH:mm:ss.zzz")
+            )
             self.twVariables.item(self.selected_twvariables_row, 4).setText("")
         else:
             self.twVariables.item(self.selected_twvariables_row, 3).setText(self.lePredefined.text())
@@ -1514,14 +1521,14 @@ class projectDialog(QDialog, Ui_dlgProject):
         logging.debug(f"selected row: {self.selected_twvariables_row}")
 
         if self.selected_twvariables_row == -1:
-            for widget in [
+            for widget in (
                 self.leLabel,
                 self.leDescription,
                 self.cbType,
                 self.lePredefined,
                 self.dte_default_date,
                 self.leSetValues,
-            ]:
+            ):
                 widget.setEnabled(False)
                 self.leLabel.setText("")
                 self.leDescription.setText("")
@@ -1532,14 +1539,14 @@ class projectDialog(QDialog, Ui_dlgProject):
             return
 
         # enable widget for indep var setting
-        for widget in [
+        for widget in (
             self.leLabel,
             self.leDescription,
             self.cbType,
             self.lePredefined,
             self.dte_default_date,
             self.leSetValues,
-        ]:
+        ):
             widget.setEnabled(True)
 
         self.leLabel.setText(self.twVariables.item(row, 0).text())
