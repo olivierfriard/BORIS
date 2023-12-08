@@ -22,4 +22,4 @@ This file is part of BORIS.
 
 
 __version__ = "8.22.8"
-__version_date__ = "2023-12-06"
+__version_date__ = "2023-12-08"

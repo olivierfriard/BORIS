@@ -24,7 +24,7 @@ import json
 import logging
 import re
 
-from PyQt5.QtCore import Qt
+from PyQt5.QtCore import Qt, QDateTime
 from PyQt5.QtGui import QColor
 from PyQt5.QtWidgets import (
     QCheckBox,
@@ -1553,6 +1553,13 @@ class projectDialog(QDialog, Ui_dlgProject):
         self.leDescription.setText(self.twVariables.item(row, 1).text())
         self.lePredefined.setText(self.twVariables.item(row, 3).text())
         self.leSetValues.setText(self.twVariables.item(row, 4).text())
+        if self.twVariables.item(row, 2).text() == cfg.TIMESTAMP:
+            if len(self.twVariables.item(row, 3).text()) == len("yyyy-MM-ddTHH:mm:ss.zzz"):
+                datetime_format = "yyyy-MM-ddThh:mm:ss.zzz"
+            if len(self.twVariables.item(row, 3).text()) == len("yyyy-MM-ddTHH:mm:ss"):
+                datetime_format = "yyyy-MM-ddThh:mm:ss"
+
+            self.dte_default_date.setDateTime(QDateTime.fromString(self.twVariables.item(row, 3).text(), datetime_format))
 
         self.cbType.clear()
         self.cbType.addItems(cfg.AVAILABLE_INDEP_VAR_TYPES)
@@ -1574,8 +1581,8 @@ class projectDialog(QDialog, Ui_dlgProject):
 
         """
         # store behaviors
-        missing_data = []
-        checked_ethogram = {}
+        missing_data: list = []
+        checked_ethogram: dict = {}
 
         # Ethogram
         # coding maps in ethogram
@@ -1751,7 +1758,7 @@ class projectDialog(QDialog, Ui_dlgProject):
             self.pj[cfg.TIME_FORMAT] = cfg.HHMMSS
 
         # store subjects
-        self.subjects_conf = {}
+        self.subjects_conf: dict = {}
 
         # check for leading/trailing spaces in subjects names
         subjects_name_with_leading_trailing_spaces = ""
