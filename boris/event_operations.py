@@ -840,7 +840,8 @@ def edit_time_selected_events(self):
 
             self.project_changed()
 
-        self.seek_mediaplayer(mem_time)
+        if self.playerType == cfg.MEDIA:
+            self.seek_mediaplayer(mem_time)
 
         self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS] = sorted(self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS])
         self.load_tw_events(self.observationId)
