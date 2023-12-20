@@ -1400,8 +1400,54 @@ def initialize_new_media_observation(self) -> bool:
 
             @p0.player.on_key_press("MBTN_RIGHT")
             def mbtn_right():
-                # no zoom
                 self.video_click_signal.emit(0, "MBTN_RIGHT")
+            
+            @p0.player.on_key_press("MBTN_LEFT_DBL")
+            def mbtn_left_dbl():
+                self.video_click_signal.emit(0, "MBTN_LEFT_DBL")
+
+            @p0.player.on_key_press("MBTN_RIGHT_DBL")
+            def mbtn_right_dbl():
+                self.video_click_signal.emit(0, "MBTN_RIGHT_DBL")
+            
+            @p0.player.on_key_press("Ctrl+WHEEL_UP")
+            def ctrl_wheel_up():
+                self.video_click_signal.emit(0, "Ctrl+WHEEL_UP")
+
+            @p0.player.on_key_press("Ctrl+WHEEL_DOWN")
+            def ctrl_wheel_down():
+                self.video_click_signal.emit(0, "Ctrl+WHEEL_DOWN")
+            
+            @p0.player.on_key_press("WHEEL_UP")
+            def wheel_up():
+                self.video_click_signal.emit(0, "WHEEL_UP")
+
+            @p0.player.on_key_press("WHEEL_DOWN")
+            def wheel_down():
+                self.video_click_signal.emit(0, "WHEEL_DOWN")
+
+            @p0.player.on_key_press("Shift+WHEEL_UP")
+            def shift_wheel_up():
+                self.video_click_signal.emit(0, "Shift+WHEEL_UP")
+
+            @p0.player.on_key_press("Shift+WHEEL_DOWN")
+            def shift_wheel_down():
+                self.video_click_signal.emit(0, "Shift+WHEEL_DOWN")
+
+            @p0.player.on_key_press("Shift+MBTN_LEFT")
+            def shift_mbtn_left():
+                self.video_click_signal.emit(0, "Shift+MBTN_LEFT")
+
+            
+            # @p0.player.on_key_press("Shift+MOUSE_MOVE")
+            # def shift_mouse_move():
+            #     # no zoom
+            #     self.video_click_signal.emit(0, "Shift+MOUSE_MOVE")
+            # @p0.player.on_key_press("MOUSE_MOVE")
+            # def mouse_move():
+            #     # no zoom
+            #     self.video_click_signal.emit(0, "MOUSE_MOVE")
+            
 
             self.dw_player.append(p0)
 
