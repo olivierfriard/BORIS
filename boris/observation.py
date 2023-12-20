@@ -25,6 +25,7 @@ import os
 import pandas as pd
 import pathlib as pl
 import datetime as dt
+from decimal import Decimal as dec
 
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QColor, QTextCursor
@@ -373,7 +374,7 @@ class Observation(QDialog, Ui_Form):
 
         if self.cb_observation_time_interval.isChecked():
             time_interval_dialog = dialog.Ask_time(self.time_format)
-            time_interval_dialog.time_widget.set_time(0)
+            time_interval_dialog.time_widget.set_time(dec(0))
             time_interval_dialog.setWindowTitle("Start observation at")
             time_interval_dialog.label.setText("Start observation at")
             start_time, stop_time = 0, 0
@@ -382,7 +383,7 @@ class Observation(QDialog, Ui_Form):
             else:
                 self.cb_observation_time_interval.setChecked(False)
                 return
-            time_interval_dialog.time_widget.set_time(0)
+            time_interval_dialog.time_widget.set_time(dec(0))
             time_interval_dialog.setWindowTitle("Stop observation at")
             time_interval_dialog.label.setText("Stop observation at")
             if time_interval_dialog.exec_():

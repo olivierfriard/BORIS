@@ -791,17 +791,32 @@ def edit_event(self):
 
 def edit_time_selected_events(self):
     """
-    edit time of one or more selected events
+    shift time of one or more selected events
     """
-    # list of rows to edit
 
     tvevents_rows_to_shift = set([index.row() for index in self.tv_events.selectionModel().selectedIndexes()])
     if not len(tvevents_rows_to_shift):
         QMessageBox.warning(self, cfg.programName, "No event selected!")
         return
 
+    """
     d, ok = QInputDialog.getDouble(self, "Time value", "Value to add or substract (use negative value):", 0, -2147483648, 2147483648, 3)
     if ok and d:
+    """
+
+    """
+    w = dialog.Ask_time(self.timeFormat)
+    w.setWindowTitle("Time value")
+    w.label.setText("Value to add or substract (use negative value):")
+    """
+
+    w = dialog.get_time_widget()
+
+    if w.exec_():
+        d = w.get_time()
+        if not d:
+            return
+
         if (
             dialog.MessageDialog(
                 cfg.programName,

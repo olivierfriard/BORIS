@@ -115,7 +115,7 @@ class DlgEditEvent(QDialog, Ui_Form):
         set time to current media time
         """
         if self.observation_type in (cfg.LIVE, cfg.MEDIA):
-            self.time_widget.set_time(float(self.current_time))
+            self.time_widget.set_time(dec(float(self.current_time)))
 
     def frame_idx_na(self):
         """
