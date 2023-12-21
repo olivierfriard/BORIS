@@ -20,7 +20,7 @@ Copyright 2012-2023 Olivier Friard
 """
 
 import csv
-import datetime
+import datetime as dt
 import hashlib
 import json
 import logging
@@ -198,8 +198,9 @@ def convertTime(time_format: str, sec: Union[float, dec]) -> Union[str, None]:
     return None
 
 
-def dynamic_time_format(sec: Union[float, dec], cutoff: dec, time_format: str) -> str:
+def smart_time_format(sec: Union[float, dec], cutoff: dec, time_format: str) -> str:
     """
+    Smart time format
     returns time in seconds if <= cutoff else in HH:MM:SS.ZZZ format
     """
     if cutoff == 0:
@@ -752,12 +753,12 @@ def datetime_iso8601(dt) -> str:
     return dt.isoformat(" ").split(".")[0]
 
 
-def seconds_of_day(dt) -> dec:
+def seconds_of_day(timestamp) -> dec:
     """
     return the number of seconds since start of the day
     """
 
-    return dec((dt - datetime.datetime.combine(dt.date(), datetime.time(0))).total_seconds()).quantize(dec("0.001"))
+    return dec((timestamp - dt.datetime.combine(dt.date(), dt.time(0))).total_seconds()).quantize(dec("0.001"))
 
 
 def sorted_keys(d: dict) -> list:
@@ -956,7 +957,7 @@ def time2seconds(time_: str) -> dec:
 
     if " " in time_:
         try:
-            return dec(str(datetime.datetime.strptime(time_, "%Y-%m-%d %H:%M:%S.%f").timestamp()))
+            return dec(str(dt.datetime.strptime(time_, "%Y-%m-%d %H:%M:%S.%f").timestamp()))
         except Exception:
             return dec("0.000")
     else:
@@ -985,7 +986,7 @@ def seconds2time(sec: dec) -> str:
 
     # if sec > one day treat as date
     if sec > cfg.SECONDS_PER_DAY:
-        t = datetime.datetime.fromtimestamp(float(sec))
+        t = dt.datetime.fromtimestamp(float(sec))
         return f"{t:%Y-%m-%d %H:%M:%S}.{t.microsecond / 1000:03.0f}"
 
     neg_sign = "-" * (sec < 0)

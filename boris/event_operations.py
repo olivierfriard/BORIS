@@ -800,7 +800,7 @@ def edit_time_selected_events(self):
         return
 
     """
-    d, ok = QInputDialog.getDouble(self, "Time value", "Value to add or substract (use negative value):", 0, -2147483648, 2147483648, 3)
+    d, ok = QInputDialog.getDouble(self, "Time value", "Value to add or substract (use negative value):", 0, -2147483648-, 2147483648, 3)
     if ok and d:
     """
 
@@ -812,56 +812,58 @@ def edit_time_selected_events(self):
 
     w = dialog.get_time_widget()
 
-    if w.exec_():
-        d = w.get_time()
-        if not d:
-            return
+    if not w.exec_():
+        return
 
-        if (
-            dialog.MessageDialog(
-                cfg.programName,
-                (
-                    f"Confirm the {'addition' if d > 0 else 'subtraction'} of {abs(d)} seconds "
-                    "to all selected events in the current observation?"
-                ),
-                [cfg.YES, cfg.NO],
-            )
-            == cfg.NO
-        ):
-            return
+    d = w.get_time()
+    if not d:
+        return
 
-        # fill the undo list
-        fill_events_undo_list(self, "Undo 'Edit time'")
+    if (
+        dialog.MessageDialog(
+            cfg.programName,
+            (
+                f"Confirm the {'addition' if d > 0 else 'subtraction'} of {abs(d)} seconds "
+                "to all selected events in the current observation?"
+            ),
+            [cfg.YES, cfg.NO],
+        )
+        == cfg.NO
+    ):
+        return
 
-        mem_time = self.getLaps()
-        for tw_event_idx in tvevents_rows_to_shift:
-            pj_event_idx = self.tv_idx2events_idx[tw_event_idx]
+    # fill the undo list
+    fill_events_undo_list(self, "Undo 'Edit time'")
 
-            self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS][pj_event_idx][cfg.PJ_OBS_FIELDS[self.playerType][cfg.TIME]] += dec(
-                f"{d:.3f}"
-            )
-            # set new frame index
-            if self.playerType == cfg.MEDIA:
-                if not self.seek_mediaplayer(
-                    self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS][pj_event_idx][cfg.PJ_OBS_FIELDS[self.playerType][cfg.TIME]]
-                ):
-                    # determine the new frame index
-                    time.sleep(0.1)
-                    frame_idx = self.get_frame_index()
-                    if len(self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS][pj_event_idx]) == 6:
-                        self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS][pj_event_idx][-1] = frame_idx
-                    elif len(self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS][pj_event_idx]) == 5:
-                        self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS][pj_event_idx].append(frame_idx)
+    mem_time = self.getLaps()
+    for tw_event_idx in tvevents_rows_to_shift:
+        pj_event_idx = self.tv_idx2events_idx[tw_event_idx]
 
-            self.project_changed()
-
+        self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS][pj_event_idx][cfg.PJ_OBS_FIELDS[self.playerType][cfg.TIME]] += dec(
+            f"{d:.3f}"
+        )
+        # set new frame index
         if self.playerType == cfg.MEDIA:
-            self.seek_mediaplayer(mem_time)
+            if not self.seek_mediaplayer(
+                self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS][pj_event_idx][cfg.PJ_OBS_FIELDS[self.playerType][cfg.TIME]]
+            ):
+                # determine the new frame index
+                time.sleep(0.1)
+                frame_idx = self.get_frame_index()
+                if len(self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS][pj_event_idx]) == 6:
+                    self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS][pj_event_idx][-1] = frame_idx
+                elif len(self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS][pj_event_idx]) == 5:
+                    self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS][pj_event_idx].append(frame_idx)
 
-        self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS] = sorted(self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS])
-        self.load_tw_events(self.observationId)
+        self.project_changed()
 
-        self.update_realtime_plot(force_plot=True)
+    if self.playerType == cfg.MEDIA:
+        self.seek_mediaplayer(mem_time)
+
+    self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS] = sorted(self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS])
+    self.load_tw_events(self.observationId)
+
+    self.update_realtime_plot(force_plot=True)
 
 
 def copy_selected_events(self):

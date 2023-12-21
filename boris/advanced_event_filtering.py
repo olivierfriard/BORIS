@@ -190,7 +190,6 @@ class Advanced_event_filtering_dialog(QDialog):
         add selected logic operaton to lineedit
         """
         if self.lw3.currentItem():
-
             text = ""
             if self.lw3.currentItem().text() == "AND":
                 text = " & "
@@ -237,7 +236,6 @@ class Advanced_event_filtering_dialog(QDialog):
         self.tw.clear()
 
         if flag_error or self.rb_details.isChecked():
-
             self.lb_results.setText(f"Results ({len(self.out)} event{'s'*(len(self.out) > 1)})")
 
             self.tw.setRowCount(len(self.out))
@@ -245,7 +243,6 @@ class Advanced_event_filtering_dialog(QDialog):
             self.tw.setHorizontalHeaderLabels(self.details_header)
 
         if not flag_error and self.rb_summary.isChecked():
-
             summary = {}
             for row in self.out:
                 obs_id, _, start, stop, duration = row
@@ -255,7 +252,6 @@ class Advanced_event_filtering_dialog(QDialog):
 
             self.out = []
             for obs_id in summary:
-
                 self.out.append(
                     [
                         obs_id,
@@ -303,9 +299,7 @@ class Advanced_event_filtering_dialog(QDialog):
             # check if file with new extension already exists
             if pathlib.Path(file_name).is_file():
                 if (
-                    dialog.MessageDialog(
-                        cfg.programName, f"The file {file_name} already exists.", [cfg.CANCEL, cfg.OVERWRITE]
-                    )
+                    dialog.MessageDialog(cfg.programName, f"The file {file_name} already exists.", [cfg.CANCEL, cfg.OVERWRITE])
                     == cfg.CANCEL
                 ):
                     return
@@ -357,9 +351,7 @@ def event_filtering(self):
         )
         return
 
-    max_media_duration_all_obs, _ = observation_operations.media_duration(
-        self.pj[cfg.OBSERVATIONS], selected_observations
-    )
+    max_media_duration_all_obs, _ = observation_operations.media_duration(self.pj[cfg.OBSERVATIONS], selected_observations)
 
     parameters = select_subj_behav.choose_obs_subj_behav_category(
         self,
@@ -454,8 +446,8 @@ def event_filtering(self):
     w.lb_time_interval.setText(
         (
             f"Time interval: "
-            f"{util.dynamic_time_format(min_time, cfg.DYNAMIC_TIME_CUTOFF_DEFAULT, self.timeFormat)} - "
-            f"{util.dynamic_time_format(max_time, cfg.DYNAMIC_TIME_CUTOFF_DEFAULT, self.timeFormat)}"
+            f"{util.smart_time_format(min_time, cfg.SMART_TIME_CUTOFF_DEFAULT, self.timeFormat)} - "
+            f"{util.smart_time_format(max_time, cfg.SMART_TIME_CUTOFF_DEFAULT, self.timeFormat)}"
         )
     )
     w.exec_()

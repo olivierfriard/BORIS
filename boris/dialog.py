@@ -28,7 +28,7 @@ import platform
 import datetime as dt
 import subprocess
 
-from PyQt5.QtCore import Qt, pyqtSignal, QT_VERSION_STR, PYQT_VERSION_STR, QRect
+from PyQt5.QtCore import Qt, pyqtSignal, QT_VERSION_STR, PYQT_VERSION_STR, QRect, QRegExp
 from PyQt5.QtWidgets import (
     QApplication,
     QAbstractItemView,
@@ -58,7 +58,7 @@ from PyQt5.QtWidgets import (
     QAbstractSpinBox,
     QRadioButton,
 )
-from PyQt5.QtGui import QFont, QTextCursor
+from PyQt5.QtGui import QFont, QTextCursor, QRegExpValidator
 
 from . import config as cfg
 from . import duration_widget
@@ -178,12 +178,11 @@ class get_time_widget(QDialog):
 
         self.widget.setGeometry(QRect(60, 171, 278, 124))
         self.verticalLayout = QVBoxLayout(self.widget)
-        self.verticalLayout.setObjectName("verticalLayout")
         self.verticalLayout.setContentsMargins(0, 0, 0, 0)
         self.horizontalLayout_2 = QHBoxLayout()
         self.horizontalLayout_2.setObjectName("horizontalLayout_2")
-        self.pb_sign = QPushButton(self.widget)
-        self.pb_sign.setObjectName("pb_sign")
+        self.pb_sign = QPushButton(self.widget, clicked=self.pb_sign_clicked)
+        self.pb_sign.setText("+")
         font = QFont()
         font.setPointSize(14)
         self.pb_sign.setFont(font)
@@ -191,52 +190,55 @@ class get_time_widget(QDialog):
         self.horizontalLayout_2.addWidget(self.pb_sign)
 
         self.gridLayout_3 = QGridLayout()
-        self.gridLayout_3.setObjectName("gridLayout_3")
         self.gridLayout = QGridLayout()
-        self.gridLayout.setObjectName("gridLayout")
-        self.label = QLabel(self.widget)
-        self.label.setObjectName("label")
-        self.label.setIndent(0)
 
-        self.gridLayout.addWidget(self.label, 0, 1, 1, 1)
+        self.rb_seconds = QRadioButton(self.widget)
+        self.rb_seconds.toggled.connect(self.format_changed)
+        self.gridLayout.addWidget(self.rb_seconds, 0, 0, 1, 1)
 
-        self.label_2 = QLabel(self.widget)
-        self.label_2.setObjectName("label_2")
+        self.le_seconds = QLineEdit(self.widget)
+        self.le_seconds.setText("0.000")
+        self.le_seconds.setValidator(QRegExpValidator(QRegExp("([0-9]+([.][0-9]*)?|[.][0-9]+)")))
+        self.gridLayout.addWidget(self.le_seconds, 0, 1, 1, 1)
 
-        self.gridLayout.addWidget(self.label_2, 0, 2, 1, 1)
+        self.lb_seconds = QLabel(self.widget)
+        self.lb_seconds.setText("seconds")
+        self.lb_seconds.setIndent(0)
+        self.gridLayout.addWidget(self.lb_seconds, 0, 2, 1, 1)
+
+        self.lb_hour = QLabel(self.widget)
+        self.lb_hour.setText("hour")
+        self.lb_hour.setIndent(0)
+        self.gridLayout.addWidget(self.lb_hour, 1, 1, 1, 1)
+
+        self.lb_hhmmss = QLabel(self.widget)
+        self.lb_hhmmss.setText("mm:ss.ms")
+        self.gridLayout.addWidget(self.lb_hhmmss, 1, 2, 1, 1)
 
         self.rb_time = QRadioButton(self.widget)
-        self.rb_time.setObjectName("rb_time")
         self.rb_time.toggled.connect(self.format_changed)
-
-        self.gridLayout.addWidget(self.rb_time, 1, 0, 1, 1)
+        self.gridLayout.addWidget(self.rb_time, 2, 0, 1, 1)
 
         self.sb_hour = QSpinBox(self.widget)
-        self.sb_hour.setObjectName("sb_hour")
         self.sb_hour.setButtonSymbols(QAbstractSpinBox.NoButtons)
         self.sb_hour.setMinimum(0)
         self.sb_hour.setMaximum(48)
         self.sb_hour.setDisplayIntegerBase(10)
-
-        self.gridLayout.addWidget(self.sb_hour, 1, 1, 1, 1)
+        self.gridLayout.addWidget(self.sb_hour, 2, 1, 1, 1)
 
         self.te_time = QTimeEdit(self.widget)
-        self.te_time.setObjectName("te_time")
-
-        self.gridLayout.addWidget(self.te_time, 1, 2, 1, 1)
+        self.te_time.setDisplayFormat("mm:ss.zzz")
+        self.gridLayout.addWidget(self.te_time, 2, 2, 1, 1)
 
         self.gridLayout_3.addLayout(self.gridLayout, 0, 0, 1, 1)
 
         self.gridLayout_2 = QGridLayout()
-        self.gridLayout_2.setObjectName("gridLayout_2")
         self.rb_datetime = QRadioButton(self.widget)
-        self.rb_datetime.setObjectName("rb_datetime")
         self.rb_datetime.toggled.connect(self.format_changed)
 
         self.gridLayout_2.addWidget(self.rb_datetime, 0, 0, 1, 1)
 
         self.dte = QDateTimeEdit(self.widget)
-        self.dte.setObjectName("dte")
         self.dte.setDisplayFormat("yyyy-MM-dd hh:mm:ss.zzz")
 
         self.gridLayout_2.addWidget(self.dte, 0, 1, 1, 1)
@@ -248,43 +250,51 @@ class get_time_widget(QDialog):
         self.verticalLayout.addLayout(self.horizontalLayout_2)
 
         self.horizontalLayout = QHBoxLayout()
-        self.horizontalLayout.setObjectName("horizontalLayout")
         self.horizontalSpacer = QSpacerItem(40, 20, QSizePolicy.Expanding, QSizePolicy.Minimum)
-
         self.horizontalLayout.addItem(self.horizontalSpacer)
 
         self.pb_cancel = QPushButton(self.widget)
-        self.pb_cancel.setObjectName("pb_cancel")
-
         self.horizontalLayout.addWidget(self.pb_cancel)
 
         self.pb_ok = QPushButton(self.widget)
-        self.pb_ok.setObjectName("pb_ok")
-
         self.horizontalLayout.addWidget(self.pb_ok)
 
         self.verticalLayout.addLayout(self.horizontalLayout)
 
-        self.label.setText("hour")
-        self.label_2.setText("mm:ss.ms")
-        self.te_time.setDisplayFormat("mm:ss.zzz")
         self.pb_cancel.setText("Cancel")
         self.pb_cancel.clicked.connect(self.reject)
-        self.pb_sign.setText("+")
 
         self.pb_ok.setText("OK")
-        self.pb_ok.clicked.connect(self.accept)
+        self.pb_ok.clicked.connect(self.pb_ok_clicked)
 
         self.setLayout(self.verticalLayout)
 
         self.format_changed()
 
     def format_changed(self):
+        self.le_seconds.setEnabled(self.rb_seconds.isChecked())
+        self.lb_seconds.setEnabled(self.rb_seconds.isChecked())
         self.sb_hour.setEnabled(self.rb_time.isChecked())
         self.te_time.setEnabled(self.rb_time.isChecked())
-        self.label.setEnabled(self.rb_time.isChecked())
-        self.label_2.setEnabled(self.rb_time.isChecked())
+        self.lb_hour.setEnabled(self.rb_time.isChecked())
+        self.lb_hhmmss.setEnabled(self.rb_time.isChecked())
         self.dte.setEnabled(self.rb_datetime.isChecked())
+
+    def pb_ok_clicked(self):
+        if not self.rb_seconds.isChecked() and not self.rb_time.isChecked() and not self.rb_datetime.isChecked():
+            QMessageBox.warning(
+                None,
+                cfg.programName,
+                "Select an option",
+                QMessageBox.Ok | QMessageBox.Default,
+                QMessageBox.NoButton,
+            )
+            return
+        # test time value
+        if self.get_time() is None:
+            return
+
+        self.accept()
 
     def pb_sign_clicked(self):
         if self.pb_sign.text() == "+":
@@ -296,12 +306,29 @@ class get_time_widget(QDialog):
         """
         return time in seconds
         """
+
+        if self.rb_seconds.isChecked():
+            try:
+                time_sec = float(self.le_seconds.text())
+            except Exception:
+                QMessageBox.warning(
+                    None,
+                    cfg.programName,
+                    "The value is not a decimal number",
+                    QMessageBox.Ok | QMessageBox.Default,
+                    QMessageBox.NoButton,
+                )
+                return None
+
         if self.rb_time.isChecked():
             time_sec = self.sb_hour.value() * 3600
             time_sec += self.te_time.time().msecsSinceStartOfDay() / 1000
 
         if self.rb_datetime.isChecked():
             time_sec = self.dte.dateTime().toMSecsSinceEpoch() / 1000
+
+        if self.pb_sign.text() == "-":
+            time_sec = -time_sec
 
         return time_sec
 
