@@ -985,7 +985,7 @@ def seconds2time(sec: dec) -> str:
         return cfg.NA
 
     # if sec > one day treat as date
-    if sec > cfg.SECONDS_PER_DAY:
+    if sec > cfg.DATE_CUTOFF:
         t = dt.datetime.fromtimestamp(float(sec))
         return f"{t:%Y-%m-%d %H:%M:%S}.{t.microsecond / 1000:03.0f}"
 

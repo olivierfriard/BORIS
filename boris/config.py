@@ -24,7 +24,12 @@ programName: str = "BORIS"
 
 project_format_version: str = "7.0"
 
-SECONDS_PER_DAY = 86_400
+SECONDS_PER_DAY: int = 86_400
+
+# cutoff value for displaying HH:MM:SS.zzz or YYYY-mm-DD HH:MM:SS:ZZZ
+DATE_CUTOFF: int = 7 * 24 * 60 * 60  # 1 week
+
+SMART_TIME_CUTOFF_DEFAULT: int = 300
 
 # minimal project version for handling observations from images
 IMAGES_OBS_PROJECT_MIN_VERSION: tuple = (8, 6)
@@ -39,9 +44,8 @@ MAX_UNDO_QUEUE: int = 25
 
 NA: str = "NA"
 
-REALTIME_PLOT_CURSOR_COLOR = "red"
+REALTIME_PLOT_CURSOR_COLOR: str = "red"
 
-SMART_TIME_CUTOFF_DEFAULT = 300
 
 CTRL_KEY: str = "Ctrl"
 ALT_KEY: str = "Alt"
