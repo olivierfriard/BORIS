@@ -198,11 +198,12 @@ def convertTime(time_format: str, sec: Union[float, dec]) -> Union[str, None]:
     return None
 
 
-def smart_time_format(sec: Union[float, dec], cutoff: dec, time_format: str) -> str:
+def smart_time_format(sec: Union[float, dec], time_format: str = cfg.S, cutoff: dec = cfg.SMART_TIME_CUTOFF_DEFAULT) -> str:
     """
     Smart time format
     returns time in seconds if <= cutoff else in HH:MM:SS.ZZZ format
     """
+    # cutoff = 0 follows the time format selectd by user
     if cutoff == 0:
         return convertTime(time_format, sec)
     if sec <= cutoff:

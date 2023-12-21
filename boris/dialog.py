@@ -168,7 +168,7 @@ class Info_widget(QWidget):
 
 
 class get_time_widget(QDialog):
-    def __init__(self, parent=None):
+    def __init__(self, time_value=0, parent=None):
         super().__init__(parent)
 
         self.setWindowTitle("BORIS")
@@ -222,7 +222,7 @@ class get_time_widget(QDialog):
         self.sb_hour = QSpinBox(self.widget)
         self.sb_hour.setButtonSymbols(QAbstractSpinBox.NoButtons)
         self.sb_hour.setMinimum(0)
-        self.sb_hour.setMaximum(48)
+        self.sb_hour.setMaximum(cfg.HOUR_CUTOFF)
         self.sb_hour.setDisplayIntegerBase(10)
         self.gridLayout.addWidget(self.sb_hour, 2, 1, 1, 1)
 

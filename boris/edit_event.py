@@ -36,6 +36,7 @@ from PyQt5.QtWidgets import (
 
 from . import config as cfg
 from . import duration_widget
+from . import dialog
 from .edit_event_ui import Ui_Form
 
 
@@ -73,6 +74,9 @@ class DlgEditEvent(QDialog, Ui_Form):
                 self.time_widget.set_format_s()
             if time_format == cfg.HHMMSS:
                 self.time_widget.set_format_hhmmss()
+
+            # future time widget
+            # self.time_widget = dialog.get_time_widget(self.time_value)
 
             self.horizontalLayout_2.insertWidget(0, self.time_widget)
 

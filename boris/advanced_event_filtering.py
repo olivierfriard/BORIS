@@ -19,7 +19,6 @@ Copyright 2012-2023 Olivier Friard
   MA 02110-1301, USA.
 """
 
-from decimal import Decimal as dec
 import pathlib
 import re
 import statistics
@@ -207,7 +206,7 @@ class Advanced_event_filtering_dialog(QDialog):
         if not self.logic.text():
             return
         if self.logic.text().count('"') % 2:
-            QMessageBox.warning(self, cfg.programName, f'Wrong number of double quotes (")')
+            QMessageBox.warning(self, cfg.programName, 'Wrong number of double quotes (")')
             return
 
         sb_list = re.findall('"([^"]*)"', self.logic.text())
@@ -444,10 +443,6 @@ def event_filtering(self):
 
     w = Advanced_event_filtering_dialog(events)
     w.lb_time_interval.setText(
-        (
-            f"Time interval: "
-            f"{util.smart_time_format(min_time, cfg.SMART_TIME_CUTOFF_DEFAULT, self.timeFormat)} - "
-            f"{util.smart_time_format(max_time, cfg.SMART_TIME_CUTOFF_DEFAULT, self.timeFormat)}"
-        )
+        ("Time interval: " f"{util.smart_time_format(min_time, self.timeFormat)} - " f"{util.smart_time_format(max_time, self.timeFormat)}")
     )
     w.exec_()

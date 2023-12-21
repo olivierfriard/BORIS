@@ -27,7 +27,8 @@ project_format_version: str = "7.0"
 SECONDS_PER_DAY: int = 86_400
 
 # cutoff value for displaying HH:MM:SS.zzz or YYYY-mm-DD HH:MM:SS:ZZZ
-DATE_CUTOFF: int = 7 * 24 * 60 * 60  # 1 week
+HOUR_CUTOFF: int = 7 * 24
+DATE_CUTOFF: int = HOUR_CUTOFF * 60 * 60  # 1 week
 
 SMART_TIME_CUTOFF_DEFAULT: int = 300
 

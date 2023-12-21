@@ -819,13 +819,15 @@ def edit_time_selected_events(self):
     if not d:
         return
 
+    if ":" in util.smart_time_format(abs(d)):
+        smart_d = f"{util.smart_time_format(abs(d))}"
+    else:
+        smart_d = f"{d} seconds"
+
     if (
         dialog.MessageDialog(
             cfg.programName,
-            (
-                f"Confirm the {'addition' if d > 0 else 'subtraction'} of {abs(d)} seconds "
-                "to all selected events in the current observation?"
-            ),
+            (f"Confirm the {'addition' if d > 0 else 'subtraction'} of {smart_d} " "to all selected events in the current observation?"),
             [cfg.YES, cfg.NO],
         )
         == cfg.NO
