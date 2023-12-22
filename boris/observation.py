@@ -119,7 +119,8 @@ class Observation(QDialog, Ui_Form):
         self.setupUi(self)
 
         # insert duration widget for time offset
-        self.obs_time_offset = duration_widget.Duration_widget(0)
+        # self.obs_time_offset = duration_widget.Duration_widget(0)
+        self.obs_time_offset = dialog.get_time_widget2(0)
         self.horizontalLayout_6.insertWidget(1, self.obs_time_offset)
         self.obs_time_offset.setEnabled(False)
 
@@ -373,8 +374,12 @@ class Observation(QDialog, Ui_Form):
         """
 
         if self.cb_observation_time_interval.isChecked():
-            time_interval_dialog = dialog.Ask_time(self.time_format)
-            time_interval_dialog.time_widget.set_time(dec(0))
+            time_interval_dialog = dialog.Ask_time(0)
+            if self.time_format == cfg.S:
+                time_interval_dialog.time_widget.rb_seconds.setChecked(True)
+            if self.time_format == cfg.HHMMSS:
+                time_interval_dialog.time_widget.rb_time.setChecked(True)
+            # time_interval_dialog.time_widget.set_time(0)
             time_interval_dialog.setWindowTitle("Start observation at")
             time_interval_dialog.label.setText("Start observation at")
             start_time, stop_time = 0, 0
@@ -383,7 +388,7 @@ class Observation(QDialog, Ui_Form):
             else:
                 self.cb_observation_time_interval.setChecked(False)
                 return
-            time_interval_dialog.time_widget.set_time(dec(0))
+            time_interval_dialog.time_widget.set_time(0)
             time_interval_dialog.setWindowTitle("Stop observation at")
             time_interval_dialog.label.setText("Stop observation at")
             if time_interval_dialog.exec_():
@@ -398,7 +403,12 @@ class Observation(QDialog, Ui_Form):
                     self.cb_observation_time_interval.setChecked(False)
                     return
                 self.observation_time_interval = [start_time, stop_time]
-                self.cb_observation_time_interval.setText(f"Limit observation to a time interval: {start_time} - {stop_time}")
+                self.cb_observation_time_interval.setText(
+                    (
+                        "Limit observation to a time interval: "
+                        f"{util.smart_time_format(start_time, self.time_format)} - {util.smart_time_format(stop_time, self.time_format)}"
+                    )
+                )
         else:
             self.observation_time_interval = [0, 0]
             self.cb_observation_time_interval.setText("Limit observation to a time interval")

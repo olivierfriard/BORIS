@@ -622,9 +622,10 @@ def new_observation(self, mode=cfg.NEW, obsId=""):
 
     # adapt time offset for current time format
     if self.timeFormat == cfg.S:
-        observationWindow.obs_time_offset.set_format_s()
+        observationWindow.obs_time_offset.rb_seconds.setChecked(True)
     if self.timeFormat == cfg.HHMMSS:
-        observationWindow.obs_time_offset.set_format_hhmmss()
+        # observationWindow.obs_time_offset.set_format_hhmmss()
+        observationWindow.obs_time_offset.rb_time.setChecked(True)
 
     if mode == cfg.EDIT:
         observationWindow.setWindowTitle(f'Edit observation "{obsId}"')
@@ -1100,35 +1101,6 @@ def close_observation(self):
 
         if results.exec_():  # fix events
             state_events.fix_unpaired_events(self, silent_mode=True)
-
-            """
-            to delete 2023-11-25
-            w = dialog.Ask_time(self.timeFormat)
-            w.setWindowTitle("Fix UNPAIRED state events")
-            w.label.setText("Fix UNPAIRED events at time")
-
-            if w.exec_():
-                fix_at_time = w.time_widget.get_time()
-                events_to_add = project_functions.fix_unpaired_state_events(
-                    self.pj[cfg.ETHOGRAM],
-                    self.pj[cfg.OBSERVATIONS][self.observationId],
-                    fix_at_time - dec("0.001"),
-                )
-                if events_to_add:
-                    self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS].extend(events_to_add)
-                    self.project_changed()
-                    self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS].sort()
-
-                    self.load_tw_events(self.observationId)
-                    index = self.tv_events.model().index(
-                        [i for i, t in enumerate(self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS]) if t[0] == fix_at_time][0],
-                        0,
-                    )
-                    self.tv_events.scrollTo(index)
-                    return
-            else:
-                return
-            """
 
     self.saved_state = self.saveState()
 

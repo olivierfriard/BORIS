@@ -91,8 +91,12 @@ def choose_obs_subj_behav_category(
     paramPanelWindow.start_coding = start_coding
     paramPanelWindow.end_coding = end_coding
 
-    paramPanelWindow.start_time.set_format(self.timeFormat)
-    paramPanelWindow.end_time.set_format(self.timeFormat)
+    if self.timeFormat == cfg.S:
+        paramPanelWindow.start_time.rb_seconds.setChecked(True)
+        paramPanelWindow.end_time.rb_seconds.setChecked(True)
+    if self.timeFormat == cfg.HHMMSS:
+        paramPanelWindow.start_time.rb_time.setChecked(True)
+        paramPanelWindow.end_time.rb_time.setChecked(True)
 
     if n_observations > 1:
         paramPanelWindow.frm_time_interval.setVisible(False)

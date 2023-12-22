@@ -1487,9 +1487,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         if self.playerType != cfg.MEDIA:
             return
 
-        jt = dialog.Ask_time(self.timeFormat)
+        jt = dialog.Ask_time(0)
         jt.setWindowTitle("Jump to specific time")
-        jt.time_widget.set_time(dec(0))
+        jt.label.setText("Set the time")
 
         if jt.exec_():
             new_time = int(jt.time_widget.get_time())

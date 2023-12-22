@@ -101,44 +101,46 @@ def fix_unpaired_events(self, silent_mode: bool = False):
             )
             return
 
-        w = dialog.Ask_time(self.timeFormat)
+        w = dialog.Ask_time(0)
         w.setWindowTitle("Fix UNPAIRED state events")
-        w.label.setText("Fix UNPAIRED events at time")
+        w.label.setText("Fix UNPAIRED events at time:")
 
-        if w.exec_():
-            fix_at_time = w.time_widget.get_time()
+        if not w.exec_():
+            return
 
-            events_to_add = project_functions.fix_unpaired_state_events(
-                self.pj[cfg.ETHOGRAM],
-                self.pj[cfg.OBSERVATIONS][self.observationId],
-                fix_at_time - dec("0.001"),
+        fix_at_time = w.time_widget.get_time()
+
+        events_to_add = project_functions.fix_unpaired_state_events(
+            self.pj[cfg.ETHOGRAM],
+            self.pj[cfg.OBSERVATIONS][self.observationId],
+            fix_at_time - dec("0.001"),
+        )
+
+        if events_to_add:
+            # determine the new frame index
+            if (self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE] == cfg.MEDIA) and self.playerType == cfg.MEDIA:
+                mem_time = self.getLaps()
+                for event in events_to_add:
+                    if not self.seek_mediaplayer(event[0]):
+                        time.sleep(0.1)
+                        frame_idx = self.get_frame_index()
+                        event[cfg.PJ_OBS_FIELDS[cfg.MEDIA][cfg.FRAME_INDEX]] = frame_idx
+                self.seek_mediaplayer(mem_time)
+
+            self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS].extend(events_to_add)
+            self.project_changed()
+            self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS].sort()
+            self.load_tw_events(self.observationId)
+
+            index = self.tv_events.model().index(
+                [
+                    event_idx
+                    for event_idx, event in enumerate(self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS])
+                    if event[cfg.PJ_OBS_FIELDS[self.playerType][cfg.TIME]] == fix_at_time
+                ][0],
+                0,
             )
-
-            if events_to_add:
-                # determine the new frame index
-                if (self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE] == cfg.MEDIA) and self.playerType == cfg.MEDIA:
-                    mem_time = self.getLaps()
-                    for event in events_to_add:
-                        if not self.seek_mediaplayer(event[0]):
-                            time.sleep(0.1)
-                            frame_idx = self.get_frame_index()
-                            event[cfg.PJ_OBS_FIELDS[cfg.MEDIA][cfg.FRAME_INDEX]] = frame_idx
-                    self.seek_mediaplayer(mem_time)
-
-                self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS].extend(events_to_add)
-                self.project_changed()
-                self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS].sort()
-                self.load_tw_events(self.observationId)
-
-                index = self.tv_events.model().index(
-                    [
-                        event_idx
-                        for event_idx, event in enumerate(self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS])
-                        if event[cfg.PJ_OBS_FIELDS[self.playerType][cfg.TIME]] == fix_at_time
-                    ][0],
-                    0,
-                )
-                self.tv_events.scrollTo(index, QAbstractItemView.EnsureVisible)
+            self.tv_events.scrollTo(index, QAbstractItemView.EnsureVisible)
 
     # selected observations
     else:

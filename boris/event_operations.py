@@ -799,23 +799,14 @@ def edit_time_selected_events(self):
         QMessageBox.warning(self, cfg.programName, "No event selected!")
         return
 
-    """
-    d, ok = QInputDialog.getDouble(self, "Time value", "Value to add or substract (use negative value):", 0, -2147483648-, 2147483648, 3)
-    if ok and d:
-    """
-
-    """
-    w = dialog.Ask_time(self.timeFormat)
-    w.setWindowTitle("Time value")
-    w.label.setText("Value to add or substract (use negative value):")
-    """
-
-    w = dialog.get_time_widget()
+    w = dialog.Ask_time(0)
+    w.setWindowTitle("Shift time of selected event(s)")
+    w.label.setText("Amount of time to add or substract")
 
     if not w.exec_():
         return
 
-    d = w.get_time()
+    d = w.time_widget.get_time()
     if not d:
         return
 
