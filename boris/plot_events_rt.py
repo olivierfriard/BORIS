@@ -46,7 +46,7 @@ class Plot_events_RT(QWidget):
 
     def __init__(self):
         super().__init__()
-        self.setWindowTitle(f"Events plot")
+        self.setWindowTitle("Events plot")
 
         self.interval = 60  # default interval of visualization (in seconds)
         self.time_mem = -1

@@ -18,9 +18,7 @@ Copyright 2012-2023 Olivier Friard
   Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
   MA 02110-1301, USA.
 
-"""
 
-"""
 Module for analyzing the latency of behaviors after another behavior(s) (marker)
 
 """
@@ -43,7 +41,7 @@ def get_latency(self):
         None,
         cfg.programName,
         (
-            f"This function is experimental. Please test it and report any bug at <br>"
+            "This function is experimental. Please test it and report any bug at <br>"
             '<a href="https://github.com/olivierfriard/BORIS/issues">'
             "https://github.com/olivierfriard/BORIS/issues</a><br>"
             "Thank you for your collaboration!"
@@ -82,7 +80,7 @@ def get_latency(self):
         )
         return
 
-    parameters = select_subj_behav.choose_obs_subj_behav_category(
+    parameters: dict = select_subj_behav.choose_obs_subj_behav_category(
         self,
         selected_observations,
         flagShowExcludeBehaviorsWoEvents=False,
@@ -101,9 +99,9 @@ def get_latency(self):
     marker_subjects = parameters[cfg.SELECTED_SUBJECTS]
     include_marker_modifiers = parameters[cfg.INCLUDE_MODIFIERS]
 
-    # print(f"{marker_behaviors=} {marker_subjects=} {include_marker_modifiers=}")
+    print(f"{marker_behaviors=} {marker_subjects=} {include_marker_modifiers=}")
 
-    parameters = select_subj_behav.choose_obs_subj_behav_category(
+    parameters: dict = select_subj_behav.choose_obs_subj_behav_category(
         self, selected_observations, flagShowExcludeBehaviorsWoEvents=False, window_title="Select the latency behaviors"
     )
     if not parameters[cfg.SELECTED_SUBJECTS] or not parameters[cfg.SELECTED_BEHAVIORS]:
@@ -112,11 +110,11 @@ def get_latency(self):
     latency_subjects = parameters[cfg.SELECTED_SUBJECTS]
     include_latency_modifiers = parameters[cfg.INCLUDE_MODIFIERS]
 
-    # print(f"{latency_behaviors=} {latency_subjects=} {include_latency_modifiers=}")
+    print(f"{latency_behaviors=} {latency_subjects=} {include_latency_modifiers=}")
 
-    results = {}
+    results: dict = {}
     for obs_id in selected_observations:
-        # print(f"{obs_id=}")
+        print(f"{obs_id=}")
 
         events_with_status = project_functions.events_start_stop(
             self.pj[cfg.ETHOGRAM],
@@ -124,7 +122,17 @@ def get_latency(self):
             self.pj[cfg.OBSERVATIONS][obs_id][cfg.TYPE],
         )
 
+        print(f"{events_with_status=}")
+
         for idx, event in enumerate(events_with_status):
+            print(f"{event=}")
+
+            print(f"{event[cfg.EVENT_STATUS_FIELD_IDX]=}")
+
+            print(f"{event[cfg.EVENT_BEHAVIOR_FIELD_IDX]=}")
+
+            print(f"{event[cfg.EVENT_SUBJECT_FIELD_IDX]=}")
+
             if all(
                 (
                     event[cfg.EVENT_STATUS_FIELD_IDX] in (cfg.START, cfg.POINT),
@@ -141,6 +149,9 @@ def get_latency(self):
                     marker = event[cfg.EVENT_TIME_FIELD_IDX : cfg.EVENT_MODIFIER_FIELD_IDX + 1]
                 else:
                     marker = event[cfg.EVENT_TIME_FIELD_IDX : cfg.EVENT_BEHAVIOR_FIELD_IDX + 1]
+
+                print(f"{marker=}")
+
                 if marker not in results:
                     results[marker] = {}
 
@@ -162,17 +173,19 @@ def get_latency(self):
                             ),
                         )
                     ):
-                        # print(event, event2)
+                        print(event, event2)
                         if include_latency_modifiers:
                             latency = event2[cfg.EVENT_SUBJECT_FIELD_IDX : cfg.EVENT_MODIFIER_FIELD_IDX + 1]
                         else:
                             latency = event2[cfg.EVENT_SUBJECT_FIELD_IDX : cfg.EVENT_BEHAVIOR_FIELD_IDX + 1]
 
                         # print(f"{marker=}")
-                        # print(f"{latency=}")
-                        if not latency in results[marker]:
+                        print(f"{latency=}")
+                        if latency not in results[marker]:
                             results[marker][latency] = []
                         results[marker][latency].append(event2[cfg.EVENT_TIME_FIELD_IDX] - event[cfg.EVENT_TIME_FIELD_IDX])
+
+                        print(f"{results[marker][latency]=}")
 
                     # check if new marker
                     if all(
@@ -217,7 +230,7 @@ def get_latency(self):
 
             out += "first occurrence: "
             out += f"{sorted(results[marker][behav])[0]} s<br>"
-            out += f"all occurrences: "
+            out += "all occurrences: "
 
             out += ", ".join([f"{x} s" for x in sorted(results[marker][behav])])
             out += "<br><br>"

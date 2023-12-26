@@ -162,7 +162,7 @@ def update_menu(self):
         action.setEnabled(self.playerType == cfg.MEDIA)
 
     # geometric measurements
-    self.action_geometric_measurements.setEnabled(observation_is_active and self.geometric_measurements_mode == False)
+    self.action_geometric_measurements.setEnabled(observation_is_active and self.geometric_measurements_mode is False)
     self.actionCoding_pad.setEnabled(observation_is_active)
     self.actionSubjects_pad.setEnabled(observation_is_active)
     self.actionBehaviors_coding_map.setEnabled(observation_is_active)

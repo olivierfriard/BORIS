@@ -31,7 +31,7 @@ def add_image_overlay(self) -> None:
     add an image overlay on video from an image
     """
 
-    logging.debug(f"function add_image_overlay")
+    logging.debug("function add_image_overlay")
 
     try:
         w = dialog.Video_overlay_dialog()
@@ -66,7 +66,7 @@ def remove_image_overlay(self) -> None:
         keys_to_delete.append(n_player)
         try:
             self.overlays[int(n_player) - 1].remove()
-        except:
-            logging.debug("error removing overlay")
+        except Exception:
+            logging.debug("Error removing image overlay")
     for n_player in keys_to_delete:
         del self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO][cfg.OVERLAY][n_player]

@@ -144,17 +144,11 @@ def cohen_kappa(cursor, obsid1: str, obsid2: str, interval: dec, selected_subjec
     logging.debug(f"last_event: {last_event}")
 
     nb_events1 = cursor.execute(
-        (
-            "SELECT COUNT(*) FROM aggregated_events "
-            f"WHERE observation = ? AND subject in ({','.join('?'*len(selected_subjects))}) "
-        ),
+        ("SELECT COUNT(*) FROM aggregated_events " f"WHERE observation = ? AND subject in ({','.join('?'*len(selected_subjects))}) "),
         (obsid1,) + tuple(selected_subjects),
     ).fetchone()[0]
     nb_events2 = cursor.execute(
-        (
-            "SELECT COUNT(*) FROM aggregated_events "
-            f"WHERE observation = ? AND subject in ({','.join('?'*len(selected_subjects))}) "
-        ),
+        ("SELECT COUNT(*) FROM aggregated_events " f"WHERE observation = ? AND subject in ({','.join('?'*len(selected_subjects))}) "),
         (obsid2,) + tuple(selected_subjects),
     ).fetchone()[0]
 
@@ -162,10 +156,8 @@ def cohen_kappa(cursor, obsid1: str, obsid2: str, interval: dec, selected_subjec
 
     currentTime = dec(str(first_event))
     while currentTime <= last_event:
-
         for obsid in [obsid1, obsid2]:
             for subject in selected_subjects:
-
                 s = subj_behav_modif(cursor, obsid, subject, currentTime, interval, include_modifiers)
 
                 if s not in total_states:
@@ -185,11 +177,9 @@ def cohen_kappa(cursor, obsid1: str, obsid2: str, interval: dec, selected_subjec
     seq2 = {}
     currentTime = dec(str(first_event))
     while currentTime <= last_event:
-
         seq1[currentTime] = []
         seq2[currentTime] = []
         for subject in selected_subjects:
-
             s1 = subj_behav_modif(cursor, obsid1, subject, currentTime, interval, include_modifiers)
             s2 = subj_behav_modif(cursor, obsid2, subject, currentTime, interval, include_modifiers)
 
@@ -309,9 +299,7 @@ def irr_cohen_kappa(self):
         return
 
     # ask for time slice
-    i, ok = QInputDialog.getDouble(
-        self, "IRR - Cohen's Kappa (time-unit)", "Time unit (in seconds):", 1.0, 0.001, 86400, 3
-    )
+    i, ok = QInputDialog.getDouble(self, "IRR - Cohen's Kappa (time-unit)", "Time unit (in seconds):", 1.0, 0.001, 86400, 3)
     if not ok:
         return
     interval = util.float2decimal(i)
@@ -354,7 +342,7 @@ def irr_cohen_kappa(self):
         out2 += "\t".join(["%8.6f" % x for x in irr_results[r, :]]) + "\n"
 
     self.results = dialog.Results_dialog()
-    self.results.setWindowTitle(f"BORIS - IRR - Cohen's Kappa (time-unit) analysis results")
+    self.results.setWindowTitle("BORIS - IRR - Cohen's Kappa (time-unit) analysis results")
     self.results.ptText.setReadOnly(True)
     if len(selected_observations) == 2:
         self.results.ptText.appendPlainText(out)
@@ -363,9 +351,7 @@ def irr_cohen_kappa(self):
     self.results.show()
 
 
-def needleman_wunsch_identity(
-    cursor, obsid1: str, obsid2: str, interval, selected_subjects: list, include_modifiers: bool
-):
+def needleman_wunsch_identity(cursor, obsid1: str, obsid2: str, interval, selected_subjects: list, include_modifiers: bool):
     """
     Needleman - Wunsch identity between 2 observations
 
@@ -490,7 +476,6 @@ def needleman_wunsch_identity(
     ).fetchone()[0]
 
     if first_event is None:
-
         logging.debug(f"An observation has no recorded events: {obsid1} or {obsid2}")
 
         return -100, f"An observation has no recorded events: {obsid1} {obsid2}"
@@ -508,18 +493,12 @@ def needleman_wunsch_identity(
     logging.debug(f"last_event: {last_event}")
 
     nb_events1 = cursor.execute(
-        (
-            "SELECT COUNT(*) FROM aggregated_events "
-            f"WHERE observation = ? AND subject in ({','.join('?'*len(selected_subjects))}) "
-        ),
+        ("SELECT COUNT(*) FROM aggregated_events " f"WHERE observation = ? AND subject in ({','.join('?'*len(selected_subjects))}) "),
         (obsid1,) + tuple(selected_subjects),
     ).fetchone()[0]
 
     nb_events2 = cursor.execute(
-        (
-            "SELECT COUNT(*) FROM aggregated_events "
-            f"WHERE observation = ? AND subject in ({','.join('?'*len(selected_subjects))}) "
-        ),
+        ("SELECT COUNT(*) FROM aggregated_events " f"WHERE observation = ? AND subject in ({','.join('?'*len(selected_subjects))}) "),
         (obsid2,) + tuple(selected_subjects),
     ).fetchone()[0]
 
@@ -528,11 +507,9 @@ def needleman_wunsch_identity(
 
     currentTime = dec(str(first_event))
     while currentTime <= last_event:
-
         seq1[currentTime], seq2[currentTime] = [], []
 
         for subject in selected_subjects:
-
             s1 = subj_behav_modif(cursor, obsid1, subject, currentTime, interval, include_modifiers)
             s2 = subj_behav_modif(cursor, obsid2, subject, currentTime, interval, include_modifiers)
 
@@ -574,9 +551,7 @@ def needleman_wunch(self):
     if not selected_observations:
         return
     if len(selected_observations) < 2:
-        QMessageBox.information(
-            self, cfg.programName, "You have to select at least 2 observations for Needleman-Wunsch similarity"
-        )
+        QMessageBox.information(self, cfg.programName, "You have to select at least 2 observations for Needleman-Wunsch similarity")
         return
 
     # check if coded behaviors are defined in ethogram

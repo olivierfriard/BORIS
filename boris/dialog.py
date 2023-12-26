@@ -29,7 +29,7 @@ import datetime as dt
 import subprocess
 from decimal import Decimal as dec
 
-from PyQt5.QtCore import Qt, pyqtSignal, QT_VERSION_STR, PYQT_VERSION_STR, QRect, QRegExp, QTime, QDateTime, QSize
+from PyQt5.QtCore import Qt, pyqtSignal, QT_VERSION_STR, PYQT_VERSION_STR, QRect, QTime, QDateTime, QSize
 from PyQt5.QtWidgets import (
     QApplication,
     QAbstractItemView,
@@ -38,7 +38,6 @@ from PyQt5.QtWidgets import (
     QDialog,
     QFileDialog,
     QHBoxLayout,
-    QGridLayout,
     QLabel,
     QLineEdit,
     QListWidget,
@@ -61,7 +60,7 @@ from PyQt5.QtWidgets import (
     QStackedWidget,
     QFrame,
 )
-from PyQt5.QtGui import QFont, QTextCursor, QRegExpValidator
+from PyQt5.QtGui import QFont, QTextCursor
 
 from . import config as cfg
 from . import version

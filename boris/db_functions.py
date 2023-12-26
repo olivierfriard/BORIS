@@ -56,8 +56,7 @@ def load_events_in_db(
     state_behaviors_codes = [
         pj[cfg.ETHOGRAM][x][cfg.BEHAVIOR_CODE]
         for x in pj[cfg.ETHOGRAM]
-        if cfg.STATE in pj[cfg.ETHOGRAM][x][cfg.TYPE].upper()
-        and pj[cfg.ETHOGRAM][x][cfg.BEHAVIOR_CODE] in selected_behaviors
+        if cfg.STATE in pj[cfg.ETHOGRAM][x][cfg.TYPE].upper() and pj[cfg.ETHOGRAM][x][cfg.BEHAVIOR_CODE] in selected_behaviors
     ]
 
     # selected behaviors defined as point event
@@ -99,20 +98,14 @@ def load_events_in_db(
     cursor.execute("CREATE INDEX modifiers_idx ON events(modifiers)")
 
     for subject_to_analyze in selected_subjects:
-
         for obs_id in selected_observations:
-
             for event in pj[cfg.OBSERVATIONS][obs_id][cfg.EVENTS]:
-
                 if event[cfg.EVENT_BEHAVIOR_FIELD_IDX] in selected_behaviors:
-
                     # extract time, code, modifier and comment (time:0, subject:1, code:2, modifier:3, comment:4)
                     if (subject_to_analyze == cfg.NO_FOCAL_SUBJECT and event[cfg.EVENT_SUBJECT_FIELD_IDX] == "") or (
                         event[cfg.EVENT_SUBJECT_FIELD_IDX] == subject_to_analyze
                     ):
-
                         if pj[cfg.OBSERVATIONS][obs_id][cfg.TYPE] in (cfg.MEDIA, cfg.LIVE):
-
                             cursor.execute(
                                 (
                                     "INSERT INTO events "
@@ -125,18 +118,12 @@ def load_events_in_db(
                                     if event[cfg.EVENT_SUBJECT_FIELD_IDX] == ""
                                     else event[cfg.EVENT_SUBJECT_FIELD_IDX],
                                     event[cfg.EVENT_BEHAVIOR_FIELD_IDX],
-                                    cfg.STATE
-                                    if event[cfg.EVENT_BEHAVIOR_FIELD_IDX] in state_behaviors_codes
-                                    else cfg.POINT,
+                                    cfg.STATE if event[cfg.EVENT_BEHAVIOR_FIELD_IDX] in state_behaviors_codes else cfg.POINT,
                                     event[cfg.EVENT_MODIFIER_FIELD_IDX],
-                                    float(event[cfg.EVENT_TIME_FIELD_IDX])
-                                    if not event[cfg.EVENT_TIME_FIELD_IDX].is_nan()
-                                    else None,
+                                    float(event[cfg.EVENT_TIME_FIELD_IDX]) if not event[cfg.EVENT_TIME_FIELD_IDX].is_nan() else None,
                                     event[cfg.EVENT_COMMENT_FIELD_IDX],
                                     # frame index or NA
-                                    event_operations.read_event_field(
-                                        event, pj[cfg.OBSERVATIONS][obs_id][cfg.TYPE], cfg.FRAME_INDEX
-                                    ),
+                                    event_operations.read_event_field(event, pj[cfg.OBSERVATIONS][obs_id][cfg.TYPE], cfg.FRAME_INDEX),
                                 ),
                             )
 
@@ -153,13 +140,9 @@ def load_events_in_db(
                                     if event[cfg.EVENT_SUBJECT_FIELD_IDX] == ""
                                     else event[cfg.EVENT_SUBJECT_FIELD_IDX],
                                     event[cfg.EVENT_BEHAVIOR_FIELD_IDX],
-                                    cfg.STATE
-                                    if event[cfg.EVENT_BEHAVIOR_FIELD_IDX] in state_behaviors_codes
-                                    else cfg.POINT,
+                                    cfg.STATE if event[cfg.EVENT_BEHAVIOR_FIELD_IDX] in state_behaviors_codes else cfg.POINT,
                                     event[cfg.EVENT_MODIFIER_FIELD_IDX],
-                                    float(event[cfg.EVENT_TIME_FIELD_IDX])
-                                    if not event[cfg.EVENT_TIME_FIELD_IDX].is_nan()
-                                    else None,
+                                    float(event[cfg.EVENT_TIME_FIELD_IDX]) if not event[cfg.EVENT_TIME_FIELD_IDX].is_nan() else None,
                                     event[cfg.EVENT_COMMENT_FIELD_IDX],
                                     event[cfg.PJ_OBS_FIELDS[cfg.IMAGES][cfg.IMAGE_INDEX]],
                                     event[cfg.PJ_OBS_FIELDS[cfg.IMAGES][cfg.IMAGE_PATH]],
@@ -189,7 +172,7 @@ def load_aggregated_events_in_db(
 
     """
 
-    logging.debug(f"function: load_aggregated_events_in_db")
+    logging.debug("function: load_aggregated_events_in_db")
 
     # if no observation selected select all
     if not selected_observations:
@@ -197,9 +180,7 @@ def load_aggregated_events_in_db(
 
     # if no subject selected select all
     if not selected_subjects:
-        selected_subjects = sorted(
-            [pj[cfg.SUBJECTS][x][cfg.SUBJECT_NAME] for x in pj[cfg.SUBJECTS]] + [cfg.NO_FOCAL_SUBJECT]
-        )
+        selected_subjects = sorted([pj[cfg.SUBJECTS][x][cfg.SUBJECT_NAME] for x in pj[cfg.SUBJECTS]] + [cfg.NO_FOCAL_SUBJECT])
 
     # if no behavior selected select all
     if not selected_behaviors:
@@ -208,9 +189,7 @@ def load_aggregated_events_in_db(
     # check if state events are paired
     out = ""
     for obs_id in selected_observations:
-        r, msg = project_functions.check_state_events_obs(
-            obs_id, pj[cfg.ETHOGRAM], pj[cfg.OBSERVATIONS][obs_id], cfg.HHMMSS
-        )
+        r, msg = project_functions.check_state_events_obs(obs_id, pj[cfg.ETHOGRAM], pj[cfg.OBSERVATIONS][obs_id], cfg.HHMMSS)
         if not r:
             out += f"Observation: <strong>{obs_id}</strong><br>{msg}<br>"
     if out:
@@ -220,16 +199,14 @@ def load_aggregated_events_in_db(
     state_behaviors_codes = [
         pj[cfg.ETHOGRAM][x][cfg.BEHAVIOR_CODE]
         for x in pj[cfg.ETHOGRAM]
-        if cfg.STATE in pj[cfg.ETHOGRAM][x][cfg.TYPE].upper()
-        and pj[cfg.ETHOGRAM][x][cfg.BEHAVIOR_CODE] in selected_behaviors
+        if cfg.STATE in pj[cfg.ETHOGRAM][x][cfg.TYPE].upper() and pj[cfg.ETHOGRAM][x][cfg.BEHAVIOR_CODE] in selected_behaviors
     ]
 
     # selected behaviors defined as point event
     point_behaviors_codes = [
         pj[cfg.ETHOGRAM][x][cfg.BEHAVIOR_CODE]
         for x in pj[cfg.ETHOGRAM]
-        if cfg.POINT in pj[cfg.ETHOGRAM][x][cfg.TYPE].upper()
-        and pj[cfg.ETHOGRAM][x][cfg.BEHAVIOR_CODE] in selected_behaviors
+        if cfg.POINT in pj[cfg.ETHOGRAM][x][cfg.TYPE].upper() and pj[cfg.ETHOGRAM][x][cfg.BEHAVIOR_CODE] in selected_behaviors
     ]
 
     db = sqlite3.connect(":memory:")
@@ -277,12 +254,10 @@ def load_aggregated_events_in_db(
     )
 
     for obs_id in selected_observations:
-
         cursor1 = load_events_in_db(pj, selected_subjects, [obs_id], selected_behaviors)
 
         for subject in selected_subjects:
             for behavior in selected_behaviors:
-
                 cursor1.execute(
                     "SELECT DISTINCT modifiers FROM events WHERE subject=? AND code=? ORDER BY modifiers",
                     (
@@ -294,7 +269,6 @@ def load_aggregated_events_in_db(
                 rows_distinct_modifiers = list(x[0] for x in cursor1.fetchall())
 
                 for distinct_modifiers in rows_distinct_modifiers:
-
                     cursor1.execute(
                         (
                             "SELECT occurence, comment, image_index, image_path FROM events "
@@ -305,7 +279,6 @@ def load_aggregated_events_in_db(
                     rows = list(cursor1.fetchall())
 
                     for idx, row in enumerate(rows):
-
                         if behavior in point_behaviors_codes:
                             data = (
                                 obs_id,

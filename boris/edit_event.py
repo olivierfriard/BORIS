@@ -75,7 +75,7 @@ class DlgEditEvent(QDialog, Ui_Form):
             #    self.time_widget.set_format_hhmmss()
 
             # future time widget
-            self.time_widget = dialog.get_time_widget2(self.time_value)
+            self.time_widget = dialog.get_time_widget(self.time_value)
 
             self.horizontalLayout_2.insertWidget(0, self.time_widget)
 

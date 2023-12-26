@@ -25,6 +25,9 @@ import os
 import sys
 import logging
 import functools
+from PyQt5.QtWidgets import QLabel, QDockWidget, QWidget, QHBoxLayout, QSlider, QSizePolicy, QStackedWidget
+from PyQt5.QtCore import pyqtSignal, QEvent, Qt
+
 
 os.environ["PATH"] = os.path.dirname(__file__) + os.sep + "misc" + os.pathsep + os.environ["PATH"]
 
@@ -47,10 +50,6 @@ except OSError:  # libmpv not found
     msg = "LIBMPV library not found!\n"
     logging.critical(msg)
     sys.exit()
-
-
-from PyQt5.QtWidgets import QLabel, QDockWidget, QWidget, QHBoxLayout, QSlider, QSizePolicy, QStackedWidget
-from PyQt5.QtCore import pyqtSignal, QEvent, Qt
 
 
 class Clickable_label(QLabel):

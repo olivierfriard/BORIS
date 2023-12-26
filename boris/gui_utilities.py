@@ -55,4 +55,4 @@ def restore_geometry(widget: QWidget, widget_name: str, default_geometry):
             try:
                 widget.resize(default_geometry[0], default_geometry[1])
             except Exception:
-                logging.warning(f"error during restoring default")
+                logging.warning("Error during restoring default")

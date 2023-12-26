@@ -48,7 +48,6 @@ from PyQt5.QtWidgets import (
     QPushButton,
     QRadioButton,
     QVBoxLayout,
-    QWidget,
     QColorDialog,
     QSpacerItem,
     QSizePolicy,

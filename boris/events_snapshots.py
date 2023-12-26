@@ -427,7 +427,7 @@ def extract_events(self):
                                 has_video = self.pj[cfg.OBSERVATIONS][obs_id][cfg.MEDIA_INFO][cfg.HAS_VIDEO][
                                     self.pj[cfg.OBSERVATIONS][obs_id][cfg.FILE][nplayer][mediaFileIdx]
                                 ]
-                            except:
+                            except Exception:
                                 has_video = False
                             if not has_video:
                                 if (
@@ -455,7 +455,7 @@ def extract_events(self):
                                 has_audio = self.pj[cfg.OBSERVATIONS][obs_id][cfg.MEDIA_INFO][cfg.HAS_AUDIO][
                                     self.pj[cfg.OBSERVATIONS][obs_id][cfg.FILE][nplayer][mediaFileIdx]
                                 ]
-                            except:
+                            except Exception:
                                 has_audio = False
                             if not has_audio:
                                 if (

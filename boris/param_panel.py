@@ -25,7 +25,6 @@ from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import QDialog
 
 from . import config as cfg
-from . import duration_widget
 from .param_panel_ui import Ui_Dialog
 from . import dialog
 
@@ -38,9 +37,9 @@ class Param_panel(QDialog, Ui_Dialog):
         self.media_duration = None
 
         # insert duration widget for time offset
-        self.start_time = dialog.get_time_widget2(0)
+        self.start_time = dialog.get_time_widget(0)
         self.horizontalLayout.insertWidget(1, self.start_time)
-        self.end_time = dialog.get_time_widget2(0)
+        self.end_time = dialog.get_time_widget(0)
         self.horizontalLayout_6.insertWidget(1, self.end_time)
 
         self.pbSelectAllSubjects.clicked.connect(lambda: self.subjects_button_clicked("select all"))

@@ -34,7 +34,7 @@ import pprint
 
 try:
     from . import config as cfg
-except:
+except Exception:
     import config as cfg
 
 
@@ -57,20 +57,20 @@ def otx_to_boris(file_path: str) -> dict:
             if files_list:
                 try:
                     file_zip.extract(files_list[0])
-                except:
+                except Exception:
                     return {"error": "error when extracting file"}
             else:
                 return {"error": "error when extracting file"}
 
             try:
                 xmldoc = minidom.parse(files_list[0])
-            except:
+            except Exception:
                 return {"error": "parsing error"}
 
     elif pl.Path(file_path).suffix in (".odx", ".otx"):
         try:
             xmldoc = minidom.parse(file_path)
-        except:
+        except Exception:
             return {"error": "parsing error"}
 
     else:
@@ -86,22 +86,18 @@ def otx_to_boris(file_path: str) -> dict:
         except Exception:
             project_name = ""
         try:
-            project_description = re.sub(
-                "<[^>]*>", "", metadata.getElementsByTagName("MET_PROJECT_DESCRIPTION")[0].toxml()
-            )
+            project_description = re.sub("<[^>]*>", "", metadata.getElementsByTagName("MET_PROJECT_DESCRIPTION")[0].toxml())
         except Exception:
             project_description = ""
 
         try:
-            project_creation_date = re.sub(
-                "<[^>]*>", "", metadata.getElementsByTagName("MET_CREATION_DATETIME")[0].toxml()
-            )
+            project_creation_date = re.sub("<[^>]*>", "", metadata.getElementsByTagName("MET_CREATION_DATETIME")[0].toxml())
         except Exception:
             project_creation_date = ""
 
     # modifiers
     modifiers: dict = {}
-    modifiers_set = {}
+    # modifiers_set = {}
     itemlist = xmldoc.getElementsByTagName("CDS_MODIFIER")
     for item in itemlist:
         modif = minidom.parseString(item.toxml())
@@ -112,16 +108,16 @@ def otx_to_boris(file_path: str) -> dict:
 
         try:
             modif_parent_id = re.sub("<[^>]*>", "", modif.getElementsByTagName("CDS_ELE_PARENT_ID")[0].toxml())
-        except:
+        except Exception:
             modif_parent_id = ""
 
         try:
             description = re.sub("<[^>]*>", "", modif.getElementsByTagName("CDS_ELE_DESCRIPTION")[0].toxml())
-        except:
+        except Exception:
             description = ""
         try:
             key = re.sub("<[^>]*>", "", modif.getElementsByTagName("CDS_ELE_START_KEYCODE")[0].toxml())
-        except:
+        except Exception:
             key = ""
 
         if modif_parent_id:
@@ -161,26 +157,26 @@ def otx_to_boris(file_path: str) -> dict:
 
         try:
             description = re.sub("<[^>]*>", "", behav.getElementsByTagName("CDS_ELE_DESCRIPTION")[0].toxml())
-        except:
+        except Exception:
             description = ""
         try:
             key = re.sub("<[^>]*>", "", behav.getElementsByTagName("CDS_ELE_START_KEYCODE")[0].toxml())
-        except:
+        except Exception:
             key = ""
 
         try:
             stop_key = re.sub("<[^>]*>", "", behav.getElementsByTagName("CDS_ELE_STOP_KEYCODE")[0].toxml())
-        except:
+        except Exception:
             stop_key = ""
 
         try:
             parent_name = re.sub("<[^>]*>", "", behav.getElementsByTagName("CDS_ELE_PARENT_NAME")[0].toxml())
-        except:
+        except Exception:
             parent_name = ""
 
         try:
             mutually_exclusive = re.sub("<[^>]*>", "", behav.getElementsByTagName("CDS_ELE_MUT_EXCLUSIVE")[0].toxml())
-        except:
+        except Exception:
             mutually_exclusive = ""
 
         if mutually_exclusive == "Y" and parent_name:
@@ -192,7 +188,6 @@ def otx_to_boris(file_path: str) -> dict:
             modifier_sets = []
 
         if parent_name:  # behavior
-
             if (not key or len(key) > 1) and stop_key:
                 key = stop_key
 
@@ -211,7 +206,6 @@ def otx_to_boris(file_path: str) -> dict:
             behaviors_list.append(behav_code)
 
         else:  #  behavioral category
-
             behav_category.append(behav_code)
 
     behaviors_boris: dict = {}
@@ -251,11 +245,11 @@ def otx_to_boris(file_path: str) -> dict:
         subject_name = re.sub("<[^>]*>", "", subject.getElementsByTagName("CDS_ELE_NAME")[0].toxml())
         try:
             key = re.sub("<[^>]*>", "", subject.getElementsByTagName("CDS_ELE_START_KEYCODE")[0].toxml())
-        except:
+        except Exception:
             key = ""
         try:
             parent_name = re.sub("<[^>]*>", "", subject.getElementsByTagName("CDS_ELE_PARENT_NAME")[0].toxml())
-        except:
+        except Exception:
             parent_name = ""
 
         if parent_name:
@@ -268,7 +262,6 @@ def otx_to_boris(file_path: str) -> dict:
     variables = {}
     itemlist = xmldoc.getElementsByTagName("VL_VARIABLE")
     for item in itemlist:
-
         variable = minidom.parseString(item.toxml())
 
         variable_label = re.sub("<[^>]*>", "", variable.getElementsByTagName("VL_LABEL")[0].toxml())
@@ -291,7 +284,7 @@ def otx_to_boris(file_path: str) -> dict:
 
         try:
             variable_description = re.sub("<[^>]*>", "", modif.getElementsByTagName("VL_DESCRIPTION")[0].toxml())
-        except:
+        except Exception:
             variable_description = ""
 
         try:
@@ -301,7 +294,7 @@ def otx_to_boris(file_path: str) -> dict:
                 values_list.append(re.sub("<[^>]*>", "", value.toxml()))
             values_str = ",".join(values_list)
 
-        except:
+        except Exception:
             values_str = ""
 
         variables[variable_id] = {
@@ -355,7 +348,6 @@ def otx_to_boris(file_path: str) -> dict:
         OBS_EVENT_LOGS = OBS_OBSERVATION.getElementsByTagName("OBS_EVENT_LOGS")[0]
 
         for OBS_EVENT_LOG in OBS_EVENT_LOGS.getElementsByTagName("OBS_EVENT_LOG"):
-
             CREATION_DATETIME = OBS_EVENT_LOG.getAttribute("CREATION_DATETIME")
 
             CREATION_DATETIME = CREATION_DATETIME.replace(" ", "T").split(".")[0]
@@ -365,7 +357,6 @@ def otx_to_boris(file_path: str) -> dict:
             project[cfg.OBSERVATIONS][obs_id]["date"] = CREATION_DATETIME
 
             for event in OBS_EVENT_LOG.getElementsByTagName("OBS_EVENT"):
-
                 OBS_EVENT_TIMESTAMP = event.getElementsByTagName("OBS_EVENT_TIMESTAMP")[0].childNodes[0].data
 
                 day_timestamp = dt.datetime.strptime(OBS_EVENT_TIMESTAMP.split(" ")[0], "%Y-%m-%d").timestamp()
@@ -429,8 +420,5 @@ def otx_to_boris(file_path: str) -> dict:
 
 if __name__ == "__main__":
     import sys
-    import pprint
 
     otx_to_boris(sys.argv[1])
-
-    # pprint.pprint(otx_to_boris(sys.argv[1]))

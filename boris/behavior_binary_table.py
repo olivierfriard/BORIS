@@ -21,11 +21,9 @@ Copyright 2012-2023 Olivier Friard
 
 import os
 import pathlib
-import re
 from decimal import Decimal as dec
 
 import tablib
-from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import QFileDialog, QInputDialog, QMessageBox
 
 from . import observation_operations
@@ -38,9 +36,7 @@ from . import config as cfg
 from . import select_subj_behav
 
 
-def create_behavior_binary_table(
-    pj: dict, selected_observations: list, parameters_obs: dict, time_interval: float
-) -> dict:
+def create_behavior_binary_table(pj: dict, selected_observations: list, parameters_obs: dict, time_interval: float) -> dict:
     """
     create behavior binary table
 
@@ -57,17 +53,12 @@ def create_behavior_binary_table(
 
     results_df = {}
 
-    state_behavior_codes = [
-        x for x in util.state_behavior_codes(pj[cfg.ETHOGRAM]) if x in parameters_obs[cfg.SELECTED_BEHAVIORS]
-    ]
-    point_behavior_codes = [
-        x for x in util.point_behavior_codes(pj[cfg.ETHOGRAM]) if x in parameters_obs[cfg.SELECTED_BEHAVIORS]
-    ]
+    state_behavior_codes = [x for x in util.state_behavior_codes(pj[cfg.ETHOGRAM]) if x in parameters_obs[cfg.SELECTED_BEHAVIORS]]
+    point_behavior_codes = [x for x in util.point_behavior_codes(pj[cfg.ETHOGRAM]) if x in parameters_obs[cfg.SELECTED_BEHAVIORS]]
     if not state_behavior_codes and not point_behavior_codes:
         return {"error": True, "msg": "No events selected"}
 
     for obs_id in selected_observations:
-
         start_time = parameters_obs[cfg.START_TIME]
         end_time = parameters_obs[cfg.END_TIME]
 
@@ -78,7 +69,6 @@ def create_behavior_binary_table(
             end_time = dec(max_obs_length)
 
         if parameters_obs["time"] == cfg.TIME_EVENTS:
-
             try:
                 start_time = dec(pj[cfg.OBSERVATIONS][obs_id][cfg.EVENTS][0][0])
             except Exception:
@@ -93,19 +83,17 @@ def create_behavior_binary_table(
             results_df[obs_id] = {}
 
         for subject in parameters_obs[cfg.SELECTED_SUBJECTS]:
-
             # extract tuple (behavior, modifier)
             behav_modif_list = [
                 (idx[2], idx[3])
                 for idx in pj[cfg.OBSERVATIONS][obs_id][cfg.EVENTS]
-                if idx[1] == (subject if subject != cfg.NO_FOCAL_SUBJECT else "")
-                and idx[2] in parameters_obs[cfg.SELECTED_BEHAVIORS]
+                if idx[1] == (subject if subject != cfg.NO_FOCAL_SUBJECT else "") and idx[2] in parameters_obs[cfg.SELECTED_BEHAVIORS]
             ]
 
             # extract observed subjects NOT USED at the moment
-            observed_subjects = [
+            """observed_subjects = [
                 event[cfg.EVENT_SUBJECT_FIELD_IDX] for event in pj[cfg.OBSERVATIONS][obs_id][cfg.EVENTS]
-            ]
+            ]"""
 
             # add selected behavior if not found in (behavior, modifier)
             if not parameters_obs[cfg.EXCLUDE_BEHAVIORS]:
@@ -127,17 +115,12 @@ def create_behavior_binary_table(
                 sel_subject_dict = {"": {cfg.SUBJECT_NAME: ""}}
             else:
                 sel_subject_dict = dict(
-                    [
-                        (idx, pj[cfg.SUBJECTS][idx])
-                        for idx in pj[cfg.SUBJECTS]
-                        if pj[cfg.SUBJECTS][idx][cfg.SUBJECT_NAME] == subject
-                    ]
+                    [(idx, pj[cfg.SUBJECTS][idx]) for idx in pj[cfg.SUBJECTS] if pj[cfg.SUBJECTS][idx][cfg.SUBJECT_NAME] == subject]
                 )
 
             row_idx = 0
             t = start_time
             while t <= end_time:
-
                 # state events
                 current_states = util.get_current_states_modifiers_by_subject_2(
                     state_behavior_codes, pj[cfg.OBSERVATIONS][obs_id][cfg.EVENTS], sel_subject_dict, t
@@ -214,9 +197,7 @@ def behavior_binary_table(self):
         return
     """
 
-    max_media_duration_all_obs, _ = observation_operations.media_duration(
-        self.pj[cfg.OBSERVATIONS], selected_observations
-    )
+    max_media_duration_all_obs, _ = observation_operations.media_duration(self.pj[cfg.OBSERVATIONS], selected_observations)
 
     start_coding, end_coding, _ = observation_operations.coding_time(self.pj[cfg.OBSERVATIONS], selected_observations)
 
@@ -253,7 +234,6 @@ def behavior_binary_table(self):
     file_formats = [cfg.TSV, cfg.CSV, cfg.ODS, cfg.XLSX, cfg.XLS, cfg.HTML]
 
     if len(selected_observations) == 1:
-
         file_name, filter_ = QFileDialog().getSaveFileName(None, "Save results", "", ";;".join(file_formats))
         if not file_name:
             return
@@ -265,14 +245,11 @@ def behavior_binary_table(self):
             # check if file with new extension already exists
             if pathlib.Path(file_name).is_file():
                 if (
-                    dialog.MessageDialog(
-                        cfg.programName, f"The file {file_name} already exists.", [cfg.CANCEL, cfg.OVERWRITE]
-                    )
+                    dialog.MessageDialog(cfg.programName, f"The file {file_name} already exists.", [cfg.CANCEL, cfg.OVERWRITE])
                     == cfg.CANCEL
                 ):
                     return
     else:
-
         item, ok = QInputDialog.getItem(None, "Save results", "Available formats", file_formats, 0, False)
         if not ok:
             return
@@ -287,17 +264,11 @@ def behavior_binary_table(self):
 
     mem_command = ""
     for obs_id in results_df:
-
         for subject in results_df[obs_id]:
-
             if len(selected_observations) > 1:
-                file_name_with_subject = (
-                    str(pathlib.Path(export_dir) / util.safeFileName(obs_id + "_" + subject)) + "." + output_format
-                )
+                file_name_with_subject = str(pathlib.Path(export_dir) / util.safeFileName(obs_id + "_" + subject)) + "." + output_format
             else:
-                file_name_with_subject = (
-                    str(os.path.splitext(file_name)[0] + util.safeFileName("_" + subject)) + "." + output_format
-                )
+                file_name_with_subject = str(os.path.splitext(file_name)[0] + util.safeFileName("_" + subject)) + "." + output_format
 
             # check if file with new extension already exists
             if mem_command != cfg.OVERWRITE_ALL and pathlib.Path(file_name_with_subject).is_file():

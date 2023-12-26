@@ -25,7 +25,6 @@ import os
 import pandas as pd
 import pathlib as pl
 import datetime as dt
-from decimal import Decimal as dec
 
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QColor, QTextCursor
@@ -47,7 +46,7 @@ from PyQt5.QtWidgets import (
 )
 
 from . import config as cfg
-from . import dialog, duration_widget, plot_data_module, project_functions
+from . import dialog, plot_data_module, project_functions
 from . import utilities as util
 from . import gui_utilities
 from .observation_ui import Ui_Form
@@ -120,7 +119,7 @@ class Observation(QDialog, Ui_Form):
 
         # insert duration widget for time offset
         # self.obs_time_offset = duration_widget.Duration_widget(0)
-        self.obs_time_offset = dialog.get_time_widget2(0)
+        self.obs_time_offset = dialog.get_time_widget(0)
         self.horizontalLayout_6.insertWidget(1, self.obs_time_offset)
         self.obs_time_offset.setEnabled(False)
 
@@ -705,7 +704,7 @@ class Observation(QDialog, Ui_Form):
             return
 
         w = dialog.View_data()
-        w.setWindowTitle(f"View data")
+        w.setWindowTitle("View data")
         w.lb.setText(f"View first and last rows of <b>{pl.Path(data_file_path).name}</b> file")
         w.pbOK.setText("Close")
         w.label.setText("Index of columns to plot")

@@ -242,60 +242,60 @@ class observationsList_widget(QDialog):
         def not_in(s, lst):
             return s not in lst
 
-        def equal(s, l):
-            l_num, s_num = str2float(l), str2float(s)
-            if type(l_num) == type(s_num):
-                return l_num == s_num
+        def equal(s, x):
+            x_num, s_num = str2float(x), str2float(s)
+            if type(x_num) == type(s_num):
+                return x_num == s_num
             else:
-                return l == s
+                return x == s
 
-        def not_equal(s, l):
-            l_num, s_num = str2float(l), str2float(s)
-            if type(l_num) == type(s_num):
-                return l_num != s_num
+        def not_equal(s, x):
+            x_num, s_num = str2float(x), str2float(s)
+            if type(x_num) == type(s_num):
+                return x_num != s_num
             else:
-                return l != s
+                return x != s
 
-        def gt(s, l):
-            l_num, s_num = str2float(l), str2float(s)
-            if type(l_num) == type(s_num):
-                return l_num > s_num
+        def gt(s, x):
+            x_num, s_num = str2float(x), str2float(s)
+            if type(x_num) == type(s_num):
+                return x_num > s_num
             else:
-                return l > s
+                return x > s
 
-        def lt(s, l):
-            l_num, s_num = str2float(l), str2float(s)
-            if type(l_num) == type(s_num):
-                return l_num < s_num
+        def lt(s, x):
+            x_num, s_num = str2float(x), str2float(s)
+            if type(x_num) == type(s_num):
+                return x_num < s_num
             else:
-                return l < s
+                return x < s
 
-        def gt_or_equal(s, l):
-            l_num, s_num = str2float(l), str2float(s)
-            if type(l_num) == type(s_num):
-                return l_num >= s_num
+        def gt_or_equal(s, x):
+            x_num, s_num = str2float(x), str2float(s)
+            if type(x_num) == type(s_num):
+                return x_num >= s_num
             else:
-                return l >= s
+                return x >= s
 
-        def lt_or_equal(s, l):
-            l_num, s_num = str2float(l), str2float(s)
-            if type(l_num) == type(s_num):
-                return l_num <= s_num
+        def lt_or_equal(s, x):
+            x_num, s_num = str2float(x), str2float(s)
+            if type(x_num) == type(s_num):
+                return x_num <= s_num
             else:
-                return l <= s
+                return x <= s
 
-        def between(s, l):
+        def between(s, x):
             if len(s.split(" AND ")) != 2:
                 return None
             s1, s2 = s.split(" AND ")
             s1_num, s2_num = str2float(s1), str2float(s2)
             if type(s1_num) != type(s2_num):
                 return None
-            l_num = str2float(l)
-            if type(s1_num) == type(l_num):
-                return l_num >= s1_num and l_num <= s2_num
+            x_num = str2float(x)
+            if type(s1_num) == type(x_num):
+                return s1_num <= x_num <= s2_num
             else:
-                return l >= s1 and l <= s2
+                return s1 <= x <= s2
 
         if not self.lineEdit.text():
             self.view.setRowCount(len(self.data))

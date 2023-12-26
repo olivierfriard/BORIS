@@ -29,7 +29,7 @@ import math
 import pathlib
 from io import StringIO
 import pandas as pd
-from typing import List, Tuple, Dict
+from typing import Tuple
 
 try:
     import pyreadr
@@ -79,9 +79,7 @@ def export_events_jwatcher(
 
         total_length = 0  # in seconds
         if observation[cfg.EVENTS]:
-            total_length = (
-                observation[cfg.EVENTS][-1][0] - observation[cfg.EVENTS][0][0]
-            )  # last event time - first event time
+            total_length = observation[cfg.EVENTS][-1][0] - observation[cfg.EVENTS][0][0]  # last event time - first event time
 
         file_name_subject = str(pathlib.Path(file_name).parent / pathlib.Path(file_name).stem) + "_" + subject + ".dat"
 
@@ -119,15 +117,11 @@ def export_events_jwatcher(
             behav_code = event[cfg.EVENT_BEHAVIOR_FIELD_IDX]
 
             try:
-                behavior_key = [
-                    ethogram[k][cfg.BEHAVIOR_KEY] for k in ethogram if ethogram[k][cfg.BEHAVIOR_CODE] == behav_code
-                ][0]
+                behavior_key = [ethogram[k][cfg.BEHAVIOR_KEY] for k in ethogram if ethogram[k][cfg.BEHAVIOR_CODE] == behav_code][0]
             except Exception:
                 # coded behavior not defined in ethogram
                 continue
-            if [ethogram[k][cfg.TYPE] for k in ethogram if ethogram[k][cfg.BEHAVIOR_CODE] == behav_code] == [
-                cfg.STATE_EVENT
-            ]:
+            if [ethogram[k][cfg.TYPE] for k in ethogram if ethogram[k][cfg.BEHAVIOR_CODE] == behav_code] == [cfg.STATE_EVENT]:
                 if behav_code in mem_number_of_state_events:
                     mem_number_of_state_events[behav_code] += 1
                 else:
@@ -169,9 +163,7 @@ def export_events_jwatcher(
         rows.append("#-----------------------------------------------------------")
         for behav, key in all_observed_behaviors:
             rows.append(f"Behaviour.name.{key}={behav}")
-            behav_description = [
-                ethogram[k][cfg.DESCRIPTION] for k in ethogram if ethogram[k][cfg.BEHAVIOR_CODE] == behav
-            ][0]
+            behav_description = [ethogram[k][cfg.DESCRIPTION] for k in ethogram if ethogram[k][cfg.BEHAVIOR_CODE] == behav][0]
             rows.append(f"Behaviour.description.{key}={behav_description}")
 
         rows.append(f"DurationMilliseconds={int(float(total_length) * 1000)}")
@@ -434,9 +426,7 @@ def export_tabular_events(
                         for media_file in observation[cfg.FILE][player]:
                             media_file_lst.append(media_file)
                             fps_lst.append(f"{observation[cfg.MEDIA_INFO][cfg.FPS].get(media_file, cfg.NA):.3f}")
-                            media_durations_lst.append(
-                                f"{observation[cfg.MEDIA_INFO][cfg.LENGTH].get(media_file, cfg.NA):.3f}"
-                            )
+                            media_durations_lst.append(f"{observation[cfg.MEDIA_INFO][cfg.LENGTH].get(media_file, cfg.NA):.3f}")
                         if player > "1":
                             media_file_str += "|"
                             fps_str += "|"
@@ -524,9 +514,7 @@ def export_tabular_events(
 
             # check video file name containing the event
             if observation[cfg.TYPE] == cfg.MEDIA:
-                video_file_name = observation_operations.event2media_file_name(
-                    observation, event[cfg.EVENT_TIME_FIELD_IDX]
-                )
+                video_file_name = observation_operations.event2media_file_name(observation, event[cfg.EVENT_TIME_FIELD_IDX])
                 if video_file_name is None:
                     video_file_name = "Not found"
 
@@ -571,9 +559,7 @@ def export_tabular_events(
     return r, msg
 
 
-def dataset_write(
-    dataset: tablib.Dataset, file_name: str, output_format: str, dtype: dict = {}
-) -> tuple:  # -> tuple[bool, str]:
+def dataset_write(dataset: tablib.Dataset, file_name: str, output_format: str, dtype: dict = {}) -> tuple:  # -> tuple[bool, str]:
     """
     write a tablib dataset with aggregated events or tabular events to file in specified format (output_format)
 
@@ -691,7 +677,7 @@ def export_aggregated_events(pj: dict, parameters: dict, obsId: str) -> Tuple[ta
         pj, parameters[cfg.SELECTED_SUBJECTS], [obsId], parameters[cfg.SELECTED_BEHAVIORS]
     )
     if connector is None:
-        logging.critical(f"error when loading aggregated events in DB")
+        logging.critical("error when loading aggregated events in DB")
         return data, 0
 
     cursor = connector.cursor()
@@ -796,12 +782,8 @@ def export_aggregated_events(pj: dict, parameters: dict, obsId: str) -> Tuple[ta
                             if observation[cfg.FILE][player]:
                                 for media_file in observation[cfg.FILE][player]:
                                     media_file_lst.append(media_file)
-                                    fps_lst.append(
-                                        f"{observation[cfg.MEDIA_INFO][cfg.FPS].get(media_file, cfg.NA):.3f}"
-                                    )
-                                    media_durations_lst.append(
-                                        f"{observation[cfg.MEDIA_INFO][cfg.LENGTH].get(media_file, cfg.NA):.3f}"
-                                    )
+                                    fps_lst.append(f"{observation[cfg.MEDIA_INFO][cfg.FPS].get(media_file, cfg.NA):.3f}")
+                                    media_durations_lst.append(f"{observation[cfg.MEDIA_INFO][cfg.LENGTH].get(media_file, cfg.NA):.3f}")
                                 if player > "1":
                                     media_file_str += "|"
                                     fps_str += "|"
@@ -843,13 +825,8 @@ def export_aggregated_events(pj: dict, parameters: dict, obsId: str) -> Tuple[ta
                     # independent variables
                     if cfg.INDEPENDENT_VARIABLES in pj:
                         for idx_var in util.sorted_keys(pj[cfg.INDEPENDENT_VARIABLES]):
-                            if (
-                                pj[cfg.INDEPENDENT_VARIABLES][idx_var]["label"]
-                                in observation[cfg.INDEPENDENT_VARIABLES]
-                            ):
-                                var_value = observation[cfg.INDEPENDENT_VARIABLES][
-                                    pj[cfg.INDEPENDENT_VARIABLES][idx_var]["label"]
-                                ]
+                            if pj[cfg.INDEPENDENT_VARIABLES][idx_var]["label"] in observation[cfg.INDEPENDENT_VARIABLES]:
+                                var_value = observation[cfg.INDEPENDENT_VARIABLES][pj[cfg.INDEPENDENT_VARIABLES][idx_var]["label"]]
                                 if pj[cfg.INDEPENDENT_VARIABLES][idx_var]["type"] == "timestamp":
                                     var_value = var_value.replace("T", " ")
 
@@ -892,9 +869,7 @@ def export_aggregated_events(pj: dict, parameters: dict, obsId: str) -> Tuple[ta
                                 f"{row['start']:.3f}" if row["start"] is not None else cfg.NA,
                                 f"{row['stop']:.3f}" if row["stop"] is not None else cfg.NA,
                                 # duration
-                                f"{row['stop'] - row['start']:.3f}"
-                                if (row["stop"] is not None) and (row["start"] is not None)
-                                else cfg.NA,
+                                f"{row['stop'] - row['start']:.3f}" if (row["stop"] is not None) and (row["start"] is not None) else cfg.NA,
                                 media_file_name,  # Media file name
                             ]
                         )
@@ -943,9 +918,7 @@ def events_to_behavioral_sequences(pj, obs_id: str, subj: str, parameters: dict,
         if event[cfg.EVENT_BEHAVIOR_FIELD_IDX] not in parameters[cfg.SELECTED_BEHAVIORS]:
             continue
 
-        if event[cfg.EVENT_SUBJECT_FIELD_IDX] == subj or (
-            subj == cfg.NO_FOCAL_SUBJECT and event[cfg.EVENT_SUBJECT_FIELD_IDX] == ""
-        ):
+        if event[cfg.EVENT_SUBJECT_FIELD_IDX] == subj or (subj == cfg.NO_FOCAL_SUBJECT and event[cfg.EVENT_SUBJECT_FIELD_IDX] == ""):
             # if event[cfg.EVENT_STATUS_FIELD_IDX] == cfg.POINT:
             if event[-1] == cfg.POINT:  # status is last element
                 if current_states:
@@ -1000,9 +973,7 @@ def events_to_behavioral_sequences(pj, obs_id: str, subj: str, parameters: dict,
     return out
 
 
-def events_to_behavioral_sequences_all_subj(
-    pj, obs_id: str, subjects_list: list, parameters: dict, behav_seq_separator: str
-) -> str:
+def events_to_behavioral_sequences_all_subj(pj, obs_id: str, subjects_list: list, parameters: dict, behav_seq_separator: str) -> str:
     """
     return the behavioral sequences for all selected subjects in obs_id
 
@@ -1035,9 +1006,7 @@ def events_to_behavioral_sequences_all_subj(
 
             if event[-1] == cfg.POINT:
                 if current_states[subject]:
-                    out += (
-                        f"[{subject}]" + "+".join(current_states[subject]) + "+" + event[cfg.EVENT_BEHAVIOR_FIELD_IDX]
-                    )
+                    out += f"[{subject}]" + "+".join(current_states[subject]) + "+" + event[cfg.EVENT_BEHAVIOR_FIELD_IDX]
                 else:
                     out += f"[{subject}]" + event[cfg.EVENT_BEHAVIOR_FIELD_IDX]
 
@@ -1139,9 +1108,7 @@ def events_to_timed_behavioral_sequences(
     return out
 
 
-def observation_to_behavioral_sequences(
-    pj, selected_observations, parameters, behaviors_separator, separated_subjects, timed, file_name
-):
+def observation_to_behavioral_sequences(pj, selected_observations, parameters, behaviors_separator, separated_subjects, timed, file_name):
     try:
         with open(file_name, "w", encoding="utf-8") as out_file:
             for obs_id in selected_observations:
@@ -1179,9 +1146,7 @@ def observation_to_behavioral_sequences(
                     out_file.write("# Independent variables\n")
 
                     for variable in pj[cfg.OBSERVATIONS][obs_id][cfg.INDEPENDENT_VARIABLES]:
-                        out_file.write(
-                            f"# {variable}: {pj[cfg.OBSERVATIONS][obs_id][cfg.INDEPENDENT_VARIABLES][variable]}\n"
-                        )
+                        out_file.write(f"# {variable}: {pj[cfg.OBSERVATIONS][obs_id][cfg.INDEPENDENT_VARIABLES][variable]}\n")
                 out_file.write("\n")
 
                 # one sequence for all subjects
@@ -1202,9 +1167,7 @@ def observation_to_behavioral_sequences(
                             out = events_to_behavioral_sequences(pj, obs_id, subject, parameters, behaviors_separator)
 
                         if timed:
-                            out = events_to_timed_behavioral_sequences(
-                                pj, obs_id, subject, parameters, 0.001, behaviors_separator
-                            )
+                            out = events_to_timed_behavioral_sequences(pj, obs_id, subject, parameters, 0.001, behaviors_separator)
 
                         if out:
                             out_file.write(out + "\n")

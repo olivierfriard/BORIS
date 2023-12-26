@@ -20,8 +20,8 @@ This file is part of BORIS.
 
 """
 
-from PyQt5.QtGui import *
-from PyQt5.QtCore import *
+from PyQt5.QtGui import QMouseEvent, QPixmap, QPolygonF, QColor, QBrush, QPen
+from PyQt5.QtCore import Qt, pyqtSignal, QEvent, QPoint
 from PyQt5.QtWidgets import (
     QLabel,
     QHBoxLayout,
@@ -49,7 +49,6 @@ penStyle = Qt.NoPen
 
 class BehaviorsCodingMapWindowClass(QWidget):
     class View(QGraphicsView):
-
         mousePress = pyqtSignal(QMouseEvent)
         mouseMove = pyqtSignal(QMouseEvent)
 
@@ -140,13 +139,13 @@ class BehaviorsCodingMapWindowClass(QWidget):
                 codes.append(areaCode)
         self.leareaCode.setText(", ".join(codes))
 
-    def viewMousePressEvent(self, event):
+    def viewMousePressEvent(self, event) -> None:
         """
         insert clicked areas codes
         """
 
         test = self.view.mapToScene(event.pos()).toPoint()
-        to_be_sent = []
+        to_be_sent: list = []
 
         for areaCode, pg in self.polygonsList2:
             if pg.contains(test):
@@ -227,7 +226,6 @@ def show_behaviors_coding_map(self):
 
 
 if __name__ == "__main__":
-
     import sys
 
     app = QApplication(sys.argv)

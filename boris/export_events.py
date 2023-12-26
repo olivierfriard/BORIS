@@ -70,12 +70,8 @@ def export_events_as_behavioral_sequences(self, separated_subjects=False, timed=
         return
 
     if len(selected_observations) == 1:
-        max_media_duration_all_obs, _ = observation_operations.media_duration(
-            self.pj[cfg.OBSERVATIONS], selected_observations
-        )
-        start_coding, end_coding, _ = observation_operations.coding_time(
-            self.pj[cfg.OBSERVATIONS], selected_observations
-        )
+        max_media_duration_all_obs, _ = observation_operations.media_duration(self.pj[cfg.OBSERVATIONS], selected_observations)
+        start_coding, end_coding, _ = observation_operations.coding_time(self.pj[cfg.OBSERVATIONS], selected_observations)
     else:
         max_media_duration_all_obs = None
         start_coding, end_coding = dec("NaN"), dec("NaN")
@@ -97,9 +93,7 @@ def export_events_as_behavioral_sequences(self, separated_subjects=False, timed=
         QMessageBox.warning(None, cfg.programName, "Select subject(s) and behavior(s) to analyze")
         return
 
-    fn = QFileDialog().getSaveFileName(
-        self, "Export events as behavioral sequences", "", "Text files (*.txt);;All files (*)"
-    )
+    fn = QFileDialog().getSaveFileName(self, "Export events as behavioral sequences", "", "Text files (*.txt);;All files (*)")
     file_name = fn[0] if type(fn) is tuple else fn
 
     if file_name:
@@ -165,12 +159,8 @@ def export_tabular_events(self, mode: str = "tabular") -> None:
         return
 
     if len(selected_observations) == 1:
-        max_media_duration_all_obs, _ = observation_operations.media_duration(
-            self.pj[cfg.OBSERVATIONS], selected_observations
-        )
-        start_coding, end_coding, _ = observation_operations.coding_time(
-            self.pj[cfg.OBSERVATIONS], selected_observations
-        )
+        max_media_duration_all_obs, _ = observation_operations.media_duration(self.pj[cfg.OBSERVATIONS], selected_observations)
+        start_coding, end_coding, _ = observation_operations.coding_time(self.pj[cfg.OBSERVATIONS], selected_observations)
     else:
         max_media_duration_all_obs = None
         start_coding, end_coding = dec("NaN"), dec("NaN")
@@ -235,9 +225,7 @@ def export_tabular_events(self, mode: str = "tabular") -> None:
                 # check if file with new extension already exists
                 if pl.Path(file_name).is_file():
                     if (
-                        dialog.MessageDialog(
-                            cfg.programName, f"The file {file_name} already exists.", [cfg.CANCEL, cfg.OVERWRITE]
-                        )
+                        dialog.MessageDialog(cfg.programName, f"The file {file_name} already exists.", [cfg.CANCEL, cfg.OVERWRITE])
                         == cfg.CANCEL
                     ):
                         return
@@ -351,9 +339,7 @@ def export_aggregated_events(self):
 
         return fields_type_dict
 
-    _, selected_observations = select_observations.select_observations2(
-        self, cfg.MULTIPLE, "Select observations for exporting events"
-    )
+    _, selected_observations = select_observations.select_observations2(self, cfg.MULTIPLE, "Select observations for exporting events")
     if not selected_observations:
         return
 
@@ -367,12 +353,8 @@ def export_aggregated_events(self):
         return
 
     if len(selected_observations) == 1:
-        max_media_duration_all_obs, _ = observation_operations.media_duration(
-            self.pj[cfg.OBSERVATIONS], selected_observations
-        )
-        start_coding, end_coding, _ = observation_operations.coding_time(
-            self.pj[cfg.OBSERVATIONS], selected_observations
-        )
+        max_media_duration_all_obs, _ = observation_operations.media_duration(self.pj[cfg.OBSERVATIONS], selected_observations)
+        start_coding, end_coding, _ = observation_operations.coding_time(self.pj[cfg.OBSERVATIONS], selected_observations)
     else:
         max_media_duration_all_obs = None
         start_coding, end_coding = dec("NaN"), dec("NaN")
@@ -397,10 +379,7 @@ def export_aggregated_events(self):
     flag_group = True
     if len(selected_observations) > 1:
         flag_group = (
-            dialog.MessageDialog(
-                cfg.programName, "Group events from selected observations in one file?", [cfg.YES, cfg.NO]
-            )
-            == cfg.YES
+            dialog.MessageDialog(cfg.programName, "Group events from selected observations in one file?", [cfg.YES, cfg.NO]) == cfg.YES
         )
 
     if flag_group:
@@ -428,12 +407,7 @@ def export_aggregated_events(self):
             # check if file with new extension already exists
             fileName = str(pl.Path(fileName)) + "." + outputFormat
             if pl.Path(fileName).is_file():
-                if (
-                    dialog.MessageDialog(
-                        cfg.programName, f"The file {fileName} already exists.", [cfg.CANCEL, cfg.OVERWRITE]
-                    )
-                    == cfg.CANCEL
-                ):
+                if dialog.MessageDialog(cfg.programName, f"The file {fileName} already exists.", [cfg.CANCEL, cfg.OVERWRITE]) == cfg.CANCEL:
                     return
 
     else:  # not grouping
@@ -539,13 +513,9 @@ def export_aggregated_events(self):
                 if mem_command in (cfg.SKIP, cfg.SKIP_ALL):
                     continue
 
-            r, msg = export_observation.dataset_write(
-                data_single_obs_sorted, fileName, outputFormat, dtype=fields_type(max_modifiers)
-            )
+            r, msg = export_observation.dataset_write(data_single_obs_sorted, fileName, outputFormat, dtype=fields_type(max_modifiers))
             if not r:
-                QMessageBox.warning(
-                    None, cfg.programName, msg, QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton
-                )
+                QMessageBox.warning(None, cfg.programName, msg, QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
 
         if len(data_single_obs_sorted) and max_modifiers < tot_max_modifiers:
             for i in range(tot_max_modifiers - max_modifiers):
@@ -600,10 +570,7 @@ def export_aggregated_events(self):
         return
 
     if outputFormat == cfg.SDIS_EXT:  # SDIS format
-        out: str = (
-            "% SDIS file created by BORIS (www.boris.unito.it) "
-            f"at {util.datetime_iso8601(dt.datetime.now())}\nTimed <seconds>;\n"
-        )
+        out: str = "% SDIS file created by BORIS (www.boris.unito.it) " f"at {util.datetime_iso8601(dt.datetime.now())}\nTimed <seconds>;\n"
         for obs_id in selected_observations:
             # observation id
             out += "\n<{}>\n".format(obs_id)
@@ -640,9 +607,7 @@ def export_aggregated_events(self):
         return
 
     if flag_group:
-        r, msg = export_observation.dataset_write(
-            data_grouped_obs_all, fileName, outputFormat, dtype=fields_type(max_modifiers)
-        )
+        r, msg = export_observation.dataset_write(data_grouped_obs_all, fileName, outputFormat, dtype=fields_type(max_modifiers))
         if not r:
             QMessageBox.warning(None, cfg.programName, msg, QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
 
@@ -719,10 +684,7 @@ def export_events_as_textgrid(self) -> None:
     )
 
     interval_template = (
-        "        intervals [{count}]:\n"
-        "            xmin = {xmin}\n"
-        "            xmax = {xmax}\n"
-        '            text = "{name}"\n'
+        "        intervals [{count}]:\n" "            xmin = {xmin}\n" "            xmax = {xmax}\n" '            text = "{name}"\n'
     )
 
     point_subject_header = (
@@ -746,7 +708,7 @@ def export_events_as_textgrid(self) -> None:
     )
 
     if db_connector is None:
-        logging.critical(f"Error when loading aggregated events in DB")
+        logging.critical("Error when loading aggregated events in DB")
         return
 
     cursor = db_connector.cursor()
@@ -755,9 +717,7 @@ def export_events_as_textgrid(self) -> None:
 
     for obs_id in selected_observations:
         if parameters["time"] == cfg.TIME_EVENTS:
-            start_coding, end_coding, coding_duration = observation_operations.coding_time(
-                self.pj[cfg.OBSERVATIONS], [obs_id]
-            )
+            start_coding, end_coding, coding_duration = observation_operations.coding_time(self.pj[cfg.OBSERVATIONS], [obs_id])
             if start_coding is None and end_coding is None:  # no events
                 self.results.ptText.appendHtml(f"The observation <b>{obs_id}</b> does not have events.")
                 QApplication.processEvents()
@@ -779,9 +739,7 @@ def export_events_as_textgrid(self) -> None:
                 coding_duration = max_media_duration
 
             if self.pj[cfg.OBSERVATIONS][obs_id][cfg.TYPE] in (cfg.LIVE, cfg.IMAGES):
-                start_coding, end_coding, coding_duration = observation_operations.coding_time(
-                    self.pj[cfg.OBSERVATIONS], [obs_id]
-                )
+                start_coding, end_coding, coding_duration = observation_operations.coding_time(self.pj[cfg.OBSERVATIONS], [obs_id])
                 if start_coding is None and end_coding is None:  # no events
                     self.results.ptText.appendHtml(f"The observation <b>{obs_id}</b> does not have events.")
                     QApplication.processEvents()
@@ -859,7 +817,8 @@ def export_events_as_textgrid(self) -> None:
         )
 
         subjectsNum = int(cursor.fetchone()[0])
-        subjectsMin, subjectsMax = min_time, max_time
+        """subjectsMin = min_time"""
+        subjectsMax = max_time
 
         out = (
             'File type = "ooTextFile"\n'
@@ -923,9 +882,7 @@ def export_events_as_textgrid(self) -> None:
 
                 count += 1
 
-                if (idx + 1 < len(rows)) and (
-                    rows[idx + 1]["start"] - dec("0.001") <= row["stop"] < rows[idx + 1]["start"]
-                ):
+                if (idx + 1 < len(rows)) and (rows[idx + 1]["start"] - dec("0.001") <= row["stop"] < rows[idx + 1]["start"]):
                     xmax = rows[idx + 1]["start"]
                 else:
                     xmax = row["stop"]
@@ -995,10 +952,7 @@ def export_events_as_textgrid(self) -> None:
             continue
 
         # check if file already exists
-        if (
-            mem_command != cfg.OVERWRITE_ALL
-            and pl.Path(f"{pl.Path(export_dir) / util.safeFileName(obs_id)}.textGrid").is_file()
-        ):
+        if mem_command != cfg.OVERWRITE_ALL and pl.Path(f"{pl.Path(export_dir) / util.safeFileName(obs_id)}.textGrid").is_file():
             if mem_command == cfg.SKIP_ALL:
                 continue
             mem_command = dialog.MessageDialog(
@@ -1015,14 +969,10 @@ def export_events_as_textgrid(self) -> None:
             with open(f"{pl.Path(export_dir) / util.safeFileName(obs_id)}.textGrid", "w") as f:
                 f.write(out)
             file_count += 1
-            self.results.ptText.appendHtml(
-                f"File {pl.Path(export_dir) / util.safeFileName(obs_id)}.textGrid was created."
-            )
+            self.results.ptText.appendHtml(f"File {pl.Path(export_dir) / util.safeFileName(obs_id)}.textGrid was created.")
             QApplication.processEvents()
         except Exception:
-            self.results.ptText.appendHtml(
-                f"The file {pl.Path(export_dir) / util.safeFileName(obs_id)}.textGrid can not be created."
-            )
+            self.results.ptText.appendHtml(f"The file {pl.Path(export_dir) / util.safeFileName(obs_id)}.textGrid can not be created.")
             QApplication.processEvents()
 
     self.results.ptText.appendHtml(f"Done.  {file_count} file(s) were created in {export_dir}.")

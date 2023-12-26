@@ -18,10 +18,8 @@ Copyright 2012-2023 Olivier Friard
   Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
   MA 02110-1301, USA.
 
-"""
 
-"""
-Module for analyzing the co.occurence of behaviors
+Module for analyzing the co-occurence of behaviors
 
 """
 
@@ -50,7 +48,7 @@ def get_cooccurence(self):
         None,
         cfg.programName,
         (
-            f"This function is experimental. Please test it and report any bug and suggestions at <br>"
+            "This function is experimental. Please test it and report any bug and suggestions at <br>"
             '<a href="https://github.com/olivierfriard/BORIS/issues">'
             "https://github.com/olivierfriard/BORIS/issues</a><br>"
             "Thank you for your collaboration!"
