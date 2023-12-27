@@ -559,7 +559,7 @@ def new_observation(self, mode=cfg.NEW, obsId=""):
     observationWindow.mem_obs_id = obsId
     observationWindow.chunk_length = self.chunk_length
     observationWindow.dteDate.setDateTime(QDateTime.currentDateTime())
-    observationWindow.de_date_offset.setDateTime(QDateTime.currentDateTime())
+    # observationWindow.de_date_offset.setDateTime(QDateTime.currentDateTime())
     observationWindow.ffmpeg_bin = self.ffmpeg_bin
     observationWindow.project_file_name = self.projectFileName
     observationWindow.rb_no_time.setChecked(True)
@@ -665,6 +665,13 @@ def new_observation(self, mode=cfg.NEW, obsId=""):
         except Exception:
             logging.info("No Video/Audio information")
 
+        # offset
+        if self.pj[cfg.OBSERVATIONS][obsId][cfg.TIME_OFFSET] > cfg.DATE_CUTOFF:
+            observationWindow.obs_time_offset.rb_datetime.setChecked(True)
+
+        #            dec(time_offset.hour() * 3600 + time_offset.minute() * 60 + time_offset.second() + time_offset.msec() / 1000)
+        #        )
+
         # date offset
         # if self.pj[cfg.OBSERVATIONS][obsId][cfg.TIME_OFFSET] >= cfg.SECONDS_PER_DAY:
         #    observationWindow.cb_date_offset.setChecked(True)
@@ -687,8 +694,9 @@ def new_observation(self, mode=cfg.NEW, obsId=""):
 
         # else:
         # time offset
-        observationWindow.cb_time_offset.setChecked(True)
-        observationWindow.obs_time_offset.set_time(self.pj[cfg.OBSERVATIONS][obsId][cfg.TIME_OFFSET])
+        if self.pj[cfg.OBSERVATIONS][obsId][cfg.TIME_OFFSET]:
+            observationWindow.cb_time_offset.setChecked(True)
+            observationWindow.obs_time_offset.set_time(self.pj[cfg.OBSERVATIONS][obsId][cfg.TIME_OFFSET])
 
         if self.pj[cfg.OBSERVATIONS][obsId]["type"] == cfg.MEDIA:
             observationWindow.rb_media_files.setChecked(True)

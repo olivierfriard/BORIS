@@ -134,26 +134,6 @@
         </layout>
        </item>
        <item>
-        <widget class="QCheckBox" name="cb_date_offset">
-         <property name="text">
-          <string>Date offset</string>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="QDateEdit" name="de_date_offset">
-         <property name="enabled">
-          <bool>false</bool>
-         </property>
-         <property name="displayFormat">
-          <string>yyyy-MM-dd</string>
-         </property>
-         <property name="calendarPopup">
-          <bool>true</bool>
-         </property>
-        </widget>
-       </item>
-       <item>
         <widget class="QCheckBox" name="cb_observation_time_interval">
          <property name="text">
           <string>Limit observation to a time interval</string>
