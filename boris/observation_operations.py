@@ -666,36 +666,29 @@ def new_observation(self, mode=cfg.NEW, obsId=""):
             logging.info("No Video/Audio information")
 
         # date offset
-        if self.pj[cfg.OBSERVATIONS][obsId][cfg.TIME_OFFSET] >= cfg.SECONDS_PER_DAY:
-            observationWindow.cb_date_offset.setChecked(True)
-            datetime_offset_iso = (
-                dt.datetime.utcfromtimestamp(float(self.pj[cfg.OBSERVATIONS][obsId][cfg.TIME_OFFSET]))
-                .replace(tzinfo=pytz.utc)
-                .astimezone(dt.datetime.now().astimezone().tzinfo)
-                .isoformat(timespec="milliseconds")
-            )
+        # if self.pj[cfg.OBSERVATIONS][obsId][cfg.TIME_OFFSET] >= cfg.SECONDS_PER_DAY:
+        #    observationWindow.cb_date_offset.setChecked(True)
+        #    datetime_offset_iso = (
+        #        dt.datetime.utcfromtimestamp(float(self.pj[cfg.OBSERVATIONS][obsId][cfg.TIME_OFFSET]))
+        #        .replace(tzinfo=pytz.utc)
+        #        .astimezone(dt.datetime.now().astimezone().tzinfo)
+        #        .isoformat(timespec="milliseconds")
+        #    )
+        #    date_offset_iso, time_offset_iso = datetime_offset_iso.split("T")
+        #    observationWindow.de_date_offset.setDateTime(QDateTime.fromString(date_offset_iso, "yyyy-MM-dd"))
+        #    print(f"{time_offset_iso=}")
+        #    time_offset = QDateTime.fromString(time_offset_iso.split("+")[0], "hh:mm:ss.zzz").time()
+        #    print(f"{time_offset=}")
+        #    if time_offset != QDateTime.fromString("00:00:00.000", "hh:mm:ss.zzz").time():
+        #        observationWindow.cb_time_offset.setChecked(True)
+        #        observationWindow.obs_time_offset.set_time(
+        #            dec(time_offset.hour() * 3600 + time_offset.minute() * 60 + time_offset.second() + time_offset.msec() / 1000)
+        #        )
 
-            print(f"{datetime_offset_iso=}")
-
-            date_offset_iso, time_offset_iso = datetime_offset_iso.split("T")
-            observationWindow.de_date_offset.setDateTime(QDateTime.fromString(date_offset_iso, "yyyy-MM-dd"))
-
-            print(f"{time_offset_iso=}")
-
-            time_offset = QDateTime.fromString(time_offset_iso.split("+")[0], "hh:mm:ss.zzz").time()
-
-            print(f"{time_offset=}")
-
-            if time_offset != QDateTime.fromString("00:00:00.000", "hh:mm:ss.zzz").time():
-                observationWindow.cb_time_offset.setChecked(True)
-                observationWindow.obs_time_offset.set_time(
-                    dec(time_offset.hour() * 3600 + time_offset.minute() * 60 + time_offset.second() + time_offset.msec() / 1000)
-                )
-
-        else:
-            # time offset
-            observationWindow.cb_time_offset.setChecked(True)
-            observationWindow.obs_time_offset.set_time(self.pj[cfg.OBSERVATIONS][obsId][cfg.TIME_OFFSET])
+        # else:
+        # time offset
+        observationWindow.cb_time_offset.setChecked(True)
+        observationWindow.obs_time_offset.set_time(self.pj[cfg.OBSERVATIONS][obsId][cfg.TIME_OFFSET])
 
         if self.pj[cfg.OBSERVATIONS][obsId]["type"] == cfg.MEDIA:
             observationWindow.rb_media_files.setChecked(True)
@@ -932,11 +925,10 @@ def new_observation(self, mode=cfg.NEW, obsId=""):
         print(f"{self.pj[cfg.OBSERVATIONS][new_obs_id][cfg.TIME_OFFSET]=}")
 
         # add date (epoch) if date offset checked
-        if observationWindow.cb_date_offset.isChecked():
-            print(f"{observationWindow.de_date_offset.date().toString(Qt.ISODate)=}")
-
-            date_timestamp = dec(dt.datetime.strptime(observationWindow.de_date_offset.date().toString(Qt.ISODate), "%Y-%m-%d").timestamp())
-            self.pj[cfg.OBSERVATIONS][new_obs_id][cfg.TIME_OFFSET] += date_timestamp
+        # if observationWindow.cb_date_offset.isChecked():
+        #    print(f"{observationWindow.de_date_offset.date().toString(Qt.ISODate)=}")
+        #    date_timestamp = dec(dt.datetime.strptime(observationWindow.de_date_offset.date().toString(Qt.ISODate), "%Y-%m-%d").timestamp())
+        #    self.pj[cfg.OBSERVATIONS][new_obs_id][cfg.TIME_OFFSET] += date_timestamp
 
         if observationWindow.cb_observation_time_interval.isChecked():
             self.pj[cfg.OBSERVATIONS][new_obs_id][cfg.OBSERVATION_TIME_INTERVAL] = observationWindow.observation_time_interval

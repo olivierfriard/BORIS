@@ -126,7 +126,7 @@ class Observation(QDialog, Ui_Form):
         # time offset
         self.cb_time_offset.stateChanged.connect(self.cb_time_offset_changed)
         # date offset
-        self.cb_date_offset.stateChanged.connect(self.cb_date_offset_changed)
+        """self.cb_date_offset.stateChanged.connect(self.cb_date_offset_changed)"""
 
         # observation type
         self.rb_media_files.toggled.connect(self.obs_type_changed)
@@ -217,11 +217,11 @@ class Observation(QDialog, Ui_Form):
         # geometry
         gui_utilities.restore_geometry(self, "new observation", (800, 650))
 
-    def cb_date_offset_changed(self):
-        """
-        activate/desactivate time value
-        """
-        self.de_date_offset.setEnabled(self.cb_date_offset.isChecked())
+    # def cb_date_offset_changed(self):
+    #    """
+    #    activate/desactivate time value
+    #    """
+    #    self.de_date_offset.setEnabled(self.cb_date_offset.isChecked())
 
     def cb_time_offset_changed(self):
         """
