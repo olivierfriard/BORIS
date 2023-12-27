@@ -33,10 +33,8 @@ def get_info(self) -> None:
     show info about media file (current media file if an observation is opened)
     """
 
-    def media_analysis_str(ffmpeg_bin, media_full_path):
+    def media_analysis_str(ffmpeg_bin: str, media_full_path: str) -> str:
         r = util.accurate_media_analysis(ffmpeg_bin, media_full_path)
-
-        print(r)
 
         if "error" in r:
             ffmpeg_output = f"File path: {media_full_path}<br><br>{r['error']}<br><br>"
@@ -112,6 +110,6 @@ def get_info(self) -> None:
             tot_output += media_analysis_str(self.ffmpeg_bin, file_path)
 
     self.results = dialog.Results_dialog()
-    self.results.setWindowTitle(cfg.programName + " - Media file information")
+    self.results.setWindowTitle(f"{cfg.programName} - Media file information")
     self.results.ptText.appendHtml(tot_output)
     self.results.show()

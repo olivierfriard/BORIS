@@ -377,22 +377,30 @@ class get_time_widget(QWidget):
         return dec(time_sec)
 
     def set_time(self, new_time: float) -> None:
+        """
+        set time on time widget
+        """
         self.pb_sign.setText("-" if new_time < 0 else "+")
 
         # seconds
         self.le_seconds.setText(f"{new_time:0.3f}")
 
         # hh:mm:ss.zzz
-        h = int(abs(new_time) // 3600)
-        m = int((abs(new_time) - h * 3600) // 60)
-        s = int((abs(new_time) - h * 3600 - m * 60))
-        ms = round((abs(new_time) - h * 3600 - m * 60 - s) * 1000)
+        if new_time <= cfg.DATE_CUTOFF:
+            h = int(abs(new_time) // 3600)
+            m = int((abs(new_time) - h * 3600) // 60)
+            s = int((abs(new_time) - h * 3600 - m * 60))
+            ms = round((abs(new_time) - h * 3600 - m * 60 - s) * 1000)
 
-        self.sb_hour.setValue(h)
-        self.te_time.setTime(QTime(0, m, s, ms))
+            self.sb_hour.setValue(h)
+            self.te_time.setTime(QTime(0, m, s, ms))
+        else:
+            self.sb_hour.setValue(0)
+            self.te_time.setTime(QTime(0, 0, 0, 0))
 
         if new_time > cfg.DATE_CUTOFF:
             self.dte.setDateTime(QDateTime().fromMSecsSinceEpoch(int(new_time * 1000)))
+            self.rb_datetime.setChecked(True)
 
 
 '''
