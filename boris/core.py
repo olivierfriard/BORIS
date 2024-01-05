@@ -3574,7 +3574,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         if self.pj[cfg.OBSERVATIONS][self.observationId].get(cfg.START_FROM_CURRENT_TIME, False):
             current_time = util.seconds_of_day(datetime.datetime.now())
         elif self.pj[cfg.OBSERVATIONS][self.observationId].get(cfg.START_FROM_CURRENT_EPOCH_TIME, False):
-            current_time = time.time()
+            current_time = dec(time.time())
         else:
             current_time = self.getLaps()
 
@@ -3637,7 +3637,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 if self.pj[cfg.OBSERVATIONS][self.observationId].get(cfg.START_FROM_CURRENT_TIME, False):
                     self.lb_current_media_time.setText(datetime.datetime.now().isoformat(" ").split(" ")[1][:12])
                 elif self.pj[cfg.OBSERVATIONS][self.observationId].get(cfg.START_FROM_CURRENT_EPOCH_TIME, False):
-                    self.lb_current_media_time.setText(datetime.datetime.fromtimestamp(time.time()))
+                    self.lb_current_media_time.setText(
+                        datetime.datetime.fromtimestamp(time.time()).isoformat(sep=" ", timespec="milliseconds")
+                    )
                 else:
                     self.lb_current_media_time.setText("00:00:00.000")
 
