@@ -61,7 +61,7 @@ from PyQt5.QtCore import (
     QT_VERSION_STR,
     PYQT_VERSION_STR,
 )
-from PyQt5.QtGui import QIcon, QPixmap, QFont, QKeyEvent, QDesktopServices, QColor, QPainter, QPolygon
+from PyQt5.QtGui import QIcon, QPixmap, QFont, QKeyEvent, QDesktopServices, QColor, QPainter, QPolygon, QFontMetricsF
 from PyQt5.QtMultimedia import QSound
 from PyQt5.QtWidgets import (
     QLabel,
@@ -5565,6 +5565,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
 
 def main():
+    # QApplication.setAttribute(Qt.AA_EnableHighDpiScaling)
+
     app = QApplication(sys.argv)
 
     locale.setlocale(locale.LC_NUMERIC, "C")
@@ -5596,6 +5598,7 @@ def main():
         ffmpeg_bin = msg
 
     app.setApplicationName(cfg.programName)
+
     window = MainWindow(ffmpeg_bin)
 
     # open project/start observation on command line

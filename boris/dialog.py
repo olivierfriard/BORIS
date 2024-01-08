@@ -220,6 +220,8 @@ class get_time_widget(QWidget):
 
         self.horizontalLayout.addWidget(self.rb_datetime)
 
+        self.horizontalLayout.addStretch()
+
         self.verticalLayout.addLayout(self.horizontalLayout)
 
         self.stackedWidget = QStackedWidget(self.widget)
@@ -229,7 +231,7 @@ class get_time_widget(QWidget):
         self.seconds.setObjectName("seconds")
         self.widget1 = QWidget(self.seconds)
         self.widget1.setObjectName("widget1")
-        self.widget1.setGeometry(QRect(10, 0, 163, 27))
+        # self.widget1.setGeometry(QRect(10, 0, 163, 27))
         self.horizontalLayout_4 = QHBoxLayout(self.widget1)
         self.horizontalLayout_4.setObjectName("horizontalLayout_4")
         self.horizontalLayout_4.setContentsMargins(0, 0, 0, 0)
@@ -243,10 +245,13 @@ class get_time_widget(QWidget):
 
         self.horizontalLayout_4.addWidget(self.lb_seconds)
 
+        self.horizontalLayout_4.addStretch()
+
         self.stackedWidget.addWidget(self.seconds)
         self.hhmmss = QWidget()
         self.hhmmss.setObjectName("hhmmss")
         self.widget2 = QWidget(self.hhmmss)
+        self.widget2.setMinimumWidth(500)
         self.widget2.setObjectName("widget2")
         self.widget2.setGeometry(QRect(0, 0, 213, 28))
         self.horizontalLayout_2 = QHBoxLayout(self.widget2)
@@ -270,15 +275,21 @@ class get_time_widget(QWidget):
 
         self.te_time = QTimeEdit(self.widget2)
         self.te_time.setObjectName("te_time")
+        self.te_time.adjustSize()
+        # self.te_time.setMinimumWidth(200)
+        # self.widget2.adjustSize()
 
         self.horizontalLayout_2.addWidget(self.te_time)
+
+        self.horizontalLayout_2.addStretch()
 
         self.stackedWidget.addWidget(self.hhmmss)
         self.page_2 = QWidget()
         self.page_2.setObjectName("page_2")
         self.dte = QDateTimeEdit(self.page_2)
+
         self.dte.setObjectName("dte")
-        self.dte.setGeometry(QRect(10, 0, 164, 26))
+        # self.dte.setGeometry(QRect(10, 0, 164, 26))
         self.stackedWidget.addWidget(self.page_2)
 
         self.verticalLayout.addWidget(self.stackedWidget)
@@ -309,6 +320,7 @@ class get_time_widget(QWidget):
         self.lb_hhmmss.setText("mm:ss.ms")
         self.te_time.setDisplayFormat("hh:mm:zzz")
         self.dte.setDisplayFormat("yyyy-MM-dd hh:mm:ss:zzz")
+        self.dte.adjustSize()
         font = QFont()
         font.setPointSize(14)
         self.pb_sign.setFont(font)
@@ -324,6 +336,8 @@ class get_time_widget(QWidget):
 
         self.format_changed()
 
+        self.adjustSize()
+
     def format_changed(self):
         if self.rb_seconds.isChecked():
             self.stackedWidget.setCurrentIndex(0)
@@ -333,6 +347,7 @@ class get_time_widget(QWidget):
             self.stackedWidget.setCurrentIndex(2)
 
         self.le_seconds.setEnabled(self.rb_seconds.isChecked())
+        self.le_seconds.adjustSize()
         self.lb_seconds.setEnabled(self.rb_seconds.isChecked())
         self.sb_hour.setEnabled(self.rb_time.isChecked())
         self.te_time.setEnabled(self.rb_time.isChecked())
