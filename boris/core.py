@@ -2049,46 +2049,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     def player_clicked(self, player_id: int, cmd: str) -> None:
         """
         receive signal from dock widget when player clicked.
-        Change zoom level:
-        * double-left-click increase the zoom level
-        * right-click: reset zoom level to 1
-
         """
 
+        print(f"player {player_id} clicked. Command: {cmd}")
+
         '''
-        def video_clicked_coord(player, videoframe):
-            """
-            returns the x, y coordinates of the click into the video expressed in video coordinates
-            """
-            vw = player.width
-            vh = player.height
-
-            fw = videoframe.size().width()
-            fh = videoframe.size().height()
-
-            if fw / fh >= player.width / player.height:  # vertical black lane
-                x = vw / vh * fh
-                offset = (fw - x) / 2
-                px = player.mouse_pos["x"] - offset
-                if 0 <= px < x:
-                    px = round((px / x) * player.width)
-                else:
-                    px = -2
-                py = round(player.mouse_pos["y"] / videoframe.size().height() * player.height)
-
-            else:
-                y = fw / vw * vh
-                offset = (fh - y) / 2
-                py = player.mouse_pos["y"] - offset
-                if 0 <= py < y:
-                    py = round((py / y) * player.height)
-                else:
-                    py = -2
-                px = round(player.mouse_pos["x"] / videoframe.size().width() * player.width)
-
-            return px, py
-        '''
-
         def video_clicked_coord(player, videoframe, zoom, pan_x, pan_y):
             """
             returns the x, y coordinates of the click into the video expressed in video coordinates
@@ -2124,6 +2089,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             vy = (dy - dh / 2) / dialog_to_video_ratio / actual_zoom - pan_y * vh + vh / 2
 
             return vx, vy
+        '''
 
         def get_pan_for_zoom_in_clicked_coordinates(player, videoframe, zoom, pan_x, pan_y, new_zoom):
             """
@@ -2167,48 +2133,93 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
             return pan_x, pan_y
 
-        if cmd == "MBTN_LEFT":
+        def get_current_pan_and_zoom():
             # CURRENT PAN/ZOOM
             pan_x = self.dw_player[player_id].player.video_pan_x
             pan_y = self.dw_player[player_id].player.video_pan_y
             zoom = self.dw_player[player_id].player.video_zoom
+            return pan_x, pan_y, zoom
 
-            # NEW ZOOM (ZOOM IN by a factor of 1.5)
-            new_zoom = zoom + 0.58496250072  # log2(1.5)
+        def set_and_update_pan_and_zoom(pan_x, pan_y, zoom):
+            # SET
+            self.dw_player[player_id].player.video_pan_x = pan_x
+            self.dw_player[player_id].player.video_pan_y = pan_y
+            self.dw_player[player_id].player.video_zoom = zoom
+            # UPDATE
+            self.update_project_zoom_pan_values()
 
+        def do_zoom_in_clicked_coords(zoom_increment):
+            """
+            The video is zoomed at the clicked coords X 2**zoom_increment
+            eg.
+                zoom_increment=+1 -> zoom in,  x 2
+                zoom_increment=-1 -> zoom out,  x (1/2)
+
+            """
+            # CURRENT PAN/ZOOM
+            pan_x, pan_y, zoom = get_current_pan_and_zoom()
+            # NEW ZOOM (ZOOM IN by a factor of 2)
+            new_zoom = zoom + zoom_increment
             # COMPUTE NEW PAN
             new_pan_x, new_pan_y = get_pan_for_zoom_in_clicked_coordinates(
                 self.dw_player[player_id].player, self.dw_player[player_id].videoframe, zoom, pan_x, pan_y, new_zoom
             )
-            self.dw_player[player_id].player.video_pan_x = new_pan_x
-            self.dw_player[player_id].player.video_pan_y = new_pan_y
-            self.dw_player[player_id].player.video_zoom = new_zoom
+            # SET NEW VALUES AND UPDATE
+            set_and_update_pan_and_zoom(new_pan_x, new_pan_y, new_zoom)
 
-            # UPDATE
-            self.update_project_zoom_pan_values()
+        def do_pan_in_clicked_coords(pan_x_increment, pan_y_increment):
+            """
+            The video is panned at the clicked coords
+            pan_x and pan_y are relative to width and height
+            eg.
+                pan_x_increment=0.01 -> pan to the right 1% of video_width
+            """
+            # CURRENT PAN/ZOOM
+            pan_x, pan_y, zoom = get_current_pan_and_zoom()
 
+            new_pan_x = pan_x + pan_x_increment
+            new_pan_y = pan_y + pan_y_increment
+            new_zoom = zoom
+
+            # SET NEW VALUES AND UPDATE
+            set_and_update_pan_and_zoom(new_pan_x, new_pan_y, new_zoom)
+
+        if cmd == "MBTN_LEFT_DBL":
+            print("left dbl")
+            # ZOOM IN x2
+            do_zoom_in_clicked_coords(zoom_increment=1)
             return
-
-        if cmd == "MBTN_RIGHT":
-            # CURRENT PAN/ZOOM
-            pan_x = self.dw_player[player_id].player.video_pan_x
-            pan_y = self.dw_player[player_id].player.video_pan_y
-            zoom = self.dw_player[player_id].player.video_zoom
-
-            # NEW ZOOM (ZOOM OUT by a factor of 1.5)
-            new_zoom = zoom - 0.58496250072  # log2(1.5)
-
-            # COMPUTE NEW PAN
-            new_pan_x, new_pan_y = get_pan_for_zoom_in_clicked_coordinates(
-                self.dw_player[player_id].player, self.dw_player[player_id].videoframe, zoom, pan_x, pan_y, new_zoom
-            )
-            self.dw_player[player_id].player.video_pan_x = new_pan_x
-            self.dw_player[player_id].player.video_pan_y = new_pan_y
-            self.dw_player[player_id].player.video_zoom = new_zoom
-
-            # UPDATE
-            self.update_project_zoom_pan_values()
-
+        if cmd == "MBTN_RIGHT_DBL":
+            # ZOOM OUT x2
+            do_zoom_in_clicked_coords(zoom_increment=-1)
+            return
+        if cmd == "Ctrl+WHEEL_UP":
+            # ZOOM IN (3 wheel steps to zoom X2)
+            do_zoom_in_clicked_coords(zoom_increment=1.0 / 3.0)
+            return
+        if cmd == "Ctrl+WHEEL_DOWN":
+            # ZOOM OUT (3 wheel steps to zoom X2)
+            do_zoom_in_clicked_coords(zoom_increment=-1.0 / 3.0)
+            return
+        if cmd == "WHEEL_UP":
+            # PAN UP (VIDEO MOVES DOWN)
+            do_pan_in_clicked_coords(pan_x_increment=0, pan_y_increment=+0.01)
+            return
+        if cmd == "WHEEL_DOWN":
+            # PAN DOWN (VIDEO MOVES UP)
+            do_pan_in_clicked_coords(pan_x_increment=0, pan_y_increment=-0.01)
+            return
+        if cmd == "Shift+WHEEL_UP":
+            # PAN LEFT (VIDEO MOVES TO THE RIGHT)
+            do_pan_in_clicked_coords(pan_x_increment=+0.01, pan_y_increment=0)
+            return
+        if cmd == "Shift+WHEEL_DOWN":
+            # PAN RIGHT (VIDEO MOVES TO THE LEFT)
+            do_pan_in_clicked_coords(pan_x_increment=-0.01, pan_y_increment=0)
+            return
+        if cmd == "Shift+MBTN_LEFT":
+            # RESET PAN AND ZOOM TO DEFAULT
+            set_and_update_pan_and_zoom(pan_x=0, pan_y=0, zoom=0)
             return
 
     # def read_tw_event_field(self, row_idx: int, player_type: str, field_type: str) -> Union[str, None, int, dec]:
