@@ -2051,46 +2051,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         receive signal from dock widget when player clicked.
         """
 
-        print(f"player {player_id} clicked. Command: {cmd}")
-
-        '''
-        def video_clicked_coord(player, videoframe, zoom, pan_x, pan_y):
-            """
-            returns the x, y coordinates of the click into the video expressed in video coordinates
-            """
-            # video width and height
-            vw = player.width
-            vh = player.height
-
-            # dockable window width and height
-            dw = videoframe.size().width()
-            dh = videoframe.size().height()
-
-            # click coordinates in dialog reference frame
-            dx = player.mouse_pos["x"]
-            dy = player.mouse_pos["y"]
-
-            # convert to float for operations
-            vw = float(vw)
-            vh = float(vh)
-            dw = float(dw)
-            dh = float(dh)
-            dx = float(dx)
-            dy = float(dy)
-
-            if dw / dh >= vw / vh:  # vertical black lanes
-                dialog_to_video_ratio = dh / vh
-            else:  # horizontal black lanes
-                dialog_to_video_ratio = dw / vw
-
-            # coordinates in video reference frame
-            actual_zoom = 2**zoom
-            vx = (dx - dw / 2) / dialog_to_video_ratio / actual_zoom - pan_x * vw + vw / 2
-            vy = (dy - dh / 2) / dialog_to_video_ratio / actual_zoom - pan_y * vh + vh / 2
-
-            return vx, vy
-        '''
-
         def get_pan_for_zoom_in_clicked_coordinates(player, videoframe, zoom, pan_x, pan_y, new_zoom):
             """
             returns the pan (pan_x, pan_y) necessary to zoom in or zoom out in the clicked coordinates
