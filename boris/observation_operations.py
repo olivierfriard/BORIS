@@ -1756,29 +1756,6 @@ def initialize_new_media_observation(self) -> bool:
 
                 self.dw_player.append(p7)
 
-        """
-        if i == 0:  # first player
-            p = player_dock_widget.DW_player(i, self)
-            self.dw_player.append(p)
-
-            @p.player.property_observer("time-pos")
-            def time_observer(_name, value):
-                if value is not None:
-                    self.time_observer_signal.emit(value)
-
-            @p.player.on_key_press("MBTN_LEFT")
-            def mbtn_left():
-                self.video_click_signal.emit(1, 2)
-
-            @p.player.on_key_press("MBTN_RIGHT")
-            def mbtn_right():
-                # no zoom
-                self.video_click_signal.emit(-1, -1)
-
-        else:
-            self.dw_player.append(player_dock_widget.DW_player(i, self))
-        """
-
         self.dw_player[-1].setFloating(False)
         self.dw_player[-1].setVisible(False)
         self.dw_player[-1].setFeatures(QDockWidget.DockWidgetFloatable | QDockWidget.DockWidgetMovable)
