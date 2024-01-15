@@ -20,6 +20,8 @@ This file is part of BORIS.
 
 """
 
+import qdarkstyle
+
 import datetime
 
 import json
@@ -5571,6 +5573,8 @@ def main():
     app.setApplicationName(cfg.programName)
 
     window = MainWindow(ffmpeg_bin)
+
+    app.setStyleSheet(qdarkstyle.load_stylesheet_pyqt5())
 
     # open project/start observation on command line
 
