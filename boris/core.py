@@ -381,6 +381,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.tb_export.setMenu(self.menu)
         """
 
+        gui_utilities.set_icons(self, mode="dark")
+        """
         # menu
         self.actionTime_budget.setIcon(QIcon(":/time_budget"))
         self.actionPlot_events2.setIcon(QIcon(":/plot_events"))
@@ -388,7 +390,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.actionPreferences.setIcon(QIcon(":/preferences"))
 
         # toolbar
-        self.action_obs_list.setIcon(QIcon(":/observations_list"))
+        self.action_obs_list.setIcon(QIcon(":/observations_list_fa"))
         self.actionPlay.setIcon(QIcon(":/play"))
         self.actionReset.setIcon(QIcon(":/reset"))
         self.actionJumpBackward.setIcon(QIcon(":/jump_backward"))
@@ -416,6 +418,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.action_geometric_measurements.setIcon(QIcon(":/measurement"))
         self.actionFind_in_current_obs.setIcon(QIcon(":/find"))
         self.actionExplore_project.setIcon(QIcon(":/explore"))
+        """
 
         self.setWindowTitle(f"{cfg.programName} ({__version__})")
 
