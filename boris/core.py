@@ -20,7 +20,7 @@ This file is part of BORIS.
 
 """
 
-import qdarkstyle
+# import qdarkstyle
 
 import datetime
 
@@ -381,7 +381,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.tb_export.setMenu(self.menu)
         """
 
-        gui_utilities.set_icons(self, mode="dark")
+        gui_utilities.set_icons(self, mode="light")
         """
         # menu
         self.actionTime_budget.setIcon(QIcon(":/time_budget"))
@@ -5577,7 +5577,7 @@ def main():
 
     window = MainWindow(ffmpeg_bin)
 
-    app.setStyleSheet(qdarkstyle.load_stylesheet_pyqt5())
+    # app.setStyleSheet(qdarkstyle.load_stylesheet_pyqt5())
 
     # open project/start observation on command line
 
