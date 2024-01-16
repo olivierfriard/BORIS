@@ -66,7 +66,7 @@
 <file alias="plot_events_fa_light">icons/fontawesome_free/chart-gantt.svg</file>
 
 <file alias="plot_real_time">icons/glyphicons_108_left_indent_modified_realtime.png</file>
-<file alias="plot_real_time_fa_light">icons/fontawesome_free/chart-gantt.svg</file>
+<file alias="plot_real_time_fa_light">icons/fontawesome_free/chart-gantt-realtime.svg</file>
 
 <file alias="find">icons/glyphicons_027_search.png</file>
 <file alias="find_fa_light">icons/fontawesome_free/magnifying-glass.svg</file>

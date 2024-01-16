@@ -68,10 +68,10 @@ def set_icons(self, mode: str):
 
     suffix = mode
     # menu
-    self.actionTime_budget.setIcon(QIcon(":/time_budget"))
-    self.actionPlot_events2.setIcon(QIcon(":/plot_events"))
-    self.action_advanced_event_filtering.setIcon(QIcon(":/filter"))
-    self.actionPreferences.setIcon(QIcon(":/preferences"))
+    self.actionTime_budget.setIcon(QIcon(f":/time_budget_fa_{suffix}"))
+    self.actionPlot_events2.setIcon(QIcon(f":/plot_events_fa_{suffix}"))
+    self.action_advanced_event_filtering.setIcon(QIcon(f":/filter_fa_{suffix}"))
+    self.actionPreferences.setIcon(QIcon(f":/preferences_fa_{suffix}"))
 
     # toolbar
     if mode == "disabled" and not self.action_obs_list.isEnabled():
@@ -95,7 +95,7 @@ def set_icons(self, mode: str):
 
     self.actionFrame_backward.setIcon(QIcon(f":/frame_backward_fa_{suffix}"))
     self.actionFrame_forward.setIcon(QIcon(f":/frame_forward_fa_{suffix}"))
-    self.actionCloseObs.setIcon(QIcon(f":/close_observation"))
+    self.actionCloseObs.setIcon(QIcon(f":/close_observation_fa_{suffix}"))
     self.actionCurrent_Time_Budget.setIcon(QIcon(f":/time_budget_fa_{suffix}"))
     self.actionPlot_current_observation.setIcon(QIcon(f":/plot_events_fa_{suffix}"))
 

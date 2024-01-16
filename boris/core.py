@@ -59,6 +59,7 @@ from PyQt5.QtCore import (
     QDateTime,
     QTime,
     QUrl,
+    QSize,
     QAbstractTableModel,
     QT_VERSION_STR,
     PYQT_VERSION_STR,
@@ -380,6 +381,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.add_button_menu(behavior_button_items, self.menu)
         self.tb_export.setMenu(self.menu)
         """
+
+        self.toolBar.setIconSize(QSize(48, 48))
 
         gui_utilities.set_icons(self, mode="light")
         """
