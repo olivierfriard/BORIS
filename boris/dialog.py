@@ -373,7 +373,7 @@ class get_time_widget(QWidget):
                 QMessageBox.warning(
                     None,
                     cfg.programName,
-                    "The value is not a decimal number",
+                    f"The value of seconds ({self.le_seconds.text()}) is not a decimal number",
                     QMessageBox.Ok | QMessageBox.Default,
                     QMessageBox.NoButton,
                 )

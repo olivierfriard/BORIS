@@ -59,7 +59,6 @@ from PyQt5.QtCore import (
     QDateTime,
     QTime,
     QUrl,
-    QSize,
     QAbstractTableModel,
     QT_VERSION_STR,
     PYQT_VERSION_STR,

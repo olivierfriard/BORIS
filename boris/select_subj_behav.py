@@ -45,7 +45,7 @@ def choose_obs_subj_behav_category(
     n_observations: int = 1,
     show_time_bin_size: bool = False,
     window_title: str = "Select subjects and behaviors",
-):
+) -> dict:
     """
     show window for:
     - selection of subjects
@@ -221,25 +221,28 @@ def choose_obs_subj_behav_category(
     logging.debug(f"selected subjects: {selectedSubjects}")
     logging.debug(f"selected behaviors: {selectedBehaviors}")
 
-    startTime = paramPanelWindow.start_time.get_time()
-    endTime = paramPanelWindow.end_time.get_time()
-    """
-    if self.timeFormat == HHMMSS:
-        startTime = time2seconds(paramPanelWindow.teStartTime.time().toString(HHMMSSZZZ))
-        endTime = time2seconds(paramPanelWindow.teEndTime.time().toString(HHMMSSZZZ))
-    if self.timeFormat == S:
-        startTime = Decimal(paramPanelWindow.dsbStartTime.value())
-        endTime = Decimal(paramPanelWindow.dsbEndTime.value())
-    """
-    if startTime > endTime:
-        QMessageBox.warning(
-            None,
-            cfg.programName,
-            "The start time is after the end time",
-            QMessageBox.Ok | QMessageBox.Default,
-            QMessageBox.NoButton,
-        )
-        return {cfg.SELECTED_SUBJECTS: [], cfg.SELECTED_BEHAVIORS: []}
+    if paramPanelWindow.rb_user_defined.isChecked():
+        startTime = paramPanelWindow.start_time.get_time()
+        endTime = paramPanelWindow.end_time.get_time()
+
+        if startTime > endTime:
+            QMessageBox.warning(
+                None,
+                cfg.programName,
+                "The start time is after the end time",
+                QMessageBox.Ok | QMessageBox.Default,
+                QMessageBox.NoButton,
+            )
+            return {cfg.SELECTED_SUBJECTS: [], cfg.SELECTED_BEHAVIORS: []}
+
+    else:
+        startTime = None
+        endTime = None
+
+    # if startTime is None:
+    #    startTime = dec("NaN")
+    # if endTime is None:
+    #    endTime = dec("NaN")
 
     if paramPanelWindow.rb_media_duration.isChecked():
         time_param = cfg.TIME_FULL_OBS

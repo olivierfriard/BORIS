@@ -1002,7 +1002,12 @@ def time_budget_analysis(
                                     all_event_durations.append(float("NaN"))
 
                             # inter event if same observation
+
                             if idx % 2 and idx != len(rows) - 1 and row[1] == rows[idx + 1][1]:
+                                print(f"{parameters['start time']=}")
+                                print(f"{parameters['end time']=}")
+                                print(f"{row[0]=}")
+
                                 if (row[0] is not None and rows[idx + 1][0] is not None) and (
                                     parameters["start time"] <= row[0] <= parameters["end time"]
                                     and parameters["start time"] <= rows[idx + 1][0] <= parameters["end time"]

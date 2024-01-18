@@ -358,6 +358,7 @@ def export_tabular_events(
         "Observation duration": float,
         "Observation type": str,
         "Source": str,
+        "Time offset (s)": str,
     }
     if media_nb == 1:
         fields_type["Media duration (s)"] = float
@@ -475,6 +476,9 @@ def export_tabular_events(
 
             else:
                 fields.append("")
+
+            # time offset
+            fields.append(observation[cfg.TIME_OFFSET])
 
             # media duration
             fields.append(media_durations_str)
@@ -816,6 +820,7 @@ def export_aggregated_events(pj: dict, parameters: dict, obsId: str) -> Tuple[ta
                             obs_description,
                             observation_type,
                             media_file_str,
+                            pj[cfg.OBSERVATIONS][obsId][cfg.TIME_OFFSET],
                             f"{coding_duration:.3f}" if not coding_duration.is_nan() else cfg.NA,
                             media_durations_str,
                             fps_str,
