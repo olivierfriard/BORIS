@@ -74,10 +74,12 @@ def set_icons(self, mode: str):
     self.actionPreferences.setIcon(QIcon(f":/preferences_fa_{suffix}"))
 
     # toolbar
+    """
     if mode == "disabled" and not self.action_obs_list.isEnabled():
         self.action_obs_list.setIcon(QIcon(":/observations_list_fa_disabled"))
-    else:
-        self.action_obs_list.setIcon(QIcon(f":/observations_list_fa_{suffix}"))
+    """
+
+    self.action_obs_list.setIcon(QIcon(f":/observations_list_fa_{suffix}"))
 
     self.actionPlay.setIcon(QIcon(f":/play_fa_{suffix}"))
     self.actionReset.setIcon(QIcon(f":/reset_fa_{suffix}"))

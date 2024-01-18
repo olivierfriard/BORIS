@@ -25,9 +25,9 @@
         <bool>true</bool>
        </property>
        <property name="currentIndex">
-        <number>1</number>
+        <number>5</number>
        </property>
-       <widget class="QWidget" name="tab">
+       <widget class="QWidget" name="tab_project">
         <attribute name="title">
          <string>Project</string>
         </attribute>
@@ -149,7 +149,7 @@
          </item>
         </layout>
        </widget>
-       <widget class="QWidget" name="tab_results">
+       <widget class="QWidget" name="tab_observations">
         <attribute name="title">
          <string>Observations</string>
         </attribute>
@@ -310,7 +310,7 @@
          </item>
         </layout>
        </widget>
-       <widget class="QWidget" name="tab_2">
+       <widget class="QWidget" name="tab_ffmpeg">
         <attribute name="title">
          <string>FFmpeg framework</string>
         </attribute>
@@ -371,7 +371,7 @@
          </item>
         </layout>
        </widget>
-       <widget class="QWidget" name="tab_4">
+       <widget class="QWidget" name="tab_spectro">
         <attribute name="title">
          <string>Spectrogram/Wave form</string>
         </attribute>
@@ -429,7 +429,7 @@
          </item>
         </layout>
        </widget>
-       <widget class="QWidget" name="tab_5">
+       <widget class="QWidget" name="tab_colors">
         <attribute name="title">
          <string>Plot colors</string>
         </attribute>
@@ -483,6 +483,37 @@
               </widget>
              </item>
             </layout>
+           </item>
+          </layout>
+         </item>
+        </layout>
+       </widget>
+       <widget class="QWidget" name="tab_interface">
+        <attribute name="title">
+         <string>Interface</string>
+        </attribute>
+        <layout class="QVBoxLayout" name="verticalLayout_7">
+         <item>
+          <layout class="QFormLayout" name="formLayout">
+           <item row="0" column="0">
+            <widget class="QLabel" name="label_9">
+             <property name="text">
+              <string>Toolbar icons size</string>
+             </property>
+            </widget>
+           </item>
+           <item row="0" column="1">
+            <widget class="QSpinBox" name="sb_toolbar_icon_size">
+             <property name="minimum">
+              <number>12</number>
+             </property>
+             <property name="maximum">
+              <number>128</number>
+             </property>
+             <property name="value">
+              <number>24</number>
+             </property>
+            </widget>
            </item>
           </layout>
          </item>

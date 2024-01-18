@@ -382,46 +382,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.tb_export.setMenu(self.menu)
         """
 
-        self.toolBar.setIconSize(QSize(48, 48))
-
         gui_utilities.set_icons(self, mode="light")
-        """
-        # menu
-        self.actionTime_budget.setIcon(QIcon(":/time_budget"))
-        self.actionPlot_events2.setIcon(QIcon(":/plot_events"))
-        self.action_advanced_event_filtering.setIcon(QIcon(":/filter"))
-        self.actionPreferences.setIcon(QIcon(":/preferences"))
-
-        # toolbar
-        self.action_obs_list.setIcon(QIcon(":/observations_list_fa"))
-        self.actionPlay.setIcon(QIcon(":/play"))
-        self.actionReset.setIcon(QIcon(":/reset"))
-        self.actionJumpBackward.setIcon(QIcon(":/jump_backward"))
-        self.actionJumpForward.setIcon(QIcon(":/jump_forward"))
-
-        self.actionFaster.setIcon(QIcon(":/faster"))
-        self.actionSlower.setIcon(QIcon(":/slower"))
-        self.actionNormalSpeed.setIcon(QIcon(":/normal_speed"))
-
-        self.actionPrevious.setIcon(QIcon(":/previous"))
-        self.actionNext.setIcon(QIcon(":/next"))
-
-        self.actionSnapshot.setIcon(QIcon(":/snapshot"))
-
-        self.actionFrame_backward.setIcon(QIcon(":/frame_backward"))
-        self.actionFrame_forward.setIcon(QIcon(":/frame_forward"))
-        self.actionCloseObs.setIcon(QIcon(":/close_observation"))
-        self.actionCurrent_Time_Budget.setIcon(QIcon(":/time_budget"))
-        self.actionPlot_current_observation.setIcon(QIcon(":/plot_events"))
-
-        self.actionPlot_events_in_real_time.setIcon(QIcon(":/plot_real_time"))
-
-        self.actionBehavior_bar_plot.setIcon(QIcon(":/plot_time_budget"))
-        self.actionPlot_current_time_budget.setIcon(QIcon(":/plot_time_budget"))
-        self.action_geometric_measurements.setIcon(QIcon(":/measurement"))
-        self.actionFind_in_current_obs.setIcon(QIcon(":/find"))
-        self.actionExplore_project.setIcon(QIcon(":/explore"))
-        """
 
         self.setWindowTitle(f"{cfg.programName} ({__version__})")
 

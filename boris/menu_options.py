@@ -22,6 +22,7 @@ Copyright 2012-2023 Olivier Friard
 
 import logging
 from . import config as cfg
+from PyQt5.QtCore import QSize
 
 
 def update_windows_title(self):
@@ -56,6 +57,13 @@ def update_menu(self):
     project_contains_obs = self.pj[cfg.OBSERVATIONS] != {}
 
     update_windows_title(self)
+
+    self.toolBar.setIconSize(
+        QSize(
+            self.config_param.get(cfg.TOOLBAR_ICON_SIZE, cfg.DEFAULT_TOOLBAR_ICON_SIZE_VALUE),
+            self.config_param.get(cfg.TOOLBAR_ICON_SIZE, cfg.DEFAULT_TOOLBAR_ICON_SIZE_VALUE),
+        )
+    )
 
     # enabled if project loaded
     for action in (
