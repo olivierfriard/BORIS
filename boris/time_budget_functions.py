@@ -24,6 +24,7 @@ import statistics
 from decimal import Decimal as dec
 from typing import Tuple
 import tablib
+import logging
 
 from . import config as cfg
 from . import db_functions
@@ -644,6 +645,11 @@ def time_budget_analysis(
         dict:
     """
 
+    logging.debug("time_budget_analysis function")
+
+    logging.debug(f"{selected_observations=}")
+    logging.debug(f"{parameters=}")
+
     categories: dict = {}
     out: list = []
     for subject in parameters[cfg.SELECTED_SUBJECTS]:
@@ -709,14 +715,20 @@ def time_budget_analysis(
                         rows = cursor.fetchall()
 
                         if len(selected_observations) == 1:
-                            new_rows = []
+                            new_rows: list = []
                             for occurence, observation in rows:
+                                if occurence is None:
+                                    new_rows.append([float("NaN"), observation])
+                                else:
+                                    new_rows.append([occurence, observation])
+                                """
                                 if occurence is not None:
                                     new_occurence = max(float(parameters["start time"]), occurence)
                                     new_occurence = min(new_occurence, float(parameters["end time"]))
                                 else:
                                     new_occurence = float("NaN")
                                 new_rows.append([new_occurence, observation])
+                                """
                             rows = list(new_rows)
 
                         # include behaviors without events
@@ -881,21 +893,32 @@ def time_budget_analysis(
             else:  # no modifiers
                 if cfg.POINT in project_functions.event_type(behavior, ethogram):
                     cursor.execute(
-                        ("SELECT occurence,observation FROM events " "WHERE subject = ? AND code = ? ORDER BY observation, occurence"),
+                        ("SELECT occurence,observation FROM events WHERE subject = ? AND code = ? ORDER BY observation, occurence"),
                         (subject, behavior),
                     )
 
                     rows = list(cursor.fetchall())
 
+                    print(f"{rows=}")
+
                     if len(selected_observations) == 1:
-                        new_rows = []
+                        new_rows: list = []
                         for occurence, observation in rows:
+                            if occurence is None:
+                                new_rows.append([float("NaN"), observation])
+                            else:
+                                new_rows.append([occurence, observation])
+                            """
                             if occurence is not None:
                                 new_occurence = max(float(parameters["start time"]), occurence)
                                 new_occurence = min(new_occurence, float(parameters["end time"]))
                             else:
                                 new_occurence = float("NaN")
                             new_rows.append([new_occurence, observation])
+                            """
+
+                        print(f"{new_rows=}")
+
                         rows = list(new_rows)
 
                     # include behaviors without events
@@ -948,7 +971,7 @@ def time_budget_analysis(
 
                 if cfg.STATE in project_functions.event_type(behavior, ethogram):
                     cursor.execute(
-                        ("SELECT occurence, observation FROM events " "WHERE subject = ? AND code = ? ORDER BY observation, occurence"),
+                        ("SELECT occurence, observation FROM events WHERE subject = ? AND code = ? ORDER BY observation, occurence"),
                         (subject, behavior),
                     )
 
@@ -976,7 +999,7 @@ def time_budget_analysis(
                             )
                         continue
 
-                    if len(rows) % 2:
+                    if len(rows) % 2:  # unpaired events
                         out.append(
                             {
                                 "subject": subject,
@@ -991,7 +1014,8 @@ def time_budget_analysis(
                             }
                         )
                     else:
-                        all_event_durations, all_event_interdurations = [], []
+                        all_event_durations: list = []
+                        all_event_interdurations: list = []
                         for idx, row in enumerate(rows):
                             # event
                             if idx % 2 == 0:
@@ -1002,12 +1026,7 @@ def time_budget_analysis(
                                     all_event_durations.append(float("NaN"))
 
                             # inter event if same observation
-
                             if idx % 2 and idx != len(rows) - 1 and row[1] == rows[idx + 1][1]:
-                                print(f"{parameters['start time']=}")
-                                print(f"{parameters['end time']=}")
-                                print(f"{row[0]=}")
-
                                 if (row[0] is not None and rows[idx + 1][0] is not None) and (
                                     parameters["start time"] <= row[0] <= parameters["end time"]
                                     and parameters["start time"] <= rows[idx + 1][0] <= parameters["end time"]
