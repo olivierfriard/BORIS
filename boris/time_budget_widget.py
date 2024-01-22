@@ -442,7 +442,7 @@ def time_budget(self, mode: str, mode2: str = "list"):
         QMessageBox.warning(None, cfg.programName, "Select subject(s) and behavior(s) to analyze")
         return
 
-    print(f"{parameters=}")
+    logging.debug(f"{parameters=}")
 
     # ask for excluding behaviors durations from total time
     if start_coding is not None and not start_coding.is_nan():
@@ -477,7 +477,7 @@ def time_budget(self, mode: str, mode2: str = "list"):
             if obs_length == dec(-2):  # images obs without time
                 parameters[cfg.TIME_INTERVAL] = cfg.TIME_EVENTS
 
-            if parameters[cfg.TIME_INTERVAL] == cfg.TIME_FULL_OBS:
+            if parameters[cfg.TIME_INTERVAL] == cfg.TIME_FULL_OBS:  # media file duration
                 min_time = float(0)
                 # check if the last event is recorded after media file length
                 try:
@@ -488,7 +488,7 @@ def time_budget(self, mode: str, mode2: str = "list"):
                 except Exception:
                     max_time = float(obs_length)
 
-            if parameters[cfg.TIME_INTERVAL] == cfg.TIME_EVENTS:
+            if parameters[cfg.TIME_INTERVAL] == cfg.TIME_EVENTS:  # events duration
                 try:
                     min_time = float(self.pj[cfg.OBSERVATIONS][obsId][cfg.EVENTS][0][0])  # first event
                 except Exception:
@@ -568,6 +568,16 @@ def time_budget(self, mode: str, mode2: str = "list"):
                 "DELETE FROM events WHERE observation = ? AND (occurence < ? OR occurence > ?)",
                 (obsId, min_time, max_time),
             )
+            try:
+                cursor.execute("COMMIT")
+            except Exception:
+                pass
+
+            cursor.execute("SELECT code, occurence, type FROM events WHERE observation = ?", (obsId,))
+            print()
+            for row in cursor.fetchall():
+                print(row["code"], row["occurence"], row["type"])
+            print()
 
         out, categories = time_budget_functions.time_budget_analysis(
             self.pj[cfg.ETHOGRAM], cursor, selected_observations, parameters, by_category=(mode == "by_category")
@@ -807,7 +817,7 @@ def time_budget(self, mode: str, mode2: str = "list"):
             if obs_length == -1:
                 obs_length = 0
 
-            if parameters["time"] == cfg.TIME_FULL_OBS:
+            if parameters[cfg.TIME_INTERVAL] == cfg.TIME_FULL_OBS:
                 min_time = float(0)
                 # check if the last event is recorded after media file length
                 try:
@@ -818,7 +828,7 @@ def time_budget(self, mode: str, mode2: str = "list"):
                 except Exception:
                     max_time = float(obs_length)
 
-            if parameters["time"] == cfg.TIME_EVENTS:
+            if parameters[cfg.TIME_INTERVAL] == cfg.TIME_EVENTS:
                 try:
                     min_time = float(self.pj[cfg.OBSERVATIONS][obsId][cfg.EVENTS][0][0])
                 except Exception:
@@ -828,7 +838,7 @@ def time_budget(self, mode: str, mode2: str = "list"):
                 except Exception:
                     max_time = float(obs_length)
 
-            if parameters["time"] == cfg.TIME_ARBITRARY_INTERVAL:
+            if parameters[cfg.TIME_INTERVAL] == cfg.TIME_ARBITRARY_INTERVAL:
                 min_time = float(parameters[cfg.START_TIME])
                 max_time = float(parameters[cfg.END_TIME])
 
