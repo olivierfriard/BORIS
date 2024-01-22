@@ -1,7 +1,7 @@
 """
 BORIS
 Behavioral Observation Research Interactive Software
-Copyright 2012-2023 Olivier Friard
+Copyright 2012-2024 Olivier Friard
 
 This file is part of BORIS.
 
@@ -41,7 +41,6 @@ from PyQt5.QtWidgets import (
 
 class ModifiersCodingMapWindowClass(QDialog):
     class View(QGraphicsView):
-
         mousePress = pyqtSignal(QMouseEvent)
 
         def mousePressEvent(self, event):
@@ -104,7 +103,6 @@ class ModifiersCodingMapWindowClass(QDialog):
 
         for code in self.polygonsList2:
             if self.polygonsList2[code].contains(test):
-
                 codes = self.leareaCode.text().split(self.codeSeparator)
                 if "" in codes:
                     codes.remove("")

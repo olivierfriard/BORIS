@@ -1,7 +1,7 @@
 """
 BORIS
 Behavioral Observation Research Interactive Software
-Copyright 2012-2023 Olivier Friard
+Copyright 2012-2024 Olivier Friard
 
 
   This program is free software; you can redistribute it and/or modify
@@ -55,24 +55,19 @@ def select_observations2(self, mode: str, windows_title: str = "") -> Tuple[str,
             column_type.append(pj[cfg.INDEPENDENT_VARIABLES][idx]["type"])
 
     state_events_list = [
-        pj[cfg.ETHOGRAM][x][cfg.BEHAVIOR_CODE]
-        for x in pj[cfg.ETHOGRAM]
-        if cfg.STATE in pj[cfg.ETHOGRAM][x][cfg.TYPE].upper()
+        pj[cfg.ETHOGRAM][x][cfg.BEHAVIOR_CODE] for x in pj[cfg.ETHOGRAM] if cfg.STATE in pj[cfg.ETHOGRAM][x][cfg.TYPE].upper()
     ]
 
     data: list = []
     not_paired: list = []
 
     if hash(str(self.pj[cfg.OBSERVATIONS])) != self.mem_hash_obs:
-
         for obs in sorted(list(pj[cfg.OBSERVATIONS].keys())):
             date = pj[cfg.OBSERVATIONS][obs]["date"].replace("T", " ")
             descr = util.eol2space(pj[cfg.OBSERVATIONS][obs][cfg.DESCRIPTION])
 
             # subjects
-            observed_subjects = [
-                cfg.NO_FOCAL_SUBJECT if x == "" else x for x in project_functions.extract_observed_subjects(pj, [obs])
-            ]
+            observed_subjects = [cfg.NO_FOCAL_SUBJECT if x == "" else x for x in project_functions.extract_observed_subjects(pj, [obs])]
 
             subjectsList = ", ".join(observed_subjects)
 
@@ -113,18 +108,14 @@ def select_observations2(self, mode: str, windows_title: str = "") -> Tuple[str,
                         indepvar.append("")
 
             # check unpaired events
-            ok, _ = project_functions.check_state_events_obs(
-                obs, pj[cfg.ETHOGRAM], pj[cfg.OBSERVATIONS][obs], cfg.HHMMSS
-            )
+            ok, _ = project_functions.check_state_events_obs(obs, pj[cfg.ETHOGRAM], pj[cfg.OBSERVATIONS][obs], cfg.HHMMSS)
             if not ok:
                 not_paired.append(obs)
 
             # exhaustivity
             if pj[cfg.OBSERVATIONS][obs][cfg.TYPE] in (cfg.MEDIA, cfg.LIVE):
                 # check exhaustivity of observation
-                exhaustivity = project_functions.check_observation_exhaustivity(
-                    pj[cfg.OBSERVATIONS][obs][cfg.EVENTS], state_events_list
-                )
+                exhaustivity = project_functions.check_observation_exhaustivity(pj[cfg.OBSERVATIONS][obs][cfg.EVENTS], state_events_list)
             elif pj[cfg.OBSERVATIONS][obs][cfg.TYPE] == cfg.IMAGES:
                 exhaustivity = project_functions.check_observation_exhaustivity_pictures(pj[cfg.OBSERVATIONS][obs])
 

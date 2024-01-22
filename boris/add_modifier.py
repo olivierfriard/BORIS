@@ -1,7 +1,7 @@
 """
 BORIS
 Behavioral Observation Research Interactive Software
-Copyright 2012-2023 Olivier Friard
+Copyright 2012-2024 Olivier Friard
 
 This file is part of BORIS.
 
@@ -33,12 +33,10 @@ from .utilities import sorted_keys
 
 
 class addModifierDialog(QDialog, Ui_Dialog):
-
     tabMem = -1
     itemPositionMem = -1
 
     def __init__(self, modifiers_str, subjects=[], parent=None):
-
         super().__init__()
         self.setupUi(self)
 
@@ -113,7 +111,6 @@ class addModifierDialog(QDialog, Ui_Dialog):
         self.tabMem = 0
 
     def pb_pushed(self, button):
-
         if self.leModifier.text():
             if (
                 dialog.MessageDialog(
@@ -160,7 +157,6 @@ class addModifierDialog(QDialog, Ui_Dialog):
                 with open(file_name) as f_in:
                     for line in f_in:
                         if line.strip():
-
                             for c in cfg.CHAR_FORBIDDEN_IN_MODIFIERS:
                                 if c in line.strip():
                                     QMessageBox.critical(
@@ -174,11 +170,7 @@ class addModifierDialog(QDialog, Ui_Dialog):
                                     )
                                     break
                             else:
-
-                                if line.strip() not in [
-                                    self.lwModifiers.item(x).text() for x in range(self.lwModifiers.count())
-                                ]:
-
+                                if line.strip() not in [self.lwModifiers.item(x).text() for x in range(self.lwModifiers.count())]:
                                     if self.itemPositionMem != -1:
                                         self.lwModifiers.insertItem(self.itemPositionMem, line.strip())
                                     else:
@@ -222,9 +214,7 @@ class addModifierDialog(QDialog, Ui_Dialog):
         """
         if not self.modifiers_sets_dict:
             self.modifiers_sets_dict["0"] = {"name": "", "description": "", "type": cfg.SINGLE_SELECTION, "values": []}
-        self.modifiers_sets_dict[str(self.tabWidgetModifiersSets.currentIndex())][
-            "description"
-        ] = self.le_description.text().strip()
+        self.modifiers_sets_dict[str(self.tabWidgetModifiersSets.currentIndex())]["description"] = self.le_description.text().strip()
 
     def type_changed(self):
         """
@@ -277,7 +267,6 @@ class addModifierDialog(QDialog, Ui_Dialog):
         move selected modifiers set right
         """
         if self.tabWidgetModifiersSets.currentIndex() < self.tabWidgetModifiersSets.count() - 1:
-
             (
                 self.modifiers_sets_dict[str(self.tabWidgetModifiersSets.currentIndex() + 1)],
                 self.modifiers_sets_dict[str(self.tabWidgetModifiersSets.currentIndex())],
@@ -381,10 +370,7 @@ class addModifierDialog(QDialog, Ui_Dialog):
         """
 
         if self.tabWidgetModifiersSets.currentIndex() != -1:
-            if (
-                dialog.MessageDialog(cfg.programName, "Confirm deletion of this set of modifiers?", [cfg.YES, cfg.NO])
-                == cfg.YES
-            ):
+            if dialog.MessageDialog(cfg.programName, "Confirm deletion of this set of modifiers?", [cfg.YES, cfg.NO]) == cfg.YES:
                 index_to_delete = self.tabWidgetModifiersSets.currentIndex()
 
                 for k in range(index_to_delete, len(self.modifiers_sets_dict) - 1):
@@ -505,7 +491,6 @@ class addModifierDialog(QDialog, Ui_Dialog):
                 return
 
         if txt:
-
             if txt in [self.lwModifiers.item(x).text() for x in range(self.lwModifiers.count())]:
                 QMessageBox.critical(self, cfg.programName, f"The modifier <b>{txt}</b> is already in the list")
                 return
@@ -551,10 +536,7 @@ class addModifierDialog(QDialog, Ui_Dialog):
                 if "(" + self.leCode.text().strip() + ")" in " ".join(
                     self.modifiers_sets_dict[str(self.tabWidgetModifiersSets.currentIndex())]["values"]
                 ):
-
-                    QMessageBox.critical(
-                        self, cfg.programName, f"The shortcut code <b>{self.leCode.text().strip()}</b> already exists!"
-                    )
+                    QMessageBox.critical(self, cfg.programName, f"The shortcut code <b>{self.leCode.text().strip()}</b> already exists!")
                     self.leCode.setFocus()
                     return
                 txt += f" ({self.leCode.text().strip()})"

@@ -3,7 +3,7 @@ BORIS CLI
 
 Behavioral Observation Research Interactive Software Command Line Interface
 
-Copyright 2012-2023 Olivier Friard
+Copyright 2012-2024 Olivier Friard
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -91,9 +91,7 @@ commands_usage = {
 parser = argparse.ArgumentParser(description="BORIS CLI")
 parser.add_argument("-v", "--version", action="store_true", dest="version", help="BORIS version")
 parser.add_argument("-p", "--project", action="store", dest="project_file", help="Project file path")
-parser.add_argument(
-    "-o", "--observation", nargs="*", action="store", default=[], dest="observation_id", help="Observation id"
-)
+parser.add_argument("-o", "--observation", nargs="*", action="store", default=[], dest="observation_id", help="Observation id")
 parser.add_argument("-i", "--info", action="store_true", dest="project_info", help="Project information")
 parser.add_argument("-c", "--command", nargs="*", action="store", dest="command", help="Command to execute")
 
@@ -117,7 +115,6 @@ if args.command:
         sys.exit()
 
 if args.project_file:
-
     if not args.command:
         print("Project path: {}".format(args.project_file))
 
@@ -164,9 +161,7 @@ if args.project_info:
                 print("Subjects\n========")
                 print("Number of subjects: {}".format(len(pj[SUBJECTS])))
                 for idx in utilities.sorted_keys(pj[SUBJECTS]):
-                    print(
-                        "Name: {}\tDescription: {}".format(pj[SUBJECTS][idx]["name"], pj[SUBJECTS][idx]["description"])
-                    )
+                    print("Name: {}\tDescription: {}".format(pj[SUBJECTS][idx]["name"], pj[SUBJECTS][idx]["description"]))
                 print()
 
                 print("Observations\n============")
@@ -179,7 +174,6 @@ if args.project_info:
                 for observation_id in observations_id_list:
                     print("Observation id: {}".format(observation_id))
                     if pj[OBSERVATIONS][observation_id][EVENTS]:
-
                         for event in pj[OBSERVATIONS][observation_id][EVENTS]:
                             print("\t".join([str(x) for x in event]))
                     else:
@@ -190,7 +184,6 @@ if args.project_info:
         sys.exit()
 
 if args.command:
-
     print("Command: {}\n".format(" ".join(args.command)))
 
     if not pj:
@@ -198,20 +191,16 @@ if args.command:
         sys.exit()
 
     if "check_state_events" in args.command:
-
         if not observations_id_list:
             print("No observation selected. Command applied on all observations found in project\n")
             observations_id_list = all_observations(pj)
 
         for observation_id in observations_id_list:
-            ret, msg = project_functions.check_state_events_obs(
-                observation_id, pj[ETHOGRAM], pj[OBSERVATIONS][observation_id], HHMMSS
-            )
+            ret, msg = project_functions.check_state_events_obs(observation_id, pj[ETHOGRAM], pj[OBSERVATIONS][observation_id], HHMMSS)
             print("{}: {}".format(observation_id, cleanhtml(msg)))
         sys.exit()
 
     if "export_events" in args.command:
-
         if not observations_id_list:
             print("No observation selected. Command applied on all observations found in project\n")
             observations_id_list = [idx for idx in pj[OBSERVATIONS]]
@@ -261,21 +250,14 @@ if args.command:
         if len(args.command) > 2:
             include_modifiers = "TRUE" in args.command[2].upper()
 
-        K, out = irr.cohen_kappa(
-            cursor, observations_id_list[0], observations_id_list[1], interval, subjects, include_modifiers
-        )
+        K, out = irr.cohen_kappa(cursor, observations_id_list[0], observations_id_list[1], interval, subjects, include_modifiers)
 
-        print(
-            ("Cohen's Kappa - Index of Inter-Rater Reliability\n\n" "Interval time: {interval:.3f} s\n").format(
-                interval=interval
-            )
-        )
+        print(("Cohen's Kappa - Index of Inter-Rater Reliability\n\n" "Interval time: {interval:.3f} s\n").format(interval=interval))
 
         print(out)
         sys.exit()
 
     if "subtitles" in args.command:
-
         if not observations_id_list:
             print("No observation selected. Command applied on all observations found in project\n")
             observations_id_list = all_observations(pj)
@@ -309,7 +291,6 @@ if args.command:
         sys.exit()
 
     if "plot_events" in args.command[0]:
-
         if not observations_id_list:
             print("No observation selected. Command applied on all observations found in project\n")
             observations_id_list = all_observations(pj)

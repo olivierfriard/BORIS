@@ -1,7 +1,7 @@
 """
 BORIS
 Behavioral Observation Research Interactive Software
-Copyright 2012-2023 Olivier Friard
+Copyright 2012-2024 Olivier Friard
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -38,9 +38,7 @@ def import_observations(self):
     import observations from project file
     """
 
-    fn = QFileDialog().getOpenFileName(
-        None, "Choose a BORIS project file", "", "Project files (*.boris);;All files (*)"
-    )
+    fn = QFileDialog().getOpenFileName(None, "Choose a BORIS project file", "", "Project files (*.boris);;All files (*)")
     fileName = fn[0] if type(fn) is tuple else fn
 
     if self.projectFileName and fileName == self.projectFileName:
@@ -63,12 +61,9 @@ def import_observations(self):
         # transform time to decimal
         fromProject = util.convert_time_to_decimal(fromProject)  # function in utilities.py
 
-        dbc = dialog.ChooseObservationsToImport(
-            "Choose the observations to import:", sorted(list(fromProject[cfg.OBSERVATIONS].keys()))
-        )
+        dbc = dialog.ChooseObservationsToImport("Choose the observations to import:", sorted(list(fromProject[cfg.OBSERVATIONS].keys())))
 
         if dbc.exec_():
-
             selected_observations = dbc.get_selected_observations()
             if selected_observations:
                 flagImported = False
@@ -80,7 +75,6 @@ def import_observations(self):
                 subjects_set = set([self.pj[cfg.SUBJECTS][idx][cfg.SUBJECT_NAME] for idx in self.pj[cfg.SUBJECTS]])
 
                 for obsId in selected_observations:
-
                     # check if behaviors are in current project ethogram
                     new_behav_set = set(
                         [
@@ -137,9 +131,9 @@ def import_observations(self):
                             return
 
                         if diag_result == "Rename observation":
-                            self.pj[cfg.OBSERVATIONS][
-                                f"{obsId} (imported at {util.datetime_iso8601(datetime.datetime.now())})"
-                            ] = dict(fromProject[cfg.OBSERVATIONS][obsId])
+                            self.pj[cfg.OBSERVATIONS][f"{obsId} (imported at {util.datetime_iso8601(datetime.datetime.now())})"] = dict(
+                                fromProject[cfg.OBSERVATIONS][obsId]
+                            )
                             flagImported = True
                     else:
                         self.pj[cfg.OBSERVATIONS][obsId] = dict(fromProject[cfg.OBSERVATIONS][obsId])

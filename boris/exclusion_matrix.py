@@ -1,7 +1,7 @@
 """
 BORIS
 Behavioral Observation Research Interactive Software
-Copyright 2012-2023 Olivier Friard
+Copyright 2012-2024 Olivier Friard
 
 This file is part of BORIS.
 
@@ -42,10 +42,7 @@ class ExclusionMatrix(QDialog):
 
         self.label = QLabel()
         self.label.setText(
-            (
-                "Check if behaviors are mutually exclusive.\n"
-                "The Point events (displayed on blue background) cannot be excluded)"
-            )
+            ("Check if behaviors are mutually exclusive.\n" "The Point events (displayed on blue background) cannot be excluded)")
         )
         hbox.addWidget(self.label)
 
@@ -139,8 +136,6 @@ class ExclusionMatrix(QDialog):
                 if c_name != r_name:
                     try:
                         if f"{c_name}|{r_name}" in self.checkboxes:
-                            self.checkboxes[f"{c_name}|{r_name}"].setChecked(
-                                self.checkboxes[f"{r_name}|{c_name}"].isChecked()
-                            )
+                            self.checkboxes[f"{c_name}|{r_name}"].setChecked(self.checkboxes[f"{r_name}|{c_name}"].isChecked())
                     except Exception:
                         logging.warning(f"Error during checking/unchecking for {r_name}/{c_name} in exclusion matrix")

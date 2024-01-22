@@ -1,7 +1,7 @@
 """
 BORIS
 Behavioral Observation Research Interactive Software
-Copyright 2012-2023 Olivier Friard
+Copyright 2012-2024 Olivier Friard
 
 This file is part of BORIS.
 
@@ -60,9 +60,7 @@ def synthetic_time_budget(self) -> None:
     if not_ok or not selected_observations:
         return
 
-    max_media_duration_all_obs, _ = observation_operations.media_duration(
-        self.pj[cfg.OBSERVATIONS], selected_observations
-    )
+    max_media_duration_all_obs, _ = observation_operations.media_duration(self.pj[cfg.OBSERVATIONS], selected_observations)
 
     start_coding, end_coding, _ = observation_operations.coding_time(self.pj[cfg.OBSERVATIONS], selected_observations)
 
@@ -141,9 +139,7 @@ def synthetic_time_budget(self) -> None:
                 file_name = str(pl.Path(file_name))
             if pl.Path(file_name).is_file():
                 if (
-                    dialog.MessageDialog(
-                        cfg.programName, f"The file {file_name} already exists.", [cfg.CANCEL, cfg.OVERWRITE]
-                    )
+                    dialog.MessageDialog(cfg.programName, f"The file {file_name} already exists.", [cfg.CANCEL, cfg.OVERWRITE])
                     == cfg.CANCEL
                 ):
                     return
@@ -268,9 +264,7 @@ def synthetic_binned_time_budget(self) -> None:
                 file_name = str(pl.Path(file_name))
             if pl.Path(file_name).is_file():
                 if (
-                    dialog.MessageDialog(
-                        cfg.programName, f"The file {file_name} already exists.", (cfg.CANCEL, cfg.OVERWRITE)
-                    )
+                    dialog.MessageDialog(cfg.programName, f"The file {file_name} already exists.", (cfg.CANCEL, cfg.OVERWRITE))
                     == cfg.CANCEL
                 ):
                     return

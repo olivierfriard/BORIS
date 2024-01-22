@@ -1,7 +1,7 @@
 """
 BORIS
 Behavioral Observation Research Interactive Software
-Copyright 2012-2023 Olivier Friard
+Copyright 2012-2024 Olivier Friard
 
 This file is part of BORIS.
 
@@ -134,7 +134,7 @@ def create_transitions_gv_from_matrix(matrix, cutoff_all=0, cutoff_behavior=0, e
             else:
                 transitions[row.split("\t")[0]][behaviours[idx]] = int(r)
 
-    '''transitions_total_number = sum([sum(transitions[x].values()) for x in transitions])'''
+    """transitions_total_number = sum([sum(transitions[x].values()) for x in transitions])"""
 
     out = "digraph G { \n"
 
@@ -220,9 +220,7 @@ def transitions_matrix(self, mode):
         strings_list = []
         for obs_id in selected_observations:
             strings_list.append(
-                export_observation.events_to_behavioral_sequences(
-                    self.pj, obs_id, subject, parameters, self.behav_seq_separator
-                )
+                export_observation.events_to_behavioral_sequences(self.pj, obs_id, subject, parameters, self.behav_seq_separator)
             )
 
         sequences, observed_behaviors = behavioral_strings_analysis(strings_list, self.behav_seq_separator)
@@ -282,9 +280,7 @@ def transitions_dot_script():
 
     for fileName in fileNames:
         with open(fileName, "r") as infile:
-            result, gv = create_transitions_gv_from_matrix(
-                infile.read(), cutoff_all=0, cutoff_behavior=0, edge_label="percent_node"
-            )
+            result, gv = create_transitions_gv_from_matrix(infile.read(), cutoff_all=0, cutoff_behavior=0, edge_label="percent_node")
             if result:
                 QMessageBox.critical(
                     None,
@@ -337,9 +333,7 @@ def transitions_flow_diagram():
     out = ""
     for fileName in fileNames:
         with open(fileName, "r") as infile:
-            result, gv = create_transitions_gv_from_matrix(
-                infile.read(), cutoff_all=0, cutoff_behavior=0, edge_label="percent_node"
-            )
+            result, gv = create_transitions_gv_from_matrix(infile.read(), cutoff_all=0, cutoff_behavior=0, edge_label="percent_node")
             if result:
                 QMessageBox.critical(
                     None,
@@ -351,10 +345,7 @@ def transitions_flow_diagram():
             with open(tempfile.gettempdir() + os.sep + os.path.basename(fileName) + ".tmp.gv", "w") as f:
                 f.write(gv)
             result = subprocess.getoutput(
-                (
-                    f'dot -Tpng -o "{fileName}.png" '
-                    f'"{tempfile.gettempdir() + os.sep + os.path.basename(fileName)}.tmp.gv"'
-                )
+                (f'dot -Tpng -o "{fileName}.png" ' f'"{tempfile.gettempdir() + os.sep + os.path.basename(fileName)}.tmp.gv"')
             )
             if not result:
                 out += f"<b>{fileName}.png</b> created<br>"

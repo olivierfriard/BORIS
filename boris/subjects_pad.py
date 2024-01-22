@@ -1,7 +1,7 @@
 """
 BORIS
 Behavioral Observation Research Interactive Software
-Copyright 2012-2023 Olivier Friard
+Copyright 2012-2024 Olivier Friard
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -27,7 +27,6 @@ from . import utilities as util
 
 
 class SubjectsPad(QWidget):
-
     clickSignal = pyqtSignal(str)
     sendEventSignal = pyqtSignal(QEvent)
     close_signal = pyqtSignal(QRect)
@@ -62,7 +61,6 @@ class SubjectsPad(QWidget):
                 c += 1
 
     def addWidget(self, subject, i, j):
-
         self.grid.addWidget(Button(), i, j)
         index = self.grid.count() - 1
         widget = self.grid.itemAt(index).widget()

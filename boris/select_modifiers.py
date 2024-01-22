@@ -1,7 +1,7 @@
 """
 BORIS
 Behavioral Observation Research Interactive Software
-Copyright 2012-2023 Olivier Friard
+Copyright 2012-2024 Olivier Friard
 
 This file is part of BORIS.
 
@@ -32,8 +32,11 @@ from PyQt5.QtWidgets import (
     QLineEdit,
     QPushButton,
     QListWidgetItem,
-
-    QSizePolicy,QSpacerItem, QAbstractItemView, QMessageBox)
+    QSizePolicy,
+    QSpacerItem,
+    QAbstractItemView,
+    QMessageBox,
+)
 
 from . import config as cfg
 from . import utilities as util
@@ -50,9 +53,7 @@ class ModifiersList(QDialog):
 
         V1layout = QVBoxLayout()
         label = QLabel()
-        label.setText(
-            f"Choose the modifier{'s' * (len(self.modifiers_dict) > 1)} for <b>{code}</b> behavior"
-        )
+        label.setText(f"Choose the modifier{'s' * (len(self.modifiers_dict) > 1)} for <b>{code}</b> behavior")
         V1layout.addWidget(label)
 
         Hlayout = QHBoxLayout()
@@ -95,9 +96,7 @@ class ModifiersList(QDialog):
 
                         # previously selected
                         try:
-                            if currentModifierList != [""] and re.sub(
-                                " \(.\)", "", modifier
-                            ) in currentModifierList[int(idx)].split(","):
+                            if currentModifierList != [""] and re.sub(" \(.\)", "", modifier) in currentModifierList[int(idx)].split(","):
                                 item.setCheckState(Qt.Checked)
                         except Exception:  # for old projects due to a fixed bug
                             pass
@@ -106,11 +105,7 @@ class ModifiersList(QDialog):
 
                     if self.modifiers_dict[idx]["type"] == cfg.SINGLE_SELECTION:
                         try:
-                            if (
-                                currentModifierList != [""]
-                                and re.sub(" \(.\)", "", modifier)
-                                == currentModifierList[int(idx)]
-                            ):
+                            if currentModifierList != [""] and re.sub(" \(.\)", "", modifier) == currentModifierList[int(idx)]:
                                 item.setSelected(True)
                         except Exception:  # for old projects due to a fixed bug
                             pass
@@ -120,18 +115,13 @@ class ModifiersList(QDialog):
                 le = QLineEdit()
                 self.modifiers_dict[idx]["widget"] = le
 
-                if (
-                    currentModifierList != [""]
-                    and currentModifierList[int(idx)] != "None"
-                ):
+                if currentModifierList != [""] and currentModifierList[int(idx)] != "None":
                     le.setText(currentModifierList[int(idx)])
 
                 V2layout.addWidget(le)
 
                 # vertical spacer
-                spacerItem = QSpacerItem(
-                    20, 40, QSizePolicy.Minimum, QSizePolicy.Expanding
-                )
+                spacerItem = QSpacerItem(20, 40, QSizePolicy.Minimum, QSizePolicy.Expanding)
                 V2layout.addItem(spacerItem)
 
             Hlayout.addLayout(V2layout)
@@ -169,9 +159,7 @@ class ModifiersList(QDialog):
                 return False
 
             # accept and close dialog if enter pressed
-            if (
-                ek == Qt.Key_Enter or ek == Qt.Key_Return
-            ):  # enter or enter from numeric pad
+            if ek == Qt.Key_Enter or ek == Qt.Key_Return:  # enter or enter from numeric pad
                 self.accept()
                 return True
 
@@ -185,31 +173,15 @@ class ModifiersList(QDialog):
                         else:
                             # modifiers have no associated code: the modifier starting with hit key will be selected
                             if ek not in [Qt.Key_Down, Qt.Key_Up]:
-                                if (
-                                    ek == Qt.Key_Space
-                                    and f"({cfg.MULTI_SELECTION})"
-                                    in widget.objectName()
-                                ):  # checking using SPACE bar
-                                    if (
-                                        widget.item(widget.currentRow()).checkState()
-                                        == Qt.Checked
-                                    ):
-                                        widget.item(widget.currentRow()).setCheckState(
-                                            Qt.Unchecked
-                                        )
+                                if ek == Qt.Key_Space and f"({cfg.MULTI_SELECTION})" in widget.objectName():  # checking using SPACE bar
+                                    if widget.item(widget.currentRow()).checkState() == Qt.Checked:
+                                        widget.item(widget.currentRow()).setCheckState(Qt.Unchecked)
                                     else:
-                                        widget.item(widget.currentRow()).setCheckState(
-                                            Qt.Checked
-                                        )
+                                        widget.item(widget.currentRow()).setCheckState(Qt.Checked)
 
                                 else:
                                     for index in range(widget.count()):
-                                        if (
-                                            widget.item(index)
-                                            .text()
-                                            .upper()
-                                            .startswith(ek_text.upper())
-                                        ):
+                                        if widget.item(index).text().upper().startswith(ek_text.upper()):
                                             widget.setCurrentRow(index)
                                             widget.scrollToItem(
                                                 widget.item(index),
@@ -218,10 +190,7 @@ class ModifiersList(QDialog):
                                             return True
                             else:  # up / down keys
                                 try:
-                                    if (
-                                        ek == Qt.Key_Down
-                                        and widget.currentRow() < widget.count() - 1
-                                    ):
+                                    if ek == Qt.Key_Down and widget.currentRow() < widget.count() - 1:
                                         widget.setCurrentRow(widget.currentRow() + 1)
                                     if ek == Qt.Key_Up and widget.currentRow() > 0:
                                         widget.setCurrentRow(widget.currentRow() - 1)
@@ -230,10 +199,7 @@ class ModifiersList(QDialog):
 
                     for index in range(widget.count()):
                         if ek in cfg.function_keys:
-                            if (
-                                f"({cfg.function_keys[ek]})"
-                                in widget.item(index).text().upper()
-                            ):
+                            if f"({cfg.function_keys[ek]})" in widget.item(index).text().upper():
                                 if f"({cfg.SINGLE_SELECTION})" in widget.objectName():
                                     widget.item(index).setSelected(True)
                                     # close dialog if one set of modifiers
@@ -270,7 +236,7 @@ class ModifiersList(QDialog):
         get modifiers
         returns list of selected modifiers
         """
-        
+
         for idx in util.sorted_keys(self.modifiers_dict):
             if self.modifiers_dict[idx]["type"] in [
                 cfg.SINGLE_SELECTION,
@@ -281,10 +247,7 @@ class ModifiersList(QDialog):
 
             if self.modifiers_dict[idx]["type"] == cfg.MULTI_SELECTION:
                 for j in range(self.modifiers_dict[idx]["widget"].count()):
-                    if (
-                        self.modifiers_dict[idx]["widget"].item(j).checkState()
-                        == Qt.Checked
-                    ):
+                    if self.modifiers_dict[idx]["widget"].item(j).checkState() == Qt.Checked:
                         self.modifiers_dict[idx]["selected"].append(
                             re.sub(
                                 " \(.*\)",
@@ -298,15 +261,11 @@ class ModifiersList(QDialog):
 
             if self.modifiers_dict[idx]["type"] == cfg.SINGLE_SELECTION:
                 for item in self.modifiers_dict[idx]["widget"].selectedItems():
-                    self.modifiers_dict[idx]["selected"].append(
-                        re.sub(" \(.*\)", "", item.text())
-                    )
+                    self.modifiers_dict[idx]["selected"].append(re.sub(" \(.*\)", "", item.text()))
 
             if self.modifiers_dict[idx]["type"] == cfg.NUMERIC_MODIFIER:
                 self.modifiers_dict[idx]["selected"] = (
-                    self.modifiers_dict[idx]["widget"].text()
-                    if self.modifiers_dict[idx]["widget"].text()
-                    else "None"
+                    self.modifiers_dict[idx]["widget"].text() if self.modifiers_dict[idx]["widget"].text() else "None"
                 )
         """
         for widget in self.children():
@@ -331,9 +290,7 @@ class ModifiersList(QDialog):
                         QMessageBox.warning(
                             self,
                             cfg.programName,
-                            "<b>{}</b> is not a numeric value".format(
-                                self.modifiers_dict[idx]["widget"].text()
-                            ),
+                            "<b>{}</b> is not a numeric value".format(self.modifiers_dict[idx]["widget"].text()),
                         )
                         return
 

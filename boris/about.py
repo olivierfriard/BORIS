@@ -1,7 +1,7 @@
 """
 BORIS
 Behavioral Observation Research Interactive Software
-Copyright 2012-2023 Olivier Friard
+Copyright 2012-2024 Olivier Friard
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -108,7 +108,7 @@ def actionAbout_activated(self):
     about_dialog.setInformativeText(
         (
             f"<b>{cfg.programName}</b> v. {version.__version__} - {version.__version_date__}"
-            "<p>Copyright &copy; 2012-2023 Olivier Friard - Marco Gamba<br>"
+            "<p>Copyright &copy; 2012-2024 Olivier Friard - Marco Gamba<br>"
             "Department of Life Sciences and Systems Biology<br>"
             "University of Torino - Italy<br>"
             "<br>"
