@@ -395,7 +395,6 @@ class get_time_widget(QWidget):
         """
         set time on time widget
         """
-        print(f"{new_time=}")
 
         self.pb_sign.setText("-" if new_time < 0 else "+")
 
@@ -408,10 +407,7 @@ class get_time_widget(QWidget):
             s = int((abs(new_time) - h * 3600 - m * 60))
             ms = round((abs(new_time) - h * 3600 - m * 60 - s) * 1000)
 
-            print(f"{h=} {m=} {s=} {ms=}")
-
             self.sb_hour.setValue(h)
-            print(f"{QTime(0, m, s, ms)=}")
             self.te_time.setTime(QTime(0, m, s, ms))
         else:
             self.sb_hour.setValue(0)
