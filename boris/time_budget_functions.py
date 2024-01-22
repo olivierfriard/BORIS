@@ -800,7 +800,7 @@ def time_budget_analysis(
                                 if parameters["start time"] == dec("0.000") and parameters["end time"] == dec("0.000"):
                                     duration = cfg.NA
                                 else:
-                                    duration = 0.000
+                                    duration: float = 0.000
                                 out.append(
                                     {
                                         "subject": subject,
@@ -831,7 +831,8 @@ def time_budget_analysis(
                                 }
                             )
                         else:
-                            all_event_durations, all_event_interdurations = [], []
+                            all_event_durations: list = []
+                            all_event_interdurations: list = []
                             for idx, row in enumerate(rows):
                                 # event
                                 if idx % 2 == 0:
@@ -843,10 +844,11 @@ def time_budget_analysis(
 
                                 # inter event if same observation
                                 if idx % 2 and idx != len(rows) - 1 and row[1] == rows[idx + 1][1]:
-                                    if (row[0] is not None and rows[idx + 1][0] is not None) and (
-                                        parameters["start time"] <= row[0] <= parameters["end time"]
-                                        and parameters["start time"] <= rows[idx + 1][0] <= parameters["end time"]
-                                    ):
+                                    if row[0] is not None and rows[idx + 1][0] is not None:
+                                        # and (
+                                        # parameters["start time"] <= row[0] <= parameters["end time"]
+                                        # and parameters["start time"] <= rows[idx + 1][0] <= parameters["end time"]
+                                        # ):
                                         all_event_interdurations.append(float(rows[idx + 1][0]) - float(row[0]))
                                     else:
                                         all_event_interdurations.append(float("NaN"))
@@ -899,8 +901,6 @@ def time_budget_analysis(
 
                     rows = list(cursor.fetchall())
 
-                    print(f"{rows=}")
-
                     if len(selected_observations) == 1:
                         new_rows: list = []
                         for occurence, observation in rows:
@@ -916,8 +916,6 @@ def time_budget_analysis(
                                 new_occurence = float("NaN")
                             new_rows.append([new_occurence, observation])
                             """
-
-                        print(f"{new_rows=}")
 
                         rows = list(new_rows)
 
@@ -1027,10 +1025,11 @@ def time_budget_analysis(
 
                             # inter event if same observation
                             if idx % 2 and idx != len(rows) - 1 and row[1] == rows[idx + 1][1]:
-                                if (row[0] is not None and rows[idx + 1][0] is not None) and (
-                                    parameters["start time"] <= row[0] <= parameters["end time"]
-                                    and parameters["start time"] <= rows[idx + 1][0] <= parameters["end time"]
-                                ):
+                                if row[0] is not None and rows[idx + 1][0] is not None:
+                                    # and (
+                                    # parameters["start time"] <= row[0] <= parameters["end time"]
+                                    # and parameters["start time"] <= rows[idx + 1][0] <= parameters["end time"]
+                                    # ):
                                     all_event_interdurations.append(float(rows[idx + 1][0]) - float(row[0]))
                                 else:
                                     all_event_interdurations.append(float("NaN"))
@@ -1078,8 +1077,6 @@ def time_budget_analysis(
 
         if by_category:  # and flagCategories:
             for behav in out_cat:
-                print(f"{behav=}")
-
                 try:
                     category = [
                         ethogram[x][cfg.BEHAVIOR_CATEGORY]

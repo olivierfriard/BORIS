@@ -26,6 +26,7 @@ import pathlib as pl
 from decimal import Decimal as dec
 from io import StringIO
 import pandas as pd
+import time
 
 try:
     import pyreadr
@@ -51,6 +52,7 @@ from PyQt5.QtWidgets import (
     QTableWidgetItem,
     QVBoxLayout,
     QWidget,
+    QApplication,
 )
 
 from . import config as cfg
@@ -457,8 +459,13 @@ def time_budget(self, mode: str, mode2: str = "list"):
     else:
         parameters[cfg.EXCLUDED_BEHAVIORS] = []
 
+    self.statusbar.showMessage(f"Generating time budget for {len(selected_observations)} observation(s)")
+    QApplication.processEvents()
+
     # check if time_budget window must be used
     if flagGroup or len(selected_observations) == 1:
+        t0 = time.time()
+
         cursor = db_functions.load_events_in_db(
             self.pj,
             parameters[cfg.SELECTED_SUBJECTS],
@@ -466,6 +473,14 @@ def time_budget(self, mode: str, mode2: str = "list"):
             parameters[cfg.SELECTED_BEHAVIORS],
             time_interval=cfg.TIME_FULL_OBS,
         )
+
+        """
+        cursor.execute("SELECT code, occurence, type FROM events ")
+        print()
+        for row in cursor.fetchall():
+            print(row["code"], row["occurence"], row["type"])
+        print()
+        """
 
         total_observation_time = 0
         for obsId in selected_observations:
@@ -536,7 +551,7 @@ def time_budget(self, mode: str, mode2: str = "list"):
                                 % 2
                             ):
                                 cursor.execute(
-                                    ("INSERT INTO events (observation, subject, code, type, modifiers, occurence) " "VALUES (?,?,?,?,?,?)"),
+                                    ("INSERT INTO events (observation, subject, code, type, modifiers, occurence) VALUES (?,?,?,?,?,?)"),
                                     (obsId, subj, behav, "STATE", modifier[0], min_time),
                                 )
 
@@ -573,11 +588,13 @@ def time_budget(self, mode: str, mode2: str = "list"):
             except Exception:
                 pass
 
+            """
             cursor.execute("SELECT code, occurence, type FROM events WHERE observation = ?", (obsId,))
             print()
             for row in cursor.fetchall():
                 print(row["code"], row["occurence"], row["type"])
             print()
+            """
 
         out, categories = time_budget_functions.time_budget_analysis(
             self.pj[cfg.ETHOGRAM], cursor, selected_observations, parameters, by_category=(mode == "by_category")
@@ -627,6 +644,9 @@ def time_budget(self, mode: str, mode2: str = "list"):
             )
         else:
             self.tb.excluded_behaviors_list.setVisible(False)
+
+        self.statusbar.showMessage(f"Time budget generated in {round(time.time() - t0, 3)} s")
+        logging.debug("Time budget generated", 5000)
 
         if mode == "by_behavior":
             tb_fields = [

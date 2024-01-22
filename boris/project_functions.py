@@ -434,7 +434,7 @@ def check_project_integrity(
                     out += (
                         "The following <b>modifier</b> defined in ethogram "
                         "has leading/trailing spaces or special chars: "
-                        f"<b>{util.replace_leading_trailing_chars(modifier_code.replace, ' ', '&#9608;')}</b>"
+                        f"<b>{util.replace_leading_trailing_chars(modifier_code, old_char=' ', new_char='&#9608;')}</b>"
                     )
 
     # check if all media are available
