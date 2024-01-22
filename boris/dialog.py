@@ -173,7 +173,7 @@ class get_time_widget(QWidget):
     widget for selecting a time in various formats: secondes, HH:MM:SS:ZZZ or YYYY-mm-DD HH:MM:SS:ZZZ
     """
 
-    def __init__(self, time_value=0, parent=None):
+    def __init__(self, time_value=dec(0), parent=None):
         super().__init__(parent)
 
         self.setWindowTitle("BORIS")
@@ -318,7 +318,7 @@ class get_time_widget(QWidget):
         self.lb_seconds.setText("seconds")
         self.lb_hour.setText("hour")
         self.lb_hhmmss.setText("mm:ss.ms")
-        self.te_time.setDisplayFormat("hh:mm:zzz")
+        self.te_time.setDisplayFormat("mm:ss.zzz")
         self.dte.setDisplayFormat("yyyy-MM-dd hh:mm:ss:zzz")
         self.dte.adjustSize()
         font = QFont()
@@ -391,23 +391,27 @@ class get_time_widget(QWidget):
 
         return dec(time_sec)
 
-    def set_time(self, new_time: float) -> None:
+    def set_time(self, new_time: dec) -> None:
         """
         set time on time widget
         """
+        print(f"{new_time=}")
+
         self.pb_sign.setText("-" if new_time < 0 else "+")
 
         # seconds
         self.le_seconds.setText(f"{new_time:0.3f}")
 
-        # hh:mm:ss.zzz
-        if new_time <= cfg.DATE_CUTOFF:
+        if new_time <= cfg.DATE_CUTOFF:  # hh:mm:ss.zzz
             h = int(abs(new_time) // 3600)
             m = int((abs(new_time) - h * 3600) // 60)
             s = int((abs(new_time) - h * 3600 - m * 60))
             ms = round((abs(new_time) - h * 3600 - m * 60 - s) * 1000)
 
+            print(f"{h=} {m=} {s=} {ms=}")
+
             self.sb_hour.setValue(h)
+            print(f"{QTime(0, m, s, ms)=}")
             self.te_time.setTime(QTime(0, m, s, ms))
         else:
             self.sb_hour.setValue(0)
