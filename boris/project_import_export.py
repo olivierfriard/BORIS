@@ -62,7 +62,7 @@ def export_ethogram(self) -> None:
     """
     export ethogram in various format
     """
-    extended_file_formats = [
+    extended_file_formats: list = [
         "BORIS project file (*.boris)",
         "Tab Separated Values (*.tsv)",
         "Comma Separated Values (*.csv)",
@@ -71,7 +71,7 @@ def export_ethogram(self) -> None:
         "Legacy Microsoft Excel Spreadsheet XLS (*.xls)",
         "HTML (*.html)",
     ]
-    file_formats = ["boris", cfg.TSV_EXT, cfg.CSV_EXT, cfg.ODS_EXT, cfg.XLSX_EXT, cfg.XLS_EXT, cfg.HMTL_EXT]
+    file_formats: list = ["boris", cfg.TSV_EXT, cfg.CSV_EXT, cfg.ODS_EXT, cfg.XLSX_EXT, cfg.XLS_EXT, cfg.HMTL_EXT]
 
     filediag_func = QFileDialog().getSaveFileName
 
@@ -79,7 +79,7 @@ def export_ethogram(self) -> None:
     if not file_name:
         return
 
-    output_format = file_formats[extended_file_formats.index(filter_)]
+    output_format: str = file_formats[extended_file_formats.index(filter_)]
     if pl.Path(file_name).suffix != "." + output_format:
         file_name = str(pl.Path(file_name)) + "." + output_format
 
@@ -122,28 +122,30 @@ def export_ethogram(self) -> None:
             "Behavioral category",
             "Excluded behaviors",
             "modifiers",
-            # "modifiers (JSON)",
+            "modifiers (JSON)",
         ]
 
         for r in range(self.twBehaviors.rowCount()):
-            row = []
+            row: list = []
             for field in ("code", cfg.TYPE, "description", "key", cfg.COLOR, "category", "excluded"):
                 row.append(self.twBehaviors.item(r, cfg.behavioursFields[field]).text())
 
             # modifiers
             if self.twBehaviors.item(r, cfg.behavioursFields[cfg.MODIFIERS]).text():
+                # modifiers a string
                 modifiers_dict = eval(self.twBehaviors.item(r, cfg.behavioursFields[cfg.MODIFIERS]).text())
                 modifiers_list = []
                 for key in modifiers_dict:
-                    if modifiers_dict[key]["values"]:
-                        values = ", ".join(modifiers_dict[key]["values"])
-                        modifiers_list.append(f"{modifiers_dict[key]['name']} ({values})")
-                    else:
-                        modifiers_list.append(modifiers_dict[key]["name"])
-
-                row.append(", ".join(modifiers_list))
+                    values = ",".join(modifiers_dict[key]["values"])
+                    modifiers_list.append(f"{modifiers_dict[key]['name']}:{values}")
+                row.append(";".join(modifiers_list))
+                # modifiers as JSON
+                row.append(self.twBehaviors.item(r, cfg.behavioursFields[cfg.MODIFIERS]).text())
             else:
+                # modifiers a string
                 row.append("")
+                # modifiers as JSON
+                row.append("{}")
 
             ethogram_data.append(row)
 

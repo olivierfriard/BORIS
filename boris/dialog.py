@@ -130,8 +130,6 @@ def global_error_message(exception_type, exception_value, traceback_object):
     cb.clear(mode=cb.Clipboard)
     cb.setText(error_text, mode=cb.Clipboard)
 
-    # error_text: str = error_text.replace("\r\n", "\n").replace("\n", "<br>")
-
     text: str = (
         f"An error has occured!\n\n"
         "to improve the software please report this problem at:\n"
