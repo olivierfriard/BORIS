@@ -298,7 +298,7 @@ class projectDialog(QDialog, Ui_dlgProject):
 
         import_button_items = [
             "boris|from a BORIS project",
-            "spreadsheet|from a spreadsheet file (XLSX)",
+            "spreadsheet|from a spreadsheet file (XLSX/ODS)",
             "jwatcher|from a JWatcher project",
             "text|from a text file (CSV or TSV)",
             "clipboard|from the clipboard",
