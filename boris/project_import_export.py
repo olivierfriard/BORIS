@@ -566,7 +566,7 @@ def import_behaviors_from_spreadsheet(self):
         QMessageBox.warning(
             None,
             cfg.programName,
-            ("The type of file was not recognized. Must be Microsoft-Excel XLSX format"),
+            ("The type of file was not recognized. Must be Microsoft-Excel XLSX format or OpenDocument ODS"),
             QMessageBox.Ok | QMessageBox.Default,
             QMessageBox.NoButton,
         )
@@ -578,7 +578,7 @@ def import_behaviors_from_spreadsheet(self):
         QMessageBox.warning(
             None,
             cfg.programName,
-            ("The type of file was not recognized. Must be Microsoft-Excel XLSX format"),
+            ("The type of file was not recognized. Must be Microsoft-Excel XLSX format or OpenDocument ODS"),
             QMessageBox.Ok | QMessageBox.Default,
             QMessageBox.NoButton,
         )
@@ -994,7 +994,9 @@ def import_subjects_from_spreadsheet(self):
         if response == cfg.CANCEL:
             return
 
-    fn = QFileDialog().getOpenFileName(self, "Import subjects from a spreadsheet file", "", "Spreadsheet files (*.xlsx);;All files (*)")
+    fn = QFileDialog().getOpenFileName(
+        self, "Import subjects from a spreadsheet file", "", "Spreadsheet files (*.xlsx *.ods);;All files (*)"
+    )
     file_name = fn[0] if type(fn) is tuple else fn
 
     if not file_name:
@@ -1005,13 +1007,13 @@ def import_subjects_from_spreadsheet(self):
 
     if pl.Path(file_name).suffix.upper() == ".XLSX":
         engine = "openpyxl"
-        '''elif pl.Path(file_name).suffix.upper() == ".ODS":
-            engine = "odf"'''
+    elif pl.Path(file_name).suffix.upper() == ".ODS":
+        engine = "odf"
     else:
         QMessageBox.warning(
             None,
             cfg.programName,
-            ("The type of file was not recognized. Must be Microsoft-Excel XLSX format"),
+            ("The type of file was not recognized. Must be Microsoft-Excel XLSX format or OpenDocument ODS"),
             QMessageBox.Ok | QMessageBox.Default,
             QMessageBox.NoButton,
         )
@@ -1023,7 +1025,7 @@ def import_subjects_from_spreadsheet(self):
         QMessageBox.warning(
             None,
             cfg.programName,
-            ("The type of file was not recognized. Must be Microsoft-Excel XLSX format"),
+            ("The type of file was not recognized. Must be Microsoft-Excel XLSX format or OpenDocument ODS"),
             QMessageBox.Ok | QMessageBox.Default,
             QMessageBox.NoButton,
         )
