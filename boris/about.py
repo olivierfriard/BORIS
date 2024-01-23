@@ -30,6 +30,7 @@ from . import version
 from . import config as cfg
 from . import utilities as util
 
+"""
 try:
     from . import mpv2 as mpv
 
@@ -44,6 +45,8 @@ try:
 
 except RuntimeError:  # libmpv found but version too old
     from . import mpv as mpv
+"""
+
 
 from PyQt5.QtCore import QT_VERSION_STR, PYQT_VERSION_STR
 from PyQt5.QtGui import QPixmap
@@ -55,19 +58,14 @@ def actionAbout_activated(self):
     About dialog
     """
 
+    1 / 0
+
     programs_versions = ["MPV media player"]
-    try:
-        python_mpv_version = mpv.__version__
-    except Exception:
-        python_mpv_version = "Not found"
-    if sys.platform.startswith("linux"):
-        programs_versions.append(
-            f"Library version: {'.'.join([str(x) for x in mpv._mpv_client_api_version()])} file: {mpv.sofile} python-mpv version: {python_mpv_version}"
-        )
-    if sys.platform.startswith("win"):
-        programs_versions.append(
-            f"Library version: {'.'.join([str(x) for x in mpv._mpv_client_api_version()])} file: {mpv.dll} python-mpv version: {python_mpv_version}"
-        )
+
+    mpv_lib_version, mpv_lib_file_path = util.mpv_lib_version()
+    programs_versions.append(
+        f"Library version: {mpv_lib_version} file: {mpv_lib_file_path} python-mpv version: {util.python_mpv_script_version()}"
+    )
 
     # ffmpeg
     if self.ffmpeg_bin == "ffmpeg" and sys.platform.startswith("linux"):

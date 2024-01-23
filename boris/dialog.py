@@ -64,9 +64,16 @@ from PyQt5.QtGui import QFont, QTextCursor
 
 from . import config as cfg
 from . import version
+from . import utilities as util
 
 
 def MessageDialog(title: str, text: str, buttons: tuple) -> str:
+    """
+    generic message dialog
+
+    Return
+        str: text of the clicked button
+    """
     message = QMessageBox()
     message.setWindowTitle(title)
     message.setText(text)
@@ -81,7 +88,7 @@ def MessageDialog(title: str, text: str, buttons: tuple) -> str:
 
 def global_error_message(exception_type, exception_value, traceback_object):
     """
-    global error management
+    Global error management
     save error using loggin.critical and stdout
     """
 
@@ -91,20 +98,23 @@ def global_error_message(exception_type, exception_value, traceback_object):
         f"CPU: {platform.uname().machine} {platform.uname().processor}\n"
         f"Python {platform.python_version()} ({'64-bit' if sys.maxsize > 2**32 else '32-bit'})\n"
         f"Qt {QT_VERSION_STR} - PyQt {PYQT_VERSION_STR}\n"
-        f"{dt.datetime.now():%Y-%m-%d %H:%M}\n\n"
+        f"MPV library version: {util.mpv_lib_version()[0]}\n"
+        f"MPV library file path: {util.mpv_lib_version()[1]}\n\n"
+        f"Error succeded at {dt.datetime.now():%Y-%m-%d %H:%M}\n\n"
     )
     error_text += "".join(traceback.format_exception(exception_type, exception_value, traceback_object))
 
     # system info
+    systeminfo = ""
     if sys.platform.startswith("win"):
         systeminfo = subprocess.getoutput("systeminfo")
     if sys.platform.startswith("linux"):
         systeminfo = subprocess.getoutput("cat /etc/*rel*; uname -a")
 
+    error_text += f"\n\nSystem info\n===========\n\n{systeminfo}"
+
     # write to stdout
     logging.critical(error_text)
-    logging.critical("System info:")
-    logging.critical(systeminfo)
 
     # write to $HOME/boris_error.log
     try:
@@ -118,34 +128,31 @@ def global_error_message(exception_type, exception_value, traceback_object):
     # copy to clipboard
     cb = QApplication.clipboard()
     cb.clear(mode=cb.Clipboard)
-    cb.setText(error_text + "\nSystem info:\n" + systeminfo, mode=cb.Clipboard)
+    cb.setText(error_text, mode=cb.Clipboard)
 
-    error_text: str = error_text.replace("\r\n", "\n").replace("\n", "<br>")
+    # error_text: str = error_text.replace("\r\n", "\n").replace("\n", "<br>")
 
     text: str = (
-        f"<b>An error has occured</b><br><br>"
-        "to improve the software please report this problem at:<br>"
-        '<a href="https://github.com/olivierfriard/BORIS/issues">'
-        "https://github.com/olivierfriard/BORIS/issues</a><br>"
-        "Please no screenshot, the error message was copied to the clipboard.<br><br>"
-        "Thank you for your collaboration!"
-        "<br><br>"
-        "<pre>"
+        f"An error has occured!\n\n"
+        "to improve the software please report this problem at:\n"
+        "https://github.com/olivierfriard/BORIS/issues\n\n"
+        "Please no screenshot, the error message was copied to the clipboard.\n\n"
+        "Thank you for your collaboration!\n\n"
         f"{error_text}"
-        "<hr>"
-        "<b>System info</b><br>"
-        f"{systeminfo}"
-        "</pre>"
     )
 
     errorbox = Results_dialog()
+
     errorbox.setWindowTitle("BORIS - An error occured")
     errorbox.pbOK.setText("Abort")
     errorbox.pbCancel.setVisible(True)
     errorbox.pbCancel.setText("Ignore and try to continue")
 
+    font = QFont()
+    font.setFamily("monospace")
+    errorbox.ptText.setFont(font)
     errorbox.ptText.clear()
-    errorbox.ptText.appendHtml(text)
+    errorbox.ptText.appendPlainText(text)
 
     errorbox.ptText.moveCursor(QTextCursor.Start)
 
