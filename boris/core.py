@@ -1641,6 +1641,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         for IMAGES obs: load picture and visualize it in frame_viewer, extract EXIF Date/Time Original tag if available
         """
 
+        logging.debug("extract_frame")
+
         if self.playerType == cfg.MEDIA:
             time.sleep(0.3)  # required for correct frame number
 
@@ -4139,8 +4141,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         scroll video slider to video position
         Time offset is NOT added!
         """
-
-        # print(value)
 
         if not self.observationId:
             return
