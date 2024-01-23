@@ -145,7 +145,7 @@ def export_ethogram(self) -> None:
                 # modifiers a string
                 row.append("")
                 # modifiers as JSON
-                row.append("{}")
+                row.append("")
 
             ethogram_data.append(row)
 
@@ -376,6 +376,9 @@ def import_ethogram_from_dict(self, project: dict):
 def load_dataframe_into_behaviors_tablewidget(self, df: pd.DataFrame) -> int:
     """
     Load pandas dataframe into the twBehaviors table widget
+
+    Returns:
+        int: 0 if no error else error code
     """
 
     expected_labels: list = [
@@ -387,23 +390,21 @@ def load_dataframe_into_behaviors_tablewidget(self, df: pd.DataFrame) -> int:
         "Excluded behaviors",
     ]
 
-    """
-      ethogram_data.headers = [
-            "Behavior code",
-            "Behavior type",
-            "Description",
-            "Key",
-            "Color",
-            "Behavioral category",
-            "Excluded behaviors",
-            "modifiers",
-            "modifiers (JSON)",
-        ]
-    
-    """
+    ethogram_header = {
+        "code": "Behavior code",
+        "description": "Description",
+        "key": "Key",
+        "color": "Color",
+        "category": "Behavioral category",
+        "excluded": "Excluded behaviors",
+        "modifiers": "modifiers (JSON)",
+    }
+
+    # change all column names to uppercase
+    df.columns = df.columns.str.upper()
 
     for column in expected_labels:
-        if column not in list(df.columns):
+        if column.upper() not in list(df.columns):
             QMessageBox.warning(
                 None,
                 cfg.programName,
@@ -414,7 +415,7 @@ def load_dataframe_into_behaviors_tablewidget(self, df: pd.DataFrame) -> int:
                     "<br>"
                     "The first row of the spreadsheet must contain the following labels:<br>"
                     f"{'<br>'.join(['<b>' + x + '</b>' for x in expected_labels])}<br>"
-                    "<br>The order is not mandatory but respect the case!"
+                    "<br>The order is not mandatory."
                 ),
                 QMessageBox.Ok | QMessageBox.Default,
                 QMessageBox.NoButton,
@@ -422,7 +423,10 @@ def load_dataframe_into_behaviors_tablewidget(self, df: pd.DataFrame) -> int:
             return 1
 
     for _, row in df.iterrows():
-        behavior = {
+        behavior = {"coding map": ""}
+        for x in ethogram_header:
+            behavior[x] = row[ethogram_header[x].upper()] if str(row[ethogram_header[x].upper()]) != "nan" else ""
+            """
             "key": row["Key"] if str(row["Key"]) != "nan" else "",
             "code": row["Behavior code"] if str(row["Behavior code"]) != "nan" else "",
             "description": row["Description"] if str(row["Description"]) != "nan" else "",
@@ -431,7 +435,7 @@ def load_dataframe_into_behaviors_tablewidget(self, df: pd.DataFrame) -> int:
             "excluded": row["Excluded behaviors"] if str(row["Excluded behaviors"]) != "nan" else "",
             "coding map": "",
             "category": row["Behavioral category"] if str(row["Behavioral category"]) != "nan" else "",
-        }
+            """
 
         self.twBehaviors.setRowCount(self.twBehaviors.rowCount() + 1)
 
@@ -439,9 +443,9 @@ def load_dataframe_into_behaviors_tablewidget(self, df: pd.DataFrame) -> int:
             if field_type == cfg.TYPE:
                 item = QTableWidgetItem(cfg.DEFAULT_BEHAVIOR_TYPE)
                 # add type combobox
-                if cfg.POINT in row["Behavior type"].upper():
+                if cfg.POINT in row["Behavior type".upper()].upper():
                     item = QTableWidgetItem(cfg.POINT_EVENT)
-                elif cfg.STATE in row["Behavior type"].upper():
+                elif cfg.STATE in row["Behavior type".upper()].upper():
                     item = QTableWidgetItem(cfg.STATE_EVENT)
                 else:
                     QMessageBox.critical(
