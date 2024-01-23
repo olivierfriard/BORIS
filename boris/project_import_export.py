@@ -121,8 +121,8 @@ def export_ethogram(self) -> None:
             "Color",
             "Behavioral category",
             "Excluded behaviors",
-            "modifiers",
-            "modifiers (JSON)",
+            "Modifiers",
+            "Modifiers (JSON)",
         ]
 
         for r in range(self.twBehaviors.rowCount()):
@@ -378,7 +378,7 @@ def load_dataframe_into_behaviors_tablewidget(self, df: pd.DataFrame) -> int:
     Load pandas dataframe into the twBehaviors table widget
     """
 
-    expected_labels = [
+    expected_labels: list = [
         "Behavior code",
         "Behavior type",
         "Description",
@@ -386,6 +386,21 @@ def load_dataframe_into_behaviors_tablewidget(self, df: pd.DataFrame) -> int:
         "Behavioral category",
         "Excluded behaviors",
     ]
+
+    """
+      ethogram_data.headers = [
+            "Behavior code",
+            "Behavior type",
+            "Description",
+            "Key",
+            "Color",
+            "Behavioral category",
+            "Excluded behaviors",
+            "modifiers",
+            "modifiers (JSON)",
+        ]
+    
+    """
 
     for column in expected_labels:
         if column not in list(df.columns):
@@ -412,7 +427,7 @@ def load_dataframe_into_behaviors_tablewidget(self, df: pd.DataFrame) -> int:
             "code": row["Behavior code"] if str(row["Behavior code"]) != "nan" else "",
             "description": row["Description"] if str(row["Description"]) != "nan" else "",
             "color": row["Color"] if ("Color" in row) and (str(row["Color"]) != "nan") else "",
-            "modifiers": "",
+            "modifiers": row["Modifiers (JSON)"] if ("Modifiers (JSON)" in row) and (str(row["Modifiers (JSON)"]) != "nan") else "",
             "excluded": row["Excluded behaviors"] if str(row["Excluded behaviors"]) != "nan" else "",
             "coding map": "",
             "category": row["Behavioral category"] if str(row["Behavioral category"]) != "nan" else "",
