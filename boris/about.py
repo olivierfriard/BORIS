@@ -30,23 +30,6 @@ from . import version
 from . import config as cfg
 from . import utilities as util
 
-"""
-try:
-    from . import mpv2 as mpv
-
-    # check if MPV API v. 1
-    # is v. 1 use the old version of mpv.py
-    try:
-        if "libmpv.so.1" in mpv.sofile:
-            from . import mpv as mpv
-    except AttributeError:
-        if "mpv-1.dll" in mpv.dll:
-            from . import mpv as mpv
-
-except RuntimeError:  # libmpv found but version too old
-    from . import mpv as mpv
-"""
-
 
 from PyQt5.QtCore import QT_VERSION_STR, PYQT_VERSION_STR
 from PyQt5.QtGui import QPixmap

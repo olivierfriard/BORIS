@@ -158,7 +158,7 @@ def export_subjects(self) -> None:
     """
     export the subjetcs list in various format
     """
-    extended_file_formats = [
+    extended_file_formats: list = [
         cfg.TSV,
         cfg.CSV,
         cfg.ODS,
@@ -166,7 +166,7 @@ def export_subjects(self) -> None:
         cfg.XLS,
         cfg.HTML,
     ]
-    file_formats = [cfg.TSV_EXT, cfg.CSV_EXT, cfg.ODS_EXT, cfg.XLSX_EXT, cfg.XLS_EXT, cfg.HMTL_EXT]
+    file_formats: list = [cfg.TSV_EXT, cfg.CSV_EXT, cfg.ODS_EXT, cfg.XLSX_EXT, cfg.XLS_EXT, cfg.HMTL_EXT]
 
     filediag_func = QFileDialog().getSaveFileName
 
@@ -183,14 +183,14 @@ def export_subjects(self) -> None:
     if self.leProjectName.text():
         subjects_data.title = f"Subjects defined in the {self.leProjectName.text()} project"
 
-    subjects_data.headers = [
+    subjects_data.headers: list = [
         "Key",
         "Subject name",
         "Description",
     ]
 
     for r in range(self.twSubjects.rowCount()):
-        row = []
+        row: list = []
         for idx, _ in enumerate(("Key", "Subject name", "Description")):
             row.append(self.twSubjects.item(r, idx).text())
 
@@ -390,7 +390,7 @@ def load_dataframe_into_behaviors_tablewidget(self, df: pd.DataFrame) -> int:
         "Excluded behaviors",
     ]
 
-    ethogram_header = {
+    ethogram_header: dict = {
         "code": "Behavior code",
         "description": "Description",
         "key": "Key",
@@ -409,7 +409,7 @@ def load_dataframe_into_behaviors_tablewidget(self, df: pd.DataFrame) -> int:
                 None,
                 cfg.programName,
                 (
-                    f"The {column } column was not found in the file header.<br>"
+                    f"The {column} column was not found in the file header.<br>"
                     "For information the current file header contains the following labels:<br>"
                     f"{'<br>'.join(['<b>' + util.replace_leading_trailing_chars(x, ' ', '&#9608;') + '</b>' for x in df.columns])}<br>"
                     "<br>"
@@ -732,9 +732,9 @@ def import_behaviors_from_repository(self):
     """
     import behaviors from the BORIS ethogram repository
     """
-    ethogram_repository_URL = "http://www.boris.unito.it/static/ethograms/ethogram_list.json"
+
     try:
-        ethogram_list = urllib.request.urlopen(ethogram_repository_URL).read().strip().decode("utf-8")
+        ethogram_list = urllib.request.urlopen(f"{cfg.ETHOGRAM_REPOSITORY_URL}/ethogram_list.json").read().strip().decode("utf-8")
     except Exception:
         QMessageBox.critical(self, cfg.programName, "An error occured during retrieving the ethogram list from BORIS repository")
         return
@@ -768,7 +768,7 @@ def import_behaviors_from_repository(self):
             break
 
     try:
-        boris_project_str = urllib.request.urlopen(f"http://www.boris.unito.it/static/ethograms/{file_name}").read().strip().decode("utf-8")
+        boris_project_str = urllib.request.urlopen(f"{cfg.ETHOGRAM_REPOSITORY_URL}/{file_name}").read().strip().decode("utf-8")
     except Exception:
         QMessageBox.critical(self, cfg.programName, f"An error occured during retrieving {file_name} from BORIS repository")
         return
@@ -780,16 +780,27 @@ def import_behaviors_from_repository(self):
 def load_dataframe_into_subjects_tablewidget(self, df: pd.DataFrame) -> int:
     """
     Load pandas dataframe into the twSubjects table widget
+
+    Returns:
+        int: 0 if no error else error code
+
     """
-    for column in ["Subject name", "Description", "Key"]:
-        if column not in list(df.columns):
+
+    expected_labels: list = ["Key", "Subject name", "Description"]
+
+    # change all column names to uppercase
+    df.columns = df.columns.str.upper()
+
+    for column in expected_labels:
+        if column.upper() not in list(df.columns):
             QMessageBox.warning(
                 None,
                 cfg.programName,
                 (
+                    f"The column {column} was not found in the file header.<br>"
                     "The first row of spreadsheet must contain the following labels:<br>"
                     "Subject name, Description, Key<br>"
-                    "Respect the case!"
+                    "The order is not mandatory."
                 ),
                 QMessageBox.Ok | QMessageBox.Default,
                 QMessageBox.NoButton,
@@ -799,11 +810,11 @@ def load_dataframe_into_subjects_tablewidget(self, df: pd.DataFrame) -> int:
     for _, row in df.iterrows():
         self.twSubjects.setRowCount(self.twSubjects.rowCount() + 1)
 
-        for idx, field in enumerate(("Key", "Subject name", "Description")):
+        for idx, field in enumerate(expected_labels):
             self.twSubjects.setItem(
                 self.twSubjects.rowCount() - 1,
                 idx,
-                QTableWidgetItem(str(row[field]) if str(row[field]) != "nan" else ""),
+                QTableWidgetItem(str(row[field.upper()]) if str(row[field.upper()]) != "nan" else ""),
             )
 
     return 0
@@ -987,7 +998,7 @@ def import_subjects_from_spreadsheet(self):
     if self.twSubjects.rowCount():
         response = dialog.MessageDialog(
             cfg.programName,
-            ("There are subjects already configured. " "Do you want to append subjects or replace them?"),
+            ("There are subjects already configured. Do you want to append subjects or replace them?"),
             [cfg.APPEND, cfg.REPLACE, cfg.CANCEL],
         )
 

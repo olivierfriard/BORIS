@@ -338,7 +338,7 @@ class projectDialog(QDialog, Ui_dlgProject):
 
         subjects_import_button_items = [
             "boris|from a BORIS project",
-            "spreadsheet|from a spreadsheet file (XLSX)",
+            "spreadsheet|from a spreadsheet file (XLSX/ODS)",
             "text|from a text file (CSV or TSV)",
             "clipboard|from the clipboard",
         ]
