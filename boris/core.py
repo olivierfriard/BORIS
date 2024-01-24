@@ -21,12 +21,14 @@ This file is part of BORIS.
 """
 
 # import qdarkstyle
+import os
+
+os.environ["PATH"] = os.path.dirname(__file__) + os.sep + "misc" + os.pathsep + os.environ["PATH"]
 
 import datetime
 
 import json
 import logging
-import os
 import pathlib as pl
 import platform
 import re

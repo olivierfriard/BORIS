@@ -29,8 +29,6 @@ from PyQt5.QtWidgets import QLabel, QDockWidget, QWidget, QHBoxLayout, QSlider, 
 from PyQt5.QtCore import pyqtSignal, QEvent, Qt
 
 
-os.environ["PATH"] = os.path.dirname(__file__) + os.sep + "misc" + os.pathsep + os.environ["PATH"]
-
 try:
     from . import mpv2 as mpv
 
