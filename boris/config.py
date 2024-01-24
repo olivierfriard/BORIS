@@ -22,7 +22,7 @@ This file is part of BORIS.
 
 programName: str = "BORIS"
 
-ETHOGRAM_REPOSITORY_URL = "http://www.boris.unito.it/static/ethograms/"
+ETHOGRAM_REPOSITORY_URL = "http://www.boris.unito.it/static/ethograms"
 
 project_format_version: str = "7.0"
 
