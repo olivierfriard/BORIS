@@ -4822,7 +4822,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
             else:  # no scan sampling
                 if self.pj[cfg.OBSERVATIONS][self.observationId].get(cfg.START_FROM_CURRENT_TIME, False):
-                    memLaps = dec(str(util.seconds_of_day(datetime.datetime.now())))
+                    memLaps = util.seconds_of_day(datetime.datetime.now())
                 elif self.pj[cfg.OBSERVATIONS][self.observationId].get(cfg.START_FROM_CURRENT_EPOCH_TIME, False):
                     memLaps = dec(time.time())
                 else:
@@ -4851,7 +4851,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             elif ek == Qt.Key_Enter and event.text():  # click from coding pad or subjects pad
                 ek_unichr = ek_text
 
-            logging.debug(f"ek_unichr {ek_unichr}")
+            logging.debug(f"{ek_unichr = }")
 
             if ek == Qt.Key_Enter and event.text():  # click from coding pad or subjects pad
                 ek_unichr = ""

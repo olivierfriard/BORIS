@@ -786,21 +786,28 @@ def complete(lst: list, max_: int) -> list:
 
 def datetime_iso8601(dt) -> str:
     """
-    current date time in ISO8601 format without milliseconds
+    current date time in ISO8601 format without microseconds
     example: 2019-06-13 10:01:02
 
     Returns:
-        str: date time in ISO8601 format
+        str: date time in ISO8601 format without microseconds
     """
-    return dt.isoformat(" ").split(".")[0]
+    return dt.isoformat(sep=" ", timespec="seconds")
 
 
-def seconds_of_day(timestamp) -> dec:
+def seconds_of_day(timestamp: dt.datetime) -> dec:
     """
     return the number of seconds since start of the day
+
+    Returns:
+        dev: number of seconds since the start of the day
     """
 
-    return dec((timestamp - dt.datetime.combine(dt.date(), dt.time(0))).total_seconds()).quantize(dec("0.001"))
+    # logging.debug("function: seconds_of_day")
+    # logging.debug(f"{timestamp = }")
+
+    t = timestamp.time()
+    return dec(t.hour * 3600 + t.minute * 60 + t.second + t.microsecond / 1000000).quantize(dec("0.001"))
 
 
 def sorted_keys(d: dict) -> list:
