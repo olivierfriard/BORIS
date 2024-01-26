@@ -1462,7 +1462,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         jt.label.setText("Set the time")
 
         if jt.exec_():
-            new_time = int(jt.time_widget.get_time())
+            new_time = jt.time_widget.get_time()
             if new_time < 0:
                 return
             self.seek_mediaplayer(new_time)

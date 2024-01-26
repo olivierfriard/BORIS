@@ -109,6 +109,13 @@ def fix_unpaired_events(self, silent_mode: bool = False):
             return
 
         fix_at_time = w.time_widget.get_time()
+        if fix_at_time is None:
+            QMessageBox.warning(
+                self,
+                cfg.programName,
+                ("Select a time format"),
+            )
+            return
 
         events_to_add = project_functions.fix_unpaired_state_events(
             self.pj[cfg.ETHOGRAM],
