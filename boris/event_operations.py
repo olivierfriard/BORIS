@@ -671,6 +671,14 @@ def edit_event(self):
             # MEDIA / LIVE
             if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE] in (cfg.MEDIA, cfg.LIVE):
                 new_time = edit_window.time_widget.get_time()
+                if new_time is None:
+                    QMessageBox.warning(
+                        self,
+                        cfg.programName,
+                        ("Select a time format"),
+                    )
+                    continue
+
                 for key in self.pj[cfg.ETHOGRAM]:
                     if self.pj[cfg.ETHOGRAM][key][cfg.BEHAVIOR_CODE] == edit_window.cobCode.currentText():
                         event = self.full_event(key)

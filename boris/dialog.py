@@ -28,6 +28,7 @@ import platform
 import datetime as dt
 import subprocess
 from decimal import Decimal as dec
+from typing import Union
 
 from PyQt5.QtCore import Qt, pyqtSignal, QT_VERSION_STR, PYQT_VERSION_STR, QRect, QTime, QDateTime, QSize
 from PyQt5.QtWidgets import (
@@ -366,10 +367,15 @@ class get_time_widget(QWidget):
         else:
             self.pb_sign.setText("+")
 
-    def get_time(self) -> dec:
+    def get_time(self) -> Union[dec, None]:
         """
-        return time in seconds
+        Get time from the selected format in the time widget
+
+        Returns:
+            dec: time in seconds (None if no format selected)
         """
+
+        time_sec = None
 
         if self.rb_seconds.isChecked():
             try:
@@ -394,7 +400,7 @@ class get_time_widget(QWidget):
         if self.pb_sign.text() == "-":
             time_sec = -time_sec
 
-        return dec(time_sec)
+        return dec(time_sec) if time_sec is not None else None
 
     def set_time(self, new_time: dec) -> None:
         """
