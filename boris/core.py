@@ -5005,6 +5005,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 self.statusbar.showMessage(f"Key not assigned ({ek_unichr})", 5000)
 
     def tv_events_doubleClicked(self):
+        """
+        manage a double click on the events table
+        """
         if not self.tv_events.selectionModel().selectedIndexes():
             return
 
@@ -5013,7 +5016,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             index = self.tv_events.selectionModel().selectedIndexes()[0]
             time_str = index.sibling(index.row(), cfg.TW_OBS_FIELD[self.playerType]["time"]).data()
 
-            """time_str = self.twEvents.item(row, cfg.TW_OBS_FIELD[self.playerType]["time"]).text()"""
             time_ = util.time2seconds(time_str) if ":" in time_str else dec(time_str)
 
             # substract time offset
