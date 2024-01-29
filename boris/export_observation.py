@@ -606,7 +606,7 @@ def dataset_write(dataset: tablib.Dataset, file_name: str, output_format: str, d
 
             return True, ""
 
-        if output_format in (cfg.CSV_EXT, cfg.TSV_EXT, cfg.HMTL_EXT):
+        if output_format in (cfg.CSV_EXT, cfg.TSV_EXT, cfg.HTML_EXT):
             with open(file_name, "wb") as f:
                 f.write(str.encode(dataset.export(output_format)))
             return True, ""

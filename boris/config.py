@@ -718,7 +718,7 @@ TSV_EXT = "tsv"
 CSV_EXT = "csv"
 RDS_EXT = "rds"
 PANDAS_DF_EXT = "pkl"
-HMTL_EXT = "html"
+HTML_EXT = "html"
 SQL_EXT = "sql"
 ODS_EXT = "ods"
 XLS_EXT = "xls"
@@ -748,7 +748,7 @@ FILE_NAME_SUFFIX = {
     XLSX: XLSX_EXT,
     XLSX_WB: XLSX_EXT,
     XLS: XLS_EXT,
-    HTML: HMTL_EXT,
+    HTML: HTML_EXT,
     PANDAS_DF: PANDAS_DF_EXT,
     RDS: RDS_EXT,
     SQL: SQL_EXT,

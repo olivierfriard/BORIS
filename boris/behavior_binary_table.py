@@ -284,10 +284,10 @@ def behavior_binary_table(self):
                 if mem_command in ["Skip", "Skip all"]:
                     continue
 
-            if output_format in ["csv", "tsv", "html"]:
+            if output_format in [cfg.CSV_EXT, cfg.TSV_EXT, cfg.HTML]:
                 with open(file_name_with_subject, "wb") as f:
                     f.write(str.encode(results_df[obs_id][subject].export(output_format)))
 
-            if output_format in ["ods", "xlsx", "xls"]:
+            if output_format in [cfg.ODS_EXT, cfg.XLSX_EXT, cfg.XLS_EXT]:
                 with open(file_name_with_subject, "wb") as f:
                     f.write(results_df[obs_id][subject].export(output_format))
