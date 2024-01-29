@@ -965,3 +965,27 @@ def read_event_field(event: list, player_type: str, field_type: str) -> Union[st
         return event[cfg.PJ_OBS_FIELDS[player_type][field_type]]
     else:
         return cfg.NA
+
+
+def add_frame_indexes(self):
+    """
+    add frame indexes for all events
+    """
+    if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE] != cfg.MEDIA:
+        return
+    if self.playerType != cfg.MEDIA:
+        return
+
+    mem_time = self.getLaps()
+    for idx, event in enumerate(self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS]):
+        if event[0] == "NA":
+            continue
+        if not self.seek_mediaplayer(event[0]):
+            time.sleep(0.1)
+            self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS][idx][
+                cfg.PJ_OBS_FIELDS[cfg.MEDIA][cfg.FRAME_INDEX]
+            ] = self.get_frame_index()
+
+    self.seek_mediaplayer(mem_time)
+
+    self.load_tw_events(self.observationId)

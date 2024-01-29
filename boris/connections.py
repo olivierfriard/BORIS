@@ -113,6 +113,8 @@ def connections(self):
     self.actionCheckStateEvents.triggered.connect(lambda: state_events.check_state_events(self, mode="all"))
     self.actionCheckStateEventsSingleObs.triggered.connect(lambda: state_events.check_state_events(self, mode="current"))
     self.actionClose_unpaired_events.triggered.connect(lambda: state_events.fix_unpaired_events(self))
+    self.actionAdd_frame_indexes.triggered.connect(lambda: event_operations.add_frame_indexes(self))
+
     self.actionRunEventOutside.triggered.connect(self.run_event_outside)
 
     self.actionSelect_observations.triggered.connect(lambda: event_operations.select_events_between_activated(self))
@@ -358,6 +360,8 @@ def connections(self):
 
     self.tv_events.addAction(self.actionCheckStateEventsSingleObs)
     self.tv_events.addAction(self.actionClose_unpaired_events)
+
+    self.tv_events.addAction(self.actionAdd_frame_indexes)
 
     self.tv_events.addAction(self.actionRunEventOutside)
 

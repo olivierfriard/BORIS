@@ -290,6 +290,7 @@
     <addaction name="actionFind_replace_events"/>
     <addaction name="actionCheckStateEvents"/>
     <addaction name="actionClose_unpaired_events"/>
+    <addaction name="actionAdd_frame_indexes"/>
     <addaction name="actionSelect_observations"/>
     <addaction name="separator"/>
     <addaction name="actionDelete_selected_events"/>
@@ -1571,6 +1572,11 @@
   <action name="actionConfigure_tvevents_columns">
    <property name="text">
     <string>Configure columns</string>
+   </property>
+  </action>
+  <action name="actionAdd_frame_indexes">
+   <property name="text">
+    <string>Add frame indexes</string>
    </property>
   </action>
  </widget>
