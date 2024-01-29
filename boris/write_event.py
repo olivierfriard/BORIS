@@ -245,7 +245,7 @@ def write_event(self, event: dict, mem_time: dec) -> int:
     else:
         modifier_str = event["from map"]
 
-    modifier_str = re.sub(" \(.*\)", "", modifier_str)
+    modifier_str = re.sub(r" \(.*\)", "", modifier_str)
 
     # update current state
     # TODO: verify event["subject"] / self.currentSubject

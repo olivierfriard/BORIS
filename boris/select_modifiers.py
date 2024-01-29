@@ -96,7 +96,7 @@ class ModifiersList(QDialog):
 
                         # previously selected
                         try:
-                            if currentModifierList != [""] and re.sub(" \(.\)", "", modifier) in currentModifierList[int(idx)].split(","):
+                            if currentModifierList != [""] and re.sub(r" \(.\)", "", modifier) in currentModifierList[int(idx)].split(","):
                                 item.setCheckState(Qt.Checked)
                         except Exception:  # for old projects due to a fixed bug
                             pass
@@ -105,7 +105,7 @@ class ModifiersList(QDialog):
 
                     if self.modifiers_dict[idx]["type"] == cfg.SINGLE_SELECTION:
                         try:
-                            if currentModifierList != [""] and re.sub(" \(.\)", "", modifier) == currentModifierList[int(idx)]:
+                            if currentModifierList != [""] and re.sub(r" \(.\)", "", modifier) == currentModifierList[int(idx)]:
                                 item.setSelected(True)
                         except Exception:  # for old projects due to a fixed bug
                             pass
@@ -250,7 +250,7 @@ class ModifiersList(QDialog):
                     if self.modifiers_dict[idx]["widget"].item(j).checkState() == Qt.Checked:
                         self.modifiers_dict[idx]["selected"].append(
                             re.sub(
-                                " \(.*\)",
+                                r" \(.*\)",
                                 "",
                                 self.modifiers_dict[idx]["widget"].item(j).text(),
                             )
@@ -261,22 +261,12 @@ class ModifiersList(QDialog):
 
             if self.modifiers_dict[idx]["type"] == cfg.SINGLE_SELECTION:
                 for item in self.modifiers_dict[idx]["widget"].selectedItems():
-                    self.modifiers_dict[idx]["selected"].append(re.sub(" \(.*\)", "", item.text()))
+                    self.modifiers_dict[idx]["selected"].append(re.sub(r" \(.*\)", "", item.text()))
 
             if self.modifiers_dict[idx]["type"] == cfg.NUMERIC_MODIFIER:
                 self.modifiers_dict[idx]["selected"] = (
                     self.modifiers_dict[idx]["widget"].text() if self.modifiers_dict[idx]["widget"].text() else "None"
                 )
-        """
-        for widget in self.children():
-            if widget.objectName() == "lw_modifiers_classic":
-                for item in widget.selectedItems():
-                    modifiers.append(re.sub(" \(.*\)", "", item.text()))
-            if widget.objectName() == "lw_modifiers_from_set":
-                for idx in range(widget.count()):
-                    if widget.item(idx).checkState() == Qt.Checked:
-                        modifiers.append(widget.item(idx).text())
-        """
 
         return self.modifiers_dict
 

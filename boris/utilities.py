@@ -1397,7 +1397,7 @@ def accurate_media_analysis(ffmpeg_bin: str, file_name: str) -> dict:
                 if b"Stream #" in row and b"Video:" in row:
                     hasVideo = True
                     # get resolution \d{3,5}x\d{3,5}
-                    re_results = re.search(b"\d{3,5}x\d{3,5}", row, re.IGNORECASE)
+                    re_results = re.search(r"\d{3,5}x\d{3,5}", row, re.IGNORECASE)
                     if re_results:
                         resolution = re_results.group(0).decode("utf-8")
                     break
