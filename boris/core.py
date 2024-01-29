@@ -4878,8 +4878,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             or (ek in cfg.function_keys)
             or (ek == Qt.Key_Enter and event.text())
         ):  # click from coding pad or subjects pad
-            ethogram_idx, subj_idx, count = -1, -1, 0
-
             if ek in cfg.function_keys:
                 ek_unichr = cfg.function_keys[ek]
             elif ek != Qt.Key_Enter:
@@ -4895,8 +4893,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 if "#subject#" in event.text():
                     for idx in self.pj[cfg.SUBJECTS]:
                         if self.pj[cfg.SUBJECTS][idx][cfg.SUBJECT_NAME] == event.text().replace("#subject#", ""):
-                            subj_idx = idx
-                            self.update_subject(self.pj[cfg.SUBJECTS][subj_idx][cfg.SUBJECT_NAME])
+                            self.update_subject(self.pj[cfg.SUBJECTS][idx][cfg.SUBJECT_NAME])
                             return
 
                 else:  # behavior
@@ -4916,7 +4913,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
             # count key occurence in subjects
             subject_matching_idx = [idx for idx in self.pj[cfg.SUBJECTS] if ek_unichr == self.pj[cfg.SUBJECTS][idx]["key"]]
-            print(f"{subject_matching_idx=}")
 
             ethogram_matching_idx = [idx for idx in self.pj[cfg.ETHOGRAM] if self.pj[cfg.ETHOGRAM][idx]["key"] == ek_unichr]
 
@@ -4928,25 +4924,16 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 r = dialog.MessageDialog(
                     cfg.programName,
                     "This key defines a behavior and a subject. Choose one",
-                    ["&Behavior", "&Subject"],
+                    ["&Behavior", "&Subject", cfg.CANCEL],
                 )
+                if r == cfg.CANCEL:
+                    return
+
                 if r == "&Subject":
                     ethogram_matching_idx = []
-                    """
-                    if len(subject_matching_idx) == 1:
-                        subject_idx = subject_matching_idx[0]
-                    else:
-                        subject_idx = self.choose_subject(ek_unichr)
-                    """
 
                 if r == "&Behavior":
                     subject_matching_idx = []
-                    """
-                    if len(ethogram_matching_idx) == 1:
-                        behavior_idx = ethogram_matching_idx[0]
-                    else:
-                        behavior_idx = self.choose_behavior(ek_unichr)
-                    """
 
             if ethogram_matching_idx:
                 if len(ethogram_matching_idx) == 1:

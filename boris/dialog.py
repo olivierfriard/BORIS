@@ -857,12 +857,17 @@ class Duplicate_items(QDialog):
 
         Vlayout.addWidget(self.lw)
 
-        pbCancel = QPushButton("Cancel", clicked=self.reject)
+        hlayout = QHBoxLayout()
+        hlayout.addItem(QSpacerItem(40, 20, QSizePolicy.Expanding, QSizePolicy.Minimum))
 
-        Vlayout.addWidget(pbCancel)
+        pbCancel = QPushButton("Cancel", clicked=self.reject)
+        hlayout.addWidget(pbCancel)
+
         pbOK = QPushButton("OK", clicked=self.accept)
         pbOK.setDefault(True)
-        Vlayout.addWidget(pbOK)
+        hlayout.addWidget(pbOK)
+
+        Vlayout.addLayout(hlayout)
 
         self.setLayout(Vlayout)
 
