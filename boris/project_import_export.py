@@ -426,16 +426,6 @@ def load_dataframe_into_behaviors_tablewidget(self, df: pd.DataFrame) -> int:
         behavior = {"coding map": ""}
         for x in ethogram_header:
             behavior[x] = row[ethogram_header[x].upper()] if str(row[ethogram_header[x].upper()]) != "nan" else ""
-            """
-            "key": row["Key"] if str(row["Key"]) != "nan" else "",
-            "code": row["Behavior code"] if str(row["Behavior code"]) != "nan" else "",
-            "description": row["Description"] if str(row["Description"]) != "nan" else "",
-            "color": row["Color"] if ("Color" in row) and (str(row["Color"]) != "nan") else "",
-            "modifiers": row["Modifiers (JSON)"] if ("Modifiers (JSON)" in row) and (str(row["Modifiers (JSON)"]) != "nan") else "",
-            "excluded": row["Excluded behaviors"] if str(row["Excluded behaviors"]) != "nan" else "",
-            "coding map": "",
-            "category": row["Behavioral category"] if str(row["Behavioral category"]) != "nan" else "",
-            """
 
         self.twBehaviors.setRowCount(self.twBehaviors.rowCount() + 1)
 
