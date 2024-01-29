@@ -1473,12 +1473,13 @@ class projectDialog(QDialog, Ui_dlgProject):
 
         self.twSubjects_cellChanged(0, 0)
 
-    def twSubjects_cellChanged(self, row: int, column: int):
+    def twSubjects_cellChanged(self, row: int, column: int) -> None:
         """
         check if subject not unique
         """
 
-        subjects, keys = [], []
+        subjects: list = []
+        """keys: list = []"""
         self.lbSubjectsState.setText("")
 
         for r in range(self.twSubjects.rowCount()):
@@ -1498,11 +1499,14 @@ class projectDialog(QDialog, Ui_dlgProject):
                     )
                     return
 
+                # control of duplicated key removed 2024-01-29
+                """
                 if self.twSubjects.item(r, 0).text() in keys:
                     self.lbSubjectsState.setText(f'<font color="red">Key duplicated at row # {r + 1}</font>')
                 else:
                     if self.twSubjects.item(r, 0).text():
                         keys.append(self.twSubjects.item(r, 0).text())
+                """
 
             # check subject
             if self.twSubjects.item(r, 1):

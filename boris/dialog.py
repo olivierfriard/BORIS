@@ -827,13 +827,13 @@ class Input_dialog(QDialog):
         self.setLayout(hbox)
 
 
-class DuplicateBehaviorCode(QDialog):
+class Duplicate_items(QDialog):
     """
-    let user show between behaviors that are coded by same key
+    let user show between behaviors/subjects that are coded by same key
     """
 
     def __init__(self, text, codes_list):
-        super(DuplicateBehaviorCode, self).__init__()
+        super(Duplicate_items, self).__init__()
 
         self.setWindowTitle(cfg.programName)
         self.setWindowFlags(Qt.WindowStaysOnTopHint)
@@ -857,12 +857,11 @@ class DuplicateBehaviorCode(QDialog):
 
         Vlayout.addWidget(self.lw)
 
-        pbCancel = QPushButton("Cancel")
-        pbCancel.clicked.connect(self.reject)
+        pbCancel = QPushButton("Cancel", clicked=self.reject)
+
         Vlayout.addWidget(pbCancel)
-        pbOK = QPushButton("OK")
+        pbOK = QPushButton("OK", clicked=self.accept)
         pbOK.setDefault(True)
-        pbOK.clicked.connect(self.pbOK_clicked)
         Vlayout.addWidget(pbOK)
 
         self.setLayout(Vlayout)
@@ -877,9 +876,8 @@ class DuplicateBehaviorCode(QDialog):
         """
         if self.lw.selectedItems():
             return self.lw.selectedItems()[0].text()
-
-    def pbOK_clicked(self):
-        self.accept()
+        else:
+            return None
 
 
 class ChooseObservationsToImport(QDialog):

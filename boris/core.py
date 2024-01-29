@@ -287,7 +287,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     play_rate: float = 1
     play_rate_step: float = 0.1
     currentSubject: str = ""  # contains the current subject of observation
-    detailedObs: dict = {}
     coding_map_window_geometry = 0
 
     # FFmpeg
@@ -4483,32 +4482,67 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 for x in self.pj[cfg.OBSERVATIONS][obs_id][cfg.EVENTS]
             )
 
-    def fill_lwDetailed(self, obs_key, memLaps):
+    def choose_behavior(self, obs_key) -> Union[None, str]:
         """
-        fill listwidget with all events coded by key
-        return index of behaviour
+        fill listwidget with all behaviors coded by key
+
+        Returns:
+            index of selected behaviour
         """
 
         # check if key duplicated
-        items = []
+        items: list = []
+        code_idx: dict = {}
         for idx in self.pj[cfg.ETHOGRAM]:
             if self.pj[cfg.ETHOGRAM][idx]["key"] == obs_key:
                 code_descr = self.pj[cfg.ETHOGRAM][idx][cfg.BEHAVIOR_CODE]
                 if self.pj[cfg.ETHOGRAM][idx][cfg.DESCRIPTION]:
                     code_descr += " - " + self.pj[cfg.ETHOGRAM][idx][cfg.DESCRIPTION]
                 items.append(code_descr)
-                self.detailedObs[code_descr] = idx
+                code_idx[code_descr] = idx
 
         items.sort()
 
-        dbc = dialog.DuplicateBehaviorCode(
-            f"The <b>{obs_key}</b> key codes more behaviors.<br>Choose the correct one:",
+        dbc = dialog.Duplicate_items(
+            f"The <b>{obs_key}</b> key codes many behaviors.<br>Choose one:",
             items,
         )
         if dbc.exec_():
             code = dbc.getCode()
             if code:
-                return self.detailedObs[code]
+                return code_idx[code]
+            else:
+                return None
+
+    def choose_subject(self, subject_key) -> Union[None, str]:
+        """
+        fill listwidget with all subjects coded by key
+
+        Returns:
+            index of selected subject
+        """
+
+        # check if key duplicated
+        items: list = []
+        subject_idx: dict = {}
+        for idx in self.pj[cfg.SUBJECTS]:
+            if self.pj[cfg.SUBJECTS][idx]["key"] == subject_key:
+                subject_descr = self.pj[cfg.SUBJECTS][idx][cfg.SUBJECT_NAME]
+                if self.pj[cfg.SUBJECTS][idx][cfg.DESCRIPTION]:
+                    subject_descr += " - " + self.pj[cfg.SUBJECTS][idx][cfg.DESCRIPTION]
+                items.append(subject_descr)
+                subject_idx[subject_descr] = idx
+
+        items.sort()
+
+        dbc = dialog.Duplicate_items(
+            f"The <b>{subject_key}</b> key codes many subjects.<br>Choose one:",
+            items,
+        )
+        if dbc.exec_():
+            subject = dbc.getCode()
+            if subject:
+                return subject_idx[subject]
             else:
                 return None
 
@@ -4688,7 +4722,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         logging.debug(f"text #{ek_text}#  event key: {ek} Modifier: {modifier}")
 
-        # undo
+        # undo (CTRL + Z)
         if ek == 90 and modifier == cfg.CTRL_KEY:
             event_operations.undo_event_operation(self)
             return
@@ -4804,12 +4838,14 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             QMessageBox.warning(self, cfg.programName, "The ethogram is not configured")
             return
 
+        """ to be removed 2024-01-29
         obs_key = None
 
         # check if key is function key
         if ek in cfg.function_keys:
             if cfg.function_keys[ek] in [self.pj[cfg.ETHOGRAM][x]["key"] for x in self.pj[cfg.ETHOGRAM]]:
                 obs_key = cfg.function_keys[ek]
+        """
 
         # get time
         memLaps = None
@@ -4866,60 +4902,83 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 else:  # behavior
                     for idx in self.pj[cfg.ETHOGRAM]:
                         if self.pj[cfg.ETHOGRAM][idx][cfg.BEHAVIOR_CODE] == event.text():
-                            ethogram_idx = idx
-                            count += 1
-            else:
-                # count key occurence in ethogram
-                for idx in self.pj[cfg.ETHOGRAM]:
-                    if self.pj[cfg.ETHOGRAM][idx]["key"] == ek_unichr:
-                        ethogram_idx = idx
-                        count += 1
+                            event = self.full_event(idx)
 
-            # check if key defines a suject
-            if subj_idx == -1:  # subject not selected with subjects pad
-                flag_subject = False
-                for idx in self.pj[cfg.SUBJECTS]:
-                    if ek_unichr == self.pj[cfg.SUBJECTS][idx]["key"]:
-                        subj_idx = idx
+                            if self.playerType == cfg.IMAGES:
+                                event[cfg.IMAGE_PATH] = self.images_list[self.image_idx]
+                                event[cfg.IMAGE_INDEX] = self.image_idx + 1
 
-            # select between code and subject
-            if subj_idx != -1 and count:
-                if self.playerType == cfg.MEDIA:
-                    if self.is_playing():
-                        flagPlayerPlaying = True
-                        self.pause_video()
+                            if self.playerType == cfg.MEDIA:
+                                event[cfg.FRAME_INDEX] = self.get_frame_index()
 
+                            write_event.write_event(self, event, memLaps)
+                            return
+
+            # count key occurence in subjects
+            subject_matching_idx = [idx for idx in self.pj[cfg.SUBJECTS] if ek_unichr == self.pj[cfg.SUBJECTS][idx]["key"]]
+            print(f"{subject_matching_idx=}")
+
+            ethogram_matching_idx = [idx for idx in self.pj[cfg.ETHOGRAM] if self.pj[cfg.ETHOGRAM][idx]["key"] == ek_unichr]
+
+            subject_idx = None
+            behavior_idx = None
+
+            # select between behavior and subject
+            if subject_matching_idx and ethogram_matching_idx:
                 r = dialog.MessageDialog(
                     cfg.programName,
                     "This key defines a behavior and a subject. Choose one",
                     ["&Behavior", "&Subject"],
                 )
                 if r == "&Subject":
-                    count = 0
-                if r == "&Behavior":
-                    subj_idx = -1
+                    ethogram_matching_idx = []
+                    """
+                    if len(subject_matching_idx) == 1:
+                        subject_idx = subject_matching_idx[0]
+                    else:
+                        subject_idx = self.choose_subject(ek_unichr)
+                    """
 
-            # check if key codes more events
-            if subj_idx == -1 and count > 1:
-                if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE] in [cfg.MEDIA]:
+                if r == "&Behavior":
+                    subject_matching_idx = []
+                    """
+                    if len(ethogram_matching_idx) == 1:
+                        behavior_idx = ethogram_matching_idx[0]
+                    else:
+                        behavior_idx = self.choose_behavior(ek_unichr)
+                    """
+
+            if ethogram_matching_idx:
+                if len(ethogram_matching_idx) == 1:
+                    behavior_idx = ethogram_matching_idx[0]
+                else:
                     if self.playerType == cfg.MEDIA:
                         if self.is_playing():
                             flagPlayerPlaying = True
                             self.pause_video()
+                    behavior_idx = self.choose_behavior(ek_unichr)
+                    if behavior_idx is None:
+                        return
 
-                # let user choose event
-                ethogram_idx = self.fill_lwDetailed(ek_unichr, memLaps)
-
-                if ethogram_idx:
-                    count = 1
+            if subject_matching_idx:
+                if len(subject_matching_idx) == 1:
+                    subject_idx = subject_matching_idx[0]
+                else:
+                    if self.playerType == cfg.MEDIA:
+                        if self.is_playing():
+                            flagPlayerPlaying = True
+                            self.pause_video()
+                    subject_idx = self.choose_subject(ek_unichr)
+                    if subject_idx is None:
+                        return
 
             if self.playerType == cfg.MEDIA and flagPlayerPlaying:
                 self.play_video()
 
-            if count == 1:
+            if behavior_idx is not None:
                 # check if focal subject is defined
                 if not self.currentSubject and self.alertNoFocalSubject:
-                    if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE] in [cfg.MEDIA]:
+                    if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE] in (cfg.MEDIA):
                         if self.playerType == cfg.MEDIA:
                             if self.is_playing():
                                 flagPlayerPlaying = True
@@ -4940,7 +4999,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     if response == cfg.NO:
                         return
 
-                event = self.full_event(ethogram_idx)
+                event = self.full_event(behavior_idx)
 
                 if self.playerType == cfg.IMAGES:
                     event[cfg.IMAGE_PATH] = self.images_list[self.image_idx]
@@ -4951,57 +5010,12 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
                 write_event.write_event(self, event, memLaps)
 
-            elif count == 0:  # not a behavior
-                if subj_idx != -1:
-                    # check if key defines a suject
-                    flag_subject = False
-                    for idx in self.pj[cfg.SUBJECTS]:
-                        if ek_unichr == self.pj[cfg.SUBJECTS][idx]["key"]:
-                            flag_subject = True
-                            # select or deselect current subject
-                            self.update_subject(self.pj[cfg.SUBJECTS][idx][cfg.SUBJECT_NAME])
+            elif subject_idx is not None:
+                self.update_subject(self.pj[cfg.SUBJECTS][subject_idx][cfg.SUBJECT_NAME])
 
-                if not flag_subject:
-                    logging.debug(f"Key not assigned ({ek_unichr})")
-                    self.statusbar.showMessage(f"Key not assigned ({ek_unichr})", 5000)
-
-    # def twEvents_doubleClicked(self):
-    #    """
-    #    seek media to double clicked position (add self.repositioningTimeOffset value)
-    #    substract time offset if defined
-    #    """
-    #    if not self.twEvents.selectedIndexes():
-    #        return
-    #    row = self.twEvents.selectedIndexes()[0].row()  # first row selected
-    #    if self.playerType == cfg.MEDIA:
-    #        time_str = self.twEvents.item(row, cfg.TW_OBS_FIELD[self.playerType]["time"]).text()
-    #        time_ = util.time2seconds(time_str) if ":" in time_str else dec(time_str)
-    #        # substract time offset
-    #        time_ -= self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TIME_OFFSET]
-    #        # substract media creation time
-    #        if self.pj[cfg.OBSERVATIONS][self.observationId].get(cfg.MEDIA_CREATION_DATE_AS_OFFSET, False):
-    #            if len(self.dw_player[0].player.playlist) > 1:
-    #                QMessageBox.information(
-    #                    self,
-    #                    cfg.programName,
-    #                    (
-    #                        "This function is not yet implemented for this type of observation "
-    #                        "(media time creation as offset with many media files)"
-    #                    ),
-    #                )
-    #                return
-    #            media_file_name = self.dw_player[0].player.playlist[self.dw_player[0].player.playlist_pos]["filename"]
-    #            time_ -= self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO][cfg.MEDIA_CREATION_TIME][media_file_name]
-    #        if time_ + self.repositioningTimeOffset >= 0:
-    #            new_time = time_ + self.repositioningTimeOffset
-    #        else:
-    #            new_time = 0
-    #        self.seek_mediaplayer(new_time)
-    #        self.update_visualizations()
-    #    if self.playerType == cfg.IMAGES:
-    #        index_str = self.twEvents.item(row, cfg.TW_OBS_FIELD[self.playerType][cfg.IMAGE_INDEX]).text()
-    #        self.image_idx = int(index_str) - 1
-    #        self.extract_frame(self.dw_player[0])
+            else:
+                logging.debug(f"Key not assigned ({ek_unichr})")
+                self.statusbar.showMessage(f"Key not assigned ({ek_unichr})", 5000)
 
     def tv_events_doubleClicked(self):
         if not self.tv_events.selectionModel().selectedIndexes():
