@@ -197,8 +197,6 @@ def load_observations_from_spreadsheet(self, project_file_path: str):
             event[label] = row[label.upper()] if str(row[label.upper()]) != "nan" else ""
         events.append([event["time"], event["subject"], event["code"], event["modifier"], event["comment"]])
 
-    print(events)
-
     if events:
         self.pj[cfg.OBSERVATIONS][self.observationId]["events"].extend(events)
         self.load_tw_events(self.observationId)
