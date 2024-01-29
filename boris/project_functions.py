@@ -838,13 +838,13 @@ def export_observations_list(pj: dict, selected_observations: list, file_name: s
             + indep_var
         )
 
-    if output_format in ["tsv", "csv", "html"]:
+    if output_format in (cfg.TSV_EXT, cfg.CSV_EXT, cfg.HTML_EXT):
         try:
             with open(file_name, "wb") as f:
                 f.write(str.encode(data.export(output_format)))
         except Exception:
             return False
-    if output_format in ["ods", "xlsx", "xls"]:
+    if output_format in [cfg.ODS_EXT, cfg.XLS_EXT, cfg.XLSX_EXT]:
         try:
             with open(file_name, "wb") as f:
                 f.write(data.export(output_format))
