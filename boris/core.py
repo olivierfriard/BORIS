@@ -4965,7 +4965,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             if behavior_idx is not None:
                 # check if focal subject is defined
                 if not self.currentSubject and self.alertNoFocalSubject:
-                    if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE] in (cfg.MEDIA):
+                    if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE] == cfg.MEDIA:
                         if self.playerType == cfg.MEDIA:
                             if self.is_playing():
                                 flagPlayerPlaying = True
@@ -4980,7 +4980,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                         [cfg.YES, cfg.NO],
                     )
 
-                    if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE] in [cfg.MEDIA] and flagPlayerPlaying:
+                    if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE] == cfg.MEDIA and flagPlayerPlaying:
                         self.play_video()
 
                     if response == cfg.NO:
