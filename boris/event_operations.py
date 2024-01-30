@@ -728,6 +728,8 @@ def edit_event(self):
 
                         r = write_event.write_event(self, event, new_time)
 
+                        print(f"{r=}")
+
                         # scroll tv events
                         index = self.tv_events.model().index(pj_event_idx, 0)
                         self.tv_events.scrollTo(index, QAbstractItemView.EnsureVisible)
