@@ -1218,7 +1218,7 @@ def ffprobe_media_analysis(ffmpeg_bin: str, file_name: str) -> dict:
         resolution = None
         fps = 0
         sample_rate = None
-        duration = 0
+        duration = None
         audio_duration = cfg.NA
         frames_number = None
         size = None
@@ -1273,6 +1273,13 @@ def ffprobe_media_analysis(ffmpeg_bin: str, file_name: str) -> dict:
                 audio_codec = stream["codec_long_name"]
                 audio_bitrate.append(int(stream.get("bit_rate", 0)))
 
+        # check duration
+        if duration is None:
+            if "duration" in video_param["format"]:
+                duration = float(video_param["format"]["duration"])
+            else:
+                duration = 0
+
         # check bit rate
         if "bit_rate" in video_param["format"]:
             all_bitrate = int(video_param["format"]["bit_rate"])
@@ -1318,7 +1325,7 @@ def ffprobe_media_analysis(ffmpeg_bin: str, file_name: str) -> dict:
 
 def accurate_media_analysis(ffmpeg_bin: str, file_name: str) -> dict:
     """
-    analyse frame rate and video duration with ffmpeg
+    analyse frame rate and video duration with ffprobe or ffmpeg if ffprobe not available
     Returns parameters: duration, duration_ms, bitrate, frames_number, fps, has_video (True/False), has_audio (True/False)
 
     Args:
