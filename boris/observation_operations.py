@@ -929,8 +929,6 @@ def new_observation(self, mode=cfg.NEW, obsId=""):
         else:
             self.pj[cfg.OBSERVATIONS][new_obs_id][cfg.TIME_OFFSET] = dec("0.0")
 
-        print(f"{self.pj[cfg.OBSERVATIONS][new_obs_id][cfg.TIME_OFFSET]=}")
-
         # add date (epoch) if date offset checked
         # if observationWindow.cb_date_offset.isChecked():
         #    print(f"{observationWindow.de_date_offset.date().toString(Qt.ISODate)=}")

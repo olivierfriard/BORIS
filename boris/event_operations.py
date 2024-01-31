@@ -282,11 +282,7 @@ def undo_event_operation(self) -> None:
         self.statusbar.showMessage("The Undo buffer is empty", 5000)
         return
 
-    print(self.undo_queue)
-
     events = self.undo_queue.pop()
-
-    print(f"{events=}")
 
     operation_description = self.undo_description.pop()
     self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS] = events[:]
@@ -727,8 +723,6 @@ def edit_event(self):
                         ]
 
                         r = write_event.write_event(self, event, new_time)
-
-                        print(f"{r=}")
 
                         # scroll tv events
                         index = self.tv_events.model().index(pj_event_idx, 0)
