@@ -2,7 +2,7 @@
 
 # create a wheel with last version
 create_wheel:
-	dtf pyproject.toml
+	dtf pyproject.toml   # dtf (dynamic text file required on path)
 	git commit -am "new wheel"; git push; rm -rf *.egg-info build dist
 	python3 -m build
 	twine check dist/*
