@@ -3971,7 +3971,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         scroll to corresponding event
         """
 
-        logging.debug("get_events_current_row")
+        # logging.debug("get_events_current_row")
 
         if not self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS]:
             return
