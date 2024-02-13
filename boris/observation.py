@@ -380,7 +380,7 @@ class Observation(QDialog, Ui_Form):
                 time_interval_dialog.time_widget.rb_time.setChecked(True)
             time_interval_dialog.time_widget.set_time(0)
             time_interval_dialog.setWindowTitle("Start observation at")
-            time_interval_dialog.label.setText("Start observation at")
+            time_interval_dialog.label.setText("<b>Start</b> observation at")
             start_time, stop_time = 0, 0
             if time_interval_dialog.exec_():
                 start_time = time_interval_dialog.time_widget.get_time()
@@ -389,7 +389,7 @@ class Observation(QDialog, Ui_Form):
                 return
             time_interval_dialog.time_widget.set_time(0)
             time_interval_dialog.setWindowTitle("Stop observation at")
-            time_interval_dialog.label.setText("Stop observation at")
+            time_interval_dialog.label.setText("<b>Stop</b> observation at")
             if time_interval_dialog.exec_():
                 stop_time = time_interval_dialog.time_widget.get_time()
             else:
