@@ -378,7 +378,7 @@ class Observation(QDialog, Ui_Form):
                 time_interval_dialog.time_widget.rb_seconds.setChecked(True)
             if self.time_format == cfg.HHMMSS:
                 time_interval_dialog.time_widget.rb_time.setChecked(True)
-            # time_interval_dialog.time_widget.set_time(0)
+            time_interval_dialog.time_widget.set_time(0)
             time_interval_dialog.setWindowTitle("Start observation at")
             time_interval_dialog.label.setText("Start observation at")
             start_time, stop_time = 0, 0
@@ -897,11 +897,13 @@ class Observation(QDialog, Ui_Form):
             self.text = None
         self.reject()
 
-    def check_parameters(self):
+    def check_parameters(self) -> bool:
         """
         check observation parameters
 
-        return True if everything OK else False
+        Returns:
+            bool: True if everything is OK else False
+
         """
 
         def is_numeric(s):
@@ -935,6 +937,15 @@ class Observation(QDialog, Ui_Form):
             self.qm.setText("Choose an observation type.")
             self.qm.exec_()
             return False
+
+        # check if offset is correct
+        if self.cb_time_offset.isChecked():
+            if self.obs_time_offset.get_time() is None:
+                self.qm = QMessageBox()
+                self.qm.setIcon(QMessageBox.Critical)
+                self.qm.setText("Check the time offset value.")
+                self.qm.exec_()
+                return False
 
         if self.rb_media_files.isChecked():  # observation based on media file(s)
             # check if media file exists

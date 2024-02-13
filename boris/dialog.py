@@ -424,7 +424,6 @@ class get_time_widget(QWidget):
             self.sb_hour.setValue(0)
             self.te_time.setTime(QTime(0, 0, 0, 0))
 
-        if new_time > cfg.DATE_CUTOFF:
             self.dte.setDateTime(QDateTime().fromMSecsSinceEpoch(int(new_time * 1000)))
             self.rb_datetime.setChecked(True)
 

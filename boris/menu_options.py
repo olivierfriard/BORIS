@@ -166,6 +166,7 @@ def update_menu(self):
         self.menuImage_overlay_on_video_2,
         self.actionAdd_image_overlay_on_video,
         self.actionRemove_image_overlay,
+        self.actionAdd_frame_indexes,
     ):
         action.setEnabled(self.playerType == cfg.MEDIA)
 

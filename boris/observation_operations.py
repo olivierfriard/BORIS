@@ -522,13 +522,16 @@ def observation_length(pj: dict, selected_observations: list) -> tuple:
     return (max_obs_length, selectedObsTotalMediaLength)
 
 
-def new_observation(self, mode=cfg.NEW, obsId=""):
+def new_observation(self, mode: str = cfg.NEW, obsId: str = "") -> None:
     """
     define a new observation or edit an existing observation
 
     Args:
         mode (str): NEW or EDIT
         obsId (str): observation Id to be edited
+
+    Retruns:
+        None
 
     """
     # check if current observation must be closed to create a new one
@@ -626,6 +629,8 @@ def new_observation(self, mode=cfg.NEW, obsId=""):
         # observationWindow.obs_time_offset.set_format_hhmmss()
         observationWindow.obs_time_offset.rb_time.setChecked(True)
 
+    observationWindow.obs_time_offset.set_time(0)
+
     if mode == cfg.EDIT:
         observationWindow.setWindowTitle(f'Edit observation "{obsId}"')
         """mem_obs_id = obsId"""
@@ -668,30 +673,6 @@ def new_observation(self, mode=cfg.NEW, obsId=""):
         if self.pj[cfg.OBSERVATIONS][obsId][cfg.TIME_OFFSET] > cfg.DATE_CUTOFF:
             observationWindow.obs_time_offset.rb_datetime.setChecked(True)
 
-        #            dec(time_offset.hour() * 3600 + time_offset.minute() * 60 + time_offset.second() + time_offset.msec() / 1000)
-        #        )
-
-        # date offset
-        # if self.pj[cfg.OBSERVATIONS][obsId][cfg.TIME_OFFSET] >= cfg.SECONDS_PER_DAY:
-        #    observationWindow.cb_date_offset.setChecked(True)
-        #    datetime_offset_iso = (
-        #        dt.datetime.utcfromtimestamp(float(self.pj[cfg.OBSERVATIONS][obsId][cfg.TIME_OFFSET]))
-        #        .replace(tzinfo=pytz.utc)
-        #        .astimezone(dt.datetime.now().astimezone().tzinfo)
-        #        .isoformat(timespec="milliseconds")
-        #    )
-        #    date_offset_iso, time_offset_iso = datetime_offset_iso.split("T")
-        #    observationWindow.de_date_offset.setDateTime(QDateTime.fromString(date_offset_iso, "yyyy-MM-dd"))
-        #    print(f"{time_offset_iso=}")
-        #    time_offset = QDateTime.fromString(time_offset_iso.split("+")[0], "hh:mm:ss.zzz").time()
-        #    print(f"{time_offset=}")
-        #    if time_offset != QDateTime.fromString("00:00:00.000", "hh:mm:ss.zzz").time():
-        #        observationWindow.cb_time_offset.setChecked(True)
-        #        observationWindow.obs_time_offset.set_time(
-        #            dec(time_offset.hour() * 3600 + time_offset.minute() * 60 + time_offset.second() + time_offset.msec() / 1000)
-        #        )
-
-        # else:
         # time offset
         if self.pj[cfg.OBSERVATIONS][obsId][cfg.TIME_OFFSET]:
             observationWindow.cb_time_offset.setChecked(True)
