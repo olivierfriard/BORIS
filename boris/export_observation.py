@@ -624,7 +624,7 @@ def dataset_write(dataset: tablib.Dataset, file_name: str, output_format: str, d
         return False, str(sys.exc_info()[1])
 
 
-def export_aggregated_events(pj: dict, parameters: dict, obsId: str) -> Tuple[tablib.Dataset, int]:
+def export_aggregated_events(pj: dict, parameters: dict, obsId: str, force_number_modifiers: int = 0) -> Tuple[tablib.Dataset, int]:
     """
     export aggregated events of one observation
 
@@ -632,6 +632,7 @@ def export_aggregated_events(pj: dict, parameters: dict, obsId: str) -> Tuple[ta
         pj (dict): BORIS project
         parameters (dict): subjects, behaviors
         obsId (str): observation id
+        force_number_modifiers (int): force the number of modifiers to return
 
     Returns:
         tablib.Dataset:
@@ -735,10 +736,14 @@ def export_aggregated_events(pj: dict, parameters: dict, obsId: str) -> Tuple[ta
     behavioral_category = project_functions.behavior_category(pj[cfg.ETHOGRAM])
 
     cursor.execute("SELECT DISTINCT modifiers FROM aggregated_events")
-    max_modifiers = 0
-    for row in cursor.fetchall():
-        if row["modifiers"]:
-            max_modifiers = max(max_modifiers, row["modifiers"].count("|") + 1)
+
+    if not force_number_modifiers:
+        max_modifiers: int = 0
+        for row in cursor.fetchall():
+            if row["modifiers"]:
+                max_modifiers = max(max_modifiers, row["modifiers"].count("|") + 1)
+    else:
+        max_modifiers = force_number_modifiers
 
     for subject in parameters[cfg.SELECTED_SUBJECTS]:
         # calculate observation duration by subject (by obs)

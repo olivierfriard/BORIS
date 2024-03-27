@@ -469,31 +469,30 @@ def export_aggregated_events(self):
     for obs_id in selected_observations:
         logging.debug(f"Exporting aggregated events for obs Id: {obs_id}")
 
-        data_single_obs, max_modifiers = export_observation.export_aggregated_events(self.pj, parameters, obs_id)
+        data_single_obs, _ = export_observation.export_aggregated_events(
+            self.pj, parameters, obs_id, force_number_modifiers=tot_max_modifiers
+        )
 
         try:
             # order by start time
             index = header.index("Start (s)")
             if cfg.NA not in [x[index] for x in list(data_single_obs)]:
                 data_single_obs_sorted = tablib.Dataset(
-                    # *data.sort(col=index),
                     *sorted(list(data_single_obs), key=lambda x: float(x[index])),
-                    headers=list(fields_type(max_modifiers).keys()),
+                    headers=list(fields_type(tot_max_modifiers).keys()),
                 )
             else:
                 # order by image index
                 index = header.index("Image index start")
                 data_single_obs_sorted = tablib.Dataset(
-                    # *data.sort(col=index),
                     *sorted(list(data_single_obs), key=lambda x: float(x[index])),
-                    headers=list(fields_type(max_modifiers).keys()),
+                    headers=list(fields_type(tot_max_modifiers).keys()),
                 )
         except Exception:
             # if error no order
             data_single_obs_sorted = tablib.Dataset(
-                # data.sort(col=0),  # Observation id
                 *list(data_single_obs),
-                headers=list(fields_type(max_modifiers).keys()),
+                headers=list(fields_type(tot_max_modifiers).keys()),
             )
 
         data_single_obs_sorted.title = obs_id
