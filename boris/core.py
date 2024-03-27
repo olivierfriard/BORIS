@@ -3898,7 +3898,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             else:
                 os.startfile(user_guide_file)
         else:
-            QDesktopServices.openUrl(QUrl("http://www.boris.unito.it/user_guide"))
+            QDesktopServices.openUrl(QUrl("https://www.boris.unito.it/user_guide"))
 
     def click_signal_from_behaviors_coding_map(self, bcm_name, behavior_codes_list: list):
         """

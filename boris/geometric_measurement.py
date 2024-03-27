@@ -546,11 +546,16 @@ def image_clicked(self, n_player: int, event) -> None:
     # media file name
     if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE] == cfg.MEDIA:
         fn = self.dw_player[n_player - 1].player.playlist[self.dw_player[n_player - 1].player.playlist_pos]["filename"]
+
+        print(f"{fn=}")
+
         # check if media file path contained in media list
         if [True for x in self.pj[cfg.OBSERVATIONS][self.observationId]["file"].values() if fn in x]:
             media_file_name = self.dw_player[n_player - 1].player.playlist[self.dw_player[n_player - 1].player.playlist_pos]["filename"]
         else:
             media_file_name = str(pl.Path(fn).relative_to(pl.Path(self.projectFileName).parent))
+
+            print(f"{media_file_name=}")
 
     if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE] == cfg.IMAGES:
         # check if pictures dir path is relative
