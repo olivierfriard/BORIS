@@ -4049,10 +4049,18 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         enable or disable video if any and audio if any
         """
         # if video
-        if self.dw_player[n_player].player.video_bitrate is not None:
+        # print(f"{n_player=} {enable=}")
+        # print(f"{self.dw_player[n_player].player.video_format=}")
+        # print(f"{self.dw_player[n_player].player.audio_bitrate=}")
+
+        # self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO][cfg.HAS_VIDEO][]
+        # if self.dw_player[n_player].player.playlist_pos is not None:
+        #    print(self.dw_player[n_player].player.playlist[self.dw_player[n_player].player.playlist_pos]["filename"])
+
+        if self.dw_player[n_player].player.video_format:
             self.dw_player[n_player].stack.setCurrentIndex(1 if not enable else 0)
         # if audio
-        if self.dw_player[n_player].player.audio_bitrate is not None:
+        if self.dw_player[n_player].player.audio_bitrate:
             self.dw_player[n_player].player.mute = True if not enable else False
 
     def sync_time(self, n_player: int, new_time: float) -> None:
@@ -4070,22 +4078,16 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO][cfg.OFFSET][str(n_player + 1)] > 0:
                     if new_time < self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO][cfg.OFFSET][str(n_player + 1)]:
                         # hide video and mute audio if time < offset
-                        # self.dw_player[n_player].stack.setCurrentIndex(1)
-                        # self.dw_player[n_player].player.mute = True
-                        self.media_player_enabled(n_player, False)
+                        self.media_player_enabled(n_player, enable=False)
                     else:
                         if new_time - dec(
                             self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO][cfg.OFFSET][str(n_player + 1)]
                         ) > sum(self.dw_player[n_player].media_durations):
                             # hide video and mute audio if required time > video time + offset
-                            # self.dw_player[n_player].stack.setCurrentIndex(1)
-                            # self.dw_player[n_player].player.mute = True
-                            self.media_player_enabled(n_player, False)
+                            self.media_player_enabled(n_player, enable=False)
                         else:
                             # show video and enable audio
-                            # self.dw_player[n_player].stack.setCurrentIndex(0)
-                            # self.dw_player[n_player].player.mute = False
-                            self.media_player_enabled(n_player, True)
+                            self.media_player_enabled(n_player, enable=True)
                             self.seek_mediaplayer(
                                 new_time
                                 - dec(self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO][cfg.OFFSET][str(n_player + 1)]),
@@ -4097,13 +4099,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                         self.dw_player[n_player].media_durations
                     ):
                         # hide video and mute audio if required time > video time + offset
-                        # self.dw_player[n_player].stack.setCurrentIndex(1)
-                        # self.dw_player[n_player].player.mute = True
-                        self.media_player_enabled(n_player, False)
+                        self.media_player_enabled(n_player, enable=False)
                     else:
-                        # self.dw_player[n_player].stack.setCurrentIndex(0)
-                        # self.dw_player[n_player].player.mute = False
-                        self.media_player_enabled(n_player, True)
+                        self.media_player_enabled(n_player, enable=True)
                         self.seek_mediaplayer(
                             new_time - dec(self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO][cfg.OFFSET][str(n_player + 1)]),
                             player=n_player,
