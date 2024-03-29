@@ -134,6 +134,7 @@ class DW_player(QDockWidget):
 
         # mute button
         self.mute_button = QToolButton()
+        self.mute_button.setFocusPolicy(Qt.NoFocus)
         self.mute_button.setAutoRaise(True)
         self.mute_action = QAction()
         self.mute_action.setIcon(QIcon(":/volume_xmark"))

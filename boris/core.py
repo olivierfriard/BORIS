@@ -1567,7 +1567,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         """
         if self.playerType == cfg.MEDIA:
             self.dw_player[nplayer].player.mute = not self.dw_player[nplayer].player.mute
-            logging.debug(f"{nplayer} set mute {"ON" if self.dw_player[nplayer].player.mute else "OFF"}")
+            logging.debug(f"{nplayer} set mute {'ON' if self.dw_player[nplayer].player.mute else 'OFF'}")
 
     def automatic_backup(self):
         """
