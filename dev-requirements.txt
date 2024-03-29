@@ -1,4 +1,0 @@
-black
-ruff
-pytest
-pytest-cov
