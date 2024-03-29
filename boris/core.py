@@ -1558,6 +1558,17 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             logging.debug(f"set volume to {new_volume}")
             self.dw_player[nplayer].player.volume = new_volume
 
+    def set_mute(self, nplayer):
+        """
+        set mute on/off for player nplayer
+
+        Args:
+            nplayer (str): player to mute
+        """
+        if self.playerType == cfg.MEDIA:
+            self.dw_player[nplayer].player.mute = not self.dw_player[nplayer].player.mute
+            logging.debug(f"{nplayer} set mute {"ON" if self.dw_player[nplayer].player.mute else "OFF"}")
+
     def automatic_backup(self):
         """
         save project every x minutes if observation is running

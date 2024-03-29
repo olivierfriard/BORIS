@@ -89,6 +89,13 @@
 <file alias="preferences">icons/glyphicons_136_cogwheel.png</file>
 <file alias="preferences_fa_light">icons/fontawesome_free/gears.svg</file>
 
+<file alias="volume_off">icons/fontawesome_free/volume-off.svg</file>
+<file alias="volume_xmark">icons/fontawesome_free/volume-xmark.svg</file>
+
+<file alias="preferences_fa_light">icons/fontawesome_free/gears.svg</file>
+
+
+
 <file alias="beep">sounds/beep.wav</file>
 <file alias="key_sound">sounds/key_sound.wav</file>
 </qresource>

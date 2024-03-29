@@ -20,14 +20,23 @@ This file is part of BORIS.
 
 """
 
-# add misc directory to search path for mpv-1.dll
-import os
 import sys
 import logging
 import functools
-from PyQt5.QtWidgets import QLabel, QDockWidget, QWidget, QHBoxLayout, QSlider, QSizePolicy, QStackedWidget
+from PyQt5.QtWidgets import (
+    QLabel,
+    QDockWidget,
+    QWidget,
+    QHBoxLayout,
+    QVBoxLayout,
+    QSlider,
+    QSizePolicy,
+    QStackedWidget,
+    QToolButton,
+    QAction,
+)
 from PyQt5.QtCore import pyqtSignal, QEvent, Qt
-
+from PyQt5.QtGui import QIcon
 
 try:
     from . import mpv2 as mpv
@@ -80,8 +89,13 @@ def mpv_logger(player_id, loglevel, component, message):
 
 
 class DW_player(QDockWidget):
+    """
+    Define the player class
+    """
+
     key_pressed_signal = pyqtSignal(QEvent)
     volume_slider_moved_signal = pyqtSignal(int, int)
+    mute_action_triggered_signal = pyqtSignal(int)
     view_signal = pyqtSignal(int, str, int)
     resize_signal = pyqtSignal(int)
 
@@ -106,13 +120,29 @@ class DW_player(QDockWidget):
         self.player.screenshot_format = "png"
         self.hlayout.addWidget(self.videoframe)
 
+        # layout volume slider and mute button
+        self.vlayout = QVBoxLayout()
+
+        # volume slider
         self.volume_slider = QSlider(Qt.Vertical, self)
         self.volume_slider.setFocusPolicy(Qt.NoFocus)
         self.volume_slider.setMaximum(100)
         self.volume_slider.setValue(50)
         self.volume_slider.sliderMoved.connect(self.volume_slider_moved)
 
-        self.hlayout.addWidget(self.volume_slider)
+        self.vlayout.addWidget(self.volume_slider)
+
+        # mute button
+        self.mute_button = QToolButton()
+        self.mute_button.setAutoRaise(True)
+        self.mute_action = QAction()
+        self.mute_action.setIcon(QIcon(":/volume_xmark"))
+        self.mute_action.triggered.connect(self.mute_action_triggered)
+        self.mute_button.setDefaultAction(self.mute_action)
+
+        self.vlayout.addWidget(self.mute_button)
+
+        self.hlayout.addLayout(self.vlayout)
 
         self.stack1.setLayout(self.hlayout)
 
@@ -140,6 +170,16 @@ class DW_player(QDockWidget):
         emit signal when volume slider moved
         """
         self.volume_slider_moved_signal.emit(self.id_, self.volume_slider.value())
+
+    def mute_action_triggered(self):
+        """
+        emit signal when mute action is triggered
+        """
+        if self.player.mute:
+            self.mute_action.setIcon(QIcon(":/volume_xmark"))
+        else:
+            self.mute_action.setIcon(QIcon(":/volume_off"))
+        self.mute_action_triggered_signal.emit(self.id_)
 
     def keyPressEvent(self, event):
         """

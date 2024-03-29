@@ -892,17 +892,17 @@ def new_observation(self, mode: str = cfg.NEW, obsId: str = "") -> None:
         for r in range(observationWindow.twIndepVariables.rowCount()):
             # set dictionary as label (col 0) => value (col 2)
             if observationWindow.twIndepVariables.item(r, 1).text() == cfg.SET_OF_VALUES:
-                self.pj[cfg.OBSERVATIONS][new_obs_id][cfg.INDEPENDENT_VARIABLES][
-                    observationWindow.twIndepVariables.item(r, 0).text()
-                ] = observationWindow.twIndepVariables.cellWidget(r, 2).currentText()
+                self.pj[cfg.OBSERVATIONS][new_obs_id][cfg.INDEPENDENT_VARIABLES][observationWindow.twIndepVariables.item(r, 0).text()] = (
+                    observationWindow.twIndepVariables.cellWidget(r, 2).currentText()
+                )
             elif observationWindow.twIndepVariables.item(r, 1).text() == cfg.TIMESTAMP:
                 self.pj[cfg.OBSERVATIONS][new_obs_id][cfg.INDEPENDENT_VARIABLES][observationWindow.twIndepVariables.item(r, 0).text()] = (
                     observationWindow.twIndepVariables.cellWidget(r, 2).dateTime().toString(Qt.ISODate)
                 )
             else:
-                self.pj[cfg.OBSERVATIONS][new_obs_id][cfg.INDEPENDENT_VARIABLES][
-                    observationWindow.twIndepVariables.item(r, 0).text()
-                ] = observationWindow.twIndepVariables.item(r, 2).text()
+                self.pj[cfg.OBSERVATIONS][new_obs_id][cfg.INDEPENDENT_VARIABLES][observationWindow.twIndepVariables.item(r, 0).text()] = (
+                    observationWindow.twIndepVariables.item(r, 2).text()
+                )
 
         # observation time offset
         if observationWindow.cb_time_offset.isChecked():
@@ -926,9 +926,9 @@ def new_observation(self, mode: str = cfg.NEW, obsId: str = "") -> None:
         # visualize waveform
         self.pj[cfg.OBSERVATIONS][new_obs_id][cfg.VISUALIZE_WAVEFORM] = observationWindow.cb_visualize_waveform.isChecked()
         # use Creation date metadata tag as offset
-        self.pj[cfg.OBSERVATIONS][new_obs_id][
-            cfg.MEDIA_CREATION_DATE_AS_OFFSET
-        ] = observationWindow.cb_media_creation_date_as_offset.isChecked()
+        self.pj[cfg.OBSERVATIONS][new_obs_id][cfg.MEDIA_CREATION_DATE_AS_OFFSET] = (
+            observationWindow.cb_media_creation_date_as_offset.isChecked()
+        )
 
         # media scan sampling
         self.pj[cfg.OBSERVATIONS][new_obs_id][cfg.MEDIA_SCAN_SAMPLING_DURATION] = observationWindow.sb_media_scan_sampling.value()
@@ -945,9 +945,9 @@ def new_observation(self, mode: str = cfg.NEW, obsId: str = "") -> None:
                 self.pj[cfg.OBSERVATIONS][new_obs_id][cfg.PLOT_DATA][str(row)] = {}
                 for idx2 in cfg.DATA_PLOT_FIELDS:
                     if idx2 in [cfg.PLOT_DATA_PLOTCOLOR_IDX, cfg.PLOT_DATA_SUBSTRACT1STVALUE_IDX]:
-                        self.pj[cfg.OBSERVATIONS][new_obs_id][cfg.PLOT_DATA][str(row)][
-                            cfg.DATA_PLOT_FIELDS[idx2]
-                        ] = observationWindow.tw_data_files.cellWidget(row, idx2).currentText()
+                        self.pj[cfg.OBSERVATIONS][new_obs_id][cfg.PLOT_DATA][str(row)][cfg.DATA_PLOT_FIELDS[idx2]] = (
+                            observationWindow.tw_data_files.cellWidget(row, idx2).currentText()
+                        )
 
                     elif idx2 == cfg.PLOT_DATA_CONVERTERS_IDX:
                         if observationWindow.tw_data_files.item(row, idx2).text():
@@ -958,14 +958,14 @@ def new_observation(self, mode: str = cfg.NEW, obsId: str = "") -> None:
                             self.pj[cfg.OBSERVATIONS][new_obs_id][cfg.PLOT_DATA][str(row)][cfg.DATA_PLOT_FIELDS[idx2]] = {}
 
                     else:
-                        self.pj[cfg.OBSERVATIONS][new_obs_id][cfg.PLOT_DATA][str(row)][
-                            cfg.DATA_PLOT_FIELDS[idx2]
-                        ] = observationWindow.tw_data_files.item(row, idx2).text()
+                        self.pj[cfg.OBSERVATIONS][new_obs_id][cfg.PLOT_DATA][str(row)][cfg.DATA_PLOT_FIELDS[idx2]] = (
+                            observationWindow.tw_data_files.item(row, idx2).text()
+                        )
 
         # Close current behaviors between video
-        self.pj[cfg.OBSERVATIONS][new_obs_id][
-            cfg.CLOSE_BEHAVIORS_BETWEEN_VIDEOS
-        ] = observationWindow.cbCloseCurrentBehaviorsBetweenVideo.isChecked()
+        self.pj[cfg.OBSERVATIONS][new_obs_id][cfg.CLOSE_BEHAVIORS_BETWEEN_VIDEOS] = (
+            observationWindow.cbCloseCurrentBehaviorsBetweenVideo.isChecked()
+        )
 
         if self.pj[cfg.OBSERVATIONS][new_obs_id][cfg.TYPE] == cfg.LIVE:
             self.pj[cfg.OBSERVATIONS][new_obs_id][cfg.SCAN_SAMPLING_TIME] = observationWindow.sbScanSampling.value()
@@ -1750,6 +1750,9 @@ def initialize_new_media_observation(self) -> bool:
 
         # for receiving event from volume slider
         self.dw_player[i].volume_slider_moved_signal.connect(self.set_volume)
+
+        # for receiving event from mute toolbutton
+        self.dw_player[i].mute_action_triggered_signal.connect(self.set_mute)
 
         # for receiving resize event from dock widget
         self.dw_player[i].resize_signal.connect(self.resize_dw)
