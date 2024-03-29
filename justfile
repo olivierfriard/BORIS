@@ -1,6 +1,12 @@
 
 
 # create a wheel with last version
+build:
+        dtf pyproject.toml   # dtf (dynamic text file required on path)
+        git commit -am "new wheel"; git push
+        rye build --clean
+
+
 create_wheel:
 	dtf pyproject.toml   # dtf (dynamic text file required on path)
 	git commit -am "new wheel"; git push; rm -rf *.egg-info build dist
