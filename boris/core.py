@@ -1361,17 +1361,17 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         """
 
         try:
-            versionURL = "http://www.boris.unito.it/static/ver4.dat"
+            versionURL = "https://www.boris.unito.it/static/ver4.dat"
             lastVersion = urllib.request.urlopen(versionURL).read().strip().decode("utf-8")
             if util.versiontuple(lastVersion) > util.versiontuple(__version__):
                 msg = (
                     f"A new version is available: v. <b>{lastVersion}</b><br>"
-                    'Go to <a href="http://www.boris.unito.it">'
-                    "http://www.boris.unito.it</a> to install it."
+                    'Go to <a href="https://www.boris.unito.it">'
+                    "https://www.boris.unito.it</a> to install it."
                 )
             else:
                 msg = f"The version you are using is the last one: <b>{__version__}</b>"
-            newsURL = "http://www.boris.unito.it/static/news.dat"
+            newsURL = "https://www.boris.unito.it/static/news.dat"
             news = urllib.request.urlopen(newsURL).read().strip().decode("utf-8")
             config_file.save(self, lastCheckForNewVersion=int(time.mktime(time.localtime())))
             QMessageBox.information(self, cfg.programName, msg)

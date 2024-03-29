@@ -251,7 +251,7 @@ def load_converters_from_file_repo(self, mode: str):
                     return
 
     if mode == "repo":
-        converters_repo_URL = "http://www.boris.unito.it/archive/converters.json"
+        converters_repo_URL = "https://www.boris.unito.it/static/converters.json"
         try:
             converters_from_repo = urllib.request.urlopen(converters_repo_URL).read().strip().decode("utf-8")
         except Exception:
