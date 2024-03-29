@@ -91,15 +91,15 @@ def actionAbout_activated(self):
             "Department of Life Sciences and Systems Biology<br>"
             "University of Torino - Italy<br>"
             "<br>"
-            'BORIS is released under the <a href="http://www.gnu.org/copyleft/gpl.html">GNU General Public License</a><br>'
-            'See <a href="http://www.boris.unito.it">www.boris.unito.it</a> for more details.<br>'
+            'BORIS is released under the <a href="https://www.gnu.org/copyleft/gpl.html">GNU General Public License</a><br>'
+            'See <a href="https://www.boris.unito.it">www.boris.unito.it</a> for more details.<br>'
             "<br>"
             "The authors would like to acknowledge Valentina Matteucci for her precious help."
             "<hr>"
             "How to cite BORIS:<br>"
             "Friard, O. and Gamba, M. (2016), BORIS: a free, versatile open-source event-logging software for video/audio "
             "coding and live observations. Methods Ecol Evol, 7: 1325–1330.<br>"
-            '<a href="http://onlinelibrary.wiley.com/doi/10.1111/2041-210X.12584/abstract">DOI:10.1111/2041-210X.12584</a>'
+            '<a href="https://besjournals.onlinelibrary.wiley.com/doi/full/10.1111/2041-210X.12584">DOI:10.1111/2041-210X.12584</a>'
         )
     )
     n = "\n"

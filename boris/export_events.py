@@ -45,7 +45,7 @@ def export_events_as_behavioral_sequences(self, separated_subjects=False, timed=
     """
     export events from selected observations by subject as behavioral sequences (plain text file)
     behaviors are separated by character specified in self.behav_seq_separator (usually pipe |)
-    for use with Behatrix (see http://www.boris.unito.it/pages/behatrix)
+    for use with Behatrix (see https://www.boris.unito.it/pages/behatrix)
 
     Args:
         separated_subjects (bool):
