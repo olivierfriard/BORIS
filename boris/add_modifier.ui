@@ -175,6 +175,13 @@
           </widget>
          </item>
          <item>
+          <widget class="QCheckBox" name="cb_ask_at_stop">
+           <property name="text">
+            <string>Ask for modifier(s) when behavior stops</string>
+           </property>
+          </widget>
+         </item>
+         <item>
           <widget class="QLabel" name="lbValues">
            <property name="text">
             <string>Values</string>
@@ -200,14 +207,14 @@
              </property>
             </widget>
            </item>
+           <item>
+            <widget class="QPushButton" name="pbRemoveModifier">
+             <property name="text">
+              <string>Remove modifier</string>
+             </property>
+            </widget>
+           </item>
           </layout>
-         </item>
-         <item>
-          <widget class="QPushButton" name="pbRemoveModifier">
-           <property name="text">
-            <string>Remove modifier</string>
-           </property>
-          </widget>
          </item>
          <item>
           <widget class="QPushButton" name="pb_sort_modifiers">

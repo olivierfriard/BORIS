@@ -36,7 +36,7 @@ class addModifierDialog(QDialog, Ui_Dialog):
     tabMem = -1
     itemPositionMem = -1
 
-    def __init__(self, modifiers_str, subjects=[], parent=None):
+    def __init__(self, modifiers_str: str, subjects: list = [], ask_at_stop_enabled: bool = False, parent=None):
         super().__init__()
         self.setupUi(self)
 
@@ -44,10 +44,12 @@ class addModifierDialog(QDialog, Ui_Dialog):
         if not self.subjects:
             self.pb_add_subjects.setEnabled(False)
 
+        self.ask_at_stop_enabled = ask_at_stop_enabled
+
         self.pbAddModifier.clicked.connect(self.addModifier)
         self.pbAddModifier.setIcon(QIcon(":/frame_forward"))
-        self.pbAddSet.clicked.connect(self.addSet)
-        self.pbRemoveSet.clicked.connect(self.removeSet)
+        self.pbAddSet.clicked.connect(self.add_set_of_modifiers)
+        self.pbRemoveSet.clicked.connect(self.remove_set_of_modifiers)
         self.pbModifyModifier.clicked.connect(self.modifyModifier)
         self.pbModifyModifier.setIcon(QIcon(":/frame_backward"))
 
@@ -68,14 +70,18 @@ class addModifierDialog(QDialog, Ui_Dialog):
 
         self.cbType.currentIndexChanged.connect(self.type_changed)
 
-        dummy_dict = json.loads(modifiers_str) if modifiers_str else {}
-        modif_values = []
+        self.cb_ask_at_stop.clicked.connect(self.ask_at_stop_changed)
+
+        dummy_dict: dict = json.loads(modifiers_str) if modifiers_str else {}
+        modif_values: list = []
         for idx in sorted_keys(dummy_dict):
             modif_values.append(dummy_dict[idx])
 
-        self.modifiers_sets_dict = {}
+        self.modifiers_sets_dict: dict = {}
         for modif in modif_values:
             self.modifiers_sets_dict[str(len(self.modifiers_sets_dict))] = dict(modif)
+
+        print(f"{self.modifiers_sets_dict=}")
 
         self.tabWidgetModifiersSets.currentChanged.connect(self.tabWidgetModifiersSets_changed)
 
@@ -102,6 +108,7 @@ class addModifierDialog(QDialog, Ui_Dialog):
                 self.pb_add_subjects,
                 self.pb_load_file,
                 self.pb_sort_modifiers,
+                self.cb_ask_at_stop,
             ):
                 w.setVisible(False)
             for w in (self.leModifier, self.leCode, self.pbAddModifier, self.pbModifyModifier):
@@ -247,6 +254,12 @@ class addModifierDialog(QDialog, Ui_Dialog):
         else:
             self.lb_name.setText("Set name")
 
+    def ask_at_stop_changed(self):
+        """
+        value changed
+        """
+        self.modifiers_sets_dict[str(self.tabWidgetModifiersSets.currentIndex())]["ask at stop"] = self.cb_ask_at_stop.isChecked()
+
     def moveSetLeft(self):
         """
         move selected modifiers set left
@@ -304,7 +317,7 @@ class addModifierDialog(QDialog, Ui_Dialog):
                 self.lwModifiers.item(x).text() for x in range(self.lwModifiers.count())
             ]
 
-    def addSet(self):
+    def add_set_of_modifiers(self):
         """
         Add a set of modifiers
         """
@@ -315,6 +328,7 @@ class addModifierDialog(QDialog, Ui_Dialog):
                 "name": "",
                 "description": "",
                 "type": cfg.SINGLE_SELECTION,
+                "ask at stop": False,
                 "values": [],
             }
             self.tabWidgetModifiersSets.addTab(QWidget(), f"Set #{len(self.modifiers_sets_dict)}")
@@ -342,6 +356,8 @@ class addModifierDialog(QDialog, Ui_Dialog):
                 self.pb_sort_modifiers,
             ):
                 w.setVisible(True)
+            self.cb_ask_at_stop.setVisible(self.ask_at_stop_enabled)
+
             for w in (self.leModifier, self.leCode, self.pbAddModifier, self.pbModifyModifier):
                 w.setEnabled(True)
             return
@@ -351,6 +367,7 @@ class addModifierDialog(QDialog, Ui_Dialog):
                 "name": "",
                 "description": "",
                 "type": cfg.SINGLE_SELECTION,
+                "ask at stop": False,
                 "values": [],
             }
             self.tabWidgetModifiersSets.addTab(QWidget(), f"Set #{len(self.modifiers_sets_dict)}")
@@ -364,7 +381,7 @@ class addModifierDialog(QDialog, Ui_Dialog):
                 "It is not possible to add a modifiers' set while the current modifiers' set is empty.",
             )
 
-    def removeSet(self):
+    def remove_set_of_modifiers(self):
         """
         remove set of modifiers
         """
@@ -403,6 +420,7 @@ class addModifierDialog(QDialog, Ui_Dialog):
                         self.pbRemoveSet,
                         self.pbMoveSetLeft,
                         self.pbMoveSetRight,
+                        self.cb_ask_at_stop,
                     ):
                         w.setVisible(False)
                     for w in [self.leModifier, self.leCode, self.pbAddModifier, self.pbModifyModifier]:
@@ -500,6 +518,7 @@ class addModifierDialog(QDialog, Ui_Dialog):
                     "name": "",
                     "description": "",
                     "type": cfg.SINGLE_SELECTION,
+                    "ask at stop": False,
                     "values": [],
                 }
 
@@ -530,6 +549,7 @@ class addModifierDialog(QDialog, Ui_Dialog):
                         "name": "",
                         "description": "",
                         "type": cfg.SINGLE_SELECTION,
+                        "ask at stop": False,
                         "values": [],
                     }
 
@@ -582,20 +602,27 @@ class addModifierDialog(QDialog, Ui_Dialog):
             self.lwModifiers.clear()
             self.leCode.clear()
             self.leModifier.clear()
+            if self.ask_at_stop_enabled:
+                self.cb_ask_at_stop.setChecked(False)
 
             self.tabMem = tabIndex
 
             if tabIndex != -1:
+                print(f"{self.modifiers_sets_dict=}")
+
                 self.le_name.setText(self.modifiers_sets_dict[str(tabIndex)]["name"])
                 self.le_description.setText(self.modifiers_sets_dict[str(tabIndex)].get("description", ""))
                 self.cbType.setCurrentIndex(self.modifiers_sets_dict[str(tabIndex)]["type"])
+                if self.ask_at_stop_enabled:
+                    self.cb_ask_at_stop.setChecked(self.modifiers_sets_dict[str(tabIndex)].get("ask at stop", False))
+
                 self.lwModifiers.addItems(self.modifiers_sets_dict[str(tabIndex)]["values"])
 
-    def getModifiers(self) -> str:
+    def get_modifiers(self) -> str:
         """
         returns modifiers as string
         """
-        keys_to_delete = []
+        keys_to_delete: list = []
         for idx in self.modifiers_sets_dict:
             if (
                 self.modifiers_sets_dict[idx]["type"] in (cfg.SINGLE_SELECTION, cfg.MULTI_SELECTION)
