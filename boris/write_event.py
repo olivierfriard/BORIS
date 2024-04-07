@@ -181,75 +181,6 @@ def write_event(self, event: dict, mem_time: dec) -> int:
                 )
                 return 1
 
-    if "from map" not in event:  # modifiers only for behaviors without coding map
-        # check if event has modifiers
-        modifier_str = ""
-
-        if event[cfg.MODIFIERS]:
-            selected_modifiers, modifiers_external_data = {}, {}
-            # check if modifiers are from external data
-            for idx in event[cfg.MODIFIERS]:
-                if event[cfg.MODIFIERS][idx]["type"] == cfg.EXTERNAL_DATA_MODIFIER:
-                    if "row" not in event:  # no edit
-                        for idx2 in self.plot_data:
-                            if self.plot_data[idx2].y_label.upper() == event[cfg.MODIFIERS][idx]["name"].upper():
-                                modifiers_external_data[idx] = dict(event[cfg.MODIFIERS][idx])
-                                modifiers_external_data[idx]["selected"] = self.plot_data[idx2].lb_value.text()
-                    else:  # edit
-                        original_modifiers_list = event.get("original_modifiers", "").split("|")
-                        modifiers_external_data[idx] = dict(event[cfg.MODIFIERS][idx])
-                        modifiers_external_data[idx]["selected"] = original_modifiers_list[int(idx)]
-
-            # check if modifiers are in single, multiple or numeric
-            if [x for x in event[cfg.MODIFIERS] if event[cfg.MODIFIERS][x]["type"] != cfg.EXTERNAL_DATA_MODIFIER]:
-                # pause media
-                if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE] in [cfg.MEDIA]:
-                    if self.playerType == cfg.MEDIA:
-                        if self.dw_player[0].player.pause:
-                            memState = "paused"
-                        elif self.dw_player[0].player.time_pos is not None:
-                            memState = "playing"
-                        else:
-                            memState = "stopped"
-                        if memState == "playing":
-                            self.pause_video()
-
-                # check if editing (original_modifiers key)
-                currentModifiers = event.get("original_modifiers", "")
-
-                modifiers_selector = select_modifiers.ModifiersList(event["code"], eval(str(event[cfg.MODIFIERS])), currentModifiers)
-
-                r = modifiers_selector.exec_()
-                if r:
-                    selected_modifiers = modifiers_selector.get_modifiers()
-
-                # restart media
-                if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE] == cfg.MEDIA:
-                    if self.playerType == cfg.MEDIA:
-                        if memState == "playing":
-                            self.play_video()
-                if not r:  # cancel button pressed
-                    return
-
-            all_modifiers = {**selected_modifiers, **modifiers_external_data}
-
-            modifier_str = ""
-            for idx in util.sorted_keys(all_modifiers):
-                if modifier_str:
-                    modifier_str += "|"
-                if all_modifiers[idx]["type"] in [cfg.SINGLE_SELECTION, cfg.MULTI_SELECTION]:
-                    modifier_str += ",".join(all_modifiers[idx].get("selected", ""))
-                if all_modifiers[idx]["type"] in [cfg.NUMERIC_MODIFIER, cfg.EXTERNAL_DATA_MODIFIER]:
-                    modifier_str += all_modifiers[idx].get("selected", "NA")
-
-    else:
-        modifier_str = event["from map"]
-
-    modifier_str = re.sub(r" \(.*\)", "", modifier_str)
-
-    # update current state
-    # TODO: verify event["subject"] / self.currentSubject
-
     # extract State events
     state_behaviors_codes = util.state_behavior_codes(self.pj[cfg.ETHOGRAM])
 
@@ -261,13 +192,106 @@ def write_event(self, event: dict, mem_time: dec) -> int:
     if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE] == cfg.IMAGES:
         position = dec(image_idx)  # decimal to pass to util.get_current_states_modifiers_by_subject
 
-    current_states = util.get_current_states_modifiers_by_subject(
+    current_states: dict = util.get_current_states_modifiers_by_subject(
         state_behaviors_codes,
         self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS],
         dict(self.pj[cfg.SUBJECTS], **{"": {"name": ""}}),
         position,
         include_modifiers=False,
     )
+
+    # check if ask at stop enabled
+    flag_ask_at_stop = False
+    if event["type"] == cfg.STATE_EVENT:
+        for idx in event[cfg.MODIFIERS]:
+            if event[cfg.MODIFIERS][idx].get("ask at stop", False):
+                flag_ask_at_stop = True
+                break
+
+    flag_ask_modifier = False
+    if flag_ask_at_stop:
+        # TODO: check if new event is a STOP one
+        if event["code"] in current_states[self.currentSubject]:
+            flag_ask_modifier = True
+    else:
+        flag_ask_modifier = True
+
+    if flag_ask_modifier:
+        if "from map" not in event:  # modifiers only for behaviors without coding map
+            # check if event has modifiers
+            modifier_str: str = ""
+
+            if event[cfg.MODIFIERS]:
+                selected_modifiers: dict = {}
+                modifiers_external_data: dict = {}
+                # check if modifiers are from external data
+                for idx in event[cfg.MODIFIERS]:
+                    if event[cfg.MODIFIERS][idx]["type"] == cfg.EXTERNAL_DATA_MODIFIER:
+                        if "row" not in event:  # no edit
+                            for idx2 in self.plot_data:
+                                if self.plot_data[idx2].y_label.upper() == event[cfg.MODIFIERS][idx]["name"].upper():
+                                    modifiers_external_data[idx] = dict(event[cfg.MODIFIERS][idx])
+                                    modifiers_external_data[idx]["selected"] = self.plot_data[idx2].lb_value.text()
+                        else:  # edit
+                            original_modifiers_list = event.get("original_modifiers", "").split("|")
+                            modifiers_external_data[idx] = dict(event[cfg.MODIFIERS][idx])
+                            modifiers_external_data[idx]["selected"] = original_modifiers_list[int(idx)]
+
+                # check if modifiers are in single, multiple or numeric
+                if [x for x in event[cfg.MODIFIERS] if event[cfg.MODIFIERS][x]["type"] != cfg.EXTERNAL_DATA_MODIFIER]:
+                    # pause media
+                    if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE] in (cfg.MEDIA):
+                        if self.playerType == cfg.MEDIA:
+                            if self.dw_player[0].player.pause:
+                                memState = "paused"
+                            elif self.dw_player[0].player.time_pos is not None:
+                                memState = "playing"
+                            else:
+                                memState = "stopped"
+                            if memState == "playing":
+                                self.pause_video()
+
+                    # check if editing (original_modifiers key)
+                    currentModifiers = event.get("original_modifiers", "")
+
+                    print(f"{event=}")
+
+                    modifiers_selector = select_modifiers.ModifiersList(event["code"], eval(str(event[cfg.MODIFIERS])), currentModifiers)
+
+                    r = modifiers_selector.exec_()
+                    if r:
+                        selected_modifiers = modifiers_selector.get_modifiers()
+
+                    # restart media
+                    if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE] == cfg.MEDIA:
+                        if self.playerType == cfg.MEDIA:
+                            if memState == "playing":
+                                self.play_video()
+                    if not r:  # cancel button pressed
+                        return
+
+                all_modifiers = {**selected_modifiers, **modifiers_external_data}
+
+                modifier_str: str = ""
+                for idx in util.sorted_keys(all_modifiers):
+                    if modifier_str:
+                        modifier_str += "|"
+                    if all_modifiers[idx]["type"] in [cfg.SINGLE_SELECTION, cfg.MULTI_SELECTION]:
+                        modifier_str += ",".join(all_modifiers[idx].get("selected", ""))
+                    if all_modifiers[idx]["type"] in [cfg.NUMERIC_MODIFIER, cfg.EXTERNAL_DATA_MODIFIER]:
+                        modifier_str += all_modifiers[idx].get("selected", "NA")
+
+        else:
+            modifier_str = event["from map"]
+
+        modifier_str = re.sub(r" \(.*\)", "", modifier_str)
+    else:  # do not ask modifier
+        modifier_str = ""
+
+    # update current state
+    # TODO: verify event["subject"] / self.currentSubject
+
+    # print(f"{current_states=}")
 
     # logging.debug(f"self.currentSubject {self.currentSubject}")
     # logging.debug(f"current_states {current_states}")
