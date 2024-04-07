@@ -6,97 +6,60 @@
 <file alias="dbios_unito">icons/dbios_unito.png</file>
 <file alias="splash">icons/splash.jpg</file>
 
-<!--<file alias="observations_list">icons/glyphicons_157_show_thumbnails_with_lines.png</file>-->
 
 <file alias="observations_list">icons/fontawesome_free/list.svg</file>
-<!--
-<file alias="observations_list_fa_dark">icons/fontawesome_free/list_dark.svg</file>
-<file alias="observations_list_fa_disabled">icons/fontawesome_free/list_disabled.svg</file>
--->
 
-<!--<file alias="play">icons/glyphicons_173_play.png</file>-->
 <file alias="play">icons/fontawesome_free/play.svg</file>
 
-<!--<file alias="pause">icons/glyphicons_174_pause.png</file>-->
 <file alias="pause">icons/fontawesome_free/pause.svg</file>
 
-<!--<file alias="reset">icons/glyphicons_170_step_backward.png</file>-->
 <file alias="reset">icons/fontawesome_free/backward-step.svg</file>
 
-<!--<file alias="jump_backward">icons/glyphicons_172_rewind.png</file>-->
 <file alias="jump_backward">icons/fontawesome_free/backward.svg</file>
 
-<!--<file alias="jump_forward">icons/glyphicons_176_forward.png</file>-->
 <file alias="jump_forward">icons/fontawesome_free/forward.svg</file>
 
-<!--<file alias="faster">icons/glyphicons_190_circle_plus.png</file>-->
 <file alias="faster">icons/fontawesome_free/circle-plus.svg</file>
 
-<!--<file alias="slower">icons/glyphicons_191_circle_minus.png</file>-->
 <file alias="slower">icons/fontawesome_free/circle-minus.svg</file>
 
-<!--<file alias="previous">icons/glyphicons_171_fast_backward.png</file>-->
 <file alias="previous">icons/fontawesome_free/backward-fast.svg</file>
 
-<!--<file alias="next">icons/glyphicons_177_fast_forward.png</file>-->
 <file alias="next">icons/fontawesome_free/forward-fast.svg</file>
 
-<!--<file alias="normal_speed">icons/glyphicons_192_circle_egal.png</file>-->
 <file alias="normal_speed">icons/fontawesome_free/circle-pause.svg</file>
 
-<!--<file alias="snapshot">icons/glyphicons_011_camera.png</file>-->
 <file alias="snapshot">icons/fontawesome_free/camera.svg</file>
 
-<!--<file alias="frame_mode">icons/glyphicons_008_film.png</file>-->
-
-
-<!--<file alias="frame_backward">icons/glyphicons_210_left_arrow.png</file>-->
 <file alias="frame_backward">icons/fontawesome_free/arrow-left.svg</file>
-<file alias="frame_backward_fa_dark">icons/fontawesome_free/arrow-left_dark.svg</file>
-
-<!--<file alias="frame_forward">icons/glyphicons_211_right_arrow.png</file>-->
 <file alias="frame_forward">icons/fontawesome_free/arrow-right.svg</file>
-<file alias="frame_forward_fa_dark">icons/fontawesome_free/arrow-right_dark.svg</file>
 
-<!--<file alias="time_budget">icons/glyphicons_119_table.png</file>-->
 <file alias="time_budget">icons/fontawesome_free/table-list.svg</file>
 
-<!--<file alias="close_observation">icons/glyphicons_207_remove_2.png</file>-->
 <file alias="close_observation">icons/fontawesome_free/xmark.svg</file>
 
-<!--<file alias="plot_events">icons/glyphicons_108_left_indent_modified.png</file>-->
 <file alias="plot_events">icons/fontawesome_free/chart-gantt.svg</file>
 
-<!--<file alias="plot_real_time">icons/glyphicons_108_left_indent_modified_realtime.png</file>-->
 <file alias="plot_real_time">icons/fontawesome_free/chart-gantt-realtime.svg</file>
 
-<!--<file alias="find">icons/glyphicons_027_search.png</file>-->
 <file alias="find">icons/fontawesome_free/magnifying-glass.svg</file>
 
-<!--<file alias="export">icons/glyphicons_359_file_export.png</file>-->
 <file alias="export">icons/fontawesome_free/file-export.svg</file>
 
-<!--<file alias="explore">icons/glyphicons_025_binoculars.png</file>-->
 <file alias="explore">icons/fontawesome_free/binoculars.svg</file>
 
-<!--<file alias="plot_time_budget">icons/glyphicons_041_charts.png</file>-->
 <file alias="plot_time_budget">icons/fontawesome_free/chart-simple.svg</file>
 
-<!--<file alias="filter">icons/glyphicons_320_filter.png</file>-->
 <file alias="filter">icons/fontawesome_free/filter.svg</file>
 
-<!--<file alias="measurement">icons/glyphicons_097_vector_path_line.png</file>-->
 <file alias="measurement">icons/fontawesome_free/compass-drafting.svg</file>
 
-<!--<file alias="preferences">icons/glyphicons_136_cogwheel.png</file>-->
 <file alias="preferences">icons/fontawesome_free/gears.svg</file>
 
 <file alias="volume_off">icons/fontawesome_free/volume-off.svg</file>
 <file alias="volume_xmark">icons/fontawesome_free/volume-xmark.svg</file>
 
 <file alias="preferences">icons/fontawesome_free/gears.svg</file>
-
-
 
 <file alias="beep">sounds/beep.wav</file>
 <file alias="key_sound">sounds/key_sound.wav</file>
