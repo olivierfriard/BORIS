@@ -26,6 +26,7 @@ dependencies = [
     "tablib[html, ods, xls, xlsx, pandas, cli]>=3",
     "pyqt5>=5.15",
     "pyreadr",
+    "qdarkstyle>=3.2.3",
 ]
 
 [project.optional-dependencies]

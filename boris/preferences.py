@@ -24,6 +24,7 @@ import logging
 import os
 import pathlib
 import sys
+import qdarkstyle
 
 from . import dialog
 from . import gui_utilities
@@ -199,6 +200,9 @@ def preferences(self):
 
     # interface
     preferencesWindow.sb_toolbar_icon_size.setValue(self.config_param.get(cfg.TOOLBAR_ICON_SIZE, cfg.DEFAULT_TOOLBAR_ICON_SIZE_VALUE))
+    preferencesWindow.cb_darkmode.setChecked(self.config_param.get(cfg.DARK_MODE, cfg.DARK_MODE_DEFAULT_VALUE))
+
+    self.config_param[cfg.DARK_MODE] = preferencesWindow.cb_darkmode.isChecked()
 
     gui_utilities.restore_geometry(preferencesWindow, "preferences", (700, 500))
 
@@ -282,6 +286,11 @@ def preferences(self):
 
         # interface
         self.config_param[cfg.TOOLBAR_ICON_SIZE] = preferencesWindow.sb_toolbar_icon_size.value()
+        self.config_param[cfg.DARK_MODE] = preferencesWindow.cb_darkmode.isChecked()
+        if self.config_param[cfg.DARK_MODE]:
+            self.setStyleSheet(qdarkstyle.load_stylesheet(qt_api="pyqt5"))
+        else:
+            self.setStyleSheet("")
 
         menu_options.update_menu(self)
 

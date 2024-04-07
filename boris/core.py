@@ -20,7 +20,7 @@ This file is part of BORIS.
 
 """
 
-# import qdarkstyle
+import qdarkstyle
 import os
 
 os.environ["PATH"] = os.path.dirname(__file__) + os.sep + "misc" + os.pathsep + os.environ["PATH"]
@@ -382,7 +382,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.tb_export.setMenu(self.menu)
         """
 
-        gui_utilities.set_icons(self, mode="light")
+        gui_utilities.set_icons(self)
 
         self.setWindowTitle(f"{cfg.programName} ({__version__})")
 
@@ -5574,12 +5574,15 @@ def main():
 
     window = MainWindow(ffmpeg_bin)
 
-    # app.setStyleSheet(qdarkstyle.load_stylesheet_pyqt5())
+    print(f"{app.styleSheet()=}")
+
+    if window.config_param.get(cfg.DARK_MODE, cfg.DARK_MODE_DEFAULT_VALUE):
+        app.setStyleSheet(qdarkstyle.load_stylesheet(qt_api="pyqt5"))
 
     # open project/start observation on command line
 
-    project_to_open = ""
-    observation_to_open = ""
+    project_to_open: str = ""
+    observation_to_open: str = ""
     if options.project:
         project_to_open = options.project
         # hook for Mac bundle created with pyinstaller

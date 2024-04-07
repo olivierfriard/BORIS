@@ -59,52 +59,43 @@ def restore_geometry(widget: QWidget, widget_name: str, default_geometry):
                 logging.warning("Error during restoring default")
 
 
-def set_icons(self, mode: str):
+def set_icons(self):
     """
-    disabled: #5f5f5f
-    dark: #DFE1E2
-    light: #000000
+    set icons of actions
     """
 
-    suffix = mode
     # menu
-    self.actionTime_budget.setIcon(QIcon(f":/time_budget_fa_{suffix}"))
-    self.actionPlot_events2.setIcon(QIcon(f":/plot_events_fa_{suffix}"))
-    self.action_advanced_event_filtering.setIcon(QIcon(f":/filter_fa_{suffix}"))
-    self.actionPreferences.setIcon(QIcon(f":/preferences_fa_{suffix}"))
+    self.actionTime_budget.setIcon(QIcon(":/time_budget"))
+    self.actionPlot_events2.setIcon(QIcon(":/plot_events"))
+    self.action_advanced_event_filtering.setIcon(QIcon(":/filter"))
+    self.actionPreferences.setIcon(QIcon(":/preferences"))
 
-    # toolbar
-    """
-    if mode == "disabled" and not self.action_obs_list.isEnabled():
-        self.action_obs_list.setIcon(QIcon(":/observations_list_fa_disabled"))
-    """
+    self.action_obs_list.setIcon(QIcon(":/observations_list"))
 
-    self.action_obs_list.setIcon(QIcon(f":/observations_list_fa_{suffix}"))
+    self.actionPlay.setIcon(QIcon(":/play"))
+    self.actionReset.setIcon(QIcon(":/reset"))
+    self.actionJumpBackward.setIcon(QIcon(":/jump_backward"))
+    self.actionJumpForward.setIcon(QIcon(":/jump_forward"))
 
-    self.actionPlay.setIcon(QIcon(f":/play_fa_{suffix}"))
-    self.actionReset.setIcon(QIcon(f":/reset_fa_{suffix}"))
-    self.actionJumpBackward.setIcon(QIcon(f":/jump_backward_fa_{suffix}"))
-    self.actionJumpForward.setIcon(QIcon(f":/jump_forward_fa_{suffix}"))
+    self.actionFaster.setIcon(QIcon(":/faster"))
+    self.actionSlower.setIcon(QIcon(":/slower"))
+    self.actionNormalSpeed.setIcon(QIcon(":/normal_speed"))
 
-    self.actionFaster.setIcon(QIcon(f":/faster_fa_{suffix}"))
-    self.actionSlower.setIcon(QIcon(f":/slower_fa_{suffix}"))
-    self.actionNormalSpeed.setIcon(QIcon(f":/normal_speed_fa_{suffix}"))
+    self.actionPrevious.setIcon(QIcon(":/previous"))
+    self.actionNext.setIcon(QIcon(":/next"))
 
-    self.actionPrevious.setIcon(QIcon(f":/previous_fa_{suffix}"))
-    self.actionNext.setIcon(QIcon(f":/next_fa_{suffix}"))
+    self.actionSnapshot.setIcon(QIcon(":/snapshot"))
 
-    self.actionSnapshot.setIcon(QIcon(f":/snapshot_fa_{suffix}"))
+    self.actionFrame_backward.setIcon(QIcon(":/frame_backward"))
+    self.actionFrame_forward.setIcon(QIcon(":/frame_forward"))
+    self.actionCloseObs.setIcon(QIcon(":/close_observation"))
+    self.actionCurrent_Time_Budget.setIcon(QIcon(":/time_budget"))
+    self.actionPlot_current_observation.setIcon(QIcon(":/plot_events"))
 
-    self.actionFrame_backward.setIcon(QIcon(f":/frame_backward_fa_{suffix}"))
-    self.actionFrame_forward.setIcon(QIcon(f":/frame_forward_fa_{suffix}"))
-    self.actionCloseObs.setIcon(QIcon(f":/close_observation_fa_{suffix}"))
-    self.actionCurrent_Time_Budget.setIcon(QIcon(f":/time_budget_fa_{suffix}"))
-    self.actionPlot_current_observation.setIcon(QIcon(f":/plot_events_fa_{suffix}"))
+    self.actionPlot_events_in_real_time.setIcon(QIcon(":/plot_real_time"))
 
-    self.actionPlot_events_in_real_time.setIcon(QIcon(f":/plot_real_time_fa_{suffix}"))
-
-    self.actionBehavior_bar_plot.setIcon(QIcon(f":/plot_time_budget_fa_{suffix}"))
-    self.actionPlot_current_time_budget.setIcon(QIcon(f":/plot_time_budget_fa_{suffix}"))
-    self.action_geometric_measurements.setIcon(QIcon(f":/measurement_fa_{suffix}"))
-    self.actionFind_in_current_obs.setIcon(QIcon(f":/find_fa_{suffix}"))
-    self.actionExplore_project.setIcon(QIcon(f":/explore_fa_{suffix}"))
+    self.actionBehavior_bar_plot.setIcon(QIcon(":/plot_time_budget"))
+    self.actionPlot_current_time_budget.setIcon(QIcon(":/plot_time_budget"))
+    self.action_geometric_measurements.setIcon(QIcon(":/measurement"))
+    self.actionFind_in_current_obs.setIcon(QIcon(":/find"))
+    self.actionExplore_project.setIcon(QIcon(":/explore"))

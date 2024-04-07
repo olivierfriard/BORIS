@@ -35,6 +35,7 @@ openpyxl==3.1.2
     # via tablib
 packaging==24.0
     # via matplotlib
+    # via qtpy
 pandas==2.0.3
     # via boris-behav-obs
     # via pyreadr
@@ -56,6 +57,10 @@ python-dateutil==2.9.0.post0
     # via pandas
 pytz==2024.1
     # via pandas
+qdarkstyle==3.2.3
+    # via boris-behav-obs
+qtpy==2.4.1
+    # via qdarkstyle
 six==1.16.0
     # via python-dateutil
 tablib==3.6.0
