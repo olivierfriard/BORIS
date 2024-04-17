@@ -393,9 +393,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.lbLogoBoris.setScaledContents(False)
         self.lbLogoBoris.setAlignment(Qt.AlignCenter)
 
-        self.lbLogoUnito.setPixmap(QPixmap(":/dbios_unito"))
-        self.lbLogoUnito.setScaledContents(False)
-        self.lbLogoUnito.setAlignment(Qt.AlignCenter)
+        # self.lbLogoUnito.setPixmap(QPixmap(":/dbios_unito"))
+        # self.lbLogoUnito.setScaledContents(False)
+        # self.lbLogoUnito.setAlignment(Qt.AlignCenter)
 
         self.toolBar.setEnabled(True)
 
@@ -3020,15 +3020,19 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         )
         file_name = fn[0] if type(fn) is tuple else fn
 
-        if file_name:
-            pj = otx_parser.otx_to_boris(file_name)
-            if "error" in pj:
-                QMessageBox.critical(self, cfg.programName, pj["error"])
-            else:
-                if "msg" in pj:
-                    QMessageBox.warning(self, cfg.programName, pj["msg"])
-                    del pj["msg"]
-                self.load_project("", True, pj)
+        if not file_name:
+            return
+        pj, error_list = otx_parser.otx_to_boris(file_name)
+        if error_list or "fatal" in pj:
+            self.results = dialog.Results_dialog()
+            self.results.setWindowTitle("Import project from Noldus the Observer XT")
+            self.results.ptText.clear()
+            self.results.ptText.appendHtml("<br>".join(error_list))
+            self.results.show()
+
+        if "fatal" in pj:
+            return
+        self.load_project("", True, pj)
 
     def clear_interface(self, flag_new: bool = True):
         """

@@ -30,7 +30,7 @@ import re
 import zipfile
 import pathlib as pl
 from xml.dom import minidom
-import pprint
+import logging
 
 try:
     from . import config as cfg
@@ -38,7 +38,7 @@ except Exception:
     import config as cfg
 
 
-def otx_to_boris(file_path: str) -> dict:
+def otx_to_boris(file_path: str) -> tuple[dict, list]:
     """
     convert otx/otb/odx file in a BORIS project
 
@@ -49,6 +49,7 @@ def otx_to_boris(file_path: str) -> dict:
 
     Returns:
         dict: BORIS project
+        list: list of errors during importation
     """
 
     if pl.Path(file_path).suffix == ".otb":
@@ -58,25 +59,26 @@ def otx_to_boris(file_path: str) -> dict:
                 try:
                     file_zip.extract(files_list[0])
                 except Exception:
-                    return {"error": "error when extracting file"}
+                    return {"fatal": True}, ["Error when extracting file from OTB"]
             else:
-                return {"error": "error when extracting file"}
+                return {"fatal": True}, ["Error when extracting file"]
 
             try:
                 xmldoc = minidom.parse(files_list[0])
             except Exception:
-                return {"error": "parsing error"}
+                return {"fatal": True}, ["XML parsing error"]
 
     elif pl.Path(file_path).suffix in (".odx", ".otx"):
         try:
             xmldoc = minidom.parse(file_path)
         except Exception:
-            return {"error": "parsing error"}
+            return {"fatal": True}, ["XML parsing error"]
 
     else:
-        return {"error": "The file must be in OTB, OTX or ODX format"}
+        return {"fatal": True}, ["The file must be in OTB, OTX or ODX format"]
 
-    flag_long_key = False
+    flag_long_key: bool = False
+    error_list: list = []
 
     # metadata
     for item in xmldoc.getElementsByTagName("MET_METADATA"):
@@ -128,8 +130,7 @@ def otx_to_boris(file_path: str) -> dict:
                 flag_long_key = True
             modifiers[modif_id] = {"set_name": modif_code, "key": key, "description": description, "values": []}
 
-    print("modifiers")
-    pprint.pprint(modifiers)
+    logging.debug(modifiers)
 
     # connect modifiers to behaviors
     connections: dict = {}
@@ -139,8 +140,7 @@ def otx_to_boris(file_path: str) -> dict:
             connections[item.attributes["CDS_ELEMENT_ID"].value] = []
         connections[item.attributes["CDS_ELEMENT_ID"].value].append(item.attributes["CDS_MODIFIER_ID"].value)
 
-    print("connections")
-    pprint.pprint(connections)
+    logging.debug(connections)
 
     # behaviors
     behaviors: dict = {}
@@ -235,7 +235,7 @@ def otx_to_boris(file_path: str) -> dict:
                         "description": modifiers[modif_key]["description"],
                     }
 
-    pprint.pprint(behaviors_boris)
+    logging.debug(behaviors_boris)
 
     # subjects
     subjects = {}
@@ -350,20 +350,21 @@ def otx_to_boris(file_path: str) -> dict:
         for OBS_EVENT_LOG in OBS_EVENT_LOGS.getElementsByTagName("OBS_EVENT_LOG"):
             CREATION_DATETIME = OBS_EVENT_LOG.getAttribute("CREATION_DATETIME")
 
-            CREATION_DATETIME = CREATION_DATETIME.replace(" ", "T").split(".")[0]
+            CREATION_DATETIME = CREATION_DATETIME.replace(" ", "T")  # .split(".")[0]
 
-            """print(f"{CREATION_DATETIME=}")  # ex: 2022-05-18 10:04:09.474512"""
+            logging.debug(f"{CREATION_DATETIME=}")  # ex: 2022-05-18 10:04:09.474512"""
 
             project[cfg.OBSERVATIONS][obs_id]["date"] = CREATION_DATETIME
 
             for event in OBS_EVENT_LOG.getElementsByTagName("OBS_EVENT"):
                 OBS_EVENT_TIMESTAMP = event.getElementsByTagName("OBS_EVENT_TIMESTAMP")[0].childNodes[0].data
 
-                day_timestamp = dt.datetime.strptime(OBS_EVENT_TIMESTAMP.split(" ")[0], "%Y-%m-%d").timestamp()
-
                 full_timestamp = dt.datetime.strptime(OBS_EVENT_TIMESTAMP, "%Y-%m-%d %H:%M:%S.%f").timestamp()
+                logging.debug(f"{full_timestamp=}")
 
-                timestamp = dec(str(round(full_timestamp - day_timestamp, 3)))
+                # day_timestamp = dt.datetime.strptime(OBS_EVENT_TIMESTAMP.split(" ")[0], "%Y-%m-%d").timestamp()
+                # timestamp = dec(str(round(full_timestamp - day_timestamp, 3)))
+                timestamp = dec(full_timestamp).quantize(dec(".001"))
 
                 try:
                     OBS_EVENT_SUBJECT = event.getElementsByTagName("OBS_EVENT_SUBJECT")[0].getAttribute("NAME")
@@ -371,24 +372,34 @@ def otx_to_boris(file_path: str) -> dict:
                     OBS_EVENT_SUBJECT = ""
 
                 OBS_EVENT_BEHAVIOR = event.getElementsByTagName("OBS_EVENT_BEHAVIOR")[0].getAttribute("NAME")
+                logging.debug(f"{OBS_EVENT_BEHAVIOR=}")
+                if not OBS_EVENT_BEHAVIOR:
+                    logging.warning(f"Behavior missing in observation {obs_id} at {timestamp}")
+                    error_list.append(f"Behavior missing in observation {obs_id} at {timestamp}")
+                    continue
 
-                OBS_EVENT_BEHAVIOR_MODIFIER = (
-                    event.getElementsByTagName("OBS_EVENT_BEHAVIOR")[0]
-                    .getElementsByTagName("OBS_EVENT_BEHAVIOR_MODIFIER")[0]
-                    .childNodes[0]
-                    .data
-                )
-
+                # modifier
                 try:
-                    OBS_EVENT_COMMENT = event.getElementsByTagName("OBS_EVENT_COMMENT")[0].childNodes[0].data
+                    OBS_EVENT_BEHAVIOR_MODIFIER = (
+                        event.getElementsByTagName("OBS_EVENT_BEHAVIOR")[0]
+                        .getElementsByTagName("OBS_EVENT_BEHAVIOR_MODIFIER")[0]
+                        .childNodes[0]
+                        .data
+                    )
                 except Exception:
-                    OBS_EVENT_COMMENT = ""
+                    OBS_EVENT_BEHAVIOR_MODIFIER: str = ""
 
-                # print(f"{timestamp=}")
-                # print(f"{OBS_EVENT_SUBJECT=}")
-                # print(f"{OBS_EVENT_BEHAVIOR=}")
-                # print(f"{OBS_EVENT_BEHAVIOR_MODIFIER=}")
-                # print(f"{OBS_EVENT_COMMENT=}")
+                # comment
+                try:
+                    OBS_EVENT_COMMENT: str = event.getElementsByTagName("OBS_EVENT_COMMENT")[0].childNodes[0].data
+                except Exception:
+                    OBS_EVENT_COMMENT: str = ""
+
+                logging.debug(f"{timestamp=}")
+                logging.debug(f"{OBS_EVENT_SUBJECT=}")
+                logging.debug(f"{OBS_EVENT_BEHAVIOR=}")
+                logging.debug(f"{OBS_EVENT_BEHAVIOR_MODIFIER=}")
+                logging.debug(f"{OBS_EVENT_COMMENT=}")
 
                 project[cfg.OBSERVATIONS][obs_id][cfg.EVENTS].append(
                     [
@@ -400,10 +411,6 @@ def otx_to_boris(file_path: str) -> dict:
                     ]
                 )
 
-                # print(80 * "-")
-
-        # print(80 * "=")
-
     project[cfg.PROJECT_NAME] = project_name
     project[cfg.PROJECT_DATE] = project_creation_date.replace(" ", "T")
     project[cfg.ETHOGRAM] = behaviors_boris
@@ -413,12 +420,22 @@ def otx_to_boris(file_path: str) -> dict:
     project[cfg.INDEPENDENT_VARIABLES] = variables_boris
 
     if flag_long_key:
-        project["msg"] = "The keys longer than one char were deleted"
+        error_list.append("The keys longer than one char were deleted.")
+        logging.debug("The keys longer than one char were deleted.")
 
-    return project
+    return project, error_list
 
 
 if __name__ == "__main__":
     import sys
+    import pprint
 
-    otx_to_boris(sys.argv[1])
+    logging.basicConfig(
+        format="%(asctime)s,%(msecs)d  %(module)s l.%(lineno)d %(levelname)s %(message)s",
+        datefmt="%H:%M:%S",
+        level=logging.DEBUG,
+    )
+    project, errors = otx_to_boris(sys.argv[1])
+
+    pprint.pprint(project)
+    pprint.pprint(errors)
