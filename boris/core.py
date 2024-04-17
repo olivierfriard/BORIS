@@ -5578,8 +5578,6 @@ def main():
 
     window = MainWindow(ffmpeg_bin)
 
-    print(f"{app.styleSheet()=}")
-
     if window.config_param.get(cfg.DARK_MODE, cfg.DARK_MODE_DEFAULT_VALUE):
         app.setStyleSheet(qdarkstyle.load_stylesheet(qt_api="pyqt5"))
 
