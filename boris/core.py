@@ -20,10 +20,14 @@ This file is part of BORIS.
 
 """
 
-import qdarkstyle
+
 import os
+import sys
 
 os.environ["PATH"] = os.path.dirname(__file__) + os.sep + "misc" + os.pathsep + os.environ["PATH"]
+
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), ".")))
+import qdarkstyle
 
 import datetime
 
@@ -35,7 +39,7 @@ import re
 import PIL.Image
 import PIL.ImageEnhance
 import subprocess
-import sys
+
 import locale
 import tempfile
 import time
@@ -5579,6 +5583,7 @@ def main():
     window = MainWindow(ffmpeg_bin)
 
     if window.config_param.get(cfg.DARK_MODE, cfg.DARK_MODE_DEFAULT_VALUE):
+        print("pyqt5")
         app.setStyleSheet(qdarkstyle.load_stylesheet(qt_api="pyqt5"))
 
     # open project/start observation on command line
