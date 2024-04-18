@@ -31,6 +31,7 @@ import zipfile
 import pathlib as pl
 from xml.dom import minidom
 import logging
+from typing import Optional, Tuple
 
 try:
     from . import config as cfg
@@ -38,7 +39,7 @@ except Exception:
     import config as cfg
 
 
-def otx_to_boris(file_path: str) -> tuple[dict, list]:
+def otx_to_boris(file_path: str) -> Tuple[dict, list]:
     """
     convert otx/otb/odx file in a BORIS project
 

@@ -326,9 +326,6 @@ def load_stylesheet(*args, **kwargs):
         str: the stylesheet string.
     """
 
-    print(f"{args=}")
-    print(f"{kwargs=}")
-
     stylesheet = ""
     arg = None
 
@@ -373,9 +370,7 @@ def load_stylesheet(*args, **kwargs):
 
     # New API arguments
     elif "qt_api" in kwargs or isinstance(arg, str):
-        print(f"{arg=}")
         qt_api = kwargs.get("qt_api", arg)
-        print(f"{qt_api=}")
         stylesheet = _load_stylesheet(qt_api=qt_api, palette=palette)
 
     # Palette arg

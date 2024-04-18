@@ -456,11 +456,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         # self.twEvents.setItemDelegate(events_cursor.StyledItemDelegateTriangle(self.events_current_row))
         self.tv_events.setItemDelegate(events_cursor.StyledItemDelegateTriangle(self.events_current_row))
 
-        self.config_param = cfg.INIT_PARAM
-
-        menu_options.update_menu(self)
         connections.connections(self)
+        self.config_param = cfg.INIT_PARAM
         config_file.read(self)
+        menu_options.update_menu(self)
 
     def excepthook(self, exception_type, exception_value, traceback_object):
         """
@@ -5583,7 +5582,6 @@ def main():
     window = MainWindow(ffmpeg_bin)
 
     if window.config_param.get(cfg.DARK_MODE, cfg.DARK_MODE_DEFAULT_VALUE):
-        print("pyqt5")
         app.setStyleSheet(qdarkstyle.load_stylesheet(qt_api="pyqt5"))
 
     # open project/start observation on command line

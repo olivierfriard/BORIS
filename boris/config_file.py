@@ -47,7 +47,7 @@ def read(self):
             self.config_param = settings.value("config")
         except Exception:
             self.config_param = None
-            pass
+
         if self.config_param is None:
             self.config_param = cfg.INIT_PARAM
 
@@ -315,6 +315,8 @@ def save(self, lastCheckForNewVersion=0):
     logging.debug(f"save config file: {file_path}")
 
     settings = QSettings(str(file_path), QSettings.IniFormat)
+
+    print(f"{self.config_param=}")
 
     settings.setValue("config", self.config_param)
 
