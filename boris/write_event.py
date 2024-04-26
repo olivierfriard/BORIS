@@ -200,7 +200,7 @@ def write_event(self, event: dict, mem_time: dec) -> int:
         include_modifiers=False,
     )
 
-    # check if ask at stop enabled
+    # check if ask modifiers at stop is enabled
     flag_ask_at_stop = False
     if event["type"] == cfg.STATE_EVENT:
         for idx in event[cfg.MODIFIERS]:
@@ -208,16 +208,27 @@ def write_event(self, event: dict, mem_time: dec) -> int:
                 flag_ask_at_stop = True
                 break
 
+    print(f"{current_states=}")
+
     flag_ask_modifier = False
     if flag_ask_at_stop:
         # TODO: check if new event is a STOP one
-        if event["code"] in current_states[self.currentSubject]:
+
+        idx_subject: str = ""
+        for idx in current_states:
+            if idx in self.pj[cfg.SUBJECTS] and self.pj[cfg.SUBJECTS][idx][cfg.SUBJECT_NAME] == self.currentSubject:
+                idx_subject = idx
+                break
+
+        if event[cfg.BEHAVIOR_CODE] in current_states[idx_subject]:
             flag_ask_modifier = True
     else:
         flag_ask_modifier = True
 
     if flag_ask_modifier:
-        if "from map" not in event:  # modifiers only for behaviors without coding map
+        if "from map" in event:  # modifiers only for behaviors without coding map
+            modifier_str = event["from map"]
+        else:
             # check if event has modifiers
             modifier_str: str = ""
 
@@ -227,15 +238,16 @@ def write_event(self, event: dict, mem_time: dec) -> int:
                 # check if modifiers are from external data
                 for idx in event[cfg.MODIFIERS]:
                     if event[cfg.MODIFIERS][idx]["type"] == cfg.EXTERNAL_DATA_MODIFIER:
-                        if "row" not in event:  # no edit
+                        if editing_event:
+                            original_modifiers_list = event.get("original_modifiers", "").split("|")
+                            modifiers_external_data[idx] = dict(event[cfg.MODIFIERS][idx])
+                            modifiers_external_data[idx]["selected"] = original_modifiers_list[int(idx)]
+
+                        else:  # no edit
                             for idx2 in self.plot_data:
                                 if self.plot_data[idx2].y_label.upper() == event[cfg.MODIFIERS][idx]["name"].upper():
                                     modifiers_external_data[idx] = dict(event[cfg.MODIFIERS][idx])
                                     modifiers_external_data[idx]["selected"] = self.plot_data[idx2].lb_value.text()
-                        else:  # edit
-                            original_modifiers_list = event.get("original_modifiers", "").split("|")
-                            modifiers_external_data[idx] = dict(event[cfg.MODIFIERS][idx])
-                            modifiers_external_data[idx]["selected"] = original_modifiers_list[int(idx)]
 
                 # check if modifiers are in single, multiple or numeric
                 if [x for x in event[cfg.MODIFIERS] if event[cfg.MODIFIERS][x]["type"] != cfg.EXTERNAL_DATA_MODIFIER]:
@@ -243,20 +255,22 @@ def write_event(self, event: dict, mem_time: dec) -> int:
                     if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE] in (cfg.MEDIA):
                         if self.playerType == cfg.MEDIA:
                             if self.dw_player[0].player.pause:
-                                memState = "paused"
+                                memState = cfg.PAUSED
                             elif self.dw_player[0].player.time_pos is not None:
-                                memState = "playing"
+                                memState = cfg.PLAYING
                             else:
-                                memState = "stopped"
-                            if memState == "playing":
+                                memState = cfg.STOPPED
+                            if memState == cfg.PLAYING:
                                 self.pause_video()
 
                     # check if editing (original_modifiers key)
                     currentModifiers = event.get("original_modifiers", "")
 
-                    print(f"{event=}")
+                    # print(f"{event=}")
 
-                    modifiers_selector = select_modifiers.ModifiersList(event["code"], eval(str(event[cfg.MODIFIERS])), currentModifiers)
+                    modifiers_selector = select_modifiers.ModifiersList(
+                        event[cfg.BEHAVIOR_CODE], eval(str(event[cfg.MODIFIERS])), currentModifiers
+                    )
 
                     r = modifiers_selector.exec_()
                     if r:
@@ -265,7 +279,7 @@ def write_event(self, event: dict, mem_time: dec) -> int:
                     # restart media
                     if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE] == cfg.MEDIA:
                         if self.playerType == cfg.MEDIA:
-                            if memState == "playing":
+                            if memState == cfg.PLAYING:
                                 self.play_video()
                     if not r:  # cancel button pressed
                         return
@@ -276,13 +290,10 @@ def write_event(self, event: dict, mem_time: dec) -> int:
                 for idx in util.sorted_keys(all_modifiers):
                     if modifier_str:
                         modifier_str += "|"
-                    if all_modifiers[idx]["type"] in [cfg.SINGLE_SELECTION, cfg.MULTI_SELECTION]:
+                    if all_modifiers[idx]["type"] in (cfg.SINGLE_SELECTION, cfg.MULTI_SELECTION):
                         modifier_str += ",".join(all_modifiers[idx].get("selected", ""))
-                    if all_modifiers[idx]["type"] in [cfg.NUMERIC_MODIFIER, cfg.EXTERNAL_DATA_MODIFIER]:
+                    if all_modifiers[idx]["type"] in (cfg.NUMERIC_MODIFIER, cfg.EXTERNAL_DATA_MODIFIER):
                         modifier_str += all_modifiers[idx].get("selected", "NA")
-
-        else:
-            modifier_str = event["from map"]
 
         modifier_str = re.sub(r" \(.*\)", "", modifier_str)
     else:  # do not ask modifier
@@ -303,7 +314,7 @@ def write_event(self, event: dict, mem_time: dec) -> int:
 
     if not editing_event:
         if self.currentSubject:
-            csj: list = []
+            csj: list = []  # list of current state for the current subject
             for idx in current_states:
                 if idx in self.pj[cfg.SUBJECTS] and self.pj[cfg.SUBJECTS][idx][cfg.SUBJECT_NAME] == self.currentSubject:
                     csj = current_states[idx]
@@ -316,6 +327,8 @@ def write_event(self, event: dict, mem_time: dec) -> int:
                 csj = []
 
         logging.debug(f"csj {csj}")
+
+        print(f"{csj=}")
 
         if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE] in (cfg.LIVE, cfg.MEDIA):
             check_index = cfg.PJ_OBS_FIELDS[self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE]][cfg.TIME]
@@ -332,6 +345,26 @@ def write_event(self, event: dict, mem_time: dec) -> int:
                     if ev[cfg.EVENT_BEHAVIOR_FIELD_IDX] == cs:
                         cm[cs] = ev[cfg.EVENT_MODIFIER_FIELD_IDX]
 
+        print(f"{cm=}")
+
+        if flag_ask_at_stop:
+            # set modifier to START
+            # mem_time
+            # for self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS]
+            if event[cfg.BEHAVIOR_CODE] in csj:
+                mem_idx = -1
+                for idx, e in enumerate(self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS]):
+                    print(f"{e=}")
+                    if e[0] >= mem_time:
+                        break
+                    # same behavior, same subject and modifier(s) not set
+                    if e[2] == event[cfg.BEHAVIOR_CODE] and e[1] == self.currentSubject and e[3] == "":
+                        mem_idx = idx
+                if mem_idx != -1:
+                    self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS][mem_idx][3] = modifier_str
+
+                csj.remove(event[cfg.BEHAVIOR_CODE])
+
         for cs in csj:
             # close state if same state without modifier
             if (
@@ -342,7 +375,9 @@ def write_event(self, event: dict, mem_time: dec) -> int:
                 modifier_str = cm[cs]
                 continue
 
-            if (event["excluded"] and cs in event["excluded"].split(",")) or (event[cfg.BEHAVIOR_CODE] == cs and cm[cs] != modifier_str):
+            if (event[cfg.EXCLUDED] and cs in event[cfg.EXCLUDED].split(",")) or (
+                event[cfg.BEHAVIOR_CODE] == cs and cm[cs] != modifier_str
+            ):
                 # add excluded state event to observations (= STOP them)
                 if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE] in (cfg.LIVE):
                     bisect.insort(

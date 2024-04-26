@@ -20,10 +20,14 @@ This file is part of BORIS.
 
 """
 
-import qdarkstyle
+
 import os
+import sys
 
 os.environ["PATH"] = os.path.dirname(__file__) + os.sep + "misc" + os.pathsep + os.environ["PATH"]
+
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), ".")))
+import qdarkstyle
 
 import datetime
 
@@ -35,7 +39,7 @@ import re
 import PIL.Image
 import PIL.ImageEnhance
 import subprocess
-import sys
+
 import locale
 import tempfile
 import time
@@ -393,9 +397,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.lbLogoBoris.setScaledContents(False)
         self.lbLogoBoris.setAlignment(Qt.AlignCenter)
 
-        self.lbLogoUnito.setPixmap(QPixmap(":/dbios_unito"))
-        self.lbLogoUnito.setScaledContents(False)
-        self.lbLogoUnito.setAlignment(Qt.AlignCenter)
+        # self.lbLogoUnito.setPixmap(QPixmap(":/dbios_unito"))
+        # self.lbLogoUnito.setScaledContents(False)
+        # self.lbLogoUnito.setAlignment(Qt.AlignCenter)
 
         self.toolBar.setEnabled(True)
 
@@ -452,11 +456,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         # self.twEvents.setItemDelegate(events_cursor.StyledItemDelegateTriangle(self.events_current_row))
         self.tv_events.setItemDelegate(events_cursor.StyledItemDelegateTriangle(self.events_current_row))
 
-        self.config_param = cfg.INIT_PARAM
-
-        menu_options.update_menu(self)
         connections.connections(self)
+        self.config_param = cfg.INIT_PARAM
         config_file.read(self)
+        menu_options.update_menu(self)
 
     def excepthook(self, exception_type, exception_value, traceback_object):
         """
@@ -3020,15 +3023,19 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         )
         file_name = fn[0] if type(fn) is tuple else fn
 
-        if file_name:
-            pj = otx_parser.otx_to_boris(file_name)
-            if "error" in pj:
-                QMessageBox.critical(self, cfg.programName, pj["error"])
-            else:
-                if "msg" in pj:
-                    QMessageBox.warning(self, cfg.programName, pj["msg"])
-                    del pj["msg"]
-                self.load_project("", True, pj)
+        if not file_name:
+            return
+        pj, error_list = otx_parser.otx_to_boris(file_name)
+        if error_list or "fatal" in pj:
+            self.results = dialog.Results_dialog()
+            self.results.setWindowTitle("Import project from Noldus the Observer XT")
+            self.results.ptText.clear()
+            self.results.ptText.appendHtml("<br>".join(error_list))
+            self.results.show()
+
+        if "fatal" in pj:
+            return
+        self.load_project("", True, pj)
 
     def clear_interface(self, flag_new: bool = True):
         """
@@ -3604,6 +3611,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 if dialog.MessageDialog(cfg.programName, "Delete the current events?", (cfg.YES, cfg.NO)) == cfg.YES:
                     self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS] = []
                 self.project_changed()
+                self.load_tw_events(self.observationId)
 
             self.pb_live_obs.setText("Stop live observation")
 
@@ -5573,8 +5581,6 @@ def main():
     app.setApplicationName(cfg.programName)
 
     window = MainWindow(ffmpeg_bin)
-
-    print(f"{app.styleSheet()=}")
 
     if window.config_param.get(cfg.DARK_MODE, cfg.DARK_MODE_DEFAULT_VALUE):
         app.setStyleSheet(qdarkstyle.load_stylesheet(qt_api="pyqt5"))

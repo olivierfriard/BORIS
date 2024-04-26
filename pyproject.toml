@@ -1,6 +1,6 @@
 [project]
 name = "boris-behav-obs"
-version = "8.25"
+version = "8.25.4"
 description = "BORIS - Behavioral Observation Research Interactive Software"
 authors = [{ name="Olivier Friard", email="olivier.friard@unito.it" }]
 readme = "README.rst"
@@ -26,7 +26,6 @@ dependencies = [
     "tablib[html, ods, xls, xlsx, pandas, cli]>=3",
     "pyqt5>=5.15",
     "pyreadr",
-    "qdarkstyle>=3.2.3",
 ]
 
 [project.optional-dependencies]
@@ -59,7 +58,7 @@ line-length = 140
 exclude = ["*_ui.py", "mpv*"]
 
 [tool.bumpver]
-current_version = "8.25"
+current_version = "8.25.4"
 version_pattern = "MAJOR.MINOR.PATCH"
 
 

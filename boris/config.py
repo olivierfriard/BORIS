@@ -471,6 +471,9 @@ WAVEFORM_PLOT = "waveform"
 SPECTROGRAM_PLOT = "spectrogram"
 EVENTS_PLOT = "plot_events"
 
+PLAYING = "playing"
+PAUSED = "paused"
+STOPPED = "stopped"
 
 POINT_EVENT_ST_DURATION = 0.5
 
@@ -480,6 +483,8 @@ FRAME_TAB = 1
 SLIDER_MAXIMUM = 1000
 
 FRAME_DEFAULT_CACHE_SIZE = 1
+
+EXCLUDED = "excluded"
 
 # modifiers
 MODIFIERS = "modifiers"
