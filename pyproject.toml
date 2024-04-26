@@ -20,9 +20,9 @@ classifiers=[
     ]
 dependencies = [
     "exifread>=3.0.0",
-    "numpy>=1.21",
+    "numpy>=1.26.4",
     "matplotlib>=3.3.3",
-    "pandas>=1.3.5",
+    "pandas>=2.2.2",
     "tablib[html, ods, xls, xlsx, pandas, cli]>=3",
     "pyqt5>=5.15",
     "pyreadr",
