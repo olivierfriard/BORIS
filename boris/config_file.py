@@ -316,8 +316,6 @@ def save(self, lastCheckForNewVersion=0):
 
     settings = QSettings(str(file_path), QSettings.IniFormat)
 
-    print(f"{self.config_param=}")
-
     settings.setValue("config", self.config_param)
 
     settings.setValue("geometry", self.saveGeometry())

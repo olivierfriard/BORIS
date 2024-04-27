@@ -210,17 +210,6 @@ TIME_LAPSE = "time_lapse_delay"
 
 
 # fields for event configuration
-"""
-fields = {
-    "type": 0,
-    "key": 1,
-    "code": 2,
-    "description": 3,
-    "modifiers": 4,
-    "excluded": 5,
-    "coding map": 6,
-}
-"""
 
 ETHOGRAM_TABLE_COLUMNS: dict = {
     0: "key",
@@ -245,18 +234,6 @@ behavioursFields: dict = {
     "excluded": 7,
     "coding map": 8,
 }
-"""
-ETHOGRAM_FIELDS = [
-    "type",
-    "key",
-    "code",
-    "description",
-    "category",
-    "modifiers",
-    "excluded",
-    "coding map",
-]
-"""
 ETHOGRAM_EDITABLE_FIELDS: tuple = ("key", "code", "description")
 
 PROJECT_BEHAVIORS_KEY_FIELD_IDX = 1

@@ -208,7 +208,7 @@ def write_event(self, event: dict, mem_time: dec) -> int:
                 flag_ask_at_stop = True
                 break
 
-    print(f"{current_states=}")
+    # print(f"{current_states=}")
 
     flag_ask_modifier = False
     if flag_ask_at_stop:
@@ -328,7 +328,7 @@ def write_event(self, event: dict, mem_time: dec) -> int:
 
         logging.debug(f"csj {csj}")
 
-        print(f"{csj=}")
+        # print(f"{csj=}")
 
         if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE] in (cfg.LIVE, cfg.MEDIA):
             check_index = cfg.PJ_OBS_FIELDS[self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE]][cfg.TIME]
@@ -345,16 +345,14 @@ def write_event(self, event: dict, mem_time: dec) -> int:
                     if ev[cfg.EVENT_BEHAVIOR_FIELD_IDX] == cs:
                         cm[cs] = ev[cfg.EVENT_MODIFIER_FIELD_IDX]
 
-        print(f"{cm=}")
+        # print(f"{cm=}")
 
         if flag_ask_at_stop:
-            # set modifier to START
-            # mem_time
-            # for self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS]
+            # set modifier to START behavior
             if event[cfg.BEHAVIOR_CODE] in csj:
                 mem_idx = -1
                 for idx, e in enumerate(self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS]):
-                    print(f"{e=}")
+                    # print(f"{e=}")
                     if e[0] >= mem_time:
                         break
                     # same behavior, same subject and modifier(s) not set
@@ -362,8 +360,7 @@ def write_event(self, event: dict, mem_time: dec) -> int:
                         mem_idx = idx
                 if mem_idx != -1:
                     self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS][mem_idx][3] = modifier_str
-
-                csj.remove(event[cfg.BEHAVIOR_CODE])
+                    csj.remove(event[cfg.BEHAVIOR_CODE])
 
         for cs in csj:
             # close state if same state without modifier
@@ -380,9 +377,58 @@ def write_event(self, event: dict, mem_time: dec) -> int:
             ):
                 # add excluded state event to observations (= STOP them)
                 if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE] in (cfg.LIVE):
+                    # check if behavior to stop is a 'ask modifier at stop'
+                    behavior_to_stop = [
+                        self.pj[cfg.ETHOGRAM][x]
+                        for x in self.pj[cfg.ETHOGRAM]
+                        if self.pj[cfg.ETHOGRAM][x][cfg.BEHAVIOR_CODE] == cs and self.pj[cfg.ETHOGRAM][x]["type"] == cfg.STATE_EVENT
+                    ]
+                    if behavior_to_stop:
+                        behavior_to_stop = behavior_to_stop[0]
+
+                        flag_behavior_ask_at_stop = False
+                        for idx in behavior_to_stop[cfg.MODIFIERS]:
+                            if behavior_to_stop[cfg.MODIFIERS][idx].get("ask at stop", False):
+                                flag_behavior_ask_at_stop = True
+                                break
+                        if flag_behavior_ask_at_stop:
+                            modifiers_selector = select_modifiers.ModifiersList(
+                                behavior_to_stop[cfg.BEHAVIOR_CODE],
+                                eval(str(behavior_to_stop[cfg.MODIFIERS])),
+                                currentModifier="",
+                            )
+
+                            r = modifiers_selector.exec_()
+                            if r:
+                                selected_modifiers = modifiers_selector.get_modifiers()
+                                # print(f"{selected_modifiers=}")
+
+                                behavior_to_stop_modifier_str: str = ""
+                                for idx in util.sorted_keys(selected_modifiers):
+                                    if behavior_to_stop_modifier_str:
+                                        behavior_to_stop_modifier_str += "|"
+                                    if selected_modifiers[idx]["type"] in (cfg.SINGLE_SELECTION, cfg.MULTI_SELECTION):
+                                        behavior_to_stop_modifier_str += ",".join(selected_modifiers[idx].get("selected", ""))
+                                    if selected_modifiers[idx]["type"] in (cfg.NUMERIC_MODIFIER, cfg.EXTERNAL_DATA_MODIFIER):
+                                        behavior_to_stop_modifier_str += selected_modifiers[idx].get("selected", "NA")
+
+                                # set the start modifier
+                                mem_idx = -1
+                                for idx, e in enumerate(self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS]):
+                                    if e[0] >= mem_time - dec("0.001"):
+                                        break
+                                    # same behavior, same subject and modifier(s) not set
+                                    if e[2] == behavior_to_stop[cfg.BEHAVIOR_CODE] and e[1] == self.currentSubject and e[3] == "":
+                                        mem_idx = idx
+                                if mem_idx != -1:
+                                    self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS][mem_idx][3] = behavior_to_stop_modifier_str
+
+                        else:
+                            behavior_to_stop_modifier_str = cm[cs]
+
                     bisect.insort(
                         self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS],
-                        [mem_time - dec("0.001"), self.currentSubject, cs, cm[cs], ""],
+                        [mem_time - dec("0.001"), self.currentSubject, cs, behavior_to_stop_modifier_str, ""],
                     )
 
                 if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE] in (cfg.MEDIA):
