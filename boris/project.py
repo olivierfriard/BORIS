@@ -760,7 +760,7 @@ class projectDialog(QDialog, Ui_dlgProject):
         # check if double click on 'coding map' column
         if column == cfg.behavioursFields["coding map"]:
             if "with coding map" in self.twBehaviors.item(row, cfg.behavioursFields[cfg.TYPE]).text():
-                self.behaviorTypeChanged(row)
+                self.behavior_type_changed(row)
             else:
                 QMessageBox.information(self, cfg.programName, "Change the behavior type on first column to select a coding map")
 
@@ -815,7 +815,7 @@ class projectDialog(QDialog, Ui_dlgProject):
         if ok and new_type:
             self.twBehaviors.item(row, cfg.behavioursFields["type"]).setText(new_type)
 
-            self.behaviorTypeChanged(row)
+            self.behavior_type_changed(row)
 
     def color_doubleclicked(self, row: int) -> None:
         """
@@ -1330,16 +1330,16 @@ class projectDialog(QDialog, Ui_dlgProject):
             self.twBehaviors.setItem(self.twBehaviors.rowCount() - 1, cfg.behavioursFields[field_type], item)
         self.twBehaviors.scrollToBottom()
 
-    def behaviorTypeChanged(self, row):
+    def behavior_type_changed(self, row: int) -> None:
         """
         event type combobox changed
         """
 
-        if "with coding map" in self.twBehaviors.item(row, cfg.behavioursFields[cfg.TYPE]).text():
+        if cfg.CODING_MAP_sp in self.twBehaviors.item(row, cfg.behavioursFields[cfg.TYPE]).text():
             # let user select a coding maop
             fn = QFileDialog().getOpenFileName(
                 self,
-                "Select a coding map for " f"{self.twBehaviors.item(row, cfg.behavioursFields['code']).text()} behavior",
+                "Select a modifier coding map for " f"{self.twBehaviors.item(row, cfg.behavioursFields['code']).text()} behavior",
                 "",
                 "BORIS map files (*.boris_map);;All files (*)",
             )
@@ -1349,12 +1349,12 @@ class projectDialog(QDialog, Ui_dlgProject):
                 try:
                     new_map = json.loads(open(fileName, "r").read())
                 except Exception:
-                    QMessageBox.critical(self, cfg.programName, "Error reding the file")
+                    QMessageBox.critical(self, cfg.programName, "Error reding the coding map")
                     return
                 self.pj[cfg.CODING_MAP][new_map["name"]] = new_map
 
                 # add modifiers from coding map areas
-                modifstr = str(
+                modifstr = json.dumps(
                     {
                         "0": {
                             "name": new_map["name"],
@@ -1697,7 +1697,12 @@ class projectDialog(QDialog, Ui_dlgProject):
                                 QMessageBox.critical(self, cfg.programName, "Error removing leading/trailing spaces in modifiers")
 
                         else:
-                            """row["modifiers"] = eval(row["modifiers"])"""
+                            """
+                            if row["modifiers"]:
+                                row["modifiers"] = eval(row["modifiers"])
+                            else:
+                                row["modifiers"] = {}
+                            """
                             row["modifiers"] = json.loads(row["modifiers"]) if row["modifiers"] else {}
                 else:
                     row[field] = ""

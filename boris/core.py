@@ -4652,9 +4652,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         event = dict(self.pj[cfg.ETHOGRAM][behavior_idx])
         # check if coding map for modifiers
-        if "coding map" in self.pj[cfg.ETHOGRAM][behavior_idx] and self.pj[cfg.ETHOGRAM][behavior_idx]["coding map"]:
+        if util.has_coding_map(self.pj[cfg.ETHOGRAM], behavior_idx):
             # pause if media and media playing
-            if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE] in [cfg.MEDIA]:
+            if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE] == cfg.MEDIA:
                 if self.playerType == cfg.MEDIA:
                     if self.is_playing():
                         flag_player_playing = True

@@ -82,6 +82,7 @@ EVENTS = "events"
 TIME_OFFSET = "time offset"
 
 CODING_MAP = "coding_map"
+CODING_MAP_sp = "coding map"  # space between words (no underscore)
 BEHAVIORS_CODING_MAP = "behaviors_coding_map"
 SUBJECTS = "subjects_conf"
 ETHOGRAM = "behaviors_conf"
