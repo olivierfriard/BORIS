@@ -206,6 +206,10 @@ class ModifiersList(QDialog):
                                     if self.modifiersSetNumber == 1:
                                         self.accept()
                                         return True
+                                    #else move to next set of mofifiers
+                                    elif index!=self.modifiersSetNumber:
+                                        widget.parent().focusNextChild()
+                                        return True
 
                                 if f"({cfg.MULTI_SELECTION})" in widget.objectName():
                                     if widget.item(index).checkState() == Qt.Checked:
@@ -220,6 +224,10 @@ class ModifiersList(QDialog):
                                 if self.modifiersSetNumber == 1:
                                     self.accept()
                                     return True
+                                #else move to next set of mofifiers
+                                elif index!=self.modifiersSetNumber:
+                                        widget.parent().focusNextChild()
+                                        return True
 
                             if f"({cfg.MULTI_SELECTION})" in widget.objectName():
                                 if widget.item(index).checkState() == Qt.Checked:
