@@ -6,14 +6,21 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>638</width>
-    <height>636</height>
+    <width>1088</width>
+    <height>654</height>
    </rect>
   </property>
   <property name="windowTitle">
    <string>Set modifiers</string>
   </property>
   <layout class="QVBoxLayout" name="verticalLayout_5">
+   <item>
+    <widget class="QCheckBox" name="cb_ask_at_stop">
+     <property name="text">
+      <string>Ask for modifier(s) when behavior stops</string>
+     </property>
+    </widget>
+   </item>
    <item>
     <layout class="QVBoxLayout" name="verticalLayout_4">
      <item>
@@ -172,13 +179,6 @@
              <string>Value from external data file</string>
             </property>
            </item>
-          </widget>
-         </item>
-         <item>
-          <widget class="QCheckBox" name="cb_ask_at_stop">
-           <property name="text">
-            <string>Ask for modifier(s) when behavior stops</string>
-           </property>
           </widget>
          </item>
          <item>

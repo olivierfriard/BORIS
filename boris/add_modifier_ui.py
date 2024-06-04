@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'add_modifier.ui'
+# Form implementation generated from reading ui file 'boris/add_modifier.ui'
 #
 # Created by: PyQt5 UI code generator 5.15.6
 #
@@ -14,9 +14,12 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 class Ui_Dialog(object):
     def setupUi(self, Dialog):
         Dialog.setObjectName("Dialog")
-        Dialog.resize(638, 636)
+        Dialog.resize(1088, 654)
         self.verticalLayout_5 = QtWidgets.QVBoxLayout(Dialog)
         self.verticalLayout_5.setObjectName("verticalLayout_5")
+        self.cb_ask_at_stop = QtWidgets.QCheckBox(Dialog)
+        self.cb_ask_at_stop.setObjectName("cb_ask_at_stop")
+        self.verticalLayout_5.addWidget(self.cb_ask_at_stop)
         self.verticalLayout_4 = QtWidgets.QVBoxLayout()
         self.verticalLayout_4.setObjectName("verticalLayout_4")
         self.horizontalLayout_5 = QtWidgets.QHBoxLayout()
@@ -87,9 +90,6 @@ class Ui_Dialog(object):
         self.cbType.addItem("")
         self.cbType.addItem("")
         self.verticalLayout.addWidget(self.cbType)
-        self.cb_ask_at_stop = QtWidgets.QCheckBox(Dialog)
-        self.cb_ask_at_stop.setObjectName("cb_ask_at_stop")
-        self.verticalLayout.addWidget(self.cb_ask_at_stop)
         self.lbValues = QtWidgets.QLabel(Dialog)
         self.lbValues.setObjectName("lbValues")
         self.verticalLayout.addWidget(self.lbValues)
@@ -159,6 +159,7 @@ class Ui_Dialog(object):
     def retranslateUi(self, Dialog):
         _translate = QtCore.QCoreApplication.translate
         Dialog.setWindowTitle(_translate("Dialog", "Set modifiers"))
+        self.cb_ask_at_stop.setText(_translate("Dialog", "Ask for modifier(s) when behavior stops"))
         self.lbModifier.setText(_translate("Dialog", "Modifier"))
         self.lbCode.setText(_translate("Dialog", "Key code"))
         self.lbCodeHelp.setText(_translate("Dialog", "Key code is case sensitive. Type one character or a function key (F1, F2... F12)"))
@@ -169,7 +170,6 @@ class Ui_Dialog(object):
         self.cbType.setItemText(1, _translate("Dialog", "Multiple selection"))
         self.cbType.setItemText(2, _translate("Dialog", "Numeric"))
         self.cbType.setItemText(3, _translate("Dialog", "Value from external data file"))
-        self.cb_ask_at_stop.setText(_translate("Dialog", "Ask for modifier(s) when behavior stops"))
         self.lbValues.setText(_translate("Dialog", "Values"))
         self.pbMoveUp.setText(_translate("Dialog", "Move modifier up"))
         self.pbMoveDown.setText(_translate("Dialog", "Move modifier down"))
