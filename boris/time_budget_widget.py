@@ -112,7 +112,7 @@ class timeBudgetResults(QWidget):
         spacerItem = QSpacerItem(241, 20, QSizePolicy.Expanding, QSizePolicy.Minimum)
         hbox2.addItem(spacerItem)
 
-        self.pbClose = QPushButton("Close", clicked=self.close_clicked)
+        self.pbClose = QPushButton(cfg.CLOSE, clicked=self.close_clicked)
         hbox2.addWidget(self.pbClose)
 
         hbox.addLayout(hbox2)

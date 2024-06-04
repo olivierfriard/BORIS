@@ -102,7 +102,7 @@ class BehaviorsCodingMapWindowClass(QWidget):
         self.leareaCode = QLineEdit(self)
         hBoxLayout1.addWidget(self.leareaCode)
 
-        self.btClose = QPushButton("Close")
+        self.btClose = QPushButton(cfg.CLOSE)
         self.btClose.clicked.connect(self.close)
         hBoxLayout1.addWidget(self.btClose)
 

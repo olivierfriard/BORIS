@@ -62,8 +62,8 @@ class addModifierDialog(QDialog, Ui_Dialog):
         self.pb_add_subjects.clicked.connect(self.add_subjects)
         self.pb_load_file.clicked.connect(self.add_modifiers_from_file)
 
-        self.pbOK.clicked.connect(lambda: self.pb_pushed("ok"))
-        self.pbCancel.clicked.connect(lambda: self.pb_pushed("cancel"))
+        self.pbOK.clicked.connect(lambda: self.pb_pushed(cfg.OK))
+        self.pbCancel.clicked.connect(lambda: self.pb_pushed(cfg.CANCEL))
 
         self.le_name.textChanged.connect(self.set_name_changed)
         self.le_description.textChanged.connect(self.set_description_changed)
@@ -83,8 +83,6 @@ class addModifierDialog(QDialog, Ui_Dialog):
             if self.ask_at_stop_enabled:
                 if dict(modif).get("ask at stop", False):
                     self.cb_ask_at_stop.setChecked(True)
-
-        print(f"{self.modifiers_sets_dict=}")
 
         self.tabWidgetModifiersSets.currentChanged.connect(self.tabWidgetModifiersSets_changed)
 
@@ -130,14 +128,14 @@ class addModifierDialog(QDialog, Ui_Dialog):
                         "If you close the window it will be lost.<br>"
                         "Do you want to change modifiers set"
                     ),
-                    ["Close", cfg.CANCEL],
+                    [cfg.CLOSE, cfg.CANCEL],
                 )
                 == cfg.CANCEL
             ):
                 return
-        if button == "ok":
+        if button == cfg.OK:
             self.accept()
-        if button == "cancel":
+        if button == cfg.CANCEL:
             self.reject()
 
     def add_subjects(self):

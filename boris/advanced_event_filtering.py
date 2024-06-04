@@ -155,7 +155,7 @@ class Advanced_event_filtering_dialog(QDialog):
         hbox.addItem(QSpacerItem(241, 20, QSizePolicy.Expanding, QSizePolicy.Minimum))
         self.pb_save = QPushButton("Save results", clicked=self.save_results)
         hbox.addWidget(self.pb_save)
-        self.pb_close = QPushButton("Close", clicked=self.close)
+        self.pb_close = QPushButton(cfg.CLOSE, clicked=self.close)
         hbox.addWidget(self.pb_close)
         vbox.addLayout(hbox)
 

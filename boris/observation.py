@@ -706,7 +706,7 @@ class Observation(QDialog, Ui_Form):
         w = dialog.View_data()
         w.setWindowTitle("View data")
         w.lb.setText(f"View first and last rows of <b>{pl.Path(data_file_path).name}</b> file")
-        w.pbOK.setText("Close")
+        w.pbOK.setText(cfg.CLOSE)
         w.label.setText("Index of columns to plot")
         w.le.setEnabled(False)
         w.le.setText(columns_to_plot)
