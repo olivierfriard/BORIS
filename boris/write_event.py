@@ -208,8 +208,6 @@ def write_event(self, event: dict, mem_time: dec) -> int:
                 flag_ask_at_stop = True
                 break
 
-    # print(f"{current_states=}")
-
     flag_ask_modifier = False
     if flag_ask_at_stop:
         # TODO: check if new event is a STOP one

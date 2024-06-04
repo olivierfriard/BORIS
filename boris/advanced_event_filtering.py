@@ -429,7 +429,7 @@ def event_filtering(self):
     for row in cursor.fetchall():
         obs, subj, behav, start, stop = row
         if obs not in events:
-            events[obs]: dict = {}
+            events[obs] = {}
 
         # use function in base at event (state or point)
         interval_func = icc if start == stop else ico
