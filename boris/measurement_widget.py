@@ -111,7 +111,7 @@ class wgMeasurement(QWidget):
         self.pbSave = QPushButton("Save results", clicked=self.pbSave_clicked)
         hbox3.addWidget(self.pbSave)
 
-        self.pbClose = QPushButton("Close", clicked=self.pbClose_clicked)
+        self.pbClose = QPushButton(cfg.CLOSE, clicked=self.pbClose_clicked)
         hbox3.addWidget(self.pbClose)
 
         vbox.addLayout(hbox3)
