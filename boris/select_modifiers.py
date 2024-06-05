@@ -114,6 +114,7 @@ class ModifiersList(QDialog):
             if self.modifiers_dict[idx]["type"] in [cfg.NUMERIC_MODIFIER]:
                 le = QLineEdit()
                 self.modifiers_dict[idx]["widget"] = le
+                le.setObjectName(f"le_modifiers_({self.modifiers_dict[idx]['type']})")
 
                 if currentModifierList != [""] and currentModifierList[int(idx)] != "None":
                     le.setText(currentModifierList[int(idx)])
@@ -163,7 +164,10 @@ class ModifiersList(QDialog):
                 self.accept()
                 return True
 
+            modifiersSetIndex=0
             for widget in self.children():
+                if "_modifiers" in widget.objectName():
+                    modifiersSetIndex = modifiersSetIndex + 1
                 if "lw_modifiers" in widget.objectName():
                     if self.modifiersSetNumber == 1:
                         # check if modifiers have code
@@ -197,6 +201,7 @@ class ModifiersList(QDialog):
                                 except Exception:
                                     return
 
+
                     for index in range(widget.count()):
                         # check function kesy (F1, F2...)
                         if ek in cfg.function_keys:
@@ -207,8 +212,13 @@ class ModifiersList(QDialog):
                                     if self.modifiersSetNumber == 1:
                                         self.accept()
                                         return True
+<<<<<<< master
+                                    #else move to next set of mofifiers
+                                    elif modifiersSetIndex!=self.modifiersSetNumber:
+=======
                                     # else move to next set of mofifiers
                                     elif index != self.modifiersSetNumber:
+>>>>>>> master
                                         widget.parent().focusNextChild()
                                         return True
 
@@ -225,10 +235,17 @@ class ModifiersList(QDialog):
                                 if self.modifiersSetNumber == 1:
                                     self.accept()
                                     return True
+<<<<<<< master
+                                #else move to next set of mofifiers
+                                elif modifiersSetIndex!=self.modifiersSetNumber:
+                                        widget.parent().focusNextChild()
+                                        return True
+=======
                                 # else move to next set of mofifiers
                                 elif index != self.modifiersSetNumber:
                                     widget.parent().focusNextChild()
                                     return True
+>>>>>>> master
 
                             if f"({cfg.MULTI_SELECTION})" in widget.objectName():
                                 if widget.item(index).checkState() == Qt.Checked:
