@@ -43,6 +43,10 @@ from . import utilities as util
 
 
 class ModifiersList(QDialog):
+    """
+    class for selection the modifier(s)
+    """
+
     def __init__(self, code: str, modifiers_dict: dict, currentModifier: str):
         super().__init__()
         self.setWindowTitle(cfg.programName)
@@ -60,11 +64,11 @@ class ModifiersList(QDialog):
         self.modifiersSetNumber = 0
 
         for idx in util.sorted_keys(modifiers_dict):
-            if self.modifiers_dict[idx]["type"] not in [
+            if self.modifiers_dict[idx]["type"] not in (
                 cfg.SINGLE_SELECTION,
                 cfg.MULTI_SELECTION,
                 cfg.NUMERIC_MODIFIER,
-            ]:
+            ):
                 continue
 
             V2layout = QVBoxLayout()
@@ -75,10 +79,13 @@ class ModifiersList(QDialog):
             lb.setText(f"Modifier <b>{self.modifiers_dict[idx]['name']}</b>")
             V2layout.addWidget(lb)
 
-            if self.modifiers_dict[idx]["type"] in [
+            lb = QLabel(f"<small>{self.modifiers_dict[idx]['description']}</small>")
+            V2layout.addWidget(lb)
+
+            if self.modifiers_dict[idx]["type"] in (
                 cfg.SINGLE_SELECTION,
                 cfg.MULTI_SELECTION,
-            ]:
+            ):
                 lw = QListWidget()
                 self.modifiers_dict[idx]["widget"] = lw
                 lw.setObjectName(f"lw_modifiers_({self.modifiers_dict[idx]['type']})")
@@ -161,10 +168,11 @@ class ModifiersList(QDialog):
 
             # accept and close dialog if enter pressed
             if ek == Qt.Key_Enter or ek == Qt.Key_Return:  # enter or enter from numeric pad
-                self.accept()
+                if not self.pbOK_clicked():
+                    return False
                 return True
 
-            modifiersSetIndex=0
+            modifiersSetIndex = 0
             for widget in self.children():
                 if "_modifiers" in widget.objectName():
                     modifiersSetIndex = modifiersSetIndex + 1
@@ -176,7 +184,7 @@ class ModifiersList(QDialog):
                                 break
                         else:
                             # modifiers have no associated code: the modifier starting with hit key will be selected
-                            if ek not in [Qt.Key_Down, Qt.Key_Up]:
+                            if ek not in (Qt.Key_Down, Qt.Key_Up):
                                 if ek == Qt.Key_Space and f"({cfg.MULTI_SELECTION})" in widget.objectName():  # checking using SPACE bar
                                     if widget.item(widget.currentRow()).checkState() == Qt.Checked:
                                         widget.item(widget.currentRow()).setCheckState(Qt.Unchecked)
@@ -201,7 +209,6 @@ class ModifiersList(QDialog):
                                 except Exception:
                                     return
 
-
                     for index in range(widget.count()):
                         # check function kesy (F1, F2...)
                         if ek in cfg.function_keys:
@@ -212,13 +219,8 @@ class ModifiersList(QDialog):
                                     if self.modifiersSetNumber == 1:
                                         self.accept()
                                         return True
-<<<<<<< master
-                                    #else move to next set of mofifiers
-                                    elif modifiersSetIndex!=self.modifiersSetNumber:
-=======
                                     # else move to next set of mofifiers
-                                    elif index != self.modifiersSetNumber:
->>>>>>> master
+                                    elif modifiersSetIndex != self.modifiersSetNumber:
                                         widget.parent().focusNextChild()
                                         return True
 
@@ -235,17 +237,10 @@ class ModifiersList(QDialog):
                                 if self.modifiersSetNumber == 1:
                                     self.accept()
                                     return True
-<<<<<<< master
-                                #else move to next set of mofifiers
-                                elif modifiersSetIndex!=self.modifiersSetNumber:
-                                        widget.parent().focusNextChild()
-                                        return True
-=======
                                 # else move to next set of mofifiers
-                                elif index != self.modifiersSetNumber:
+                                elif modifiersSetIndex != self.modifiersSetNumber:
                                     widget.parent().focusNextChild()
                                     return True
->>>>>>> master
 
                             if f"({cfg.MULTI_SELECTION})" in widget.objectName():
                                 if widget.item(index).checkState() == Qt.Checked:
@@ -297,6 +292,9 @@ class ModifiersList(QDialog):
         return self.modifiers_dict
 
     def pbOK_clicked(self):
+        """
+        OK button is clicked
+        """
         for idx in util.sorted_keys(self.modifiers_dict):
             if self.modifiers_dict[idx]["type"] == cfg.NUMERIC_MODIFIER:
                 if self.modifiers_dict[idx]["widget"].text():
@@ -306,8 +304,8 @@ class ModifiersList(QDialog):
                         QMessageBox.warning(
                             self,
                             cfg.programName,
-                            "<b>{}</b> is not a numeric value".format(self.modifiers_dict[idx]["widget"].text()),
+                            f"<b>{self.modifiers_dict[idx]['widget'].text()}</b> is not a numeric value",
                         )
-                        return
+                        return False
 
         self.accept()
