@@ -198,6 +198,7 @@ class ModifiersList(QDialog):
                                     return
 
                     for index in range(widget.count()):
+                        # check function kesy (F1, F2...)
                         if ek in cfg.function_keys:
                             if f"({cfg.function_keys[ek]})" in widget.item(index).text().upper():
                                 if f"({cfg.SINGLE_SELECTION})" in widget.objectName():
@@ -205,6 +206,10 @@ class ModifiersList(QDialog):
                                     # close dialog if one set of modifiers
                                     if self.modifiersSetNumber == 1:
                                         self.accept()
+                                        return True
+                                    # else move to next set of mofifiers
+                                    elif index != self.modifiersSetNumber:
+                                        widget.parent().focusNextChild()
                                         return True
 
                                 if f"({cfg.MULTI_SELECTION})" in widget.objectName():
@@ -219,6 +224,10 @@ class ModifiersList(QDialog):
                                 # close dialog if one set of modifiers
                                 if self.modifiersSetNumber == 1:
                                     self.accept()
+                                    return True
+                                # else move to next set of mofifiers
+                                elif index != self.modifiersSetNumber:
+                                    widget.parent().focusNextChild()
                                     return True
 
                             if f"({cfg.MULTI_SELECTION})" in widget.objectName():
