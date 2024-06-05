@@ -537,9 +537,9 @@ def get_current_states_modifiers_by_subject(
                 break
             if x[cfg.EVENT_BEHAVIOR_FIELD_IDX] in state_behaviors_codes:
                 if (x[cfg.EVENT_BEHAVIOR_FIELD_IDX], x[cfg.EVENT_MODIFIER_FIELD_IDX]) not in current_states[x[cfg.EVENT_SUBJECT_FIELD_IDX]]:
-                    current_states[x[cfg.EVENT_SUBJECT_FIELD_IDX]][
-                        (x[cfg.EVENT_BEHAVIOR_FIELD_IDX], x[cfg.EVENT_MODIFIER_FIELD_IDX])
-                    ] = False
+                    current_states[x[cfg.EVENT_SUBJECT_FIELD_IDX]][(x[cfg.EVENT_BEHAVIOR_FIELD_IDX], x[cfg.EVENT_MODIFIER_FIELD_IDX])] = (
+                        False
+                    )
 
                 current_states[x[cfg.EVENT_SUBJECT_FIELD_IDX]][
                     (x[cfg.EVENT_BEHAVIOR_FIELD_IDX], x[cfg.EVENT_MODIFIER_FIELD_IDX])
@@ -1491,6 +1491,17 @@ def all_subjects(subjects: dict) -> list:
     """
 
     return [subjects[x][cfg.SUBJECT_NAME] for x in sorted_keys(subjects)]
+
+
+def has_coding_map(ethogram: dict, behavior_idx: str) -> bool:
+    """
+    check if behavior index has a coding map
+    """
+    if not ethogram.get(behavior_idx, False):
+        return False
+    if not ethogram[behavior_idx].get("coding map", False):
+        return False
+    return False
 
 
 def dir_images_number(dir_path_str: str) -> dict:

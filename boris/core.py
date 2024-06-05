@@ -20,7 +20,6 @@ This file is part of BORIS.
 
 """
 
-
 import os
 import sys
 
@@ -1365,13 +1364,14 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         try:
             versionURL = "https://www.boris.unito.it/static/ver4.dat"
-            lastVersion = urllib.request.urlopen(versionURL).read().strip().decode("utf-8")
-            if util.versiontuple(lastVersion) > util.versiontuple(__version__):
+            last_version = urllib.request.urlopen(versionURL).read().strip().decode("utf-8")
+            if util.versiontuple(last_version) > util.versiontuple(__version__):
                 msg = (
-                    f"A new version is available: v. <b>{lastVersion}</b><br>"
+                    f"A new version is available: v. <b>{last_version}</b><br>"
                     'Go to <a href="https://www.boris.unito.it">'
                     "https://www.boris.unito.it</a> to install it."
                 )
+                # https://github.com/olivierfriard/BORIS/archive/refs/tags/v{last_version}.zip
             else:
                 msg = f"The version you are using is the last one: <b>{__version__}</b>"
             newsURL = "https://www.boris.unito.it/static/news.dat"
@@ -3611,6 +3611,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 if dialog.MessageDialog(cfg.programName, "Delete the current events?", (cfg.YES, cfg.NO)) == cfg.YES:
                     self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS] = []
                 self.project_changed()
+                self.load_tw_events(self.observationId)
 
             self.pb_live_obs.setText("Stop live observation")
 
@@ -4651,9 +4652,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         event = dict(self.pj[cfg.ETHOGRAM][behavior_idx])
         # check if coding map for modifiers
-        if "coding map" in self.pj[cfg.ETHOGRAM][behavior_idx] and self.pj[cfg.ETHOGRAM][behavior_idx]["coding map"]:
+        if util.has_coding_map(self.pj[cfg.ETHOGRAM], behavior_idx):
             # pause if media and media playing
-            if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE] in [cfg.MEDIA]:
+            if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE] == cfg.MEDIA:
                 if self.playerType == cfg.MEDIA:
                     if self.is_playing():
                         flag_player_playing = True

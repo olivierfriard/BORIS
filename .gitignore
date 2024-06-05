@@ -1,5 +1,7 @@
-*.pyc
+*.py[oc]
+__pycache__/
 .DS_Store
+*.egg-info
 build
 dist
 .vscode

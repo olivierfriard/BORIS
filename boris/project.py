@@ -760,7 +760,7 @@ class projectDialog(QDialog, Ui_dlgProject):
         # check if double click on 'coding map' column
         if column == cfg.behavioursFields["coding map"]:
             if "with coding map" in self.twBehaviors.item(row, cfg.behavioursFields[cfg.TYPE]).text():
-                self.behaviorTypeChanged(row)
+                self.behavior_type_changed(row)
             else:
                 QMessageBox.information(self, cfg.programName, "Change the behavior type on first column to select a coding map")
 
@@ -790,10 +790,15 @@ class projectDialog(QDialog, Ui_dlgProject):
                     subjectName = self.twSubjects.item(subject_row, 1).text().strip() if self.twSubjects.item(subject_row, 1) else ""
                     subjects_list.append((subjectName, key))
 
-                addModifierWindow = add_modifier.addModifierDialog(self.twBehaviors.item(row, column).text(), subjects=subjects_list)
+                addModifierWindow = add_modifier.addModifierDialog(
+                    self.twBehaviors.item(row, column).text(),
+                    subjects=subjects_list,
+                    ask_at_stop_enabled=self.twBehaviors.item(row, cfg.behavioursFields["type"]).text() == cfg.STATE_EVENT,
+                )
                 addModifierWindow.setWindowTitle(f'Set modifiers for "{self.twBehaviors.item(row, 2).text()}" behavior')
+
                 if addModifierWindow.exec_():
-                    self.twBehaviors.item(row, column).setText(addModifierWindow.getModifiers())
+                    self.twBehaviors.item(row, column).setText(addModifierWindow.get_modifiers())
 
     def behavior_type_doubleclicked(self, row):
         """
@@ -810,7 +815,7 @@ class projectDialog(QDialog, Ui_dlgProject):
         if ok and new_type:
             self.twBehaviors.item(row, cfg.behavioursFields["type"]).setText(new_type)
 
-            self.behaviorTypeChanged(row)
+            self.behavior_type_changed(row)
 
     def color_doubleclicked(self, row: int) -> None:
         """
@@ -1325,16 +1330,16 @@ class projectDialog(QDialog, Ui_dlgProject):
             self.twBehaviors.setItem(self.twBehaviors.rowCount() - 1, cfg.behavioursFields[field_type], item)
         self.twBehaviors.scrollToBottom()
 
-    def behaviorTypeChanged(self, row):
+    def behavior_type_changed(self, row: int) -> None:
         """
         event type combobox changed
         """
 
-        if "with coding map" in self.twBehaviors.item(row, cfg.behavioursFields[cfg.TYPE]).text():
+        if cfg.CODING_MAP_sp in self.twBehaviors.item(row, cfg.behavioursFields[cfg.TYPE]).text():
             # let user select a coding maop
             fn = QFileDialog().getOpenFileName(
                 self,
-                "Select a coding map for " f"{self.twBehaviors.item(row, cfg.behavioursFields['code']).text()} behavior",
+                "Select a modifier coding map for " f"{self.twBehaviors.item(row, cfg.behavioursFields['code']).text()} behavior",
                 "",
                 "BORIS map files (*.boris_map);;All files (*)",
             )
@@ -1344,12 +1349,12 @@ class projectDialog(QDialog, Ui_dlgProject):
                 try:
                     new_map = json.loads(open(fileName, "r").read())
                 except Exception:
-                    QMessageBox.critical(self, cfg.programName, "Error reding the file")
+                    QMessageBox.critical(self, cfg.programName, "Error reding the coding map")
                     return
                 self.pj[cfg.CODING_MAP][new_map["name"]] = new_map
 
                 # add modifiers from coding map areas
-                modifstr = str(
+                modifstr = json.dumps(
                     {
                         "0": {
                             "name": new_map["name"],
@@ -1581,7 +1586,7 @@ class projectDialog(QDialog, Ui_dlgProject):
     def check_ethogram(self) -> dict:
         """
         check ethogram for various parameter
-        returns ethogram dict or {cfg.CANCEL: True"} in case of error
+        returns ethogram dict or {cfg.CANCEL: True} in case of error
 
         """
         # store behaviors
@@ -1602,7 +1607,11 @@ class projectDialog(QDialog, Ui_dlgProject):
 
             if self.twBehaviors.item(r, cfg.behavioursFields["modifiers"]).text():
                 try:
-                    modifiers_dict = eval(self.twBehaviors.item(r, cfg.behavioursFields["modifiers"]).text())
+                    modifiers_dict = (
+                        json.loads(self.twBehaviors.item(r, cfg.behavioursFields["modifiers"]).text())
+                        if self.twBehaviors.item(r, cfg.behavioursFields["modifiers"]).text()
+                        else {}
+                    )
                     for k in modifiers_dict:
                         for value in modifiers_dict[k]["values"]:
                             modif_code = value.split(" (")[0]
@@ -1672,7 +1681,7 @@ class projectDialog(QDialog, Ui_dlgProject):
                     if field == "modifiers" and row["modifiers"]:
                         if remove_leading_trailing_spaces_in_modifiers == cfg.YES:
                             try:
-                                modifiers_dict = eval(row["modifiers"])
+                                modifiers_dict = json.loads(row["modifiers"]) if row["modifiers"] else {}
                                 for k in modifiers_dict:
                                     for idx, value in enumerate(modifiers_dict[k]["values"]):
                                         modif_code = value.split(" (")[0]
@@ -1688,7 +1697,13 @@ class projectDialog(QDialog, Ui_dlgProject):
                                 QMessageBox.critical(self, cfg.programName, "Error removing leading/trailing spaces in modifiers")
 
                         else:
-                            row["modifiers"] = eval(row["modifiers"])
+                            """
+                            if row["modifiers"]:
+                                row["modifiers"] = eval(row["modifiers"])
+                            else:
+                                row["modifiers"] = {}
+                            """
+                            row["modifiers"] = json.loads(row["modifiers"]) if row["modifiers"] else {}
                 else:
                     row[field] = ""
 
@@ -1714,7 +1729,7 @@ class projectDialog(QDialog, Ui_dlgProject):
             return {cfg.CANCEL: True}
 
         # check if behavior belong to category that is not in categories list
-        behavior_category = []
+        behavior_category: list = []
         for idx in checked_ethogram:
             if cfg.BEHAVIOR_CATEGORY in checked_ethogram[idx]:
                 if checked_ethogram[idx][cfg.BEHAVIOR_CATEGORY]:

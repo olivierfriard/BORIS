@@ -138,7 +138,7 @@ class BehaviorsMapCreatorWindow(QMainWindow):
         self.addToProject.triggered.connect(self.add_to_project)
 
         self.exitAction = QAction(QIcon(), "&Close", self)
-        self.exitAction.setStatusTip("Close")
+        self.exitAction.setStatusTip(cfg.CLOSE)
         self.exitAction.triggered.connect(self.close)
 
         menubar = self.menuBar()

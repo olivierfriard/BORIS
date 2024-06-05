@@ -82,6 +82,7 @@ EVENTS = "events"
 TIME_OFFSET = "time offset"
 
 CODING_MAP = "coding_map"
+CODING_MAP_sp = "coding map"  # space between words (no underscore)
 BEHAVIORS_CODING_MAP = "behaviors_coding_map"
 SUBJECTS = "subjects_conf"
 ETHOGRAM = "behaviors_conf"
@@ -139,6 +140,7 @@ YES = "Yes"
 NO = "No"
 CANCEL = "Cancel"
 APPEND = "Append"
+CLOSE = "Close"
 REPLACE = "Replace"
 REMOVE = "Remove"
 SAVE = "Save"
@@ -210,17 +212,6 @@ TIME_LAPSE = "time_lapse_delay"
 
 
 # fields for event configuration
-"""
-fields = {
-    "type": 0,
-    "key": 1,
-    "code": 2,
-    "description": 3,
-    "modifiers": 4,
-    "excluded": 5,
-    "coding map": 6,
-}
-"""
 
 ETHOGRAM_TABLE_COLUMNS: dict = {
     0: "key",
@@ -245,18 +236,6 @@ behavioursFields: dict = {
     "excluded": 7,
     "coding map": 8,
 }
-"""
-ETHOGRAM_FIELDS = [
-    "type",
-    "key",
-    "code",
-    "description",
-    "category",
-    "modifiers",
-    "excluded",
-    "coding map",
-]
-"""
 ETHOGRAM_EDITABLE_FIELDS: tuple = ("key", "code", "description")
 
 PROJECT_BEHAVIORS_KEY_FIELD_IDX = 1
@@ -471,6 +450,9 @@ WAVEFORM_PLOT = "waveform"
 SPECTROGRAM_PLOT = "spectrogram"
 EVENTS_PLOT = "plot_events"
 
+PLAYING = "playing"
+PAUSED = "paused"
+STOPPED = "stopped"
 
 POINT_EVENT_ST_DURATION = 0.5
 
@@ -480,6 +462,8 @@ FRAME_TAB = 1
 SLIDER_MAXIMUM = 1000
 
 FRAME_DEFAULT_CACHE_SIZE = 1
+
+EXCLUDED = "excluded"
 
 # modifiers
 MODIFIERS = "modifiers"

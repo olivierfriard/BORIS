@@ -155,7 +155,7 @@ class Advanced_event_filtering_dialog(QDialog):
         hbox.addItem(QSpacerItem(241, 20, QSizePolicy.Expanding, QSizePolicy.Minimum))
         self.pb_save = QPushButton("Save results", clicked=self.save_results)
         hbox.addWidget(self.pb_save)
-        self.pb_close = QPushButton("Close", clicked=self.close)
+        self.pb_close = QPushButton(cfg.CLOSE, clicked=self.close)
         hbox.addWidget(self.pb_close)
         vbox.addLayout(hbox)
 
@@ -429,7 +429,7 @@ def event_filtering(self):
     for row in cursor.fetchall():
         obs, subj, behav, start, stop = row
         if obs not in events:
-            events[obs]: dict = {}
+            events[obs] = {}
 
         # use function in base at event (state or point)
         interval_func = icc if start == stop else ico

@@ -31,7 +31,7 @@ import zipfile
 import pathlib as pl
 from xml.dom import minidom
 import logging
-from typing import Optional, Tuple
+from typing import Tuple
 
 try:
     from . import config as cfg

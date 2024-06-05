@@ -204,8 +204,6 @@ def preferences(self):
     preferencesWindow.sb_toolbar_icon_size.setValue(self.config_param.get(cfg.TOOLBAR_ICON_SIZE, cfg.DEFAULT_TOOLBAR_ICON_SIZE_VALUE))
     preferencesWindow.cb_darkmode.setChecked(self.config_param.get(cfg.DARK_MODE, cfg.DARK_MODE_DEFAULT_VALUE))
 
-    self.config_param[cfg.DARK_MODE] = preferencesWindow.cb_darkmode.isChecked()
-
     gui_utilities.restore_geometry(preferencesWindow, "preferences", (700, 500))
 
     if preferencesWindow.exec_():
