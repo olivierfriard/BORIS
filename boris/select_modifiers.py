@@ -203,6 +203,7 @@ class ModifiersList(QDialog):
 
 
                     for index in range(widget.count()):
+                        # check function kesy (F1, F2...)
                         if ek in cfg.function_keys:
                             if f"({cfg.function_keys[ek]})" in widget.item(index).text().upper():
                                 if f"({cfg.SINGLE_SELECTION})" in widget.objectName():
@@ -211,8 +212,13 @@ class ModifiersList(QDialog):
                                     if self.modifiersSetNumber == 1:
                                         self.accept()
                                         return True
+<<<<<<< master
                                     #else move to next set of mofifiers
                                     elif modifiersSetIndex!=self.modifiersSetNumber:
+=======
+                                    # else move to next set of mofifiers
+                                    elif index != self.modifiersSetNumber:
+>>>>>>> master
                                         widget.parent().focusNextChild()
                                         return True
 
@@ -229,10 +235,17 @@ class ModifiersList(QDialog):
                                 if self.modifiersSetNumber == 1:
                                     self.accept()
                                     return True
+<<<<<<< master
                                 #else move to next set of mofifiers
                                 elif modifiersSetIndex!=self.modifiersSetNumber:
                                         widget.parent().focusNextChild()
                                         return True
+=======
+                                # else move to next set of mofifiers
+                                elif index != self.modifiersSetNumber:
+                                    widget.parent().focusNextChild()
+                                    return True
+>>>>>>> master
 
                             if f"({cfg.MULTI_SELECTION})" in widget.objectName():
                                 if widget.item(index).checkState() == Qt.Checked:
