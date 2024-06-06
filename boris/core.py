@@ -53,6 +53,8 @@ import gzip
 from collections import deque
 
 import matplotlib
+import zipfile
+import shutil
 
 matplotlib.use("Qt5Agg")
 
@@ -1360,27 +1362,68 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     def actionCheckUpdate_activated(self, flagMsgOnlyIfNew=False):
         """
         check BORIS web site for updates
+        ask user for updating
         """
 
         try:
             versionURL = "https://www.boris.unito.it/static/ver4.dat"
             last_version = urllib.request.urlopen(versionURL).read().strip().decode("utf-8")
+
+            # record check timestamp
+            config_file.save(self, lastCheckForNewVersion=int(time.mktime(time.localtime())))
+
             if util.versiontuple(last_version) > util.versiontuple(__version__):
-                msg = (
-                    f"A new version is available: v. <b>{last_version}</b><br>"
-                    'Go to <a href="https://www.boris.unito.it">'
-                    "https://www.boris.unito.it</a> to install it."
-                )
-                # https://github.com/olivierfriard/BORIS/archive/refs/tags/v{last_version}.zip
+                if (
+                    dialog.MessageDialog(
+                        cfg.programName,
+                        (
+                            f"A new version is available: v. {last_version}.<br><br>"
+                            'For updating manually go to <a href="https://www.boris.unito.it">https://www.boris.unito.it</a>'
+                        ),
+                        (cfg.CANCEL, "Update"),
+                    )
+                    == cfg.CANCEL
+                ):
+                    return
+
             else:
                 msg = f"The version you are using is the last one: <b>{__version__}</b>"
-            newsURL = "https://www.boris.unito.it/static/news.dat"
-            news = urllib.request.urlopen(newsURL).read().strip().decode("utf-8")
-            config_file.save(self, lastCheckForNewVersion=int(time.mktime(time.localtime())))
-            QMessageBox.information(self, cfg.programName, msg)
-            if news:
-                QMessageBox.information(self, cfg.programName, news)
+                QMessageBox.information(self, cfg.programName, msg)
+
+                # any news?
+                newsURL = "https://www.boris.unito.it/static/news.dat"
+                news = urllib.request.urlopen(newsURL).read().strip().decode("utf-8")
+                if news:
+                    QMessageBox.information(self, cfg.programName, news)
+
+                return
+
+            # download zip archive
+            zip_content = urllib.request.urlopen(f"https://github.com/olivierfriard/BORIS/archive/refs/tags/v{last_version}.zip").read()
+
+            temp_zip = tempfile.NamedTemporaryFile(suffix=".zip")
+            # print(temp_zip.name)
+            try:
+                with open(temp_zip.name, "wb") as f_out:
+                    f_out.write(zip_content)
+            except Exception:
+                QMessageBox.critical(self, cfg.programName, "A problem occurred during saving the new version of BORIS.")
+                return
+
+            # extract to temp dir
+            temp_dir = tempfile.TemporaryDirectory()
+            # print(temp_dir.name)
+            # pl.Path(temp_dir.name).mkdir()
+            with zipfile.ZipFile(temp_zip.name, "r") as zip_ref:
+                zip_ref.extractall(temp_dir.name)
+
+            print(pl.Path(__file__).parent.parent)
+
+            shutil.copytree(f"{temp_dir.name}/BORIS-{last_version}", pl.Path(__file__).parent.parent, dirs_exist_ok=True)
+            QMessageBox.information(self, cfg.programName, f"BORIS was updated to version {last_version}")
+
         except Exception:
+            raise
             QMessageBox.warning(self, cfg.programName, "Can not check for updates...")
 
     def seek_mediaplayer(self, new_time: dec, player=0) -> int:
