@@ -1365,66 +1365,78 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         ask user for updating
         """
 
+        versionURL = "https://www.boris.unito.it/static/ver4.dat"
         try:
-            versionURL = "https://www.boris.unito.it/static/ver4.dat"
             last_version = urllib.request.urlopen(versionURL).read().strip().decode("utf-8")
+        except Exception:
+            QMessageBox.warning(self, cfg.programName, "Can not check for updates...")
+            return
 
-            # record check timestamp
-            config_file.save(self, lastCheckForNewVersion=int(time.mktime(time.localtime())))
+        # record check timestamp
+        config_file.save(self, lastCheckForNewVersion=int(time.mktime(time.localtime())))
 
-            if util.versiontuple(last_version) > util.versiontuple(__version__):
-                if (
-                    dialog.MessageDialog(
-                        cfg.programName,
-                        (
-                            f"A new version is available: v. {last_version}.<br><br>"
-                            'For updating manually go to <a href="https://www.boris.unito.it">https://www.boris.unito.it</a>'
-                        ),
-                        (cfg.CANCEL, "Update"),
-                    )
-                    == cfg.CANCEL
-                ):
-                    return
-
-            else:
-                msg = f"The version you are using is the last one: <b>{__version__}</b>"
-                QMessageBox.information(self, cfg.programName, msg)
-
-                # any news?
-                newsURL = "https://www.boris.unito.it/static/news.dat"
-                news = urllib.request.urlopen(newsURL).read().strip().decode("utf-8")
-                if news:
-                    QMessageBox.information(self, cfg.programName, news)
-
+        if util.versiontuple(last_version) > util.versiontuple(__version__):
+            if (
+                dialog.MessageDialog(
+                    cfg.programName,
+                    (
+                        f"A new version is available: v. {last_version}.<br><br>"
+                        'For updating manually go to <a href="https://www.boris.unito.it">https://www.boris.unito.it</a>.<br>'
+                    ),
+                    (cfg.CANCEL, "Update automatically"),
+                )
+                == cfg.CANCEL
+            ):
                 return
 
-            # download zip archive
+        else:
+            msg = f"The version you are using is the last one: <b>{__version__}</b>"
+            QMessageBox.information(self, cfg.programName, msg)
+
+            # any news?
+            newsURL = "https://www.boris.unito.it/static/news.dat"
+            news = urllib.request.urlopen(newsURL).read().strip().decode("utf-8")
+            if news:
+                QMessageBox.information(self, cfg.programName, news)
+            return
+
+        # check if a .git is present
+        if (pl.Path(__file__).parent.parent / pl.Path(".git")).is_dir():
+            QMessageBox.critical(self, cfg.programName, "A .git directory is present, BORIS cannot be automatically updated.")
+            return
+
+        # download zip archive
+        try:
             zip_content = urllib.request.urlopen(f"https://github.com/olivierfriard/BORIS/archive/refs/tags/v{last_version}.zip").read()
+        except Exception:
+            QMessageBox.critical(self, cfg.programName, "Cannot download the new version")
+            return
 
-            temp_zip = tempfile.NamedTemporaryFile(suffix=".zip")
-            # print(temp_zip.name)
-            try:
-                with open(temp_zip.name, "wb") as f_out:
-                    f_out.write(zip_content)
-            except Exception:
-                QMessageBox.critical(self, cfg.programName, "A problem occurred during saving the new version of BORIS.")
-                return
+        temp_zip = tempfile.NamedTemporaryFile(suffix=".zip")
+        try:
+            with open(temp_zip.name, "wb") as f_out:
+                f_out.write(zip_content)
+        except Exception:
+            QMessageBox.critical(self, cfg.programName, "A problem occurred during saving the new version of BORIS.")
+            return
 
-            # extract to temp dir
+        # extract to temp dir
+        try:
             temp_dir = tempfile.TemporaryDirectory()
-            # print(temp_dir.name)
-            # pl.Path(temp_dir.name).mkdir()
             with zipfile.ZipFile(temp_zip.name, "r") as zip_ref:
                 zip_ref.extractall(temp_dir.name)
-
-            print(pl.Path(__file__).parent.parent)
-
-            shutil.copytree(f"{temp_dir.name}/BORIS-{last_version}", pl.Path(__file__).parent.parent, dirs_exist_ok=True)
-            QMessageBox.information(self, cfg.programName, f"BORIS was updated to version {last_version}")
-
         except Exception:
-            raise
-            QMessageBox.warning(self, cfg.programName, "Can not check for updates...")
+            QMessageBox.critical(self, cfg.programName, "A problem occurred during the unzip of the new version.")
+            return
+
+        # copy from temp dir to current BORIS dir
+        try:
+            shutil.copytree(f"{temp_dir.name}/BORIS-{last_version}", pl.Path(__file__).parent.parent, dirs_exist_ok=True)
+        except Exception:
+            QMessageBox.critical(self, cfg.programName, "A problem occurred during the copy the new version of BORIS.")
+            return
+
+        QMessageBox.information(self, cfg.programName, f"BORIS was updated to v. {last_version}. Restart the program to apply the changes.")
 
     def seek_mediaplayer(self, new_time: dec, player=0) -> int:
         """

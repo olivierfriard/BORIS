@@ -54,7 +54,6 @@ class Preferences(QDialog, Ui_prefDialog):
         self.pbCancel.clicked.connect(self.reject)
 
         self.flag_refresh = False
-        self.flag_reset_frames_memory = False
 
     def refresh_preferences(self):
         """
