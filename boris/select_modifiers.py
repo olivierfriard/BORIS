@@ -75,12 +75,13 @@ class ModifiersList(QDialog):
 
             self.modifiersSetNumber += 1
 
-            lb = QLabel()
-            lb.setText(f"Modifier <b>{self.modifiers_dict[idx]['name']}</b>")
-            V2layout.addWidget(lb)
+            if self.modifiers_dict[idx].get("name", ""):
+                lb1 = QLabel(f"Modifier <b>{self.modifiers_dict[idx].get('name', '')}</b>")
+                V2layout.addWidget(lb1)
 
-            lb = QLabel(f"<small>{self.modifiers_dict[idx]['description']}</small>")
-            V2layout.addWidget(lb)
+            if self.modifiers_dict[idx].get("description", ""):
+                lb2 = QLabel(f"<small>{self.modifiers_dict[idx].get('description', '')}</small>")
+                V2layout.addWidget(lb2)
 
             if self.modifiers_dict[idx]["type"] in (
                 cfg.SINGLE_SELECTION,
