@@ -198,8 +198,8 @@ def load_observation(self, obs_id: str, mode: str = cfg.OBS_START) -> str:
     self.observationId = obs_id
 
     if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE] == cfg.IMAGES:
-        self.image_idx: int = 0
-        self.images_list: list = []
+        self.image_idx = 0
+        self.images_list = []
 
         if mode == cfg.OBS_START:
             self.playerType = cfg.IMAGES
@@ -1803,12 +1803,14 @@ def initialize_new_media_observation(self) -> bool:
 
             self.dw_player[i].fps[mediaFile] = mediaFPS
 
+            # add media file to playlist
             self.dw_player[i].player.playlist_append(media_full_path)
-            # self.dw_player[i].player.loadfile(media_full_path)
-            # self.dw_player[i].player.pause = True
+
+            # add media file name to player window title
+            self.dw_player[i].setWindowTitle(f"Player #{i + 1} ({pl.Path(media_full_path).name})")
 
         # media duration cumuled in seconds
-        self.dw_player[i].cumul_media_durations_sec: List[dec] = [round(dec(x / 1000), 3) for x in self.dw_player[i].cumul_media_durations]
+        self.dw_player[i].cumul_media_durations_sec = [round(dec(x / 1000), 3) for x in self.dw_player[i].cumul_media_durations]
 
         # check if BORIS is running on a Windows VM with the 'WMIC COMPUTERSYSTEM GET SERIALNUMBER' command
         # because "auto" or "auto-safe" crash in Windows VM
