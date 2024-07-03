@@ -138,8 +138,8 @@ class BehavioralCategories(QDialog):
         self.vbox.addLayout(self.hbox0)
 
         hbox1 = QHBoxLayout()
-        self.pbOK = QPushButton("OK", clicked=self.accept)
-        self.pbCancel = QPushButton("Cancel", clicked=self.accept)
+        self.pbOK = QPushButton(cfg.OK, clicked=self.accept)
+        self.pbCancel = QPushButton(cfg.CANCEL, clicked=self.accept)
 
         spacerItem = QSpacerItem(40, 20, QSizePolicy.Expanding, QSizePolicy.Minimum)
         hbox1.addItem(spacerItem)
