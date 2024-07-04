@@ -520,7 +520,7 @@
          <item>
           <widget class="QCheckBox" name="cb_darkmode">
            <property name="text">
-            <string>Dark mode</string>
+            <string>Dark mode (should be necessary to relaunch BORIS)</string>
            </property>
           </widget>
          </item>

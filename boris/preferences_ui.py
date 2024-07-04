@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'preferences.ui'
+# Form implementation generated from reading ui file 'boris/preferences.ui'
 #
 # Created by: PyQt5 UI code generator 5.15.6
 #
@@ -331,7 +331,7 @@ class Ui_prefDialog(object):
         self.pb_reset_category_colors.setText(_translate("prefDialog", "Reset colors to default"))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab_colors), _translate("prefDialog", "Plot colors"))
         self.label_9.setText(_translate("prefDialog", "Toolbar icons size"))
-        self.cb_darkmode.setText(_translate("prefDialog", "Dark mode"))
+        self.cb_darkmode.setText(_translate("prefDialog", "Dark mode (should be necessary to relaunch BORIS)"))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab_interface), _translate("prefDialog", "Interface"))
         self.pb_refresh.setText(_translate("prefDialog", "Refresh"))
         self.pbCancel.setText(_translate("prefDialog", "Cancel"))
