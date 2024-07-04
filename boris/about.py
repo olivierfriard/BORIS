@@ -33,7 +33,7 @@ from . import utilities as util
 
 from PyQt5.QtCore import QT_VERSION_STR, PYQT_VERSION_STR
 from PyQt5.QtGui import QPixmap
-from PyQt5.QtWidgets import QApplication, QMessageBox
+from PyQt5.QtWidgets import QMessageBox
 
 
 def actionAbout_activated(self):
@@ -41,7 +41,7 @@ def actionAbout_activated(self):
     About dialog
     """
 
-    programs_versions = ["MPV media player"]
+    programs_versions: list = ["MPV media player"]
 
     mpv_lib_version, mpv_lib_file_path = util.mpv_lib_version()
     programs_versions.append(
