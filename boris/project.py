@@ -578,7 +578,7 @@ class projectDialog(QDialog, Ui_dlgProject):
             # convert modifier shortcuts
             if self.twBehaviors.item(row, cfg.behavioursFields[cfg.MODIFIERS]).text():
                 modifiers_dict = (
-                    eval(self.twBehaviors.item(row, cfg.behavioursFields[cfg.MODIFIERS]).text())
+                    json.loads(self.twBehaviors.item(row, cfg.behavioursFields[cfg.MODIFIERS]).text())
                     if self.twBehaviors.item(row, cfg.behavioursFields[cfg.MODIFIERS]).text()
                     else {}
                 )
@@ -593,7 +593,7 @@ class projectDialog(QDialog, Ui_dlgProject):
                     except Exception:
                         logging.warning("error during conversion of modifier short cut to lower case")
 
-                self.twBehaviors.item(row, cfg.behavioursFields[cfg.MODIFIERS]).setText(str(modifiers_dict))
+                self.twBehaviors.item(row, cfg.behavioursFields[cfg.MODIFIERS]).setText(json.dumps(modifiers_dict))
 
     def convert_subjects_keys_to_lower_case(self):
         """
@@ -796,7 +796,7 @@ class projectDialog(QDialog, Ui_dlgProject):
             else:
                 QMessageBox.information(self, cfg.programName, "Change the behavior type on first column to select a coding map")
 
-        # check if double click on category
+        # check if double click on behavior type
         if column == cfg.behavioursFields["type"]:
             self.behavior_type_doubleclicked(row)
 
@@ -808,6 +808,7 @@ class projectDialog(QDialog, Ui_dlgProject):
         if column == cfg.behavioursFields[cfg.BEHAVIOR_CATEGORY]:
             self.category_doubleclicked(row)
 
+        # check if double click on modifiers
         if column == cfg.behavioursFields[cfg.MODIFIERS]:
             # check if behavior has coding map
             if (
@@ -1735,12 +1736,6 @@ class projectDialog(QDialog, Ui_dlgProject):
                                 QMessageBox.critical(self, cfg.programName, "Error removing leading/trailing spaces in modifiers")
 
                         else:
-                            """
-                            if row["modifiers"]:
-                                row["modifiers"] = eval(row["modifiers"])
-                            else:
-                                row["modifiers"] = {}
-                            """
                             row["modifiers"] = json.loads(row["modifiers"]) if row["modifiers"] else {}
                 else:
                     row[field] = ""

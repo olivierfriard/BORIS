@@ -133,7 +133,7 @@ def export_ethogram(self) -> None:
             # modifiers
             if self.twBehaviors.item(r, cfg.behavioursFields[cfg.MODIFIERS]).text():
                 # modifiers a string
-                modifiers_dict = eval(self.twBehaviors.item(r, cfg.behavioursFields[cfg.MODIFIERS]).text())
+                modifiers_dict = json.loads(self.twBehaviors.item(r, cfg.behavioursFields[cfg.MODIFIERS]).text())
                 modifiers_list = []
                 for key in modifiers_dict:
                     values = ",".join(modifiers_dict[key]["values"])
@@ -350,19 +350,22 @@ def import_ethogram_from_dict(self, project: dict):
                 item.setBackground(QColor(230, 230, 230))
 
             else:
-                if field == cfg.MODIFIERS and isinstance(project[cfg.ETHOGRAM][i][field], str):
-                    modif_set_dict = {}
-                    if project[cfg.ETHOGRAM][i][field]:
-                        modif_set_list = project[cfg.ETHOGRAM][i][field].split("|")
-                        for modif_set in modif_set_list:
-                            modif_set_dict[str(len(modif_set_dict))] = {
-                                "name": "",
-                                "type": cfg.SINGLE_SELECTION,
-                                "values": modif_set.split(","),
-                            }
-                    project[cfg.ETHOGRAM][i][field] = dict(modif_set_dict)
-
-                item.setText(str(project[cfg.ETHOGRAM][i][field]))
+                if field == cfg.MODIFIERS:
+                    if isinstance(project[cfg.ETHOGRAM][i][field], str):
+                        modif_set_dict = {}
+                        if project[cfg.ETHOGRAM][i][field]:
+                            modif_set_list = project[cfg.ETHOGRAM][i][field].split("|")
+                            for modif_set in modif_set_list:
+                                modif_set_dict[str(len(modif_set_dict))] = {
+                                    "name": "",
+                                    "type": cfg.SINGLE_SELECTION,
+                                    "values": modif_set.split(","),
+                                }
+                        project[cfg.ETHOGRAM][i][field] = dict(modif_set_dict)
+                    else:
+                        item.setText(json.dumps(project[cfg.ETHOGRAM][i][field]))
+                else:
+                    item.setText(project[cfg.ETHOGRAM][i][field])
 
                 if field not in cfg.ETHOGRAM_EDITABLE_FIELDS:
                     item.setFlags(Qt.ItemIsEnabled)
@@ -460,8 +463,11 @@ def load_dataframe_into_behaviors_tablewidget(self, df: pd.DataFrame) -> int:
 
 
 def import_behaviors_from_project(self):
+    """
+    import ethogram from a BORIS project file
+    """
     fn = QFileDialog().getOpenFileName(
-        self, "Import behaviors from project file", "", ("Project files (*.boris *.boris.gz);;" "All files (*)")
+        self, "Import behaviors from BORIS project file", "", ("Project files (*.boris *.boris.gz);;" "All files (*)")
     )
     file_name = fn[0] if type(fn) is tuple else fn
 
@@ -474,7 +480,7 @@ def import_behaviors_from_project(self):
 
 def import_behaviors_from_text_file(self):
     """
-    Import behaviors from text file (CSV or TSV)
+    Import ethogram from text file (CSV or TSV)
     """
 
     if self.twBehaviors.rowCount():
