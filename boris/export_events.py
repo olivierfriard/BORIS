@@ -461,6 +461,8 @@ def export_aggregated_events(self):
         _, max_modifiers = export_observation.export_aggregated_events(self.pj, parameters, obs_id)
         tot_max_modifiers = max(tot_max_modifiers, max_modifiers)
 
+    logging.debug(f"tot_max_modifiers: {tot_max_modifiers}")
+
     data_grouped_obs = tablib.Dataset()
 
     mem_command: str = ""  # remember user choice when file already exists
@@ -517,6 +519,8 @@ def export_aggregated_events(self):
             if not r:
                 QMessageBox.warning(None, cfg.programName, msg, QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
 
+        """
+        # disabled after introduction of the force_number_modifiers parameter in export_aggregated_events function
         if len(data_single_obs_sorted) and max_modifiers < tot_max_modifiers:
             for i in range(tot_max_modifiers - max_modifiers):
                 data_single_obs_sorted.insert_col(
@@ -524,9 +528,12 @@ def export_aggregated_events(self):
                     col=[""] * (len(list(data_single_obs_sorted))),
                     header=f"Modif #{i}",
                 )
+        """
+
         data_grouped_obs.extend(data_single_obs_sorted)
 
     data_grouped_obs_all = tablib.Dataset(headers=list(fields_type(tot_max_modifiers).keys()))
+
     data_grouped_obs_all.extend(data_grouped_obs)
     data_grouped_obs_all.title = "Aggregated events"
 
