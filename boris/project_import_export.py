@@ -428,7 +428,10 @@ def load_dataframe_into_behaviors_tablewidget(self, df: pd.DataFrame) -> int:
     for _, row in df.iterrows():
         behavior = {"coding map": ""}
         for x in ethogram_header:
-            behavior[x] = row[ethogram_header[x].upper()] if str(row[ethogram_header[x].upper()]) != "nan" else ""
+            if ethogram_header[x].upper() in row:
+                behavior[x] = row[ethogram_header[x].upper()] if str(row[ethogram_header[x].upper()]) != "nan" else ""
+            else:
+                behavior[x] = ""
 
         self.twBehaviors.setRowCount(self.twBehaviors.rowCount() + 1)
 
