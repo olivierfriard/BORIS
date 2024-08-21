@@ -45,6 +45,9 @@ from PIL.ImageQt import Image
 
 from . import config as cfg
 
+from . import mpv2 as mpv
+
+"""
 try:
     from . import mpv2 as mpv
 
@@ -59,9 +62,10 @@ try:
 
 except RuntimeError:  # libmpv found but version too old
     from . import mpv as mpv
+"""
 
 
-def mpv_lib_version() -> Tuple[str, str]:
+def mpv_lib_version() -> Tuple[str, str, str]:
     """
     Version of MPV library
 
@@ -74,7 +78,7 @@ def mpv_lib_version() -> Tuple[str, str]:
     if sys.platform.startswith("win"):
         mpv_lib_file = mpv.dll
 
-    return (".".join([str(x) for x in mpv._mpv_client_api_version()]), mpv_lib_file)
+    return (".".join([str(x) for x in mpv._mpv_client_api_version()]), mpv_lib_file, mpv.MPV_VERSION)
 
 
 def python_mpv_script_version() -> str:

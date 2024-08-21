@@ -100,6 +100,7 @@ def global_error_message(exception_type, exception_value, traceback_object):
         f"Python {platform.python_version()} ({'64-bit' if sys.maxsize > 2**32 else '32-bit'})\n"
         f"Qt {QT_VERSION_STR} - PyQt {PYQT_VERSION_STR}\n"
         f"MPV library version: {util.mpv_lib_version()[0]}\n"
+        f"MPV API version: {util.mpv_lib_version()[2]}\n"
         f"MPV library file path: {util.mpv_lib_version()[1]}\n\n"
         f"Error succeded at {dt.datetime.now():%Y-%m-%d %H:%M}\n\n"
     )

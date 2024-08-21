@@ -43,9 +43,13 @@ def actionAbout_activated(self):
 
     programs_versions: list = ["MPV media player"]
 
-    mpv_lib_version, mpv_lib_file_path = util.mpv_lib_version()
+    mpv_lib_version, mpv_lib_file_path, mpv_api_version = util.mpv_lib_version()
     programs_versions.append(
-        f"Library version: {mpv_lib_version} file: {mpv_lib_file_path} python-mpv version: {util.python_mpv_script_version()}"
+        (
+            f"Library version: {mpv_lib_version} file: {mpv_lib_file_path}\n"
+            f"MPV API version: {mpv_api_version}\n"
+            f"python-mpv version: {util.python_mpv_script_version()}"
+        )
     )
 
     # ffmpeg

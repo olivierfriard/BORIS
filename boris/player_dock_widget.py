@@ -38,7 +38,11 @@ from PyQt5.QtWidgets import (
 from PyQt5.QtCore import pyqtSignal, QEvent, Qt
 from PyQt5.QtGui import QIcon
 
+from . import mpv2 as mpv
+
+"""
 try:
+    # import last version of python-mpv
     from . import mpv2 as mpv
 
     # check if MPV API v. 1
@@ -57,6 +61,7 @@ except OSError:  # libmpv not found
     msg = "LIBMPV library not found!\n"
     logging.critical(msg)
     sys.exit()
+"""
 
 
 class Clickable_label(QLabel):
