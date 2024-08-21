@@ -13,7 +13,7 @@ You can not longer run BORIS natively on MacOS (since v.8). Some alternatives to
 
 It provides also some analysis tools like time budget and some plotting functions.
 
-The BORIS paper has more than `1400 citations in peer-reviewed scientific publications <http://www.boris.unito.it/pages/citations.html>`_.
+The BORIS paper has more than `1700 citations in peer-reviewed scientific publications <http://www.boris.unito.it/pages/citations.html>`_.
 
 See http://www.boris.unito.it
 
@@ -40,9 +40,9 @@ Documentation
 -----------------------------------------------------------------------
 
 
-The documentation provides a good starting point for learning how to use BORIS: http://boris.readthedocs.io/
+The documentation provides a good starting point for learning how to use BORIS: https://www.boris.unito.it/user_guide/
 
-Some video tutorials are available: http://www.boris.unito.it/pages/video_tutorials.html
+Some video tutorials are available: https://www.boris.unito.it/video_tutorials/
 
 
 
@@ -80,7 +80,7 @@ following BibTex entry
     }
 
 
-You can also send us a nice postcard! See the `user testimonials <http://www.boris.unito.it/pages/postcards.html>`_
+You can also send us a nice postcard! See the `user testimonials <https://www.boris.unito.it/postcards/>`_
 
 
 
@@ -103,7 +103,7 @@ Licence
 
 Distributed with a `GPL v.3 license <LICENSE.TXT>`_
 
-Copyright (C) 2012-2023 Olivier Friard
+Copyright (C) 2012-2024 Olivier Friard
 
 
 
