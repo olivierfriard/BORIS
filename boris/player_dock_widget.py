@@ -38,11 +38,7 @@ from PyQt5.QtWidgets import (
 from PyQt5.QtCore import pyqtSignal, QEvent, Qt
 from PyQt5.QtGui import QIcon
 
-try:
-    from . import mpv2 as mpv
-except Exception:
-    print("libmpv not found")
-    sys.exit()
+from . import mpv2 as mpv
 
 """
 try:
