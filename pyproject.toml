@@ -5,7 +5,7 @@ description = "BORIS - Behavioral Observation Research Interactive Software"
 authors = [{ name="Olivier Friard", email="olivier.friard@unito.it" }]
 readme = "README.rst"
 license = { file = "LICENSE.TXT" }
-requires-python = ">=3.8"
+requires-python = ">=3.12"
 classifiers=[
         "Topic :: Scientific/Engineering",
         "Intended Audience :: Science/Research",
