@@ -472,7 +472,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         """
         allow to block Qdockwidgets on main window because they can have a strange behavior specially on Mac
         """
-        for w in [self.dwEvents, self.dwEthogram, self.dwSubjects]:
+        for w in (self.dwEvents, self.dwEthogram, self.dwSubjects):
             if self.action_block_dockwidgets.isChecked():
                 w.setFloating(False)
                 w.setFeatures(QDockWidget.NoDockWidgetFeatures)

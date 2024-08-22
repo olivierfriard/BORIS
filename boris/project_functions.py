@@ -379,15 +379,16 @@ def check_project_integrity(
     media_file_available: bool = True,
 ) -> str:
     """
-    check project integrity
-    check if behaviors in observations are in ethogram
-    check unpaired state events
-    check if timestamp between -2147483647 and 2147483647 (2**31 - 1)
-    check if behavior belong to behavioral category that do not more exist
-    check for leading and trailing spaces and special chars in modifiers
-    check if media file are available
-    check if media length available
-    check independent variables
+    check project integrity:
+    * check if coded behaviors are defined in ethogram
+    * check unpaired state events
+    * check if timestamp between -2147483647 and 2147483647 (2**31 - 1)
+    * check if behavior belong to behavioral category that do not more exist
+    * check for leading and trailing spaces and special chars in modifiers
+    * check if media file are available (optional)
+    * check if media length available
+    * check independent variables
+    * check if coded subjects are defines
 
     Args:
         pj (dict): BORIS project
@@ -398,7 +399,7 @@ def check_project_integrity(
     Returns:
         str: message
     """
-    out = ""
+    out: str = ""
 
     # check if coded behaviors are defined in ethogram
     r = check_coded_behaviors(pj)
@@ -520,6 +521,14 @@ def check_project_integrity(
                         f"{obs_id}: the <b>{pj[cfg.OBSERVATIONS][obs_id][cfg.INDEPENDENT_VARIABLES][var_label]}</b> value "
                         f" is not allowed for {var_label} (choose between {defined_set_var_label[var_label]})<br>"
                     )
+
+    # check if coded subjects are defined in the subjects list
+    subjects_list: list = [pj[cfg.SUBJECTS][x]["name"] for x in pj[cfg.SUBJECTS]]
+    coded_subjects = set(util.flatten_list([[y[1] for y in pj[cfg.OBSERVATIONS][x].get(cfg.EVENTS, [])] for x in pj[cfg.OBSERVATIONS]]))
+
+    for subject in coded_subjects:
+        if subject and subject not in subjects_list:
+            out += f"The coded subject <b>{subject}</b> is not defined in the subjects list.<br>You can use the <b>Explore project</b> to fix it.<br><br>"
 
     return out
 

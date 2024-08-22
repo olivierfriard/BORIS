@@ -505,6 +505,19 @@ def group_events(pj: dict, obs_id: str, include_modifiers: bool = False) -> dict
         return {"error": ""}
 
 
+def flatten_list(nested_list) -> list:
+    """
+    Flatten a list of lists.
+    """
+    flattened: list = []
+    for item in nested_list:
+        if isinstance(item, list):
+            flattened.extend(flatten_list(item))
+        else:
+            flattened.append(item)
+    return flattened
+
+
 def get_current_states_modifiers_by_subject(
     state_behaviors_codes: list, events: list, subjects: dict, time_: dec, include_modifiers: bool = False
 ) -> dict:

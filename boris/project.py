@@ -1836,10 +1836,9 @@ class projectDialog(QDialog, Ui_dlgProject):
         # check subjects
         for row in range(self.twSubjects.rowCount()):
             # check key
+            key: str = ""
             if self.twSubjects.item(row, 0):
                 key = self.twSubjects.item(row, 0).text()
-            else:
-                key = ""
 
             # check subject name
             if self.twSubjects.item(row, 1):
@@ -1865,7 +1864,7 @@ class projectDialog(QDialog, Ui_dlgProject):
                 return
 
             # description
-            subjectDescription = ""
+            subjectDescription: str = ""
             if self.twSubjects.item(row, 2):
                 subjectDescription = self.twSubjects.item(row, 2).text().strip()
 
@@ -1874,6 +1873,25 @@ class projectDialog(QDialog, Ui_dlgProject):
                 "name": subjectName,
                 "description": subjectDescription,
             }
+
+        # check if coded subjects are defined in the subjects list
+        subjects_list: list = [self.subjects_conf[x]["name"] for x in self.subjects_conf]
+        coded_subjects = set(
+            util.flatten_list([[y[1] for y in self.pj[cfg.OBSERVATIONS][x].get(cfg.EVENTS, [])] for x in self.pj[cfg.OBSERVATIONS]])
+        )
+
+        not_defined_subjects: list = []
+        for subject in coded_subjects:
+            if subject and subject not in subjects_list:
+                not_defined_subjects.append(subject)
+
+        if not_defined_subjects:
+            QMessageBox.warning(
+                self,
+                cfg.programName,
+                f"The coded subject(s) <b>{', '.join(not_defined_subjects)}</b> is/are not defined in the subjects list.<br>You can use the <b>Explore project</b> to fix it.",
+            )
+            return
 
         self.pj[cfg.SUBJECTS] = dict(self.subjects_conf)
 
