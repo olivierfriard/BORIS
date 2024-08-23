@@ -430,7 +430,7 @@ class projectDialog(QDialog, Ui_dlgProject):
         """
         return a color for the not editable column
         """
-        if self.config_param[cfg.DARK_MODE]:
+        if self.config_param.get(cfg.DARK_MODE, cfg.DEFAULT_FRAME_MODE):
             return QColor(55, 65, 79)
         else:
             return QColor(230, 230, 230)
@@ -730,7 +730,7 @@ class projectDialog(QDialog, Ui_dlgProject):
         behavioral categories manager
         """
 
-        bc = BehavioralCategories(self.pj, self.config_param[cfg.DARK_MODE])
+        bc = BehavioralCategories(self.pj, self.config_param.get(cfg.DARK_MODE, cfg.DEFAULT_FRAME_MODE))
 
         if bc.exec_():
             self.pj[cfg.BEHAVIORAL_CATEGORIES] = []

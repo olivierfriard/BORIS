@@ -146,7 +146,7 @@ def preferences(self):
             cfg.MPV_HWDEC_OPTIONS.index(self.config_param.get(cfg.MPV_HWDEC, cfg.MPV_HWDEC_DEFAULT_VALUE))
         )
     except Exception:
-        preferencesWindow.cb_hwdec.setCurrentIndex(cfg.MPV_HWDEC_DEFAULT_VALUE)
+        preferencesWindow.cb_hwdec.setCurrentIndex(cfg.MPV_HWDEC_OPTIONS.index(cfg.MPV_HWDEC_DEFAULT_VALUE))
 
     # PROJET FILE INDENTATION
     preferencesWindow.combo_project_file_indentation.clear()
@@ -286,7 +286,7 @@ def preferences(self):
         # interface
         self.config_param[cfg.TOOLBAR_ICON_SIZE] = preferencesWindow.sb_toolbar_icon_size.value()
         self.config_param[cfg.DARK_MODE] = preferencesWindow.cb_darkmode.isChecked()
-        if self.config_param[cfg.DARK_MODE]:
+        if self.config_param.get(cfg.DARK_MODE, cfg.DEFAULT_FRAME_MODE):
             self.setStyleSheet(qdarkstyle.load_stylesheet(qt_api="pyqt5"))
         else:
             self.setStyleSheet("")
