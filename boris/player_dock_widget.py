@@ -117,7 +117,7 @@ class DW_player(QDockWidget):
 
         self.player = mpv.MPV(
             wid=str(int(self.videoframe.winId())),
-            # vo='x11', # You may not need this
+            vo="x11" if sys.platform.startswith("linux") else "",
             log_handler=functools.partial(mpv_logger, self.id_),
             loglevel="debug",
         )
