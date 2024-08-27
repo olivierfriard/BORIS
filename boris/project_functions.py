@@ -244,6 +244,17 @@ def check_coded_behaviors_in_obs_list(pj: dict, observations_list: list) -> bool
     return False
 
 
+def get_modifiers_of_behavior(ethogram, behavior: str) -> list:
+    """
+    get all modifiers for a behavior (if any)
+    """
+    return [
+        [ethogram[x][cfg.MODIFIERS][y]["values"] for y in ethogram[x][cfg.MODIFIERS]]
+        for x in ethogram
+        if ethogram[x][cfg.BEHAVIOR_CODE] == behavior
+    ]
+
+
 def check_coded_behaviors(pj: dict) -> set:
     """
     check if behaviors coded in events are defined in ethogram for all observations
@@ -252,7 +263,7 @@ def check_coded_behaviors(pj: dict) -> set:
         pj (dict): project dictionary
 
     Returns:
-        set: behaviors present in observations that are not define in ethogram
+        set: behaviors present in observations that are not defined in ethogram
     """
 
     # set of behaviors defined in ethogram

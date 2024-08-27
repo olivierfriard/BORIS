@@ -80,7 +80,7 @@ class ModifiersList(QDialog):
                 V2layout.addWidget(lb1)
 
             if self.modifiers_dict[idx].get("description", ""):
-                lb2 = QLabel(f"<small>{self.modifiers_dict[idx].get('description', '')}</small>")
+                lb2 = QLabel(f"<small>{self.modifiers_dict[idx].get('description', '')[:50]}</small>")
                 V2layout.addWidget(lb2)
 
             if self.modifiers_dict[idx]["type"] in (

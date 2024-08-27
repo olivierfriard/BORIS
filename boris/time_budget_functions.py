@@ -654,10 +654,22 @@ def time_budget_analysis(
     out: list = []
     for subject in parameters[cfg.SELECTED_SUBJECTS]:
         out_cat: list = []
-        categories[subject]: dict = {}
+        categories[subject] = {}
 
         for behavior in parameters[cfg.SELECTED_BEHAVIORS]:
             if parameters[cfg.INCLUDE_MODIFIERS]:  # with modifiers
+                # get all modifiers for behavior
+                """modifiers_list = project_functions.get_modifiers_of_behavior(ethogram, behavior)
+                if modifiers_list:
+                    for modif_set in modifiers_list[0]:
+                        for modif in modif_set:
+
+
+
+                re.sub(r" \(.\)", "", modifier)
+                """
+
+                # get coded modifiers
                 cursor.execute("SELECT DISTINCT modifiers FROM events WHERE subject = ? AND code = ?", (subject, behavior))
                 distinct_modifiers = list(cursor.fetchall())
 
@@ -670,7 +682,7 @@ def time_budget_analysis(
                             else:
                                 duration = 0.000
 
-                            out.append(
+                            out_cat.append(
                                 {
                                     "subject": subject,
                                     "behavior": behavior,
@@ -684,7 +696,7 @@ def time_budget_analysis(
                                 }
                             )
                         else:  # point
-                            out.append(
+                            out_cat.append(
                                 {
                                     "subject": subject,
                                     "behavior": behavior,
@@ -734,7 +746,7 @@ def time_budget_analysis(
                         # include behaviors without events
                         if len(rows) == 0:
                             if not parameters[cfg.EXCLUDE_BEHAVIORS]:
-                                out.append(
+                                out_cat.append(
                                     {
                                         "subject": subject,
                                         "behavior": behavior,
@@ -801,7 +813,7 @@ def time_budget_analysis(
                                     duration = cfg.NA
                                 else:
                                     duration: float = 0.000
-                                out.append(
+                                out_cat.append(
                                     {
                                         "subject": subject,
                                         "behavior": behavior,
@@ -817,7 +829,7 @@ def time_budget_analysis(
                             continue
 
                         if len(rows) % 2:
-                            out.append(
+                            out_cat.append(
                                 {
                                     "subject": subject,
                                     "behavior": behavior,
@@ -895,7 +907,7 @@ def time_budget_analysis(
             else:  # no modifiers
                 if cfg.POINT in project_functions.event_type(behavior, ethogram):
                     cursor.execute(
-                        ("SELECT occurence,observation FROM events WHERE subject = ? AND code = ? ORDER BY observation, occurence"),
+                        ("SELECT occurence,observation FROM events " "WHERE subject = ? AND code = ? ORDER BY observation, occurence"),
                         (subject, behavior),
                     )
 
@@ -922,7 +934,7 @@ def time_budget_analysis(
                     # include behaviors without events
                     if len(rows) == 0:
                         if not parameters[cfg.EXCLUDE_BEHAVIORS]:
-                            out.append(
+                            out_cat.append(
                                 {
                                     "subject": subject,
                                     "behavior": behavior,
@@ -982,7 +994,7 @@ def time_budget_analysis(
                                 duration = cfg.NA
                             else:
                                 duration = 0.000
-                            out.append(
+                            out_cat.append(
                                 {
                                     "subject": subject,
                                     "behavior": behavior,
@@ -998,7 +1010,7 @@ def time_budget_analysis(
                         continue
 
                     if len(rows) % 2:  # unpaired events
-                        out.append(
+                        out_cat.append(
                             {
                                 "subject": subject,
                                 "behavior": behavior,
