@@ -1,6 +1,6 @@
 ---
 name: Bug report
-about: Create a report to help us improve. See [how to report a bug](http://www.boris.unito.it/report_a_bug/) for details
+about: Create a report to help us improve. See http://www.boris.unito.it/report_a_bug/ for details
 title: ''
 labels: ''
 assignees: ''
@@ -14,7 +14,7 @@ Project > Check project integrity
 
 **Indicate the version of BORIS**
 
-Verify you are using the [last version](http://www.boris.unito.it/download) otherwise no bug report will be accepted.
+Verify you are using the last version (http://www.boris.unito.it/download) otherwise no bug report will be accepted.
 
 
 **Describe the bug**
