@@ -248,6 +248,7 @@ def get_modifiers_of_behavior(ethogram, behavior: str) -> list:
     """
     get all modifiers for a behavior (if any)
     """
+
     return [
         [ethogram[x][cfg.MODIFIERS][y]["values"] for y in ethogram[x][cfg.MODIFIERS]]
         for x in ethogram

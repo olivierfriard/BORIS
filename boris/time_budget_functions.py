@@ -659,19 +659,25 @@ def time_budget_analysis(
         for behavior in parameters[cfg.SELECTED_BEHAVIORS]:
             if parameters[cfg.INCLUDE_MODIFIERS]:  # with modifiers
                 # get all modifiers for behavior
-                """modifiers_list = project_functions.get_modifiers_of_behavior(ethogram, behavior)
+                import itertools, re
+
+                ms = []
+                modifiers_list = project_functions.get_modifiers_of_behavior(ethogram, behavior)
+
                 if modifiers_list:
                     for modif_set in modifiers_list[0]:
-                        for modif in modif_set:
+                        ms.append([re.sub(r" \(.*\)", "", x) for x in modif_set])
 
+                distinct_modifiers = ["|".join(x) for x in itertools.product(*ms)]
 
-
-                re.sub(r" \(.\)", "", modifier)
-                """
+                print(f"{distinct_modifiers=}")
 
                 # get coded modifiers
+
                 cursor.execute("SELECT DISTINCT modifiers FROM events WHERE subject = ? AND code = ?", (subject, behavior))
-                distinct_modifiers = list(cursor.fetchall())
+                distinct_coded_modifiers = [x[0] for x in cursor.fetchall()]
+
+                print(f"{distinct_coded_modifiers=}")
 
                 if not distinct_modifiers:
                     if not parameters[cfg.EXCLUDE_BEHAVIORS]:
@@ -713,6 +719,8 @@ def time_budget_analysis(
 
                 if cfg.POINT in project_functions.event_type(behavior, ethogram):
                     for modifier in distinct_modifiers:
+                        print(f"{modifier=}")
+
                         cursor.execute(
                             (
                                 "SELECT occurence, observation FROM events "
@@ -721,7 +729,7 @@ def time_budget_analysis(
                                 "AND modifiers = ? "
                                 "ORDER BY observation, occurence"
                             ),
-                            (subject, behavior, modifier[0]),
+                            (subject, behavior, modifier),
                         )
 
                         rows = cursor.fetchall()
@@ -733,14 +741,6 @@ def time_budget_analysis(
                                     new_rows.append([float("NaN"), observation])
                                 else:
                                     new_rows.append([occurence, observation])
-                                """
-                                if occurence is not None:
-                                    new_occurence = max(float(parameters["start time"]), occurence)
-                                    new_occurence = min(new_occurence, float(parameters["end time"]))
-                                else:
-                                    new_occurence = float("NaN")
-                                new_rows.append([new_occurence, observation])
-                                """
                             rows = list(new_rows)
 
                         # include behaviors without events
@@ -764,6 +764,7 @@ def time_budget_analysis(
                         # inter events duration
                         all_event_interdurations = []
                         for idx, row in enumerate(rows):
+                            print(dict(row))
                             if idx and row[1] == rows[idx - 1][1]:
                                 all_event_interdurations.append(float(row[0]) - float(rows[idx - 1][0]))
 
@@ -781,7 +782,7 @@ def time_budget_analysis(
                             {
                                 "subject": subject,
                                 "behavior": behavior,
-                                "modifiers": modifier[0],
+                                "modifiers": modifier,
                                 "duration": cfg.NA,
                                 "duration_mean": cfg.NA,
                                 "duration_stdev": cfg.NA,
@@ -801,7 +802,7 @@ def time_budget_analysis(
                                 "AND modifiers = ? "
                                 "ORDER BY observation, occurence"
                             ),
-                            (subject, behavior, modifier[0]),
+                            (subject, behavior, modifier),
                         )
 
                         rows = list(cursor.fetchall())
@@ -817,7 +818,7 @@ def time_budget_analysis(
                                     {
                                         "subject": subject,
                                         "behavior": behavior,
-                                        "modifiers": modifier[0],
+                                        "modifiers": modifier,
                                         "duration": duration,
                                         "duration_mean": cfg.NA,
                                         "duration_stdev": cfg.NA,
@@ -833,7 +834,7 @@ def time_budget_analysis(
                                 {
                                     "subject": subject,
                                     "behavior": behavior,
-                                    "modifiers": modifier[0],
+                                    "modifiers": modifier,
                                     "duration": cfg.UNPAIRED,
                                     "duration_mean": cfg.UNPAIRED,
                                     "duration_stdev": cfg.UNPAIRED,
@@ -894,7 +895,7 @@ def time_budget_analysis(
                                 {
                                     "subject": subject,
                                     "behavior": behavior,
-                                    "modifiers": modifier[0],
+                                    "modifiers": modifier,
                                     "duration": total_duration,
                                     "duration_mean": duration_mean,
                                     "duration_stdev": duration_stdev,
@@ -907,7 +908,7 @@ def time_budget_analysis(
             else:  # no modifiers
                 if cfg.POINT in project_functions.event_type(behavior, ethogram):
                     cursor.execute(
-                        ("SELECT occurence,observation FROM events " "WHERE subject = ? AND code = ? ORDER BY observation, occurence"),
+                        ("SELECT occurence, observation FROM events " "WHERE subject = ? AND code = ? ORDER BY observation, occurence"),
                         (subject, behavior),
                     )
 
@@ -920,15 +921,6 @@ def time_budget_analysis(
                                 new_rows.append([float("NaN"), observation])
                             else:
                                 new_rows.append([occurence, observation])
-                            """
-                            if occurence is not None:
-                                new_occurence = max(float(parameters["start time"]), occurence)
-                                new_occurence = min(new_occurence, float(parameters["end time"]))
-                            else:
-                                new_occurence = float("NaN")
-                            new_rows.append([new_occurence, observation])
-                            """
-
                         rows = list(new_rows)
 
                     # include behaviors without events
