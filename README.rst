@@ -1,3 +1,4 @@
+
 ===============================================================
 BORIS (Behavioral Observation Research Interactive Software)
 ===============================================================
@@ -33,6 +34,8 @@ See http://www.boris.unito.it
 .. image:: https://img.shields.io/pypi/v/boris-behav-obs.svg
  :target: https://pypi.org/project/boris-behav-obs/
 
+
+.. image:: http://penelope.unito.it/friard/boris_scopus_citations.svg
 
 
 
