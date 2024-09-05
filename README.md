@@ -29,9 +29,8 @@ See the official [BORIS web site](https://www.boris.unito.it).
 
 ![](https://img.shields.io/github/commit-activity/m/olivierfriard/BORIS)
 
+[![](https://img.shields.io/pypi/v/boris-behav-obs.svg)](https://pypi.org/project/boris-behav-obs/)
 
-.. image:: https://img.shields.io/pypi/v/boris-behav-obs.svg
- :target: https://pypi.org/project/boris-behav-obs/
 
 ![BORIS scopus citations badge](http://penelope.unito.it/friard/boris_scopus_citations.svg)
 
