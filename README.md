@@ -16,11 +16,9 @@ The BORIS paper has more than ![BORIS citations counter](http://penelope.unito.i
 
 
 
-See http://www.boris.unito.it
+See the official [BORIS web site](https://www.boris.unito.it).
 
-
-.. image:: https://img.shields.io/badge/Made%20with-Python-1f425f.svg
- :target: https://www.python.org/
+[![Python web site](https://img.shields.io/badge/Made%20with-Python-1f425f.svg)](https://www.python.org)
 
 .. image:: https://img.shields.io/pypi/pyversions/boris-behav-obs
 
