@@ -11,7 +11,7 @@ You can not longer run BORIS natively on MacOS (since v.8). Some alternatives to
 
 It provides also some analysis tools like time budget and some plotting functions.
 
-The BORIS paper has more than ![BORIS citations counter](http://penelope.unito.it/friard/boris_scopus_citations.png) citations in peer-reviewed scientific publications (https://www.boris.unito.it/citations)
+The BORIS paper has more than [![BORIS citations counter](http://penelope.unito.it/friard/boris_scopus_citations.png) citations](https://www.boris.unito.it/citations) in peer-reviewed scientific publications.
 
 
 
@@ -29,20 +29,20 @@ See the official [BORIS web site](https://www.boris.unito.it).
 
 
 
-Documentation
------------------------------------------------------------------------
-
-
-The documentation provides a good starting point for learning how to use BORIS: https://www.boris.unito.it/user_guide/
-
-Some video tutorials are available: https://www.boris.unito.it/video_tutorials/
+# Documentation
 
 
 
+The [user guide](https://www.boris.unito.it/user_guide/) provides a good starting point for learning how to use BORIS.
+
+Some [video tutorials](https://www.boris.unito.it/video_tutorials/) are available.
 
 
-Bug reports and feature requests
------------------------------------------------------------------------
+
+
+
+# Bug reports and feature requests
+
 
 To search for bugs, report them or request a feature, please use the github tracker:
 https://github.com/olivierfriard/BORIS/issues
@@ -51,8 +51,8 @@ https://github.com/olivierfriard/BORIS/issues
 
 
 
-Citing BORIS
------------------------------------------------------------------------
+# Citing BORIS
+
 
 Please acknowledge and cite the use of this software and its authors when
 results are used in publications or published elsewhere. You can use the
@@ -68,12 +68,11 @@ following BibTex entry
     url = {http://dx.doi.org/10.1111/2041-210X.12584},
     doi = {10.1111/2041-210X.12584},
     pages = {1324--1330},
-    keywords = {behavioural analysis, behaviour coding, coding scheme, ethology, observational data, ttime-budget},
     year = {2016},
     }
 
 
-You can also send us a nice postcard! See the `user testimonials <https://www.boris.unito.it/postcards/>`_
+You can also send us a nice postcard! See the [user testimonials](https://www.boris.unito.it/postcards).
 
 
 
