@@ -91,7 +91,7 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 `
 
-Distributed with a `GPL v.3 license <LICENSE.TXT>`_
+Distributed with a [GPL v.3 license](LICENSE.TXT).
 
 Copyright (C) 2012-2024 Olivier Friard
 
