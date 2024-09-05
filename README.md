@@ -58,18 +58,18 @@ Please acknowledge and cite the use of this software and its authors when
 results are used in publications or published elsewhere. You can use the
 following BibTex entry
 
-
->@article {MEE3:MEE312584,
->    author = {Friard, Olivier and Gamba, Marco},
->   title = {BORIS: a free, versatile open-source event-logging software for video/audio coding and live observations},
->   journal = {Methods in Ecology and Evolution},
->   issn = {2041-210X},
->   url = {http://dx.doi.org/10.1111/2041-210X.12584},
->   doi = {10.1111/2041-210X.12584},
->   pages = {1324--1330},
->    year = {2016},
->}
-
+```
+@article {MEE3:MEE312584,
+    author = {Friard, Olivier and Gamba, Marco},
+   title = {BORIS: a free, versatile open-source event-logging software for video/audio coding and live observations},
+   journal = {Methods in Ecology and Evolution},
+   issn = {2041-210X},
+   url = {http://dx.doi.org/10.1111/2041-210X.12584},
+   doi = {10.1111/2041-210X.12584},
+   pages = {1324--1330},
+    year = {2016},
+}
+```
 
 You can also send us a nice postcard! See the [user testimonials](https://www.boris.unito.it/postcards).
 
