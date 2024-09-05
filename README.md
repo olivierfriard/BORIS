@@ -1,10 +1,8 @@
 BORIS (Behavioral Observation Research Interactive Software)
 ===============================================================
 
-.. image:: https://github.com/olivierfriard/BORIS/blob/master/boris/icons/logo_boris.png?raw=true
- :target: https://www.boris.unito.it
 
-![BORIS logo](/https://github.com/olivierfriard/BORIS/blob/master/boris/icons/logo_boris.png?raw=true)
+![BORIS logo](https://github.com/olivierfriard/BORIS/blob/master/boris/icons/logo_boris.png?raw=true)
 
 BORIS is an easy-to-use event logging software for video/audio coding or live observations.
 
