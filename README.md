@@ -83,10 +83,10 @@ You can also send us a nice postcard! See the [user testimonials](https://www.bo
 # Licence
 
 
->This program is distributed in the hope that it will be useful,
->but WITHOUT ANY WARRANTY; without even the implied warranty of
->ERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
->NU General Public License for more details.
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
 
 
 Distributed with a [GPL v.3 license](LICENSE.TXT).
