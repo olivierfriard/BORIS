@@ -19,19 +19,11 @@ The BORIS paper has more than ![BORIS citations counter](http://penelope.unito.i
 See the official [BORIS web site](https://www.boris.unito.it).
 
 [![Python web site](https://img.shields.io/badge/Made%20with-Python-1f425f.svg)](https://www.python.org)
-
-![](https://img.shields.io/pypi/pyversions/boris-behav-obs)
-
-![](https://img.shields.io/pypi/l/boris-behav-obs)
-
-[![](https://static.pepy.tech/personalized-badge/boris-behav-obs?period=total&units=international_system&left_color=black&right_color=orange&left_text=Downloads)](https://pepy.tech/project/boris-behav-obs)
-
-
-![](https://img.shields.io/github/commit-activity/m/olivierfriard/BORIS)
-
-[![](https://img.shields.io/pypi/v/boris-behav-obs.svg)](https://pypi.org/project/boris-behav-obs/)
-
-
+![Python versions](https://img.shields.io/pypi/pyversions/boris-behav-obs)
+![BORIS license](https://img.shields.io/pypi/l/boris-behav-obs)
+[![Number of downloads](https://static.pepy.tech/personalized-badge/boris-behav-obs?period=total&units=international_system&left_color=black&right_color=orange&left_text=Downloads)](https://pepy.tech/project/boris-behav-obs)
+![commit-activity](https://img.shields.io/github/commit-activity/m/olivierfriard/BORIS)
+[![PyPI version](https://img.shields.io/pypi/v/boris-behav-obs.svg)](https://pypi.org/project/boris-behav-obs/)
 ![BORIS scopus citations badge](http://penelope.unito.it/friard/boris_scopus_citations.svg)
 
 
