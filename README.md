@@ -24,17 +24,17 @@ See the official [BORIS web site](https://www.boris.unito.it).
 
 ![](https://img.shields.io/pypi/l/boris-behav-obs)
 
+[![](https://static.pepy.tech/personalized-badge/boris-behav-obs?period=total&units=international_system&left_color=black&right_color=orange&left_text=Downloads)](https://pepy.tech/project/boris-behav-obs)
 
 
-.. image:: https://static.pepy.tech/personalized-badge/boris-behav-obs?period=total&units=international_system&left_color=black&right_color=orange&left_text=Downloads
- :target: https://pepy.tech/project/boris-behav-obs
+![](https://img.shields.io/github/commit-activity/m/olivierfriard/BORIS)
 
-.. image:: https://img.shields.io/github/commit-activity/m/olivierfriard/BORIS
 
 .. image:: https://img.shields.io/pypi/v/boris-behav-obs.svg
  :target: https://pypi.org/project/boris-behav-obs/
 
-.. image:: http://penelope.unito.it/friard/boris_scopus_citations.svg
+![BORIS scopus citations badge](http://penelope.unito.it/friard/boris_scopus_citations.svg)
+
 
 
 
