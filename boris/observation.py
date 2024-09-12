@@ -1151,11 +1151,13 @@ class Observation(QDialog, Ui_Form):
 
         media_info = util.accurate_media_analysis(self.ffmpeg_bin, file_path)
 
+        print(f"{media_info=}")
+
         if "error" in media_info:
-            return (False, media_info["error"])
+            return (True, media_info["error"])
 
         if media_info["format_long_name"] == "Tele-typewriter":
-            return (False, "Text file")
+            return (True, "Text file")
 
         if media_info["duration"] > 0:
             if " rel " in mode:
@@ -1249,6 +1251,9 @@ class Observation(QDialog, Ui_Form):
 
                 for file_path in file_paths:
                     (error, msg) = self.check_media(file_path, mode)
+
+                    print(f"{(error, msg)=}")
+
                     if error:
                         QMessageBox.critical(self, cfg.programName, f"<b>{file_path}</b>. {msg}")
 
