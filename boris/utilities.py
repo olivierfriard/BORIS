@@ -1275,6 +1275,11 @@ def ffprobe_media_analysis(ffmpeg_bin: str, file_name: str) -> dict:
                             fps = eval(stream["r_frame_rate"])
                         except Exception:
                             fps = 0
+                        if fps >= 1000 and "avg_frame_rate" in stream:  # case for some h265 video ("r_frame_rate": "1200000/1")
+                            try:
+                                fps = eval(stream["avg_frame_rate"])
+                            except Exception:
+                                pass
 
                 if "duration" in stream:
                     duration = float(stream["duration"])
@@ -1341,7 +1346,6 @@ def ffprobe_media_analysis(ffmpeg_bin: str, file_name: str) -> dict:
         }
 
     except Exception as e:
-        raise
         return {"error": str(e)}
 
 
@@ -1360,6 +1364,8 @@ def accurate_media_analysis(ffmpeg_bin: str, file_name: str) -> dict:
     """
 
     ffprobe_results = ffprobe_media_analysis(ffmpeg_bin, file_name)
+
+    print(f"{ffprobe_results=}")
 
     logging.debug(f"file_name: {file_name}")
     logging.debug(f"ffprobe_results: {ffprobe_results}")
