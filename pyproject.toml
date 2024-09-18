@@ -39,7 +39,7 @@ Source_code = "https://github.com/olivierfriard/BORIS"
 Issues = "https://github.com/olivierfriard/BORIS/issues"
 
 [project.scripts]
-boris = "boris:main"
+boris-behav-obs = "boris:main"
 
 [build-system]
 requires = ["setuptools", "wheel"]
