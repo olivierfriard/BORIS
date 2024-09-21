@@ -658,26 +658,8 @@ def time_budget_analysis(
 
         for behavior in parameters[cfg.SELECTED_BEHAVIORS]:
             if parameters[cfg.INCLUDE_MODIFIERS]:  # with modifiers
-                # get all modifiers for behavior
-                import itertools, re
-
-                ms = []
-                modifiers_list = project_functions.get_modifiers_of_behavior(ethogram, behavior)
-
-                if modifiers_list:
-                    for modif_set in modifiers_list[0]:
-                        ms.append([re.sub(r" \(.*\)", "", x) for x in modif_set])
-
-                distinct_modifiers = ["|".join(x) for x in itertools.product(*ms)]
-
-                print(f"{distinct_modifiers=}")
-
-                # get coded modifiers
-
                 cursor.execute("SELECT DISTINCT modifiers FROM events WHERE subject = ? AND code = ?", (subject, behavior))
-                distinct_coded_modifiers = [x[0] for x in cursor.fetchall()]
-
-                print(f"{distinct_coded_modifiers=}")
+                distinct_modifiers = [x[0] for x in cursor.fetchall()]
 
                 if not distinct_modifiers:
                     if not parameters[cfg.EXCLUDE_BEHAVIORS]:
