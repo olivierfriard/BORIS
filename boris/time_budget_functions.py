@@ -25,6 +25,8 @@ from decimal import Decimal as dec
 from typing import Tuple
 import tablib
 import logging
+import itertools
+import re
 
 from . import config as cfg
 from . import db_functions
@@ -659,7 +661,6 @@ def time_budget_analysis(
         for behavior in parameters[cfg.SELECTED_BEHAVIORS]:
             if parameters[cfg.INCLUDE_MODIFIERS]:  # with modifiers
                 # get all modifiers for behavior
-                import itertools, re
 
                 ms = []
                 modifiers_list = project_functions.get_modifiers_of_behavior(ethogram, behavior)
