@@ -207,8 +207,8 @@ def behavior_binary_table(self):
         start_coding=start_coding,
         end_coding=end_coding,
         maxTime=max_media_duration_all_obs,
-        flagShowIncludeModifiers=True,
-        flagShowExcludeBehaviorsWoEvents=True,
+        show_include_modifiers=True,
+        show_exclude_non_coded_behaviors=True,
         by_category=False,
         n_observations=len(selected_observations),
     )

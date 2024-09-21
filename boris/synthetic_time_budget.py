@@ -70,7 +70,7 @@ def synthetic_time_budget(self) -> None:
         start_coding=start_coding,
         end_coding=end_coding,
         maxTime=max_media_duration_all_obs,
-        flagShowExcludeBehaviorsWoEvents=False,
+        show_exclude_non_coded_behaviors=False,
         by_category=False,
         n_observations=len(selected_observations),
     )
@@ -195,7 +195,7 @@ def synthetic_binned_time_budget(self) -> None:
         start_coding=start_coding,
         end_coding=end_coding,
         maxTime=max_media_duration_all_obs,
-        flagShowExcludeBehaviorsWoEvents=False,
+        show_exclude_non_coded_behaviors=False,
         by_category=False,
         n_observations=len(selected_observations),
         show_time_bin_size=True,

@@ -83,7 +83,7 @@ def get_latency(self):
     parameters: dict = select_subj_behav.choose_obs_subj_behav_category(
         self,
         selected_observations,
-        flagShowExcludeBehaviorsWoEvents=False,
+        show_exclude_non_coded_behaviors=False,
         window_title="Select the marker behaviors (stimulus)",
         n_observations=len(selected_observations),
     )
@@ -102,7 +102,7 @@ def get_latency(self):
     print(f"{marker_behaviors=} {marker_subjects=} {include_marker_modifiers=}")
 
     parameters: dict = select_subj_behav.choose_obs_subj_behav_category(
-        self, selected_observations, flagShowExcludeBehaviorsWoEvents=False, window_title="Select the latency behaviors"
+        self, selected_observations, show_exclude_non_coded_behaviors=False, window_title="Select the latency behaviors"
     )
     if not parameters[cfg.SELECTED_SUBJECTS] or not parameters[cfg.SELECTED_BEHAVIORS]:
         return

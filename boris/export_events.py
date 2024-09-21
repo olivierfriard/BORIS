@@ -82,8 +82,8 @@ def export_events_as_behavioral_sequences(self, separated_subjects=False, timed=
         start_coding=start_coding,
         end_coding=end_coding,
         maxTime=max_media_duration_all_obs,
-        flagShowIncludeModifiers=True,
-        flagShowExcludeBehaviorsWoEvents=False,
+        show_include_modifiers=True,
+        show_exclude_non_coded_behaviors=False,
         n_observations=len(selected_observations),
     )
 
@@ -171,8 +171,8 @@ def export_tabular_events(self, mode: str = "tabular") -> None:
         start_coding=start_coding,
         end_coding=end_coding,
         maxTime=max_media_duration_all_obs,
-        flagShowIncludeModifiers=False,
-        flagShowExcludeBehaviorsWoEvents=False,
+        show_include_modifiers=False,
+        show_exclude_non_coded_behaviors=False,
         n_observations=len(selected_observations),
     )
     if parameters == {}:
@@ -366,8 +366,8 @@ def export_aggregated_events(self):
         start_coding=start_coding,
         end_coding=end_coding,
         maxTime=max_media_duration_all_obs,
-        flagShowIncludeModifiers=False,
-        flagShowExcludeBehaviorsWoEvents=False,
+        show_include_modifiers=False,
+        show_exclude_non_coded_behaviors=False,
         n_observations=len(selected_observations),
     )
     if parameters == {}:
@@ -660,8 +660,8 @@ def export_events_as_textgrid(self) -> None:
         selected_observations,
         start_coding=start_coding,
         end_coding=end_coding,
-        flagShowIncludeModifiers=False,
-        flagShowExcludeBehaviorsWoEvents=False,
+        show_include_modifiers=False,
+        show_exclude_non_coded_behaviors=False,
         maxTime=max_obs_length,
         n_observations=len(selected_observations),
     )

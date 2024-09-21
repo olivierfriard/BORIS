@@ -436,6 +436,7 @@ def time_budget(self, mode: str, mode2: str = "list"):
         maxTime=max_media_duration_all_obs,
         by_category=(mode == "by_category"),
         n_observations=len(selected_observations),
+        show_exclude_non_coded_modifiers=True,
     )
     if parameters == {}:
         return
@@ -473,14 +474,6 @@ def time_budget(self, mode: str, mode2: str = "list"):
             parameters[cfg.SELECTED_BEHAVIORS],
             time_interval=cfg.TIME_FULL_OBS,
         )
-
-        """
-        cursor.execute("SELECT code, occurence, type FROM events ")
-        print()
-        for row in cursor.fetchall():
-            print(row["code"], row["occurence"], row["type"])
-        print()
-        """
 
         total_observation_time = 0
         for obsId in selected_observations:
@@ -587,14 +580,6 @@ def time_budget(self, mode: str, mode2: str = "list"):
                 cursor.execute("COMMIT")
             except Exception:
                 pass
-
-            """
-            cursor.execute("SELECT code, occurence, type FROM events WHERE observation = ?", (obsId,))
-            print()
-            for row in cursor.fetchall():
-                print(row["code"], row["occurence"], row["type"])
-            print()
-            """
 
         out, categories = time_budget_functions.time_budget_analysis(
             self.pj[cfg.ETHOGRAM], cursor, selected_observations, parameters, by_category=(mode == "by_category")

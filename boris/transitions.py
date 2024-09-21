@@ -181,8 +181,8 @@ def transitions_matrix(self, mode):
     parameters = select_subj_behav.choose_obs_subj_behav_category(
         self,
         selected_observations,
-        flagShowIncludeModifiers=True,
-        flagShowExcludeBehaviorsWoEvents=False,
+        show_include_modifiers=True,
+        show_exclude_non_coded_behaviors=False,
         n_observations=len(selected_observations),
     )
 

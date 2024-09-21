@@ -288,8 +288,8 @@ def irr_cohen_kappa(self):
         selected_observations,
         start_coding=dec("NaN"),
         end_coding=dec("NaN"),
-        flagShowIncludeModifiers=True,
-        flagShowExcludeBehaviorsWoEvents=False,
+        show_include_modifiers=True,
+        show_exclude_non_coded_behaviors=False,
         n_observations=len(selected_observations),
     )
     if parameters == {}:
@@ -581,8 +581,8 @@ def needleman_wunch(self):
         selected_observations,
         start_coding=dec("NaN"),
         end_coding=dec("NaN"),
-        flagShowIncludeModifiers=True,
-        flagShowExcludeBehaviorsWoEvents=False,
+        show_include_modifiers=True,
+        show_exclude_non_coded_behaviors=False,
         n_observations=len(selected_observations),
     )
 

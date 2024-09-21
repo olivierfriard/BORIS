@@ -662,23 +662,22 @@ def time_budget_analysis(
             if parameters[cfg.INCLUDE_MODIFIERS]:  # with modifiers
                 # get all modifiers for behavior
 
-                ms = []
-                modifiers_list = project_functions.get_modifiers_of_behavior(ethogram, behavior)
+                if parameters[cfg.EXCLUDE_NON_CODED_MODIFIERS]:
+                    # get coded modifiers
+                    cursor.execute("SELECT DISTINCT modifiers FROM events WHERE subject = ? AND code = ?", (subject, behavior))
+                    distinct_modifiers = [x[0] for x in cursor.fetchall()]
+                else:
+                    # get all modifiers combinations
+                    ms: list = []
+                    modifiers_list = project_functions.get_modifiers_of_behavior(ethogram, behavior)
 
-                if modifiers_list:
-                    for modif_set in modifiers_list[0]:
-                        ms.append([re.sub(r" \(.*\)", "", x) for x in modif_set])
+                    if modifiers_list:
+                        for modif_set in modifiers_list[0]:
+                            ms.append([re.sub(r" \(.*\)", "", x) for x in modif_set])
 
-                distinct_modifiers = ["|".join(x) for x in itertools.product(*ms)]
+                    distinct_modifiers = ["|".join(x) for x in itertools.product(*ms)]
 
                 print(f"{distinct_modifiers=}")
-
-                # get coded modifiers
-
-                cursor.execute("SELECT DISTINCT modifiers FROM events WHERE subject = ? AND code = ?", (subject, behavior))
-                distinct_coded_modifiers = [x[0] for x in cursor.fetchall()]
-
-                print(f"{distinct_coded_modifiers=}")
 
                 if not distinct_modifiers:
                     if not parameters[cfg.EXCLUDE_BEHAVIORS]:

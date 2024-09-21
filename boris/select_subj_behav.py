@@ -39,12 +39,13 @@ def choose_obs_subj_behav_category(
     start_coding: Optional[dec] = dec("NaN"),  #  Union[..., None]
     end_coding: Optional[dec] = dec("NaN"),
     maxTime: Optional[dec] = None,
-    flagShowIncludeModifiers: bool = True,
-    flagShowExcludeBehaviorsWoEvents: bool = True,
+    show_include_modifiers: bool = True,
+    show_exclude_non_coded_behaviors: bool = True,
     by_category: bool = False,
     n_observations: int = 1,
     show_time_bin_size: bool = False,
     window_title: str = "Select subjects and behaviors",
+    show_exclude_non_coded_modifiers: bool = False,
 ) -> dict:
     """
     show window for:
@@ -52,7 +53,7 @@ def choose_obs_subj_behav_category(
     - selection of behaviors (based on selected subjects)
     - selection of time interval
     - inclusion/exclusion of modifiers
-    - inclusion/exclusion of behaviors without events (flagShowExcludeBehaviorsWoEvents == True)
+    - inclusion/exclusion of behaviors without events (show_exclude_non_coded_behaviors == True)
     - selection of time bin size (show_time_bin_size == True)
 
     Args:
@@ -78,14 +79,19 @@ def choose_obs_subj_behav_category(
     paramPanelWindow.pj = self.pj
     paramPanelWindow.extract_observed_behaviors = self.extract_observed_behaviors
 
-    paramPanelWindow.cbIncludeModifiers.setVisible(flagShowIncludeModifiers)
-    paramPanelWindow.cbExcludeBehaviors.setVisible(flagShowExcludeBehaviorsWoEvents)
+    paramPanelWindow.cbIncludeModifiers.setVisible(show_include_modifiers)
+    paramPanelWindow.cb_exclude_non_coded_modifiers.setVisible(show_exclude_non_coded_modifiers)
+    paramPanelWindow.cbExcludeBehaviors.setVisible(show_exclude_non_coded_behaviors)
     # show_time_bin_size:
     paramPanelWindow.frm_time_bin_size.setVisible(show_time_bin_size)
 
     if by_category:
         paramPanelWindow.cbIncludeModifiers.setVisible(False)
         paramPanelWindow.cbExcludeBehaviors.setVisible(False)
+        paramPanelWindow.cb_exclude_non_coded_modifiers.setVisible(False)
+
+    # set state of cb_exclude_non_coded_modifiers
+    paramPanelWindow.cb_exclude_non_coded_modifiers.setEnabled(paramPanelWindow.cbIncludeModifiers.isChecked())
 
     paramPanelWindow.media_duration = maxTime
     paramPanelWindow.start_coding = start_coding
@@ -256,6 +262,7 @@ def choose_obs_subj_behav_category(
         cfg.SELECTED_BEHAVIORS: selectedBehaviors,
         cfg.INCLUDE_MODIFIERS: paramPanelWindow.cbIncludeModifiers.isChecked(),
         cfg.EXCLUDE_BEHAVIORS: paramPanelWindow.cbExcludeBehaviors.isChecked(),
+        cfg.EXCLUDE_NON_CODED_MODIFIERS: paramPanelWindow.cb_exclude_non_coded_modifiers.isChecked(),
         "time": time_param,
         cfg.START_TIME: startTime,
         cfg.END_TIME: endTime,
