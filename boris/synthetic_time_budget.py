@@ -73,6 +73,7 @@ def synthetic_time_budget(self) -> None:
         show_exclude_non_coded_behaviors=False,
         by_category=False,
         n_observations=len(selected_observations),
+        show_exclude_non_coded_modifiers=True,
     )
 
     if synth_tb_param == {}:

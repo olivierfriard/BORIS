@@ -70,6 +70,7 @@ def load_events_in_db(
     """
 
     db = sqlite3.connect(":memory:", isolation_level=None)
+
     """
     import os
     os.system("rm /tmp/ramdisk/events.sqlite")

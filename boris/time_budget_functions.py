@@ -162,9 +162,7 @@ def synthetic_time_budget_bin(pj: dict, selected_observations: list, parameters_
             except Exception:
                 return cfg.NA
 
-    selected_subjects = parameters_obs[cfg.SELECTED_SUBJECTS]
     selected_behaviors = parameters_obs[cfg.SELECTED_BEHAVIORS]
-    include_modifiers = parameters_obs[cfg.INCLUDE_MODIFIERS]
     time_interval = parameters_obs["time"]
     start_time = parameters_obs[cfg.START_TIME]
     end_time = parameters_obs[cfg.END_TIME]
@@ -184,7 +182,7 @@ def synthetic_time_budget_bin(pj: dict, selected_observations: list, parameters_
     distinct_behav_modif = []
     for obs_id in selected_observations:
         for event in pj[cfg.OBSERVATIONS][obs_id][cfg.EVENTS]:
-            if include_modifiers:
+            if parameters_obs[cfg.INCLUDE_MODIFIERS]:
                 if (
                     event[cfg.EVENT_BEHAVIOR_FIELD_IDX],
                     event[cfg.EVENT_MODIFIER_FIELD_IDX],
@@ -211,7 +209,7 @@ def synthetic_time_budget_bin(pj: dict, selected_observations: list, parameters_
     behav_header[1] = "Behaviors:"
     modif_header[1] = "Modifiers:"
 
-    for subj in selected_subjects:
+    for subj in parameters_obs[cfg.SELECTED_SUBJECTS]:
         for behavior_modifiers in distinct_behav_modif:
             behavior, modifiers = behavior_modifiers
             behavior_modifiers_str = "|".join(behavior_modifiers) if modifiers else behavior
@@ -223,7 +221,7 @@ def synthetic_time_budget_bin(pj: dict, selected_observations: list, parameters_
 
     data_report.append(subj_header)
     data_report.append(behav_header)
-    if include_modifiers:
+    if parameters_obs[cfg.INCLUDE_MODIFIERS]:
         data_report.append(modif_header)
     data_report.append(param_header)
 
@@ -232,7 +230,7 @@ def synthetic_time_budget_bin(pj: dict, selected_observations: list, parameters_
     ]
     # select time interval
     for obs_id in selected_observations:
-        behaviors = init_behav_modif_bin(pj[cfg.ETHOGRAM], selected_subjects, distinct_behav_modif, parameters)
+        behaviors = init_behav_modif_bin(pj[cfg.ETHOGRAM], parameters_obs[cfg.SELECTED_SUBJECTS], distinct_behav_modif, parameters)
 
         obs_length = observation_operations.observation_total_length(pj[cfg.OBSERVATIONS][obs_id])
 
@@ -265,13 +263,13 @@ def synthetic_time_budget_bin(pj: dict, selected_observations: list, parameters_
             else:
                 current_subject = event[cfg.EVENT_SUBJECT_FIELD_IDX]
 
-            if current_subject not in selected_subjects:
+            if current_subject not in parameters_obs[cfg.SELECTED_SUBJECTS]:
                 continue
             if current_subject not in events_interval:
                 events_interval[current_subject] = {}
                 mem_events_interval[current_subject] = {}
 
-            if include_modifiers:
+            if parameters_obs[cfg.INCLUDE_MODIFIERS]:
                 modif = event[cfg.EVENT_MODIFIER_FIELD_IDX]
             else:
                 modif = ""
@@ -340,7 +338,7 @@ def synthetic_time_budget_bin(pj: dict, selected_observations: list, parameters_
                         behaviors[subject][behav]["proportion of time"] = cfg.NA
 
             columns = [obs_id, f"{max_time - min_time:.3f}", f"{time_bin_start:.3f}-{time_bin_end:.3f}"]
-            for subject in selected_subjects:
+            for subject in parameters_obs[cfg.SELECTED_SUBJECTS]:
                 for behavior_modifiers in distinct_behav_modif:
                     behavior, modifiers = behavior_modifiers
                     behavior_modifiers_str = behavior_modifiers
@@ -376,9 +374,6 @@ def synthetic_time_budget(pj: dict, selected_observations: list, parameters_obs:
         tablib.Dataset: dataset containing synthetic time budget data
     """
 
-    selected_subjects = parameters_obs[cfg.SELECTED_SUBJECTS]
-    selected_behaviors = parameters_obs[cfg.SELECTED_BEHAVIORS]
-    include_modifiers = parameters_obs[cfg.INCLUDE_MODIFIERS]
     interval = parameters_obs["time"]
     start_time = parameters_obs["start time"]
     end_time = parameters_obs["end time"]
@@ -394,7 +389,9 @@ def synthetic_time_budget(pj: dict, selected_observations: list, parameters_obs:
     data_report = tablib.Dataset()
     data_report.title = "Synthetic time budget"
 
-    ok, msg, db_connector = db_functions.load_aggregated_events_in_db(pj, selected_subjects, selected_observations, selected_behaviors)
+    ok, msg, db_connector = db_functions.load_aggregated_events_in_db(
+        pj, parameters_obs[cfg.SELECTED_SUBJECTS], selected_observations, parameters_obs[cfg.SELECTED_BEHAVIORS]
+    )
 
     if not ok:
         return False, msg, None
@@ -402,20 +399,32 @@ def synthetic_time_budget(pj: dict, selected_observations: list, parameters_obs:
     db_connector.create_aggregate("stdev", 1, StdevFunc)
     cursor = db_connector.cursor()
 
-    # modifiers
-    if include_modifiers:
-        cursor.execute("SELECT distinct behavior, modifiers FROM aggregated_events")
-        distinct_behav_modif = [[rows["behavior"], rows["modifiers"]] for rows in cursor.fetchall()]
-    else:
-        cursor.execute("SELECT distinct behavior FROM aggregated_events")
-        distinct_behav_modif = [[rows["behavior"], ""] for rows in cursor.fetchall()]
-
     # add selected behaviors that are not observed
-    for behav in selected_behaviors:
-        if [x for x in distinct_behav_modif if x[0] == behav] == []:
-            distinct_behav_modif.append([behav, ""])
+    distinct_behav_modif: list = []
+    for behavior in parameters_obs[cfg.SELECTED_BEHAVIORS]:
+        # modifiers
+        if parameters_obs[cfg.INCLUDE_MODIFIERS]:
+            if parameters_obs[cfg.EXCLUDE_NON_CODED_MODIFIERS]:
+                # get coded modifiers
+                cursor.execute("SELECT DISTINCT modifiers FROM aggregated_events WHERE code = ?", (behavior,))
+                for row in cursor.fetchall():
+                    distinct_behav_modif.append((behavior, row["modifiers"]))
+            else:
+                # get all modifiers combination
+                ms: list = []
+                modifiers_list = project_functions.get_modifiers_of_behavior(pj[cfg.ETHOGRAM], behavior)
+                if modifiers_list:
+                    for modif_set in modifiers_list[0]:
+                        modif_set.append("None")
+                        ms.append([re.sub(r" \(.*\)", "", x) for x in modif_set])
+                distinct_modifiers = ["|".join(x) for x in itertools.product(*ms)]
+            for modifier in distinct_modifiers:
+                distinct_behav_modif.append((behavior, modifier))
 
-    """behaviors = init_behav_modif(pj[cfg.ETHOGRAM], selected_subjects, distinct_behav_modif, parameters)"""
+        else:
+            distinct_behav_modif.append((behavior, ""))
+
+    # print(f"{distinct_behav_modif=}")
 
     param_header = ["Observations id", "Total length (s)"]
     subj_header, behav_header, modif_header = (
@@ -427,10 +436,10 @@ def synthetic_time_budget(pj: dict, selected_observations: list, parameters_obs:
     behav_header[1] = "Behaviors:"
     modif_header[1] = "Modifiers:"
 
-    for subj in selected_subjects:
-        for behavior_modifiers in distinct_behav_modif:
-            behavior, modifiers = behavior_modifiers
-            behavior_modifiers_str = "|".join(behavior_modifiers) if modifiers else behavior
+    for subj in parameters_obs[cfg.SELECTED_SUBJECTS]:
+        for behavior, modifiers in distinct_behav_modif:
+            """behavior, modifiers = behavior_modifiers"""
+            """behavior_modifiers_str = "|".join(behavior_modifiers) if modifiers else behavior"""
             for param in parameters:
                 subj_header.append(subj)
                 behav_header.append(behavior)
@@ -439,15 +448,17 @@ def synthetic_time_budget(pj: dict, selected_observations: list, parameters_obs:
 
     data_report.append(subj_header)
     data_report.append(behav_header)
-    if include_modifiers:
+    if parameters_obs[cfg.INCLUDE_MODIFIERS]:
         data_report.append(modif_header)
     data_report.append(param_header)
 
     # select time interval
     for obs_id in selected_observations:
-        behaviors = init_behav_modif(pj[cfg.ETHOGRAM], selected_subjects, distinct_behav_modif, parameters)
+        behaviors = init_behav_modif(pj[cfg.ETHOGRAM], parameters_obs[cfg.SELECTED_SUBJECTS], distinct_behav_modif, parameters)
 
-        ok, msg, db_connector = db_functions.load_aggregated_events_in_db(pj, selected_subjects, [obs_id], selected_behaviors)
+        ok, msg, db_connector = db_functions.load_aggregated_events_in_db(
+            pj, parameters_obs[cfg.SELECTED_SUBJECTS], [obs_id], parameters_obs[cfg.SELECTED_BEHAVIORS]
+        )
 
         if not ok:
             return False, msg, None
@@ -455,7 +466,7 @@ def synthetic_time_budget(pj: dict, selected_observations: list, parameters_obs:
         db_connector.create_aggregate("stdev", 1, StdevFunc)
         cursor = db_connector.cursor()
         # if modifiers not to be included set modifiers to ""
-        if not include_modifiers:
+        if not parameters_obs[cfg.INCLUDE_MODIFIERS]:
             cursor.execute("UPDATE aggregated_events SET modifiers = ''")
 
         # time
@@ -530,14 +541,14 @@ def synthetic_time_budget(pj: dict, selected_observations: list, parameters_obs:
                 ),
             )
 
-        for subject in selected_subjects:
+        for subject in parameters_obs[cfg.SELECTED_SUBJECTS]:
             # check if behaviors are to exclude from total time
             time_to_subtract = 0
             if obs_length != dec(-2):  # obs not an images obs without time
                 if cfg.EXCLUDED_BEHAVIORS in parameters_obs:
                     for excluded_behav in parameters_obs[cfg.EXCLUDED_BEHAVIORS]:
                         cursor.execute(
-                            ("SELECT SUM(stop-start) " "FROM aggregated_events " "WHERE observation = ? AND subject = ? AND behavior = ? "),
+                            ("SELECT SUM(stop-start) FROM aggregated_events WHERE observation = ? AND subject = ? AND behavior = ? "),
                             (
                                 obs_id,
                                 subject,
@@ -615,7 +626,7 @@ def synthetic_time_budget(pj: dict, selected_observations: list, parameters_obs:
             columns = [obs_id, cfg.NA]
         else:
             columns = [obs_id, f"{max_time - min_time:0.3f}"]
-        for subj in selected_subjects:
+        for subj in parameters_obs[cfg.SELECTED_SUBJECTS]:
             for behavior_modifiers in distinct_behav_modif:
                 behavior, modifiers = behavior_modifiers
                 behavior_modifiers_str = "|".join(behavior_modifiers) if modifiers else behavior
@@ -660,8 +671,6 @@ def time_budget_analysis(
 
         for behavior in parameters[cfg.SELECTED_BEHAVIORS]:
             if parameters[cfg.INCLUDE_MODIFIERS]:  # with modifiers
-                # get all modifiers for behavior
-
                 if parameters[cfg.EXCLUDE_NON_CODED_MODIFIERS]:
                     # get coded modifiers
                     cursor.execute("SELECT DISTINCT modifiers FROM events WHERE subject = ? AND code = ?", (subject, behavior))
@@ -670,16 +679,11 @@ def time_budget_analysis(
                     # get all modifiers combinations
                     ms: list = []
                     modifiers_list = project_functions.get_modifiers_of_behavior(ethogram, behavior)
-
                     if modifiers_list:
-                        print(f"{modifiers_list=}")
                         for modif_set in modifiers_list[0]:
                             modif_set.append("None")
                             ms.append([re.sub(r" \(.*\)", "", x) for x in modif_set])
-
                     distinct_modifiers = ["|".join(x) for x in itertools.product(*ms)]
-
-                print(f"{behavior=}  {distinct_modifiers=}")
 
                 if not distinct_modifiers:
                     if not parameters[cfg.EXCLUDE_BEHAVIORS]:
@@ -766,7 +770,6 @@ def time_budget_analysis(
                         # inter events duration
                         all_event_interdurations = []
                         for idx, row in enumerate(rows):
-                            print(dict(row))
                             if idx and row[1] == rows[idx - 1][1]:
                                 all_event_interdurations.append(float(row[0]) - float(rows[idx - 1][0]))
 
