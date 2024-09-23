@@ -62,6 +62,8 @@ class Param_panel(QDialog, Ui_Dialog):
 
         self.cbIncludeModifiers.stateChanged.connect(self.cb_exclude_non_coded_modifiers_visibility)
 
+        self.cb_exclude_non_coded_modifiers.setVisible(False)
+
     def cb_exclude_non_coded_modifiers_visibility(self):
         """
         set visibility of cb_exclude_non_coded_modifiers

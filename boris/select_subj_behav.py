@@ -59,6 +59,7 @@ def choose_obs_subj_behav_category(
     Args:
         selected_observations (list): List of selected observations
         ...
+        show_exclude_non_coded_modifiers (bool): display the Exclude non coded modifiers checkbox
 
     Returns:
         dict: {"selected subjects": selectedSubjects,

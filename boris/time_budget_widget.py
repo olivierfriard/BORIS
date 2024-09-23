@@ -390,6 +390,7 @@ def time_budget(self, mode: str, mode2: str = "list"):
     Args:
         mode (str): ["by_behavior", "by_category"]
         mode2 (str): must be in ["list", "current"]
+                     "current" time budget of current observation
     """
 
     if mode2 == "current":
