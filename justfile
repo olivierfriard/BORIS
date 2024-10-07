@@ -7,7 +7,7 @@ build:
     # dtf pyproject.toml   # dtf (dynamic text file required on path)
     git commit -am "new wheel"
     git push
-    uv build --clean
+    uv build
 
 publish:
     uvx twine upload --verbose --repository pypi dist/*
