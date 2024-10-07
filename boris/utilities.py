@@ -586,7 +586,6 @@ def get_current_states_modifiers_by_subject(
     return r
 
 
-'''
 def get_current_states_modifiers_by_subject_2(state_behaviors_codes: list, events: list, subjects: dict, time: dec) -> dict:
     """
     get current states and modifiers for subjects at given time
@@ -617,7 +616,6 @@ def get_current_states_modifiers_by_subject_2(state_behaviors_codes: list, event
                 current_states[idx].append(bl[-1])
 
     return current_states
-'''
 
 
 def get_current_points_by_subject(
