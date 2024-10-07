@@ -20,7 +20,6 @@ This file is part of BORIS.
 
 """
 
-
 from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import QDialog
 
@@ -60,6 +59,16 @@ class Param_panel(QDialog, Ui_Dialog):
         self.rb_media_duration.clicked.connect(lambda: self.rb_time_interval_selection(cfg.TIME_FULL_OBS))
         self.rb_observed_events.clicked.connect(lambda: self.rb_time_interval_selection(cfg.TIME_EVENTS))
         self.rb_user_defined.clicked.connect(lambda: self.rb_time_interval_selection(cfg.TIME_ARBITRARY_INTERVAL))
+
+        self.cbIncludeModifiers.stateChanged.connect(self.cb_exclude_non_coded_modifiers_visibility)
+
+        self.cb_exclude_non_coded_modifiers.setVisible(False)
+
+    def cb_exclude_non_coded_modifiers_visibility(self):
+        """
+        set visibility of cb_exclude_non_coded_modifiers
+        """
+        self.cb_exclude_non_coded_modifiers.setEnabled(self.cbIncludeModifiers.isChecked())
 
     def rb_time_interval_selection(self, button):
         """

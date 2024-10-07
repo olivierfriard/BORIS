@@ -222,8 +222,8 @@ def filter_events(self):
         start_coding=dec("NaN"),
         end_coding=dec("NaN"),
         maxTime=None,
-        flagShowIncludeModifiers=False,
-        flagShowExcludeBehaviorsWoEvents=False,
+        show_include_modifiers=False,
+        show_exclude_non_coded_behaviors=False,
         by_category=False,
     )
     if parameters == {}:
@@ -983,9 +983,9 @@ def add_frame_indexes(self):
             continue
         if not self.seek_mediaplayer(event[0]):
             time.sleep(0.1)
-            self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS][idx][
-                cfg.PJ_OBS_FIELDS[cfg.MEDIA][cfg.FRAME_INDEX]
-            ] = self.get_frame_index()
+            self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS][idx][cfg.PJ_OBS_FIELDS[cfg.MEDIA][cfg.FRAME_INDEX]] = (
+                self.get_frame_index()
+            )
 
     self.seek_mediaplayer(mem_time)
 

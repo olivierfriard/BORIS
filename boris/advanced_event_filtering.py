@@ -358,8 +358,8 @@ def event_filtering(self):
         start_coding=start_coding,
         end_coding=end_coding,
         maxTime=max_media_duration_all_obs,
-        flagShowIncludeModifiers=False,
-        flagShowExcludeBehaviorsWoEvents=False,
+        show_include_modifiers=False,
+        show_exclude_non_coded_behaviors=False,
         by_category=False,
         n_observations=len(selected_observations),
     )

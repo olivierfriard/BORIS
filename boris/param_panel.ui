@@ -122,6 +122,16 @@
         </widget>
        </item>
        <item>
+        <widget class="QCheckBox" name="cb_exclude_non_coded_modifiers">
+         <property name="text">
+          <string>Exclude non coded modifiers</string>
+         </property>
+         <property name="checked">
+          <bool>true</bool>
+         </property>
+        </widget>
+       </item>
+       <item>
         <widget class="QCheckBox" name="cbExcludeBehaviors">
          <property name="text">
           <string>Exclude behaviors without events</string>

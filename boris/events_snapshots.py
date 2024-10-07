@@ -21,7 +21,6 @@ Copyright 2012-2024 Olivier Friard
 
 """
 
-
 import logging
 import os
 import pathlib as pl
@@ -80,8 +79,8 @@ def events_snapshots(self):
         selected_observations,
         start_coding=dec("NaN"),
         end_coding=dec("NaN"),
-        flagShowIncludeModifiers=False,
-        flagShowExcludeBehaviorsWoEvents=False,
+        show_include_modifiers=False,
+        show_exclude_non_coded_behaviors=False,
         n_observations=len(selected_observations),
     )
 
@@ -346,8 +345,8 @@ def extract_events(self):
         selected_observations,
         start_coding=dec("NaN"),
         end_coding=dec("NaN"),
-        flagShowIncludeModifiers=False,
-        flagShowExcludeBehaviorsWoEvents=False,
+        show_include_modifiers=False,
+        show_exclude_non_coded_behaviors=False,
     )
     if parameters == {}:
         return

@@ -390,6 +390,7 @@ def time_budget(self, mode: str, mode2: str = "list"):
     Args:
         mode (str): ["by_behavior", "by_category"]
         mode2 (str): must be in ["list", "current"]
+                     "current" time budget of current observation
     """
 
     if mode2 == "current":
@@ -436,6 +437,7 @@ def time_budget(self, mode: str, mode2: str = "list"):
         maxTime=max_media_duration_all_obs,
         by_category=(mode == "by_category"),
         n_observations=len(selected_observations),
+        show_exclude_non_coded_modifiers=True,
     )
     if parameters == {}:
         return

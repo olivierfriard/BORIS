@@ -5,16 +5,15 @@ build:
     sed -i "/^version = /c\version = \"$(grep '__version__' boris/version.py | awk -F'"' '{print $2}')\"" pyproject.toml
     sed -i "/^current_version = /c\current_version = \"$(grep '__version__' boris/version.py | awk -F'"' '{print $2}')\"" pyproject.toml
     # dtf pyproject.toml   # dtf (dynamic text file required on path)
-    git commit -am "new wheel"
+    git commit -am "new wheel" || true
     git push
-    rye build --clean
+    uv build
 
 publish:
-    rye publish
+    uvx twine upload --verbose --repository pypi dist/*
 
 publish_test:
-    rye publish --repository testpypi --repository-url https://test.pypi.org/legacy/
-
+    uvx twine upload --verbose --repository testpypi dist/*
 
 
 #create_wheel:

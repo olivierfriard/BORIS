@@ -583,7 +583,7 @@ def dataset_write(dataset: tablib.Dataset, file_name: str, output_format: str, d
     try:
         if output_format in (cfg.PANDAS_DF_EXT, cfg.RDS_EXT):
             # build pandas dataframe from the tsv export of tablib dataset
-            date_type = []
+            date_type: list = []
             for field_name in dtype:
                 if dtype[field_name] == dt.datetime:
                     date_type.append(field_name)

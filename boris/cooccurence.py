@@ -101,8 +101,8 @@ def get_cooccurence(self):
             selected_observations,
             window_title="Select the behaviors",
             n_observations=len(selected_observations),
-            flagShowIncludeModifiers=False,
-            flagShowExcludeBehaviorsWoEvents=True,
+            show_include_modifiers=False,
+            show_exclude_non_coded_behaviors=True,
         )
 
         if parameters == {}:  # cancel button pressed

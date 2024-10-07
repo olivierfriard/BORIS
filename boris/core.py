@@ -774,7 +774,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         """
 
         if not self.pj[cfg.ETHOGRAM]:
-            True, []
+            return True, []
 
         behavior_type = [x.upper() for x in behavior_type]
 
@@ -2750,7 +2750,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             start_coding=start_coding,
             end_coding=end_coding,
             maxTime=max_obs_length,
-            flagShowExcludeBehaviorsWoEvents=True,
+            show_exclude_non_coded_behaviors=True,
             by_category=False,
             n_observations=len(selected_observations),
         )
@@ -2849,8 +2849,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             start_coding=start_coding,
             end_coding=end_coding,
             maxTime=max_obs_length if len(selected_observations) > 1 else selectedObsTotalMediaLength,
-            flagShowIncludeModifiers=False,
-            flagShowExcludeBehaviorsWoEvents=True,
+            show_include_modifiers=False,
+            show_exclude_non_coded_behaviors=True,
             n_observations=len(selected_observations),
         )
 
@@ -3730,8 +3730,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             start_coding=start_coding,
             end_coding=end_coding,
             maxTime=max_media_duration_all_obs,
-            flagShowIncludeModifiers=False,
-            flagShowExcludeBehaviorsWoEvents=False,
+            show_include_modifiers=False,
+            show_exclude_non_coded_behaviors=False,
             n_observations=len(selected_observations),
         )
         if parameters == {}:
