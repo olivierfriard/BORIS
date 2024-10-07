@@ -7,14 +7,13 @@ build:
     # dtf pyproject.toml   # dtf (dynamic text file required on path)
     git commit -am "new wheel"
     git push
-    rye build --clean
+    uv build --clean
 
 publish:
-    rye publish
+    uvx twine upload --verbose --repository pypi dist/*
 
 publish_test:
-    rye publish --repository testpypi --repository-url https://test.pypi.org/legacy/
-
+    uvx twine upload --verbose --repository testpypi dist/*
 
 
 #create_wheel:
