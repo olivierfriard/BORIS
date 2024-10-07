@@ -212,11 +212,10 @@ def load_aggregated_events_in_db(
 
     db = sqlite3.connect(":memory:")
 
-    """
     import os
+
     os.system("rm /tmp/ramdisk/aggreg.sqlite")
     db = sqlite3.connect("/tmp/ramdisk/aggreg.sqlite", isolation_level=None)
-    """
 
     db.row_factory = sqlite3.Row
     cursor2 = db.cursor()

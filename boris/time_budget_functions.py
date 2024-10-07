@@ -136,26 +136,17 @@ def synthetic_time_budget_bin(pj: dict, selected_observations: list, parameters_
     """
 
     def interval_len(interval):
-        if interval.empty:
-            return dec(0)
-        else:
-            return sum([x.upper - x.lower for x in interval])
+        return dec(0) if interval.empty else sum([x.upper - x.lower for x in interval])
 
     def interval_number(interval):
-        if interval.empty:
-            return dec(0)
-        else:
-            return len(interval)
+        return dec(0) if interval.empty else len(interval)
 
     def interval_mean(interval):
-        if interval.empty:
-            return dec(0)
-        else:
-            return sum([x.upper - x.lower for x in interval]) / len(interval)
+        return dec(0) if interval.empty else sum([x.upper - x.lower for x in interval]) / len(interval)
 
     def interval_std_dev(interval) -> str:
         if interval.empty:
-            return "NA"
+            return cfg.NA
         else:
             try:
                 return f"{statistics.stdev([x.upper - x.lower for x in interval]):.3f}"
@@ -183,11 +174,25 @@ def synthetic_time_budget_bin(pj: dict, selected_observations: list, parameters_
     for obs_id in selected_observations:
         for event in pj[cfg.OBSERVATIONS][obs_id][cfg.EVENTS]:
             if parameters_obs[cfg.INCLUDE_MODIFIERS]:
-                if (
-                    event[cfg.EVENT_BEHAVIOR_FIELD_IDX],
-                    event[cfg.EVENT_MODIFIER_FIELD_IDX],
-                ) not in distinct_behav_modif:
-                    distinct_behav_modif.append((event[cfg.EVENT_BEHAVIOR_FIELD_IDX], event[cfg.EVENT_MODIFIER_FIELD_IDX]))
+                if parameters_obs[cfg.EXCLUDE_NON_CODED_MODIFIERS]:
+                    # get coded modifiers
+                    if (
+                        event[cfg.EVENT_BEHAVIOR_FIELD_IDX],
+                        event[cfg.EVENT_MODIFIER_FIELD_IDX],
+                    ) not in distinct_behav_modif:
+                        distinct_behav_modif.append((event[cfg.EVENT_BEHAVIOR_FIELD_IDX], event[cfg.EVENT_MODIFIER_FIELD_IDX]))
+                else:
+                    # get all modifiers combination
+                    ms: list = []
+                    modifiers_list = project_functions.get_modifiers_of_behavior(pj[cfg.ETHOGRAM], event[cfg.EVENT_BEHAVIOR_FIELD_IDX])
+                    if modifiers_list:
+                        for modif_set in modifiers_list[0]:
+                            modif_set.append("None")
+                            ms.append([re.sub(r" \(.*\)", "", x) for x in modif_set])
+                    distinct_modifiers = ["|".join(x) for x in itertools.product(*ms)]
+                    for modifier in distinct_modifiers:
+                        distinct_behav_modif.append((event[cfg.EVENT_BEHAVIOR_FIELD_IDX], modifier))
+
             else:
                 if (event[cfg.EVENT_BEHAVIOR_FIELD_IDX], "") not in distinct_behav_modif:
                     distinct_behav_modif.append((event[cfg.EVENT_BEHAVIOR_FIELD_IDX], ""))
@@ -375,8 +380,8 @@ def synthetic_time_budget(pj: dict, selected_observations: list, parameters_obs:
     """
 
     interval = parameters_obs["time"]
-    start_time = parameters_obs["start time"]
-    end_time = parameters_obs["end time"]
+    start_time = parameters_obs[cfg.START_TIME]
+    end_time = parameters_obs[cfg.END_TIME]
 
     parameters = [
         ["duration", "Total duration"],
@@ -406,7 +411,7 @@ def synthetic_time_budget(pj: dict, selected_observations: list, parameters_obs:
         if parameters_obs[cfg.INCLUDE_MODIFIERS]:
             if parameters_obs[cfg.EXCLUDE_NON_CODED_MODIFIERS]:
                 # get coded modifiers
-                cursor.execute("SELECT DISTINCT modifiers FROM aggregated_events WHERE code = ?", (behavior,))
+                cursor.execute("SELECT DISTINCT modifiers FROM aggregated_events WHERE behavior = ?", (behavior,))
                 for row in cursor.fetchall():
                     distinct_behav_modif.append((behavior, row["modifiers"]))
             else:
@@ -418,8 +423,8 @@ def synthetic_time_budget(pj: dict, selected_observations: list, parameters_obs:
                         modif_set.append("None")
                         ms.append([re.sub(r" \(.*\)", "", x) for x in modif_set])
                 distinct_modifiers = ["|".join(x) for x in itertools.product(*ms)]
-            for modifier in distinct_modifiers:
-                distinct_behav_modif.append((behavior, modifier))
+                for modifier in distinct_modifiers:
+                    distinct_behav_modif.append((behavior, modifier))
 
         else:
             distinct_behav_modif.append((behavior, ""))

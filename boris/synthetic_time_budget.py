@@ -200,6 +200,7 @@ def synthetic_binned_time_budget(self) -> None:
         by_category=False,
         n_observations=len(selected_observations),
         show_time_bin_size=True,
+        show_exclude_non_coded_modifiers=True,
     )
 
     if synth_tb_param == {}:

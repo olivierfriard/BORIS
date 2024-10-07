@@ -774,7 +774,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         """
 
         if not self.pj[cfg.ETHOGRAM]:
-            True, []
+            return True, []
 
         behavior_type = [x.upper() for x in behavior_type]
 
