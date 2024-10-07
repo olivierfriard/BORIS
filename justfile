@@ -5,7 +5,7 @@ build:
     sed -i "/^version = /c\version = \"$(grep '__version__' boris/version.py | awk -F'"' '{print $2}')\"" pyproject.toml
     sed -i "/^current_version = /c\current_version = \"$(grep '__version__' boris/version.py | awk -F'"' '{print $2}')\"" pyproject.toml
     # dtf pyproject.toml   # dtf (dynamic text file required on path)
-    git commit -am "new wheel"
+    git commit -am "new wheel" || true
     git push
     uv build
 
