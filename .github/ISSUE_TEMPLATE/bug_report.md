@@ -8,7 +8,6 @@ assignees: ''
 ---
 
 <!-- 
-
 Important points to add in your bug report
 ===========================================
 
@@ -42,8 +41,7 @@ Information about your system:
  - OS: [windows 10, Ubuntu 22.04 ... ]
  - Type of BORIS installation (setup or portable ...)
 
-
 In case of crash attach or copy the content of the boris.log file (before relaunching BORIS).
 (see http://www.boris.unito.it/report_a_bug for its location)
-
 -->
+
