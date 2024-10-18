@@ -7,45 +7,43 @@ assignees: ''
 
 ---
 
-**Verify the integrity of your BORIS project**
+<!-- 
 
-Project > Check project integrity
+Important points to add in your bug report
+===========================================
 
-
-**Indicate the version of BORIS**
+1) Indicate the version of BORIS
 
 Verify you are using the last version (http://www.boris.unito.it/download) otherwise no bug report will be accepted.
 
 
-**Describe the bug**
+2) Verify the integrity of your BORIS project using: Project > Check project integrity
+
+
+3) Describe the bug
 
 A clear and concise description of what the bug is.
 
-**To Reproduce**
-
 Steps to reproduce the issue:
+
 1. Go to '...'
 2. Click on '....'
 3. Scroll down to '....'
 4. See error
 
-
 **Expected behavior**
 
 A clear and concise description of what you expected to happen.
 
-
-**Screenshots**
-
-If applicable, add screenshots to help explain your problem.
+Screenshots:  If applicable, add screenshots to help explain your problem.
 
 
-**Desktop (please complete the following information):**
+Information about your system: 
  - OS: [windows 10, Ubuntu 22.04 ... ]
  - Type of BORIS installation (setup or portable ...)
 
 
-**In case of crash** attach or copy the content of the boris.log file (before relaunching BORIS).
+In case of crash attach or copy the content of the boris.log file (before relaunching BORIS).
 (see http://www.boris.unito.it/report_a_bug for its location)
 
-
+-->
