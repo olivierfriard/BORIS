@@ -11,7 +11,7 @@ assignees: ''
 
 
 
-<!-- 
+
 Important points to add in your bug report
 ===========================================
 
@@ -43,5 +43,5 @@ Information about your system:
 
 In case of crash attach or copy the content of the boris.log file (before relaunching BORIS).
 (see http://www.boris.unito.it/report_a_bug for its location)
--->
+
 
