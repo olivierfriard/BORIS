@@ -15,13 +15,9 @@ assignees: ''
 Important points to add in your bug report
 ===========================================
 
-1) Indicate the version of BORIS
-
-Verify you are using the last version (http://www.boris.unito.it/download) otherwise no bug report will be accepted.
-
+1) Indicate the version of BORIS (Verify you are using the last version http://www.boris.unito.it/download)
 
 2) Verify the integrity of your BORIS project using: Project > Check project integrity
-
 
 3) Describe the bug
 
