@@ -9,14 +9,13 @@ import sys
 
 # Local imports
 from qdarkstyle import PACKAGE_PATH, QRC_FILE_SUFFIX
-from qdarkstyle.utils.images import (compile_qrc_file, create_images,
-                                     create_palette_image, generate_qrc_file)
+from qdarkstyle.utils.images import compile_qrc_file, create_images, create_palette_image, generate_qrc_file
 from qdarkstyle.utils.scss import create_qss
 
 _logger = logging.getLogger(__name__)
 
 
-def process_palette(palette, compile_for='qtpy'):
+def process_palette(palette, compile_for="qtpy"):
     """Process palette class to create a new palette file/folders.
 
     It generates all files below, in this order:
@@ -37,14 +36,13 @@ def process_palette(palette, compile_for='qtpy'):
         palette (Palette): Palette.
         compile_for (list, optional): Prefix used in resources.
             Defaults to 'qtpy'. Possible values are 'qtpy', 'pyqtgraph',
-            'pyqt', 'pyqt5', 'pyqt6',
+            'pyqt', 'PySide6', 'pyqt6',
             'pyside', 'pyside2', 'pyside6',
             'qt', 'qt5', qt6, 'all'.
     """
 
     if palette is None:
-        _logger.error("Please pass a palette class in order to create its "
-                      "associated images")
+        _logger.error("Please pass a palette class in order to create its " "associated images")
         sys.exit(1)
 
     if palette.ID is None:

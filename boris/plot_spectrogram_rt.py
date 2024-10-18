@@ -30,7 +30,7 @@ import numpy as np
 
 from . import config as cfg
 
-from PyQt5.QtWidgets import (
+from PySide6.QtWidgets import (
     QWidget,
     QVBoxLayout,
     QHBoxLayout,
@@ -38,8 +38,8 @@ from PyQt5.QtWidgets import (
     QLabel,
     QSpinBox,
 )
-from PyQt5.QtCore import pyqtSignal, QEvent
-from PyQt5 import Qt
+from PySide6.QtCore import Signal, QEvent
+from PySide6 import Qt
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.figure import Figure
 import matplotlib.ticker as mticker
@@ -49,7 +49,7 @@ import matplotlib.ticker as mticker
 
 class Plot_spectrogram_RT(QWidget):
     # send keypress event to mainwindow
-    sendEvent = pyqtSignal(QEvent)
+    sendEvent = Signal(QEvent)
 
     def __init__(self):
         super().__init__()

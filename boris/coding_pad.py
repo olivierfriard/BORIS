@@ -19,9 +19,9 @@ Copyright 2012-2024 Olivier Friard
   MA 02110-1301, USA.
 """
 
-from PyQt5.QtCore import Qt, pyqtSignal, QEvent, QRect
-from PyQt5.QtGui import QFont
-from PyQt5.QtWidgets import QWidget, QPushButton, QHBoxLayout, QGridLayout, QComboBox, QMessageBox
+from PySide6.QtCore import Qt, Signal, QEvent, QRect
+from PySide6.QtGui import QFont
+from PySide6.QtWidgets import QWidget, QPushButton, QHBoxLayout, QGridLayout, QComboBox, QMessageBox
 
 from . import config as cfg
 from . import utilities as util
@@ -38,9 +38,9 @@ class Button(QWidget):
 
 
 class CodingPad(QWidget):
-    clickSignal = pyqtSignal(str)
-    sendEventSignal = pyqtSignal(QEvent)
-    close_signal = pyqtSignal(QRect, dict)
+    clickSignal = Signal(str)
+    sendEventSignal = Signal(QEvent)
+    close_signal = Signal(QRect, dict)
 
     def __init__(self, pj: dict, filtered_behaviors, parent=None):
         super().__init__(parent)

@@ -19,13 +19,12 @@ Copyright 2012-2024 Olivier Friard
   MA 02110-1301, USA.
 """
 
-
 import json
 import datetime
 from pathlib import Path
 import pandas as pd
 
-from PyQt5.QtWidgets import (
+from PySide6.QtWidgets import (
     QMessageBox,
     QFileDialog,
 )

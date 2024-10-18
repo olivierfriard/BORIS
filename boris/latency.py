@@ -29,7 +29,7 @@ from . import dialog
 from . import select_observations
 from . import project_functions, observation_operations
 
-from PyQt5.QtWidgets import QMessageBox
+from PySide6.QtWidgets import QMessageBox
 
 
 def get_latency(self):

@@ -28,9 +28,9 @@ import pandas as pd
 import tablib
 import pickle
 
-from PyQt5.QtCore import Qt
-from PyQt5.QtGui import QColor, QFont
-from PyQt5.QtWidgets import QApplication, QFileDialog, QListWidgetItem, QMessageBox, QTableWidgetItem
+from PySide6.QtCore import Qt
+from PySide6.QtGui import QColor, QFont
+from PySide6.QtWidgets import QApplication, QFileDialog, QListWidgetItem, QMessageBox, QTableWidgetItem
 
 
 from . import config as cfg

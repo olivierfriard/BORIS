@@ -2,12 +2,12 @@
 
 widget to edit duration > 24 h or < 0
 
-https://stackoverflow.com/questions/44380202/creating-a-custom-widget-in-pyqt5
+https://stackoverflow.com/questions/44380202/creating-a-custom-widget-in-PySide6
 """
 
 from decimal import Decimal as dec
 
-from PyQt5.QtWidgets import (
+from PySide6.QtWidgets import (
     QWidget,
     QHBoxLayout,
     QPushButton,
@@ -20,13 +20,13 @@ from PyQt5.QtWidgets import (
     QRadioButton,
 )
 
-from PyQt5.QtCore import pyqtSignal
+from PySide6.QtCore import Signal
 
 from . import config as cfg
 
 
 class Widget_hhmmss(QWidget):
-    time_changed_signal = pyqtSignal(float)
+    time_changed_signal = Signal(float)
 
     def __init__(self, parent=None):
         QWidget.__init__(self, parent=parent)
@@ -117,7 +117,7 @@ class Widget_hhmmss(QWidget):
 
 
 class Widget_seconds(QWidget):
-    time_changed_signal = pyqtSignal(float)
+    time_changed_signal = Signal(float)
 
     def __init__(self, parent=None):
         QWidget.__init__(self, parent=parent)

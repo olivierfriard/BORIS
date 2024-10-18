@@ -25,7 +25,7 @@ import logging
 from decimal import Decimal as dec
 
 import numpy as np
-from PyQt5.QtWidgets import QInputDialog, QMessageBox
+from PySide6.QtWidgets import QInputDialog, QMessageBox
 
 from . import config as cfg
 from . import db_functions, dialog, project_functions, select_subj_behav

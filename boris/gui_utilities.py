@@ -21,9 +21,9 @@ Copyright 2012-2024 Olivier Friard
 
 import pathlib as pl
 import logging
-from PyQt5.QtCore import QSettings
-from PyQt5.QtWidgets import QWidget
-from PyQt5.QtGui import QIcon
+from PySide6.QtCore import QSettings
+from PySide6.QtWidgets import QWidget
+from PySide6.QtGui import QIcon
 
 
 def save_geometry(widget: QWidget, widget_name: str):

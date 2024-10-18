@@ -23,8 +23,8 @@ This file is part of BORIS.
 import logging
 import pathlib as pl
 
-from PyQt5.QtWidgets import QFileDialog, QMessageBox
-from PyQt5.QtGui import QFont, QTextOption, QTextCursor
+from PySide6.QtWidgets import QFileDialog, QMessageBox
+from PySide6.QtGui import QFont, QTextOption, QTextCursor
 
 from . import config as cfg
 from . import (

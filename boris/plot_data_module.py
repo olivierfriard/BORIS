@@ -29,8 +29,8 @@ from decimal import Decimal as dec
 import numpy as np
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.figure import Figure
-from PyQt5.QtCore import pyqtSignal, QEvent, QThread, QObject, pyqtSlot, QTimer
-from PyQt5.QtWidgets import (
+from PySide6.QtCore import Signal, QEvent, QThread, QObject, Slot, QTimer
+from PySide6.QtWidgets import (
     QSizePolicy,
     QWidget,
     QPushButton,
@@ -56,10 +56,10 @@ class MyMplCanvas(FigureCanvas):
 
 
 class Plot_data(QWidget):
-    send_fig = pyqtSignal(float)
+    send_fig = Signal(float)
 
     # send keypress event to mainwindow
-    sendEvent = pyqtSignal(QEvent)
+    sendEvent = Signal(QEvent)
 
     def __init__(
         self,
@@ -310,7 +310,7 @@ class Plot_data(QWidget):
 
 
 class Plotter(QObject):
-    return_fig = pyqtSignal(
+    return_fig = Signal(
         np.ndarray,  # x array
         np.ndarray,  # y array
         float,  # position_data
@@ -320,7 +320,7 @@ class Plotter(QObject):
         float,  # position end
     )
 
-    @pyqtSlot(float)
+    @Slot(float)
     def replot(self, current_time):  # time_ in s
         logging.debug("current_time: {}".format(current_time))
 

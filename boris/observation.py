@@ -26,9 +26,9 @@ import pandas as pd
 import pathlib as pl
 import datetime as dt
 
-from PyQt5.QtCore import Qt
-from PyQt5.QtGui import QColor, QTextCursor
-from PyQt5.QtWidgets import (
+from PySide6.QtCore import Qt
+from PySide6.QtGui import QColor, QTextCursor, QAction
+from PySide6.QtWidgets import (
     QDialog,
     QVBoxLayout,
     QHBoxLayout,
@@ -145,8 +145,18 @@ class Observation(QDialog, Ui_Form):
             },
         ]
         menu = QMenu()
-        menu.triggered.connect(lambda x: self.add_media(mode=x.statusTip()))
-        self.add_button_menu(menu_items, menu)
+        # Add actions to the menu
+        self.action1 = QAction("media abs path|with absolute path")
+        self.action2 = QAction("media rel path|with relative path")
+        menu.addAction(self.action1)
+        menu.addAction(self.action2)
+
+        # Connect actions to functions
+        self.action1.triggered.connect(lambda: self.add_media(mode="media abs path|with absolute path"))
+        self.action2.triggered.connect(lambda: self.add_media(mode="media rel path|with relative path"))
+
+        # menu.triggered.connect(lambda x: self.add_media(mode=x.statusTip()))
+        # self.add_button_menu(menu_items, menu)
         self.pbAddVideo.setMenu(menu)
 
         self.pbRemoveVideo.clicked.connect(self.remove_media)
@@ -158,8 +168,20 @@ class Observation(QDialog, Ui_Form):
         ]
 
         menu_data = QMenu()
-        menu_data.triggered.connect(lambda x: self.add_data_file(mode=x.statusTip()))
-        self.add_button_menu(data_menu_items, menu_data)
+
+        # Add actions to the menu
+        data_action1 = QAction("data abs path|with absolute path")
+        data_action2 = QAction("data rel path|with relative path")
+        menu_data.addAction(data_action1)
+        menu_data.addAction(data_action2)
+
+        # Connect actions to functions
+        data_action1.triggered.connect(lambda: self.add_data_file(mode="data abs path|with absolute path"))
+        data_action2.triggered.connect(lambda: self.add_data_file(mode="data rel path|with relative path"))
+
+        # menu_data.triggered.connect(lambda x: self.add_data_file(mode=x.statusTip()))
+        # self.add_button_menu(data_menu_items, menu_data)
+
         self.pb_add_data_file.setMenu(menu_data)
 
         # button menu for images

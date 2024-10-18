@@ -17,26 +17,25 @@ from qtpy.QtGui import QIcon
 from qtpy.QtWidgets import QApplication
 
 # Local imports
-from qdarkstyle import (IMAGES_PATH, PACKAGE_PATH, QRC_FILE_SUFFIX, QSS_FILE_SUFFIX, QSS_PATH,
-                        STYLES_SCSS_FILE, SVG_PATH)
+from qdarkstyle import IMAGES_PATH, PACKAGE_PATH, QRC_FILE_SUFFIX, QSS_FILE_SUFFIX, QSS_PATH, STYLES_SCSS_FILE, SVG_PATH
 
 
-IMAGE_BLACKLIST = ['base_palette']
+IMAGE_BLACKLIST = ["base_palette"]
 
-TEMPLATE_QRC_HEADER = '''
+TEMPLATE_QRC_HEADER = """
 <RCC warning="WARNING! File created programmatically. All changes made in this file will be lost!">
   <qresource prefix="{resource_prefix}">
-'''
+"""
 
-TEMPLATE_QRC_FILE = '    <file>rc/{fname}</file>'
+TEMPLATE_QRC_FILE = "    <file>rc/{fname}</file>"
 
-TEMPLATE_QRC_FOOTER = '''
+TEMPLATE_QRC_FOOTER = """
   </qresource>
   <qresource prefix="{style_prefix}">
       <file>{qss_file}</file>
   </qresource>
 </RCC>
-'''
+"""
 
 _logger = logging.getLogger(__name__)
 
@@ -50,12 +49,12 @@ def _get_file_color_map(fname, palette):
     color_pressed = palette.COLOR_ACCENT_2
     color_normal = palette.COLOR_TEXT_1
 
-    name, ext = fname.split('.')
+    name, ext = fname.split(".")
     file_colors = {
         fname: color_normal,
-        name + '_disabled.' + ext: color_disabled,
-        name + '_focus.' + ext: color_focus,
-        name + '_pressed.' + ext: color_pressed,
+        name + "_disabled." + ext: color_disabled,
+        name + "_focus." + ext: color_focus,
+        name + "_pressed." + ext: color_pressed,
     }
 
     return file_colors
@@ -65,13 +64,13 @@ def _create_colored_svg(svg_path, temp_svg_path, color):
     """
     Replace base svg with fill color.
     """
-    with open(svg_path, 'r') as fh:
+    with open(svg_path, "r") as fh:
         data = fh.read()
 
-    base_color = '#ff0000'  # Hardcoded in base svg files
+    base_color = "#ff0000"  # Hardcoded in base svg files
     new_data = data.replace(base_color, color)
 
-    with open(temp_svg_path, 'w') as fh:
+    with open(temp_svg_path, "w") as fh:
         fh.write(new_data)
 
 
@@ -91,8 +90,7 @@ def convert_svg_to_png(svg_path, png_path, height, width):
     img.save(os.path.abspath(png_path))
 
 
-def create_palette_image(base_svg_path=SVG_PATH, path=IMAGES_PATH,
-                         palette=None):
+def create_palette_image(base_svg_path=SVG_PATH, path=IMAGES_PATH, palette=None):
     """
     Create palette image svg and png image on specified path.
     """
@@ -100,32 +98,31 @@ def create_palette_image(base_svg_path=SVG_PATH, path=IMAGES_PATH,
     _ = QApplication([])
 
     if palette is None:
-        _logger.error("Please pass a palette class in order to create its "
-                      "associated images")
+        _logger.error("Please pass a palette class in order to create its " "associated images")
         sys.exit(1)
 
     if palette.ID is None:
         _logger.error("A QDarkStyle palette requires an ID!")
         sys.exit(1)
 
-    base_palette_svg_path = os.path.join(base_svg_path, 'base_palette.svg')
-    palette_svg_path = os.path.join(path, palette.ID, 'palette.svg')
-    palette_png_path = os.path.join(path, palette.ID, 'palette.png')
+    base_palette_svg_path = os.path.join(base_svg_path, "base_palette.svg")
+    palette_svg_path = os.path.join(path, palette.ID, "palette.svg")
+    palette_png_path = os.path.join(path, palette.ID, "palette.png")
 
     _logger.info("Creating palette image ...")
     _logger.info(f"Base SVG: {base_palette_svg_path}")
     _logger.info(f"To SVG: {palette_svg_path}")
     _logger.info(f"To PNG: {palette_png_path}")
 
-    with open(base_palette_svg_path, 'r') as fh:
+    with open(base_palette_svg_path, "r") as fh:
         data = fh.read()
 
     color_palette = palette.color_palette()
 
     for color_name, color_value in color_palette.items():
-        data = data.replace('{{ ' + color_name + ' }}', color_value.lower())
+        data = data.replace("{{ " + color_name + " }}", color_value.lower())
 
-    with open(palette_svg_path, 'w+') as fh:
+    with open(palette_svg_path, "w+") as fh:
         fh.write(data)
 
     convert_svg_to_png(palette_svg_path, palette_png_path, 4000, 4000)
@@ -150,8 +147,7 @@ def create_images(base_svg_path=SVG_PATH, rc_path=None, palette=None):
     _ = QApplication([])
 
     if palette is None:
-        _logger.error("Please pass a palette class in order to create its "
-                      "associated file")
+        _logger.error("Please pass a palette class in order to create its " "associated file")
         sys.exit(1)
 
     if palette.ID is None:
@@ -159,16 +155,16 @@ def create_images(base_svg_path=SVG_PATH, rc_path=None, palette=None):
         sys.exit(1)
 
     if not rc_path:
-        rc_path = os.path.join(PACKAGE_PATH, palette.ID, 'rc')
+        rc_path = os.path.join(PACKAGE_PATH, palette.ID, "rc")
 
     temp_dir = tempfile.mkdtemp()
-    svg_fnames = [f for f in os.listdir(base_svg_path) if f.endswith('.svg')]
+    svg_fnames = [f for f in os.listdir(base_svg_path) if f.endswith(".svg")]
     base_height = 32
 
     # See: https://doc.qt.io/qt-5/scalability.html
     heights = {
-        32: '.png',
-        64: '@2x.png',
+        32: ".png",
+        64: "@2x.png",
     }
 
     _logger.info("Creating images ...")
@@ -191,7 +187,7 @@ def create_images(base_svg_path=SVG_PATH, rc_path=None, palette=None):
         _logger.debug(f" Size HxW (px): {height} X {width}")
 
         for svg_fname in svg_fnames:
-            svg_name = svg_fname.split('.')[0]
+            svg_name = svg_fname.split(".")[0]
 
             # Skip blacklist
             if svg_name not in IMAGE_BLACKLIST:
@@ -205,7 +201,7 @@ def create_images(base_svg_path=SVG_PATH, rc_path=None, palette=None):
                     temp_svg_path = os.path.join(temp_dir, color_svg_name)
                     _create_colored_svg(svg_path, temp_svg_path, color)
 
-                    png_fname = color_svg_name.replace('.svg', ext)
+                    png_fname = color_svg_name.replace(".svg", ext)
                     png_path = os.path.join(rc_path, png_fname)
                     convert_svg_to_png(temp_svg_path, png_path, height, width)
                     num_png += 1
@@ -216,7 +212,7 @@ def create_images(base_svg_path=SVG_PATH, rc_path=None, palette=None):
                     if height == base_height:
                         rc_base = os.path.basename(rc_path)
                         png_base = os.path.basename(png_fname)
-                        rc_name = '/' + rc_base + '/' + png_base
+                        rc_name = "/" + rc_base + "/" + png_base
                         try:
                             rc_list.remove(rc_name)
                         except ValueError:
@@ -235,8 +231,7 @@ def create_images(base_svg_path=SVG_PATH, rc_path=None, palette=None):
     _logger.info(f"RC links in _style.scss not in RC: {rc_list}")
 
 
-def generate_qrc_file(resource_prefix='qss_icons', style_prefix='qdarkstyle',
-                      palette=None):
+def generate_qrc_file(resource_prefix="qss_icons", style_prefix="qdarkstyle", palette=None):
     """
     Generate the QRC file programmatically.
 
@@ -253,8 +248,7 @@ def generate_qrc_file(resource_prefix='qss_icons', style_prefix='qdarkstyle',
     files = []
 
     if palette is None:
-        _logger.error("Please pass a palette class in order to create its "
-                      "qrc file")
+        _logger.error("Please pass a palette class in order to create its " "qrc file")
         sys.exit(1)
 
     if palette.ID is None:
@@ -262,12 +256,12 @@ def generate_qrc_file(resource_prefix='qss_icons', style_prefix='qdarkstyle',
         sys.exit(1)
 
     palette_path = os.path.join(PACKAGE_PATH, palette.ID)
-    rc_path = os.path.join(palette_path, 'rc')
+    rc_path = os.path.join(palette_path, "rc")
     qss_file = palette.ID + QSS_FILE_SUFFIX
     qrc_file = palette.ID + QRC_FILE_SUFFIX
     qrc_filepath = os.path.join(palette_path, qrc_file)
-    resource_prefix = resource_prefix + '/' + palette.ID
-    style_prefix = style_prefix + '/' + palette.ID
+    resource_prefix = resource_prefix + "/" + palette.ID
+    style_prefix = style_prefix + "/" + palette.ID
 
     _logger.info("Generating QRC file ...")
     _logger.info(f"Resource prefix: {resource_prefix}")
@@ -277,18 +271,20 @@ def generate_qrc_file(resource_prefix='qss_icons', style_prefix='qdarkstyle',
 
     # Search by png images
     for fname in sorted(os.listdir(rc_path)):
-        if os.path.splitext(fname)[1] == '.png':
+        if os.path.splitext(fname)[1] == ".png":
             files.append(TEMPLATE_QRC_FILE.format(fname=fname))
 
     # Join parts
-    qrc_content = (TEMPLATE_QRC_HEADER.format(resource_prefix=resource_prefix)
-                   + '\n'.join(files)
-                   + TEMPLATE_QRC_FOOTER.format(style_prefix=style_prefix, qss_file=qss_file))
+    qrc_content = (
+        TEMPLATE_QRC_HEADER.format(resource_prefix=resource_prefix)
+        + "\n".join(files)
+        + TEMPLATE_QRC_FOOTER.format(style_prefix=style_prefix, qss_file=qss_file)
+    )
 
     _logger.info(f"Writing in: {qrc_filepath}")
 
     # Write qrc file
-    with open(qrc_filepath, 'w') as fh:
+    with open(qrc_filepath, "w") as fh:
         fh.write(qrc_content)
 
 
@@ -305,11 +301,11 @@ def get_rc_links_from_scss(pattern=r"\/rc.*\.png"):
 
     style_scss_filepath = os.path.join(QSS_PATH, STYLES_SCSS_FILE)
 
-    with open(style_scss_filepath, 'r') as fh:
+    with open(style_scss_filepath, "r") as fh:
         data = fh.read()
 
     lines = data.split("\n")
-    compiled_exp = re.compile('(' + pattern + ')')
+    compiled_exp = re.compile("(" + pattern + ")")
 
     rc_list = []
 
@@ -324,7 +320,7 @@ def get_rc_links_from_scss(pattern=r"\/rc.*\.png"):
     return rc_list
 
 
-def compile_qrc_file(compile_for='qtpy', qrc_path=None, palette=None):
+def compile_qrc_file(compile_for="qtpy", qrc_path=None, palette=None):
     """
     Compile the QRC file converting it to _rc.py nad/or .rcc.
 
@@ -337,15 +333,14 @@ def compile_qrc_file(compile_for='qtpy', qrc_path=None, palette=None):
     Args:
         compile_for (list, optional): Prefix used in resources.
             Defaults to 'qtpy'. Possible values are 'qtpy', 'pyqtgraph',
-            'pyqt', 'pyqt5', 'pyside', 'pyside2', 'qt', 'qt5', 'all'.
+            'pyqt', 'PySide6', 'pyside', 'pyside2', 'qt', 'qt5', 'all'.
         qrc_path (str, optional): .qrc folder path.
             Defaults to None.
         palette (Palette, optional): Palette.
     """
 
     if palette is None:
-        _logger.error("Please pass a palette class in order to create its "
-                      "associated file")
+        _logger.error("Please pass a palette class in order to create its " "associated file")
         sys.exit(1)
 
     if palette.ID is None:
@@ -360,18 +355,18 @@ def compile_qrc_file(compile_for='qtpy', qrc_path=None, palette=None):
     # get name without extension
     filename = os.path.splitext(qrc_file)[0]
 
-    ext = '_rc.py'
-    ext_c = '.rcc'
+    ext = "_rc.py"
+    ext_c = ".rcc"
 
     # creating names
-    py_file_pyqt6 = 'pyqt6_' + filename + ext
-    py_file_pyqt5 = 'pyqt5_' + filename + ext
-    py_file_pyqt = 'pyqt_' + filename + ext
-    py_file_pyside6 = 'pyside6_' + filename + ext
-    py_file_pyside2 = 'pyside2_' + filename + ext
-    py_file_pyside = 'pyside_' + filename + ext
-    py_file_qtpy = '' + filename + ext
-    py_file_pyqtgraph = 'pyqtgraph_' + filename + ext
+    py_file_pyqt6 = "pyqt6_" + filename + ext
+    py_file_PySide6 = "PySide6_" + filename + ext
+    py_file_pyqt = "pyqt_" + filename + ext
+    py_file_pyside6 = "pyside6_" + filename + ext
+    py_file_pyside2 = "pyside2_" + filename + ext
+    py_file_pyside = "pyside_" + filename + ext
+    py_file_qtpy = "" + filename + ext
+    py_file_pyqtgraph = "pyqtgraph_" + filename + ext
 
     # it is simple to change the directory, otherwise we need to add
     # more arguments for each compiler
@@ -379,70 +374,70 @@ def compile_qrc_file(compile_for='qtpy', qrc_path=None, palette=None):
     os.chdir(qrc_path)
 
     # Shell kwarg to pass to subprocess
-    shell = True if os.name == 'nt' else False
+    shell = True if os.name == "nt" else False
 
     # calling external commands
-    if compile_for in ['pyqt', 'pyqtgraph', 'all']:
+    if compile_for in ["pyqt", "pyqtgraph", "all"]:
         _logger.info("Compiling using PyQt4 ...")
         try:
-            subprocess.call(['pyrcc4', '-py3', qrc_file, '-o', py_file_pyqt], shell=shell)
+            subprocess.call(["pyrcc4", "-py3", qrc_file, "-o", py_file_pyqt], shell=shell)
         except FileNotFoundError:
             _logger.error("You must install pyrcc4")
 
-    if compile_for in ['pyqt5', 'qtpy','all']:
-        _logger.info("Compiling using PyQt5 ...")
+    if compile_for in ["PySide6", "qtpy", "all"]:
+        _logger.info("Compiling using PySide6 ...")
         try:
-            subprocess.call(['pyrcc5', qrc_file, '-o', py_file_pyqt5], shell=shell)
+            subprocess.call(["pyrcc5", qrc_file, "-o", py_file_PySide6], shell=shell)
         except FileNotFoundError:
             _logger.error("You must install pyrcc5")
 
-    if compile_for in ['pyside', 'all']:
+    if compile_for in ["pyside", "all"]:
         _logger.info("Compiling using PySide ...")
         try:
-            subprocess.call(['pyside-rcc', '-py3', qrc_file, '-o', py_file_pyside], shell=shell)
+            subprocess.call(["pyside-rcc", "-py3", qrc_file, "-o", py_file_pyside], shell=shell)
         except FileNotFoundError:
             _logger.error("You must install pyside-rcc")
 
-    if compile_for in ['pyside2', 'all']:
+    if compile_for in ["pyside2", "all"]:
         _logger.info("Compiling using PySide 2...")
         try:
-            subprocess.call(['pyside2-rcc', qrc_file, '-o', py_file_pyside2], shell=shell)
+            subprocess.call(["pyside2-rcc", qrc_file, "-o", py_file_pyside2], shell=shell)
         except FileNotFoundError:
             _logger.error("You must install pyside2-rcc")
 
-    if compile_for in ['pyside6', 'all']:
+    if compile_for in ["pyside6", "all"]:
         _logger.info("Compiling using PySide 6...")
         try:
-            subprocess.call(['pyside6-rcc', '-g', 'python', qrc_file, '-o', py_file_pyside6], shell=shell)
+            subprocess.call(["pyside6-rcc", "-g", "python", qrc_file, "-o", py_file_pyside6], shell=shell)
         except FileNotFoundError:
             _logger.error("You must install pyside6-rcc")
 
-    if compile_for in ['qtpy', 'all']:
+    if compile_for in ["qtpy", "all"]:
         _logger.info("Converting for QtPy ...")
-        # special case - qtpy - syntax is PyQt5
-        with open(py_file_pyqt5, 'r') as file:
+        # special case - qtpy - syntax is PySide6
+        with open(py_file_PySide6, "r") as file:
             filedata = file.read()
 
         # replace the target string
-        filedata = filedata.replace('from PyQt5', 'from qtpy')
+        filedata = filedata.replace("from PySide6", "from qtpy")
 
-        with open(py_file_qtpy, 'w+') as file:
+        with open(py_file_qtpy, "w+") as file:
             # write the file out again
             file.write(filedata)
 
-        if compile_for not in ['pyqt5']:
-            os.remove(py_file_pyqt5)
+        if compile_for not in ["PySide6"]:
+            os.remove(py_file_PySide6)
 
-    if compile_for in ['pyqtgraph', 'all']:
+    if compile_for in ["pyqtgraph", "all"]:
         _logger.info("Converting for PyQtGraph ...")
         # special case - pyqtgraph - syntax is PyQt4
-        with open(py_file_pyqt, 'r') as file:
+        with open(py_file_pyqt, "r") as file:
             filedata = file.read()
 
         # replace the target string
-        filedata = filedata.replace('from PyQt4', 'from pyqtgraph.Qt')
+        filedata = filedata.replace("from PyQt4", "from pyqtgraph.Qt")
 
-        with open(py_file_pyqtgraph, 'w+') as file:
+        with open(py_file_pyqtgraph, "w+") as file:
             # write the file out again
             file.write(filedata)
 

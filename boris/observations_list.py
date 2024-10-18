@@ -21,8 +21,8 @@ Copyright 2012-2024 Olivier Friard
 
 """
 
-from PyQt5.QtGui import QColor
-from PyQt5.QtWidgets import (
+from PySide6.QtGui import QColor
+from PySide6.QtWidgets import (
     QTableWidgetItem,
     QLabel,
     QLineEdit,

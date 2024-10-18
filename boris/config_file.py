@@ -28,7 +28,7 @@ import time
 from . import config as cfg
 from . import dialog
 
-from PyQt5.QtCore import QByteArray, QSettings
+from PySide6.QtCore import QByteArray, QSettings
 
 
 def read(self):

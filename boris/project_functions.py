@@ -30,8 +30,8 @@ from shutil import copyfile
 from typing import List, Tuple, Dict
 
 import tablib
-from PyQt5.QtWidgets import QMessageBox, QTableWidgetItem, QAbstractItemView
-from PyQt5.QtCore import Qt
+from PySide6.QtWidgets import QMessageBox, QTableWidgetItem, QAbstractItemView
+from PySide6.QtCore import Qt
 
 from . import config as cfg
 from . import db_functions

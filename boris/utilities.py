@@ -39,7 +39,7 @@ from shutil import copyfile
 from typing import Union, Tuple
 
 import numpy as np
-from PyQt5.QtGui import QPixmap, QImage
+from PySide6.QtGui import QPixmap, QImage
 
 from PIL.ImageQt import Image
 

@@ -56,23 +56,23 @@ import matplotlib
 import zipfile
 import shutil
 
-matplotlib.use("Qt5Agg")
+matplotlib.use("QtAgg")
 
-from PyQt5.QtCore import (
+import PySide6
+from PySide6.QtCore import (
     Qt,
     QPoint,
-    pyqtSignal,
+    Signal,
     QEvent,
     QDateTime,
     QTime,
     QUrl,
     QAbstractTableModel,
-    QT_VERSION_STR,
-    PYQT_VERSION_STR,
+    qVersion,
 )
-from PyQt5.QtGui import QIcon, QPixmap, QFont, QKeyEvent, QDesktopServices, QColor, QPainter, QPolygon
-from PyQt5.QtMultimedia import QSound
-from PyQt5.QtWidgets import (
+from PySide6.QtGui import QIcon, QPixmap, QFont, QKeyEvent, QDesktopServices, QColor, QPainter, QPolygon, QAction
+from PySide6.QtMultimedia import QSoundEffect
+from PySide6.QtWidgets import (
     QLabel,
     QMessageBox,
     QMainWindow,
@@ -83,10 +83,10 @@ from PyQt5.QtWidgets import (
     QFrame,
     QDockWidget,
     QApplication,
-    QAction,
     QAbstractItemView,
     QSplashScreen,
     QHeaderView,
+    QStyledItemDelegate,
 )
 from PIL.ImageQt import Image
 
@@ -168,7 +168,8 @@ logging.info(f"BORIS version {__version__} release date: {__version_date__}")
 logging.info(f"Operating system: {platform.uname().system} {platform.uname().release} {platform.uname().version}")
 logging.info(f"CPU: {platform.uname().machine} {platform.uname().processor}")
 logging.info(f"Python {platform.python_version()} ({'64-bit' if sys.maxsize > 2**32 else '32-bit'})")
-logging.info(f"Qt {QT_VERSION_STR} - PyQt {PYQT_VERSION_STR}")
+logging.info(f"Qt {qVersion()} - PySide {PySide6.__version__}")
+
 
 (r, memory) = util.mem_info()
 if not r:
@@ -236,9 +237,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
     state_behaviors_codes: tuple = tuple()
 
-    time_observer_signal = pyqtSignal(float)
-    mpv_eof_reached_signal = pyqtSignal(float)
-    video_click_signal = pyqtSignal(int, str)
+    time_observer_signal = Signal(float)
+    mpv_eof_reached_signal = Signal(float)
+    video_click_signal = Signal(int, str)
 
     processes: list = []  # list of QProcess processes
     overlays: dict = {}  # dict for storing video overlays
@@ -453,14 +454,22 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.statusbar.addPermanentWidget(self.lbSpeed)
         """
 
-        # set painter for twEvents to highlight current row
-        # self.twEvents.setItemDelegate(events_cursor.StyledItemDelegateTriangle(self.events_current_row))
-        self.tv_events.setItemDelegate(events_cursor.StyledItemDelegateTriangle(self.events_current_row))
+        # set painter for tv_events to highlight current row
+        delegate = self.CustomItemDelegate()
+        self.tv_events.setItemDelegate(delegate)
+
+        # PySide6
+        # self.tv_events.setItemDelegate(events_cursor.StyledItemDelegateTriangle(self.events_current_row))
 
         connections.connections(self)
         self.config_param = cfg.INIT_PARAM
         config_file.read(self)
         menu_options.update_menu(self)
+
+    class CustomItemDelegate(QStyledItemDelegate):
+        def paint(self, painter, option, index):
+            # Custom drawing logic here (overriding paint)
+            super().paint(painter, option, index)
 
     def excepthook(self, exception_type, exception_value, traceback_object):
         """
@@ -4746,7 +4755,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             sound_type (str): type of sound
         """
 
-        QSound.play(f":/{sound_type}")
+        QSoundEffect.play(f":/{sound_type}")
 
     def is_playing(self) -> bool:
         """
@@ -4789,7 +4798,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     def keyPressEvent(self, event) -> None:
         """
         http://qt-project.org/doc/qt-5.0/qtcore/qt.html#Key-enum
-        https://github.com/pyqt/python-qt5/blob/master/PyQt5/qml/builtins.qmltypes
+        https://github.com/pyqt/python-qt5/blob/master/PySide6/qml/builtins.qmltypes
 
         ESC: 16777216
         """
@@ -5638,7 +5647,7 @@ def main():
     window = MainWindow(ffmpeg_bin)
 
     if window.config_param.get(cfg.DARK_MODE, cfg.DARK_MODE_DEFAULT_VALUE):
-        app.setStyleSheet(qdarkstyle.load_stylesheet(qt_api="pyqt5"))
+        app.setStyleSheet(qdarkstyle.load_stylesheet(qt_api="PySide6"))
 
     # open project/start observation on command line
 
@@ -5686,7 +5695,7 @@ def main():
     if not options.nosplashscreen and (sys.platform != "darwin"):
         splash.finish(window)
 
-    return_code = app.exec_()
+    return_code = app.exec()
 
     del window
 

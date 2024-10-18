@@ -16,15 +16,15 @@ This file is part of BORIS.
   GNU General Public License for more details.
 
   You should have received a copy of the GNU General Public License
-  along with this program; if not see <http://www.gnu.org/licenses/>.
+  along with this program; if not see <http://www.gnu.org/licPbehav_enses/>.
 
 """
 
 import logging
 import json
 
-from PyQt5.QtGui import QIcon
-from PyQt5.QtWidgets import QDialog, QWidget, QFileDialog, QMessageBox
+from PySide6.QtGui import QIcon
+from PySide6.QtWidgets import QDialog, QWidget, QFileDialog, QMessageBox
 
 from . import dialog
 from .add_modifier_ui import Ui_Dialog

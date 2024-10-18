@@ -22,8 +22,8 @@ Copyright 2012-2024 Olivier Friard
 """
 
 from typing import Tuple
-from PyQt5.QtCore import Qt
-from PyQt5.QtWidgets import QAbstractItemView
+from PySide6.QtCore import Qt
+from PySide6.QtWidgets import QAbstractItemView
 
 from . import config as cfg
 from . import gui_utilities, observations_list, project_functions

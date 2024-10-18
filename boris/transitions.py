@@ -25,7 +25,7 @@ import os
 import subprocess
 import tempfile
 
-from PyQt5.QtWidgets import QFileDialog, QMessageBox
+from PySide6.QtWidgets import QFileDialog, QMessageBox
 
 from . import config as cfg
 from . import dialog, export_observation, select_subj_behav

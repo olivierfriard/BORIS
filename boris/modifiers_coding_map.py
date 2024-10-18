@@ -22,9 +22,9 @@ This file is part of BORIS.
 
 import binascii
 
-from PyQt5.QtCore import pyqtSignal, QPoint, Qt
-from PyQt5.QtGui import QPen, QPixmap, QBrush, QMouseEvent, QPolygonF, QColor
-from PyQt5.QtWidgets import (
+from PySide6.QtCore import Signal, QPoint, Qt
+from PySide6.QtGui import QPen, QPixmap, QBrush, QMouseEvent, QPolygonF, QColor
+from PySide6.QtWidgets import (
     QDialog,
     QGraphicsView,
     QGraphicsScene,
@@ -41,7 +41,7 @@ from PyQt5.QtWidgets import (
 
 class ModifiersCodingMapWindowClass(QDialog):
     class View(QGraphicsView):
-        mousePress = pyqtSignal(QMouseEvent)
+        mousePress = Signal(QMouseEvent)
 
         def mousePressEvent(self, event):
             self.mousePress.emit(event)

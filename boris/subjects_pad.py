@@ -19,17 +19,17 @@ Copyright 2012-2024 Olivier Friard
   MA 02110-1301, USA.
 """
 
-from PyQt5.QtCore import pyqtSignal, QRect, QEvent, Qt
-from PyQt5.QtWidgets import QGridLayout, QPushButton, QHBoxLayout, QWidget
+from PySide6.QtCore import Signal, QRect, QEvent, Qt
+from PySide6.QtWidgets import QGridLayout, QPushButton, QHBoxLayout, QWidget
 
 from . import config as cfg
 from . import utilities as util
 
 
 class SubjectsPad(QWidget):
-    clickSignal = pyqtSignal(str)
-    sendEventSignal = pyqtSignal(QEvent)
-    close_signal = pyqtSignal(QRect)
+    clickSignal = Signal(str)
+    sendEventSignal = Signal(QEvent)
+    close_signal = Signal(QRect)
 
     def __init__(self, pj, filtered_subjects, parent=None):
         super(SubjectsPad, self).__init__(parent)

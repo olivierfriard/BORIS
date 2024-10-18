@@ -24,32 +24,22 @@ import binascii
 import json
 import os
 
-from PyQt5.QtCore import (
+from PySide6.QtCore import (
     Qt,
-    pyqtSignal,
+    Signal,
     QPoint,
     QByteArray,
     QBuffer,
     QIODevice,
     QLineF,
 )
-from PyQt5.QtGui import (
-    QColor,
-    QBrush,
-    QMouseEvent,
-    QPixmap,
-    QIcon,
-    QPen,
-    QPolygon,
-    QPolygonF,
-)
+from PySide6.QtGui import QColor, QBrush, QMouseEvent, QPixmap, QIcon, QPen, QPolygon, QPolygonF, QAction
 
-from PyQt5.QtWidgets import (
+from PySide6.QtWidgets import (
     QGraphicsPolygonItem,
     QGraphicsEllipseItem,
     QGraphicsPixmapItem,
     QGraphicsLineItem,
-    QAction,
     QMainWindow,
     QGraphicsView,
     QPushButton,
@@ -80,14 +70,14 @@ selectedBrush.setColor(QColor(255, 255, 0, 255))
 
 
 class ModifiersMapCreatorWindow(QMainWindow):
-    closed = pyqtSignal()
+    closed = Signal()
 
     class View(QGraphicsView):
         """
         class for handling mousepress event in QGraphicsView
         """
 
-        mousePress = pyqtSignal(QMouseEvent)
+        mousePress = Signal(QMouseEvent)
 
         def mousePressEvent(self, event):
             self.mousePress.emit(event)

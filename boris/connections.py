@@ -19,8 +19,8 @@ Copyright 2012-2024 Olivier Friard
   MA 02110-1301, USA.
 """
 
-from PyQt5.QtCore import Qt, QTimer
-from PyQt5.QtWidgets import QAction
+from PySide6.QtCore import Qt, QTimer
+from PySide6.QtGui import QAction
 
 from . import config as cfg
 from . import (

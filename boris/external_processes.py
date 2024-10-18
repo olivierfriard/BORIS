@@ -20,14 +20,13 @@ This file is part of BORIS.
 
 """
 
-
 import os
 import tempfile
 import pathlib as pl
 import logging
 
-from PyQt5.QtWidgets import QFileDialog, QMessageBox, QInputDialog
-from PyQt5.QtCore import (
+from PySide6.QtWidgets import QFileDialog, QMessageBox, QInputDialog
+from PySide6.QtCore import (
     Qt,
     QProcess,
 )

@@ -38,8 +38,8 @@ from . import select_modifiers
 from . import write_event
 from .edit_event import DlgEditEvent, EditSelectedEvents
 
-from PyQt5.QtWidgets import QMessageBox, QInputDialog, QLineEdit, QAbstractItemView, QApplication
-from PyQt5.QtCore import QTime, Qt
+from PySide6.QtWidgets import QMessageBox, QInputDialog, QLineEdit, QAbstractItemView, QApplication
+from PySide6.QtCore import QTime, Qt
 
 
 def add_event(self):

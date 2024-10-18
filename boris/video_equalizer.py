@@ -20,8 +20,8 @@ This file is part of BORIS.
 
 """
 
-from PyQt5.QtWidgets import QDialog
-from PyQt5.QtCore import pyqtSignal, QEvent
+from PySide6.QtWidgets import QDialog
+from PySide6.QtCore import Signal, QEvent
 from .video_equalizer_ui import Ui_Equalizer
 
 
@@ -30,8 +30,8 @@ class Video_equalizer(QDialog, Ui_Equalizer):
     management of video equalizer: brightness, saturation, contrast, gamma and hue
     """
 
-    sendEventSignal = pyqtSignal(int, str, int)
-    sendKeyPressSignal = pyqtSignal(QEvent)
+    sendEventSignal = Signal(int, str, int)
+    sendKeyPressSignal = Signal(QEvent)
 
     def __init__(self, equalizer, parent=None):
         super().__init__(parent)

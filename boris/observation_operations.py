@@ -32,7 +32,7 @@ import datetime as dt
 from typing import List, Tuple, Optional
 
 
-from PyQt5.QtWidgets import (
+from PySide6.QtWidgets import (
     QMessageBox,
     QFileDialog,
     QDateTimeEdit,
@@ -42,10 +42,10 @@ from PyQt5.QtWidgets import (
     QMainWindow,
     QDockWidget,
 )
-from PyQt5.QtCore import Qt, QDateTime, QTimer
-from PyQt5.QtGui import QFont, QIcon, QTextCursor
+from PySide6.QtCore import Qt, QDateTime, QTimer
+from PySide6.QtGui import QFont, QIcon, QTextCursor
 
-from PyQt5 import QtTest
+from PySide6 import QtTest
 
 from . import menu_options
 from . import config as cfg

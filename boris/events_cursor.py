@@ -21,9 +21,9 @@ Copyright 2012-2024 Olivier Friard
 
 """
 
-from PyQt5.QtCore import QPoint, Qt
-from PyQt5.QtGui import QPolygon, QPen, QColor, QBrush
-from PyQt5.QtWidgets import QStyledItemDelegate
+from PySide6.QtCore import QPoint, Qt
+from PySide6.QtGui import QPolygon, QPen, QColor, QBrush
+from PySide6.QtWidgets import QStyledItemDelegate
 
 
 class StyledItemDelegateTriangle(QStyledItemDelegate):

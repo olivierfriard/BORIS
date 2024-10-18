@@ -20,9 +20,9 @@ This file is part of BORIS.
 
 """
 
-from PyQt5.QtGui import QMouseEvent, QPixmap, QPolygonF, QColor, QBrush, QPen
-from PyQt5.QtCore import Qt, pyqtSignal, QEvent, QPoint
-from PyQt5.QtWidgets import (
+from PySide6.QtGui import QMouseEvent, QPixmap, QPolygonF, QColor, QBrush, QPen
+from PySide6.QtCore import Qt, Signal, QEvent, QPoint
+from PySide6.QtWidgets import (
     QLabel,
     QHBoxLayout,
     QGraphicsView,
@@ -49,8 +49,8 @@ penStyle = Qt.NoPen
 
 class BehaviorsCodingMapWindowClass(QWidget):
     class View(QGraphicsView):
-        mousePress = pyqtSignal(QMouseEvent)
-        mouseMove = pyqtSignal(QMouseEvent)
+        mousePress = Signal(QMouseEvent)
+        mouseMove = Signal(QMouseEvent)
 
         def eventFilter(self, source, event):
             if event.type() == QEvent.MouseMove:
@@ -71,9 +71,9 @@ class BehaviorsCodingMapWindowClass(QWidget):
             self.viewport().installEventFilter(self)
             self.setMouseTracking(True)
 
-    clickSignal = pyqtSignal(str, list)  # click signal to be sent to mainwindow
-    keypressSignal = pyqtSignal(QEvent)
-    close_signal = pyqtSignal(str)
+    clickSignal = Signal(str, list)  # click signal to be sent to mainwindow
+    keypressSignal = Signal(QEvent)
+    close_signal = Signal(str)
 
     def __init__(self, behaviors_coding_map, idx=0):
         super(BehaviorsCodingMapWindowClass, self).__init__()

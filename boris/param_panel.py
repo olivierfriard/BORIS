@@ -20,8 +20,8 @@ This file is part of BORIS.
 
 """
 
-from PyQt5.QtCore import Qt
-from PyQt5.QtWidgets import QDialog
+from PySide6.QtCore import Qt
+from PySide6.QtWidgets import QDialog
 
 from . import config as cfg
 from .param_panel_ui import Ui_Dialog

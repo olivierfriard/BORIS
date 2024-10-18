@@ -20,12 +20,11 @@ This file is part of BORIS.
 
 """
 
-
 from . import config as cfg
 from . import utilities as util
 from . import dialog
 from . import project_functions
-from PyQt5.QtWidgets import QFileDialog
+from PySide6.QtWidgets import QFileDialog
 
 
 def get_info(self) -> None:

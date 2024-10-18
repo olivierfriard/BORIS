@@ -38,7 +38,7 @@ from . import project_functions
 from . import dialog
 from . import db_functions
 
-from PyQt5.QtWidgets import QApplication, QFileDialog, QMessageBox, QInputDialog
+from PySide6.QtWidgets import QApplication, QFileDialog, QMessageBox, QInputDialog
 
 
 def export_events_as_behavioral_sequences(self, separated_subjects=False, timed=False):

@@ -33,9 +33,9 @@ except ModuleNotFoundError:
     flag_pyreadr_loaded = False
 
 
-from PyQt5.QtCore import QPoint, Qt, pyqtSignal, QEvent
-from PyQt5.QtGui import QColor, QPainter, QPolygon, QPixmap
-from PyQt5.QtWidgets import (
+from PySide6.QtCore import QPoint, Qt, Signal, QEvent
+from PySide6.QtGui import QColor, QPainter, QPolygon, QPixmap, QAction
+from PySide6.QtWidgets import (
     QApplication,
     QCheckBox,
     QFileDialog,
@@ -51,7 +51,6 @@ from PyQt5.QtWidgets import (
     QColorDialog,
     QSpacerItem,
     QSizePolicy,
-    QAction,
     QDialog,
 )
 
@@ -67,10 +66,10 @@ class wgMeasurement(QDialog):
     widget for geometric measurements
     """
 
-    closeSignal = pyqtSignal()
-    send_event_signal = pyqtSignal(QEvent)
-    reload_image_signal = pyqtSignal()
-    save_picture_signal = pyqtSignal(str)
+    closeSignal = Signal()
+    send_event_signal = Signal(QEvent)
+    reload_image_signal = Signal()
+    save_picture_signal = Signal(str)
     mark_color: str = cfg.ACTIVE_MEASUREMENTS_COLOR
     flag_saved = True  # store if measurements are saved
     draw_mem: dict = {}

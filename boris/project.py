@@ -24,9 +24,9 @@ import json
 import logging
 import re
 
-from PyQt5.QtCore import Qt, QDateTime
-from PyQt5.QtGui import QColor
-from PyQt5.QtWidgets import (
+from PySide6.QtCore import Qt, QDateTime
+from PySide6.QtGui import QColor
+from PySide6.QtWidgets import (
     QApplication,
     QCheckBox,
     QDialog,

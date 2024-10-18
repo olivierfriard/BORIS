@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 """The most complete dark/light style sheet for Qt applications (Qt4, Qt5,
-PySide, PySide2, PyQt4, PySide6, PyQt5, PyQt6, QtPy, PyQtGraph, Qt.Py) for
+PySide, PySide2, PyQt4, PySide6, PySide6, PyQt6, QtPy, PyQtGraph, Qt.Py) for
 Python 2/3 and C++.
 
 Python 2, as well as Qt4 (PyQt4 and PySide), will not be supported anymore.
@@ -28,8 +28,8 @@ as shown below
 
     # PySide 2
     dark_stylesheet = qdarkstyle.load_stylesheet_pyside2()
-    # PyQt5
-    dark_stylesheet = qdarkstyle.load_stylesheet_pyqt5()
+    # PySide6
+    dark_stylesheet = qdarkstyle.load_stylesheet_PySide6()
     # PySide 6
     dark_stylesheet = qdarkstyle.load_stylesheet_pyside6()
     # PyQt6
@@ -215,7 +215,7 @@ def _load_stylesheet(qt_api="", palette=None):
     Args:
         qt_api (str): qt binding name to set QT_API environment variable.
                       Default is ''. Possible values are pyside, pyside2
-                      pyqt4, pyqt5. Not case sensitive.
+                      pyqt4, PySide6. Not case sensitive.
         palette (Palette): Palette class that inherits from Palette.
 
     Note:
@@ -240,9 +240,9 @@ def _load_stylesheet(qt_api="", palette=None):
     from qtpy.QtGui import QColor, QPalette
     from qtpy import QT_VERSION
     """
-    from PyQt5.QtCore import QCoreApplication, QFile, QTextStream
-    from PyQt5.QtGui import QColor, QPalette
-    from PyQt5.QtCore import QT_VERSION_STR as QT_VERSION
+    from PySide6.QtCore import QCoreApplication, QFile, QTextStream
+    from PySide6.QtGui import QColor, QPalette
+    from PySide6.QtCore import QT_VERSION_STR as QT_VERSION
 
     # Then we import resources - binary qrc content
     if palette is None:
@@ -306,13 +306,13 @@ def load_stylesheet(*args, **kwargs):
 
     Args:
         pyside (bool): True to load the PySide (or PySide2) rc file,
-                       False to load the PyQt4 (or PyQt5) rc file.
+                       False to load the PyQt4 (or PySide6) rc file.
                        Default is False.
         or
 
         qt_api (str): Qt binding name to set QT_API environment variable.
-                      Default is '', i.e PyQt5 the default QtPy binding.
-                      Possible values are pyside, pyside2 pyqt4, pyqt5.
+                      Default is '', i.e PySide6 the default QtPy binding.
+                      Possible values are pyside, pyside2 pyqt4, PySide6.
                       Not case sensitive.
 
         or
@@ -342,14 +342,14 @@ def load_stylesheet(*args, **kwargs):
     if (kwargs and args) or len(args) > 2 or len(kwargs) > 2:
         raise TypeError(
             "load_stylesheet() takes zero, one or two arguments: "
-            "(new) string type qt_api='pyqt5' or "
+            "(new) string type qt_api='PySide6' or "
             "(old) boolean type pyside='False' or "
             "(new) palette type palette=Palette."
         )
 
     # No arguments
     if not kwargs and not args:
-        stylesheet = _load_stylesheet(qt_api="pyqt5")
+        stylesheet = _load_stylesheet(qt_api="PySide6")
 
     # Old API arguments
     elif "pyside" in kwargs or isinstance(arg, bool):
@@ -361,7 +361,7 @@ def load_stylesheet(*args, **kwargs):
                 stylesheet = _load_stylesheet(qt_api="pyside", palette=palette)
 
         else:
-            stylesheet = _load_stylesheet(qt_api="pyqt5", palette=palette)
+            stylesheet = _load_stylesheet(qt_api="PySide6", palette=palette)
             if not stylesheet:
                 stylesheet = _load_stylesheet(qt_api="pyqt4", palette=palette)
 
@@ -382,7 +382,7 @@ def load_stylesheet(*args, **kwargs):
     else:
         raise TypeError(
             "load_stylesheet() takes only zero, one or two arguments: "
-            "(new) string type qt_api='pyqt5' or "
+            "(new) string type qt_api='PySide6' or "
             "(new) palette type palette=Palette or "
             "(old) boolean type pyside='False'."
         )
@@ -430,14 +430,14 @@ def load_stylesheet_pyqt():
     return _load_stylesheet(qt_api="pyqt4")
 
 
-def load_stylesheet_pyqt5():
+def load_stylesheet_PySide6():
     """
-    Load the stylesheet for use in a PyQt5 application.
+    Load the stylesheet for use in a PySide6 application.
 
     Returns:
         str: the stylesheet string.
     """
-    return _load_stylesheet(qt_api="pyqt5")
+    return _load_stylesheet(qt_api="PySide6")
 
 
 def load_stylesheet_pyqt6():

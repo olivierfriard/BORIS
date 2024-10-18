@@ -25,7 +25,7 @@ Module containing functions for state events
 import time
 from decimal import Decimal as dec
 
-from PyQt5.QtWidgets import QMessageBox, QAbstractItemView
+from PySide6.QtWidgets import QMessageBox, QAbstractItemView
 
 from . import config as cfg
 from . import dialog, project_functions, select_observations

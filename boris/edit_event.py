@@ -22,7 +22,7 @@ This file is part of BORIS.
 
 from decimal import Decimal as dec
 
-from PyQt5.QtWidgets import (
+from PySide6.QtWidgets import (
     QDialog,
     QHBoxLayout,
     QLabel,

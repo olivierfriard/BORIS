@@ -19,10 +19,9 @@ Copyright 2012-2024 Olivier Friard
   MA 02110-1301, USA.
 """
 
-
 import logging
 from . import config as cfg
-from PyQt5.QtCore import QSize
+from PySide6.QtCore import QSize
 
 
 def update_windows_title(self):

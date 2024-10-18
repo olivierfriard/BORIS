@@ -22,10 +22,10 @@ This file is part of BORIS.
 
 import logging
 
-from PyQt5.QtCore import pyqtSignal
+from PySide6.QtCore import Signal
 
-# from PyQt5.QtGui import *
-from PyQt5.QtWidgets import (
+# from PySide6.QtGui import *
+from PySide6.QtWidgets import (
     QApplication,
     QWidget,
     QRadioButton,
@@ -46,7 +46,7 @@ from . import config as cfg
 class wgMeasurement(QWidget):
     """ """
 
-    closeSignal, clearSignal = pyqtSignal(), pyqtSignal()
+    closeSignal, clearSignal = Signal(), Signal()
     flagSaved = True
     draw_mem = []
 

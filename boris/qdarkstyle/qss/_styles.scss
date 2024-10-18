@@ -1562,7 +1562,7 @@ QTabWidget {
         border: $BORDER_2;
         border-radius: $SIZE_BORDER_RADIUS;
         margin: 0px;
-        /* Fixes double border inside pane with pyqt5 */
+        /* Fixes double border inside pane with PySide6 */
         padding: 0px;
 
         &:selected {

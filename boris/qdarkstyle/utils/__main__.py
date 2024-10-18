@@ -5,7 +5,7 @@ The script will attempt to compile the qrc file using the following tools:
 
     - `pyside6-rcc` for PySide6 and QtPy (Python) (Official)
     - There is no specific rcc compiler for PyQt6, use `pyside6-rcc` (Python)
-    - `pyrcc5` for PyQt5 (Python)
+    - `pyrcc5` for PySide6 (Python)
     - `pyside2-rcc` for PySide2 (Python)
     - `rcc` for Qt5/Qt6 (C++)
 
@@ -15,7 +15,7 @@ running this script.
 Links to understand those tools:
 
     - `pyside6-rcc`: https://doc.qt.io/qtforpython/tutorials/basictutorial/qrcfiles.html (Official)
-    - `pyrcc5`: http://pyqt.sourceforge.net/Docs/PyQt5/resources.html#pyrcc5
+    - `pyrcc5`: http://pyqt.sourceforge.net/Docs/PySide6/resources.html#pyrcc5
     - `pyside2-rcc: https://doc.qt.io/qtforpython/overviews/resources.html (Documentation Incomplete)
     - `rcc` on Qt6: https://doc.qt.io/qt-6/resources.html
     - `rcc` on Qt5: http://doc.qt.io/qt-5/rcc.html
@@ -50,28 +50,29 @@ class QSSFileHandler(FileSystemEventHandler):
 
     def on_modified(self, event):
         """Handle file system events."""
-        if event.src_path.endswith('.qss'):
+        if event.src_path.endswith(".qss"):
             # TODO: needs implementation for new palettes
             process_palette(compile_for=self.args.create)
-            print('\n')
+            print("\n")
 
 
 def main():
     """Process QRC files."""
-    parser = argparse.ArgumentParser(description=__doc__,
-                                     formatter_class=argparse.RawDescriptionHelpFormatter)
-    parser.add_argument('--qrc_dir',
-                        default=None,
-                        type=str,
-                        help="QRC file directory, relative to current directory.",)
-    parser.add_argument('--create',
-                        default='qtpy',
-                        choices=['pyqt5', 'pyqt6', 'pyside2', 'pyside6', 'qtpy', 'pyqtgraph', 'qt', 'qt5', 'all'],
-                        type=str,
-                        help="Choose which one would be generated.")
-    parser.add_argument('--watch', '-w',
-                        action='store_true',
-                        help="Watch for file changes.")
+    parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
+    parser.add_argument(
+        "--qrc_dir",
+        default=None,
+        type=str,
+        help="QRC file directory, relative to current directory.",
+    )
+    parser.add_argument(
+        "--create",
+        default="qtpy",
+        choices=["PySide6", "pyqt6", "pyside2", "pyside6", "qtpy", "pyqtgraph", "qt", "qt5", "all"],
+        type=str,
+        help="Choose which one would be generated.",
+    )
+    parser.add_argument("--watch", "-w", action="store_true", help="Watch for file changes.")
 
     args = parser.parse_args()
 
@@ -81,7 +82,7 @@ def main():
         handler = QSSFileHandler(parser_args=args)
         observer.schedule(handler, path, recursive=True)
         try:
-            print('\nWatching QSS file for changes...\nPress Ctrl+C to exit\n')
+            print("\nWatching QSS file for changes...\nPress Ctrl+C to exit\n")
             observer.start()
         except KeyboardInterrupt:
             observer.stop()

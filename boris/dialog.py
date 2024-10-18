@@ -30,8 +30,8 @@ import subprocess
 from decimal import Decimal as dec
 from typing import Union
 
-from PyQt5.QtCore import Qt, pyqtSignal, QT_VERSION_STR, PYQT_VERSION_STR, QRect, QTime, QDateTime, QSize
-from PyQt5.QtWidgets import (
+from PySide6.QtCore import Qt, Signal, qVersion, QRect, QTime, QDateTime, QSize
+from PySide6.QtWidgets import (
     QApplication,
     QAbstractItemView,
     QCheckBox,
@@ -61,7 +61,7 @@ from PyQt5.QtWidgets import (
     QStackedWidget,
     QFrame,
 )
-from PyQt5.QtGui import QFont, QTextCursor
+from PySide6.QtGui import QFont, QTextCursor
 
 from . import config as cfg
 from . import version
@@ -92,13 +92,14 @@ def global_error_message(exception_type, exception_value, traceback_object):
     Global error management
     save error using loggin.critical and stdout
     """
+    import PySide6
 
     error_text: str = (
         f"BORIS version: {version.__version__}\n"
         f"OS: {platform.uname().system} {platform.uname().release} {platform.uname().version}\n"
         f"CPU: {platform.uname().machine} {platform.uname().processor}\n"
         f"Python {platform.python_version()} ({'64-bit' if sys.maxsize > 2**32 else '32-bit'})\n"
-        f"Qt {QT_VERSION_STR} - PyQt {PYQT_VERSION_STR}\n"
+        f"Qt {qVersion()} - PySide {PySide6.__version__}\n"
         f"MPV library version: {util.mpv_lib_version()[0]}\n"
         f"MPV API version: {util.mpv_lib_version()[2]}\n"
         f"MPV library file path: {util.mpv_lib_version()[1]}\n\n"
@@ -129,8 +130,8 @@ def global_error_message(exception_type, exception_value, traceback_object):
 
     # copy to clipboard
     cb = QApplication.clipboard()
-    cb.clear(mode=cb.Clipboard)
-    cb.setText(error_text, mode=cb.Clipboard)
+    cb.clear()
+    cb.setText(error_text)
 
     text: str = (
         f"An error has occured!\n\n"
@@ -981,7 +982,7 @@ class FindInEvents(QWidget):
     "find in events" dialog box
     """
 
-    clickSignal = pyqtSignal(str)
+    clickSignal = Signal(str)
 
     currentIdx: int = -1
 
@@ -1045,7 +1046,7 @@ class FindReplaceEvents(QWidget):
     "find replace events" dialog box
     """
 
-    clickSignal = pyqtSignal(str)
+    clickSignal = Signal(str)
 
     def __init__(self):
         super().__init__()
@@ -1287,7 +1288,7 @@ class View_explore_project_results(QWidget):
     widget for visualizing results of explore project
     """
 
-    double_click_signal = pyqtSignal(str, int)
+    double_click_signal = Signal(str, int)
 
     def __init__(self):
         super().__init__()

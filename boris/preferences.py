@@ -36,7 +36,7 @@ from . import config_file
 
 from .preferences_ui import Ui_prefDialog
 
-from PyQt5.QtWidgets import QDialog, QFileDialog
+from PySide6.QtWidgets import QDialog, QFileDialog
 
 
 class Preferences(QDialog, Ui_prefDialog):
@@ -135,7 +135,7 @@ def preferences(self):
     # check for new version
     preferencesWindow.cbCheckForNewVersion.setChecked(self.checkForNewVersion)
     # display subtitles
-    preferencesWindow.cb_display_subtitles.setChecked(self.config_param[cfg.DISPLAY_SUBTITLES])
+    preferencesWindow.cb_display_subtitles.setChecked(self.config_param.get(cfg.DISPLAY_SUBTITLES, False))
     # pause before add event
     preferencesWindow.cb_pause_before_addevent.setChecked(self.pause_before_addevent)
     # MPV hwdec
@@ -287,7 +287,7 @@ def preferences(self):
         self.config_param[cfg.TOOLBAR_ICON_SIZE] = preferencesWindow.sb_toolbar_icon_size.value()
         self.config_param[cfg.DARK_MODE] = preferencesWindow.cb_darkmode.isChecked()
         if self.config_param.get(cfg.DARK_MODE, cfg.DEFAULT_FRAME_MODE):
-            self.setStyleSheet(qdarkstyle.load_stylesheet(qt_api="pyqt5"))
+            self.setStyleSheet(qdarkstyle.load_stylesheet(qt_api="PySide6"))
         else:
             self.setStyleSheet("")
 

@@ -25,10 +25,9 @@ import io
 import json
 import os
 
-from PyQt5.QtCore import QBuffer, QByteArray, QIODevice, QLineF, QPoint, Qt, pyqtSignal
-from PyQt5.QtGui import QBrush, QColor, QIcon, QMouseEvent, QPen, QPixmap, QPolygonF
-from PyQt5.QtWidgets import (
-    QAction,
+from PySide6.QtCore import QBuffer, QByteArray, QIODevice, QLineF, QPoint, Qt, Signal
+from PySide6.QtGui import QBrush, QColor, QIcon, QMouseEvent, QPen, QPixmap, QPolygonF, QAction
+from PySide6.QtWidgets import (
     QApplication,
     QColorDialog,
     QFileDialog,
@@ -68,14 +67,14 @@ selectedBrush.setColor(QColor(255, 255, 0, 255))
 
 
 class BehaviorsMapCreatorWindow(QMainWindow):
-    signal_add_to_project = pyqtSignal(dict)
+    signal_add_to_project = Signal(dict)
 
     class View(QGraphicsView):
         """
         class for handling mousepress event in QGraphicsView
         """
 
-        mousePress = pyqtSignal(QMouseEvent)
+        mousePress = Signal(QMouseEvent)
 
         def mousePressEvent(self, event):
             self.mousePress.emit(event)

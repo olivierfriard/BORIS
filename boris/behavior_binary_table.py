@@ -24,7 +24,7 @@ import pathlib
 from decimal import Decimal as dec
 
 import tablib
-from PyQt5.QtWidgets import QFileDialog, QInputDialog, QMessageBox
+from PySide6.QtWidgets import QFileDialog, QInputDialog, QMessageBox
 
 from . import observation_operations
 

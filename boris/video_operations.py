@@ -26,7 +26,7 @@ import pathlib as pl
 import shutil
 from math import log2
 
-from PyQt5.QtWidgets import QFileDialog
+from PySide6.QtWidgets import QFileDialog
 
 from . import config as cfg
 from . import dialog

@@ -27,7 +27,7 @@ import urllib.parse
 import urllib.request
 
 
-from PyQt5.QtWidgets import QMessageBox, QTableWidgetItem, QFileDialog, QInputDialog, QLineEdit
+from PySide6.QtWidgets import QMessageBox, QTableWidgetItem, QFileDialog, QInputDialog, QLineEdit
 
 from . import dialog
 from . import config as cfg

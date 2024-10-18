@@ -23,20 +23,9 @@ This file is part of BORIS.
 import sys
 import logging
 import functools
-from PyQt5.QtWidgets import (
-    QLabel,
-    QDockWidget,
-    QWidget,
-    QHBoxLayout,
-    QVBoxLayout,
-    QSlider,
-    QSizePolicy,
-    QStackedWidget,
-    QToolButton,
-    QAction,
-)
-from PyQt5.QtCore import pyqtSignal, QEvent, Qt
-from PyQt5.QtGui import QIcon
+from PySide6.QtWidgets import QLabel, QDockWidget, QWidget, QHBoxLayout, QVBoxLayout, QSlider, QSizePolicy, QStackedWidget, QToolButton
+from PySide6.QtCore import Signal, QEvent, Qt
+from PySide6.QtGui import QIcon, QAction
 
 from . import mpv2 as mpv
 
@@ -70,7 +59,7 @@ class Clickable_label(QLabel):
     Label emits a signal when clicked
     """
 
-    mouse_pressed_signal = pyqtSignal(int, QEvent)
+    mouse_pressed_signal = Signal(int, QEvent)
 
     def __init__(self, id_, parent=None):
         QLabel.__init__(self, parent)
@@ -98,11 +87,11 @@ class DW_player(QDockWidget):
     Define the player class
     """
 
-    key_pressed_signal = pyqtSignal(QEvent)
-    volume_slider_moved_signal = pyqtSignal(int, int)
-    mute_action_triggered_signal = pyqtSignal(int)
-    view_signal = pyqtSignal(int, str, int)
-    resize_signal = pyqtSignal(int)
+    key_pressed_signal = Signal(QEvent)
+    volume_slider_moved_signal = Signal(int, int)
+    mute_action_triggered_signal = Signal(int)
+    view_signal = Signal(int, str, int)
+    resize_signal = Signal(int)
 
     def __init__(self, id_, parent=None):
         super().__init__(parent)
