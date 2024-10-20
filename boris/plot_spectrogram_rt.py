@@ -38,8 +38,7 @@ from PySide6.QtWidgets import (
     QLabel,
     QSpinBox,
 )
-from PySide6.QtCore import Signal, QEvent
-from PySide6 import Qt
+from PySide6.QtCore import Signal, QEvent, Qt
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.figure import Figure
 import matplotlib.ticker as mticker
@@ -77,7 +76,7 @@ class Plot_spectrogram_RT(QWidget):
                 "+",
                 self,
                 clicked=lambda: self.time_interval_changed(1),
-                focusPolicy=Qt.Qt.NoFocus,
+                focusPolicy=Qt.NoFocus,
             )
         )
         hlayout1.addWidget(
@@ -85,17 +84,17 @@ class Plot_spectrogram_RT(QWidget):
                 "-",
                 self,
                 clicked=lambda: self.time_interval_changed(-1),
-                focusPolicy=Qt.Qt.NoFocus,
+                focusPolicy=Qt.NoFocus,
             )
         )
         layout.addLayout(hlayout1)
 
         hlayout2 = QHBoxLayout()
         hlayout2.addWidget(QLabel("Frequency interval"))
-        self.sb_freq_min = QSpinBox(valueChanged=self.frequency_interval_changed, focusPolicy=Qt.Qt.NoFocus)
+        self.sb_freq_min = QSpinBox(valueChanged=self.frequency_interval_changed, focusPolicy=Qt.NoFocus)
         self.sb_freq_min.setRange(0, 200000)
         self.sb_freq_min.setSingleStep(100)
-        self.sb_freq_max = QSpinBox(valueChanged=self.frequency_interval_changed, focusPolicy=Qt.Qt.NoFocus)
+        self.sb_freq_max = QSpinBox(valueChanged=self.frequency_interval_changed, focusPolicy=Qt.NoFocus)
         self.sb_freq_max.setRange(0, 200000)
         self.sb_freq_max.setSingleStep(100)
         hlayout2.addWidget(self.sb_freq_min)

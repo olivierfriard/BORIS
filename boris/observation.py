@@ -134,6 +134,7 @@ class Observation(QDialog, Ui_Form):
         self.rb_images.toggled.connect(self.obs_type_changed)
 
         # button menu for media
+        """
         menu_items = [
             "media abs path|with absolute path",
             "media rel path|with relative path",
@@ -144,56 +145,76 @@ class Observation(QDialog, Ui_Form):
                 ]
             },
         ]
-        menu = QMenu()
+        """
+
+        self.menu = QMenu()
         # Add actions to the menu
-        self.action1 = QAction("media abs path|with absolute path")
-        self.action2 = QAction("media rel path|with relative path")
-        menu.addAction(self.action1)
-        menu.addAction(self.action2)
+        self.action1 = QAction("with absolute path")
+        self.action2 = QAction("with relative path")
+        self.action3 = QAction("directory with absolute path")
+        self.action4 = QAction("directory with relative path")
+
+        self.menu.addAction(self.action1)
+        self.menu.addAction(self.action2)
+        self.menu.addAction(self.action3)
+        self.menu.addAction(self.action4)
 
         # Connect actions to functions
         self.action1.triggered.connect(lambda: self.add_media(mode="media abs path|with absolute path"))
         self.action2.triggered.connect(lambda: self.add_media(mode="media rel path|with relative path"))
+        self.action3.triggered.connect(lambda: self.add_media(mode="dir abs path|with absolute path"))
+        self.action4.triggered.connect(lambda: self.add_media(mode="dir rel path|wih relative path"))
 
         # menu.triggered.connect(lambda x: self.add_media(mode=x.statusTip()))
         # self.add_button_menu(menu_items, menu)
-        self.pbAddVideo.setMenu(menu)
+        self.pbAddVideo.setMenu(self.menu)
 
         self.pbRemoveVideo.clicked.connect(self.remove_media)
 
         # button menu for data file
-        data_menu_items = [
+        """data_menu_items = [
             "data abs path|with absolute path",
             "data rel path|with relative path",
         ]
+        """
 
-        menu_data = QMenu()
+        self.menu_data = QMenu()
 
         # Add actions to the menu
-        data_action1 = QAction("data abs path|with absolute path")
-        data_action2 = QAction("data rel path|with relative path")
-        menu_data.addAction(data_action1)
-        menu_data.addAction(data_action2)
+        self.data_action1 = QAction("with absolute path")
+        self.data_action2 = QAction("with relative path")
+        self.menu_data.addAction(self.data_action1)
+        self.menu_data.addAction(self.data_action2)
 
         # Connect actions to functions
-        data_action1.triggered.connect(lambda: self.add_data_file(mode="data abs path|with absolute path"))
-        data_action2.triggered.connect(lambda: self.add_data_file(mode="data rel path|with relative path"))
+        self.data_action1.triggered.connect(lambda: self.add_data_file(mode="data abs path|with absolute path"))
+        self.data_action2.triggered.connect(lambda: self.add_data_file(mode="data rel path|with relative path"))
 
         # menu_data.triggered.connect(lambda x: self.add_data_file(mode=x.statusTip()))
         # self.add_button_menu(data_menu_items, menu_data)
 
-        self.pb_add_data_file.setMenu(menu_data)
+        self.pb_add_data_file.setMenu(self.menu_data)
 
         # button menu for images
-        images_menu_items = [
+        """images_menu_items = [
             "images abs path|with absolute path",
             "images rel path|with relative path",
-        ]
+        ]"""
 
-        menu_images = QMenu()
-        menu_images.triggered.connect(lambda x: self.add_images_directory(mode=x.statusTip()))
-        self.add_button_menu(images_menu_items, menu_images)
-        self.pb_add_directory.setMenu(menu_images)
+        self.menu_images = QMenu()
+        # Add actions to the menu
+        self.images_data_action1 = QAction("with absolute path")
+        self.images_data_action2 = QAction("with relative path")
+        self.menu_images.addAction(self.images_data_action1)
+        self.menu_images.addAction(self.images_data_action2)
+
+        # Connect actions to functions
+        self.images_data_action1.triggered.connect(lambda: self.add_images_directory(mode="images abs path|with absolute path"))
+        self.images_data_action2.triggered.connect(lambda: self.add_images_directory(mode="images rel path|with relative path"))
+
+        # menu_images.triggered.connect(lambda x: self.add_images_directory(mode=x.statusTip()))
+        # self.add_button_menu(images_menu_items, menu_images)
+        self.pb_add_directory.setMenu(self.menu_images)
 
         self.pb_remove_data_file.clicked.connect(self.remove_data_file)
         self.pb_view_data_head.clicked.connect(self.view_data_file_head_tail)

@@ -29,8 +29,7 @@ matplotlib.use("Qt5Agg")
 
 import numpy as np
 from PySide6.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QPushButton, QLabel
-from PySide6.QtCore import Signal, QEvent
-from PySide6 import Qt
+from PySide6.QtCore import Signal, QEvent, Qt
 from matplotlib.backends.backend_qtagg import FigureCanvasQTAgg as FigureCanvas
 
 from matplotlib.figure import Figure
@@ -67,9 +66,9 @@ class Plot_events_RT(QWidget):
 
         hlayout1 = QHBoxLayout()
         hlayout1.addWidget(QLabel("Time interval"))
-        hlayout1.addWidget(QPushButton("+", self, clicked=lambda: self.time_interval_changed(1), focusPolicy=Qt.Qt.NoFocus))
-        hlayout1.addWidget(QPushButton("-", self, clicked=lambda: self.time_interval_changed(-1), focusPolicy=Qt.Qt.NoFocus))
-        self.pb_mode = QPushButton("Include modifiers", self, clicked=self.change_mode, focusPolicy=Qt.Qt.NoFocus)
+        hlayout1.addWidget(QPushButton("+", self, clicked=lambda: self.time_interval_changed(1), focusPolicy=Qt.NoFocus))
+        hlayout1.addWidget(QPushButton("-", self, clicked=lambda: self.time_interval_changed(-1), focusPolicy=Qt.NoFocus))
+        self.pb_mode = QPushButton("Include modifiers", self, clicked=self.change_mode, focusPolicy=Qt.NoFocus)
         hlayout1.addWidget(self.pb_mode)
         layout.addLayout(hlayout1)
 

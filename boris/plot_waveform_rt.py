@@ -29,8 +29,7 @@ matplotlib.use("Qt5Agg")
 
 import numpy as np
 from PySide6.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QPushButton, QLabel
-from PySide6.QtCore import Signal, QEvent
-from PySide6 import Qt
+from PySide6.QtCore import Signal, QEvent, Qt
 from matplotlib.backends.backend_qtagg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.figure import Figure
 import matplotlib.ticker as mticker
@@ -68,7 +67,7 @@ class Plot_waveform_RT(QWidget):
                 "+",
                 self,
                 clicked=lambda: self.time_interval_changed(1),
-                focusPolicy=Qt.Qt.NoFocus,
+                focusPolicy=Qt.NoFocus,
             )
         )
         hlayout1.addWidget(
@@ -76,7 +75,7 @@ class Plot_waveform_RT(QWidget):
                 "-",
                 self,
                 clicked=lambda: self.time_interval_changed(-1),
-                focusPolicy=Qt.Qt.NoFocus,
+                focusPolicy=Qt.NoFocus,
             )
         )
         layout.addLayout(hlayout1)
