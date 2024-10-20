@@ -27,7 +27,6 @@ import re
 from PySide6.QtCore import Qt, QDateTime
 from PySide6.QtGui import QColor
 from PySide6.QtWidgets import (
-    QApplication,
     QCheckBox,
     QDialog,
     QFileDialog,
@@ -302,10 +301,10 @@ class projectDialog(QDialog, Ui_dlgProject):
             "remove all|Remove all behaviors",
             "lower|Convert keys to lower case",
         ]
-        menu = QMenu()
-        menu.triggered.connect(lambda x: self.behavior(action=x.statusTip()))
-        self.add_button_menu(behavior_button_items, menu)
-        self.pb_behavior.setMenu(menu)
+        self.behavior_menu = QMenu()
+        self.behavior_menu.triggered.connect(lambda x: self.behavior(action=x.statusTip()))
+        self.add_button_menu(behavior_button_items, self.behavior_menu)
+        self.pb_behavior.setMenu(self.behavior_menu)
 
         import_button_items = [
             "boris|from a BORIS project",
@@ -315,10 +314,10 @@ class projectDialog(QDialog, Ui_dlgProject):
             "clipboard|from the clipboard",
             "repository|from the BORIS repository",
         ]
-        menu = QMenu()
-        menu.triggered.connect(lambda x: self.import_ethogram(action=x.statusTip()))
-        self.add_button_menu(import_button_items, menu)
-        self.pb_import.setMenu(menu)
+        self.import_behaviors_menu = QMenu()
+        self.import_behaviors_menu.triggered.connect(lambda x: self.import_ethogram(action=x.statusTip()))
+        self.add_button_menu(import_button_items, self.import_behaviors_menu)
+        self.pb_import.setMenu(self.import_behaviors_menu)
 
         self.pbBehaviorsCategories.clicked.connect(self.pbBehaviorsCategories_clicked)
 
@@ -342,10 +341,10 @@ class projectDialog(QDialog, Ui_dlgProject):
             "lower|Convert keys to lower case",
         ]
 
-        menu = QMenu()
-        menu.triggered.connect(lambda x: self.subjects(action=x.statusTip()))
-        self.add_button_menu(subjects_button_items, menu)
-        self.pb_subjects.setMenu(menu)
+        self.subject_menu = QMenu()
+        self.subject_menu.triggered.connect(lambda x: self.subjects(action=x.statusTip()))
+        self.add_button_menu(subjects_button_items, self.subject_menu)
+        self.pb_subjects.setMenu(self.subject_menu)
 
         subjects_import_button_items = [
             "boris|from a BORIS project",
@@ -353,10 +352,10 @@ class projectDialog(QDialog, Ui_dlgProject):
             "text|from a text file (CSV or TSV)",
             "clipboard|from the clipboard",
         ]
-        menu = QMenu()
-        menu.triggered.connect(lambda x: self.import_subjects(action=x.statusTip()))
-        self.add_button_menu(subjects_import_button_items, menu)
-        self.pbImportSubjectsFromProject.setMenu(menu)
+        self.import_subjects_menu = QMenu()
+        self.import_subjects_menu.triggered.connect(lambda x: self.import_subjects(action=x.statusTip()))
+        self.add_button_menu(subjects_import_button_items, self.import_subjects_menu)
+        self.pbImportSubjectsFromProject.setMenu(self.import_subjects_menu)
 
         self.pb_export_subjects.clicked.connect(lambda: project_import_export.export_subjects(self))
 
