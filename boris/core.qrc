@@ -7,7 +7,8 @@
 <file alias="splash">icons/splash.png</file>
 
 
-<file alias="observations_list">icons/fontawesome_free/list.svg</file>
+<file alias="observations_list_light">icons/fontawesome_free/list_light.svg</file>
+<file alias="observations_list_dark">icons/fontawesome_free/list_dark.svg</file>
 
 <file alias="play">icons/fontawesome_free/play.svg</file>
 
@@ -31,8 +32,11 @@
 
 <file alias="snapshot">icons/fontawesome_free/camera.svg</file>
 
-<file alias="frame_backward">icons/fontawesome_free/arrow-left.svg</file>
-<file alias="frame_forward">icons/fontawesome_free/arrow-right.svg</file>
+<file alias="frame_backward_dark">icons/fontawesome_free/arrow-left_dark.svg</file>
+<file alias="frame_backward_light">icons/fontawesome_free/arrow-left_light.svg</file>
+
+<file alias="frame_forward_dark">icons/fontawesome_free/arrow-right_dark.svg</file>
+<file alias="frame_forward_light">icons/fontawesome_free/arrow-right_light.svg</file>
 
 <file alias="time_budget">icons/fontawesome_free/table-list.svg</file>
 
@@ -54,12 +58,11 @@
 
 <file alias="measurement">icons/fontawesome_free/compass-drafting.svg</file>
 
-<file alias="preferences">icons/fontawesome_free/gears.svg</file>
-
 <file alias="volume_off">icons/fontawesome_free/volume-off.svg</file>
 <file alias="volume_xmark">icons/fontawesome_free/volume-xmark.svg</file>
 
-<file alias="preferences">icons/fontawesome_free/gears.svg</file>
+<file alias="preferences_dark">icons/fontawesome_free/gears_dark.svg</file>
+<file alias="preferences_light">icons/fontawesome_free/gears_light.svg</file>
 
 <file alias="beep">sounds/beep.wav</file>
 <file alias="key_sound">sounds/key_sound.wav</file>

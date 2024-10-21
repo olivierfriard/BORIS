@@ -2936,12 +2936,12 @@ L459.5 71.4c9.5-\
 12 96V416c0 12.4\
 -7.2 23.7-18.4 2\
 9z\x22/></svg>\
-\x00\x00\x03e\
+\x00\x00\x01\xff\
 <\
 svg xmlns=\x22http:\
 //www.w3.org/200\
 0/svg\x22 viewBox=\x22\
-0 0 512 512\x22><!-\
+0 0 448 512\x22><!-\
 -! Font Awesome \
 Free 6.5.1 by @f\
 ontawesome - htt\
@@ -2955,44 +2955,21 @@ L OFL 1.1, Code:\
  MIT License) Co\
 pyright 2023 Fon\
 ticons, Inc. -->\
-<path d=\x22M40 48C\
-26.7 48 16 58.7 \
-16 72v48c0 13.3 \
-10.7 24 24 24H88\
-c13.3 0 24-10.7 \
-24-24V72c0-13.3-\
-10.7-24-24-24H40\
-zM192 64c-17.7 0\
--32 14.3-32 32s1\
-4.3 32 32 32H480\
-c17.7 0 32-14.3 \
-32-32s-14.3-32-3\
-2-32H192zm0 160c\
--17.7 0-32 14.3-\
-32 32s14.3 32 32\
- 32H480c17.7 0 3\
-2-14.3 32-32s-14\
-.3-32-32-32H192z\
-m0 160c-17.7 0-3\
-2 14.3-32 32s14.\
-3 32 32 32H480c1\
-7.7 0 32-14.3 32\
--32s-14.3-32-32-\
-32H192zM16 232v4\
-8c0 13.3 10.7 24\
- 24 24H88c13.3 0\
- 24-10.7 24-24V2\
-32c0-13.3-10.7-2\
-4-24-24H40c-13.3\
- 0-24 10.7-24 24\
-zM40 368c-13.3 0\
--24 10.7-24 24v4\
-8c0 13.3 10.7 24\
- 24 24H88c13.3 0\
- 24-10.7 24-24V3\
-92c0-13.3-10.7-2\
-4-24-24H40z\x22/></\
-svg>\
+<path d=\x22M9.4 23\
+3.4c-12.5 12.5-1\
+2.5 32.8 0 45.3l\
+160 160c12.5 12.\
+5 32.8 12.5 45.3\
+ 0s12.5-32.8 0-4\
+5.3L109.2 288 41\
+6 288c17.7 0 32-\
+14.3 32-32s-14.3\
+-32-32-32l-306.7\
+ 0L214.6 118.6c1\
+2.5-12.5 12.5-32\
+.8 0-45.3s-32.8-\
+12.5-45.3 0l-160\
+ 160z\x22/></svg>\
 \x00\x00\x02:\
 <\
 svg xmlns=\x22http:\
@@ -5585,6 +5562,213 @@ ticons, Inc. -->\
 3-41s-8.7-32.2-2\
 3-41L73 39z\x22/></\
 svg>\
+\x00\x00\x0c\xd0\
+<\
+?xml version=\x221.\
+0\x22 encoding=\x22UTF\
+-8\x22 standalone=\x22\
+no\x22?>\x0a<svg\x0a   ve\
+rsion=\x221.1\x22\x0a   v\
+iewBox=\x220 0 640 \
+512\x22\x0a   id=\x22svg1\
+\x22\x0a   sodipodi:do\
+cname=\x22gears_lig\
+ht.svg\x22\x0a   inksc\
+ape:version=\x221.4\
+ (1:1.4+20241016\
+1351+e7c3feb100)\
+\x22\x0a   xmlns:inksc\
+ape=\x22http://www.\
+inkscape.org/nam\
+espaces/inkscape\
+\x22\x0a   xmlns:sodip\
+odi=\x22http://sodi\
+podi.sourceforge\
+.net/DTD/sodipod\
+i-0.dtd\x22\x0a   xmln\
+s=\x22http://www.w3\
+.org/2000/svg\x22\x0a \
+  xmlns:svg=\x22htt\
+p://www.w3.org/2\
+000/svg\x22>\x0a  <def\
+s\x0a     id=\x22defs1\
+\x22 />\x0a  <sodipodi\
+:namedview\x0a     \
+id=\x22namedview1\x22\x0a\
+     pagecolor=\x22\
+#ffffff\x22\x0a     bo\
+rdercolor=\x22#6666\
+66\x22\x0a     bordero\
+pacity=\x221.0\x22\x0a   \
+  inkscape:showp\
+ageshadow=\x222\x22\x0a  \
+   inkscape:page\
+opacity=\x220.0\x22\x0a  \
+   inkscape:page\
+checkerboard=\x220\x22\
+\x0a     inkscape:d\
+eskcolor=\x22#d1d1d\
+1\x22\x0a     inkscape\
+:zoom=\x223.6875\x22\x0a \
+    inkscape:cx=\
+\x22319.86441\x22\x0a    \
+ inkscape:cy=\x2225\
+6\x22\x0a     inkscape\
+:window-width=\x223\
+783\x22\x0a     inksca\
+pe:window-height\
+=\x222126\x22\x0a     ink\
+scape:window-x=\x22\
+57\x22\x0a     inkscap\
+e:window-y=\x221074\
+\x22\x0a     inkscape:\
+window-maximized\
+=\x221\x22\x0a     inksca\
+pe:current-layer\
+=\x22svg1\x22 />\x0a  <!-\
+-! Font Awesome \
+Free 6.5.1 by @f\
+ontawesome - htt\
+ps://fontawesome\
+.com License - h\
+ttps://fontaweso\
+me.com/license/f\
+ree (Icons: CC B\
+Y 4.0, Fonts: SI\
+L OFL 1.1, Code:\
+ MIT License) Co\
+pyright 2023 Fon\
+ticons, Inc. -->\
+\x0a  <path\x0a     d=\
+\x22M308.5 135.3c7.\
+1-6.3 9.9-16.2 6\
+.2-25c-2.3-5.3-4\
+.8-10.5-7.6-15.5\
+L304 89.4c-3-5-6\
+.3-9.9-9.8-14.6c\
+-5.7-7.6-15.7-10\
+.1-24.7-7.1l-28.\
+2 9.3c-10.7-8.8-\
+23-16-36.2-20.9L\
+199 27.1c-1.9-9.\
+3-9.1-16.7-18.5-\
+17.8C173.9 8.4 1\
+67.2 8 160.4 8h-\
+.7c-6.8 0-13.5 .\
+4-20.1 1.2c-9.4 \
+1.1-16.6 8.6-18.\
+5 17.8L115 56.1c\
+-13.3 5-25.5 12.\
+1-36.2 20.9L50.5\
+ 67.8c-9-3-19-.5\
+-24.7 7.1c-3.5 4\
+.7-6.8 9.6-9.9 1\
+4.6l-3 5.3c-2.8 \
+5-5.3 10.2-7.6 1\
+5.6c-3.7 8.7-.9 \
+18.6 6.2 25l22.2\
+ 19.8C32.6 161.9\
+ 32 168.9 32 176\
+s.6 14.1 1.7 20.\
+9L11.5 216.7c-7.\
+1 6.3-9.9 16.2-6\
+.2 25c2.3 5.3 4.\
+8 10.5 7.6 15.6l\
+3 5.2c3 5.1 6.3 \
+9.9 9.9 14.6c5.7\
+ 7.6 15.7 10.1 2\
+4.7 7.1l28.2-9.3\
+c10.7 8.8 23 16 \
+36.2 20.9l6.1 29\
+.1c1.9 9.3 9.1 1\
+6.7 18.5 17.8c6.\
+7 .8 13.5 1.2 20\
+.4 1.2s13.7-.4 2\
+0.4-1.2c9.4-1.1 \
+16.6-8.6 18.5-17\
+.8l6.1-29.1c13.3\
+-5 25.5-12.1 36.\
+2-20.9l28.2 9.3c\
+9 3 19 .5 24.7-7\
+.1c3.5-4.7 6.8-9\
+.5 9.8-14.6l3.1-\
+5.4c2.8-5 5.3-10\
+.2 7.6-15.5c3.7-\
+8.7 .9-18.6-6.2-\
+25l-22.2-19.8c1.\
+1-6.8 1.7-13.8 1\
+.7-20.9s-.6-14.1\
+-1.7-20.9l22.2-1\
+9.8zM112 176a48 \
+48 0 1 1 96 0 48\
+ 48 0 1 1 -96 0z\
+M504.7 500.5c6.3\
+ 7.1 16.2 9.9 25\
+ 6.2c5.3-2.3 10.\
+5-4.8 15.5-7.6l5\
+.4-3.1c5-3 9.9-6\
+.3 14.6-9.8c7.6-\
+5.7 10.1-15.7 7.\
+1-24.7l-9.3-28.2\
+c8.8-10.7 16-23 \
+20.9-36.2l29.1-6\
+.1c9.3-1.9 16.7-\
+9.1 17.8-18.5c.8\
+-6.7 1.2-13.5 1.\
+2-20.4s-.4-13.7-\
+1.2-20.4c-1.1-9.\
+4-8.6-16.6-17.8-\
+18.5L583.9 307c-\
+5-13.3-12.1-25.5\
+-20.9-36.2l9.3-2\
+8.2c3-9 .5-19-7.\
+1-24.7c-4.7-3.5-\
+9.6-6.8-14.6-9.9\
+l-5.3-3c-5-2.8-1\
+0.2-5.3-15.6-7.6\
+c-8.7-3.7-18.6-.\
+9-25 6.2l-19.8 2\
+2.2c-6.8-1.1-13.\
+8-1.7-20.9-1.7s-\
+14.1 .6-20.9 1.7\
+l-19.8-22.2c-6.3\
+-7.1-16.2-9.9-25\
+-6.2c-5.3 2.3-10\
+.5 4.8-15.6 7.6l\
+-5.2 3c-5.1 3-9.\
+9 6.3-14.6 9.9c-\
+7.6 5.7-10.1 15.\
+7-7.1 24.7l9.3 2\
+8.2c-8.8 10.7-16\
+ 23-20.9 36.2L31\
+5.1 313c-9.3 1.9\
+-16.7 9.1-17.8 1\
+8.5c-.8 6.7-1.2 \
+13.5-1.2 20.4s.4\
+ 13.7 1.2 20.4c1\
+.1 9.4 8.6 16.6 \
+17.8 18.5l29.1 6\
+.1c5 13.3 12.1 2\
+5.5 20.9 36.2l-9\
+.3 28.2c-3 9-.5 \
+19 7.1 24.7c4.7 \
+3.5 9.5 6.8 14.6\
+ 9.8l5.4 3.1c5 2\
+.8 10.2 5.3 15.5\
+ 7.6c8.7 3.7 18.\
+6 .9 25-6.2l19.8\
+-22.2c6.8 1.1 13\
+.8 1.7 20.9 1.7s\
+14.1-.6 20.9-1.7\
+l19.8 22.2zM464 \
+304a48 48 0 1 1 \
+0 96 48 48 0 1 1\
+ 0-96z\x22\x0a     fil\
+l=\x22#ffffb6\x22\x0a    \
+ id=\x22path1\x22\x0a    \
+ style=\x22fill:#ff\
+ffff;fill-opacit\
+y:1\x22 />\x0a</svg>\x0a\
 \x00\x00\x02\xee\
 <\
 svg xmlns=\x22http:\
@@ -5778,150 +5962,6 @@ l-19.8 22.2c-6.8\
 8 0 1 1 0 96 48 \
 48 0 1 1 0-96z\x22/\
 ></svg>\
-\x00\x00\x08\xd8\
-<\
-svg xmlns=\x22http:\
-//www.w3.org/200\
-0/svg\x22 viewBox=\x22\
-0 0 640 512\x22><!-\
--! Font Awesome \
-Free 6.5.1 by @f\
-ontawesome - htt\
-ps://fontawesome\
-.com License - h\
-ttps://fontaweso\
-me.com/license/f\
-ree (Icons: CC B\
-Y 4.0, Fonts: SI\
-L OFL 1.1, Code:\
- MIT License) Co\
-pyright 2023 Fon\
-ticons, Inc. -->\
-<path d=\x22M308.5 \
-135.3c7.1-6.3 9.\
-9-16.2 6.2-25c-2\
-.3-5.3-4.8-10.5-\
-7.6-15.5L304 89.\
-4c-3-5-6.3-9.9-9\
-.8-14.6c-5.7-7.6\
--15.7-10.1-24.7-\
-7.1l-28.2 9.3c-1\
-0.7-8.8-23-16-36\
-.2-20.9L199 27.1\
-c-1.9-9.3-9.1-16\
-.7-18.5-17.8C173\
-.9 8.4 167.2 8 1\
-60.4 8h-.7c-6.8 \
-0-13.5 .4-20.1 1\
-.2c-9.4 1.1-16.6\
- 8.6-18.5 17.8L1\
-15 56.1c-13.3 5-\
-25.5 12.1-36.2 2\
-0.9L50.5 67.8c-9\
--3-19-.5-24.7 7.\
-1c-3.5 4.7-6.8 9\
-.6-9.9 14.6l-3 5\
-.3c-2.8 5-5.3 10\
-.2-7.6 15.6c-3.7\
- 8.7-.9 18.6 6.2\
- 25l22.2 19.8C32\
-.6 161.9 32 168.\
-9 32 176s.6 14.1\
- 1.7 20.9L11.5 2\
-16.7c-7.1 6.3-9.\
-9 16.2-6.2 25c2.\
-3 5.3 4.8 10.5 7\
-.6 15.6l3 5.2c3 \
-5.1 6.3 9.9 9.9 \
-14.6c5.7 7.6 15.\
-7 10.1 24.7 7.1l\
-28.2-9.3c10.7 8.\
-8 23 16 36.2 20.\
-9l6.1 29.1c1.9 9\
-.3 9.1 16.7 18.5\
- 17.8c6.7 .8 13.\
-5 1.2 20.4 1.2s1\
-3.7-.4 20.4-1.2c\
-9.4-1.1 16.6-8.6\
- 18.5-17.8l6.1-2\
-9.1c13.3-5 25.5-\
-12.1 36.2-20.9l2\
-8.2 9.3c9 3 19 .\
-5 24.7-7.1c3.5-4\
-.7 6.8-9.5 9.8-1\
-4.6l3.1-5.4c2.8-\
-5 5.3-10.2 7.6-1\
-5.5c3.7-8.7 .9-1\
-8.6-6.2-25l-22.2\
--19.8c1.1-6.8 1.\
-7-13.8 1.7-20.9s\
--.6-14.1-1.7-20.\
-9l22.2-19.8zM112\
- 176a48 48 0 1 1\
- 96 0 48 48 0 1 \
-1 -96 0zM504.7 5\
-00.5c6.3 7.1 16.\
-2 9.9 25 6.2c5.3\
--2.3 10.5-4.8 15\
-.5-7.6l5.4-3.1c5\
--3 9.9-6.3 14.6-\
-9.8c7.6-5.7 10.1\
--15.7 7.1-24.7l-\
-9.3-28.2c8.8-10.\
-7 16-23 20.9-36.\
-2l29.1-6.1c9.3-1\
-.9 16.7-9.1 17.8\
--18.5c.8-6.7 1.2\
--13.5 1.2-20.4s-\
-.4-13.7-1.2-20.4\
-c-1.1-9.4-8.6-16\
-.6-17.8-18.5L583\
-.9 307c-5-13.3-1\
-2.1-25.5-20.9-36\
-.2l9.3-28.2c3-9 \
-.5-19-7.1-24.7c-\
-4.7-3.5-9.6-6.8-\
-14.6-9.9l-5.3-3c\
--5-2.8-10.2-5.3-\
-15.6-7.6c-8.7-3.\
-7-18.6-.9-25 6.2\
-l-19.8 22.2c-6.8\
--1.1-13.8-1.7-20\
-.9-1.7s-14.1 .6-\
-20.9 1.7l-19.8-2\
-2.2c-6.3-7.1-16.\
-2-9.9-25-6.2c-5.\
-3 2.3-10.5 4.8-1\
-5.6 7.6l-5.2 3c-\
-5.1 3-9.9 6.3-14\
-.6 9.9c-7.6 5.7-\
-10.1 15.7-7.1 24\
-.7l9.3 28.2c-8.8\
- 10.7-16 23-20.9\
- 36.2L315.1 313c\
--9.3 1.9-16.7 9.\
-1-17.8 18.5c-.8 \
-6.7-1.2 13.5-1.2\
- 20.4s.4 13.7 1.\
-2 20.4c1.1 9.4 8\
-.6 16.6 17.8 18.\
-5l29.1 6.1c5 13.\
-3 12.1 25.5 20.9\
- 36.2l-9.3 28.2c\
--3 9-.5 19 7.1 2\
-4.7c4.7 3.5 9.5 \
-6.8 14.6 9.8l5.4\
- 3.1c5 2.8 10.2 \
-5.3 15.5 7.6c8.7\
- 3.7 18.6 .9 25-\
-6.2l19.8-22.2c6.\
-8 1.1 13.8 1.7 2\
-0.9 1.7s14.1-.6 \
-20.9-1.7l19.8 22\
-.2zM464 304a48 4\
-8 0 1 1 0 96 48 \
-48 0 1 1 0-96z\x22/\
-></svg>\
 \x00\x00\x01\xad\
 <\
 svg xmlns=\x22http:\
@@ -5951,40 +5991,6 @@ ticons, Inc. -->\
 13.3 0-24-10.7-2\
 4-24s10.7-24 24-\
 24z\x22/></svg>\
-\x00\x00\x01\xff\
-<\
-svg xmlns=\x22http:\
-//www.w3.org/200\
-0/svg\x22 viewBox=\x22\
-0 0 448 512\x22><!-\
--! Font Awesome \
-Free 6.5.1 by @f\
-ontawesome - htt\
-ps://fontawesome\
-.com License - h\
-ttps://fontaweso\
-me.com/license/f\
-ree (Icons: CC B\
-Y 4.0, Fonts: SI\
-L OFL 1.1, Code:\
- MIT License) Co\
-pyright 2023 Fon\
-ticons, Inc. -->\
-<path d=\x22M9.4 23\
-3.4c-12.5 12.5-1\
-2.5 32.8 0 45.3l\
-160 160c12.5 12.\
-5 32.8 12.5 45.3\
- 0s12.5-32.8 0-4\
-5.3L109.2 288 41\
-6 288c17.7 0 32-\
-14.3 32-32s-14.3\
--32-32-32l-306.7\
- 0L214.6 118.6c1\
-2.5-12.5 12.5-32\
-.8 0-45.3s-32.8-\
-12.5-45.3 0l-160\
- 160z\x22/></svg>\
 \x00\x00,\xcc\
 R\
 IFF\xc4,\x00\x00WAVEfmt \x10\
@@ -7057,6 +7063,182 @@ V\xcc/\x92\x22\xe4\xc0]}\x9b\xc3e\x19\xe9r~\
 e\xc8\xce]\xb8\xadeG\xcfp\xdc\xf7\x0d\x90\xd8\x0b\
 }\xea\xbf\x86\xd8f\x05N\xb7\x19\xfe0\xe4\xd3\x84\x86\
 \xcc\xf0}m\x87\xda\x8d \xaf\x0cR\xcd\x11\x7f\
+\x00\x00\x07H\
+<\
+?xml version=\x221.\
+0\x22 encoding=\x22UTF\
+-8\x22 standalone=\x22\
+no\x22?>\x0a<svg\x0a   vi\
+ewBox=\x220 0 512 5\
+12\x22\x0a   version=\x22\
+1.1\x22\x0a   id=\x22svg1\
+\x22\x0a   sodipodi:do\
+cname=\x22list_ligh\
+t.svg\x22\x0a   inksca\
+pe:version=\x221.4 \
+(1:1.4+202410161\
+351+e7c3feb100)\x22\
+\x0a   xmlns:inksca\
+pe=\x22http://www.i\
+nkscape.org/name\
+spaces/inkscape\x22\
+\x0a   xmlns:sodipo\
+di=\x22http://sodip\
+odi.sourceforge.\
+net/DTD/sodipodi\
+-0.dtd\x22\x0a   xmlns\
+=\x22http://www.w3.\
+org/2000/svg\x22\x0a  \
+ xmlns:svg=\x22http\
+://www.w3.org/20\
+00/svg\x22>\x0a  <defs\
+\x0a     id=\x22defs1\x22\
+ />\x0a  <sodipodi:\
+namedview\x0a     i\
+d=\x22namedview1\x22\x0a \
+    pagecolor=\x22#\
+ffffff\x22\x0a     bor\
+dercolor=\x22#66666\
+6\x22\x0a     borderop\
+acity=\x221.0\x22\x0a    \
+ inkscape:showpa\
+geshadow=\x222\x22\x0a   \
+  inkscape:pageo\
+pacity=\x220.0\x22\x0a   \
+  inkscape:pagec\
+heckerboard=\x220\x22\x0a\
+     inkscape:de\
+skcolor=\x22#d1d1d1\
+\x22\x0a     inkscape:\
+zoom=\x223.6875\x22\x0a  \
+   inkscape:cx=\x22\
+255.86441\x22\x0a     \
+inkscape:cy=\x22256\
+\x22\x0a     inkscape:\
+window-width=\x2237\
+83\x22\x0a     inkscap\
+e:window-height=\
+\x222126\x22\x0a     inks\
+cape:window-x=\x225\
+7\x22\x0a     inkscape\
+:window-y=\x221074\x22\
+\x0a     inkscape:w\
+indow-maximized=\
+\x221\x22\x0a     inkscap\
+e:current-layer=\
+\x22svg1\x22 />\x0a  <!--\
+! Font Awesome F\
+ree 6.5.1 by @fo\
+ntawesome - http\
+s://fontawesome.\
+com License - ht\
+tps://fontawesom\
+e.com/license/fr\
+ee (Icons: CC BY\
+ 4.0, Fonts: SIL\
+ OFL 1.1, Code: \
+MIT License) Cop\
+yright 2023 Font\
+icons, Inc. -->\x0a\
+  <path\x0a     d=\x22\
+M40 48C26.7 48 1\
+6 58.7 16 72v48c\
+0 13.3 10.7 24 2\
+4 24H88c13.3 0 2\
+4-10.7 24-24V72c\
+0-13.3-10.7-24-2\
+4-24H40zM192 64c\
+-17.7 0-32 14.3-\
+32 32s14.3 32 32\
+ 32H480c17.7 0 3\
+2-14.3 32-32s-14\
+.3-32-32-32H192z\
+m0 160c-17.7 0-3\
+2 14.3-32 32s14.\
+3 32 32 32H480c1\
+7.7 0 32-14.3 32\
+-32s-14.3-32-32-\
+32H192zm0 160c-1\
+7.7 0-32 14.3-32\
+ 32s14.3 32 32 3\
+2H480c17.7 0 32-\
+14.3 32-32s-14.3\
+-32-32-32H192zM1\
+6 232v48c0 13.3 \
+10.7 24 24 24H88\
+c13.3 0 24-10.7 \
+24-24V232c0-13.3\
+-10.7-24-24-24H4\
+0c-13.3 0-24 10.\
+7-24 24zM40 368c\
+-13.3 0-24 10.7-\
+24 24v48c0 13.3 \
+10.7 24 24 24H88\
+c13.3 0 24-10.7 \
+24-24V392c0-13.3\
+-10.7-24-24-24H4\
+0z\x22\x0a     id=\x22pat\
+h1\x22\x0a     style=\x22\
+fill:#ffffff;fil\
+l-opacity:1\x22 />\x0a\
+</svg>\x0a\
+\x00\x00\x03e\
+<\
+svg xmlns=\x22http:\
+//www.w3.org/200\
+0/svg\x22 viewBox=\x22\
+0 0 512 512\x22><!-\
+-! Font Awesome \
+Free 6.5.1 by @f\
+ontawesome - htt\
+ps://fontawesome\
+.com License - h\
+ttps://fontaweso\
+me.com/license/f\
+ree (Icons: CC B\
+Y 4.0, Fonts: SI\
+L OFL 1.1, Code:\
+ MIT License) Co\
+pyright 2023 Fon\
+ticons, Inc. -->\
+<path d=\x22M40 48C\
+26.7 48 16 58.7 \
+16 72v48c0 13.3 \
+10.7 24 24 24H88\
+c13.3 0 24-10.7 \
+24-24V72c0-13.3-\
+10.7-24-24-24H40\
+zM192 64c-17.7 0\
+-32 14.3-32 32s1\
+4.3 32 32 32H480\
+c17.7 0 32-14.3 \
+32-32s-14.3-32-3\
+2-32H192zm0 160c\
+-17.7 0-32 14.3-\
+32 32s14.3 32 32\
+ 32H480c17.7 0 3\
+2-14.3 32-32s-14\
+.3-32-32-32H192z\
+m0 160c-17.7 0-3\
+2 14.3-32 32s14.\
+3 32 32 32H480c1\
+7.7 0 32-14.3 32\
+-32s-14.3-32-32-\
+32H192zM16 232v4\
+8c0 13.3 10.7 24\
+ 24 24H88c13.3 0\
+ 24-10.7 24-24V2\
+32c0-13.3-10.7-2\
+4-24-24H40c-13.3\
+ 0-24 10.7-24 24\
+zM40 368c-13.3 0\
+-24 10.7-24 24v4\
+8c0 13.3 10.7 24\
+ 24 24H88c13.3 0\
+ 24-10.7 24-24V3\
+92c0-13.3-10.7-2\
+4-24-24H40z\x22/></\
+svg>\
 \x00\x00\x02\x08\
 <\
 svg xmlns=\x22http:\
@@ -13003,6 +13185,103 @@ c0-12.6-7.4-24-1\
 .9 10.4 34.4 5.3\
 S320 460.6 320 4\
 48V64z\x22/></svg>\
+\x00\x00\x05\xef\
+<\
+?xml version=\x221.\
+0\x22 encoding=\x22UTF\
+-8\x22 standalone=\x22\
+no\x22?>\x0a<svg\x0a   vi\
+ewBox=\x220 0 448 5\
+12\x22\x0a   version=\x22\
+1.1\x22\x0a   id=\x22svg1\
+\x22\x0a   sodipodi:do\
+cname=\x22arrow-lef\
+t_dark.svg\x22\x0a   i\
+nkscape:version=\
+\x221.4 (1:1.4+2024\
+10161351+e7c3feb\
+100)\x22\x0a   xmlns:i\
+nkscape=\x22http://\
+www.inkscape.org\
+/namespaces/inks\
+cape\x22\x0a   xmlns:s\
+odipodi=\x22http://\
+sodipodi.sourcef\
+orge.net/DTD/sod\
+ipodi-0.dtd\x22\x0a   \
+xmlns=\x22http://ww\
+w.w3.org/2000/sv\
+g\x22\x0a   xmlns:svg=\
+\x22http://www.w3.o\
+rg/2000/svg\x22>\x0a  \
+<defs\x0a     id=\x22d\
+efs1\x22 />\x0a  <sodi\
+podi:namedview\x0a \
+    id=\x22namedvie\
+w1\x22\x0a     pagecol\
+or=\x22#ffffff\x22\x0a   \
+  bordercolor=\x22#\
+666666\x22\x0a     bor\
+deropacity=\x221.0\x22\
+\x0a     inkscape:s\
+howpageshadow=\x222\
+\x22\x0a     inkscape:\
+pageopacity=\x220.0\
+\x22\x0a     inkscape:\
+pagecheckerboard\
+=\x220\x22\x0a     inksca\
+pe:deskcolor=\x22#d\
+1d1d1\x22\x0a     inks\
+cape:zoom=\x224.484\
+375\x22\x0a     inksca\
+pe:cx=\x22224.1115\x22\
+\x0a     inkscape:c\
+y=\x22256.1115\x22\x0a   \
+  inkscape:windo\
+w-width=\x222344\x22\x0a \
+    inkscape:win\
+dow-height=\x221537\
+\x22\x0a     inkscape:\
+window-x=\x221117\x22\x0a\
+     inkscape:wi\
+ndow-y=\x221352\x22\x0a  \
+   inkscape:wind\
+ow-maximized=\x220\x22\
+\x0a     inkscape:c\
+urrent-layer=\x22sv\
+g1\x22 />\x0a  <!--! F\
+ont Awesome Free\
+ 6.5.1 by @fonta\
+wesome - https:/\
+/fontawesome.com\
+ License - https\
+://fontawesome.c\
+om/license/free \
+(Icons: CC BY 4.\
+0, Fonts: SIL OF\
+L 1.1, Code: MIT\
+ License) Copyri\
+ght 2023 Fontico\
+ns, Inc. -->\x0a  <\
+path\x0a     d=\x22M9.\
+4 233.4c-12.5 12\
+.5-12.5 32.8 0 4\
+5.3l160 160c12.5\
+ 12.5 32.8 12.5 \
+45.3 0s12.5-32.8\
+ 0-45.3L109.2 28\
+8 416 288c17.7 0\
+ 32-14.3 32-32s-\
+14.3-32-32-32l-3\
+06.7 0L214.6 118\
+.6c12.5-12.5 12.\
+5-32.8 0-45.3s-3\
+2.8-12.5-45.3 0l\
+-160 160z\x22\x0a     \
+id=\x22path1\x22\x0a     \
+style=\x22fill:#fff\
+fff;fill-opacity\
+:1\x22 />\x0a</svg>\x0a\
 "
 
 qt_resource_name = b"\
@@ -13018,11 +13297,11 @@ qt_resource_name = b"\
 \x08\xcd\x08#\
 \x00p\
 \x00r\x00e\x00v\x00i\x00o\x00u\x00s\
-\x00\x11\
-\x07\xd5\x0fD\
-\x00o\
-\x00b\x00s\x00e\x00r\x00v\x00a\x00t\x00i\x00o\x00n\x00s\x00_\x00l\x00i\x00s\x00t\
-\
+\x00\x14\
+\x07)\xac4\
+\x00f\
+\x00r\x00a\x00m\x00e\x00_\x00b\x00a\x00c\x00k\x00w\x00a\x00r\x00d\x00_\x00l\x00i\
+\x00g\x00h\x00t\
 \x00\x11\
 \x0e\xabI\xbe\
 \x00c\
@@ -13056,22 +13335,23 @@ qt_resource_name = b"\
 \x00\x07r\x89\
 \x00p\
 \x00l\x00a\x00y\
+\x00\x10\
+\x05\x19CK\
+\x00p\
+\x00r\x00e\x00f\x00e\x00r\x00e\x00n\x00c\x00e\x00s\x00_\x00d\x00a\x00r\x00k\
 \x00\x07\
 \x0c\xf76E\
 \x00e\
 \x00x\x00p\x00l\x00o\x00r\x00e\
-\x00\x0b\
-\x0cg^C\
+\x00\x11\
+\x01\xacAT\
 \x00p\
-\x00r\x00e\x00f\x00e\x00r\x00e\x00n\x00c\x00e\x00s\
+\x00r\x00e\x00f\x00e\x00r\x00e\x00n\x00c\x00e\x00s\x00_\x00l\x00i\x00g\x00h\x00t\
+\
 \x00\x06\
 \x07\xa3m\xc2\
 \x00s\
 \x00l\x00o\x00w\x00e\x00r\
-\x00\x0e\
-\x06\xa5\xa8\xe4\
-\x00f\
-\x00r\x00a\x00m\x00e\x00_\x00b\x00a\x00c\x00k\x00w\x00a\x00r\x00d\
 \x00\x09\
 \x0fj\x8b\xc4\
 \x00k\
@@ -13084,6 +13364,16 @@ qt_resource_name = b"\
 \x00\x06\x8b\xc0\
 \x00b\
 \x00e\x00e\x00p\
+\x00\x16\
+\x04\x9f\x09k\
+\x00o\
+\x00b\x00s\x00e\x00r\x00v\x00a\x00t\x00i\x00o\x00n\x00s\x00_\x00l\x00i\x00s\x00t\
+\x00_\x00d\x00a\x00r\x00k\
+\x00\x17\
+\x0a\x08\xe3t\
+\x00o\
+\x00b\x00s\x00e\x00r\x00v\x00a\x00t\x00i\x00o\x00n\x00s\x00_\x00l\x00i\x00s\x00t\
+\x00_\x00l\x00i\x00g\x00h\x00t\
 \x00\x06\
 \x06\xc8\xaa\xc2\
 \x00f\
@@ -13144,81 +13434,90 @@ qt_resource_name = b"\
 \x0c5\x09\xa6\
 \x00v\
 \x00o\x00l\x00u\x00m\x00e\x00_\x00o\x00f\x00f\
+\x00\x13\
+\x0eq\x1d\x8b\
+\x00f\
+\x00r\x00a\x00m\x00e\x00_\x00b\x00a\x00c\x00k\x00w\x00a\x00r\x00d\x00_\x00d\x00a\
+\x00r\x00k\
 "
 
 qt_resource_struct = b"\
-\x00\x00\x00\x00\x00\x02\x00\x00\x00#\x00\x00\x00\x01\
+\x00\x00\x00\x00\x00\x02\x00\x00\x00%\x00\x00\x00\x01\
 \x00\x00\x00\x00\x00\x00\x00\x00\
-\x00\x00\x01\xd0\x00\x04\x00\x00\x00\x01\x00\x01\xa2?\
-\x00\x00\x01\x8c\x0c\x85\x84\xaa\
-\x00\x00\x00\xb0\x00\x00\x00\x00\x00\x01\x00\x00\xc3\x8e\
-\x00\x00\x01\x8d\x1cJ0~\
-\x00\x00\x02\xbc\x00\x00\x00\x00\x00\x01\x00\x02^-\
-\x00\x00\x01\x8f!\x9a`\xb6\
-\x00\x00\x03 \x00\x00\x00\x00\x00\x01\x00\x03#d\
-\x00\x00\x01\x8d\x1cJ0~\
-\x00\x00\x016\x00\x00\x00\x00\x00\x01\x00\x01YZ\
-\x00\x00\x01\x8d\x1cJ0~\
-\x00\x00\x02\x1e\x00\x00\x00\x00\x00\x01\x00\x024\x01\
-\x00\x00\x01\x8d\x1cJ0~\
-\x00\x00\x01\xc0\x00\x00\x00\x00\x00\x01\x00\x01\xa0A\
-\x00\x00\x01\x8d\x1cJ0~\
-\x00\x00\x00\xbe\x00\x00\x00\x00\x00\x01\x00\x00\xc5\x9d\
-\x00\x00\x01\x8d\x1cJ0~\
-\x00\x00\x02\xe8\x00\x00\x00\x00\x00\x01\x00\x03\x1f\x00\
-\x00\x00\x01\x8d\x1cJ0~\
-\x00\x00\x00\x8e\x00\x00\x00\x00\x00\x01\x00\x00\xbce\
-\x00\x00\x01\x8d\x1cJ0~\
-\x00\x00\x02J\x00\x00\x00\x00\x00\x01\x00\x028\xbc\
-\x00\x00\x01\x8f!\x9a`\xb6\
-\x00\x00\x00\xfc\x00\x00\x00\x00\x00\x01\x00\x00\xcd\x9e\
-\x00\x00\x01\x8d\x1cJ0~\
-\x00\x00\x02\x9c\x00\x00\x00\x00\x00\x01\x00\x02[\xd5\
-\x00\x00\x01\x8d\x1cJ0~\
+\x00\x00\x01\xe6\x00\x04\x00\x00\x00\x01\x00\x01\xa2\xce\
+\x00\x00\x01\x85\x9c\x98+\xff\
+\x00\x00\x00\xb6\x00\x00\x00\x00\x00\x01\x00\x00\xc2(\
+\x00\x00\x01\x8c\x1c\xfb\x81\xb0\
+\x00\x00\x038\x00\x00\x00\x00\x00\x01\x00\x02iq\
+\x00\x00\x01\x8f\x1a~:\x12\
+\x00\x00\x03\x9c\x00\x00\x00\x00\x00\x01\x00\x03.\xa8\
+\x00\x00\x01\x8c\x1c\xfb\x81\xb0\
+\x00\x00\x01<\x00\x00\x00\x00\x00\x01\x00\x01W\xf4\
+\x00\x00\x01\x8c\x1c\xfb\x81\xb0\
+\x00\x00\x02\x9a\x00\x00\x00\x00\x00\x01\x00\x02?E\
+\x00\x00\x01\x8c\x1c\xfb\x81\xb0\
+\x00\x00\x01\xd6\x00\x00\x00\x00\x00\x01\x00\x01\xa0\xd0\
+\x00\x00\x01\x8c\x1c\xfb\x81\xb0\
+\x00\x00\x00\xc4\x00\x00\x00\x00\x00\x01\x00\x00\xc47\
+\x00\x00\x01\x8d\x12Z&t\
+\x00\x00\x03d\x00\x00\x00\x00\x00\x01\x00\x03*D\
+\x00\x00\x01\x8c\x1c\xfb\x81\xb0\
+\x00\x00\x01\x84\x00\x00\x00\x00\x00\x01\x00\x01is\
+\x00\x00\x01\x8c\x1c\xfb\x81\xb0\
+\x00\x00\x00\x94\x00\x00\x00\x00\x00\x01\x00\x00\xba\xff\
+\x00\x00\x01\x8d\x136\xa7\x84\
+\x00\x00\x02\xc6\x00\x00\x00\x00\x00\x01\x00\x02D\x00\
+\x00\x00\x01\x8f\x1a~:\x12\
+\x00\x00\x01\x02\x00\x00\x00\x00\x00\x01\x00\x00\xcc8\
+\x00\x00\x01\x8c\x1c\xfb\x81\xb0\
+\x00\x00\x03\x18\x00\x00\x00\x00\x00\x01\x00\x02g\x19\
+\x00\x00\x01\x8c\x1c\xfb\x81\xb0\
 \x00\x00\x00\x12\x00\x00\x00\x00\x00\x01\x00\x00\xb23\
-\x00\x00\x01\x8d\x1cJ0~\
-\x00\x00\x02\xca\x00\x00\x00\x00\x00\x01\x00\x03\x1cA\
-\x00\x00\x01\x8e\x8b&!\x0d\
-\x00\x00\x02.\x00\x00\x00\x00\x00\x01\x00\x025\xfc\
-\x00\x00\x01\x8d\x1cJ0~\
-\x00\x00\x02\x80\x00\x00\x00\x00\x00\x01\x00\x02Y\xc8\
-\x00\x00\x01\x8d\x1cJ0~\
-\x00\x00\x00\xdc\x00\x00\x00\x00\x00\x01\x00\x00\xcb\x9a\
-\x00\x00\x01\x8d\x1cJ0~\
-\x00\x00\x01\x86\x00\x00\x00\x00\x00\x01\x00\x01qn\
-\x00\x00\x01\x8d\x1cJ0~\
-\x00\x00\x01\xde\x00\x00\x00\x00\x00\x01\x00\x01\xb6\x12\
-\x00\x00\x01\x8d\x1cJ0~\
-\x00\x00\x02\x0c\x00\x00\x00\x00\x00\x01\x00\x021\x8a\
-\x00\x00\x01\x8d\x1cJ0~\
-\x00\x00\x03\x0e\x00\x00\x00\x00\x00\x01\x00\x03!h\
-\x00\x00\x01\x8d\x1cJ0~\
-\x00\x00\x01t\x00\x00\x00\x00\x00\x01\x00\x01o\xbd\
-\x00\x00\x01\x8d\x1cJ0~\
-\x00\x00\x00\x00\x00\x00\x00\x00\x00\x01\x00\x00\x00\x00\
-\x00\x00\x01\x8f!\x9a`\xb6\
+\x00\x00\x01\x8c\x1c\xfb\x81\xb0\
+\x00\x00\x01\xf4\x00\x00\x00\x00\x00\x01\x00\x01\xb6\xa1\
+\x00\x00\x01\x92\xae\xafr\xa8\
+\x00\x00\x03F\x00\x00\x00\x00\x00\x01\x00\x03'\x85\
+\x00\x00\x01\x8e\xbd\xcdf/\
+\x00\x00\x01J\x00\x00\x00\x00\x00\x01\x00\x01Y\xad\
+\x00\x00\x01\x92\xae\xacL\x8f\
+\x00\x00\x02\xaa\x00\x00\x00\x00\x00\x01\x00\x02A@\
+\x00\x00\x01\x8c\x1c\xfb\x81\xb0\
+\x00\x00\x02\xfc\x00\x00\x00\x00\x00\x01\x00\x02e\x0c\
+\x00\x00\x01\x8c\x1c\xfb\x81\xb0\
+\x00\x00\x00\xe2\x00\x00\x00\x00\x00\x01\x00\x00\xca4\
+\x00\x00\x01\x8c\x1c\xfb\x81\xb0\
+\x00\x00\x02Z\x00\x00\x00\x00\x00\x01\x00\x01\xc1V\
+\x00\x00\x01\x8c\x1c\xfb\x81\xb0\
+\x00\x00\x02\x88\x00\x00\x00\x00\x00\x01\x00\x02<\xce\
+\x00\x00\x01\x8c\x1c\xfb\x81\xb0\
+\x00\x00\x03\x8a\x00\x00\x00\x00\x00\x01\x00\x03,\xac\
+\x00\x00\x01\x8c\x1c\xfb\x81\xb0\
 \x00\x00\x00>\x00\x00\x00\x00\x00\x01\x00\x00\xb6\xbe\
-\x00\x00\x01\x8d\x1cJ0~\
+\x00\x00\x01\x8c\x1c\xfb\x81\xb0\
+\x00\x00\x01\xac\x00\x00\x00\x00\x00\x01\x00\x01rO\
+\x00\x00\x01\x8c\x1c\xfb\x81\xb0\
+\x00\x00\x00\x00\x00\x00\x00\x00\x00\x01\x00\x00\x00\x00\
+\x00\x00\x01\x8f\x1a~:\x12\
 \x00\x00\x00(\x00\x00\x00\x00\x00\x01\x00\x00\xb4N\
-\x00\x00\x01\x8d\x1cJ0~\
-\x00\x00\x01\x1a\x00\x00\x00\x00\x00\x01\x00\x00\xcf\xf6\
-\x00\x00\x01\x8f!\x9a`\xb6\
-\x00\x00\x01\xf0\x00\x00\x00\x00\x00\x01\x00\x01\xb8\x1e\
-\x00\x00\x01\x8f!\x9a`\xb6\
-\x00\x00\x03.\x00\x00\x00\x00\x00\x01\x00\x03%\xcf\
-\x00\x00\x01\x8e\x8b&I\xa4\
-\x00\x00\x01X\x00\x00\x00\x00\x00\x01\x00\x01f\xe1\
-\x00\x00\x01\x8d\x1cJ0~\
-\x00\x00\x01X\x00\x00\x00\x00\x00\x01\x00\x01^\x05\
-\x00\x00\x01\x8d\x1cJ0~\
-\x00\x00\x02d\x00\x00\x00\x00\x00\x01\x00\x02U\xb0\
-\x00\x00\x01\x8d\x1cJ0~\
-\x00\x00\x01D\x00\x00\x00\x00\x00\x01\x00\x01[\x13\
-\x00\x00\x01\x8d\x1cJ0~\
-\x00\x00\x00f\x00\x00\x00\x00\x00\x01\x00\x00\xba'\
-\x00\x00\x01\x8d\x1cJ0~\
-\x00\x00\x01\xa8\x00\x00\x00\x00\x00\x01\x00\x01sq\
-\x00\x00\x01\x8c\x0c\x85\x84\xaa\
+\x00\x00\x01\x8c\x1c\xfb\x81\xb0\
+\x00\x00\x01 \x00\x00\x00\x00\x00\x01\x00\x00\xce\x90\
+\x00\x00\x01\x8f\x1a~:\x12\
+\x00\x00\x02l\x00\x00\x00\x00\x00\x01\x00\x01\xc3b\
+\x00\x00\x01\x8f\x1a~:\x12\
+\x00\x00\x02&\x00\x00\x00\x00\x00\x01\x00\x01\xbd\xed\
+\x00\x00\x01\x8c\x1c\xfb\x81\xb0\
+\x00\x00\x03\xaa\x00\x00\x00\x00\x00\x01\x00\x031\x13\
+\x00\x00\x01\x8e\xbd\xcdf/\
+\x00\x00\x02\xe0\x00\x00\x00\x00\x00\x01\x00\x02`\xf4\
+\x00\x00\x01\x8c\x1c\xfb\x81\xb0\
+\x00\x00\x01p\x00\x00\x00\x00\x00\x01\x00\x01f\x81\
+\x00\x00\x01\x8c\x1c\xfb\x81\xb0\
+\x00\x00\x03\xc4\x00\x00\x00\x00\x00\x01\x00\x032\xe7\
+\x00\x00\x01\x92\xae\xba\xdc\xe1\
+\x00\x00\x00l\x00\x00\x00\x00\x00\x01\x00\x00\xb8\xc1\
+\x00\x00\x01\x8c\x1c\xfb\x81\xb0\
+\x00\x00\x01\xbe\x00\x00\x00\x00\x00\x01\x00\x01t\x00\
+\x00\x00\x01\x85\x9c\x98+\xff\
 "
 
 def qInitResources():

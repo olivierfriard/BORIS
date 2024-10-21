@@ -59,18 +59,19 @@ def restore_geometry(widget: QWidget, widget_name: str, default_geometry):
                 logging.warning("Error during restoring default")
 
 
-def set_icons(self):
+def set_icons(self, theme_mode: str) -> None:
     """
     set icons of actions
     """
 
     # menu
+    self.action_obs_list.setIcon(QIcon(f":/observations_list_{theme_mode}"))
+
     self.actionTime_budget.setIcon(QIcon(":/time_budget"))
     self.actionPlot_events2.setIcon(QIcon(":/plot_events"))
     self.action_advanced_event_filtering.setIcon(QIcon(":/filter"))
-    self.actionPreferences.setIcon(QIcon(":/preferences"))
 
-    self.action_obs_list.setIcon(QIcon(":/observations_list"))
+    self.actionPreferences.setIcon(QIcon(f":/preferences_{theme_mode}"))
 
     self.actionPlay.setIcon(QIcon(":/play"))
     self.actionReset.setIcon(QIcon(":/reset"))
@@ -86,7 +87,7 @@ def set_icons(self):
 
     self.actionSnapshot.setIcon(QIcon(":/snapshot"))
 
-    self.actionFrame_backward.setIcon(QIcon(":/frame_backward"))
+    self.actionFrame_backward.setIcon(QIcon(f":/frame_backward_{theme_mode}"))
     self.actionFrame_forward.setIcon(QIcon(":/frame_forward"))
     self.actionCloseObs.setIcon(QIcon(":/close_observation"))
     self.actionCurrent_Time_Budget.setIcon(QIcon(":/time_budget"))

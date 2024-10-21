@@ -388,7 +388,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.tb_export.setMenu(self.menu)
         """
 
-        gui_utilities.set_icons(self)
+        gui_utilities.set_icons(self, theme_mode=self.theme_mode())
 
         self.setWindowTitle(f"{cfg.programName} ({__version__})")
 
@@ -465,6 +465,14 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.config_param = cfg.INIT_PARAM
         config_file.read(self)
         menu_options.update_menu(self)
+
+    def theme_mode(self):
+        """
+        return the theme mode (dark or light) of the OS
+        """
+        palette = QApplication.instance().palette()
+        color = palette.window().color()
+        return "dark" if color.value() < 128 else "light"  # Dark mode if the color value is less than 128
 
     class CustomItemDelegate(QStyledItemDelegate):
         def paint(self, painter, option, index):
