@@ -88,7 +88,7 @@ def set_icons(self, theme_mode: str) -> None:
     self.actionSnapshot.setIcon(QIcon(":/snapshot"))
 
     self.actionFrame_backward.setIcon(QIcon(f":/frame_backward_{theme_mode}"))
-    self.actionFrame_forward.setIcon(QIcon(":/frame_forward"))
+    self.actionFrame_forward.setIcon(QIcon(f":/frame_forward_{theme_mode}"))
     self.actionCloseObs.setIcon(QIcon(":/close_observation"))
     self.actionCurrent_Time_Budget.setIcon(QIcon(":/time_budget"))
     self.actionPlot_current_observation.setIcon(QIcon(":/plot_events"))
