@@ -655,11 +655,11 @@ def new_observation(self, mode: str = cfg.NEW, obsId: str = "") -> None:
         observationWindow.teDescription.setPlainText(self.pj[cfg.OBSERVATIONS][obsId][cfg.DESCRIPTION])
 
         try:
-            observationWindow.mediaDurations: dict = self.pj[cfg.OBSERVATIONS][obsId][cfg.MEDIA_INFO][cfg.LENGTH]
-            observationWindow.mediaFPS: dict = self.pj[cfg.OBSERVATIONS][obsId][cfg.MEDIA_INFO][cfg.FPS]
+            observationWindow.mediaDurations = self.pj[cfg.OBSERVATIONS][obsId][cfg.MEDIA_INFO][cfg.LENGTH]
+            observationWindow.mediaFPS = self.pj[cfg.OBSERVATIONS][obsId][cfg.MEDIA_INFO][cfg.FPS]
         except Exception:
-            observationWindow.mediaDurations: dict = {}
-            observationWindow.mediaFPS: dict = {}
+            observationWindow.mediaDurations = {}
+            observationWindow.mediaFPS = {}
 
         try:
             if cfg.HAS_VIDEO in self.pj[cfg.OBSERVATIONS][obsId][cfg.MEDIA_INFO]:
@@ -1083,7 +1083,7 @@ def close_observation(self):
     self.saved_state = self.saveState()
 
     if self.playerType == cfg.MEDIA:
-        self.media_scan_sampling_mem: list = []
+        self.media_scan_sampling_mem = []
         logging.info("Stop plot timer")
         self.plot_timer.stop()
 
