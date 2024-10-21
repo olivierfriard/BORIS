@@ -3803,7 +3803,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         if self.geometric_measurements_mode:
             geometric_measurement.redraw_measurements(self)
 
-            self.actionPlay.setIcon(QIcon(":/play"))
+            self.actionPlay.setIcon(QIcon(f":/play_{self.theme_mode()}"))
 
     def previous_frame(self) -> None:
         """
@@ -3827,7 +3827,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         if self.geometric_measurements_mode:
             geometric_measurement.redraw_measurements(self)
 
-            self.actionPlay.setIcon(QIcon(":/play"))
+            self.actionPlay.setIcon(QIcon(f":/play_{self.theme_mode()}"))
 
     def run_event_outside(self):
         """
@@ -4408,7 +4408,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             for data_timer in self.ext_data_timer_list:
                 data_timer.stop()
 
-            self.actionPlay.setIcon(QIcon(":/play"))
+            self.actionPlay.setIcon(QIcon(f":/play_{self.theme_mode()}"))
 
         if msg:
             self.lb_current_media_time.setText(msg)
@@ -5490,7 +5490,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             for data_timer in self.ext_data_timer_list:
                 data_timer.start()
 
-            self.actionPlay.setIcon(QIcon(":/pause"))
+            self.actionPlay.setIcon(QIcon(f":/pause_{self.theme_mode()}"))
             self.actionPlay.setText("Pause")
 
             return True
@@ -5524,7 +5524,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         for idx in self.plot_data:
             self.timer_plot_data_out(self.plot_data[idx])
 
-        self.actionPlay.setIcon(QIcon(":/play"))
+        self.actionPlay.setIcon(QIcon(f":/play_{self.theme_mode()}"))
         self.actionPlay.setText("Play")
 
     def play_activated(self):
