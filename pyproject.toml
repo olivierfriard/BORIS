@@ -24,8 +24,8 @@ dependencies = [
     "matplotlib>=3.3.3",
     "pandas>=2.2.2",
     "tablib[html, ods, xls, xlsx, pandas, cli]>=3",
-    "pyqt5>=5.15",
     "pyreadr",
+    "pyside6>=6.8.0.1",
 ]
 
 [project.optional-dependencies]
