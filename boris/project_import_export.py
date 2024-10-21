@@ -347,7 +347,8 @@ def import_ethogram_from_dict(self, project: dict):
             if field == cfg.TYPE:
                 item.setText(project[cfg.ETHOGRAM][i][field])
                 item.setFlags(Qt.ItemIsEnabled)
-                item.setBackground(QColor(230, 230, 230))
+                # item.setBackground(QColor(230, 230, 230))
+                item.setBackground(self.not_editable_column_color())
 
             else:
                 if field == cfg.MODIFIERS:
@@ -369,7 +370,8 @@ def import_ethogram_from_dict(self, project: dict):
 
                 if field not in cfg.ETHOGRAM_EDITABLE_FIELDS:
                     item.setFlags(Qt.ItemIsEnabled)
-                    item.setBackground(QColor(230, 230, 230))
+                    # item.setBackground(QColor(230, 230, 230))
+                    item.setBackground(self.not_editable_column_color())
 
             self.twBehaviors.setItem(self.twBehaviors.rowCount() - 1, cfg.behavioursFields[field], item)
 
@@ -458,7 +460,8 @@ def load_dataframe_into_behaviors_tablewidget(self, df: pd.DataFrame) -> int:
 
             if field_type not in cfg.ETHOGRAM_EDITABLE_FIELDS:
                 item.setFlags(Qt.ItemIsEnabled)
-                item.setBackground(QColor(230, 230, 230))
+                # item.setBackground(QColor(230, 230, 230))
+                item.setBackground(self.not_editable_column_color())
 
             self.twBehaviors.setItem(self.twBehaviors.rowCount() - 1, cfg.behavioursFields[field_type], item)
 
@@ -662,7 +665,8 @@ def import_behaviors_from_clipboard(self):
 
                 if field_type not in cfg.ETHOGRAM_EDITABLE_FIELDS:  # [TYPE, "excluded", "coding map", "modifiers", "category"]:
                     item.setFlags(Qt.ItemIsEnabled)
-                    item.setBackground(QColor(230, 230, 230))
+                    # item.setBackground(QColor(230, 230, 230))
+                    item.setBackground(self.not_editable_column_color())
 
                 self.twBehaviors.setItem(self.twBehaviors.rowCount() - 1, cfg.behavioursFields[field_type], item)
 
@@ -722,7 +726,8 @@ def import_behaviors_from_JWatcher(self):
 
                     if field_type in [cfg.TYPE, "excluded", "category", "coding map", "modifiers"]:
                         item.setFlags(Qt.ItemIsEnabled)
-                        item.setBackground(QColor(230, 230, 230))
+                        # item.setBackground(QColor(230, 230, 230))
+                        item.setBackground(self.not_editable_column_color())
 
                     self.twBehaviors.setItem(self.twBehaviors.rowCount() - 1, cfg.behavioursFields[field_type], item)
 

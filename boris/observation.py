@@ -134,8 +134,8 @@ class Observation(QDialog, Ui_Form):
         self.rb_images.toggled.connect(self.obs_type_changed)
 
         # button menu for media
-        """
-        menu_items = [
+
+        add_media_menu_items = [
             "media abs path|with absolute path",
             "media rel path|with relative path",
             {
@@ -145,10 +145,10 @@ class Observation(QDialog, Ui_Form):
                 ]
             },
         ]
-        """
 
-        self.menu = QMenu()
+        self.media_menu = QMenu()
         # Add actions to the menu
+        """
         self.action1 = QAction("with absolute path")
         self.action2 = QAction("with relative path")
         self.action3 = QAction("directory with absolute path")
@@ -164,23 +164,24 @@ class Observation(QDialog, Ui_Form):
         self.action2.triggered.connect(lambda: self.add_media(mode="media rel path|with relative path"))
         self.action3.triggered.connect(lambda: self.add_media(mode="dir abs path|with absolute path"))
         self.action4.triggered.connect(lambda: self.add_media(mode="dir rel path|wih relative path"))
+        """
 
-        # menu.triggered.connect(lambda x: self.add_media(mode=x.statusTip()))
-        # self.add_button_menu(menu_items, menu)
-        self.pbAddVideo.setMenu(self.menu)
+        self.media_menu.triggered.connect(lambda x: self.add_media(mode=x.statusTip()))
+        self.add_button_menu(add_media_menu_items, self.media_menu)
+        self.pbAddVideo.setMenu(self.media_menu)
 
         self.pbRemoveVideo.clicked.connect(self.remove_media)
 
         # button menu for data file
-        """data_menu_items = [
+        data_menu_items = [
             "data abs path|with absolute path",
             "data rel path|with relative path",
         ]
-        """
 
         self.menu_data = QMenu()
 
         # Add actions to the menu
+        """
         self.data_action1 = QAction("with absolute path")
         self.data_action2 = QAction("with relative path")
         self.menu_data.addAction(self.data_action1)
@@ -189,20 +190,21 @@ class Observation(QDialog, Ui_Form):
         # Connect actions to functions
         self.data_action1.triggered.connect(lambda: self.add_data_file(mode="data abs path|with absolute path"))
         self.data_action2.triggered.connect(lambda: self.add_data_file(mode="data rel path|with relative path"))
+        """
 
-        # menu_data.triggered.connect(lambda x: self.add_data_file(mode=x.statusTip()))
-        # self.add_button_menu(data_menu_items, menu_data)
-
+        self.menu_data.triggered.connect(lambda x: self.add_data_file(mode=x.statusTip()))
+        self.add_button_menu(data_menu_items, self.menu_data)
         self.pb_add_data_file.setMenu(self.menu_data)
 
         # button menu for images
-        """images_menu_items = [
+        images_menu_items = [
             "images abs path|with absolute path",
             "images rel path|with relative path",
-        ]"""
+        ]
 
         self.menu_images = QMenu()
         # Add actions to the menu
+        """
         self.images_data_action1 = QAction("with absolute path")
         self.images_data_action2 = QAction("with relative path")
         self.menu_images.addAction(self.images_data_action1)
@@ -211,9 +213,10 @@ class Observation(QDialog, Ui_Form):
         # Connect actions to functions
         self.images_data_action1.triggered.connect(lambda: self.add_images_directory(mode="images abs path|with absolute path"))
         self.images_data_action2.triggered.connect(lambda: self.add_images_directory(mode="images rel path|with relative path"))
+        """
 
-        # menu_images.triggered.connect(lambda x: self.add_images_directory(mode=x.statusTip()))
-        # self.add_button_menu(images_menu_items, menu_images)
+        self.menu_images.triggered.connect(lambda x: self.add_images_directory(mode=x.statusTip()))
+        self.add_button_menu(images_menu_items, self.menu_images)
         self.pb_add_directory.setMenu(self.menu_images)
 
         self.pb_remove_data_file.clicked.connect(self.remove_data_file)
@@ -556,6 +559,13 @@ class Observation(QDialog, Ui_Form):
         else:
             QMessageBox.warning(self, cfg.programName, "Select a data file")
 
+    def not_editable_column_color(self):
+        """
+        return a color for the not editable column
+        """
+        window_color = QApplication.instance().palette().window().color()
+        return QColor(window_color.red() - 5, window_color.green() - 5, window_color.blue() - 5)
+
     def add_data_file(self, mode: str):
         """
         user select a data file to be plotted synchronously with media file
@@ -705,7 +715,8 @@ class Observation(QDialog, Ui_Form):
             item = QTableWidgetItem(value)
             if col_idx == cfg.PLOT_DATA_CONVERTERS_IDX:
                 item.setFlags(Qt.ItemIsEnabled)
-                item.setBackground(QColor(230, 230, 230))
+                # item.setBackground(QColor(230, 230, 230))
+                item.setBackground(self.not_editable_column_color())
             self.tw_data_files.setItem(self.tw_data_files.rowCount() - 1, col_idx, item)
 
         # substract first value

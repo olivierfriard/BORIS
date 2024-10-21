@@ -27,7 +27,10 @@ import re
 from PySide6.QtCore import Qt, QDateTime
 from PySide6.QtGui import QColor
 from PySide6.QtWidgets import (
+    QAbstractItemView,
+    QApplication,
     QCheckBox,
+    QColorDialog,
     QDialog,
     QFileDialog,
     QHBoxLayout,
@@ -40,11 +43,9 @@ from PySide6.QtWidgets import (
     QPushButton,
     QSizePolicy,
     QSpacerItem,
+    QTableWidget,
     QTableWidgetItem,
     QVBoxLayout,
-    QColorDialog,
-    QTableWidget,
-    QAbstractItemView,
 )
 
 from . import add_modifier
@@ -152,10 +153,15 @@ class BehavioralCategories(QDialog):
         """
         return a color for the not editable column
         """
+        window_color = QApplication.instance().palette().window().color()
+        return QColor(window_color.red() - 5, window_color.green() - 5, window_color.blue() - 5)
+
+        """
         if self.dark_mode:
             return QColor(55, 65, 79)
         else:
             return QColor(230, 230, 230)
+        """
 
     def lw_double_clicked(self, row: int, column: int):
         """
@@ -429,10 +435,18 @@ class projectDialog(QDialog, Ui_dlgProject):
         """
         return a color for the not editable column
         """
+        window_color = QApplication.instance().palette().window().color()
+        return QColor(window_color.red() - 5, window_color.green() - 5, window_color.blue() - 5)
+
+        """
+        if window_color.value() < 128:  # dark palette
+            return QColor(window_color.red() - 5, window_color.green() - 5, window_color.blue() - 5)
+
         if self.config_param.get(cfg.DARK_MODE, cfg.DEFAULT_FRAME_MODE):
             return QColor(55, 65, 79)
         else:
             return QColor(230, 230, 230)
+        """
 
     def add_button_menu(self, data, menu_obj):
         """
@@ -867,7 +881,6 @@ class projectDialog(QDialog, Ui_dlgProject):
             color = col_diag.currentColor()
             if color.name() == "#000000":  # black -> delete color
                 self.twBehaviors.item(row, cfg.behavioursFields[cfg.COLOR]).setText("")
-                # self.twBehaviors.item(row, cfg.behavioursFields[cfg.COLOR]).setBackground(QColor(230, 230, 230))
                 self.twBehaviors.item(row, cfg.behavioursFields[cfg.COLOR]).setBackground(self.not_editable_column_color())
             elif color.isValid():
                 self.twBehaviors.item(row, cfg.behavioursFields[cfg.COLOR]).setText(color.name())
@@ -1199,7 +1212,6 @@ class projectDialog(QDialog, Ui_dlgProject):
                         if e == self.twBehaviors.item(r, cfg.behavioursFields[cfg.BEHAVIOR_CODE]).text():
                             item = QTableWidgetItem(",".join(new_excl[e]))
                             item.setFlags(Qt.ItemIsEnabled)
-                            # item.setBackground(QColor(230, 230, 230))
                             item.setBackground(self.not_editable_column_color())
                             self.twBehaviors.setItem(r, cfg.behavioursFields["excluded"], item)
 
@@ -1303,14 +1315,12 @@ class projectDialog(QDialog, Ui_dlgProject):
                 self.twBehaviors.setItem(self.twBehaviors.rowCount() - 1, cfg.behavioursFields[field], item)
                 if field in (cfg.TYPE, "category", "excluded", "coding map", "modifiers"):
                     item.setFlags(Qt.ItemIsEnabled)
-                    # item.setBackground(QColor(230, 230, 230))
                     item.setBackground(self.not_editable_column_color())
                 if field == cfg.COLOR:
                     item.setFlags(Qt.ItemIsEnabled)
                     if QColor(self.twBehaviors.item(row, cfg.behavioursFields[field]).text()).isValid():
                         item.setBackground(QColor(self.twBehaviors.item(row, cfg.behavioursFields[field]).text()))
                     else:
-                        # item.setBackground(QColor(230, 230, 230))
                         item.setBackground(self.not_editable_column_color())
 
         self.twBehaviors.scrollToBottom()

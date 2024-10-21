@@ -73,20 +73,20 @@ from PySide6.QtCore import (
 from PySide6.QtGui import QIcon, QPixmap, QFont, QKeyEvent, QDesktopServices, QColor, QPainter, QPolygon, QAction
 from PySide6.QtMultimedia import QSoundEffect
 from PySide6.QtWidgets import (
-    QLabel,
-    QMessageBox,
-    QMainWindow,
-    QListWidgetItem,
-    QFileDialog,
-    QInputDialog,
-    QTableWidgetItem,
-    QFrame,
-    QDockWidget,
-    QApplication,
     QAbstractItemView,
-    QSplashScreen,
+    QApplication,
+    QDockWidget,
+    QFileDialog,
+    QFrame,
     QHeaderView,
+    QInputDialog,
+    QLabel,
+    QListWidgetItem,
+    QMainWindow,
+    QMessageBox,
+    QSplashScreen,
     QStyledItemDelegate,
+    QTableWidgetItem,
 )
 from PIL.ImageQt import Image
 
@@ -3162,6 +3162,13 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         self.w_obs_info.setVisible(False)
 
+    def not_editable_column_color(self):
+        """
+        return a color for the not editable column
+        """
+        window_color = QApplication.instance().palette().window().color()
+        return QColor(window_color.red() - 5, window_color.green() - 5, window_color.blue() - 5)
+
     def edit_project(self, mode: str):
         """
         project management
@@ -3281,13 +3288,16 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                             cfg.MODIFIERS,
                         ):
                             item.setFlags(Qt.ItemIsEnabled)
-                            item.setBackground(QColor(230, 230, 230))
+                            # item.setBackground(QColor(230, 230, 230))
+                            item.setBackground(self.not_editable_column_color())
+
                         if field == cfg.COLOR:
                             item.setFlags(Qt.ItemIsEnabled)
                             if QColor(newProjectWindow.pj[cfg.ETHOGRAM][i].get(field, "")).isValid():
                                 item.setBackground(QColor(newProjectWindow.pj[cfg.ETHOGRAM][i][field]))
                             else:
-                                item.setBackground(QColor(230, 230, 230))
+                                # item.setBackground(QColor(230, 230, 230))
+                                item.setBackground(self.not_editable_column_color())
 
                         newProjectWindow.twBehaviors.setItem(
                             newProjectWindow.twBehaviors.rowCount() - 1,
