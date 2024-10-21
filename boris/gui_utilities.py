@@ -67,36 +67,36 @@ def set_icons(self, theme_mode: str) -> None:
     # menu
     self.action_obs_list.setIcon(QIcon(f":/observations_list_{theme_mode}"))
 
-    self.actionTime_budget.setIcon(QIcon(":/time_budget"))
-    self.actionPlot_events2.setIcon(QIcon(":/plot_events"))
-    self.action_advanced_event_filtering.setIcon(QIcon(":/filter"))
+    self.actionTime_budget.setIcon(QIcon(f":/time_budget_{theme_mode}"))
+    self.actionPlot_events2.setIcon(QIcon(f":/plot_events_{theme_mode}"))
+    self.action_advanced_event_filtering.setIcon(QIcon(f":/filter_{theme_mode}"))
 
     self.actionPreferences.setIcon(QIcon(f":/preferences_{theme_mode}"))
 
-    self.actionPlay.setIcon(QIcon(":/play"))
-    self.actionReset.setIcon(QIcon(":/reset"))
-    self.actionJumpBackward.setIcon(QIcon(":/jump_backward"))
-    self.actionJumpForward.setIcon(QIcon(":/jump_forward"))
+    self.actionPlay.setIcon(QIcon(f":/play_{theme_mode}"))
+    self.actionReset.setIcon(QIcon(f":/reset_{theme_mode}"))
+    self.actionJumpBackward.setIcon(QIcon(f":/jump_backward_{theme_mode}"))
+    self.actionJumpForward.setIcon(QIcon(f":/jump_forward_{theme_mode}"))
 
-    self.actionFaster.setIcon(QIcon(":/faster"))
-    self.actionSlower.setIcon(QIcon(":/slower"))
-    self.actionNormalSpeed.setIcon(QIcon(":/normal_speed"))
+    self.actionFaster.setIcon(QIcon(f":/faster_{theme_mode}"))
+    self.actionSlower.setIcon(QIcon(f":/slower_{theme_mode}"))
+    self.actionNormalSpeed.setIcon(QIcon(f":/normal_speed_{theme_mode}"))
 
-    self.actionPrevious.setIcon(QIcon(":/previous"))
-    self.actionNext.setIcon(QIcon(":/next"))
+    self.actionPrevious.setIcon(QIcon(f":/previous_{theme_mode}"))
+    self.actionNext.setIcon(QIcon(f":/next_{theme_mode}"))
 
-    self.actionSnapshot.setIcon(QIcon(":/snapshot"))
+    self.actionSnapshot.setIcon(QIcon(f":/snapshot_{theme_mode}"))
 
     self.actionFrame_backward.setIcon(QIcon(f":/frame_backward_{theme_mode}"))
     self.actionFrame_forward.setIcon(QIcon(f":/frame_forward_{theme_mode}"))
-    self.actionCloseObs.setIcon(QIcon(":/close_observation"))
-    self.actionCurrent_Time_Budget.setIcon(QIcon(":/time_budget"))
-    self.actionPlot_current_observation.setIcon(QIcon(":/plot_events"))
+    self.actionCloseObs.setIcon(QIcon(f":/close_observation_{theme_mode}"))
+    self.actionCurrent_Time_Budget.setIcon(QIcon(f":/time_budget_{theme_mode}"))
+    self.actionPlot_current_observation.setIcon(QIcon(f":/plot_events_{theme_mode}"))
 
-    self.actionPlot_events_in_real_time.setIcon(QIcon(":/plot_real_time"))
+    self.actionPlot_events_in_real_time.setIcon(QIcon(f":/plot_real_time_{theme_mode}"))
 
-    self.actionBehavior_bar_plot.setIcon(QIcon(":/plot_time_budget"))
-    self.actionPlot_current_time_budget.setIcon(QIcon(":/plot_time_budget"))
-    self.action_geometric_measurements.setIcon(QIcon(":/measurement"))
-    self.actionFind_in_current_obs.setIcon(QIcon(":/find"))
-    self.actionExplore_project.setIcon(QIcon(":/explore"))
+    self.actionBehavior_bar_plot.setIcon(QIcon(f":/plot_time_budget_{theme_mode}"))
+    self.actionPlot_current_time_budget.setIcon(QIcon(f":/plot_time_budget_{theme_mode}"))
+    self.action_geometric_measurements.setIcon(QIcon(f":/measurement_{theme_mode}"))
+    self.actionFind_in_current_obs.setIcon(QIcon(f":/find_{theme_mode}"))
+    self.actionExplore_project.setIcon(QIcon(f":/explore_{theme_mode}"))

@@ -6,31 +6,41 @@
 <file alias="dbios_unito">icons/dbios_unito.png</file>
 <file alias="splash">icons/splash.png</file>
 
-
-<file alias="observations_list_light">icons/fontawesome_free/list_light.svg</file>
 <file alias="observations_list_dark">icons/fontawesome_free/list_dark.svg</file>
+<file alias="observations_list_light">icons/fontawesome_free/list_light.svg</file>
 
-<file alias="play">icons/fontawesome_free/play.svg</file>
+<file alias="play_dark">icons/fontawesome_free/play_dark.svg</file>
+<file alias="play_light">icons/fontawesome_free/play_light.svg</file>
 
-<file alias="pause">icons/fontawesome_free/pause.svg</file>
+<file alias="pause_dark">icons/fontawesome_free/pause_dark.svg</file>
+<file alias="pause_light">icons/fontawesome_free/pause_light.svg</file>
 
-<file alias="reset">icons/fontawesome_free/backward-step.svg</file>
+<file alias="reset_dark">icons/fontawesome_free/backward-step_dark.svg</file>
+<file alias="reset_light">icons/fontawesome_free/backward-step_light.svg</file>
 
-<file alias="jump_backward">icons/fontawesome_free/backward.svg</file>
+<file alias="jump_backward_dark">icons/fontawesome_free/backward_dark.svg</file>
+<file alias="jump_backward_light">icons/fontawesome_free/backward_light.svg</file>
 
-<file alias="jump_forward">icons/fontawesome_free/forward.svg</file>
+<file alias="jump_forward_dark">icons/fontawesome_free/forward_dark.svg</file>
+<file alias="jump_forward_light">icons/fontawesome_free/forward_light.svg</file>
 
-<file alias="faster">icons/fontawesome_free/circle-plus.svg</file>
+<file alias="faster_dark">icons/fontawesome_free/circle-plus_dark.svg</file>
+<file alias="faster_light">icons/fontawesome_free/circle-plus_light.svg</file>
 
-<file alias="slower">icons/fontawesome_free/circle-minus.svg</file>
+<file alias="slower_dark">icons/fontawesome_free/circle-minus_dark.svg</file>
+<file alias="slower_light">icons/fontawesome_free/circle-minus_light.svg</file>
 
-<file alias="previous">icons/fontawesome_free/backward-fast.svg</file>
+<file alias="previous_dark">icons/fontawesome_free/backward-fast_dark.svg</file>
+<file alias="previous_light">icons/fontawesome_free/backward-fast_light.svg</file>
 
-<file alias="next">icons/fontawesome_free/forward-fast.svg</file>
+<file alias="next_dark">icons/fontawesome_free/forward-fast_dark.svg</file>
+<file alias="next_light">icons/fontawesome_free/forward-fast_light.svg</file>
 
-<file alias="normal_speed">icons/fontawesome_free/circle-pause.svg</file>
+<file alias="normal_speed_dark">icons/fontawesome_free/circle-pause_dark.svg</file>
+<file alias="normal_speed_light">icons/fontawesome_free/circle-pause_light.svg</file>
 
-<file alias="snapshot">icons/fontawesome_free/camera.svg</file>
+<file alias="snapshot_dark">icons/fontawesome_free/camera_dark.svg</file>
+<file alias="snapshot_light">icons/fontawesome_free/camera_light.svg</file>
 
 <file alias="frame_backward_dark">icons/fontawesome_free/arrow-left_dark.svg</file>
 <file alias="frame_backward_light">icons/fontawesome_free/arrow-left_light.svg</file>
@@ -38,28 +48,42 @@
 <file alias="frame_forward_dark">icons/fontawesome_free/arrow-right_dark.svg</file>
 <file alias="frame_forward_light">icons/fontawesome_free/arrow-right_light.svg</file>
 
-<file alias="time_budget">icons/fontawesome_free/table-list.svg</file>
+<file alias="time_budget_dark">icons/fontawesome_free/table-list_dark.svg</file>
+<file alias="time_budget_light">icons/fontawesome_free/table-list_light.svg</file>
 
-<file alias="close_observation">icons/fontawesome_free/xmark.svg</file>
+<file alias="close_observation_dark">icons/fontawesome_free/xmark_dark.svg</file>
+<file alias="close_observation_light">icons/fontawesome_free/xmark_light.svg</file>
 
-<file alias="plot_events">icons/fontawesome_free/chart-gantt.svg</file>
+<file alias="plot_events_dark">icons/fontawesome_free/chart-gantt_dark.svg</file>
+<file alias="plot_events_light">icons/fontawesome_free/chart-gantt_light.svg</file>
 
-<file alias="plot_real_time">icons/fontawesome_free/chart-gantt-realtime.svg</file>
+<file alias="plot_real_time_dark">icons/fontawesome_free/chart-gantt-realtime_dark.svg</file>
+<file alias="plot_real_time_light">icons/fontawesome_free/chart-gantt-realtime_light.svg</file>
 
-<file alias="find">icons/fontawesome_free/magnifying-glass.svg</file>
+<file alias="find_dark">icons/fontawesome_free/magnifying-glass_dark.svg</file>
+<file alias="find_light">icons/fontawesome_free/magnifying-glass_light.svg</file>
 
-<file alias="export">icons/fontawesome_free/file-export.svg</file>
+<file alias="export_dark">icons/fontawesome_free/file-export_dark.svg</file>
+<file alias="export_light">icons/fontawesome_free/file-export_light.svg</file>
 
-<file alias="explore">icons/fontawesome_free/binoculars.svg</file>
+<file alias="explore_dark">icons/fontawesome_free/binoculars_dark.svg</file>
+<file alias="explore_light_light">icons/fontawesome_free/binoculars_light_light.svg</file>
 
-<file alias="plot_time_budget">icons/fontawesome_free/chart-simple.svg</file>
+<file alias="plot_time_budget_dark">icons/fontawesome_free/chart-simple_dark.svg</file>
+<file alias="plot_time_budget_light">icons/fontawesome_free/chart-simple_light.svg</file>
 
-<file alias="filter">icons/fontawesome_free/filter.svg</file>
+<file alias="filter_dark">icons/fontawesome_free/filter_dark.svg</file>
+<file alias="filter_light">icons/fontawesome_free/filter_light.svg</file>
 
-<file alias="measurement">icons/fontawesome_free/compass-drafting.svg</file>
+<file alias="measurement_dark">icons/fontawesome_free/compass-drafting_dark.svg</file>
+<file alias="measurement_light">icons/fontawesome_free/compass-drafting_light.svg</file>
 
-<file alias="volume_off">icons/fontawesome_free/volume-off.svg</file>
-<file alias="volume_xmark">icons/fontawesome_free/volume-xmark.svg</file>
+<file alias="volume_off_dark">icons/fontawesome_free/volume-off_dark.svg</file>
+<file alias="volume_off_light">icons/fontawesome_free/volume-off_light.svg</file>
+
+
+<file alias="volume_xmark_dark">icons/fontawesome_free/volume-xmark_dark.svg</file>
+<file alias="volume_xmark_light">icons/fontawesome_free/volume-xmark_light.svg</file>
 
 <file alias="preferences_dark">icons/fontawesome_free/gears_dark.svg</file>
 <file alias="preferences_light">icons/fontawesome_free/gears_light.svg</file>
