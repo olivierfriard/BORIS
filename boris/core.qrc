@@ -67,7 +67,7 @@
 <file alias="export_light">icons/fontawesome_free/file-export_light.svg</file>
 
 <file alias="explore_dark">icons/fontawesome_free/binoculars_dark.svg</file>
-<file alias="explore_light_light">icons/fontawesome_free/binoculars_light_light.svg</file>
+<file alias="explore_light">icons/fontawesome_free/binoculars_light.svg</file>
 
 <file alias="plot_time_budget_dark">icons/fontawesome_free/chart-simple_dark.svg</file>
 <file alias="plot_time_budget_light">icons/fontawesome_free/chart-simple_light.svg</file>
