@@ -34,7 +34,7 @@ except ModuleNotFoundError:
 
 
 from PySide6.QtCore import QPoint, Qt, Signal, QEvent
-from PySide6.QtGui import QColor, QPainter, QPolygon, QPixmap, QAction
+from PySide6.QtGui import QColor, QPainter, QPolygon, QPixmap, QAction, QPen
 from PySide6.QtWidgets import (
     QApplication,
     QCheckBox,
@@ -451,16 +451,29 @@ def draw_point(self, x: int, y: int, color: str, n_player: int = 0) -> None:
     """
     draw point on frame-by-frame image
     """
+
+    logging.debug("draw_point function")
+
     RADIUS = 6
-    painter = QPainter()
-    painter.begin(self.dw_player[n_player].frame_viewer.pixmap())
-    painter.setPen(QColor(color))
-    painter.drawEllipse(QPoint(x, y), RADIUS, RADIUS)
-    # cross inside circle
-    painter.drawLine(x - RADIUS, y, x + RADIUS, y)
-    painter.drawLine(x, y - RADIUS, x, y + RADIUS)
-    painter.end()
-    self.dw_player[n_player].frame_viewer.update()
+
+    print(f"{self.dw_player[n_player].frame_viewer.pixmap()=}")
+
+    painter = QPainter(self.dw_player[n_player].frame_viewer.pixmap())
+
+    print(f"{painter=}")
+
+    try:
+        # painter.begin()
+
+        painter.setPen(QPen(QColor(color), 1))
+        painter.drawEllipse(QPoint(x, y), RADIUS, RADIUS)
+        # cross inside circle
+        painter.drawLine(x - RADIUS, y, x + RADIUS, y)
+        painter.drawLine(x, y - RADIUS, x, y + RADIUS)
+    finally:
+        painter.end()
+    # self.dw_player[n_player].frame_viewer.update()
+    self.update()
 
 
 def draw_line(self, x1: int, y1: int, x2: int, y2: int, color: str, n_player: int = 0) -> None:
@@ -518,6 +531,8 @@ def image_clicked(self, n_player: int, event) -> None:
         return
 
     x, y = event.pos().x(), event.pos().y()
+
+    logging.debug(f"clicked on {x} {y}")
 
     # convert label coordinates in pixmap coordinates
     pixmap_x = int(x - (self.dw_player[n_player].frame_viewer.width() - self.dw_player[n_player].frame_viewer.pixmap().width()) / 2)

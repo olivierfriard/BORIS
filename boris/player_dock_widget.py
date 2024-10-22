@@ -65,6 +65,9 @@ class Clickable_label(QLabel):
         QLabel.__init__(self, parent)
         self.id_ = id_
 
+    # def paintEvent(self, event):
+    #    print("click label paint event")
+
     def mousePressEvent(self, event):
         """
         label clicked

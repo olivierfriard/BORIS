@@ -868,8 +868,6 @@ class MPV(object):
         Extra arguments and extra keyword arguments will be passed to mpv as options.
         """
 
-        print(f"{extra_mpv_flags=}")
-
         self.handle = _mpv_create()
         self._event_thread = None
         self._core_shutdown = False
