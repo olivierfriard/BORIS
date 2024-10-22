@@ -3,7 +3,7 @@
  <class>prefDialog</class>
  <widget class="QDialog" name="prefDialog">
   <property name="windowModality">
-   <enum>Qt::WindowModal</enum>
+   <enum>Qt::WindowModality::WindowModal</enum>
   </property>
   <property name="geometry">
    <rect>
@@ -137,7 +137,7 @@
          <item>
           <spacer name="verticalSpacer_2">
            <property name="orientation">
-            <enum>Qt::Vertical</enum>
+            <enum>Qt::Orientation::Vertical</enum>
            </property>
            <property name="sizeHint" stdset="0">
             <size>
@@ -298,7 +298,7 @@
          <item>
           <spacer name="verticalSpacer_4">
            <property name="orientation">
-            <enum>Qt::Vertical</enum>
+            <enum>Qt::Orientation::Vertical</enum>
            </property>
            <property name="sizeHint" stdset="0">
             <size>
@@ -357,7 +357,7 @@
            <item>
             <spacer name="verticalSpacer">
              <property name="orientation">
-              <enum>Qt::Vertical</enum>
+              <enum>Qt::Orientation::Vertical</enum>
              </property>
              <property name="sizeHint" stdset="0">
               <size>
@@ -417,7 +417,7 @@
          <item>
           <spacer name="verticalSpacer_3">
            <property name="orientation">
-            <enum>Qt::Vertical</enum>
+            <enum>Qt::Orientation::Vertical</enum>
            </property>
            <property name="sizeHint" stdset="0">
             <size>
@@ -519,6 +519,9 @@
          </item>
          <item>
           <widget class="QCheckBox" name="cb_darkmode">
+           <property name="enabled">
+            <bool>false</bool>
+           </property>
            <property name="text">
             <string>Dark mode (should be necessary to relaunch BORIS)</string>
            </property>
@@ -527,7 +530,7 @@
          <item>
           <spacer name="verticalSpacer_5">
            <property name="orientation">
-            <enum>Qt::Vertical</enum>
+            <enum>Qt::Orientation::Vertical</enum>
            </property>
            <property name="sizeHint" stdset="0">
             <size>
@@ -546,7 +549,7 @@
        <item>
         <spacer name="horizontalSpacer">
          <property name="orientation">
-          <enum>Qt::Horizontal</enum>
+          <enum>Qt::Orientation::Horizontal</enum>
          </property>
          <property name="sizeHint" stdset="0">
           <size>

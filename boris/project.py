@@ -60,11 +60,10 @@ class BehavioralCategories(QDialog):
     Class for managing the behavioral categories
     """
 
-    def __init__(self, pj, dark_mode):
+    def __init__(self, pj):
         super().__init__()
 
         self.pj = pj
-        self.dark_mode = dark_mode
         self.setWindowTitle("Behavioral categories")
 
         self.renamed = None
@@ -154,14 +153,11 @@ class BehavioralCategories(QDialog):
         return a color for the not editable column
         """
         window_color = QApplication.instance().palette().window().color()
-        return QColor(window_color.red() - 5, window_color.green() - 5, window_color.blue() - 5)
-
-        """
-        if self.dark_mode:
-            return QColor(55, 65, 79)
-        else:
-            return QColor(230, 230, 230)
-        """
+        return QColor(
+            window_color.red() - cfg.DARKER_DIFFERENCE,
+            window_color.green() - cfg.DARKER_DIFFERENCE,
+            window_color.blue() - cfg.DARKER_DIFFERENCE,
+        )
 
     def lw_double_clicked(self, row: int, column: int):
         """
@@ -436,17 +432,11 @@ class projectDialog(QDialog, Ui_dlgProject):
         return a color for the not editable column
         """
         window_color = QApplication.instance().palette().window().color()
-        return QColor(window_color.red() - 5, window_color.green() - 5, window_color.blue() - 5)
-
-        """
-        if window_color.value() < 128:  # dark palette
-            return QColor(window_color.red() - 5, window_color.green() - 5, window_color.blue() - 5)
-
-        if self.config_param.get(cfg.DARK_MODE, cfg.DEFAULT_FRAME_MODE):
-            return QColor(55, 65, 79)
-        else:
-            return QColor(230, 230, 230)
-        """
+        return QColor(
+            window_color.red() - cfg.DARKER_DIFFERENCE,
+            window_color.green() - cfg.DARKER_DIFFERENCE,
+            window_color.blue() - cfg.DARKER_DIFFERENCE,
+        )
 
     def add_button_menu(self, data, menu_obj):
         """
@@ -743,7 +733,7 @@ class projectDialog(QDialog, Ui_dlgProject):
         behavioral categories manager
         """
 
-        bc = BehavioralCategories(self.pj, self.config_param.get(cfg.DARK_MODE, cfg.DEFAULT_FRAME_MODE))
+        bc = BehavioralCategories(self.pj)  # self.config_param.get(cfg.DARK_MODE, cfg.DEFAULT_FRAME_MODE)
 
         if bc.exec_():
             self.pj[cfg.BEHAVIORAL_CATEGORIES] = []

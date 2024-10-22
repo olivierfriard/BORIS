@@ -22,7 +22,7 @@ Copyright 2012-2024 Olivier Friard
 """
 
 from PySide6.QtCore import QPoint, Qt
-from PySide6.QtGui import QPolygon, QPen, QColor, QBrush
+from PySide6.QtGui import QPolygon, QPen, QColor, QBrush, QPainter
 from PySide6.QtWidgets import QStyledItemDelegate
 
 
@@ -36,18 +36,26 @@ class StyledItemDelegateTriangle(QStyledItemDelegate):
         self.row = row
 
     def paint(self, painter, option, index):
+        """
+        draw a red triangle on ceel corresponfing to current event
+        """
+
         super(StyledItemDelegateTriangle, self).paint(painter, option, index)
 
         if self.row == -1:
             return
         if index.row() == self.row:
-            polygonTriangle = QPolygon(3)
-            polygonTriangle.setPoint(0, QPoint(option.rect.x() + 15, option.rect.y()))
-            polygonTriangle.setPoint(1, QPoint(option.rect.x(), option.rect.y() - 5))
-            polygonTriangle.setPoint(2, QPoint(option.rect.x(), option.rect.y() + 5))
+            triangle = QPolygon(
+                [
+                    QPoint(option.rect.x() + 15, option.rect.y()),
+                    QPoint(option.rect.x(), option.rect.y() - 5),
+                    QPoint(option.rect.x(), option.rect.y() + 5),
+                ]
+            )
+
             painter.save()
-            painter.setRenderHint(painter.Antialiasing)
+            painter.setRenderHint(QPainter.RenderHint.Antialiasing)
             painter.setBrush(QBrush(QColor(Qt.red)))
             painter.setPen(QPen(QColor(Qt.red)))
-            painter.drawPolygon(polygonTriangle)
+            painter.drawPolygon(triangle)
             painter.restore()

@@ -25,7 +25,7 @@ class Ui_prefDialog(object):
     def setupUi(self, prefDialog):
         if not prefDialog.objectName():
             prefDialog.setObjectName(u"prefDialog")
-        prefDialog.setWindowModality(Qt.WindowModal)
+        prefDialog.setWindowModality(Qt.WindowModality.WindowModal)
         prefDialog.resize(719, 554)
         self.gridLayout = QGridLayout(prefDialog)
         self.gridLayout.setObjectName(u"gridLayout")
@@ -407,6 +407,7 @@ class Ui_prefDialog(object):
 
         self.cb_darkmode = QCheckBox(self.tab_interface)
         self.cb_darkmode.setObjectName(u"cb_darkmode")
+        self.cb_darkmode.setEnabled(False)
 
         self.verticalLayout_7.addWidget(self.cb_darkmode)
 

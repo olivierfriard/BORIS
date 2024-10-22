@@ -459,7 +459,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.tv_events.setItemDelegate(delegate)
 
         # PySide6
-        # self.tv_events.setItemDelegate(events_cursor.StyledItemDelegateTriangle(self.events_current_row))
+        self.tv_events.setItemDelegate(events_cursor.StyledItemDelegateTriangle(self.events_current_row))
 
         connections.connections(self)
         self.config_param = cfg.INIT_PARAM
@@ -4115,7 +4115,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         # print(f"{self.events_current_row=}")
 
-        # self.twEvents.setItemDelegate(events_cursor.StyledItemDelegateTriangle(self.events_current_row))
         self.tv_events.setItemDelegate(events_cursor.StyledItemDelegateTriangle(self.events_current_row))
 
         # print(f"{self.twEvents.item(self.events_current_row, 0)=}")
@@ -5664,8 +5663,8 @@ def main():
 
     window = MainWindow(ffmpeg_bin)
 
-    if window.config_param.get(cfg.DARK_MODE, cfg.DARK_MODE_DEFAULT_VALUE):
-        app.setStyleSheet(qdarkstyle.load_stylesheet(qt_api="PySide6"))
+    # if window.config_param.get(cfg.DARK_MODE, cfg.DARK_MODE_DEFAULT_VALUE):
+    #    app.setStyleSheet(qdarkstyle.load_stylesheet(qt_api="PySide6"))
 
     # open project/start observation on command line
 
