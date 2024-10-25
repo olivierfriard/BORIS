@@ -9,7 +9,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>719</width>
+    <width>904</width>
     <height>554</height>
    </rect>
   </property>
@@ -516,16 +516,6 @@
             </widget>
            </item>
           </layout>
-         </item>
-         <item>
-          <widget class="QCheckBox" name="cb_darkmode">
-           <property name="enabled">
-            <bool>false</bool>
-           </property>
-           <property name="text">
-            <string>Dark mode (should be necessary to relaunch BORIS)</string>
-           </property>
-          </widget>
          </item>
          <item>
           <spacer name="verticalSpacer_5">

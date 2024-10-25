@@ -26,7 +26,7 @@ class Ui_prefDialog(object):
         if not prefDialog.objectName():
             prefDialog.setObjectName(u"prefDialog")
         prefDialog.setWindowModality(Qt.WindowModality.WindowModal)
-        prefDialog.resize(719, 554)
+        prefDialog.resize(904, 554)
         self.gridLayout = QGridLayout(prefDialog)
         self.gridLayout.setObjectName(u"gridLayout")
         self.verticalLayout_2 = QVBoxLayout()
@@ -405,12 +405,6 @@ class Ui_prefDialog(object):
 
         self.verticalLayout_7.addLayout(self.formLayout)
 
-        self.cb_darkmode = QCheckBox(self.tab_interface)
-        self.cb_darkmode.setObjectName(u"cb_darkmode")
-        self.cb_darkmode.setEnabled(False)
-
-        self.verticalLayout_7.addWidget(self.cb_darkmode)
-
         self.verticalSpacer_5 = QSpacerItem(20, 386, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding)
 
         self.verticalLayout_7.addItem(self.verticalSpacer_5)
@@ -493,7 +487,6 @@ class Ui_prefDialog(object):
         self.pb_reset_category_colors.setText(QCoreApplication.translate("prefDialog", u"Reset colors to default", None))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab_colors), QCoreApplication.translate("prefDialog", u"Plot colors", None))
         self.label_9.setText(QCoreApplication.translate("prefDialog", u"Toolbar icons size", None))
-        self.cb_darkmode.setText(QCoreApplication.translate("prefDialog", u"Dark mode (should be necessary to relaunch BORIS)", None))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab_interface), QCoreApplication.translate("prefDialog", u"Interface", None))
         self.pb_refresh.setText(QCoreApplication.translate("prefDialog", u"Refresh", None))
         self.pbCancel.setText(QCoreApplication.translate("prefDialog", u"Cancel", None))
