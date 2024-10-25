@@ -694,8 +694,7 @@ class Video_overlay_dialog(QDialog):
         self.setLayout(vlayout)
 
     def browse(self):
-        fn = QFileDialog().getOpenFileName(self, "Choose an image file", "", "PNG files (*.png);;All files (*)")
-        file_name = fn[0] if type(fn) is tuple else fn
+        file_name, _ = QFileDialog.getOpenFileName(self, "Choose an image file", "", "PNG files (*.png);;All files (*)")
         if file_name:
             self.le_file_path.setText(file_name)
 
@@ -1217,8 +1216,7 @@ class Results_dialog(QDialog):
         """
 
         if not self.dataset:
-            fn = QFileDialog().getSaveFileName(self, "Save results", "", "Text files (*.txt *.tsv);;All files (*)")
-            file_name = fn[0] if type(fn) is tuple else fn
+            file_name, _ = QFileDialog().getSaveFileName(self, "Save results", "", "Text files (*.txt *.tsv);;All files (*)")
 
             if not file_name:
                 return

@@ -517,79 +517,77 @@ class ModifiersMapCreatorWindow(QMainWindow):
             if response == "Cancel":
                 return
 
-        fn = QFileDialog().getOpenFileName(
+        fileName, _ = QFileDialog().getOpenFileName(
             self,
             "Open a coding map",
             "",
             "BORIS coding map (*.boris_map);;All files (*)",
         )
-        fileName = fn[0] if type(fn) is tuple else fn
 
-        if fileName:
-            try:
-                self.codingMap = json.loads(open(fileName, "r").read())
-            except Exception:
-                QMessageBox.critical(
-                    self,
-                    cfg.programName,
-                    "The file {} seems not a behaviors coding map...".format(fileName),
-                )
-                return
-
-            self.cancelMap()
-
-            self.mapName = self.codingMap["name"]
-
-            self.setWindowTitle(cfg.programName + " - Map creator tool - " + self.mapName)
-
-            self.bitmapFileName = True
-
-            self.fileName = fileName
-
-            self.areasList = self.codingMap["areas"]  # dictionary of dictionaries
-            bitmapContent = binascii.a2b_base64(self.codingMap["bitmap"])
-
-            self.pixmap.loadFromData(bitmapContent)
-
-            self.btDeleteArea.setEnabled(False)
-
-            self.view.setSceneRect(0, 0, self.pixmap.size().width(), self.pixmap.size().height())
-            pixItem = QGraphicsPixmapItem(self.pixmap)
-            pixItem.setPos(0, 0)
-            self.view.scene().addItem(pixItem)
-
-            for areaCode in self.areasList:
-                points = self.areasList[areaCode]["geometry"]
-
-                newPolygon = QPolygonF()
-                for p in points:
-                    newPolygon.append(QPoint(p[0], p[1]))
-
-                clr = QColor()
-                clr.setRgba(self.areasList[areaCode]["color"])
-
-                # draw polygon
-                polygon = QGraphicsPolygonItem()
-
-                polygon.setPolygon(newPolygon)
-
-                polygon.setPen(QPen(clr, penWidth, penStyle, Qt.RoundCap, Qt.RoundJoin))
-
-                polygon.setBrush(QBrush(clr, Qt.SolidPattern))
-
-                self.view.scene().addItem(polygon)
-                self.polygonsList2[areaCode] = polygon
-
-            self.btNewArea.setVisible(True)
-
-            self.btLoad.setVisible(False)
-
-            self.saveMapAction.setEnabled(True)
-            self.saveAsMapAction.setEnabled(True)
-            self.mapNameAction.setEnabled(True)
-            self.statusBar().showMessage('Click "New area" to create a new area')
-        else:
+        if not fileName:
             self.statusBar().showMessage("No file", 5000)
+        try:
+            self.codingMap = json.loads(open(fileName, "r").read())
+        except Exception:
+            QMessageBox.critical(
+                self,
+                cfg.programName,
+                "The file {} seems not a behaviors coding map...".format(fileName),
+            )
+            return
+
+        self.cancelMap()
+
+        self.mapName = self.codingMap["name"]
+
+        self.setWindowTitle(cfg.programName + " - Map creator tool - " + self.mapName)
+
+        self.bitmapFileName = True
+
+        self.fileName = fileName
+
+        self.areasList = self.codingMap["areas"]  # dictionary of dictionaries
+        bitmapContent = binascii.a2b_base64(self.codingMap["bitmap"])
+
+        self.pixmap.loadFromData(bitmapContent)
+
+        self.btDeleteArea.setEnabled(False)
+
+        self.view.setSceneRect(0, 0, self.pixmap.size().width(), self.pixmap.size().height())
+        pixItem = QGraphicsPixmapItem(self.pixmap)
+        pixItem.setPos(0, 0)
+        self.view.scene().addItem(pixItem)
+
+        for areaCode in self.areasList:
+            points = self.areasList[areaCode]["geometry"]
+
+            newPolygon = QPolygonF()
+            for p in points:
+                newPolygon.append(QPoint(p[0], p[1]))
+
+            clr = QColor()
+            clr.setRgba(self.areasList[areaCode]["color"])
+
+            # draw polygon
+            polygon = QGraphicsPolygonItem()
+
+            polygon.setPolygon(newPolygon)
+
+            polygon.setPen(QPen(clr, penWidth, penStyle, Qt.RoundCap, Qt.RoundJoin))
+
+            polygon.setBrush(QBrush(clr, Qt.SolidPattern))
+
+            self.view.scene().addItem(polygon)
+            self.polygonsList2[areaCode] = polygon
+
+        self.btNewArea.setVisible(True)
+
+        self.btLoad.setVisible(False)
+
+        self.saveMapAction.setEnabled(True)
+        self.saveAsMapAction.setEnabled(True)
+        self.mapNameAction.setEnabled(True)
+        self.statusBar().showMessage('Click "New area" to create a new area')
 
     def saveMap(self):
         if self.fileName:
@@ -833,41 +831,41 @@ class ModifiersMapCreatorWindow(QMainWindow):
 
         maxSize = 512
 
-        fn = QFileDialog().getOpenFileName(self, "Load bitmap", "", "bitmap files (*.png *.jpg);;All files (*)")
-        fileName = fn[0] if type(fn) is tuple else fn
+        fileName, _ = QFileDialog().getOpenFileName(self, "Load bitmap", "", "bitmap files (*.png *.jpg);;All files (*)")
 
-        if fileName:
-            self.bitmapFileName = fileName
+        if not fileName:
+            return
+        self.bitmapFileName = fileName
 
-            self.pixmap.load(self.bitmapFileName)
+        self.pixmap.load(self.bitmapFileName)
 
-            if self.pixmap.size().width() > maxSize or self.pixmap.size().height() > maxSize:
-                self.pixmap = self.pixmap.scaled(maxSize, maxSize, Qt.KeepAspectRatio)
-                QMessageBox.information(
-                    self,
-                    cfg.programName,
-                    "The bitmap was resized to %d x %d pixels\nThe original file was not modified"
-                    % (self.pixmap.size().width(), self.pixmap.size().height()),
-                )
+        if self.pixmap.size().width() > maxSize or self.pixmap.size().height() > maxSize:
+            self.pixmap = self.pixmap.scaled(maxSize, maxSize, Qt.KeepAspectRatio)
+            QMessageBox.information(
+                self,
+                cfg.programName,
+                "The bitmap was resized to %d x %d pixels\nThe original file was not modified"
+                % (self.pixmap.size().width(), self.pixmap.size().height()),
+            )
 
-            # scale image
-            # pixmap = pixmap.scaled (256, 256, Qt.KeepAspectRatio)
+        # scale image
+        # pixmap = pixmap.scaled (256, 256, Qt.KeepAspectRatio)
 
-            self.view.setSceneRect(0, 0, self.pixmap.size().width(), self.pixmap.size().height())
-            pixitem = QGraphicsPixmapItem(self.pixmap)
-            pixitem.setPos(0, 0)
-            self.view.scene().addItem(pixitem)
+        self.view.setSceneRect(0, 0, self.pixmap.size().width(), self.pixmap.size().height())
+        pixitem = QGraphicsPixmapItem(self.pixmap)
+        pixitem.setPos(0, 0)
+        self.view.scene().addItem(pixitem)
 
-            self.btNewArea.setVisible(True)
+        self.btNewArea.setVisible(True)
 
-            self.btLoad.setVisible(False)
-            self.saveMapAction.setEnabled(True)
-            self.saveAsMapAction.setEnabled(True)
-            self.mapNameAction.setEnabled(True)
+        self.btLoad.setVisible(False)
+        self.saveMapAction.setEnabled(True)
+        self.saveAsMapAction.setEnabled(True)
+        self.mapNameAction.setEnabled(True)
 
-            self.statusBar().showMessage("""Click "New modifier" to create a new modifier""")
+        self.statusBar().showMessage("""Click "New modifier" to create a new modifier""")
 
-            self.flagMapChanged = True
+        self.flagMapChanged = True
 
 
 if __name__ == "__main__":

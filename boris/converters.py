@@ -239,8 +239,7 @@ def load_converters_from_file_repo(self, mode: str):
 
     converters_from_file = {}
     if mode == "file":
-        fn = QFileDialog(self).getOpenFileName(self, "Load converters from file", "", "All files (*)")
-        file_name = fn[0] if type(fn) is tuple else fn
+        file_name, _ = QFileDialog.getOpenFileName(self, "Load converters from file", "", "All files (*)")
 
         if file_name:
             with open(file_name, "r") as f_in:

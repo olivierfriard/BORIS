@@ -24,6 +24,7 @@ import binascii
 import io
 import json
 import os
+from pathlib import Path
 
 from PySide6.QtCore import QBuffer, QByteArray, QIODevice, QLineF, QPoint, Qt, Signal
 from PySide6.QtGui import QBrush, QColor, QIcon, QMouseEvent, QPen, QPixmap, QPolygonF, QAction
@@ -663,75 +664,72 @@ class BehaviorsMapCreatorWindow(QMainWindow):
             if (response == "Save" and not self.saveMap_clicked()) or (response == "Cancel"):
                 return
 
-        fn = QFileDialog(self).getOpenFileName(
+        fileName, _ = QFileDialog(self).getOpenFileName(
             self, "Open a behaviors coding map", "", "Behaviors coding map (*.behav_coding_map);;All files (*)"
         )
-        fileName = fn[0] if type(fn) is tuple else fn
 
-        if fileName:
-            try:
-                self.codingMap = json.loads(open(fileName, "r").read())
-            except Exception:
-                QMessageBox.critical(self, cfg.programName, f"The file {fileName} is not a behaviors coding map.")
-                return
-
-            if "coding_map_type" not in self.codingMap or self.codingMap["coding_map_type"] != "BORIS behaviors coding map":
-                QMessageBox.critical(self, cfg.programName, f"The file {fileName} is not a BORIS behaviors coding map.")
-
-            self.cancelMap()
-
-            self.mapName = self.codingMap["name"]
-
-            self.setWindowTitle(f"{cfg.programName} - Behaviors coding map creator - {self.mapName}")
-
-            self.bitmapFileName = True
-
-            self.fileName = fileName
-
-            bitmapContent = binascii.a2b_base64(self.codingMap["bitmap"])
-
-            self.pixmap.loadFromData(bitmapContent)
-
-            self.view.setSceneRect(0, 0, self.pixmap.size().width(), self.pixmap.size().height())
-            self.view.setMinimumHeight(self.pixmap.size().height())
-            # self.view.setMaximumHeight(self.pixmap.size().height())
-            pixItem = QGraphicsPixmapItem(self.pixmap)
-            pixItem.setPos(0, 0)
-            self.view.scene().addItem(pixItem)
-
-            for key in self.codingMap["areas"]:
-                areaCode = self.codingMap["areas"][key]["code"]
-                points = self.codingMap["areas"][key]["geometry"]
-
-                newPolygon = QPolygonF()
-                for p in points:
-                    newPolygon.append(QPoint(p[0], p[1]))
-
-                # draw polygon
-                """polygon = QGraphicsPolygonItem(None, None) if QT_VERSION_STR[0] == "4" else QGraphicsPolygonItem()"""
-                polygon = QGraphicsPolygonItem()
-                polygon.setPolygon(newPolygon)
-                clr = QColor()
-                clr.setRgba(self.codingMap["areas"][key]["color"])
-                polygon.setPen(QPen(clr, penWidth, penStyle, Qt.RoundCap, Qt.RoundJoin))
-                polygon.setBrush(QBrush(clr, Qt.SolidPattern))
-
-                self.view.scene().addItem(polygon)
-
-                self.polygonsList2.append([areaCode, polygon])
-
-            self.btNewArea.setVisible(True)
-            self.btLoad.setVisible(False)
-
-            self.saveMapAction.setEnabled(True)
-            self.saveAsMapAction.setEnabled(True)
-            self.addToProject.setEnabled(True)
-            self.mapNameAction.setEnabled(True)
-
-            self.update_area_list()
-
-        else:
+        if not fileName:
             self.statusBar().showMessage("No file", 5000)
+        try:
+            self.codingMap = json.loads(open(fileName, "r").read())
+        except Exception:
+            QMessageBox.critical(self, cfg.programName, f"The file {fileName} is not a behaviors coding map.")
+            return
+
+        if "coding_map_type" not in self.codingMap or self.codingMap["coding_map_type"] != "BORIS behaviors coding map":
+            QMessageBox.critical(self, cfg.programName, f"The file {fileName} is not a BORIS behaviors coding map.")
+
+        self.cancelMap()
+
+        self.mapName = self.codingMap["name"]
+
+        self.setWindowTitle(f"{cfg.programName} - Behaviors coding map creator - {self.mapName}")
+
+        self.bitmapFileName = True
+
+        self.fileName = fileName
+
+        bitmapContent = binascii.a2b_base64(self.codingMap["bitmap"])
+
+        self.pixmap.loadFromData(bitmapContent)
+
+        self.view.setSceneRect(0, 0, self.pixmap.size().width(), self.pixmap.size().height())
+        self.view.setMinimumHeight(self.pixmap.size().height())
+        # self.view.setMaximumHeight(self.pixmap.size().height())
+        pixItem = QGraphicsPixmapItem(self.pixmap)
+        pixItem.setPos(0, 0)
+        self.view.scene().addItem(pixItem)
+
+        for key in self.codingMap["areas"]:
+            areaCode = self.codingMap["areas"][key]["code"]
+            points = self.codingMap["areas"][key]["geometry"]
+
+            newPolygon = QPolygonF()
+            for p in points:
+                newPolygon.append(QPoint(p[0], p[1]))
+
+            # draw polygon
+            """polygon = QGraphicsPolygonItem(None, None) if QT_VERSION_STR[0] == "4" else QGraphicsPolygonItem()"""
+            polygon = QGraphicsPolygonItem()
+            polygon.setPolygon(newPolygon)
+            clr = QColor()
+            clr.setRgba(self.codingMap["areas"][key]["color"])
+            polygon.setPen(QPen(clr, penWidth, penStyle, Qt.RoundCap, Qt.RoundJoin))
+            polygon.setBrush(QBrush(clr, Qt.SolidPattern))
+
+            self.view.scene().addItem(polygon)
+
+            self.polygonsList2.append([areaCode, polygon])
+
+        self.btNewArea.setVisible(True)
+        self.btLoad.setVisible(False)
+
+        self.saveMapAction.setEnabled(True)
+        self.saveAsMapAction.setEnabled(True)
+        self.addToProject.setEnabled(True)
+        self.mapNameAction.setEnabled(True)
+
+        self.update_area_list()
 
     def make_coding_map_dict(self) -> dict:
         """
@@ -787,25 +785,25 @@ class BehaviorsMapCreatorWindow(QMainWindow):
     def saveAsMap_clicked(self):
         filters = "Behaviors coding map (*.behav_coding_map);;All files (*)"
 
-        fn = QFileDialog(self).getSaveFileName(self, "Save behaviors coding map as", "", filters)
-        self.fileName = fn[0] if type(fn) is tuple else fn
+        self.fileName, _ = QFileDialog.getSaveFileName(self, "Save behaviors coding map as", "", filters)
 
-        if self.fileName:
-            if os.path.splitext(self.fileName)[1] != ".behav_coding_map":
-                self.fileName += ".behav_coding_map"
-            self.saveMap()
+        if not self.fileName:
+            return
+        """if os.path.splitext(self.fileName)[1] != ".behav_coding_map":"""
+        if Path(self.fileName).suffix != ".behav_coding_map":
+            self.fileName += ".behav_coding_map"
+        self.saveMap()
 
     def saveMap_clicked(self):
         if not self.fileName:
-            fn = QFileDialog().getSaveFileName(
+            self.fileName, _ = QFileDialog().getSaveFileName(
                 self,
                 "Save modifiers map",
                 self.mapName + ".behav_coding_map",
                 "Behaviors coding map (*.behav_coding_map);;All files (*)",
             )
-            self.fileName = fn[0] if type(fn) is tuple else fn
 
-            if self.fileName and os.path.splitext(self.fileName)[1] != ".behav_coding_map":
+            if self.fileName and Path(self.fileName).suffix != ".behav_coding_map":
                 self.fileName += ".behav_coding_map"
 
         if self.fileName:
@@ -989,47 +987,47 @@ class BehaviorsMapCreatorWindow(QMainWindow):
         resize bitmap to CODING_MAP_RESIZE_W x CODING_MAP_RESIZE_H defined in config.py
         """
 
-        fn = QFileDialog(self).getOpenFileName(self, "Load bitmap", "", "bitmap files (*.png *.jpg);;All files (*)")
-        fileName = fn[0] if type(fn) is tuple else fn
+        fileName, _ = QFileDialog.getOpenFileName(self, "Load bitmap", "", "bitmap files (*.png *.jpg);;All files (*)")
 
-        if fileName:
-            self.bitmapFileName = fileName
+        if not fileName:
+            return
+        self.bitmapFileName = fileName
 
-            self.pixmap.load(self.bitmapFileName)
+        self.pixmap.load(self.bitmapFileName)
 
-            # scale image
-            """
-            if (
-                self.pixmap.size().width() > cfg.CODING_MAP_RESIZE_W
-                or self.pixmap.size().height() > cfg.CODING_MAP_RESIZE_H
-            ):
-                self.pixmap = self.pixmap.scaled(cfg.CODING_MAP_RESIZE_W, cfg.CODING_MAP_RESIZE_H, Qt.KeepAspectRatio)
-                QMessageBox.information(
-                    self,
-                    cfg.programName,
-                    (
-                        f"The bitmap was resized to {self.pixmap.size().width()}x{self.pixmap.size().height()} pixels\n"
-                        "The original file was not modified"
-                    ),
-                )
-            """
+        # scale image
+        """
+        if (
+            self.pixmap.size().width() > cfg.CODING_MAP_RESIZE_W
+            or self.pixmap.size().height() > cfg.CODING_MAP_RESIZE_H
+        ):
+            self.pixmap = self.pixmap.scaled(cfg.CODING_MAP_RESIZE_W, cfg.CODING_MAP_RESIZE_H, Qt.KeepAspectRatio)
+            QMessageBox.information(
+                self,
+                cfg.programName,
+                (
+                    f"The bitmap was resized to {self.pixmap.size().width()}x{self.pixmap.size().height()} pixels\n"
+                    "The original file was not modified"
+                ),
+            )
+        """
 
-            self.view.setSceneRect(0, 0, self.pixmap.size().width(), self.pixmap.size().height())
-            pixitem = QGraphicsPixmapItem(self.pixmap)
-            pixitem.setPos(0, 0)
-            self.view.scene().addItem(pixitem)
+        self.view.setSceneRect(0, 0, self.pixmap.size().width(), self.pixmap.size().height())
+        pixitem = QGraphicsPixmapItem(self.pixmap)
+        pixitem.setPos(0, 0)
+        self.view.scene().addItem(pixitem)
 
-            self.btNewArea.setVisible(True)
+        self.btNewArea.setVisible(True)
 
-            self.btLoad.setVisible(False)
-            self.saveMapAction.setEnabled(True)
-            self.saveAsMapAction.setEnabled(True)
-            self.addToProject.setEnabled(True)
-            self.mapNameAction.setEnabled(True)
+        self.btLoad.setVisible(False)
+        self.saveMapAction.setEnabled(True)
+        self.saveAsMapAction.setEnabled(True)
+        self.addToProject.setEnabled(True)
+        self.mapNameAction.setEnabled(True)
 
-            self.statusBar().showMessage("""Click "New behavior area" to create a new behavior area""")
+        self.statusBar().showMessage("""Click "New behavior area" to create a new behavior area""")
 
-            self.flag_map_changed = True
+        self.flag_map_changed = True
 
 
 def behaviors_coding_map_creator(self):

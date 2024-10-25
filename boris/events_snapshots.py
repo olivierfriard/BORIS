@@ -109,11 +109,11 @@ def events_snapshots(self):
         return
 
     # directory for saving frames
-    export_dir = QFileDialog().getExistingDirectory(
+    export_dir = QFileDialog.getExistingDirectory(
         self,
         "Choose a directory to extract events",
         os.path.expanduser("~"),
-        options=QFileDialog(self).ShowDirsOnly,
+        options=QFileDialog.ShowDirsOnly,
     )
     if not export_dir:
         return
@@ -373,11 +373,11 @@ def extract_events(self):
     if not ok:
         return
 
-    export_dir = QFileDialog().getExistingDirectory(
+    export_dir = QFileDialog.getExistingDirectory(
         self,
         "Choose a directory to extract events",
         os.path.expanduser("~"),
-        options=QFileDialog(self).ShowDirsOnly,
+        options=QFileDialog.ShowDirsOnly,
     )
     if not export_dir:
         return

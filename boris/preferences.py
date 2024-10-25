@@ -24,10 +24,6 @@ import logging
 import os
 import pathlib
 import sys
-
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), ".")))
-import qdarkstyle
-
 from . import dialog
 from . import gui_utilities
 from . import menu_options
@@ -74,11 +70,11 @@ class Preferences(QDialog, Ui_prefDialog):
         """
         allow user select a cache dir for ffmpeg images
         """
-        FFmpegCacheDir = QFileDialog().getExistingDirectory(
+        FFmpegCacheDir = QFileDialog.getExistingDirectory(
             self,
             "Select a directory",
             os.path.expanduser("~"),
-            options=QFileDialog().ShowDirsOnly,
+            options=QFileDialog.ShowDirsOnly,
         )
         if FFmpegCacheDir:
             self.leFFmpegCacheDir.setText(FFmpegCacheDir)

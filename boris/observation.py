@@ -606,9 +606,7 @@ class Observation(QDialog, Ui_Form):
         fd = QFileDialog()
         fd.setDirectory(os.path.expanduser("~") if (" abs " in mode) else str(pl.Path(self.project_path).parent))
 
-        fn = fd.getOpenFileName(self, "Add data file", "", "All files (*)")
-        file_name = fn[0] if type(fn) is tuple else fn
-
+        file_name, _ = fd.getOpenFileName(self, "Add data file", "", "All files (*)")
         if not file_name:
             return
 
@@ -1285,8 +1283,7 @@ class Observation(QDialog, Ui_Form):
             fd.setDirectory(os.path.expanduser("~") if (" abs " in mode) else str(pl.Path(self.project_path).parent))
 
         if "media " in mode:
-            fn = fd.getOpenFileNames(self, "Add media file(s)", "", "All files (*)")
-            file_paths = fn[0] if type(fn) is tuple else fn
+            file_paths, _ = fd.getOpenFileNames(self, "Add media file(s)", "", "All files (*)")
 
             if file_paths:
                 # store directory for next usage

@@ -100,8 +100,7 @@ def ffmpeg_process(self, action: str):
     else:
         msg = f"Select one or more video files to {action.replace('_', ' and ')}"
         file_type = "Video files (*)"
-    fn = QFileDialog().getOpenFileNames(self, msg, "", file_type)
-    file_names = fn[0] if type(fn) is tuple else fn
+    file_names, _ = QFileDialog().getOpenFileNames(self, msg, "", file_type)
 
     if not file_names:
         return

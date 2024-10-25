@@ -456,15 +456,10 @@ def draw_point(self, x: int, y: int, color: str, n_player: int = 0) -> None:
 
     RADIUS = 6
 
-    print(f"{self.dw_player[n_player].frame_viewer.pixmap()=}")
+    pixmap_copy = self.dw_player[n_player].frame_viewer.pixmap().copy()
 
-    painter = QPainter(self.dw_player[n_player].frame_viewer.pixmap())
-
-    print(f"{painter=}")
-
+    painter = QPainter(pixmap_copy)
     try:
-        # painter.begin()
-
         painter.setPen(QPen(QColor(color), 1))
         painter.drawEllipse(QPoint(x, y), RADIUS, RADIUS)
         # cross inside circle
@@ -472,19 +467,26 @@ def draw_point(self, x: int, y: int, color: str, n_player: int = 0) -> None:
         painter.drawLine(x, y - RADIUS, x, y + RADIUS)
     finally:
         painter.end()
-    # self.dw_player[n_player].frame_viewer.update()
-    self.update()
+
+    self.dw_player[n_player].frame_viewer.setPixmap(pixmap_copy)
+    self.dw_player[n_player].frame_viewer.update()
 
 
 def draw_line(self, x1: int, y1: int, x2: int, y2: int, color: str, n_player: int = 0) -> None:
     """
     draw line on frame-by-frame image
     """
-    painter = QPainter()
-    painter.begin(self.dw_player[n_player].frame_viewer.pixmap())
-    painter.setPen(QColor(color))
-    painter.drawLine(x1, y1, x2, y2)
-    painter.end()
+
+    pixmap_copy = self.dw_player[n_player].frame_viewer.pixmap().copy()
+    painter = QPainter(pixmap_copy)
+
+    try:
+        painter.setPen(QColor(color))
+        painter.drawLine(x1, y1, x2, y2)
+    finally:
+        painter.end()
+
+    self.dw_player[n_player].frame_viewer.setPixmap(pixmap_copy)
     self.dw_player[n_player].frame_viewer.update()
 
 
@@ -906,11 +908,18 @@ def redraw_measurements(self):
                         for x, y in element["coordinates"]:
                             x, y = scale_coord([x, y])
                             polygon.append(QPoint(x, y))
-                        painter = QPainter()
-                        painter.begin(self.dw_player[idx].frame_viewer.pixmap())
-                        painter.setPen(QColor(elements_color))
-                        painter.drawPolygon(polygon)
-                        painter.end()
+
+                        pixmap_copy = self.dw_player[idx].frame_viewer.pixmap().copy()
+                        painter = QPainter(pixmap_copy)
+
+                        try:
+                            painter.setPen(QColor(elements_color))
+                            painter.drawPolygon(polygon)
+                        finally:
+                            painter.end()
+
+                        self.dw_player[idx].frame_viewer.setPixmap(pixmap_copy)
+
                         dw.frame_viewer.update()
 
                     if element["object_type"] == cfg.POLYLINE_OBJECT:

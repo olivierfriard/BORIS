@@ -636,45 +636,45 @@ class projectDialog(QDialog, Ui_dlgProject):
         Add a behaviors coding map from file
         """
 
-        fn = QFileDialog().getOpenFileName(
+        file_name, _ = QFileDialog().getOpenFileName(
             self, "Open a behaviors coding map", "", "Behaviors coding map (*.behav_coding_map);;All files (*)"
         )
-        file_name = fn[0] if type(fn) is tuple else fn
-        if file_name:
-            try:
-                bcm = json.loads(open(file_name, "r").read())
-            except Exception:
-                QMessageBox.critical(self, cfg.programName, f"The file {file_name} is not a behaviors coding map.")
-                return
+        if not file_name:
+            return
+        try:
+            bcm = json.loads(open(file_name, "r").read())
+        except Exception:
+            QMessageBox.critical(self, cfg.programName, f"The file {file_name} is not a behaviors coding map.")
+            return
 
-            if "coding_map_type" not in bcm or bcm["coding_map_type"] != "BORIS behaviors coding map":
-                QMessageBox.critical(self, cfg.programName, f"The file {file_name} is not a BORIS behaviors coding map.")
+        if "coding_map_type" not in bcm or bcm["coding_map_type"] != "BORIS behaviors coding map":
+            QMessageBox.critical(self, cfg.programName, f"The file {file_name} is not a BORIS behaviors coding map.")
 
-            if cfg.BEHAVIORS_CODING_MAP not in self.pj:
-                self.pj[cfg.BEHAVIORS_CODING_MAP] = []
+        if cfg.BEHAVIORS_CODING_MAP not in self.pj:
+            self.pj[cfg.BEHAVIORS_CODING_MAP] = []
 
-            bcm_code_not_found = []
-            existing_codes = [self.pj[cfg.ETHOGRAM][key][cfg.BEHAVIOR_CODE] for key in self.pj[cfg.ETHOGRAM]]
-            for code in [bcm["areas"][key][cfg.BEHAVIOR_CODE] for key in bcm["areas"]]:
-                if code not in existing_codes:
-                    bcm_code_not_found.append(code)
+        bcm_code_not_found = []
+        existing_codes = [self.pj[cfg.ETHOGRAM][key][cfg.BEHAVIOR_CODE] for key in self.pj[cfg.ETHOGRAM]]
+        for code in [bcm["areas"][key][cfg.BEHAVIOR_CODE] for key in bcm["areas"]]:
+            if code not in existing_codes:
+                bcm_code_not_found.append(code)
 
-            if bcm_code_not_found:
-                QMessageBox.warning(
-                    self,
-                    cfg.programName,
-                    ("The following behavior{} are not defined in the ethogram:<br>" "{}").format(
-                        "s" if len(bcm_code_not_found) > 1 else "", ",".join(bcm_code_not_found)
-                    ),
-                )
+        if bcm_code_not_found:
+            QMessageBox.warning(
+                self,
+                cfg.programName,
+                ("The following behavior{} are not defined in the ethogram:<br>" "{}").format(
+                    "s" if len(bcm_code_not_found) > 1 else "", ",".join(bcm_code_not_found)
+                ),
+            )
 
-            self.pj[cfg.BEHAVIORS_CODING_MAP].append(dict(bcm))
+        self.pj[cfg.BEHAVIORS_CODING_MAP].append(dict(bcm))
 
-            self.twBehavCodingMap.setRowCount(self.twBehavCodingMap.rowCount() + 1)
+        self.twBehavCodingMap.setRowCount(self.twBehavCodingMap.rowCount() + 1)
 
-            self.twBehavCodingMap.setItem(self.twBehavCodingMap.rowCount() - 1, 0, QTableWidgetItem(bcm["name"]))
-            codes = ", ".join([bcm["areas"][idx][cfg.BEHAVIOR_CODE] for idx in bcm["areas"]])
-            self.twBehavCodingMap.setItem(self.twBehavCodingMap.rowCount() - 1, 1, QTableWidgetItem(codes))
+        self.twBehavCodingMap.setItem(self.twBehavCodingMap.rowCount() - 1, 0, QTableWidgetItem(bcm["name"]))
+        codes = ", ".join([bcm["areas"][idx][cfg.BEHAVIOR_CODE] for idx in bcm["areas"]])
+        self.twBehavCodingMap.setItem(self.twBehavCodingMap.rowCount() - 1, 1, QTableWidgetItem(codes))
 
     def remove_behaviors_coding_map(self):
         """
@@ -1375,17 +1375,15 @@ class projectDialog(QDialog, Ui_dlgProject):
 
         if cfg.CODING_MAP_sp in self.twBehaviors.item(row, cfg.behavioursFields[cfg.TYPE]).text():
             # let user select a coding maop
-            fn = QFileDialog().getOpenFileName(
+            file_name, _ = QFileDialog().getOpenFileName(
                 self,
                 "Select a modifier coding map for " f"{self.twBehaviors.item(row, cfg.behavioursFields['code']).text()} behavior",
                 "",
                 "BORIS map files (*.boris_map);;All files (*)",
             )
-            fileName = fn[0] if type(fn) is tuple else fn
-
-            if fileName:
+            if file_name:
                 try:
-                    new_map = json.loads(open(fileName, "r").read())
+                    new_map = json.loads(open(file_name, "r").read())
                 except Exception:
                     QMessageBox.critical(self, cfg.programName, "Error reding the coding map")
                     return

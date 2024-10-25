@@ -24,6 +24,7 @@ import logging
 import os
 import subprocess
 import tempfile
+from pathlib import Path
 
 from PySide6.QtWidgets import QFileDialog, QMessageBox
 
@@ -170,6 +171,8 @@ def transitions_matrix(self, mode):
     * number
     * frequencies_after_behaviors
     """
+    logging.debug("flag transitions_matrix function")
+
     # ask user observations to analyze
     _, selected_observations = select_observations.select_observations2(
         self, cfg.MULTIPLE, windows_title="Select observations for transitions matrix"
@@ -194,20 +197,20 @@ def transitions_matrix(self, mode):
 
     flagMulti = False
     if len(parameters[cfg.SELECTED_SUBJECTS]) == 1:
-        fn = QFileDialog().getSaveFileName(
+        file_name, _ = QFileDialog().getSaveFileName(
             None,
             "Create matrix of transitions " + mode,
             "",
             "Transitions matrix files (*.txt *.tsv);;All files (*)",
         )
-        fileName = fn[0] if type(fn) is tuple else fn  # PyQt4/5
-
+        if not file_name:
+            return
     else:
-        exportDir = QFileDialog(self).getExistingDirectory(
+        exportDir = QFileDialog.getExistingDirectory(
             self,
             "Choose a directory to save the transitions matrices",
-            os.path.expanduser("~"),
-            options=QFileDialog(self).ShowDirsOnly,
+            str(Path.home()),
+            options=QFileDialog.ShowDirsOnly,
         )
         if not exportDir:
             return
@@ -256,11 +259,11 @@ def transitions_matrix(self, mode):
                 QMessageBox.critical(self, cfg.programName, f"The file {nf} can not be saved")
         else:
             try:
-                with open(fileName, "w") as outfile:
+                with open(file_name, "w") as outfile:
                     outfile.write(observed_matrix)
 
             except Exception:
-                QMessageBox.critical(self, cfg.programName, f"The file {fileName} can not be saved")
+                QMessageBox.critical(self, cfg.programName, f"The file {file_name} can not be saved")
 
 
 def transitions_dot_script():
@@ -268,18 +271,17 @@ def transitions_dot_script():
     create dot script (graphviz language) from transitions frequencies matrix
     """
 
-    fn = QFileDialog().getOpenFileNames(
+    file_names, _ = QFileDialog().getOpenFileNames(
         None,
         "Select one or more transitions matrix files",
         "",
         "Transitions matrix files (*.txt *.tsv);;All files (*)",
     )
-    fileNames = fn[0] if type(fn) is tuple else fn
 
     out = ""
 
-    for fileName in fileNames:
-        with open(fileName, "r") as infile:
+    for file_name in file_names:
+        with open(file_name, "r") as infile:
             result, gv = create_transitions_gv_from_matrix(infile.read(), cutoff_all=0, cutoff_behavior=0, edge_label="percent_node")
             if result:
                 QMessageBox.critical(
@@ -289,16 +291,24 @@ def transitions_dot_script():
                 )
                 return
 
-            with open(fileName + ".gv", "w") as f:
-                f.write(gv)
+            try:
+                with open(file_name + ".gv", "w") as file_out:
+                    file_out.write(gv)
+            except Exception:
+                QMessageBox.critical(
+                    None,
+                    cfg.programName,
+                    ("Error saving the file"),
+                )
+                return
 
-            out += f"<b>{fileName}.gv</b> created<br>"
+            out += f"<b>{file_name}.gv</b> created<br>"
 
     if out:
         QMessageBox.information(
             None,
             cfg.programName,
-            (f"{out}<br><br>The DOT scripts can be used with Graphviz or WebGraphviz " "to generate diagram"),
+            (f"{out}<br><br>The DOT scripts can be used with the Graphviz package or WebGraphviz to generate diagram"),
         )
 
 
@@ -322,17 +332,16 @@ def transitions_flow_diagram():
         )
         return
 
-    fn = QFileDialog().getOpenFileNames(
+    file_names, _ = QFileDialog().getOpenFileNames(
         None,
         "Select one or more transitions matrix files",
         "",
         "Transitions matrix files (*.txt *.tsv);;All files (*)",
     )
-    fileNames = fn[0] if type(fn) is tuple else fn
 
     out = ""
-    for fileName in fileNames:
-        with open(fileName, "r") as infile:
+    for file_name in file_names:
+        with open(file_name, "r") as infile:
             result, gv = create_transitions_gv_from_matrix(infile.read(), cutoff_all=0, cutoff_behavior=0, edge_label="percent_node")
             if result:
                 QMessageBox.critical(
@@ -342,15 +351,15 @@ def transitions_flow_diagram():
                 )
                 return
 
-            with open(tempfile.gettempdir() + os.sep + os.path.basename(fileName) + ".tmp.gv", "w") as f:
+            with open(tempfile.gettempdir() + os.sep + os.path.basename(file_name) + ".tmp.gv", "w") as f:
                 f.write(gv)
             result = subprocess.getoutput(
-                (f'dot -Tpng -o "{fileName}.png" ' f'"{tempfile.gettempdir() + os.sep + os.path.basename(fileName)}.tmp.gv"')
+                (f'dot -Tpng -o "{file_name}.png" ' f'"{tempfile.gettempdir() + os.sep + os.path.basename(file_name)}.tmp.gv"')
             )
             if not result:
-                out += f"<b>{fileName}.png</b> created<br>"
+                out += f"<b>{file_name}.png</b> created<br>"
             else:
-                out += f"Problem with <b>{fileName}</b><br>"
+                out += f"Problem with <b>{file_name}</b><br>"
 
     if out:
         QMessageBox.information(None, cfg.programName, out)

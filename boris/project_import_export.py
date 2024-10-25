@@ -472,11 +472,9 @@ def import_behaviors_from_project(self):
     """
     import ethogram from a BORIS project file
     """
-    fn = QFileDialog().getOpenFileName(
+    file_name, _ = QFileDialog.getOpenFileName(
         self, "Import behaviors from BORIS project file", "", ("Project files (*.boris *.boris.gz);;" "All files (*)")
     )
-    file_name = fn[0] if type(fn) is tuple else fn
-
     if not file_name:
         return
     _, _, project, _ = project_functions.open_project_json(file_name)
@@ -498,10 +496,9 @@ def import_behaviors_from_text_file(self):
         if response == cfg.CANCEL:
             return
 
-    fn = QFileDialog().getOpenFileName(
+    file_name, _ = QFileDialog.getOpenFileName(
         self, "Import behaviors from text file (CSV, TSV)", "", "Text files (*.txt *.tsv *.csv);;All files (*)"
     )
-    file_name = fn[0] if type(fn) is tuple else fn
 
     if not file_name:
         return
@@ -552,10 +549,9 @@ def import_behaviors_from_spreadsheet(self):
         if response == cfg.CANCEL:
             return
 
-    fn = QFileDialog().getOpenFileName(
+    file_name, _ = QFileDialog.getOpenFileName(
         self, "Import behaviors from a spreadsheet file", "", "Spreadsheet files (*.xlsx *.ods);;All files (*)"
     )
-    file_name = fn[0] if type(fn) is tuple else fn
 
     if not file_name:
         return
@@ -685,51 +681,51 @@ def import_behaviors_from_JWatcher(self):
         if response == cfg.CANCEL:
             return
 
-    fn = QFileDialog().getOpenFileName(self, "Import behaviors from JWatcher", "", "Global Definition File (*.gdf);;All files (*)")
-    fileName = fn[0] if type(fn) is tuple else fn
+    fileName, _ = QFileDialog().getOpenFileName(self, "Import behaviors from JWatcher", "", "Global Definition File (*.gdf);;All files (*)")
 
-    if fileName:
-        if self.twBehaviors.rowCount() and response == cfg.REPLACE:
-            self.twBehaviors.setRowCount(0)
+    if not fileName:
+        return
+    if self.twBehaviors.rowCount() and response == cfg.REPLACE:
+        self.twBehaviors.setRowCount(0)
 
-        with open(fileName, "r") as f:
-            rows = f.readlines()
+    with open(fileName, "r") as f:
+        rows = f.readlines()
 
-        for idx, row in enumerate(rows):
-            if row and row[0] == "#":
-                continue
+    for idx, row in enumerate(rows):
+        if row and row[0] == "#":
+            continue
 
-            if "Behavior.name." in row and "=" in row:
-                key, code = row.split("=")
-                key = key.replace("Behavior.name.", "")
-                # read description
-                if idx < len(rows) and "Behavior.description." in rows[idx + 1]:
-                    description = rows[idx + 1].split("=")[-1]
+        if "Behavior.name." in row and "=" in row:
+            key, code = row.split("=")
+            key = key.replace("Behavior.name.", "")
+            # read description
+            if idx < len(rows) and "Behavior.description." in rows[idx + 1]:
+                description = rows[idx + 1].split("=")[-1]
 
-                behavior = {
-                    "key": key,
-                    "code": code,
-                    "description": description,
-                    "modifiers": "",
-                    "excluded": "",
-                    "coding map": "",
-                    "category": "",
-                }
+            behavior = {
+                "key": key,
+                "code": code,
+                "description": description,
+                "modifiers": "",
+                "excluded": "",
+                "coding map": "",
+                "category": "",
+            }
 
-                self.twBehaviors.setRowCount(self.twBehaviors.rowCount() + 1)
+            self.twBehaviors.setRowCount(self.twBehaviors.rowCount() + 1)
 
-                for field_type in cfg.behavioursFields:
-                    if field_type == cfg.TYPE:
-                        item = QTableWidgetItem(cfg.DEFAULT_BEHAVIOR_TYPE)
-                    else:
-                        item = QTableWidgetItem(behavior[field_type])
+            for field_type in cfg.behavioursFields:
+                if field_type == cfg.TYPE:
+                    item = QTableWidgetItem(cfg.DEFAULT_BEHAVIOR_TYPE)
+                else:
+                    item = QTableWidgetItem(behavior[field_type])
 
-                    if field_type in [cfg.TYPE, "excluded", "category", "coding map", "modifiers"]:
-                        item.setFlags(Qt.ItemIsEnabled)
-                        # item.setBackground(QColor(230, 230, 230))
-                        item.setBackground(self.not_editable_column_color())
+                if field_type in [cfg.TYPE, "excluded", "category", "coding map", "modifiers"]:
+                    item.setFlags(Qt.ItemIsEnabled)
+                    # item.setBackground(QColor(230, 230, 230))
+                    item.setBackground(self.not_editable_column_color())
 
-                    self.twBehaviors.setItem(self.twBehaviors.rowCount() - 1, cfg.behavioursFields[field_type], item)
+                self.twBehaviors.setItem(self.twBehaviors.rowCount() - 1, cfg.behavioursFields[field_type], item)
 
 
 def import_behaviors_from_repository(self):
@@ -890,11 +886,9 @@ def import_subjects_from_project(self):
     import subjects from a BORIS project
     """
 
-    fn = QFileDialog().getOpenFileName(
+    file_name, _ = QFileDialog().getOpenFileName(
         self, "Import subjects from project file", "", ("Project files (*.boris *.boris.gz);;" "All files (*)")
     )
-    file_name = fn[0] if type(fn) is tuple else fn
-
     if not file_name:
         return
 
@@ -954,11 +948,9 @@ def import_subjects_from_text_file(self):
         if response == cfg.CANCEL:
             return
 
-    fn = QFileDialog().getOpenFileName(
+    file_name, _ = QFileDialog().getOpenFileName(
         self, "Import behaviors from text file (CSV, TSV)", "", "Text files (*.txt *.tsv *.csv);;All files (*)"
     )
-    file_name = fn[0] if type(fn) is tuple else fn
-
     if not file_name:
         return
 
@@ -1009,11 +1001,9 @@ def import_subjects_from_spreadsheet(self):
         if response == cfg.CANCEL:
             return
 
-    fn = QFileDialog().getOpenFileName(
+    file_name, _ = QFileDialog().getOpenFileName(
         self, "Import subjects from a spreadsheet file", "", "Spreadsheet files (*.xlsx *.ods);;All files (*)"
     )
-    file_name = fn[0] if type(fn) is tuple else fn
-
     if not file_name:
         return
 
@@ -1054,15 +1044,12 @@ def import_indep_variables_from_project(self):
     import independent variables from another project
     """
 
-    fn = QFileDialog().getOpenFileName(
+    file_name, _ = QFileDialog().getOpenFileName(
         self,
         "Import independent variables from project file",
         "",
         ("Project files (*.boris *.boris.gz);;" "All files (*)"),
     )
-
-    file_name = fn[0] if type(fn) is tuple else fn
-
     if not file_name:
         return
 

@@ -158,38 +158,38 @@ class addModifierDialog(QDialog, Ui_Dialog):
         add modifiers from file
         """
 
-        fn = QFileDialog().getOpenFileName(self, "Load modifiers from file", "", "All files (*)")
-        file_name = fn[0] if type(fn) is tuple else fn
-        if file_name:
-            try:
-                with open(file_name) as f_in:
-                    for line in f_in:
-                        if line.strip():
-                            for c in cfg.CHAR_FORBIDDEN_IN_MODIFIERS:
-                                if c in line.strip():
-                                    QMessageBox.critical(
-                                        self,
-                                        cfg.programName,
-                                        (
-                                            f"The character <b>{c}</b> is not allowed.<br>"
-                                            "The following characters are not allowed in modifiers:<br>"
-                                            f"<b>{cfg.CHAR_FORBIDDEN_IN_MODIFIERS}</b>"
-                                        ),
-                                    )
-                                    break
-                            else:
-                                if line.strip() not in [self.lwModifiers.item(x).text() for x in range(self.lwModifiers.count())]:
-                                    if self.itemPositionMem != -1:
-                                        self.lwModifiers.insertItem(self.itemPositionMem, line.strip())
-                                    else:
-                                        self.lwModifiers.addItem(line.strip())
+        file_name, _ = QFileDialog.getOpenFileName(self, "Load modifiers from file", "", "All files (*)")
+        if not file_name:
+            return
+        try:
+            with open(file_name) as f_in:
+                for line in f_in:
+                    if line.strip():
+                        for c in cfg.CHAR_FORBIDDEN_IN_MODIFIERS:
+                            if c in line.strip():
+                                QMessageBox.critical(
+                                    self,
+                                    cfg.programName,
+                                    (
+                                        f"The character <b>{c}</b> is not allowed.<br>"
+                                        "The following characters are not allowed in modifiers:<br>"
+                                        f"<b>{cfg.CHAR_FORBIDDEN_IN_MODIFIERS}</b>"
+                                    ),
+                                )
+                                break
+                        else:
+                            if line.strip() not in [self.lwModifiers.item(x).text() for x in range(self.lwModifiers.count())]:
+                                if self.itemPositionMem != -1:
+                                    self.lwModifiers.insertItem(self.itemPositionMem, line.strip())
+                                else:
+                                    self.lwModifiers.addItem(line.strip())
 
-                self.modifiers_sets_dict[str(self.tabWidgetModifiersSets.currentIndex())]["values"] = [
-                    self.lwModifiers.item(x).text() for x in range(self.lwModifiers.count())
-                ]
-            except Exception:
-                QMessageBox.warning(self, cfg.programName, f"Error reading modifiers from file:<br>{file_name}")
-                logging.warning(f"Error reading modifiers from file<br>{file_name}")
+            self.modifiers_sets_dict[str(self.tabWidgetModifiersSets.currentIndex())]["values"] = [
+                self.lwModifiers.item(x).text() for x in range(self.lwModifiers.count())
+            ]
+        except Exception:
+            QMessageBox.warning(self, cfg.programName, f"Error reading modifiers from file:<br>{file_name}")
+            logging.warning(f"Error reading modifiers from file<br>{file_name}")
 
     def sort_modifiers(self):
         """

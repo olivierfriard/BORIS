@@ -209,10 +209,9 @@ def import_observations(self):
     import observations from project file
     """
 
-    fn = QFileDialog().getOpenFileName(
+    file_name, _ = QFileDialog().getOpenFileName(
         None, "Choose a file", "", "BORIS project files (*.boris);;Spreadsheet files (*.ods *.xlsx *);;All files (*)"
     )
-    file_name = fn[0] if type(fn) is tuple else fn
 
     if not file_name:
         return

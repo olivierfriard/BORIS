@@ -1870,11 +1870,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
             return painter
 
-        output_dir = QFileDialog().getExistingDirectory(
+        output_dir = QFileDialog.getExistingDirectory(
             self,
             "Select a directory to save the frames",
             os.path.expanduser("~"),
-            options=QFileDialog().ShowDirsOnly,
+            options=QFileDialog.ShowDirsOnly,
         )
         if not output_dir:
             return
@@ -2737,11 +2737,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         plot_directory = ""
         file_format = "png"
         if len(selected_observations) > 1:
-            plot_directory = QFileDialog().getExistingDirectory(
+            plot_directory = QFileDialog.getExistingDirectory(
                 self,
                 "Choose a directory to save the plots",
                 os.path.expanduser("~"),
-                options=QFileDialog(self).ShowDirsOnly,
+                options=QFileDialog.ShowDirsOnly,
             )
 
             if not plot_directory:
@@ -2881,11 +2881,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         plot_directory = ""
         output_format = ""
         if len(selected_observations) > 1:
-            plot_directory = QFileDialog().getExistingDirectory(
+            plot_directory = QFileDialog.getExistingDirectory(
                 self,
                 "Choose a directory to save the plots",
                 os.path.expanduser("~"),
-                options=QFileDialog(self).ShowDirsOnly,
+                options=QFileDialog.ShowDirsOnly,
             )
             if not plot_directory:
                 return
@@ -2978,13 +2978,12 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 return
 
         if action.text() == "Open project":
-            fn = QFileDialog().getOpenFileName(
+            file_name, _ = QFileDialog.getOpenFileName(
                 self,
                 "Open project",
                 "",
                 ("Project files (*.boris *.boris.gz);;" "All files (*)"),
             )
-            file_name = fn[0] if type(fn) is tuple else fn
 
         else:  # recent project
             file_name = action.text()
@@ -3087,13 +3086,12 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             if response == cfg.CANCEL:
                 return
 
-        fn = QFileDialog().getOpenFileName(
+        file_name, _ = QFileDialog.getOpenFileName(
             self,
             "Import project from Noldus The Observer",
             "",
             "Noldus Observer files (*.otx *.otb *.odx);;All files (*)",
         )
-        file_name = fn[0] if type(fn) is tuple else fn
 
         if not file_name:
             return
@@ -3772,11 +3770,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             )
             return
 
-        export_dir = QFileDialog().getExistingDirectory(
+        export_dir = QFileDialog.getExistingDirectory(
             self,
             "Choose a directory to save subtitles",
             os.path.expanduser("~"),
-            options=QFileDialog(self).ShowDirsOnly,
+            options=QFileDialog.ShowDirsOnly,
         )
         if not export_dir:
             return

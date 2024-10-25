@@ -93,28 +93,28 @@ def export_events_as_behavioral_sequences(self, separated_subjects=False, timed=
         QMessageBox.warning(None, cfg.programName, "Select subject(s) and behavior(s) to analyze")
         return
 
-    fn = QFileDialog().getSaveFileName(self, "Export events as behavioral sequences", "", "Text files (*.txt);;All files (*)")
-    file_name = fn[0] if type(fn) is tuple else fn
+    file_name, _ = QFileDialog.getSaveFileName(self, "Export events as behavioral sequences", "", "Text files (*.txt);;All files (*)")
 
-    if file_name:
-        r, msg = export_observation.observation_to_behavioral_sequences(
-            pj=self.pj,
-            selected_observations=selected_observations,
-            parameters=parameters,
-            behaviors_separator=self.behav_seq_separator,
-            separated_subjects=separated_subjects,
-            timed=timed,
-            file_name=file_name,
+    if not file_name:
+        return
+    r, msg = export_observation.observation_to_behavioral_sequences(
+        pj=self.pj,
+        selected_observations=selected_observations,
+        parameters=parameters,
+        behaviors_separator=self.behav_seq_separator,
+        separated_subjects=separated_subjects,
+        timed=timed,
+        file_name=file_name,
+    )
+    if not r:
+        logging.critical(f"Error while exporting events as behavioral sequences: {msg}")
+        QMessageBox.critical(
+            None,
+            cfg.programName,
+            f"Error while exporting events as behavioral sequences:<br>{msg}",
+            QMessageBox.Ok | QMessageBox.Default,
+            QMessageBox.NoButton,
         )
-        if not r:
-            logging.critical(f"Error while exporting events as behavioral sequences: {msg}")
-            QMessageBox.critical(
-                None,
-                cfg.programName,
-                f"Error while exporting events as behavioral sequences:<br>{msg}",
-                QMessageBox.Ok | QMessageBox.Default,
-                QMessageBox.NoButton,
-            )
 
 
 def export_tabular_events(self, mode: str = "tabular") -> None:
@@ -671,8 +671,8 @@ def export_events_as_textgrid(self) -> None:
         QMessageBox.warning(None, cfg.programName, "Select subject(s) and behavior(s) to export")
         return
 
-    export_dir = QFileDialog(self).getExistingDirectory(
-        self, "Export events as Praat TextGrid", os.path.expanduser("~"), options=QFileDialog(self).ShowDirsOnly
+    export_dir = QFileDialog.getExistingDirectory(
+        self, "Export events as Praat TextGrid", os.path.expanduser("~"), options=QFileDialog.ShowDirsOnly
     )
     if not export_dir:
         return

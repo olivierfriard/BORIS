@@ -99,8 +99,7 @@ def get_info(self) -> None:
             tot_output += mpv_output + ffmpeg_output + "<br><hr>"
 
     else:  # no open observation
-        fn = QFileDialog().getOpenFileNames(self, "Select a media file", "", "Media files (*)")
-        file_paths = fn[0] if type(fn) is tuple else fn
+        file_paths, _ = QFileDialog().getOpenFileNames(self, "Select a media file", "", "Media files (*)")
         if not file_paths:
             return
 
