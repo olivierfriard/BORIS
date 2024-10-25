@@ -72,7 +72,6 @@ def update_menu(self):
         self.actionExport_project,
         self.actionCheck_project,
         self.actionClose_project,
-        self.actionSend_project,
         self.actionNew_observation,
         self.actionRemove_path_from_media_files,
         self.action_create_observations,

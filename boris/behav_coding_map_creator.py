@@ -23,7 +23,6 @@ This file is part of BORIS.
 import binascii
 import io
 import json
-import os
 from pathlib import Path
 
 from PySide6.QtCore import QBuffer, QByteArray, QIODevice, QLineF, QPoint, Qt, Signal
@@ -198,6 +197,8 @@ class BehaviorsMapCreatorWindow(QMainWindow):
         self.btCancelAreaCreation.clicked.connect(self.cancelAreaCreation)
         self.btCancelAreaCreation.setVisible(False)
         hlayout_cmd.addWidget(self.btCancelAreaCreation)
+
+        hlayout_cmd.addItem(QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum))
 
         self.btDeleteArea = QPushButton("Delete selected behavior area", self)
         self.btDeleteArea.clicked.connect(self.deleteArea)
@@ -621,6 +622,8 @@ class BehaviorsMapCreatorWindow(QMainWindow):
 
         while True:
             map_name, ok = QInputDialog.getText(self, "Behaviors coding map name", "Enter a name for the new coding map")
+            if not ok:
+                return
             if map_name.upper() in self.bcm_list:
                 QMessageBox.critical(
                     self,
@@ -634,18 +637,13 @@ class BehaviorsMapCreatorWindow(QMainWindow):
             if ok and map_name and map_name.upper() not in self.bcm_list:
                 self.mapName = map_name
                 break
-            if not ok:
-                return
-        """
-        if not self.mapName:
-            QMessageBox.critical(self, "", "You must define a name for the new coding map")
-            return
-        """
 
         self.setWindowTitle(f"{cfg.programName} - Behaviors coding map creator tool - {self.mapName}")
 
-        self.btLoad.setVisible(True)
-        self.statusBar().showMessage('Click "Load bitmap" button to select and load a bitmap into the viewer')
+        self.loadBitmap()
+
+        # self.btLoad.setVisible(True)
+        # self.statusBar().showMessage('Click "Load bitmap" button to select and load a bitmap into the viewer')
 
     def openMap(self):
         """
@@ -984,7 +982,7 @@ class BehaviorsMapCreatorWindow(QMainWindow):
     def loadBitmap(self):
         """
         load bitmap as background for coding map
-        resize bitmap to CODING_MAP_RESIZE_W x CODING_MAP_RESIZE_H defined in config.py
+        no more resize bitmap to CODING_MAP_RESIZE_W x CODING_MAP_RESIZE_H defined in config.py
         """
 
         fileName, _ = QFileDialog.getOpenFileName(self, "Load bitmap", "", "bitmap files (*.png *.jpg);;All files (*)")
