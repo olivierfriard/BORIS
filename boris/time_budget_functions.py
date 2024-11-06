@@ -1016,6 +1016,7 @@ def time_budget_analysis(
                         continue
 
                     if len(rows) % 2:  # unpaired events
+                        print(f"{rows=}")
                         out_cat.append(
                             {
                                 "subject": subject,
@@ -1112,8 +1113,8 @@ def time_budget_analysis(
                         "-",
                         cfg.NA,
                     ):
-                        print(f"{categories[subject][category]["duration"]=}")
-                        print(f"{behav["duration"]=}")
+                        # print(f"{categories[subject][category]["duration"]=}")
+                        # print(f"{behav["duration"]=}")
                         categories[subject][category]["duration"] += behav["duration"]
                     else:
                         categories[subject][category]["duration"] = cfg.NA
