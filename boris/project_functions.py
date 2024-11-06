@@ -410,6 +410,10 @@ def check_project_integrity(
 
     Returns:
         str: message
+
+
+    TODO: implement check on order of events (for live and media)
+
     """
     out: str = ""
 
