@@ -180,6 +180,18 @@ if not r:
     )
 
 
+def excepthook(exception_type, exception_value, traceback_object):
+    """
+    global error management
+    """
+    logging.debug("excepthook")
+
+    dialog.global_error_message(exception_type, exception_value, traceback_object)
+
+
+sys.excepthook = excepthook
+
+
 class TableModel(QAbstractTableModel):
     """
     class for populating table view with events
@@ -362,8 +374,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         super(MainWindow, self).__init__(parent)
         self.setupUi(self)
 
-        sys.excepthook = self.excepthook
-
         self.ffmpeg_bin = ffmpeg_bin
         # set icons
         self.setWindowIcon(QIcon(":/small_logo"))
@@ -477,12 +487,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         def paint(self, painter, option, index):
             # Custom drawing logic here (overriding paint)
             super().paint(painter, option, index)
-
-    def excepthook(self, exception_type, exception_value, traceback_object):
-        """
-        global error management
-        """
-        dialog.global_error_message(exception_type, exception_value, traceback_object)
 
     def block_dockwidgets(self):
         """
