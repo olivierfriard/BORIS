@@ -2919,7 +2919,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
     def load_project(self, project_path: str, project_changed, pj: dict):
         """
-        load project from pj dict
+        load project into widgets from pj dict
 
         Args:
             project_path (str): path of project file
@@ -2930,10 +2930,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             None
         """
         self.pj = dict(pj)
-        memProjectChanged = project_changed
         self.clear_interface()
-        self.projectChanged = True
-        self.projectChanged = memProjectChanged
+        self.projectChanged = project_changed
         self.load_behaviors_in_twEthogram([self.pj[cfg.ETHOGRAM][x][cfg.BEHAVIOR_CODE] for x in self.pj[cfg.ETHOGRAM]])
         self.load_subjects_in_twSubjects([self.pj[cfg.SUBJECTS][x][cfg.SUBJECT_NAME] for x in self.pj[cfg.SUBJECTS]])
         self.projectFileName = str(pl.Path(project_path).absolute())
