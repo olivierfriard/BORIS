@@ -814,6 +814,8 @@ class Input_dialog(QDialog):
 
         hbox2 = QHBoxLayout()
 
+        hbox2.addItem(QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum))
+
         self.pbCancel = QPushButton(cfg.CANCEL)
         self.pbCancel.clicked.connect(self.reject)
         hbox2.addWidget(self.pbCancel)
