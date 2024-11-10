@@ -166,7 +166,7 @@
      <x>0</x>
      <y>0</y>
      <width>1509</width>
-     <height>28</height>
+     <height>22</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuHelp">
@@ -326,6 +326,13 @@
      </property>
      <addaction name="actionNeedleman_Wunsch"/>
     </widget>
+    <widget class="QMenu" name="menu_plugins">
+     <property name="title">
+      <string>Plugins</string>
+     </property>
+     <addaction name="action_load_plugins"/>
+    </widget>
+    <addaction name="menu_plugins"/>
     <addaction name="actionTime_budget"/>
     <addaction name="actionTime_budget_by_behaviors_category"/>
     <addaction name="actionTime_budget_report"/>
@@ -1576,6 +1583,11 @@
   <action name="actionAdd_frame_indexes">
    <property name="text">
     <string>Add frame indexes</string>
+   </property>
+  </action>
+  <action name="action_load_plugins">
+   <property name="text">
+    <string>Load plugins</string>
    </property>
   </action>
  </widget>

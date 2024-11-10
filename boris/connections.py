@@ -49,6 +49,7 @@ from . import (
     video_operations,
     project_functions,
     external_processes,
+    plugins,
 )
 
 from . import state_events as state_events
@@ -200,6 +201,8 @@ def connections(self):
     self.actionCreate_transitions_flow_diagram_2.triggered.connect(transitions.transitions_flow_diagram)
 
     # menu Analysis
+    self.action_load_plugins.triggered.connect(lambda: plugins.load_plugins(self))
+
     self.actionTime_budget.triggered.connect(lambda: time_budget_widget.time_budget(self, mode="by_behavior"))
     self.actionTime_budget_by_behaviors_category.triggered.connect(lambda: time_budget_widget.time_budget(self, mode="by_category"))
 
