@@ -294,7 +294,7 @@ def check_state_events_obs(obsId: str, ethogram: dict, observation: dict, time_f
         tuple (bool, str): if OK True else False , message
     """
 
-    out = ""
+    out: str = ""
 
     # check if behaviors are defined as "state event"
     event_types = {ethogram[idx]["type"] for idx in ethogram}
@@ -304,6 +304,7 @@ def check_state_events_obs(obsId: str, ethogram: dict, observation: dict, time_f
 
     subjects = [event[cfg.EVENT_SUBJECT_FIELD_IDX] for event in observation[cfg.EVENTS]]
     ethogram_behaviors = {ethogram[idx][cfg.BEHAVIOR_CODE] for idx in ethogram}
+    state_behaviors = set(util.state_behavior_codes(ethogram))
 
     for subject in sorted(set(subjects)):
         behaviors = [
@@ -315,33 +316,35 @@ def check_state_events_obs(obsId: str, ethogram: dict, observation: dict, time_f
                 # return (False, "The behaviour <b>{}</b> is not defined in the ethogram.<br>".format(behavior))
                 continue
             else:
-                if cfg.STATE in event_type(behavior, ethogram).upper():
-                    lst: list = []
-                    memTime: dict = {}
-                    for event in [
-                        event
-                        for event in observation[cfg.EVENTS]
-                        if event[cfg.EVENT_BEHAVIOR_FIELD_IDX] == behavior and event[cfg.EVENT_SUBJECT_FIELD_IDX] == subject
-                    ]:
-                        behav_modif = [
-                            event[cfg.EVENT_BEHAVIOR_FIELD_IDX],
-                            event[cfg.EVENT_MODIFIER_FIELD_IDX],
-                        ]
+                if behavior not in state_behaviors:
+                    continue
 
-                        if behav_modif in lst:
-                            lst.remove(behav_modif)
-                            del memTime[str(behav_modif)]
-                        else:
-                            lst.append(behav_modif)
-                            memTime[str(behav_modif)] = event[cfg.EVENT_TIME_FIELD_IDX]
+                lst: list = []
+                memTime: dict = {}
+                for event in [
+                    event
+                    for event in observation[cfg.EVENTS]
+                    if event[cfg.EVENT_BEHAVIOR_FIELD_IDX] == behavior and event[cfg.EVENT_SUBJECT_FIELD_IDX] == subject
+                ]:
+                    behav_modif = [
+                        event[cfg.EVENT_BEHAVIOR_FIELD_IDX],
+                        event[cfg.EVENT_MODIFIER_FIELD_IDX],
+                    ]
 
-                    for event in lst:
-                        out += (
-                            f"The behavior <b>{behavior}</b> "
-                            f"{('(modifier ' + event[1] + ') ') if event[1] else ''} is not PAIRED "
-                            f'for subject "<b>{subject if subject else cfg.NO_FOCAL_SUBJECT}</b>" at '
-                            f"<b>{memTime[str(event)] if time_format == cfg.S else util.seconds2time(memTime[str(event)])}</b><br>"
-                        )
+                    if behav_modif in lst:
+                        lst.remove(behav_modif)
+                        del memTime[str(behav_modif)]
+                    else:
+                        lst.append(behav_modif)
+                        memTime[str(behav_modif)] = event[cfg.EVENT_TIME_FIELD_IDX]
+
+                for event in lst:
+                    out += (
+                        f"The behavior <b>{behavior}</b> "
+                        f"{('(modifier ' + event[1] + ') ') if event[1] else ''} is not PAIRED "
+                        f'for subject "<b>{subject if subject else cfg.NO_FOCAL_SUBJECT}</b>" at '
+                        f"<b>{memTime[str(event)] if time_format == cfg.S else util.seconds2time(memTime[str(event)])}</b><br>"
+                    )
 
     return (False, out) if out else (True, "No problem detected")
 

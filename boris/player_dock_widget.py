@@ -52,34 +52,6 @@ except OSError:  # libmpv not found
     sys.exit()
 """
 
-"""
-def draw_on_pixmap(label, x, y, color="red"):
-    # Ensure that the label has a pixmap; create one if it doesn't
-    if label.pixmap() is None:
-        pixmap = QPixmap(label.size())
-        pixmap.fill(Qt.transparent)
-        label.setPixmap(pixmap)
-
-    # Create a copy of the current pixmap to work on
-    pixmap_copy = label.pixmap().copy()
-
-    print(f"{pixmap_copy=}")
-
-    # Start painting on the copied pixmap
-    painter = QPainter(pixmap_copy)
-    try:
-        painter.setPen(QPen(QColor(color), 3))
-        painter.drawPoint(QPoint(x, y))  # Example: Draw a point at (x, y)
-    finally:
-        painter.end()  # Ensure painter is ended properly
-
-    pixmap_copy.save("/tmp/ramdisk/1.png")
-
-    # Set the modified pixmap back to the label
-    label.setPixmap(pixmap_copy)
-    label.update()  # Refresh the label to show the updated pixmap
-"""
-
 
 class Clickable_label(QLabel):
     """

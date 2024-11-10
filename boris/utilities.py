@@ -438,7 +438,7 @@ def state_behavior_codes(ethogram: dict) -> list:
         list: list of behavior codes defined as STATE event
 
     """
-    return [ethogram[x][cfg.BEHAVIOR_CODE] for x in ethogram if cfg.STATE in ethogram[x][cfg.TYPE].upper()]
+    return [ethogram[x][cfg.BEHAVIOR_CODE] for x in ethogram if ethogram[x][cfg.TYPE] == cfg.STATE_EVENT]
 
 
 def point_behavior_codes(ethogram: dict) -> list:
