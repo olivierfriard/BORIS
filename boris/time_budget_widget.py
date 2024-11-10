@@ -631,8 +631,8 @@ def time_budget(self, mode: str, mode2: str = "list"):
         else:
             self.tb.excluded_behaviors_list.setVisible(False)
 
-        self.statusbar.showMessage(f"Time budget generated in {round(time.time() - t0, 3)} s")
-        logging.debug("Time budget generated", 5000)
+        self.statusbar.showMessage(f"Time budget generated in {round(time.time() - t0, 3)} s", 5000)
+        logging.debug("Time budget generated")
 
         if mode == "by_behavior":
             tb_fields = [

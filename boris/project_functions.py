@@ -413,6 +413,10 @@ def check_project_integrity(
 
     Returns:
         str: message
+
+
+    TODO: implement check on order of events (for live and media)
+
     """
     out: str = ""
 
@@ -1279,8 +1283,8 @@ def open_project_json(projectFileName: str) -> tuple:
 
     logging.debug(f"open project: {projectFileName}")
 
-    projectChanged = False
-    msg = ""
+    projectChanged: bool = False
+    msg: str = ""
 
     if not os.path.isfile(projectFileName):
         return (
@@ -1517,6 +1521,11 @@ def open_project_json(projectFileName: str) -> tuple:
             QMessageBox.critical(cfg.programName, f"Error saving old project to {old_project_file_name}")
 
         pj[cfg.PROJECT_VERSION] = cfg.project_format_version
+
+    # sort events by time asc
+    for obs_id in pj[cfg.OBSERVATIONS]:
+        if pj[cfg.OBSERVATIONS][obs_id][cfg.TYPE] in (cfg.LIVE, cfg.MEDIA):
+            pj[cfg.OBSERVATIONS][obs_id][cfg.EVENTS].sort()
 
     return projectFileName, projectChanged, pj, msg
 

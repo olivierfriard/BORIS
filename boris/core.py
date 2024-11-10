@@ -180,6 +180,18 @@ if not r:
     )
 
 
+def excepthook(exception_type, exception_value, traceback_object):
+    """
+    global error management
+    """
+    logging.debug("excepthook")
+
+    dialog.global_error_message(exception_type, exception_value, traceback_object)
+
+
+sys.excepthook = excepthook
+
+
 class TableModel(QAbstractTableModel):
     """
     class for populating table view with events
@@ -362,8 +374,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         super(MainWindow, self).__init__(parent)
         self.setupUi(self)
 
-        sys.excepthook = self.excepthook
-
         self.ffmpeg_bin = ffmpeg_bin
         # set icons
         self.setWindowIcon(QIcon(":/small_logo"))
@@ -477,12 +487,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         def paint(self, painter, option, index):
             # Custom drawing logic here (overriding paint)
             super().paint(painter, option, index)
-
-    def excepthook(self, exception_type, exception_value, traceback_object):
-        """
-        global error management
-        """
-        dialog.global_error_message(exception_type, exception_value, traceback_object)
 
     def block_dockwidgets(self):
         """
@@ -2915,7 +2919,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
     def load_project(self, project_path: str, project_changed, pj: dict):
         """
-        load project from pj dict
+        load project into widgets from pj dict
 
         Args:
             project_path (str): path of project file
@@ -2926,10 +2930,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             None
         """
         self.pj = dict(pj)
-        memProjectChanged = project_changed
         self.clear_interface()
-        self.projectChanged = True
-        self.projectChanged = memProjectChanged
+        self.projectChanged = project_changed
         self.load_behaviors_in_twEthogram([self.pj[cfg.ETHOGRAM][x][cfg.BEHAVIOR_CODE] for x in self.pj[cfg.ETHOGRAM]])
         self.load_subjects_in_twSubjects([self.pj[cfg.SUBJECTS][x][cfg.SUBJECT_NAME] for x in self.pj[cfg.SUBJECTS]])
         self.projectFileName = str(pl.Path(project_path).absolute())

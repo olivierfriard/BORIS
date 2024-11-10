@@ -186,10 +186,10 @@ class observationsList_widget(QDialog):
         """
         select or unselect all filtered observations
         """
-
-        for idx in range(self.view.rowCount()):
-            table_item = self.view.item(idx, 0)
-            table_item.setSelected(mode == "select")
+        if mode == "select":
+            self.view.selectAll()
+        if mode == "unselect":
+            self.view.clearSelection()
 
     def pbCancel_clicked(self):
         self.close()

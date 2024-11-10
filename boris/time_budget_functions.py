@@ -671,10 +671,14 @@ def time_budget_analysis(
     categories: dict = {}
     out: list = []
     for subject in parameters[cfg.SELECTED_SUBJECTS]:
+        logging.debug(f"{subject=}")
+
         out_cat: list = []
         categories[subject] = {}
 
         for behavior in parameters[cfg.SELECTED_BEHAVIORS]:
+            logging.debug(f"{behavior=}")
+
             if parameters[cfg.INCLUDE_MODIFIERS]:  # with modifiers
                 if parameters[cfg.EXCLUDE_NON_CODED_MODIFIERS]:
                     # get coded modifiers
@@ -1012,6 +1016,15 @@ def time_budget_analysis(
                         continue
 
                     if len(rows) % 2:  # unpaired events
+                        """
+                        print()
+                        print(f"{subject=}")
+                        print(f"{behavior=}")
+                        print()
+                        for row in rows:
+                            print(f"{row['observation']=}  {row['occurence']=}")
+                        print()
+                        """
                         out_cat.append(
                             {
                                 "subject": subject,
@@ -1108,6 +1121,8 @@ def time_budget_analysis(
                         "-",
                         cfg.NA,
                     ):
+                        # print(f"{categories[subject][category]["duration"]=}")
+                        # print(f"{behav["duration"]=}")
                         categories[subject][category]["duration"] += behav["duration"]
                     else:
                         categories[subject][category]["duration"] = cfg.NA
