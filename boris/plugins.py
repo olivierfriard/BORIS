@@ -19,16 +19,21 @@ Copyright 2012-2024 Olivier Friard
   MA 02110-1301, USA.
 """
 
+import logging
 from PySide6.QtGui import QAction
+from . import config as cfg
 
 
 def load_plugins(self):
-    for action in self.menu_plugins.actions():
-        if not action.text().startswith("Load"):
-            self.menu_plugins.removeAction(action)
+    """
+    load selected plugins in analysis menu
+    """
+    self.menu_plugins.clear()
 
-    for option in ["Option 1", "Option 2", "Option 3"]:
-        print(option)
+    for plugin in self.config_param.get(cfg.ANALYSIS_PLUGINS, []):
+        logging.debug(f"adding plugin {plugin} to menu")
         # Create an action for each submenu option
-        action = QAction(option, self)
+        action = QAction(self, triggered=self.run_plugin)
+        action.setText(plugin)
+
         self.menu_plugins.addAction(action)

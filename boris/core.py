@@ -27,6 +27,7 @@ os.environ["PATH"] = os.path.dirname(__file__) + os.sep + "misc" + os.pathsep + 
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), ".")))
 
+
 import datetime
 
 import json
@@ -58,7 +59,7 @@ import shutil
 matplotlib.use("QtAgg")
 
 import PySide6
-from PySide6.QtCore import Qt, QPoint, Signal, QEvent, QDateTime, QTime, QUrl, QAbstractTableModel, qVersion, QTimer, QElapsedTimer
+from PySide6.QtCore import Qt, QPoint, Signal, QEvent, QDateTime, QUrl, QAbstractTableModel, qVersion, QElapsedTimer
 from PySide6.QtGui import QIcon, QPixmap, QFont, QKeyEvent, QDesktopServices, QColor, QPainter, QPolygon, QAction
 from PySide6.QtMultimedia import QSoundEffect
 from PySide6.QtWidgets import (
@@ -92,6 +93,7 @@ from . import plot_events
 from . import plot_spectrogram_rt
 from . import plot_waveform_rt
 from . import plot_events_rt
+from . import plugins
 from . import project_functions
 
 from . import select_observations
@@ -464,6 +466,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.config_param = cfg.INIT_PARAM
         config_file.read(self)
         menu_options.update_menu(self)
+
+        plugins.load_plugins(self)
 
     def theme_mode(self):
         """
@@ -5626,6 +5630,35 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         if self.playerType == cfg.IMAGES:
             self.image_idx = 0
             self.extract_frame(self.dw_player[0])
+
+    def run_plugin(self):
+        """
+        run plugin
+        """
+        import importlib
+
+        plugin = self.sender().text().replace(" ", "_")
+        logging.debug(f"run plugin {plugin}")
+
+        plugins_dir = pl.Path(__file__).parent / "analysis_plugins"
+
+        print(f"{plugins_dir=}")
+
+        module_path = f"{plugins_dir.name}.{plugin}"
+
+        print(f"{module_path=}")
+
+        plugin_module = importlib.import_module(module_path)
+
+        print(f"{plugin_module=}")
+
+        df = project_functions.project2dataframe(self.pj)
+
+        print(f"{df.head()=}")
+
+        results = getattr(plugin_module, plugin)(df, observations_list=[])
+
+        print(f"{results=}")
 
 
 def main():

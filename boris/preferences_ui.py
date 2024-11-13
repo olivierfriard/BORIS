@@ -17,9 +17,9 @@ from PySide6.QtGui import (QBrush, QColor, QConicalGradient, QCursor,
     QPalette, QPixmap, QRadialGradient, QTransform)
 from PySide6.QtWidgets import (QApplication, QCheckBox, QComboBox, QDialog,
     QDoubleSpinBox, QFormLayout, QGridLayout, QHBoxLayout,
-    QLabel, QLineEdit, QPlainTextEdit, QPushButton,
-    QSizePolicy, QSpacerItem, QSpinBox, QTabWidget,
-    QVBoxLayout, QWidget)
+    QLabel, QLineEdit, QListWidget, QListWidgetItem,
+    QPlainTextEdit, QPushButton, QSizePolicy, QSpacerItem,
+    QSpinBox, QTabWidget, QVBoxLayout, QWidget)
 
 class Ui_prefDialog(object):
     def setupUi(self, prefDialog):
@@ -243,6 +243,64 @@ class Ui_prefDialog(object):
         self.verticalLayout.addItem(self.verticalSpacer_4)
 
         self.tabWidget.addTab(self.tab_observations, "")
+        self.tab_analysis_plugins = QWidget()
+        self.tab_analysis_plugins.setObjectName(u"tab_analysis_plugins")
+        self.horizontalLayout_16 = QHBoxLayout(self.tab_analysis_plugins)
+        self.horizontalLayout_16.setObjectName(u"horizontalLayout_16")
+        self.verticalLayout_11 = QVBoxLayout()
+        self.verticalLayout_11.setObjectName(u"verticalLayout_11")
+        self.label_13 = QLabel(self.tab_analysis_plugins)
+        self.label_13.setObjectName(u"label_13")
+
+        self.verticalLayout_11.addWidget(self.label_13)
+
+        self.lv_all_plugins = QListWidget(self.tab_analysis_plugins)
+        self.lv_all_plugins.setObjectName(u"lv_all_plugins")
+
+        self.verticalLayout_11.addWidget(self.lv_all_plugins)
+
+
+        self.horizontalLayout_16.addLayout(self.verticalLayout_11)
+
+        self.verticalLayout_13 = QVBoxLayout()
+        self.verticalLayout_13.setObjectName(u"verticalLayout_13")
+        self.verticalSpacer_7 = QSpacerItem(20, 40, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding)
+
+        self.verticalLayout_13.addItem(self.verticalSpacer_7)
+
+        self.pb_add_plugin = QPushButton(self.tab_analysis_plugins)
+        self.pb_add_plugin.setObjectName(u"pb_add_plugin")
+
+        self.verticalLayout_13.addWidget(self.pb_add_plugin)
+
+        self.pb_remove_plugin = QPushButton(self.tab_analysis_plugins)
+        self.pb_remove_plugin.setObjectName(u"pb_remove_plugin")
+
+        self.verticalLayout_13.addWidget(self.pb_remove_plugin)
+
+        self.verticalSpacer_6 = QSpacerItem(20, 40, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding)
+
+        self.verticalLayout_13.addItem(self.verticalSpacer_6)
+
+
+        self.horizontalLayout_16.addLayout(self.verticalLayout_13)
+
+        self.verticalLayout_12 = QVBoxLayout()
+        self.verticalLayout_12.setObjectName(u"verticalLayout_12")
+        self.label_14 = QLabel(self.tab_analysis_plugins)
+        self.label_14.setObjectName(u"label_14")
+
+        self.verticalLayout_12.addWidget(self.label_14)
+
+        self.lv_plugins = QListWidget(self.tab_analysis_plugins)
+        self.lv_plugins.setObjectName(u"lv_plugins")
+
+        self.verticalLayout_12.addWidget(self.lv_plugins)
+
+
+        self.horizontalLayout_16.addLayout(self.verticalLayout_12)
+
+        self.tabWidget.addTab(self.tab_analysis_plugins, "")
         self.tab_ffmpeg = QWidget()
         self.tab_ffmpeg.setObjectName(u"tab_ffmpeg")
         self.verticalLayout_4 = QVBoxLayout(self.tab_ffmpeg)
@@ -443,7 +501,7 @@ class Ui_prefDialog(object):
 
         self.retranslateUi(prefDialog)
 
-        self.tabWidget.setCurrentIndex(5)
+        self.tabWidget.setCurrentIndex(2)
 
 
         QMetaObject.connectSlotsByName(prefDialog)
@@ -474,6 +532,11 @@ class Ui_prefDialog(object):
         self.cbAlertNoFocalSubject.setText(QCoreApplication.translate("prefDialog", u"Alert if focal subject is not set", None))
         self.cb_pause_before_addevent.setText(QCoreApplication.translate("prefDialog", u"Pause media before \"Add event\" command", None))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab_observations), QCoreApplication.translate("prefDialog", u"Observations", None))
+        self.label_13.setText(QCoreApplication.translate("prefDialog", u"All plugins", None))
+        self.pb_add_plugin.setText(QCoreApplication.translate("prefDialog", u"->", None))
+        self.pb_remove_plugin.setText(QCoreApplication.translate("prefDialog", u"<-", None))
+        self.label_14.setText(QCoreApplication.translate("prefDialog", u"Avalable plugins", None))
+        self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab_analysis_plugins), QCoreApplication.translate("prefDialog", u"Analysis plugins", None))
         self.lbFFmpegPath.setText(QCoreApplication.translate("prefDialog", u"FFmpeg path:", None))
         self.lbFFmpegCacheDir.setText(QCoreApplication.translate("prefDialog", u"FFmpeg cache directory", None))
         self.pbBrowseFFmpegCacheDir.setText(QCoreApplication.translate("prefDialog", u"...", None))

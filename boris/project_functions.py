@@ -23,6 +23,8 @@ import gzip
 import json
 import logging
 import os
+import pandas as pd
+import numpy as np
 import pathlib as pl
 import sys
 from decimal import Decimal as dec
@@ -1759,3 +1761,189 @@ def explore_project(self) -> None:
 
     else:
         QMessageBox.information(self, cfg.programName, "No events found")
+
+
+def project2dataframe(pj: dict) -> pd.DataFrame:
+    # print(pj.keys())
+
+    # print(pj["independent_variables"])
+
+    # indep_var = [pj["independent_variables"][idx]["label"] for idx in pj["independent_variables"]]
+
+    indep_variables = dict(
+        [(pj["independent_variables"][idx]["label"], pj["independent_variables"][idx]["type"]) for idx in pj["independent_variables"]]
+    )
+
+    # print()
+    # print(f"{indep_variables=}")
+
+    # n_max_set_modifiers = max([len(pj["behaviors_conf"][behavior_id]["modifiers"]) for behavior_id in pj["behaviors_conf"]])
+
+    # behavioral_categories
+    behavioral_category = dict([(pj["behaviors_conf"][x]["code"], pj["behaviors_conf"][x]["category"]) for x in pj["behaviors_conf"]])
+
+    # print(f"{pj["behaviors_conf"]=}")
+
+    all_modifier_sets: list = []
+    for behavior_id in pj["behaviors_conf"]:
+        modifier_names = []
+        set_count = 0
+        if pj["behaviors_conf"][behavior_id]["modifiers"] == "":
+            continue
+        for modifier in pj["behaviors_conf"][behavior_id]["modifiers"].values():
+            if modifier["name"]:
+                modifier_names.append((pj["behaviors_conf"][behavior_id]["code"], modifier["name"]))
+            else:
+                set_count += 1
+                modifier_names.append((pj["behaviors_conf"][behavior_id]["code"], f"set #{set_count}"))
+
+        # print(modifier_names)
+        if modifier_names:
+            all_modifier_sets.extend(modifier_names)
+
+    # print()
+    # print(f"{all_modifier_sets=}")
+
+    # create df
+
+    data = {
+        "Observation id": [],
+        # "Observation date": [],
+        # "Description": [],
+        # "Observation type": [],
+        # "Source": [],
+        # "Time offset (s)": [],
+        # "Coding duration": [],
+        # "Media duration (s)": [],
+        # "FPS (frame/s)": [],
+    }
+
+    for indep_var in indep_variables:
+        data[f"independent variable '{indep_var}'"] = []
+
+    data = data | {
+        "Subject": [],
+        "Observation duration by subject by observation": [],
+        "Behavior": [],
+        "Behavioral category": [],
+    }
+
+    for modifier_set in all_modifier_sets:
+        data[modifier_set] = []
+
+    data = data | {
+        "Behavior type": [],
+        "Start (s)": [],
+        "Stop (s)": [],
+        "Duration (s)": [],
+        # "Media file name": [],
+        # "Image index start": [],
+        # "Image index stop": [],
+        # "Image file path start": [],
+        # "Image file path stop": [],
+        "Comment start": [],
+        "Comment stop": [],
+    }
+
+    #
+
+    type_ = {
+        "Observation id": "string",
+        # "Observation date": "string",
+        # "Description": "string",
+        # "Observation type": "string",
+        # "Source": "string",
+        # "Time offset (s)": "string",
+        # "Coding duration": "float64",
+        # "Media duration (s)": "string",
+        # "FPS (frame/s)": "float64",
+    }
+
+    # TODO: set correct type in base of the var type
+    for indep_var in indep_variables:
+        type_[f"independent variable '{indep_var}'"] = "float64" if indep_variables[indep_var] == "numeric" else "string"
+
+    type_ = type_ | {
+        "Subject": "string",
+        "Observation duration by subject by observation": "float64",
+        "Behavior": "string",
+        "Behavioral category": "string",
+    }
+
+    for modifer_set in all_modifier_sets:
+        type_[modifer_set] = "string"
+
+    type_ = type_ | {
+        "Behavior type": "string",
+        "Start (s)": "float64",
+        "Stop (s)": "float64",
+        "Duration (s)": "float64",
+        # "Media file name": "string",
+        # "Image index start": "float64",
+        # "Image index stop": "float64",
+        # "Image file path start": "string",
+        # "Image file path stop": "string",
+        "Comment start": "string",
+        "Comment stop": "string",
+    }
+
+    state_behaviors = [pj["behaviors_conf"][x]["code"] for x in pj["behaviors_conf"] if pj["behaviors_conf"][x]["type"] == "State event"]
+
+    for obs_id in pj["observations"]:
+        # print(obs_id)
+        stop_event_idx = set()
+        for idx_event, event in enumerate(pj["observations"][obs_id]["events"]):
+            if idx_event in stop_event_idx:
+                continue
+            data["Observation id"].append(obs_id)
+            # data["Observation date"].append(pj["observations"][obs_id]["date"])
+            # data["Description"].append(pj["observations"][obs_id]["description"])
+            # data["Observation type"].append(pj["observations"][obs_id]["type"])
+            # data["Source"].append("")
+            # data["Time offset (s)"].append(pj["observations"][obs_id]["time offset"])
+            # data["Coding duration"].append("")
+            # data["Media duration (s)"].append("")
+            # data["FPS (frame/s)"].append("")
+
+            for indep_var in indep_variables:
+                data[f"independent variable '{indep_var}'"].append(pj["observations"][obs_id]["independent_variables"][indep_var])
+
+            data["Subject"].append(event[1])
+            data["Observation duration by subject by observation"].append(-1)
+            data["Behavior"].append(event[2])
+            data["Behavioral category"].append(behavioral_category[event[2]])
+
+            count_set = 0
+            for modifier_set in all_modifier_sets:
+                if event[2] == modifier_set[0]:
+                    data[modifier_set].append(event[3].split("|")[count_set])
+                    count_set += 1
+                else:
+                    data[modifier_set].append(np.nan)
+
+            data["Behavior type"].append("State event" if event[2] in state_behaviors else "Point event")
+            data["Start (s)"].append(event[0])
+            if event[2] in state_behaviors:
+                # search stop
+                # print(f"==> {idx_event=} {event[1:4]=}")
+                for idx_event2, event2 in enumerate(pj["observations"][obs_id]["events"][idx_event + 1 :], start=idx_event + 1):
+                    # print(f"{idx_event2=} {event2[1:4]=}")
+                    if event2[1:4] == event[1:4]:
+                        # print("found")
+                        stop_event_idx.add(idx_event2)
+                        data["Stop (s)"].append(event2[0])
+                        data["Duration (s)"].append(event2[0] - event[0])
+                        data["Comment start"].append(event[4])
+                        data["Comment stop"].append(event2[4])
+                        break
+                else:
+                    # print("not paired")
+                    raise ("not paired")
+
+            else:  # point
+                data["Stop (s)"].append(event[0])
+                data["Duration (s)"].append(np.nan)
+                data["Comment start"].append(event[4])
+                data["Comment stop"].append(event[4])
+
+    return pd.DataFrame(data)

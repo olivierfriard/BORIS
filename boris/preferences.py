@@ -22,23 +22,28 @@ This file is part of BORIS.
 
 import logging
 import os
-import pathlib
+from pathlib import Path
 import sys
 from . import dialog
 from . import gui_utilities
 from . import menu_options
 from . import config as cfg
 from . import config_file
+from . import plugins
 
 from .preferences_ui import Ui_prefDialog
 
-from PySide6.QtWidgets import QDialog, QFileDialog
+from PySide6.QtWidgets import QDialog, QFileDialog, QListWidgetItem
 
 
 class Preferences(QDialog, Ui_prefDialog):
     def __init__(self, parent=None):
         super().__init__()
         self.setupUi(self)
+
+        # plugins
+        self.pb_add_plugin.clicked.connect(self.add_plugin)
+        self.pb_remove_plugin.clicked.connect(self.remove_plugin)
 
         self.pbBrowseFFmpegCacheDir.clicked.connect(self.browseFFmpegCacheDir)
 
@@ -50,6 +55,26 @@ class Preferences(QDialog, Ui_prefDialog):
         self.pbCancel.clicked.connect(self.reject)
 
         self.flag_refresh = False
+
+    def add_plugin(self):
+        """
+        add selected plugin to available plugins
+        """
+        if not self.lv_all_plugins.currentItem():
+            return
+        if self.lv_all_plugins.currentItem().text() not in [self.lv_plugins.item(i).text() for i in range(self.lv_plugins.count())]:
+            self.lv_plugins.addItem(QListWidgetItem(self.lv_all_plugins.currentItem().text()))
+
+    def remove_plugin(self):
+        """
+        remove selected plugin from available plugins
+        """
+        if not self.lv_plugins.currentItem():
+            return
+        selected_item = self.lv_plugins.currentItem()
+        if selected_item:
+            row = self.lv_plugins.row(selected_item)
+            self.lv_plugins.takeItem(row)
 
     def refresh_preferences(self):
         """
@@ -144,6 +169,17 @@ def preferences(self):
     except Exception:
         preferencesWindow.cb_hwdec.setCurrentIndex(cfg.MPV_HWDEC_OPTIONS.index(cfg.MPV_HWDEC_DEFAULT_VALUE))
 
+    # plugins
+    preferencesWindow.lv_all_plugins.clear()
+    for file_ in (Path(__file__).parent / "analysis_plugins").glob("*.py"):
+        if file_.name == "__init__.py":
+            continue
+        preferencesWindow.lv_all_plugins.addItem(QListWidgetItem(file_.stem.replace("_", " ")))
+
+    if self.config_param.get(cfg.ANALYSIS_PLUGINS, []):
+        for file_ in self.config_param[cfg.ANALYSIS_PLUGINS]:
+            preferencesWindow.lv_plugins.addItem(QListWidgetItem(file_))
+
     # PROJET FILE INDENTATION
     preferencesWindow.combo_project_file_indentation.clear()
     preferencesWindow.combo_project_file_indentation.addItems(cfg.PROJECT_FILE_INDENTATION_COMBO_OPTIONS)
@@ -212,8 +248,8 @@ def preferences(self):
             self.close()
             # check if refresh canceled for not saved project
             if "refresh_preferences" in self.config_param:
-                if (pathlib.Path.home() / ".boris").exists():
-                    os.remove(pathlib.Path.home() / ".boris")
+                if (Path.home() / ".boris").exists():
+                    os.remove(Path.home() / ".boris")
                 sys.exit()
 
         if preferencesWindow.cbTimeFormat.currentIndex() == 0:
@@ -256,6 +292,13 @@ def preferences(self):
 
         # MPV hwdec
         self.config_param[cfg.MPV_HWDEC] = cfg.MPV_HWDEC_OPTIONS[preferencesWindow.cb_hwdec.currentIndex()]
+
+        # analysis plugins
+        self.config_param[cfg.ANALYSIS_PLUGINS] = [
+            preferencesWindow.lv_plugins.item(i).text() for i in range(preferencesWindow.lv_plugins.count())
+        ]
+
+        plugins.load_plugins(self)
 
         # project file indentation
         self.config_param[cfg.PROJECT_FILE_INDENTATION] = cfg.PROJECT_FILE_INDENTATION_OPTIONS[
