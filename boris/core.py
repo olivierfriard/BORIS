@@ -58,17 +58,7 @@ import shutil
 matplotlib.use("QtAgg")
 
 import PySide6
-from PySide6.QtCore import (
-    Qt,
-    QPoint,
-    Signal,
-    QEvent,
-    QDateTime,
-    QTime,
-    QUrl,
-    QAbstractTableModel,
-    qVersion,
-)
+from PySide6.QtCore import Qt, QPoint, Signal, QEvent, QDateTime, QTime, QUrl, QAbstractTableModel, qVersion, QTimer, QElapsedTimer
 from PySide6.QtGui import QIcon, QPixmap, QFont, QKeyEvent, QDesktopServices, QColor, QPainter, QPolygon, QAction
 from PySide6.QtMultimedia import QSoundEffect
 from PySide6.QtWidgets import (
@@ -3696,7 +3686,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
             self.pb_live_obs.setText("Stop live observation")
 
-            self.liveStartTime = QTime()
+            self.liveStartTime = QElapsedTimer()
             # set to now
             self.liveStartTime.start()
             # start timer
@@ -4682,9 +4672,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             if "Live observation finished" in self.pb_live_obs.text():
                 return dec("NaN")
             if self.liveObservationStarted:
-                now = QTime()
-                now.start()  # current time
-                memLaps = dec(str(round(self.liveStartTime.msecsTo(now) / 1000, 3)))
+                """now = QTime()"""
+                """now.start()  # current time"""
+                memLaps = dec(str(round(self.liveStartTime.elapsed() / 1000, 3)))
                 return memLaps
             else:
                 return dec("0")
