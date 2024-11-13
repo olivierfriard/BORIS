@@ -1731,6 +1731,19 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             )
 
         if self.playerType == cfg.IMAGES:
+            # print(f"{self.images_list=}")
+            # print(f"{self.image_idx=}")
+
+            if self.image_idx >= len(self.images_list):
+                QMessageBox.critical(
+                    None,
+                    cfg.programName,
+                    ("The picture directory was changed since the creation of observation."),
+                    QMessageBox.Ok | QMessageBox.Default,
+                    QMessageBox.NoButton,
+                )
+                return
+
             pixmap = QPixmap(self.images_list[self.image_idx])
             self.current_image_size = (pixmap.size().width(), pixmap.size().height())
 
