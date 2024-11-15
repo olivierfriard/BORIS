@@ -5682,7 +5682,14 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         """
         import importlib
 
-        plugin = self.sender().text().replace(" ", "_")
+        print(f"{self.config_param.get(cfg.ANALYSIS_PLUGINS, {})=}")
+
+        plugin_name = self.sender().text()
+        if plugin_name not in self.config_param.get(cfg.ANALYSIS_PLUGINS, {}):
+            QMessageBox.critical(self, cfg.programName, f"Plugin '{plugin_name}' not found")
+            return
+
+        plugin = self.config_param.get(cfg.ANALYSIS_PLUGINS, {})[plugin_name]
         logging.debug(f"run plugin {plugin}")
 
         plugins_dir = pl.Path(__file__).parent / "analysis_plugins"

@@ -63,7 +63,10 @@ class Preferences(QDialog, Ui_prefDialog):
         if not self.lv_all_plugins.currentItem():
             return
         if self.lv_all_plugins.currentItem().text() not in [self.lv_plugins.item(i).text() for i in range(self.lv_plugins.count())]:
-            self.lv_plugins.addItem(QListWidgetItem(self.lv_all_plugins.currentItem().text()))
+            # self.lv_plugins.addItem(self.lv_all_plugins.currentItem())
+            item = QListWidgetItem(self.lv_all_plugins.currentItem().text())
+            item.setData(100, self.lv_all_plugins.currentItem().data(100))
+            self.lv_plugins.addItem(item)
 
     def remove_plugin(self):
         """
@@ -174,7 +177,17 @@ def preferences(self):
     for file_ in (Path(__file__).parent / "analysis_plugins").glob("*.py"):
         if file_.name == "__init__.py":
             continue
-        preferencesWindow.lv_all_plugins.addItem(QListWidgetItem(file_.stem.replace("_", " ")))
+        with open(file_, "r") as f_in:
+            content = f_in.readlines()
+        plugin_name: str = ""
+        for line in content:
+            if line.startswith("__plugin_name__"):
+                plugin_name = line.split("=")[1].strip().replace('"', "")
+                break
+        if plugin_name:
+            item = QListWidgetItem(plugin_name)
+            item.setData(100, file_.stem)
+            preferencesWindow.lv_all_plugins.addItem(item)
 
     if self.config_param.get(cfg.ANALYSIS_PLUGINS, []):
         for file_ in self.config_param[cfg.ANALYSIS_PLUGINS]:
@@ -294,9 +307,12 @@ def preferences(self):
         self.config_param[cfg.MPV_HWDEC] = cfg.MPV_HWDEC_OPTIONS[preferencesWindow.cb_hwdec.currentIndex()]
 
         # analysis plugins
-        self.config_param[cfg.ANALYSIS_PLUGINS] = [
-            preferencesWindow.lv_plugins.item(i).text() for i in range(preferencesWindow.lv_plugins.count())
-        ]
+        self.config_param[cfg.ANALYSIS_PLUGINS] = {
+            preferencesWindow.lv_plugins.item(i).text(): preferencesWindow.lv_plugins.item(i).data(100)
+            for i in range(preferencesWindow.lv_plugins.count())
+        }
+
+        print(f"*** {self.config_param[cfg.ANALYSIS_PLUGINS]=}")
 
         plugins.load_plugins(self)
 

@@ -8,11 +8,12 @@ import pandas as pd
 
 __version__ = "0.1.0"
 __version_date__ = "2024-11-14"
+__plugin_name__ = "Number of occurences of behaviors"
 
 
 def number_of_occurences(df: pd.DataFrame, observations_list: list = [], parameters: dict = {}) -> pd.DataFrame:
     """
-    Calculate the number of occurrences per subject for a given list of observations.
+    Calculate the number of occurrences of behaviors per subject for a given list of observations.
     If the observations list is empty, the function will include all available observations.
 
     parameters
@@ -41,7 +42,7 @@ def number_of_occurences(df: pd.DataFrame, observations_list: list = [], paramet
                 | ((df["Start (s)"] < MIN_TIME) & (df["Stop (s)"] > MAX_TIME))
             ]
             df_interval.loc[df["Start (s)"] < MIN_TIME, "Start (s)"] = MIN_TIME
-            df_interval.loc[df["Stop (s)"] > MAX_TIME, "Start (s)"] = MAX_TIME
+            df_interval.loc[df["Stop (s)"] > MAX_TIME, "Stop (s)"] = MAX_TIME
 
             df_interval.loc[:, "Duration (s)"] = df_interval["Stop (s)"] - df_interval["Start (s)"]
 

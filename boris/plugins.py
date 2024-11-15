@@ -30,10 +30,12 @@ def load_plugins(self):
     """
     self.menu_plugins.clear()
 
-    for plugin in self.config_param.get(cfg.ANALYSIS_PLUGINS, []):
-        logging.debug(f"adding plugin {plugin} to menu")
+    print(f"{self.config_param.get(cfg.ANALYSIS_PLUGINS, {})=}")
+
+    for plugin_name in self.config_param.get(cfg.ANALYSIS_PLUGINS, {}):
+        logging.debug(f"adding plugin '{plugin_name}' to menu")
         # Create an action for each submenu option
         action = QAction(self, triggered=self.run_plugin)
-        action.setText(plugin)
+        action.setText(plugin_name)
 
         self.menu_plugins.addAction(action)

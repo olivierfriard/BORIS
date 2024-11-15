@@ -601,7 +601,7 @@ def dataset_write(dataset: tablib.Dataset, file_name: str, output_format: str, d
             if output_format == cfg.PANDAS_DF_EXT:
                 df.to_pickle(file_name)
 
-            if flag_pyreadr_loaded and output_format == cfg.RDS_EXT:
+            if output_format == cfg.RDS_EXT and flag_pyreadr_loaded:
                 pyreadr.write_rds(file_name, df)
 
             return True, ""

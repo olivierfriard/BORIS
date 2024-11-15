@@ -215,7 +215,12 @@ def export_tabular_events(self, mode: str = "tabular") -> None:
                 return
 
         if len(selected_observations) == 1:
-            file_name, filter_ = QFileDialog().getSaveFileName(self, "Export events", "", ";;".join(available_formats))
+            file_dialog_options = QFileDialog.Options()
+            file_dialog_options |= QFileDialog.DontConfirmOverwrite
+
+            file_name, filter_ = QFileDialog().getSaveFileName(
+                self, "Export events", "", ";;".join(available_formats), options=file_dialog_options
+            )
             if not file_name:
                 return
 
@@ -223,7 +228,7 @@ def export_tabular_events(self, mode: str = "tabular") -> None:
             if pl.Path(file_name).suffix != "." + output_format:
                 file_name = str(pl.Path(file_name)) + "." + output_format
                 # check if file with new extension already exists
-                if pl.Path(file_name).is_file():
+                if pl.Path(file_name).exists():
                     if (
                         dialog.MessageDialog(cfg.programName, f"The file {file_name} already exists.", [cfg.CANCEL, cfg.OVERWRITE])
                         == cfg.CANCEL
@@ -398,7 +403,12 @@ def export_aggregated_events(self):
             cfg.RDS,
         )
 
-        fileName, filter_ = QFileDialog().getSaveFileName(self, "Export aggregated events", "", ";;".join(file_formats))
+        file_dialog_options = QFileDialog.Options()
+        file_dialog_options |= QFileDialog.DontConfirmOverwrite
+
+        fileName, filter_ = QFileDialog().getSaveFileName(
+            self, "Export aggregated events", "", ";;".join(file_formats), options=file_dialog_options
+        )
 
         if not fileName:
             return
@@ -407,7 +417,7 @@ def export_aggregated_events(self):
         if pl.Path(fileName).suffix != "." + outputFormat:
             # check if file with new extension already exists
             fileName = str(pl.Path(fileName)) + "." + outputFormat
-            if pl.Path(fileName).is_file():
+            if pl.Path(fileName).exists():
                 if dialog.MessageDialog(cfg.programName, f"The file {fileName} already exists.", [cfg.CANCEL, cfg.OVERWRITE]) == cfg.CANCEL:
                     return
 
