@@ -1763,7 +1763,7 @@ def explore_project(self) -> None:
         QMessageBox.information(self, cfg.programName, "No events found")
 
 
-def project2dataframe(pj: dict) -> pd.DataFrame:
+def project2dataframe(pj: dict, observations_list: list = []) -> pd.DataFrame:
     # print(pj.keys())
 
     # print(pj["independent_variables"])
@@ -1890,6 +1890,8 @@ def project2dataframe(pj: dict) -> pd.DataFrame:
     state_behaviors = [pj["behaviors_conf"][x]["code"] for x in pj["behaviors_conf"] if pj["behaviors_conf"][x]["type"] == "State event"]
 
     for obs_id in pj["observations"]:
+        if observations_list and obs_id not in observations_list:
+            continue
         # print(obs_id)
         stop_event_idx = set()
         for idx_event, event in enumerate(pj["observations"][obs_id]["events"]):

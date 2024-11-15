@@ -5631,6 +5631,51 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.image_idx = 0
             self.extract_frame(self.dw_player[0])
 
+    def obs_param(self):
+        _, selected_observations = select_observations.select_observations2(self, mode=cfg.MULTIPLE, windows_title="")
+
+        if not selected_observations:
+            return [], {}
+
+        # check if coded behaviors are defined in ethogram
+        if project_functions.check_coded_behaviors_in_obs_list(self.pj, selected_observations):
+            return [], {}
+
+        # check if state events are paired
+        not_ok, selected_observations = project_functions.check_state_events(self.pj, selected_observations)
+        if not_ok or not selected_observations:
+            return [], {}
+
+        max_media_duration_all_obs, total_media_duration_all_obs = observation_operations.media_duration(
+            self.pj[cfg.OBSERVATIONS], selected_observations
+        )
+
+        logging.debug(
+            f"max_media_duration_all_obs: {max_media_duration_all_obs}, total_media_duration_all_obs={total_media_duration_all_obs}"
+        )
+
+        start_coding, end_coding, _ = observation_operations.coding_time(self.pj[cfg.OBSERVATIONS], selected_observations)
+
+        parameters: dict = select_subj_behav.choose_obs_subj_behav_category(
+            self,
+            selected_observations,
+            start_coding=start_coding,
+            end_coding=end_coding,
+            maxTime=max_media_duration_all_obs,
+            by_category=False,
+            n_observations=len(selected_observations),
+            show_exclude_non_coded_modifiers=True,
+        )
+        if parameters == {}:
+            return [], {}
+
+        if not parameters[cfg.SELECTED_SUBJECTS] or not parameters[cfg.SELECTED_BEHAVIORS]:
+            QMessageBox.warning(None, cfg.programName, "Select subject(s) and behavior(s) to analyze")
+            return [], {}
+
+        logging.debug(f"{parameters=}")
+        return selected_observations, parameters
+
     def run_plugin(self):
         """
         run plugin
@@ -5648,17 +5693,31 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         print(f"{module_path=}")
 
-        plugin_module = importlib.import_module(module_path)
+        try:
+            plugin_module = importlib.import_module(module_path)
+            print(f"{plugin} loaded v.{getattr(plugin_module, '__version__')} v. {getattr(plugin_module, '__version_date__')}")
+        except Exception:
+            QMessageBox.critical(self, cfg.programName, f"Error loding the plugin {plugin}")
+            return
 
         print(f"{plugin_module=}")
 
-        df = project_functions.project2dataframe(self.pj)
+        selected_observations, parameters = self.obs_param()
+
+        df = project_functions.project2dataframe(self.pj, selected_observations)
 
         print(f"{df.head()=}")
 
-        results = getattr(plugin_module, plugin)(df, observations_list=[])
+        df_results = getattr(plugin_module, plugin)(df, observations_list=selected_observations, parameters=parameters)
 
-        print(f"{results=}")
+        from . import view_df
+
+        self.view_dataframe = view_df.View_df(
+            self.sender().text(), f"{getattr(plugin_module, "__version__")} ({getattr(plugin_module, "__version_date__")})", df_results
+        )
+        self.view_dataframe.show()
+
+        # print(f"{results=}")
 
 
 def main():
