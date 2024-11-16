@@ -129,6 +129,18 @@ def preferences(self):
     show preferences window
     """
 
+    def on_plugin_click(item):
+        print(f"You clicked: {item.text()}")
+        # file_name = (Path(__file__).parent / "analysis_plugins" / item.data(100)).with_suffix(".py")
+        import importlib
+
+        plugins_dir = Path(__file__).parent / "analysis_plugins"
+        module_path = f"{plugins_dir.name}.{item.data(100)}"
+        print(f"{module_path=}")
+        plugin_module = importlib.import_module(module_path)
+
+        preferencesWindow.pte_plugin_description.setPlainText(getattr(plugin_module, item.data(100)).__doc__)
+
     preferencesWindow = Preferences()
     preferencesWindow.tabWidget.setCurrentIndex(0)
 
@@ -173,6 +185,8 @@ def preferences(self):
         preferencesWindow.cb_hwdec.setCurrentIndex(cfg.MPV_HWDEC_OPTIONS.index(cfg.MPV_HWDEC_DEFAULT_VALUE))
 
     # plugins
+    preferencesWindow.lv_all_plugins.itemClicked.connect(on_plugin_click)
+
     preferencesWindow.lv_all_plugins.clear()
     for file_ in (Path(__file__).parent / "analysis_plugins").glob("*.py"):
         if file_.name == "__init__.py":
@@ -311,8 +325,6 @@ def preferences(self):
             preferencesWindow.lv_plugins.item(i).text(): preferencesWindow.lv_plugins.item(i).data(100)
             for i in range(preferencesWindow.lv_plugins.count())
         }
-
-        print(f"*** {self.config_param[cfg.ANALYSIS_PLUGINS]=}")
 
         plugins.load_plugins(self)
 
