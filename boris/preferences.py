@@ -34,6 +34,7 @@ from . import plugins
 from .preferences_ui import Ui_prefDialog
 
 from PySide6.QtWidgets import QDialog, QFileDialog, QListWidgetItem
+from PySide6.QtCore import Qt
 
 
 class Preferences(QDialog, Ui_prefDialog):
@@ -42,8 +43,8 @@ class Preferences(QDialog, Ui_prefDialog):
         self.setupUi(self)
 
         # plugins
-        self.pb_add_plugin.clicked.connect(self.add_plugin)
-        self.pb_remove_plugin.clicked.connect(self.remove_plugin)
+        """self.pb_add_plugin.clicked.connect(self.add_plugin)
+        self.pb_remove_plugin.clicked.connect(self.remove_plugin)"""
 
         self.pbBrowseFFmpegCacheDir.clicked.connect(self.browseFFmpegCacheDir)
 
@@ -56,6 +57,7 @@ class Preferences(QDialog, Ui_prefDialog):
 
         self.flag_refresh = False
 
+    '''
     def add_plugin(self):
         """
         add selected plugin to available plugins
@@ -78,6 +80,7 @@ class Preferences(QDialog, Ui_prefDialog):
         if selected_item:
             row = self.lv_plugins.row(selected_item)
             self.lv_plugins.takeItem(row)
+    '''
 
     def refresh_preferences(self):
         """
@@ -130,15 +133,22 @@ def preferences(self):
     """
 
     def on_plugin_click(item):
-        print(f"You clicked: {item.text()}")
-        # file_name = (Path(__file__).parent / "analysis_plugins" / item.data(100)).with_suffix(".py")
+        """
+        display information about the clicked plugin
+        """
         import importlib
 
         plugins_dir = Path(__file__).parent / "analysis_plugins"
         module_path = f"{plugins_dir.name}.{item.data(100)}"
         plugin_module = importlib.import_module(module_path)
+        out: list = []
+        out.append(getattr(plugin_module, "__plugin_name__") + "\n")
+        out.append(getattr(plugin_module, "__author__"))
+        out.append(f"v. {getattr(plugin_module, "__version__")} ({getattr(plugin_module, "__version_date__")})\n")
 
-        preferencesWindow.pte_plugin_description.setPlainText(getattr(plugin_module, item.data(100)).__doc__)
+        out.append(getattr(plugin_module, item.data(100)).__doc__.strip())
+
+        preferencesWindow.pte_plugin_description.setPlainText("\n".join(out))
 
     preferencesWindow = Preferences()
     preferencesWindow.tabWidget.setCurrentIndex(0)
@@ -199,12 +209,13 @@ def preferences(self):
                 break
         if plugin_name:
             item = QListWidgetItem(plugin_name)
+            item.setFlags(item.flags() | Qt.ItemIsUserCheckable)
+            if plugin_name in self.config_param.get(cfg.EXCLUDED_PLUGINS, set()):
+                item.setCheckState(Qt.Unchecked)
+            else:
+                item.setCheckState(Qt.Checked)
             item.setData(100, file_.stem)
             preferencesWindow.lv_all_plugins.addItem(item)
-
-    if self.config_param.get(cfg.ANALYSIS_PLUGINS, []):
-        for file_ in self.config_param[cfg.ANALYSIS_PLUGINS]:
-            preferencesWindow.lv_plugins.addItem(QListWidgetItem(file_))
 
     # PROJET FILE INDENTATION
     preferencesWindow.combo_project_file_indentation.clear()
@@ -320,10 +331,15 @@ def preferences(self):
         self.config_param[cfg.MPV_HWDEC] = cfg.MPV_HWDEC_OPTIONS[preferencesWindow.cb_hwdec.currentIndex()]
 
         # analysis plugins
-        self.config_param[cfg.ANALYSIS_PLUGINS] = {
-            preferencesWindow.lv_plugins.item(i).text(): preferencesWindow.lv_plugins.item(i).data(100)
-            for i in range(preferencesWindow.lv_plugins.count())
-        }
+        self.config_param[cfg.ANALYSIS_PLUGINS] = {}
+        self.config_param[cfg.EXCLUDED_PLUGINS] = set()
+        for i in range(preferencesWindow.lv_all_plugins.count()):
+            if preferencesWindow.lv_all_plugins.item(i).checkState() == Qt.Checked:
+                self.config_param[cfg.ANALYSIS_PLUGINS][preferencesWindow.lv_all_plugins.item(i).text()] = (
+                    preferencesWindow.lv_all_plugins.item(i).data(100)
+                )
+            else:
+                self.config_param[cfg.EXCLUDED_PLUGINS].add(preferencesWindow.lv_all_plugins.item(i).text())
 
         plugins.load_plugins(self)
 

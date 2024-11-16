@@ -7,24 +7,21 @@ import pandas as pd
 __version__ = "0.1.0"
 __version_date__ = "2024-11-14"
 __plugin_name__ = "Time budget"
+__author__ = "Olivier Friard - University of Torino - Italy"
 
 
 def time_budget(df: pd.DataFrame, observations_list: list = [], parameters: dict = {}) -> pd.DataFrame:
     """
-    Calculate the following values for a given list of observations:
+    Calculate the following values for the selected observations:
 
-    - total number of occurences
-    - total duration
-    - duration mean
-    - duration std dev
-    - inter-event intervals mean
-    - inter-event intervals std dev
+    - Total number of occurences of behavior
+    - Total duration of behavior (in seconds)
+    - Duration mean of behavior (in seconds)
+    - Standard deviation of behavior duration (in seconds)
+    - Inter-event intervals mean (in seconds)
+    - Inter-event intervals standard deviation (in seconds)
     - % of total duration
-
-    If the observations list is empty, the function will include all available observations.
     """
-
-    print(parameters)
 
     # filter selected observations
     if observations_list:

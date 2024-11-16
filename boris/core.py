@@ -5680,6 +5680,16 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         """
         run plugin
         """
+        if not self.project:
+            QMessageBox.warning(
+                self,
+                cfg.programName,
+                "No observations found. Open a project first",
+                QMessageBox.Ok | QMessageBox.Default,
+                QMessageBox.NoButton,
+            )
+            return
+
         import importlib
 
         print(f"{self.config_param.get(cfg.ANALYSIS_PLUGINS, {})=}")
@@ -5710,6 +5720,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         print(f"{plugin_module=}")
 
         selected_observations, parameters = self.obs_param()
+        if not selected_observations:
+            return
 
         df = project_functions.project2dataframe(self.pj, selected_observations)
 

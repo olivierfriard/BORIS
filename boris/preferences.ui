@@ -314,124 +314,36 @@
         <attribute name="title">
          <string>Analysis plugins</string>
         </attribute>
-        <layout class="QHBoxLayout" name="horizontalLayout_17">
+        <layout class="QHBoxLayout" name="horizontalLayout_16">
          <item>
-          <layout class="QHBoxLayout" name="horizontalLayout_16" stretch="4,1,4">
+          <layout class="QVBoxLayout" name="verticalLayout_11">
            <item>
-            <layout class="QVBoxLayout" name="verticalLayout_11" stretch="0,1">
-             <property name="sizeConstraint">
-              <enum>QLayout::SizeConstraint::SetMaximumSize</enum>
+            <widget class="QLabel" name="label_13">
+             <property name="text">
+              <string>All plugins</string>
              </property>
-             <item>
-              <widget class="QLabel" name="label_13">
-               <property name="text">
-                <string>All plugins</string>
-               </property>
-              </widget>
-             </item>
-             <item>
-              <widget class="QSplitter" name="splitter">
-               <property name="orientation">
-                <enum>Qt::Orientation::Vertical</enum>
-               </property>
-               <widget class="QListWidget" name="lv_all_plugins"/>
-               <widget class="QPlainTextEdit" name="pte_plugin_description">
-                <property name="readOnly">
-                 <bool>true</bool>
-                </property>
-               </widget>
-              </widget>
-             </item>
-            </layout>
+            </widget>
            </item>
            <item>
-            <layout class="QVBoxLayout" name="verticalLayout_13" stretch="0,0,0,0">
-             <property name="spacing">
-              <number>5</number>
+            <widget class="QListWidget" name="lv_all_plugins"/>
+           </item>
+          </layout>
+         </item>
+         <item>
+          <layout class="QVBoxLayout" name="verticalLayout_12">
+           <item>
+            <widget class="QLabel" name="label_14">
+             <property name="text">
+              <string>Plugin info</string>
              </property>
-             <property name="sizeConstraint">
-              <enum>QLayout::SizeConstraint::SetFixedSize</enum>
-             </property>
-             <property name="leftMargin">
-              <number>0</number>
-             </property>
-             <item>
-              <spacer name="verticalSpacer_7">
-               <property name="orientation">
-                <enum>Qt::Orientation::Vertical</enum>
-               </property>
-               <property name="sizeHint" stdset="0">
-                <size>
-                 <width>20</width>
-                 <height>40</height>
-                </size>
-               </property>
-              </spacer>
-             </item>
-             <item>
-              <widget class="QPushButton" name="pb_add_plugin">
-               <property name="minimumSize">
-                <size>
-                 <width>41</width>
-                 <height>0</height>
-                </size>
-               </property>
-               <property name="text">
-                <string>-&gt;</string>
-               </property>
-              </widget>
-             </item>
-             <item>
-              <widget class="QPushButton" name="pb_remove_plugin">
-               <property name="minimumSize">
-                <size>
-                 <width>41</width>
-                 <height>0</height>
-                </size>
-               </property>
-               <property name="text">
-                <string>&lt;-</string>
-               </property>
-              </widget>
-             </item>
-             <item>
-              <spacer name="verticalSpacer_6">
-               <property name="orientation">
-                <enum>Qt::Orientation::Vertical</enum>
-               </property>
-               <property name="sizeHint" stdset="0">
-                <size>
-                 <width>20</width>
-                 <height>40</height>
-                </size>
-               </property>
-              </spacer>
-             </item>
-            </layout>
+            </widget>
            </item>
            <item>
-            <layout class="QVBoxLayout" name="verticalLayout_12">
-             <property name="sizeConstraint">
-              <enum>QLayout::SizeConstraint::SetMinimumSize</enum>
+            <widget class="QPlainTextEdit" name="pte_plugin_description">
+             <property name="readOnly">
+              <bool>true</bool>
              </property>
-             <item>
-              <widget class="QLabel" name="label_14">
-               <property name="text">
-                <string>Available plugins</string>
-               </property>
-              </widget>
-             </item>
-             <item>
-              <widget class="QListWidget" name="lv_plugins">
-               <property name="sizePolicy">
-                <sizepolicy hsizetype="Ignored" vsizetype="Expanding">
-                 <horstretch>100</horstretch>
-                 <verstretch>0</verstretch>
-                </sizepolicy>
-               </property>
-              </widget>
-             </item>
-            </layout>
+            </widget>
            </item>
           </layout>
          </item>

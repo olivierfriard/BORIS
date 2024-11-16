@@ -22,6 +22,7 @@ Copyright 2012-2024 Olivier Friard
 import logging
 from PySide6.QtGui import QAction
 from . import config as cfg
+from pathlib import Path
 
 
 def load_plugins(self):
@@ -29,6 +30,19 @@ def load_plugins(self):
     load selected plugins in analysis menu
     """
     self.menu_plugins.clear()
+
+    for file_ in (Path(__file__).parent / "analysis_plugins").glob("*.py"):
+        if file_.name == "__init__.py":
+            continue
+        with open(file_, "r") as f_in:
+            content = f_in.readlines()
+        plugin_name: str = ""
+        for line in content:
+            if line.startswith("__plugin_name__"):
+                plugin_name = line.split("=")[1].strip().replace('"', "")
+                break
+        if plugin_name and plugin_name not in self.config_param.get(cfg.EXCLUDED_PLUGINS, set()):
+            self.config_param[cfg.ANALYSIS_PLUGINS][plugin_name] = file_.stem
 
     print(f"{self.config_param.get(cfg.ANALYSIS_PLUGINS, {})=}")
 
