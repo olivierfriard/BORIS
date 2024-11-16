@@ -136,7 +136,6 @@ def preferences(self):
 
         plugins_dir = Path(__file__).parent / "analysis_plugins"
         module_path = f"{plugins_dir.name}.{item.data(100)}"
-        print(f"{module_path=}")
         plugin_module = importlib.import_module(module_path)
 
         preferencesWindow.pte_plugin_description.setPlainText(getattr(plugin_module, item.data(100)).__doc__)
