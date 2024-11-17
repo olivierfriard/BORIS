@@ -314,18 +314,42 @@
         <attribute name="title">
          <string>Analysis plugins</string>
         </attribute>
-        <layout class="QHBoxLayout" name="horizontalLayout_16">
+        <layout class="QHBoxLayout" name="horizontalLayout_17">
          <item>
           <layout class="QVBoxLayout" name="verticalLayout_11">
            <item>
             <widget class="QLabel" name="label_13">
              <property name="text">
-              <string>All plugins</string>
+              <string>BORIS plugins</string>
              </property>
             </widget>
            </item>
            <item>
             <widget class="QListWidget" name="lv_all_plugins"/>
+           </item>
+           <item>
+            <widget class="QLabel" name="label_15">
+             <property name="text">
+              <string>Personal plugins</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <layout class="QHBoxLayout" name="horizontalLayout_16">
+             <item>
+              <widget class="QLineEdit" name="le_personal_plugins_dir"/>
+             </item>
+             <item>
+              <widget class="QPushButton" name="pb_browse_plugins_dir">
+               <property name="text">
+                <string>Browse</string>
+               </property>
+              </widget>
+             </item>
+            </layout>
+           </item>
+           <item>
+            <widget class="QListWidget" name="lw_personal_plugins"/>
            </item>
           </layout>
          </item>

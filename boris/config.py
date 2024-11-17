@@ -402,7 +402,8 @@ MPV_HWDEC_OPTIONS = (MPV_HWDEC_AUTO, MPV_HWDEC_AUTOSAFE, MPV_HWDEC_NO)
 MPV_HWDEC_DEFAULT_VALUE = MPV_HWDEC_AUTO
 
 ANALYSIS_PLUGINS = "analysis_plugins"
-EXCLUDED_PLUGINS = "excluded plugins "
+EXCLUDED_PLUGINS = "excluded_plugins"
+PERSONAL_PLUGINS_DIR = "personal_plugins_dir"
 
 PROJECT_FILE_INDENTATION = "project file indentation"
 PROJECT_FILE_INDENTATION_COMBO_OPTIONS = ("None", "Newline", "Tab", "2 spaces", "4 spaces")

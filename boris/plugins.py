@@ -30,6 +30,7 @@ def load_plugins(self):
     load selected plugins in analysis menu
     """
     self.menu_plugins.clear()
+    self.config_param[cfg.ANALYSIS_PLUGINS] = {}
 
     for file_ in (Path(__file__).parent / "analysis_plugins").glob("*.py"):
         if file_.name == "__init__.py":

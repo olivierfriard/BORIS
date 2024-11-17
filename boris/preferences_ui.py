@@ -245,8 +245,8 @@ class Ui_prefDialog(object):
         self.tabWidget.addTab(self.tab_observations, "")
         self.tab_analysis_plugins = QWidget()
         self.tab_analysis_plugins.setObjectName(u"tab_analysis_plugins")
-        self.horizontalLayout_16 = QHBoxLayout(self.tab_analysis_plugins)
-        self.horizontalLayout_16.setObjectName(u"horizontalLayout_16")
+        self.horizontalLayout_17 = QHBoxLayout(self.tab_analysis_plugins)
+        self.horizontalLayout_17.setObjectName(u"horizontalLayout_17")
         self.verticalLayout_11 = QVBoxLayout()
         self.verticalLayout_11.setObjectName(u"verticalLayout_11")
         self.label_13 = QLabel(self.tab_analysis_plugins)
@@ -259,8 +259,33 @@ class Ui_prefDialog(object):
 
         self.verticalLayout_11.addWidget(self.lv_all_plugins)
 
+        self.label_15 = QLabel(self.tab_analysis_plugins)
+        self.label_15.setObjectName(u"label_15")
 
-        self.horizontalLayout_16.addLayout(self.verticalLayout_11)
+        self.verticalLayout_11.addWidget(self.label_15)
+
+        self.horizontalLayout_16 = QHBoxLayout()
+        self.horizontalLayout_16.setObjectName(u"horizontalLayout_16")
+        self.le_personal_plugins_dir = QLineEdit(self.tab_analysis_plugins)
+        self.le_personal_plugins_dir.setObjectName(u"le_personal_plugins_dir")
+
+        self.horizontalLayout_16.addWidget(self.le_personal_plugins_dir)
+
+        self.pb_browse_plugins_dir = QPushButton(self.tab_analysis_plugins)
+        self.pb_browse_plugins_dir.setObjectName(u"pb_browse_plugins_dir")
+
+        self.horizontalLayout_16.addWidget(self.pb_browse_plugins_dir)
+
+
+        self.verticalLayout_11.addLayout(self.horizontalLayout_16)
+
+        self.lw_personal_plugins = QListWidget(self.tab_analysis_plugins)
+        self.lw_personal_plugins.setObjectName(u"lw_personal_plugins")
+
+        self.verticalLayout_11.addWidget(self.lw_personal_plugins)
+
+
+        self.horizontalLayout_17.addLayout(self.verticalLayout_11)
 
         self.verticalLayout_12 = QVBoxLayout()
         self.verticalLayout_12.setObjectName(u"verticalLayout_12")
@@ -276,7 +301,7 @@ class Ui_prefDialog(object):
         self.verticalLayout_12.addWidget(self.pte_plugin_description)
 
 
-        self.horizontalLayout_16.addLayout(self.verticalLayout_12)
+        self.horizontalLayout_17.addLayout(self.verticalLayout_12)
 
         self.tabWidget.addTab(self.tab_analysis_plugins, "")
         self.tab_ffmpeg = QWidget()
@@ -510,7 +535,9 @@ class Ui_prefDialog(object):
         self.cbAlertNoFocalSubject.setText(QCoreApplication.translate("prefDialog", u"Alert if focal subject is not set", None))
         self.cb_pause_before_addevent.setText(QCoreApplication.translate("prefDialog", u"Pause media before \"Add event\" command", None))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab_observations), QCoreApplication.translate("prefDialog", u"Observations", None))
-        self.label_13.setText(QCoreApplication.translate("prefDialog", u"All plugins", None))
+        self.label_13.setText(QCoreApplication.translate("prefDialog", u"BORIS plugins", None))
+        self.label_15.setText(QCoreApplication.translate("prefDialog", u"Personal plugins", None))
+        self.pb_browse_plugins_dir.setText(QCoreApplication.translate("prefDialog", u"Browse", None))
         self.label_14.setText(QCoreApplication.translate("prefDialog", u"Plugin info", None))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab_analysis_plugins), QCoreApplication.translate("prefDialog", u"Analysis plugins", None))
         self.lbFFmpegPath.setText(QCoreApplication.translate("prefDialog", u"FFmpeg path:", None))
