@@ -77,5 +77,3 @@ def load_plugins(self):
                 self.config_param[cfg.ANALYSIS_PLUGINS][plugin_name] = str(file_)
 
     print(f"{self.config_param.get(cfg.ANALYSIS_PLUGINS, {})=}")
-
-    # add_plugins_to_menu(self)
