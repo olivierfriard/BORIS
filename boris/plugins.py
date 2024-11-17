@@ -25,28 +25,10 @@ from . import config as cfg
 from pathlib import Path
 
 
-def load_plugins(self):
+def add_plugins_to_menu(self):
     """
-    load selected plugins in analysis menu
+    add plugins to the plugins menu
     """
-    self.menu_plugins.clear()
-    self.config_param[cfg.ANALYSIS_PLUGINS] = {}
-
-    for file_ in (Path(__file__).parent / "analysis_plugins").glob("*.py"):
-        if file_.name == "__init__.py":
-            continue
-        with open(file_, "r") as f_in:
-            content = f_in.readlines()
-        plugin_name: str = ""
-        for line in content:
-            if line.startswith("__plugin_name__"):
-                plugin_name = line.split("=")[1].strip().replace('"', "")
-                break
-        if plugin_name and plugin_name not in self.config_param.get(cfg.EXCLUDED_PLUGINS, set()):
-            self.config_param[cfg.ANALYSIS_PLUGINS][plugin_name] = file_.stem
-
-    print(f"{self.config_param.get(cfg.ANALYSIS_PLUGINS, {})=}")
-
     for plugin_name in self.config_param.get(cfg.ANALYSIS_PLUGINS, {}):
         logging.debug(f"adding plugin '{plugin_name}' to menu")
         # Create an action for each submenu option
@@ -54,3 +36,46 @@ def load_plugins(self):
         action.setText(plugin_name)
 
         self.menu_plugins.addAction(action)
+
+
+def get_plugin_name(plugin_path: str):
+    """
+    get name of plugin
+    """
+    # search plugin name
+    plugin_name = None
+    with open(plugin_path, "r") as f_in:
+        for line in f_in:
+            if line.startswith("__plugin_name__"):
+                plugin_name = line.split("=")[1].strip().replace('"', "")
+                break
+    return plugin_name
+
+
+def load_plugins(self):
+    """
+    load selected plugins in analysis menu
+    """
+    self.menu_plugins.clear()
+    self.config_param[cfg.ANALYSIS_PLUGINS] = {}
+
+    # load BORIS plugins
+    for file_ in (Path(__file__).parent / "analysis_plugins").glob("*.py"):
+        if file_.name == "__init__.py":
+            continue
+        plugin_name = get_plugin_name(file_)
+        if plugin_name is not None and plugin_name not in self.config_param.get(cfg.EXCLUDED_PLUGINS, set()):
+            self.config_param[cfg.ANALYSIS_PLUGINS][plugin_name] = str(file_)
+
+    # load personal plugins
+    if self.config_param.get(cfg.PERSONAL_PLUGINS_DIR, ""):
+        for file_ in Path(self.config_param.get(cfg.PERSONAL_PLUGINS_DIR, "")).glob("*.py"):
+            if file_.name == "__init__.py":
+                continue
+            plugin_name = get_plugin_name(file_)
+            if plugin_name is not None and plugin_name not in self.config_param.get(cfg.EXCLUDED_PLUGINS, set()):
+                self.config_param[cfg.ANALYSIS_PLUGINS][plugin_name] = str(file_)
+
+    print(f"{self.config_param.get(cfg.ANALYSIS_PLUGINS, {})=}")
+
+    # add_plugins_to_menu(self)

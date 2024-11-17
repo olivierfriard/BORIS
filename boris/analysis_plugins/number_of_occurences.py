@@ -12,11 +12,20 @@ __plugin_name__ = "Number of occurences of behaviors"
 __author__ = "Olivier Friard - University of Torino - Italy"
 
 
-def number_of_occurences(df: pd.DataFrame, observations_list: list = [], parameters: dict = {}) -> pd.DataFrame:
+def run(df: pd.DataFrame):
     """
-    Calculate the number of occurrences of behaviors by subject for the selected observations.
+    Calculate the number of occurrences of behaviors by subject.
+    """
 
-    parameters
+    return df.groupby(["Subject", "Behavior"])["Behavior"].count().reset_index(name="number of occurences")
+
+
+def main(df: pd.DataFrame, observations_list: list = [], parameters: dict = {}) -> pd.DataFrame:
+    """
+    filter by selected observations.
+    filter by selected subjects.
+    filter by selected behaviors.
+    filter by time interval.
     """
 
     # filter selected observations
@@ -48,4 +57,4 @@ def number_of_occurences(df: pd.DataFrame, observations_list: list = [], paramet
 
             df = df_interval
 
-    return df.groupby(["Subject", "Behavior"])["Behavior"].count().reset_index(name="number of occurences")
+    return run(df)

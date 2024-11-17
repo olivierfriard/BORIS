@@ -67,16 +67,15 @@ class Preferences(QDialog, Ui_prefDialog):
             return
 
         self.le_personal_plugins_dir.setText(directory)
-        if Path(directory).exists():
-            for file_ in Path(directory).glob("*.py"):
-                item = QListWidgetItem(file_.stem)
-                item.setFlags(item.flags() | Qt.ItemIsUserCheckable)
-                # if plugin_name in self.config_param.get(cfg.EXCLUDED_PLUGINS, set()):
-                #    item.setCheckState(Qt.Unchecked)
-                # else:
-                item.setCheckState(Qt.Checked)
-                item.setData(100, file_.stem)
-                self.lw_personal_plugins.addItem(item)
+        for file_ in Path(directory).glob("*.py"):
+            item = QListWidgetItem(file_.stem)
+            item.setFlags(item.flags() | Qt.ItemIsUserCheckable)
+            # if plugin_name in self.config_param.get(cfg.EXCLUDED_PLUGINS, set()):
+            #    item.setCheckState(Qt.Unchecked)
+            # else:
+            item.setCheckState(Qt.Checked)
+            item.setData(100, file_.stem)
+            self.lw_personal_plugins.addItem(item)
 
     def refresh_preferences(self):
         """
@@ -128,7 +127,7 @@ def preferences(self):
     show preferences window
     """
 
-    def on_plugin_click(item):
+    def show_plugin_info(item):
         """
         display information about the clicked plugin
         """
@@ -138,15 +137,17 @@ def preferences(self):
 
         import importlib
 
-        plugins_dir = Path(__file__).parent / "analysis_plugins"
-        module_path = f"{plugins_dir.name}.{item.data(100)}"
-        plugin_module = importlib.import_module(module_path)
-        out: list = []
-        out.append(getattr(plugin_module, "__plugin_name__") + "\n")
-        out.append(getattr(plugin_module, "__author__"))
-        out.append(f"v. {getattr(plugin_module, "__version__")} ({getattr(plugin_module, "__version_date__")})\n")
+        plugin_path = item.data(100)
 
-        out.append(getattr(plugin_module, item.data(100)).__doc__.strip())
+        module_name = Path(plugin_path).stem
+        spec = importlib.util.spec_from_file_location(module_name, plugin_path)
+        plugin_module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(plugin_module)
+        out: list = []
+        out.append(plugin_module.__plugin_name__ + "\n")
+        out.append(plugin_module.__author__)
+        out.append(f"{plugin_module.__version__} ({plugin_module.__version_date__})\n")
+        out.append(plugin_module.run.__doc__.strip())
 
         preferencesWindow.pte_plugin_description.setPlainText("\n".join(out))
 
@@ -194,54 +195,42 @@ def preferences(self):
         preferencesWindow.cb_hwdec.setCurrentIndex(cfg.MPV_HWDEC_OPTIONS.index(cfg.MPV_HWDEC_DEFAULT_VALUE))
 
     # BORIS plugins
-    preferencesWindow.lv_all_plugins.itemClicked.connect(on_plugin_click)
+    preferencesWindow.lv_all_plugins.itemClicked.connect(show_plugin_info)
 
     preferencesWindow.lv_all_plugins.clear()
+
     for file_ in (Path(__file__).parent / "analysis_plugins").glob("*.py"):
         if file_.name == "__init__.py":
             continue
-        with open(file_, "r") as f_in:
-            content = f_in.readlines()
-        plugin_name: str = ""
-        for line in content:
-            if line.startswith("__plugin_name__"):
-                plugin_name = line.split("=")[1].strip().replace('"', "")
-                break
-        if plugin_name:
+        plugin_name = plugins.get_plugin_name(file_)
+        if plugin_name is not None:
             item = QListWidgetItem(plugin_name)
             item.setFlags(item.flags() | Qt.ItemIsUserCheckable)
             if plugin_name in self.config_param.get(cfg.EXCLUDED_PLUGINS, set()):
                 item.setCheckState(Qt.Unchecked)
             else:
                 item.setCheckState(Qt.Checked)
-            item.setData(100, file_.stem)
+            item.setData(100, str(file_))
             preferencesWindow.lv_all_plugins.addItem(item)
 
     # personal plugins
     preferencesWindow.le_personal_plugins_dir.setText(self.config_param.get(cfg.PERSONAL_PLUGINS_DIR, ""))
-    preferencesWindow.lw_personal_plugins.itemClicked.connect(on_plugin_click)
+    preferencesWindow.lw_personal_plugins.itemClicked.connect(show_plugin_info)
 
     preferencesWindow.lw_personal_plugins.clear()
     if self.config_param.get(cfg.PERSONAL_PLUGINS_DIR, ""):
         for file_ in Path(self.config_param[cfg.PERSONAL_PLUGINS_DIR]).glob("*.py"):
             if file_.name == "__init__.py":
                 continue
-            print(f"{file_=}")
-            with open(file_, "r") as f_in:
-                content = f_in.readlines()
-            plugin_name: str = ""
-            for line in content:
-                if line.startswith("__plugin_name__"):
-                    plugin_name = line.split("=")[1].strip().replace('"', "")
-                    break
-            if plugin_name:
+            plugin_name = plugins.get_plugin_name(file_)
+            if plugin_name is not None:
                 item = QListWidgetItem(plugin_name)
                 item.setFlags(item.flags() | Qt.ItemIsUserCheckable)
                 if plugin_name in self.config_param.get(cfg.EXCLUDED_PLUGINS, set()):
                     item.setCheckState(Qt.Unchecked)
                 else:
                     item.setCheckState(Qt.Checked)
-                item.setData(100, file_.stem)
+                item.setData(100, str(file_))
                 preferencesWindow.lw_personal_plugins.addItem(item)
 
     # PROJET FILE INDENTATION
@@ -357,7 +346,7 @@ def preferences(self):
         # MPV hwdec
         self.config_param[cfg.MPV_HWDEC] = cfg.MPV_HWDEC_OPTIONS[preferencesWindow.cb_hwdec.currentIndex()]
 
-        # analysis plugins
+        # update BORIS analysis plugins
         self.config_param[cfg.ANALYSIS_PLUGINS] = {}
         self.config_param[cfg.EXCLUDED_PLUGINS] = set()
         for i in range(preferencesWindow.lv_all_plugins.count()):
@@ -368,9 +357,18 @@ def preferences(self):
             else:
                 self.config_param[cfg.EXCLUDED_PLUGINS].add(preferencesWindow.lv_all_plugins.item(i).text())
 
+        # update personal plugins
         self.config_param[cfg.PERSONAL_PLUGINS_DIR] = preferencesWindow.le_personal_plugins_dir.text()
+        for i in range(preferencesWindow.lw_personal_plugins.count()):
+            if preferencesWindow.lw_personal_plugins.item(i).checkState() == Qt.Checked:
+                self.config_param[cfg.ANALYSIS_PLUGINS][preferencesWindow.lw_personal_plugins.item(i).text()] = (
+                    preferencesWindow.lw_personal_plugins.item(i).data(100)
+                )
+            else:
+                self.config_param[cfg.EXCLUDED_PLUGINS].add(preferencesWindow.lw_personal_plugins.item(i).text())
 
         plugins.load_plugins(self)
+        plugins.add_plugins_to_menu(self)
 
         # project file indentation
         self.config_param[cfg.PROJECT_FILE_INDENTATION] = cfg.PROJECT_FILE_INDENTATION_OPTIONS[

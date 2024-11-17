@@ -10,9 +10,9 @@ __plugin_name__ = "Time budget"
 __author__ = "Olivier Friard - University of Torino - Italy"
 
 
-def time_budget(df: pd.DataFrame, observations_list: list = [], parameters: dict = {}) -> pd.DataFrame:
+def run(df: pd.DataFrame):
     """
-    Calculate the following values for the selected observations:
+    Calculate the following values:
 
     - Total number of occurences of behavior
     - Total duration of behavior (in seconds)
@@ -21,6 +21,44 @@ def time_budget(df: pd.DataFrame, observations_list: list = [], parameters: dict
     - Inter-event intervals mean (in seconds)
     - Inter-event intervals standard deviation (in seconds)
     - % of total duration
+    """
+
+    dfs = [
+        df.groupby(["Subject", "Behavior"])["Behavior"].count().reset_index(name="number of occurences"),
+        df.groupby(["Subject", "Behavior"])["Duration (s)"].sum().reset_index(name="total duration"),
+        df.groupby(["Subject", "Behavior"])["Duration (s)"].mean().astype(float).round(3).reset_index(name="duration mean"),
+        df.groupby(["Subject", "Behavior"])["Duration (s)"].std().astype(float).round(3).reset_index(name="duration std dev"),
+    ]
+
+    # inter events
+    df2 = df.sort_values(by=["Observation id", "Subject", "Behavior", "Start (s)"])
+    df2["diff"] = df2.groupby(["Observation id", "Subject", "Behavior"])["Start (s)"].shift(periods=-1) - df2["Stop (s)"]
+
+    dfs.append(df2.groupby(["Subject", "Behavior"])["diff"].mean().astype(float).round(3).reset_index(name="inter-event intervals mean"))
+
+    dfs.append(df2.groupby(["Subject", "Behavior"])["diff"].std().astype(float).round(3).reset_index(name="inter-event intervals std dev"))
+
+    # % of time
+    dfs.append(
+        (100 * df.groupby(["Subject", "Behavior"])["Duration (s)"].sum() / df.groupby(["Subject"])["Duration (s)"].sum())
+        .astype(float)
+        .round(3)
+        .reset_index(name="% of total duration")
+    )
+
+    merged_df = dfs[0]
+    for df in dfs[1:]:
+        merged_df = pd.merge(merged_df, df, on=["Subject", "Behavior"])
+
+    return merged_df
+
+
+def main(df: pd.DataFrame, observations_list: list = [], parameters: dict = {}) -> pd.DataFrame:
+    """
+    filter by selected observations.
+    filter by selected subjects.
+    filter by selected behaviors.
+    filter by time interval.
     """
 
     # filter selected observations
@@ -54,31 +92,4 @@ def time_budget(df: pd.DataFrame, observations_list: list = [], parameters: dict
 
             df = df_interval
 
-    dfs = [
-        df.groupby(["Subject", "Behavior"])["Behavior"].count().reset_index(name="number of occurences"),
-        df.groupby(["Subject", "Behavior"])["Duration (s)"].sum().reset_index(name="total duration"),
-        df.groupby(["Subject", "Behavior"])["Duration (s)"].mean().astype(float).round(3).reset_index(name="duration mean"),
-        df.groupby(["Subject", "Behavior"])["Duration (s)"].std().astype(float).round(3).reset_index(name="duration std dev"),
-    ]
-
-    # inter events
-    df2 = df.sort_values(by=["Observation id", "Subject", "Behavior", "Start (s)"])
-    df2["diff"] = df2.groupby(["Observation id", "Subject", "Behavior"])["Start (s)"].shift(periods=-1) - df2["Stop (s)"]
-
-    dfs.append(df2.groupby(["Subject", "Behavior"])["diff"].mean().astype(float).round(3).reset_index(name="inter-event intervals mean"))
-
-    dfs.append(df2.groupby(["Subject", "Behavior"])["diff"].std().astype(float).round(3).reset_index(name="inter-event intervals std dev"))
-
-    # % of time
-    dfs.append(
-        (100 * df.groupby(["Subject", "Behavior"])["Duration (s)"].sum() / df.groupby(["Subject"])["Duration (s)"].sum())
-        .astype(float)
-        .round(3)
-        .reset_index(name="% of total duration")
-    )
-
-    merged_df = dfs[0]
-    for df in dfs[1:]:
-        merged_df = pd.merge(merged_df, df, on=["Subject", "Behavior"])
-
-    return merged_df
+    return run(df)

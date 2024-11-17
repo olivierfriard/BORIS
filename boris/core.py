@@ -468,6 +468,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         menu_options.update_menu(self)
 
         plugins.load_plugins(self)
+        plugins.add_plugins_to_menu(self)
 
     def theme_mode(self):
         """
@@ -5699,9 +5700,21 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             QMessageBox.critical(self, cfg.programName, f"Plugin '{plugin_name}' not found")
             return
 
-        plugin = self.config_param.get(cfg.ANALYSIS_PLUGINS, {})[plugin_name]
-        logging.debug(f"run plugin {plugin}")
+        plugin_path = self.config_param.get(cfg.ANALYSIS_PLUGINS, {})[plugin_name]
+        logging.debug(f"run plugin from {plugin_path}")
 
+        module_name = pl.Path(plugin_path).stem
+
+        spec = importlib.util.spec_from_file_location(module_name, plugin_path)
+        plugin_module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(plugin_module)
+
+        print(f"{plugin_module=}")
+        print(
+            f"{plugin_module.__plugin_name__} loaded v.{getattr(plugin_module, '__version__')} v. {getattr(plugin_module, '__version_date__')}"
+        )
+
+        """
         plugins_dir = pl.Path(__file__).parent / "analysis_plugins"
 
         print(f"{plugins_dir=}")
@@ -5718,6 +5731,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             return
 
         print(f"{plugin_module=}")
+        """
 
         selected_observations, parameters = self.obs_param()
         if not selected_observations:
@@ -5727,12 +5741,12 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         print(f"{df.head()=}")
 
-        df_results = getattr(plugin_module, plugin)(df, observations_list=selected_observations, parameters=parameters)
+        df_results = plugin_module.main(df, observations_list=selected_observations, parameters=parameters)
 
         from . import view_df
 
         self.view_dataframe = view_df.View_df(
-            self.sender().text(), f"{getattr(plugin_module, "__version__")} ({getattr(plugin_module, "__version_date__")})", df_results
+            self.sender().text(), f"{plugin_module.__version__} ({plugin_module.__version_date__})", df_results
         )
         self.view_dataframe.show()
 

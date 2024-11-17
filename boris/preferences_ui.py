@@ -268,6 +268,7 @@ class Ui_prefDialog(object):
         self.horizontalLayout_16.setObjectName(u"horizontalLayout_16")
         self.le_personal_plugins_dir = QLineEdit(self.tab_analysis_plugins)
         self.le_personal_plugins_dir.setObjectName(u"le_personal_plugins_dir")
+        self.le_personal_plugins_dir.setReadOnly(True)
 
         self.horizontalLayout_16.addWidget(self.le_personal_plugins_dir)
 
