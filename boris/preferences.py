@@ -33,7 +33,7 @@ from . import plugins
 
 from .preferences_ui import Ui_prefDialog
 
-from PySide6.QtWidgets import QDialog, QFileDialog, QListWidgetItem
+from PySide6.QtWidgets import QDialog, QFileDialog, QListWidgetItem, QMessageBox
 from PySide6.QtCore import Qt
 
 
@@ -62,11 +62,12 @@ class Preferences(QDialog, Ui_prefDialog):
         """
         get the personal plugins directory
         """
-        directory = QFileDialog.getExistingDirectory(None, "Select the plugins directory")
+        directory = QFileDialog.getExistingDirectory(None, "Select the plugins directory", self.le_personal_plugins_dir.text())
         if not directory:
             return
 
         self.le_personal_plugins_dir.setText(directory)
+        self.lw_personal_plugins.clear()
         for file_ in Path(directory).glob("*.py"):
             item = QListWidgetItem(file_.stem)
             item.setFlags(item.flags() | Qt.ItemIsUserCheckable)
@@ -76,6 +77,8 @@ class Preferences(QDialog, Ui_prefDialog):
             item.setCheckState(Qt.Checked)
             item.setData(100, file_.stem)
             self.lw_personal_plugins.addItem(item)
+        if self.lw_personal_plugins.count() == 0:
+            QMessageBox.warning(self, cfg.programName, f"No plugin found in {directory}")
 
     def refresh_preferences(self):
         """
