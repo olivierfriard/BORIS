@@ -5701,15 +5701,20 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             return
 
         plugin_path = self.config_param.get(cfg.ANALYSIS_PLUGINS, {})[plugin_name]
+        print(f"{plugin_path=}")
+        if not pl.Path(plugin_path).is_file():
+            QMessageBox.critical(self, cfg.programName, f"The plugin {plugin_path} was not found.")
+            return
+
         logging.debug(f"run plugin from {plugin_path}")
 
         module_name = pl.Path(plugin_path).stem
 
         spec = importlib.util.spec_from_file_location(module_name, plugin_path)
         plugin_module = importlib.util.module_from_spec(spec)
+        print(f"{plugin_module=}")
         spec.loader.exec_module(plugin_module)
 
-        print(f"{plugin_module=}")
         print(
             f"{plugin_module.__plugin_name__} loaded v.{getattr(plugin_module, '__version__')} v. {getattr(plugin_module, '__version_date__')}"
         )

@@ -226,7 +226,7 @@ def preferences(self):
             if plugin_name is None:
                 continue
             # check if personal plugin name is in BORIS plugins (case sensitive)
-            if plugin_name in [preferencesWindow.lv_all_plugins.items(i).text() for i in range(preferencesWindow.lv_all_plugins.count())]:
+            if plugin_name in [preferencesWindow.lv_all_plugins.item(i).text() for i in range(preferencesWindow.lv_all_plugins.count())]:
                 continue
             item = QListWidgetItem(plugin_name)
             item.setFlags(item.flags() | Qt.ItemIsUserCheckable)
