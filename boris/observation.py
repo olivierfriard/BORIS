@@ -1325,6 +1325,15 @@ class Observation(QDialog, Ui_Form):
                             )
                             if response == cfg.CANCEL:
                                 break
+                # ask to use directory name / path as observation id
+                if response != cfg.CANCEL:
+                    selected_obs_id = dialog.MessageDialog(
+                        cfg.programName,
+                        "Select the observation id",
+                        [dir_name, str(pl.Path(dir_name).name), cfg.CANCEL],
+                    )
+                    if selected_obs_id != cfg.CANCEL:
+                        self.leObservationId.setText(selected_obs_id)
 
         self.update_media_options()
 
