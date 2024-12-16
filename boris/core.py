@@ -1694,9 +1694,16 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
     def extract_exif_DateTimeOriginal(self, file_path: str) -> int:
         """
-        extract the exif extract_exif_DateTimeOriginal tag
+        extract the EXIF DateTimeOriginal tag
         return epoch time
         if the tag is not available return -1
+
+        Args:
+            file_path (str): path of the media file
+
+        Returns:
+            int: timestamp
+
         """
         try:
             with open(file_path, "rb") as f_in:
