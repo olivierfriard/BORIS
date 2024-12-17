@@ -1692,6 +1692,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 break
         return currentMedia, round(frameCurrentMedia)
 
+    '''
     def extract_exif_DateTimeOriginal(self, file_path: str) -> int:
         """
         extract the EXIF DateTimeOriginal tag
@@ -1726,6 +1727,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         except Exception:
             return -1
+    '''
 
     def extract_frame(self, dw):
         """
@@ -1763,7 +1765,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
             # extract EXIF tag
             if self.pj[cfg.OBSERVATIONS][self.observationId].get(cfg.USE_EXIF_DATE, False):
-                date_time_original = self.extract_exif_DateTimeOriginal(self.images_list[self.image_idx])
+                date_time_original = util.extract_exif_DateTimeOriginal(self.images_list[self.image_idx])
                 if date_time_original != -1:
                     msg += f"<br>EXIF Date/Time Original: <b>{datetime.datetime.fromtimestamp(date_time_original):%Y-%m-%d %H:%M:%S}</b>"
                 else:
@@ -4712,9 +4714,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 time_ = dec("NaN")
                 if (
                     self.pj[cfg.OBSERVATIONS][self.observationId].get(cfg.USE_EXIF_DATE, False)
-                    and self.extract_exif_DateTimeOriginal(self.images_list[self.image_idx]) != -1
+                    and util.extract_exif_DateTimeOriginal(self.images_list[self.image_idx]) != -1
                 ):
-                    time_ = self.extract_exif_DateTimeOriginal(self.images_list[self.image_idx]) - self.image_time_ref
+                    time_ = util.extract_exif_DateTimeOriginal(self.images_list[self.image_idx]) - self.image_time_ref
 
                 elif self.pj[cfg.OBSERVATIONS][self.observationId].get(cfg.TIME_LAPSE, 0):
                     time_ = (self.image_idx + 1) * self.pj[cfg.OBSERVATIONS][self.observationId].get(cfg.TIME_LAPSE, 0)

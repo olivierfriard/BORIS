@@ -233,6 +233,9 @@ class Observation(QDialog, Ui_Form):
 
         self.cb_observation_time_interval.clicked.connect(self.limit_time_interval)
 
+        # use Date/TimeOriginal metadata as offset
+        self.cb_media_creation_date_as_offset.stateChanged.connect(self.creation_date_as_offset)
+
         self.pbSave.clicked.connect(self.pbSave_clicked)
         self.pbLaunch.clicked.connect(self.pbLaunch_clicked)
         self.pbCancel.clicked.connect(self.pbCancel_clicked)
@@ -269,6 +272,39 @@ class Observation(QDialog, Ui_Form):
     #    """
     #    self.de_date_offset.setEnabled(self.cb_date_offset.isChecked())
 
+    def creation_date_as_offset(self):
+        """
+        use Date/TimeOriginal metadata as offset
+        """
+
+        for row in range(self.twVideo1.rowCount()):
+            if self.twVideo1.item(row, 2).text():
+                if self.cb_media_creation_date_as_offset.isChecked():
+                    date_time_original = util.extract_video_creation_date(
+                        project_functions.full_path(self.twVideo1.item(row, 2).text(), self.project_path)
+                    )
+                    if date_time_original is not None:
+                        self.cb_time_offset.setChecked(True)
+                        self.obs_time_offset.set_time(date_time_original)
+                        return
+                        # self.twVideo1.item(row, 1).setText(str(date_time_original))
+                    else:
+                        # test file name
+                        QMessageBox.information(self, cfg.programName, "Date time not found in metadata. Use the file name instead")
+                        date_time_file_name = util.extract_date_time_from_file_name(self.twVideo1.item(row, 2).text())
+
+                        print(f"{date_time_file_name=}")
+
+                        if date_time_file_name:
+                            self.obs_time_offset.set_time(date_time_file_name)
+                            return
+                        else:
+                            self.obs_time_offset.set_time(0)
+                        # self.twVideo1.item(row, 1).setText("")
+                else:
+                    self.obs_time_offset.set_time(0)
+                    # self.twVideo1.item(row, 1).setText("")
+
     def cb_time_offset_changed(self):
         """
         activate/desactivate date value
@@ -283,7 +319,7 @@ class Observation(QDialog, Ui_Form):
             QMessageBox.critical(self, cfg.programName, "A media file must be loaded in player #1")
             return
 
-        first_media_file = ""
+        first_media_file: str = ""
         for row in range(self.twVideo1.rowCount()):
             if int(self.twVideo1.cellWidget(row, 0).currentText()) == 1:
                 first_media_file = self.twVideo1.item(row, 2).text()
@@ -893,6 +929,7 @@ class Observation(QDialog, Ui_Form):
             ret = dlg.exec_()
         """
 
+        """
         not_tagged_media_list: list = []
         for row in range(self.twVideo1.rowCount()):
             if self.twVideo1.item(row, 2).text() not in media_not_found_list:
@@ -931,6 +968,8 @@ class Observation(QDialog, Ui_Form):
                 return 1
         else:
             return 0  # OK all media have a 'creation time' tag
+        """
+        return 0
 
     def closeEvent(self, event):
         """
@@ -1243,8 +1282,7 @@ class Observation(QDialog, Ui_Form):
         # enable stop ongoing state events if n. media > 1
         self.cbCloseCurrentBehaviorsBetweenVideo.setEnabled(self.twVideo1.rowCount() > 0)
 
-        # DEVELOPMENT (REMOVE BEFORE RELEASE)
-        self.cb_media_creation_date_as_offset.setEnabled(False)
+        self.creation_date_as_offset()
 
     def add_media(self, mode: str):
         """

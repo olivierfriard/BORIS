@@ -33,10 +33,16 @@ import subprocess
 import sys
 import urllib.parse
 import wave
+import exifread
+import datetime
 from decimal import Decimal as dec
 from decimal import getcontext, ROUND_DOWN
 from shutil import copyfile
 from typing import Union, Tuple
+
+from hachoir.parser import createParser
+from hachoir.metadata import extractMetadata
+
 
 import numpy as np
 from PySide6.QtGui import QPixmap, QImage
@@ -63,6 +69,84 @@ try:
 except RuntimeError:  # libmpv found but version too old
     from . import mpv as mpv
 """
+
+
+def extract_exif_DateTimeOriginal(file_path: str) -> int:
+    """
+    extract the EXIF DateTimeOriginal tag
+    return epoch time
+    if the tag is not available return -1
+
+    Args:
+        file_path (str): path of the media file
+
+    Returns:
+        int: timestamp
+
+    """
+    try:
+        with open(file_path, "rb") as f_in:
+            tags = exifread.process_file(f_in, details=False, stop_tag="EXIF DateTimeOriginal")
+            if "EXIF DateTimeOriginal" in tags:
+                date_time_original = (
+                    f'{tags["EXIF DateTimeOriginal"].values[:4]}-'
+                    f'{tags["EXIF DateTimeOriginal"].values[5:7]}-'
+                    f'{tags["EXIF DateTimeOriginal"].values[8:10]} '
+                    f'{tags["EXIF DateTimeOriginal"].values.split(" ")[-1]}'
+                )
+                return int(datetime.datetime.strptime(date_time_original, "%Y-%m-%d %H:%M:%S").timestamp())
+            else:
+                try:
+                    # read from file name (YYYY-MM-DD_HHMMSS)
+                    return int(datetime.datetime.strptime(pl.Path(file_path).stem, "%Y-%m-%d_%H%M%S").timestamp())
+                except Exception:
+                    # read from file name (YYYY-MM-DD_HH:MM:SS)
+                    return int(datetime.datetime.strptime(pl.Path(file_path).stem, "%Y-%m-%d_%H:%M:%S").timestamp())
+
+    except Exception:
+        return -1
+
+
+def extract_video_creation_date(file_path: str) -> int:
+    """
+    extract the video creation data time with Hachoir
+    """
+    print(file_path)
+    if not pl.Path(file_path).is_file():
+        print("not found")
+        return None
+    try:
+        parser = createParser(file_path)
+        metadata = extractMetadata(parser)
+    except Exception:
+        return None
+
+    if metadata.has("creation_date"):
+        if metadata.get("creation_date") == datetime.datetime(1904, 1, 1, 0, 0):
+            return None
+        return metadata.get("creation_date").timestamp()
+    else:
+        return None
+
+
+def extract_date_time_from_file_name(file_path: str) -> int:
+    """
+    extract YYYY-MM-DD_HHMMSS or YYYY-MM-DD_HH:MM:SS from file name
+    """
+
+    patterns = (r"\d{4}-\d{2}-\d{2}_\d{6}", r"\d{4}-\d{2}-\d{2}_\d{2}:\d{2}:\d{2}")
+    for pattern in patterns:
+        print(f"{pattern=}")
+        matches = re.findall(pattern, file_path)
+
+        print(f"{matches=}")
+        if matches:
+            print(f"{matches=}")
+            if pattern == r"\d{4}-\d{2}-\d{2}_\d{6}":
+                return int(datetime.datetime.strptime(matches[0], "%Y-%m-%d_%H%M%S").timestamp())
+            if pattern == r"\d{4}-\d{2}-\d{2}_\d{2}:\d{2}:\d{2}":
+                return int(datetime.datetime.strptime(matches[0], "%Y-%m-%d_%H:%M:%S").timestamp())
+    return None
 
 
 def mpv_lib_version() -> Tuple[str, str, str]:

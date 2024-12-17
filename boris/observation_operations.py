@@ -743,7 +743,7 @@ def new_observation(self, mode: str = cfg.NEW, obsId: str = "") -> None:
             observationWindow.cb_media_creation_date_as_offset.setEnabled(True)
 
             # DEVELOPMENT (REMOVE BEFORE RELEASE)
-            observationWindow.cb_media_creation_date_as_offset.setEnabled(False)
+            # observationWindow.cb_media_creation_date_as_offset.setEnabled(False)
 
             observationWindow.cb_media_creation_date_as_offset.setChecked(
                 self.pj[cfg.OBSERVATIONS][obsId].get(cfg.MEDIA_CREATION_DATE_AS_OFFSET, False)
