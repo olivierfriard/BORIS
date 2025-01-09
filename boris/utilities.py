@@ -107,13 +107,15 @@ def extract_exif_DateTimeOriginal(file_path: str) -> int:
         return -1
 
 
-def extract_video_creation_date(file_path: str) -> int:
+def extract_video_creation_date(file_path: str) -> int | None:
     """
-    extract the video creation data time with Hachoir
+    returns the timestamp of the media creation date time with Hachoir
     """
-    print(file_path)
+
+    logging.debug(f"extract_video_creation_date for {file_path}")
+
     if not pl.Path(file_path).is_file():
-        print("not found")
+        logging.debug(f"{file_path} not found")
         return None
     try:
         parser = createParser(file_path)
@@ -136,16 +138,23 @@ def extract_date_time_from_file_name(file_path: str) -> int:
 
     patterns = (r"\d{4}-\d{2}-\d{2}_\d{6}", r"\d{4}-\d{2}-\d{2}_\d{2}:\d{2}:\d{2}")
     for pattern in patterns:
-        print(f"{pattern=}")
         matches = re.findall(pattern, file_path)
 
-        print(f"{matches=}")
         if matches:
-            print(f"{matches=}")
             if pattern == r"\d{4}-\d{2}-\d{2}_\d{6}":
+                logging.debug(
+                    f"extract_date_time_from_file_name timestamp from {file_path}: {int(datetime.datetime.strptime(matches[0], "%Y-%m-%d_%H%M%S").timestamp())}"
+                )
+
                 return int(datetime.datetime.strptime(matches[0], "%Y-%m-%d_%H%M%S").timestamp())
+
             if pattern == r"\d{4}-\d{2}-\d{2}_\d{2}:\d{2}:\d{2}":
+                logging.debug(
+                    f"extract_date_time_from_file_name timestamp from {file_path}: {int(datetime.datetime.strptime(matches[0], "%Y-%m-%d_%H:%M:%S").timestamp())}"
+                )
+
                 return int(datetime.datetime.strptime(matches[0], "%Y-%m-%d_%H:%M:%S").timestamp())
+
     return None
 
 
