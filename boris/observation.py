@@ -223,7 +223,7 @@ class Observation(QDialog, Ui_Form):
         self.cb_observation_time_interval.clicked.connect(self.limit_time_interval)
 
         # use Date/TimeOriginal metadata as offset
-        self.cb_media_creation_date_as_offset.stateChanged.connect(self.check_media_creation_date)
+        # self.cb_media_creation_date_as_offset.stateChanged.connect(self.check_media_creation_date)
 
         self.pbSave.clicked.connect(self.pbSave_clicked)
         self.pbLaunch.clicked.connect(self.pbLaunch_clicked)
@@ -270,6 +270,8 @@ class Observation(QDialog, Ui_Form):
         creation_date_not_found: list = []
         flag_filename_used = False
 
+        self.media_creation_time = {}
+
         for row in range(self.twVideo1.rowCount()):
             if self.twVideo1.item(row, 2).text():  # media file path
                 if self.cb_media_creation_date_as_offset.isChecked():
@@ -281,13 +283,18 @@ class Observation(QDialog, Ui_Form):
                         if date_time_file_name is None:
                             creation_date_not_found.append(self.twVideo1.item(row, 2).text())
                         else:
+                            self.media_creation_time[self.twVideo1.item(row, 2).text()] = date_time_file_name
                             flag_filename_used = True
+                    else:
+                        self.media_creation_time[self.twVideo1.item(row, 2).text()] = date_time_original
 
         if creation_date_not_found:
             QMessageBox.warning(
                 self, cfg.programName, "The creation date time was not found for all media file(s).\nThe option was disabled."
             )
             self.cb_media_creation_date_as_offset.setChecked(False)
+            self.media_creation_time = {}
+
         elif flag_filename_used:
             QMessageBox.information(
                 self, cfg.programName, "The creation date time was not found in metadata. The media file name(s) was/were used"
@@ -1148,6 +1155,9 @@ class Observation(QDialog, Ui_Form):
                     return False
             """
 
+            # check media creation date time (if option enabled)
+            self.check_media_creation_date()
+
         if self.rb_images.isChecked():  # observation based on images directory
             if not self.lw_images_directory.count():
                 QMessageBox.critical(self, cfg.programName, "You have to select at least one images directory")
@@ -1270,7 +1280,7 @@ class Observation(QDialog, Ui_Form):
         # enable stop ongoing state events if n. media > 1
         self.cbCloseCurrentBehaviorsBetweenVideo.setEnabled(self.twVideo1.rowCount() > 0)
 
-        self.creation_date_as_offset()
+        # self.creation_date_as_offset()
 
     def add_media(self, mode: str):
         """

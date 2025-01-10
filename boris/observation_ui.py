@@ -27,7 +27,7 @@ class Ui_Form(object):
     def setupUi(self, Form):
         if not Form.objectName():
             Form.setObjectName(u"Form")
-        Form.resize(959, 677)
+        Form.resize(1278, 677)
         self.verticalLayout_6 = QVBoxLayout(Form)
         self.verticalLayout_6.setObjectName(u"verticalLayout_6")
         self.horizontalLayout_2 = QHBoxLayout()
@@ -67,7 +67,7 @@ class Ui_Form(object):
 
         self.splitter = QSplitter(Form)
         self.splitter.setObjectName(u"splitter")
-        self.splitter.setOrientation(Qt.Horizontal)
+        self.splitter.setOrientation(Qt.Orientation.Horizontal)
         self.layoutWidget = QWidget(self.splitter)
         self.layoutWidget.setObjectName(u"layoutWidget")
         self.verticalLayout_2 = QVBoxLayout(self.layoutWidget)
@@ -80,7 +80,7 @@ class Ui_Form(object):
         sizePolicy.setVerticalStretch(0)
         sizePolicy.setHeightForWidth(self.label_9.sizePolicy().hasHeightForWidth())
         self.label_9.setSizePolicy(sizePolicy)
-        self.label_9.setAlignment(Qt.AlignLeading|Qt.AlignLeft|Qt.AlignVCenter)
+        self.label_9.setAlignment(Qt.AlignmentFlag.AlignLeading|Qt.AlignmentFlag.AlignLeft|Qt.AlignmentFlag.AlignVCenter)
 
         self.verticalLayout_2.addWidget(self.label_9)
 
@@ -215,11 +215,11 @@ class Ui_Form(object):
         __qtablewidgetitem9 = QTableWidgetItem()
         self.twVideo1.setHorizontalHeaderItem(6, __qtablewidgetitem9)
         self.twVideo1.setObjectName(u"twVideo1")
-        self.twVideo1.setEditTriggers(QAbstractItemView.AnyKeyPressed|QAbstractItemView.DoubleClicked|QAbstractItemView.EditKeyPressed)
+        self.twVideo1.setEditTriggers(QAbstractItemView.EditTrigger.AnyKeyPressed|QAbstractItemView.EditTrigger.DoubleClicked|QAbstractItemView.EditTrigger.EditKeyPressed)
         self.twVideo1.setAlternatingRowColors(True)
-        self.twVideo1.setSelectionMode(QAbstractItemView.MultiSelection)
-        self.twVideo1.setSelectionBehavior(QAbstractItemView.SelectRows)
-        self.twVideo1.setTextElideMode(Qt.ElideNone)
+        self.twVideo1.setSelectionMode(QAbstractItemView.SelectionMode.MultiSelection)
+        self.twVideo1.setSelectionBehavior(QAbstractItemView.SelectionBehavior.SelectRows)
+        self.twVideo1.setTextElideMode(Qt.TextElideMode.ElideNone)
 
         self.verticalLayout_3.addWidget(self.twVideo1)
 
@@ -320,7 +320,7 @@ class Ui_Form(object):
         self.verticalLayout_17.setObjectName(u"verticalLayout_17")
         self.splitter_5 = QSplitter(self.tab_data_files)
         self.splitter_5.setObjectName(u"splitter_5")
-        self.splitter_5.setOrientation(Qt.Vertical)
+        self.splitter_5.setOrientation(Qt.Orientation.Vertical)
         self.layoutWidget_4 = QWidget(self.splitter_5)
         self.layoutWidget_4.setObjectName(u"layoutWidget_4")
         self.verticalLayout_15 = QVBoxLayout(self.layoutWidget_4)
@@ -353,7 +353,7 @@ class Ui_Form(object):
         __qtablewidgetitem18 = QTableWidgetItem()
         self.tw_data_files.setHorizontalHeaderItem(8, __qtablewidgetitem18)
         self.tw_data_files.setObjectName(u"tw_data_files")
-        self.tw_data_files.setSelectionMode(QAbstractItemView.MultiSelection)
+        self.tw_data_files.setSelectionMode(QAbstractItemView.SelectionMode.MultiSelection)
 
         self.verticalLayout_15.addWidget(self.tw_data_files)
 
@@ -583,7 +583,7 @@ class Ui_Form(object):
 
         self.retranslateUi(Form)
 
-        self.sw_observation_type.setCurrentIndex(2)
+        self.sw_observation_type.setCurrentIndex(1)
         self.tabWidget.setCurrentIndex(0)
 
 
@@ -630,7 +630,7 @@ class Ui_Form(object):
         self.pb_use_media_file_name_as_obsid.setText(QCoreApplication.translate("Form", u"Use media file name as observation id", None))
         self.cbVisualizeSpectrogram.setText(QCoreApplication.translate("Form", u"Visualize the sound spectrogram for the player #1", None))
         self.cb_visualize_waveform.setText(QCoreApplication.translate("Form", u"Visualize the waveform for the player #1", None))
-        self.cb_media_creation_date_as_offset.setText(QCoreApplication.translate("Form", u"Use the media creation date/time metadata as offset", None))
+        self.cb_media_creation_date_as_offset.setText(QCoreApplication.translate("Form", u"Use the media creation date/time as offset", None))
         self.label_5.setText(QCoreApplication.translate("Form", u"Scan sampling every (s)", None))
         self.label_2.setText(QCoreApplication.translate("Form", u"Image display duration (s)", None))
         self.cbCloseCurrentBehaviorsBetweenVideo.setText(QCoreApplication.translate("Form", u"Stop ongoing state events between successive media files", None))

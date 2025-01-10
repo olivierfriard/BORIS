@@ -1180,30 +1180,6 @@ def check_creation_date(self) -> Tuple[int, dict]:
 
     """
 
-    # check if media files exist
-
-    """
-    media_not_found_list: list = []
-    for row in range(self.twVideo1.rowCount()):
-        if not pl.Path(self.twVideo1.item(row, 2).text()).is_file():
-            media_not_found_list.append(self.twVideo1.item(row, 2).text())
-
-    if media_list:
-        dlg = dialog.Results_dialog()
-        dlg.setWindowTitle("BORIS")
-        dlg.pbOK.setText("OK")
-        dlg.pbCancel.setVisible(False)
-        dlg.ptText.clear()
-        dlg.ptText.appendHtml(
-            (
-                "Some media file(s) were not found:<br>"
-                f"{'<br>'.join(media_list)}<br><br>"
-                "You cannot select the <b>Use the media creation date/time option</b>."
-            )
-        )
-        dlg.ptText.moveCursor(QTextCursor.Start)
-        ret = dlg.exec_()
-    """
 
     not_tagged_media_list: list = []
     media_creation_time: dict = {}
