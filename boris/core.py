@@ -582,7 +582,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         if (
             dialog.MessageDialog(
                 cfg.programName,
-                ("Removing the path of external data files is irreversible.<br>" "Are you sure to continue?"),
+                ("Removing the path of external data files is irreversible.<br>Are you sure to continue?"),
                 [cfg.YES, cfg.NO],
             )
             == cfg.NO
@@ -1653,9 +1653,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
             self.save_project_activated()
         else:
-            logging.debug(
-                (f"project not autosaved: " f"observation id: {self.observationId} " f"project file name: {self.projectFileName}")
-            )
+            logging.debug((f"project not autosaved: observation id: {self.observationId} project file name: {self.projectFileName}"))
 
     def update_subject(self, subject: str) -> None:
         """
@@ -2665,7 +2663,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                         start_time = f"{self.pj[cfg.OBSERVATIONS][obs_id][cfg.OBSERVATION_TIME_INTERVAL][0]:.3f}"
                         stop_time = f"{self.pj[cfg.OBSERVATIONS][obs_id][cfg.OBSERVATION_TIME_INTERVAL][1]:.3f}"
 
-                    self.lb_obs_time_interval.setText(("Observation time interval: " f"{start_time} - {stop_time}"))
+                    self.lb_obs_time_interval.setText((f"Observation time interval: {start_time} - {stop_time}"))
                 else:
                     self.lb_obs_time_interval.clear()
             else:
@@ -3000,7 +2998,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 self,
                 "Open project",
                 "",
-                ("Project files (*.boris *.boris.gz);;" "All files (*)"),
+                ("Project files (*.boris *.boris.gz);;All files (*)"),
             )
 
         else:  # recent project
@@ -3508,7 +3506,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self,
             "Save project as",
             os.path.dirname(self.projectFileName),
-            ("Project files (*.boris);;" "Compressed project files (*.boris.gz);;" "All files (*)"),
+            ("Project files (*.boris);;Compressed project files (*.boris.gz);;All files (*)"),
         )
 
         if not project_new_file_name:
@@ -3572,7 +3570,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 self,
                 "Save project",
                 txt,
-                ("Project files (*.boris);;" "Compressed project files (*.boris.gz);;" "All files (*)"),
+                ("Project files (*.boris);;Compressed project files (*.boris.gz);;All files (*)"),
             )
 
             if not self.projectFileName:
@@ -3966,7 +3964,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             QMessageBox.critical(
                 self,
                 cfg.programName,
-                ("The current observation is opened in VIEW mode.\n" "It is not allowed to log events in this mode."),
+                ("The current observation is opened in VIEW mode.\nIt is not allowed to log events in this mode."),
             )
             return
 
@@ -3992,7 +3990,18 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE] == cfg.MEDIA:
                 event[cfg.FRAME_INDEX] = self.get_frame_index()
 
-            write_event.write_event(self, event, self.getLaps())
+            time_, cumulative_time = self.get_obs_time()
+
+            """
+            print(time_)
+            print(cumulative_time)
+            """
+
+            if self.pj[cfg.OBSERVATIONS][self.observationId].get(cfg.MEDIA_CREATION_DATE_AS_OFFSET, False):
+                write_event.write_event(self, event, time_)
+            else:
+                write_event.write_event(self, event, cumulative_time)
+            # write_event.write_event(self, event, self.getLaps())
 
     def get_frame_index(self, player_idx: int = 0) -> Union[int, str]:
         """
@@ -4044,7 +4053,14 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE] == cfg.MEDIA:
                 event[cfg.FRAME_INDEX] = self.get_frame_index()
 
-            write_event.write_event(self.event, self.getLaps())
+            time_, cumulative_time = self.get_obs_time()
+
+            if self.pj[cfg.OBSERVATIONS][self.observationId].get(cfg.MEDIA_CREATION_DATE_AS_OFFSET, False):
+                write_event.write_event(self, event, time_)
+            else:
+                write_event.write_event(self, event, cumulative_time)
+
+            # write_event.write_event(self.event, self.getLaps())
 
     def keypress_signal_from_behaviors_coding_map(self, event):
         """
@@ -4422,7 +4438,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             # if many media files
             if self.dw_player[0].player.playlist_count > 1:
                 msg += (
-                    f"<br>Total: <b>{util.convertTime(self.timeFormat,cumulative_time_pos)} / "
+                    f"<br>Total: <b>{util.convertTime(self.timeFormat, cumulative_time_pos)} / "
                     f"{util.convertTime(self.timeFormat, all_media_duration)}</b>"
                 )
 
@@ -4699,8 +4715,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             if "Live observation finished" in self.pb_live_obs.text():
                 return dec("NaN")
             if self.liveObservationStarted:
-                """now = QTime()"""
-                """now.start()  # current time"""
                 memLaps = dec(str(round(self.liveStartTime.elapsed() / 1000, 3)))
                 return memLaps
             else:
@@ -4724,7 +4738,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 return dec(time_).quantize(dec("0.001"), rounding=ROUND_DOWN)
 
         if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE] == cfg.MEDIA:
-            if self.playerType in [cfg.VIEWER_LIVE, cfg.VIEWER_MEDIA]:
+            if self.playerType in (cfg.VIEWER_LIVE, cfg.VIEWER_MEDIA):
                 return dec(0)
 
             if self.playerType == cfg.MEDIA:
@@ -4734,6 +4748,60 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 )
 
                 return dec(str(round(mem_laps / 1000, 3)))
+
+    def get_obs_time(self, n_player: int = 0) -> Tuple[dec, dec | None]:
+        """
+        returns time in current media and cumulative time from begining of observation
+        do not add time offset
+
+        Args:
+            n_player (int): player
+        Returns:
+            decimal: cumulative time in seconds
+
+        """
+
+        if not self.observationId:
+            return dec("0")
+
+        if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE] == cfg.LIVE:
+            if "Live observation finished" in self.pb_live_obs.text():
+                return dec("NaN"), None
+            if self.liveObservationStarted:
+                return dec(str(round(self.liveStartTime.elapsed() / 1000, 3))), None
+            else:
+                return dec("0"), None
+
+        if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE] == cfg.IMAGES:
+            if self.playerType == cfg.VIEWER_IMAGES:
+                return dec("NaN"), None
+
+            if self.playerType == cfg.IMAGES:
+                time_ = dec("NaN")
+                if (
+                    self.pj[cfg.OBSERVATIONS][self.observationId].get(cfg.USE_EXIF_DATE, False)
+                    and util.extract_exif_DateTimeOriginal(self.images_list[self.image_idx]) != -1
+                ):
+                    time_ = util.extract_exif_DateTimeOriginal(self.images_list[self.image_idx]) - self.image_time_ref
+
+                elif self.pj[cfg.OBSERVATIONS][self.observationId].get(cfg.TIME_LAPSE, 0):
+                    time_ = (self.image_idx + 1) * self.pj[cfg.OBSERVATIONS][self.observationId].get(cfg.TIME_LAPSE, 0)
+
+                return dec(time_).quantize(dec("0.001"), rounding=ROUND_DOWN), None
+
+        if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE] == cfg.MEDIA:
+            if self.playerType in (cfg.VIEWER_LIVE, cfg.VIEWER_MEDIA):
+                return dec(0), dec(0)
+
+            if self.playerType == cfg.MEDIA:
+                # cumulative time
+                mem_laps = sum(self.dw_player[n_player].media_durations[0 : self.dw_player[n_player].player.playlist_pos]) + (
+                    0 if self.dw_player[n_player].player.time_pos is None else self.dw_player[n_player].player.time_pos * 1000
+                )
+
+                return dec(0) if self.dw_player[n_player].player.time_pos is None else dec(
+                    str(round(self.dw_player[n_player].player.time_pos, 3))
+                ), dec(str(round(mem_laps / 1000, 3)))
 
     def full_event(self, behavior_idx: str) -> dict:
         """
@@ -4877,7 +4945,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             QMessageBox.critical(
                 self,
                 cfg.programName,
-                ("The current observation is opened in VIEW mode.\n" "It is not allowed to log events in this mode."),
+                ("The current observation is opened in VIEW mode.\nIt is not allowed to log events in this mode."),
             )
             return
 
@@ -5042,7 +5110,12 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                             if self.playerType == cfg.MEDIA:
                                 event[cfg.FRAME_INDEX] = self.get_frame_index()
 
-                            write_event.write_event(self, event, memLaps)
+                            if self.pj[cfg.OBSERVATIONS][self.observationId].get(cfg.MEDIA_CREATION_DATE_AS_OFFSET, False):
+                                time_, _ = self.get_obs_time()
+                                write_event.write_event(self, event, time_)
+                            else:
+                                write_event.write_event(self, event, memLaps)
+
                             return
 
             # count key occurence in subjects
@@ -5129,7 +5202,13 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 if self.playerType == cfg.MEDIA:
                     event[cfg.FRAME_INDEX] = self.get_frame_index()
 
-                write_event.write_event(self, event, memLaps)
+                if self.pj[cfg.OBSERVATIONS][self.observationId].get(cfg.MEDIA_CREATION_DATE_AS_OFFSET, False):
+                    time_, _ = self.get_obs_time()
+                    write_event.write_event(self, event, time_)
+                else:
+                    write_event.write_event(self, event, memLaps)
+
+                # write_event.write_event(self, event, memLaps)
 
             elif subject_idx is not None:
                 self.update_subject(self.pj[cfg.SUBJECTS][subject_idx][cfg.SUBJECT_NAME])

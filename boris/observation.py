@@ -218,12 +218,7 @@ class Observation(QDialog, Ui_Form):
         self.cbVisualizeSpectrogram.clicked.connect(self.extract_wav)
         self.cb_visualize_waveform.clicked.connect(self.extract_wav)
 
-        # self.cb_media_creation_date_as_offset.clicked.connect(self.check_creation_date)
-
         self.cb_observation_time_interval.clicked.connect(self.limit_time_interval)
-
-        # use Date/TimeOriginal metadata as offset
-        # self.cb_media_creation_date_as_offset.stateChanged.connect(self.check_media_creation_date)
 
         self.pbSave.clicked.connect(self.pbSave_clicked)
         self.pbLaunch.clicked.connect(self.pbLaunch_clicked)
@@ -272,9 +267,9 @@ class Observation(QDialog, Ui_Form):
 
         self.media_creation_time = {}
 
-        for row in range(self.twVideo1.rowCount()):
-            if self.twVideo1.item(row, 2).text():  # media file path
-                if self.cb_media_creation_date_as_offset.isChecked():
+        if self.cb_media_creation_date_as_offset.isChecked():
+            for row in range(self.twVideo1.rowCount()):
+                if self.twVideo1.item(row, 2).text():  # media file path
                     date_time_original = util.extract_video_creation_date(
                         project_functions.full_path(self.twVideo1.item(row, 2).text(), self.project_path)
                     )
@@ -294,11 +289,14 @@ class Observation(QDialog, Ui_Form):
             )
             self.cb_media_creation_date_as_offset.setChecked(False)
             self.media_creation_time = {}
+            return 1
 
         elif flag_filename_used:
             QMessageBox.information(
                 self, cfg.programName, "The creation date time was not found in metadata. The media file name(s) was/were used"
             )
+
+        return 0
 
     def cb_time_offset_changed(self):
         """
@@ -630,7 +628,7 @@ class Observation(QDialog, Ui_Form):
             QMessageBox.warning(
                 self,
                 cfg.programName,
-                ("It is not yet possible to plot more than 2 external data sources" "This limitation will be removed in future"),
+                ("It is not yet possible to plot more than 2 external data sourcesThis limitation will be removed in future"),
             )
             return
 
@@ -1148,7 +1146,7 @@ class Observation(QDialog, Ui_Form):
                     return False
 
             # check media creation time tag in metadata
-            # Disable because the check will be made at the oservation start
+            # Disable because the check will be made at the observation start
             """
             if self.cb_media_creation_date_as_offset.isChecked():
                 if self.check_creation_date():
@@ -1156,7 +1154,8 @@ class Observation(QDialog, Ui_Form):
             """
 
             # check media creation date time (if option enabled)
-            self.check_media_creation_date()
+            if self.check_media_creation_date():
+                return False
 
         if self.rb_images.isChecked():  # observation based on images directory
             if not self.lw_images_directory.count():

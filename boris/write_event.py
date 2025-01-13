@@ -93,6 +93,14 @@ def write_event(self, event: dict, mem_time: dec) -> int:
         if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE] in (cfg.MEDIA):
             if self.pj[cfg.OBSERVATIONS][self.observationId].get(cfg.MEDIA_CREATION_DATE_AS_OFFSET, False):
                 media_file_name = self.dw_player[0].player.playlist[self.dw_player[0].player.playlist_pos]["filename"]
+                # add media creation date/time
+
+                """
+                print(f"{media_file_name=}")
+                print(f"{mem_time=}")
+                print(f"{dec(self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO][cfg.MEDIA_CREATION_TIME][media_file_name])=}")
+                """
+
                 mem_time += dec(self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO][cfg.MEDIA_CREATION_TIME][media_file_name])
 
     # check if time > 2**31 - 1 (2147483647)
@@ -100,7 +108,7 @@ def write_event(self, event: dict, mem_time: dec) -> int:
         if (mem_time < -2147483647) or (mem_time > 2147483647):
             _ = dialog.MessageDialog(
                 cfg.programName,
-                ("The timestamp must be between -2147483647 and 2147483647.<br>" f"The current timestamp is {mem_time}"),
+                (f"The timestamp must be between -2147483647 and 2147483647.<br>The current timestamp is {mem_time}"),
                 (cfg.OK,),
             )
             return 1

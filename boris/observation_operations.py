@@ -137,7 +137,7 @@ def observations_list(self):
             QMessageBox.warning(
                 self,
                 cfg.programName,
-                (f"The observation <b>{self.observationId}</b> is running!<br>" "Close it before editing."),
+                (f"The observation <b>{self.observationId}</b> is running!<br>Close it before editing."),
             )
 
     logging.debug("end observations list")
@@ -490,7 +490,7 @@ def observation_length(pj: dict, selected_observations: list) -> tuple:
         if (
             dialog.MessageDialog(
                 cfg.programName,
-                (f"The observation length is not available (<b>{obs_id}</b>).<br>" "Use last event time as observation length?"),
+                (f"The observation length is not available (<b>{obs_id}</b>).<br>Use last event time as observation length?"),
                 (cfg.YES, cfg.NO),
             )
             == cfg.YES
@@ -1180,7 +1180,6 @@ def check_creation_date(self) -> Tuple[int, dict]:
 
     """
 
-
     not_tagged_media_list: list = []
     media_creation_time: dict = {}
 
@@ -1289,12 +1288,14 @@ def initialize_new_media_observation(self) -> bool:
     self.dw_player: list = []
 
     # check if media creation time used as offset
+    """
     if self.pj[cfg.OBSERVATIONS][self.observationId].get(cfg.MEDIA_CREATION_DATE_AS_OFFSET, False):
         r, media_creation_time = check_creation_date(self)
 
         if r:
             return False
         self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO][cfg.MEDIA_CREATION_TIME] = dict(media_creation_time)
+    """
 
     # create dock widgets for players
     for i in range(cfg.N_PLAYER):
@@ -2344,7 +2345,7 @@ def create_observations(self):
                 QMessageBox.critical(
                     self,
                     cfg.programName,
-                    (f"The observation <b>{media_file}</b> already exists." "<br><br>Aborting the creation of observations"),
+                    (f"The observation <b>{media_file}</b> already exists.<br><br>Aborting the creation of observations"),
                 )
                 return
 
