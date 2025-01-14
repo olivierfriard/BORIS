@@ -1241,7 +1241,7 @@ def initialize_new_media_observation(self) -> bool:
 
     logging.debug("function: initialize new observation for media file(s)")
 
-    for dw in [self.dwEthogram, self.dwSubjects, self.dwEvents]:
+    for dw in (self.dwEthogram, self.dwSubjects, self.dwEvents):
         dw.setVisible(True)
 
     ok, msg = project_functions.check_if_media_available(self.pj[cfg.OBSERVATIONS][self.observationId], self.projectFileName)
@@ -1288,6 +1288,7 @@ def initialize_new_media_observation(self) -> bool:
     self.dw_player: list = []
 
     # check if media creation time used as offset
+    # TODO check if cfg.MEDIA_CREATION_TIME dict is present
     """
     if self.pj[cfg.OBSERVATIONS][self.observationId].get(cfg.MEDIA_CREATION_DATE_AS_OFFSET, False):
         r, media_creation_time = check_creation_date(self)

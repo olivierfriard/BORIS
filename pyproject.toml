@@ -1,6 +1,6 @@
 [project]
 name = "boris-behav-obs"
-version = "9.0.0"
+version = "9.0.1"
 description = "BORIS - Behavioral Observation Research Interactive Software"
 authors = [{ name="Olivier Friard", email="olivier.friard@unito.it" }]
 readme = "README.rst"
@@ -59,7 +59,7 @@ line-length = 140
 exclude = ["*_ui.py", "mpv*"]
 
 [tool.bumpver]
-current_version = "9.0.0"
+current_version = "9.0.1"
 version_pattern = "MAJOR.MINOR.PATCH"
 
 
