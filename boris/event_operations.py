@@ -320,7 +320,7 @@ def delete_all_events(self):
     if (
         dialog.MessageDialog(
             cfg.programName,
-            ("Confirm the deletion of all (filtered) events in the current observation?<br>" "Filters do not apply!"),
+            ("Confirm the deletion of all (filtered) events in the current observation?<br>Filters do not apply!"),
             [cfg.YES, cfg.NO],
         )
         == cfg.YES
@@ -762,28 +762,7 @@ def edit_event(self):
                             cfg.IMAGE_PATH,
                         )
 
-                        """
-                        try:
-                            event[cfg.IMAGE_PATH] = self.images_list[new_index]
-                        except IndexError:
-                            event[cfg.IMAGE_PATH] = ""
-                        """
                         event[cfg.IMAGE_INDEX] = new_index
-
-                        """
-                        time_ = dec("NaN")
-                        if (
-                            self.playerType != cfg.VIEWER_IMAGES
-                            and self.pj[cfg.OBSERVATIONS][self.observationId].get(cfg.USE_EXIF_DATE, False)
-                            and self.extract_exif_DateTimeOriginal(self.images_list[new_index]) != -1
-                        ):
-                            time_ = (
-                                self.extract_exif_DateTimeOriginal(self.images_list[new_index]) - self.image_time_ref
-                            )
-
-                        elif self.pj[cfg.OBSERVATIONS][self.observationId].get(cfg.TIME_LAPSE, 0):
-                            time_ = new_index * self.pj[cfg.OBSERVATIONS][self.observationId].get(cfg.TIME_LAPSE, 0)
-                        """
 
                         r = write_event.write_event(self, event, event[cfg.TIME].quantize(dec("0.001"), rounding=ROUND_DOWN))
                         if r == 1:  # same event already present
@@ -834,7 +813,7 @@ def edit_time_selected_events(self):
     if (
         dialog.MessageDialog(
             cfg.programName,
-            (f"Confirm the {'addition' if d > 0 else 'subtraction'} of {smart_d} " "to all selected events in the current observation?"),
+            (f"Confirm the {'addition' if d > 0 else 'subtraction'} of {smart_d} to all selected events in the current observation?"),
             [cfg.YES, cfg.NO],
         )
         == cfg.NO
