@@ -89,10 +89,10 @@ def extract_exif_DateTimeOriginal(file_path: str) -> int:
             tags = exifread.process_file(f_in, details=False, stop_tag="EXIF DateTimeOriginal")
             if "EXIF DateTimeOriginal" in tags:
                 date_time_original = (
-                    f'{tags["EXIF DateTimeOriginal"].values[:4]}-'
-                    f'{tags["EXIF DateTimeOriginal"].values[5:7]}-'
-                    f'{tags["EXIF DateTimeOriginal"].values[8:10]} '
-                    f'{tags["EXIF DateTimeOriginal"].values.split(" ")[-1]}'
+                    f"{tags['EXIF DateTimeOriginal'].values[:4]}-"
+                    f"{tags['EXIF DateTimeOriginal'].values[5:7]}-"
+                    f"{tags['EXIF DateTimeOriginal'].values[8:10]} "
+                    f"{tags['EXIF DateTimeOriginal'].values.split(' ')[-1]}"
                 )
                 return int(datetime.datetime.strptime(date_time_original, "%Y-%m-%d %H:%M:%S").timestamp())
             else:
@@ -143,14 +143,14 @@ def extract_date_time_from_file_name(file_path: str) -> int:
         if matches:
             if pattern == r"\d{4}-\d{2}-\d{2}_\d{6}":
                 logging.debug(
-                    f"extract_date_time_from_file_name timestamp from {file_path}: {int(datetime.datetime.strptime(matches[0], "%Y-%m-%d_%H%M%S").timestamp())}"
+                    f"extract_date_time_from_file_name timestamp from {file_path}: {int(datetime.datetime.strptime(matches[0], '%Y-%m-%d_%H%M%S').timestamp())}"
                 )
 
                 return int(datetime.datetime.strptime(matches[0], "%Y-%m-%d_%H%M%S").timestamp())
 
             if pattern == r"\d{4}-\d{2}-\d{2}_\d{2}:\d{2}:\d{2}":
                 logging.debug(
-                    f"extract_date_time_from_file_name timestamp from {file_path}: {int(datetime.datetime.strptime(matches[0], "%Y-%m-%d_%H:%M:%S").timestamp())}"
+                    f"extract_date_time_from_file_name timestamp from {file_path}: {int(datetime.datetime.strptime(matches[0], '%Y-%m-%d_%H:%M:%S').timestamp())}"
                 )
 
                 return int(datetime.datetime.strptime(matches[0], "%Y-%m-%d_%H:%M:%S").timestamp())
@@ -1617,7 +1617,7 @@ def has_coding_map(ethogram: dict, behavior_idx: str) -> bool:
         return False
     if not ethogram[behavior_idx].get("coding map", False):
         return False
-    return False
+    return True
 
 
 def dir_images_number(dir_path_str: str) -> dict:
