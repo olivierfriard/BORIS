@@ -1,7 +1,7 @@
 """
 BORIS
 Behavioral Observation Research Interactive Software
-Copyright 2012-2024 Olivier Friard
+Copyright 2012-2025 Olivier Friard
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -22,10 +22,9 @@ Copyright 2012-2024 Olivier Friard
 import gzip
 import json
 import logging
-import os
 import pandas as pd
 import numpy as np
-import pathlib as pl
+from pathlib import Path
 import sys
 from decimal import Decimal as dec
 from shutil import copyfile
@@ -666,7 +665,7 @@ def create_subtitles(pj: dict, selected_observations: list, parameters: dict, ex
                     modifiers=modifiers_str,
                 )
 
-            file_name = pl.Path(export_dir) / pl.Path(util.safeFileName(obs_id)).with_suffix(".srt")
+            file_name = Path(export_dir) / Path(util.safeFileName(obs_id)).with_suffix(".srt")
 
             if mem_command not in (cfg.OVERWRITE_ALL, cfg.SKIP_ALL) and file_name.is_file():
                 mem_command = dialog.MessageDialog(
@@ -773,7 +772,7 @@ def create_subtitles(pj: dict, selected_observations: list, parameters: dict, ex
                             behavior=row["behavior"],
                             modifiers=modifiers_str,
                         )
-                    file_name = pl.Path(export_dir) / pl.Path(pl.Path(media_file).stem).with_suffix(".srt")
+                    file_name = Path(export_dir) / Path(Path(media_file).stem).with_suffix(".srt")
 
                     if mem_command not in (cfg.OVERWRITE_ALL, cfg.SKIP_ALL) and file_name.is_file():
                         mem_command = dialog.MessageDialog(
@@ -901,9 +900,9 @@ def set_media_paths_relative_to_project_dir(pj: dict, project_file_name: str) ->
         if pj[cfg.OBSERVATIONS][obs_id][cfg.TYPE] == cfg.IMAGES:
             for img_dir in pj[cfg.OBSERVATIONS][obs_id][cfg.DIRECTORIES_LIST]:
                 try:
-                    pl.Path(img_dir).relative_to(pl.Path(project_file_name).parent)
+                    Path(img_dir).relative_to(Path(project_file_name).parent)
                 except ValueError:
-                    if pl.Path(img_dir).is_absolute() or not (pl.Path(project_file_name).parent / pl.Path(img_dir)).is_dir():
+                    if Path(img_dir).is_absolute() or not (Path(project_file_name).parent / Path(img_dir)).is_dir():
                         QMessageBox.critical(
                             None,
                             cfg.programName,
@@ -916,9 +915,9 @@ def set_media_paths_relative_to_project_dir(pj: dict, project_file_name: str) ->
                 if n_player in pj[cfg.OBSERVATIONS][obs_id][cfg.FILE]:
                     for idx, media_file in enumerate(pj[cfg.OBSERVATIONS][obs_id][cfg.FILE][n_player]):
                         try:
-                            pl.Path(media_file).relative_to(pl.Path(project_file_name).parent)
+                            Path(media_file).relative_to(Path(project_file_name).parent)
                         except ValueError:
-                            if pl.Path(media_file).is_absolute() or not (pl.Path(project_file_name).parent / pl.Path(media_file)).is_file():
+                            if Path(media_file).is_absolute() or not (Path(project_file_name).parent / Path(media_file)).is_file():
                                 QMessageBox.critical(
                                     None,
                                     cfg.programName,
@@ -936,9 +935,9 @@ def set_media_paths_relative_to_project_dir(pj: dict, project_file_name: str) ->
             new_dir_list = []
             for img_dir in pj[cfg.OBSERVATIONS][obs_id][cfg.DIRECTORIES_LIST]:
                 try:
-                    new_dir_list.append(str(pl.Path(img_dir).relative_to(pl.Path(project_file_name).parent)))
+                    new_dir_list.append(str(Path(img_dir).relative_to(Path(project_file_name).parent)))
                 except ValueError:
-                    if not pl.Path(img_dir).is_absolute() and (pl.Path(project_file_name).parent / pl.Path(img_dir)).is_dir():
+                    if not Path(img_dir).is_absolute() and (Path(project_file_name).parent / Path(img_dir)).is_dir():
                         new_dir_list.append(img_dir)
 
             if pj[cfg.OBSERVATIONS][obs_id][cfg.DIRECTORIES_LIST] != new_dir_list:
@@ -950,12 +949,9 @@ def set_media_paths_relative_to_project_dir(pj: dict, project_file_name: str) ->
                 if n_player in pj[cfg.OBSERVATIONS][obs_id][cfg.FILE]:
                     for idx, media_file in enumerate(pj[cfg.OBSERVATIONS][obs_id][cfg.FILE][n_player]):
                         try:
-                            p = str(pl.Path(media_file).relative_to(pl.Path(project_file_name).parent))
+                            p = str(Path(media_file).relative_to(Path(project_file_name).parent))
                         except ValueError:
-                            if (
-                                not pl.Path(media_file).is_absolute()
-                                and (pl.Path(project_file_name).parent / pl.Path(media_file)).is_file()
-                            ):
+                            if not Path(media_file).is_absolute() and (Path(project_file_name).parent / Path(media_file)).is_file():
                                 p = media_file
                         if p != media_file:
                             flag_changed = True
@@ -996,13 +992,10 @@ def set_data_paths_relative_to_project_dir(pj: dict, project_file_name: str) -> 
         for _, v in pj[cfg.OBSERVATIONS][obs_id].get(cfg.PLOT_DATA, {}).items():
             if cfg.FILE_PATH in v:
                 try:
-                    pl.Path(v[cfg.FILE_PATH]).relative_to(pl.Path(project_file_name).parent)
+                    Path(v[cfg.FILE_PATH]).relative_to(Path(project_file_name).parent)
                 except ValueError:
                     # check if file is in project dir
-                    if (
-                        pl.Path(v[cfg.FILE_PATH]).is_absolute()
-                        or not (pl.Path(project_file_name).parent / pl.Path(v[cfg.FILE_PATH])).is_file()
-                    ):
+                    if Path(v[cfg.FILE_PATH]).is_absolute() or not (Path(project_file_name).parent / Path(v[cfg.FILE_PATH])).is_file():
                         QMessageBox.critical(
                             None,
                             cfg.programName,
@@ -1021,13 +1014,10 @@ def set_data_paths_relative_to_project_dir(pj: dict, project_file_name: str) -> 
         for idx, v in pj[cfg.OBSERVATIONS][obs_id].get(cfg.PLOT_DATA, {}).items():
             if cfg.FILE_PATH in v:
                 try:
-                    p = str(pl.Path(v[cfg.FILE_PATH]).relative_to(pl.Path(project_file_name).parent))
+                    p = str(Path(v[cfg.FILE_PATH]).relative_to(Path(project_file_name).parent))
                 except ValueError:
                     # check if file is in project dir
-                    if (
-                        not pl.Path(v[cfg.FILE_PATH]).is_absolute()
-                        and (pl.Path(project_file_name).parent / pl.Path(v[cfg.FILE_PATH])).is_file()
-                    ):
+                    if not Path(v[cfg.FILE_PATH]).is_absolute() and (Path(project_file_name).parent / Path(v[cfg.FILE_PATH])).is_file():
                         p = v[cfg.FILE_PATH]
 
                 if p != v[cfg.FILE_PATH]:
@@ -1054,7 +1044,7 @@ def remove_data_files_path(pj: dict) -> None:
         if cfg.PLOT_DATA in pj[cfg.OBSERVATIONS][obs_id]:
             for idx in pj[cfg.OBSERVATIONS][obs_id][cfg.PLOT_DATA]:
                 if "file_path" in pj[cfg.OBSERVATIONS][obs_id][cfg.PLOT_DATA][idx]:
-                    p = str(pl.Path(pj[cfg.OBSERVATIONS][obs_id][cfg.PLOT_DATA][idx]["file_path"]).name)
+                    p = str(Path(pj[cfg.OBSERVATIONS][obs_id][cfg.PLOT_DATA][idx]["file_path"]).name)
                     if p != pj[cfg.OBSERVATIONS][obs_id][cfg.PLOT_DATA][idx]["file_path"]:
                         pj[cfg.OBSERVATIONS][obs_id][cfg.PLOT_DATA][idx]["file_path"] = p
 
@@ -1076,14 +1066,14 @@ def remove_media_files_path(pj: dict, project_file_name: str) -> bool:
     for obs_id in pj[cfg.OBSERVATIONS]:
         if pj[cfg.OBSERVATIONS][obs_id][cfg.TYPE] == cfg.IMAGES:
             for img_dir in pj[cfg.OBSERVATIONS][obs_id][cfg.DIRECTORIES_LIST]:
-                if full_path(pl.Path(img_dir).name, project_file_name) == "":
+                if full_path(Path(img_dir).name, project_file_name) == "":
                     file_not_found.append(img_dir)
 
         if pj[cfg.OBSERVATIONS][obs_id][cfg.TYPE] == cfg.MEDIA:
             for n_player in cfg.ALL_PLAYERS:
                 if n_player in pj[cfg.OBSERVATIONS][obs_id][cfg.FILE]:
                     for idx, media_file in enumerate(pj[cfg.OBSERVATIONS][obs_id][cfg.FILE][n_player]):
-                        if full_path(pl.Path(media_file).name, project_file_name) == "":
+                        if full_path(Path(media_file).name, project_file_name) == "":
                             file_not_found.append(media_file)
 
     file_not_found = set(file_not_found)
@@ -1107,16 +1097,16 @@ def remove_media_files_path(pj: dict, project_file_name: str) -> bool:
         if pj[cfg.OBSERVATIONS][obs_id][cfg.TYPE] == cfg.IMAGES:
             new_img_dir_list = []
             for img_dir in pj[cfg.OBSERVATIONS][obs_id][cfg.DIRECTORIES_LIST]:
-                if img_dir != pl.Path(img_dir).name:
+                if img_dir != Path(img_dir).name:
                     flag_changed = True
-                new_img_dir_list.append(str(pl.Path(img_dir).name))
+                new_img_dir_list.append(str(Path(img_dir).name))
             pj[cfg.OBSERVATIONS][obs_id][cfg.DIRECTORIES_LIST] = new_img_dir_list
 
         if pj[cfg.OBSERVATIONS][obs_id][cfg.TYPE] == cfg.MEDIA:
             for n_player in cfg.ALL_PLAYERS:
                 if n_player in pj[cfg.OBSERVATIONS][obs_id][cfg.FILE]:
                     for idx, media_file in enumerate(pj[cfg.OBSERVATIONS][obs_id][cfg.FILE][n_player]):
-                        p = pl.Path(media_file).name
+                        p = Path(media_file).name
                         if p != media_file:
                             flag_changed = True
                             pj[cfg.OBSERVATIONS][obs_id][cfg.FILE][n_player][idx] = p
@@ -1154,12 +1144,12 @@ def full_path(path: str, project_file_name: str) -> str:
         str: full path
     """
 
-    source_path = pl.Path(path)
+    source_path = Path(path)
     if source_path.exists():
         return str(source_path)
     else:
         # check relative path (to project path)
-        project_path = pl.Path(project_file_name)
+        project_path = Path(project_file_name)
         if (project_path.parent / source_path).exists():
             return str(project_path.parent / source_path)
         else:
@@ -1269,7 +1259,7 @@ def extract_observed_subjects(pj: dict, selected_observations: list) -> list:
     return list(set(observed_subjects))
 
 
-def open_project_json(projectFileName: str) -> tuple:
+def open_project_json(project_file_name: str) -> tuple:
     """
     open BORIS project file in json format or GZ compressed json format
 
@@ -1283,37 +1273,37 @@ def open_project_json(projectFileName: str) -> tuple:
         str: message
     """
 
-    logging.debug(f"open project: {projectFileName}")
+    logging.debug(f"open project: {project_file_name}")
 
     projectChanged: bool = False
     msg: str = ""
 
-    if not os.path.isfile(projectFileName):
+    if not Path(project_file_name).is_file():
         return (
-            projectFileName,
+            project_file_name,
             projectChanged,
-            {"error": f"File {projectFileName} not found"},
+            {"error": f"File {project_file_name} not found"},
             msg,
         )
 
     try:
-        if projectFileName.endswith(".boris.gz"):
-            file_in = gzip.open(projectFileName, mode="rt", encoding="utf-8")
+        if project_file_name.endswith(".boris.gz"):
+            file_in = gzip.open(project_file_name, mode="rt", encoding="utf-8")
         else:
-            file_in = open(projectFileName, "r")
+            file_in = open(project_file_name, "r")
         file_content = file_in.read()
     except PermissionError:
         return (
-            projectFileName,
+            project_file_name,
             projectChanged,
-            {"error": f"File {projectFileName}: Permission denied"},
+            {"error": f"File {project_file_name}: Permission denied"},
             msg,
         )
     except Exception:
         return (
-            projectFileName,
+            project_file_name,
             projectChanged,
-            {"error": f"Error on file {projectFileName}: {sys.exc_info()[1]}"},
+            {"error": f"Error on file {project_file_name}: {sys.exc_info()[1]}"},
             msg,
         )
 
@@ -1321,16 +1311,16 @@ def open_project_json(projectFileName: str) -> tuple:
         pj = json.loads(file_content)
     except json.decoder.JSONDecodeError:
         return (
-            projectFileName,
+            project_file_name,
             projectChanged,
             {"error": "This project file seems corrupted"},
             msg,
         )
     except Exception:
         return (
-            projectFileName,
+            project_file_name,
             projectChanged,
-            {"error": f"Error on file {projectFileName}: {sys.exc_info()[1]}"},
+            {"error": f"Error on file {project_file_name}: {sys.exc_info()[1]}"},
             msg,
         )
 
@@ -1352,7 +1342,7 @@ def open_project_json(projectFileName: str) -> tuple:
     # check if project file version is newer than current BORIS project file version
     if cfg.PROJECT_VERSION in pj and util.versiontuple(pj[cfg.PROJECT_VERSION]) > util.versiontuple(version.__version__):
         return (
-            projectFileName,
+            project_file_name,
             projectChanged,
             {
                 "error": (
@@ -1395,7 +1385,7 @@ def open_project_json(projectFileName: str) -> tuple:
             f"The project file was converted to the new format (v. {cfg.project_format_version}) in use with your version of BORIS.<br>"
             "Choose a new file name for saving it."
         )
-        projectFileName = ""
+        project_file_name = ""
 
     # update modifiers to JSON format
 
@@ -1425,8 +1415,8 @@ def open_project_json(projectFileName: str) -> tuple:
 
     # add category key if not found
     for idx in pj[cfg.ETHOGRAM]:
-        if "category" not in pj[cfg.ETHOGRAM][idx]:
-            pj[cfg.ETHOGRAM][idx]["category"] = ""
+        if cfg.BEHAVIOR_CATEGORY not in pj[cfg.ETHOGRAM][idx]:
+            pj[cfg.ETHOGRAM][idx][cfg.BEHAVIOR_CATEGORY] = ""
 
     # if one file is present in player #1 -> set "media_info" key with value of media_file_info
     for obs in pj[cfg.OBSERVATIONS]:
@@ -1447,7 +1437,7 @@ def open_project_json(projectFileName: str) -> tuple:
                     ret, ffmpeg_bin = util.check_ffmpeg_path()
                     if not ret:
                         return (
-                            projectFileName,
+                            project_file_name,
                             projectChanged,
                             {"error": "FFmpeg path not found"},
                             "",
@@ -1516,8 +1506,8 @@ def open_project_json(projectFileName: str) -> tuple:
         msg = f"The project was updated to the current project version ({cfg.project_format_version})."
 
         try:
-            old_project_file_name = projectFileName.replace(".boris", f".v{pj['project_format_version']}.boris")
-            copyfile(projectFileName, old_project_file_name)
+            old_project_file_name = project_file_name.replace(".boris", f".v{pj['project_format_version']}.boris")
+            copyfile(project_file_name, old_project_file_name)
             msg += f"\n\nThe old file project was saved as {old_project_file_name}"
         except Exception:
             QMessageBox.critical(cfg.programName, f"Error saving old project to {old_project_file_name}")
@@ -1529,12 +1519,12 @@ def open_project_json(projectFileName: str) -> tuple:
         if pj[cfg.OBSERVATIONS][obs_id][cfg.TYPE] in (cfg.LIVE, cfg.MEDIA):
             pj[cfg.OBSERVATIONS][obs_id][cfg.EVENTS].sort()
 
-    return projectFileName, projectChanged, pj, msg
+    return project_file_name, projectChanged, pj, msg
 
 
-def event_type(code: str, ethogram: dict) -> str:
+def event_type(code: str, ethogram: dict) -> str | None:
     """
-    returns type of event for code
+    returns type of event for behavior code
 
     Args:
         ethogram (dict); ethogram of project
@@ -1764,6 +1754,9 @@ def explore_project(self) -> None:
 
 
 def project2dataframe(pj: dict, observations_list: list = []) -> pd.DataFrame:
+    """
+    returns a pandas dataframe containing observations data
+    """
     # print(pj.keys())
 
     # print(pj["independent_variables"])
@@ -1771,7 +1764,7 @@ def project2dataframe(pj: dict, observations_list: list = []) -> pd.DataFrame:
     # indep_var = [pj["independent_variables"][idx]["label"] for idx in pj["independent_variables"]]
 
     indep_variables = dict(
-        [(pj["independent_variables"][idx]["label"], pj["independent_variables"][idx]["type"]) for idx in pj["independent_variables"]]
+        [(pj[cfg.INDEPENDENT_VARIABLES][idx]["label"], pj[cfg.INDEPENDENT_VARIABLES][idx]["type"]) for idx in pj[cfg.INDEPENDENT_VARIABLES]]
     )
 
     # print()
@@ -1780,22 +1773,25 @@ def project2dataframe(pj: dict, observations_list: list = []) -> pd.DataFrame:
     # n_max_set_modifiers = max([len(pj["behaviors_conf"][behavior_id]["modifiers"]) for behavior_id in pj["behaviors_conf"]])
 
     # behavioral_categories
-    behavioral_category = dict([(pj["behaviors_conf"][x]["code"], pj["behaviors_conf"][x]["category"]) for x in pj["behaviors_conf"]])
+    behavioral_category = dict(
+        [(pj[cfg.ETHOGRAM][x][cfg.BEHAVIOR_CODE], pj[cfg.ETHOGRAM][x][cfg.BEHAVIOR_CATEGORY]) for x in pj[cfg.ETHOGRAM]]
+    )
 
     # print(f"{pj["behaviors_conf"]=}")
 
+    # check all modifiers
     all_modifier_sets: list = []
-    for behavior_id in pj["behaviors_conf"]:
-        modifier_names = []
+    for behavior_id in pj[cfg.ETHOGRAM]:
+        modifier_names: list = []
         set_count = 0
-        if pj["behaviors_conf"][behavior_id]["modifiers"] == "":
+        if pj[cfg.ETHOGRAM][behavior_id][cfg.MODIFIERS] == "":
             continue
-        for modifier in pj["behaviors_conf"][behavior_id]["modifiers"].values():
+        for modifier in pj[cfg.ETHOGRAM][behavior_id][cfg.MODIFIERS].values():
             if modifier["name"]:
-                modifier_names.append((pj["behaviors_conf"][behavior_id]["code"], modifier["name"]))
+                modifier_names.append((pj[cfg.ETHOGRAM][behavior_id][cfg.BEHAVIOR_CODE], modifier["name"]))
             else:
                 set_count += 1
-                modifier_names.append((pj["behaviors_conf"][behavior_id]["code"], f"set #{set_count}"))
+                modifier_names.append((pj[cfg.ETHOGRAM][behavior_id][cfg.BEHAVIOR_CODE], f"set #{set_count}"))
 
         # print(modifier_names)
         if modifier_names:
@@ -1861,7 +1857,7 @@ def project2dataframe(pj: dict, observations_list: list = []) -> pd.DataFrame:
 
     # TODO: set correct type in base of the var type
     for indep_var in indep_variables:
-        type_[f"independent variable '{indep_var}'"] = "float64" if indep_variables[indep_var] == "numeric" else "string"
+        type_[f"independent variable '{indep_var}'"] = "float64" if indep_variables[indep_var] == cfg.NUMERIC else "string"
 
     type_ = type_ | {
         "Subject": "string",
@@ -1887,14 +1883,14 @@ def project2dataframe(pj: dict, observations_list: list = []) -> pd.DataFrame:
         "Comment stop": "string",
     }
 
-    state_behaviors = [pj["behaviors_conf"][x]["code"] for x in pj["behaviors_conf"] if pj["behaviors_conf"][x]["type"] == "State event"]
+    state_behaviors = [pj[cfg.ETHOGRAM][x][cfg.BEHAVIOR_CODE] for x in pj[cfg.ETHOGRAM] if pj[cfg.ETHOGRAM][x]["type"] == cfg.STATE_EVENT]
 
-    for obs_id in pj["observations"]:
+    for obs_id in pj[cfg.OBSERVATIONS]:
         if observations_list and obs_id not in observations_list:
             continue
         # print(obs_id)
         stop_event_idx = set()
-        for idx_event, event in enumerate(pj["observations"][obs_id]["events"]):
+        for idx_event, event in enumerate(pj[cfg.OBSERVATIONS][obs_id][cfg.EVENTS]):
             if idx_event in stop_event_idx:
                 continue
             data["Observation id"].append(obs_id)
@@ -1908,9 +1904,11 @@ def project2dataframe(pj: dict, observations_list: list = []) -> pd.DataFrame:
             # data["FPS (frame/s)"].append("")
 
             for indep_var in indep_variables:
-                data[f"independent variable '{indep_var}'"].append(pj["observations"][obs_id]["independent_variables"][indep_var])
+                data[f"independent variable '{indep_var}'"].append(
+                    pj[cfg.OBSERVATIONS][obs_id][cfg.INDEPENDENT_VARIABLES].get(indep_var, None)
+                )
 
-            data["Subject"].append(event[1])
+            data["Subject"].append(event[cfg.EVENT_SUBJECT_FIELD_IDX] if event[cfg.EVENT_SUBJECT_FIELD_IDX] != "" else cfg.NO_FOCAL_SUBJECT)
             data["Observation duration by subject by observation"].append(-1)
             data["Behavior"].append(event[2])
             data["Behavioral category"].append(behavioral_category[event[2]])
@@ -1923,12 +1921,12 @@ def project2dataframe(pj: dict, observations_list: list = []) -> pd.DataFrame:
                 else:
                     data[modifier_set].append(np.nan)
 
-            data["Behavior type"].append("State event" if event[2] in state_behaviors else "Point event")
+            data["Behavior type"].append(cfg.STATE_EVENT if event[2] in state_behaviors else cfg.POINT_EVENT)
             data["Start (s)"].append(event[0])
             if event[2] in state_behaviors:
                 # search stop
                 # print(f"==> {idx_event=} {event[1:4]=}")
-                for idx_event2, event2 in enumerate(pj["observations"][obs_id]["events"][idx_event + 1 :], start=idx_event + 1):
+                for idx_event2, event2 in enumerate(pj[cfg.OBSERVATIONS][obs_id][cfg.EVENTS][idx_event + 1 :], start=idx_event + 1):
                     # print(f"{idx_event2=} {event2[1:4]=}")
                     if event2[1:4] == event[1:4]:
                         # print("found")
@@ -1939,7 +1937,6 @@ def project2dataframe(pj: dict, observations_list: list = []) -> pd.DataFrame:
                         data["Comment stop"].append(event2[4])
                         break
                 else:
-                    # print("not paired")
                     raise ("not paired")
 
             else:  # point

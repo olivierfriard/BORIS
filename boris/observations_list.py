@@ -1,7 +1,7 @@
 """
 BORIS
 Behavioral Observation Research Interactive Software
-Copyright 2012-2024 Olivier Friard
+Copyright 2012-2025 Olivier Friard
 
 
   This program is free software; you can redistribute it and/or modify
@@ -124,7 +124,7 @@ class observationsList_widget(QDialog):
         self.pbUnSelectAll.clicked.connect(lambda: self.pbSelection_clicked("unselect"))
         hbox2.addWidget(self.pbUnSelectAll)
 
-        self.pbCancel = QPushButton("Cancel", clicked=self.pbCancel_clicked)
+        self.pbCancel = QPushButton(cfg.CANCEL, clicked=self.pbCancel_clicked)
         hbox2.addWidget(self.pbCancel)
 
         self.pbOpen = QPushButton("Start", clicked=self.pbOpen_clicked)
@@ -136,7 +136,7 @@ class observationsList_widget(QDialog):
         self.pbEdit = QPushButton("Edit", clicked=self.pbEdit_clicked)
         hbox2.addWidget(self.pbEdit)
 
-        self.pbOk = QPushButton("OK", clicked=self.pbOk_clicked)
+        self.pbOk = QPushButton(cfg.OK, clicked=self.pbOk_clicked)
         hbox2.addWidget(self.pbOk)
 
         self.gridLayout.addLayout(hbox2, 3, 0, 1, 3)

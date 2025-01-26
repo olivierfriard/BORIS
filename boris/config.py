@@ -1,7 +1,7 @@
 """
 BORIS
 Behavioral Observation Research Interactive Software
-Copyright 2012-2024 Olivier Friard
+Copyright 2012-2025 Olivier Friard
 
 This file is part of BORIS.
 
@@ -130,11 +130,21 @@ CHAR_FORBIDDEN_IN_MODIFIERS = "(|),`~"
 ADAPT_FAST_JUMP = "adapt_fast_jump"
 ADAPT_FAST_JUMP_DEFAULT = False
 
+TIME = "time"
+BEHAVIOR_CODE = "code"
+SUBJECT = "subject"
+MODIFIER = "modifier"
+COMMENT = "comment"
+BEHAVIOR_KEY = "key"
+SUBJECT_KEY = "key"
+BEHAVIOR_CATEGORY = "category"
 
-subjectsFields = ["key", SUBJECT_NAME, DESCRIPTION]
+
+subjectsFields = [SUBJECT_KEY, SUBJECT_NAME, DESCRIPTION]
 
 UNPAIRED = "UNPAIRED"
 DISPLAY_SUBTITLES = "display_subtitles"
+CHECK_PROJECT_INTEGRITY = "check_project_integrity"
 
 
 YES = "Yes"
@@ -186,13 +196,6 @@ DATA_PLOT_FIELDS = {
 }
 DATA_PLOT_STYLES = ["b-", "r-", "g-", "bo", "ro", "go"]
 
-TIME = "time"
-BEHAVIOR_CODE = "code"
-SUBJECT = "subject"
-MODIFIER = "modifier"
-COMMENT = "comment"
-BEHAVIOR_KEY = "key"
-BEHAVIOR_CATEGORY = "category"
 
 FILE_PATH = "file_path"
 

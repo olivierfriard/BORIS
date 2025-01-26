@@ -1,7 +1,7 @@
 """
 BORIS
 Behavioral Observation Research Interactive Software
-Copyright 2012-2024 Olivier Friard
+Copyright 2012-2025 Olivier Friard
 
 This file is part of BORIS.
 
@@ -515,8 +515,10 @@ def time_budget(self, mode: str, mode2: str = "list"):
                 # check intervals
                 for subj in parameters[cfg.SELECTED_SUBJECTS]:
                     for behav in parameters[cfg.SELECTED_BEHAVIORS]:
-                        if cfg.POINT in self.eventType(behav).upper():
+                        # if cfg.POINT in self.eventType(behav).upper():
+                        if cfg.POINT in project_functions.event_type(behav, self.pj[cfg.ETHOGRAM]):
                             continue
+
                         # extract modifiers
 
                         cursor.execute(
@@ -851,10 +853,8 @@ def time_budget(self, mode: str, mode2: str = "list"):
                 # check intervals
                 for subj in parameters[cfg.SELECTED_SUBJECTS]:
                     for behav in parameters[cfg.SELECTED_BEHAVIORS]:
-                        if cfg.POINT in project_functions.event_type(behav, self.pj[cfg.ETHOGRAM]):  # self.eventType(behav).upper():
+                        if cfg.POINT in project_functions.event_type(behav, self.pj[cfg.ETHOGRAM]):
                             continue
-                        # extract modifiers
-                        # if plot_parameters["include modifiers"]:
 
                         cursor.execute(
                             "SELECT distinct modifiers FROM events WHERE observation = ? AND subject = ? AND code = ?",

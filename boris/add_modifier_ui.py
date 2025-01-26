@@ -95,9 +95,9 @@ class Ui_Dialog(object):
         self.tabWidgetModifiersSets = QTabWidget(Dialog)
         self.tabWidgetModifiersSets.setObjectName(u"tabWidgetModifiersSets")
         self.tabWidgetModifiersSets.setMaximumSize(QSize(16777215, 30))
-        self.tabWidgetModifiersSets.setTabPosition(QTabWidget.North)
-        self.tabWidgetModifiersSets.setTabShape(QTabWidget.Rounded)
-        self.tabWidgetModifiersSets.setElideMode(Qt.ElideNone)
+        self.tabWidgetModifiersSets.setTabPosition(QTabWidget.TabPosition.North)
+        self.tabWidgetModifiersSets.setTabShape(QTabWidget.TabShape.Rounded)
+        self.tabWidgetModifiersSets.setElideMode(Qt.TextElideMode.ElideNone)
         self.tabWidgetModifiersSets.setDocumentMode(True)
 
         self.verticalLayout.addWidget(self.tabWidgetModifiersSets)
@@ -158,6 +158,11 @@ class Ui_Dialog(object):
 
         self.horizontalLayout.addWidget(self.pbMoveDown)
 
+        self.pb_sort_modifiers = QPushButton(Dialog)
+        self.pb_sort_modifiers.setObjectName(u"pb_sort_modifiers")
+
+        self.horizontalLayout.addWidget(self.pb_sort_modifiers)
+
         self.pbRemoveModifier = QPushButton(Dialog)
         self.pbRemoveModifier.setObjectName(u"pbRemoveModifier")
 
@@ -166,17 +171,22 @@ class Ui_Dialog(object):
 
         self.verticalLayout.addLayout(self.horizontalLayout)
 
-        self.pb_sort_modifiers = QPushButton(Dialog)
-        self.pb_sort_modifiers.setObjectName(u"pb_sort_modifiers")
-
-        self.verticalLayout.addWidget(self.pb_sort_modifiers)
-
         self.horizontalLayout_3 = QHBoxLayout()
         self.horizontalLayout_3.setObjectName(u"horizontalLayout_3")
         self.pbAddSet = QPushButton(Dialog)
         self.pbAddSet.setObjectName(u"pbAddSet")
 
         self.horizontalLayout_3.addWidget(self.pbAddSet)
+
+        self.pbMoveSetLeft = QPushButton(Dialog)
+        self.pbMoveSetLeft.setObjectName(u"pbMoveSetLeft")
+
+        self.horizontalLayout_3.addWidget(self.pbMoveSetLeft)
+
+        self.pbMoveSetRight = QPushButton(Dialog)
+        self.pbMoveSetRight.setObjectName(u"pbMoveSetRight")
+
+        self.horizontalLayout_3.addWidget(self.pbMoveSetRight)
 
         self.pbRemoveSet = QPushButton(Dialog)
         self.pbRemoveSet.setObjectName(u"pbRemoveSet")
@@ -188,16 +198,6 @@ class Ui_Dialog(object):
 
         self.horizontalLayout_4 = QHBoxLayout()
         self.horizontalLayout_4.setObjectName(u"horizontalLayout_4")
-        self.pbMoveSetLeft = QPushButton(Dialog)
-        self.pbMoveSetLeft.setObjectName(u"pbMoveSetLeft")
-
-        self.horizontalLayout_4.addWidget(self.pbMoveSetLeft)
-
-        self.pbMoveSetRight = QPushButton(Dialog)
-        self.pbMoveSetRight.setObjectName(u"pbMoveSetRight")
-
-        self.horizontalLayout_4.addWidget(self.pbMoveSetRight)
-
 
         self.verticalLayout.addLayout(self.horizontalLayout_4)
 
@@ -258,8 +258,8 @@ class Ui_Dialog(object):
         self.lbModifier.setText(QCoreApplication.translate("Dialog", u"Modifier", None))
         self.lbCode.setText(QCoreApplication.translate("Dialog", u"Key code", None))
         self.lbCodeHelp.setText(QCoreApplication.translate("Dialog", u"Key code is case sensitive. Type one character or a function key (F1, F2... F12)", None))
-        self.pbAddModifier.setText("")
-        self.pbModifyModifier.setText("")
+        self.pbAddModifier.setText(QCoreApplication.translate("Dialog", u"->", None))
+        self.pbModifyModifier.setText(QCoreApplication.translate("Dialog", u"<-", None))
         self.lb_name.setText(QCoreApplication.translate("Dialog", u"Set name", None))
         self.lb_description.setText(QCoreApplication.translate("Dialog", u"Description", None))
         self.lbType.setText(QCoreApplication.translate("Dialog", u"Modifier type", None))
@@ -271,12 +271,12 @@ class Ui_Dialog(object):
         self.lbValues.setText(QCoreApplication.translate("Dialog", u"Values", None))
         self.pbMoveUp.setText(QCoreApplication.translate("Dialog", u"Move modifier up", None))
         self.pbMoveDown.setText(QCoreApplication.translate("Dialog", u"Move modifier down", None))
-        self.pbRemoveModifier.setText(QCoreApplication.translate("Dialog", u"Remove modifier", None))
         self.pb_sort_modifiers.setText(QCoreApplication.translate("Dialog", u"Sort modifiers", None))
+        self.pbRemoveModifier.setText(QCoreApplication.translate("Dialog", u"Remove modifier", None))
         self.pbAddSet.setText(QCoreApplication.translate("Dialog", u"Add set of modifiers", None))
-        self.pbRemoveSet.setText(QCoreApplication.translate("Dialog", u"Remove set of modifiers", None))
         self.pbMoveSetLeft.setText(QCoreApplication.translate("Dialog", u"Move set left", None))
         self.pbMoveSetRight.setText(QCoreApplication.translate("Dialog", u"Move set right", None))
+        self.pbRemoveSet.setText(QCoreApplication.translate("Dialog", u"Remove set of modifiers", None))
         self.pb_add_subjects.setText(QCoreApplication.translate("Dialog", u"Add subjects as modifiers", None))
         self.pb_load_file.setText(QCoreApplication.translate("Dialog", u"Load modifiers from file", None))
         self.pbCancel.setText(QCoreApplication.translate("Dialog", u"Cancel", None))

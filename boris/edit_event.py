@@ -1,7 +1,7 @@
 """
 BORIS
 Behavioral Observation Research Interactive Software
-Copyright 2012-2024 Olivier Friard
+Copyright 2012-2025 Olivier Friard
 
 This file is part of BORIS.
 
@@ -76,6 +76,13 @@ class DlgEditEvent(QDialog, Ui_Form):
 
             # future time widget
             self.time_widget = dialog.get_time_widget(self.time_value)
+
+            if time_format == cfg.S:
+                self.time_widget.rb_seconds.setChecked(True)
+            if time_format == cfg.HHMMSS:
+                self.time_widget.rb_time.setChecked(True)
+            if self.time_value > cfg.DATE_CUTOFF:
+                self.time_widget.rb_datetime.setChecked(True)
 
             self.horizontalLayout_2.insertWidget(0, self.time_widget)
 

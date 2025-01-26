@@ -1,7 +1,7 @@
 """
 BORIS
 Behavioral Observation Research Interactive Software
-Copyright 2012-2024 Olivier Friard
+Copyright 2012-2025 Olivier Friard
 
 This file is part of BORIS.
 
@@ -20,5 +20,5 @@ This file is part of BORIS.
 
 """
 
-__version__ = "9.0.2"
-__version_date__ = "2025-01-15"
+__version__ = "9.0.4"
+__version_date__ = "2025-01-26"

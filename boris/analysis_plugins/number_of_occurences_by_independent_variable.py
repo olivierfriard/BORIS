@@ -6,8 +6,8 @@ number of occurences of behaviors by independent_variable
 
 import pandas as pd
 
-__version__ = "0.1.0"
-__version_date__ = "2024-11-14"
+__version__ = "0.2.0"
+__version_date__ = "2025-01-25"
 __plugin_name__ = "Number of occurences of behaviors by subject by independent_variable"
 __author__ = "Olivier Friard - University of Torino - Italy"
 
@@ -17,7 +17,9 @@ def run(df: pd.DataFrame):
     Calculate the number of occurrences of behaviors by subject and by independent_variable.
     """
 
-    results = (
+    str_results: str = ""
+
+    df_results: df.DataFrame = (
         df.groupby(
             [
                 "independent variable 'Weather'",
@@ -29,7 +31,7 @@ def run(df: pd.DataFrame):
         .reset_index(name="number of occurences")
     )
 
-    return results
+    return df_results, str_results
 
 
 def main(df: pd.DataFrame, observations_list: list = [], parameters: dict = {}) -> pd.DataFrame:

@@ -1,7 +1,7 @@
 """
 BORIS
 Behavioral Observation Research Interactive Software
-Copyright 2012-2024 Olivier Friard
+Copyright 2012-2025 Olivier Friard
 
 This file is part of BORIS.
 
@@ -34,6 +34,7 @@ import json
 import logging
 import pathlib as pl
 import platform
+import importlib
 import re
 import PIL.Image
 import PIL.ImageEnhance
@@ -116,6 +117,7 @@ from . import config_file
 from . import select_subj_behav
 from . import observation_operations
 from . import write_event
+from . import view_df
 
 
 # matplotlib.pyplot.switch_backend("Qt5Agg")
@@ -282,7 +284,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     plot_colors = cfg.BEHAVIORS_PLOT_COLORS
     behav_category_colors = cfg.CATEGORY_COLORS_LIST
 
-    measurement_w = None
+    # measurement_w = None
     current_image_size = None
 
     media_scan_sampling_mem: list = []
@@ -311,7 +313,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     playerType: str = ""  # cfg.MEDIA, cfg.LIVE, cfg.VIEWER
 
     # spectrogram
-    chunk_length = 60  # spectrogram chunk length in seconds
+    chunk_length: float = 60  # spectrogram chunk length in seconds
 
     close_the_same_current_event: bool = False
     tcp_port: int = 0
@@ -323,7 +325,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
     dw_player: list = []
 
-    save_project_json_started = False
+    save_project_json_started: bool = False
 
     mem_hash_obs: int = 0
 
@@ -537,11 +539,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             media_file_available=ib.elements["Test media file accessibility"].isChecked(),
         )
         if msg:
-            msg = f"Some issues were found in the project<br><br>{msg}"
             self.results = dialog.Results_dialog()
             self.results.setWindowTitle("Check project integrity")
             self.results.ptText.clear()
-            self.results.ptText.appendHtml(msg)
+            self.results.ptText.appendHtml(f"Some issues were found in the project<br><br>{msg}")
             self.results.show()
         else:
             QMessageBox.information(self, cfg.programName, "The current project has no issues")
@@ -1649,9 +1650,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         """
 
         if self.observationId and self.projectFileName:
-            logging.info("autosave project")
-
-            self.save_project_activated()
+            if not self.save_project_activated():
+                logging.info("project autosaved")
+            else:
+                logging.warning("Error autosaving project")
         else:
             logging.debug((f"project not autosaved: observation id: {self.observationId} project file name: {self.projectFileName}"))
 
@@ -1690,43 +1692,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 break
         return currentMedia, round(frameCurrentMedia)
 
-    '''
-    def extract_exif_DateTimeOriginal(self, file_path: str) -> int:
-        """
-        extract the EXIF DateTimeOriginal tag
-        return epoch time
-        if the tag is not available return -1
-
-        Args:
-            file_path (str): path of the media file
-
-        Returns:
-            int: timestamp
-
-        """
-        try:
-            with open(file_path, "rb") as f_in:
-                tags = exifread.process_file(f_in, details=False, stop_tag="EXIF DateTimeOriginal")
-                if "EXIF DateTimeOriginal" in tags:
-                    date_time_original = (
-                        f'{tags["EXIF DateTimeOriginal"].values[:4]}-'
-                        f'{tags["EXIF DateTimeOriginal"].values[5:7]}-'
-                        f'{tags["EXIF DateTimeOriginal"].values[8:10]} '
-                        f'{tags["EXIF DateTimeOriginal"].values.split(" ")[-1]}'
-                    )
-                    return int(datetime.datetime.strptime(date_time_original, "%Y-%m-%d %H:%M:%S").timestamp())
-                else:
-                    try:
-                        # read from file name (YYYY-MM-DD_HHMMSS)
-                        return int(datetime.datetime.strptime(pl.Path(file_path).stem, "%Y-%m-%d_%H%M%S").timestamp())
-                    except Exception:
-                        # read from file name (YYYY-MM-DD_HH:MM:SS)
-                        return int(datetime.datetime.strptime(pl.Path(file_path).stem, "%Y-%m-%d_%H:%M:%S").timestamp())
-
-        except Exception:
-            return -1
-    '''
-
     def extract_frame(self, dw):
         """
         for MEDIA obs: extract frame from video and visualize it in frame_viewer
@@ -1743,9 +1708,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             )
 
         if self.playerType == cfg.IMAGES:
-            # print(f"{self.images_list=}")
-            # print(f"{self.image_idx=}")
-
             if self.image_idx >= len(self.images_list):
                 QMessageBox.critical(
                     None,
@@ -1769,7 +1731,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 else:
                     msg += "<br>EXIF Date/Time Original: <b>NA</b>"
 
-                # self.image_time_ref = 0
                 if self.image_idx == 0 and date_time_original != -1:
                     self.image_time_ref = date_time_original
 
@@ -2257,47 +2218,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             set_and_update_pan_and_zoom(pan_x=0, pan_y=0, zoom=0)
             return
 
-    # def read_tw_event_field(self, row_idx: int, player_type: str, field_type: str) -> Union[str, None, int, dec]:
-    #    """
-    #    return value of field for event in TW or NA if not available
-    #    """
-    #    if field_type not in cfg.TW_EVENTS_FIELDS[player_type]:
-    #        return None
-    #
-    #    return self.twEvents.item(row_idx, cfg.TW_OBS_FIELD[player_type][field_type]).text()
-
-    # def configure_twevents_columns(self):
-    #    """
-    #    configure the visible columns of twEvent tablewidget
-    #    configuration for playerType is recorded in self.config_param[f"{self.playerType} tw fields"]
-    #    """
-
-    #    dlg = dialog.Input_dialog(
-    #        label_caption="Select the columns to show",
-    #        elements_list=[
-    #            (
-    #                "cb",
-    #                x,
-    #                # default state
-    #                x
-    #                in self.config_param.get(
-    #                    f"{self.playerType} tw fields",
-    #                    cfg.TW_EVENTS_FIELDS[self.playerType],
-    #                ),
-    #            )
-    #            for x in cfg.TW_EVENTS_FIELDS[self.playerType]
-    #        ],
-    #        title="Select the column to show",
-    #    )
-    #    if not dlg.exec_():
-    #        return
-
-    #    self.config_param[f"{self.playerType} tw fields"] = tuple(
-    #        field for field in cfg.TW_EVENTS_FIELDS[self.playerType] if dlg.elements[field].isChecked()
-    #    )
-
-    #    self.load_tw_events(self.observationId)
-
     def configure_tvevents_columns(self):
         """
         configure the visible columns of tv_events tableview
@@ -2405,7 +2325,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         # self.table.setSortingEnabled(True)
         # self.table.sortByColumn(0, Qt.AscendingOrder)
 
-    def load_tw_events(self, obs_id):
+    def load_tw_events(self, obs_id) -> None:
         """
         load events in table view and update START/STOP
 
@@ -2531,76 +2451,77 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 self.plot_data[pd].close_plot()
 
         except Exception:
-            pass
-        """
-        while self.plot_data:
-            self.plot_data[0].close_plot()
-            time.sleep(1)
-            del self.plot_data[0]
-        """
+            logging.warning("Error closing plot window")
 
         if hasattr(self, "measurement_w"):
             try:
                 self.measurement_w.close()
-                del self.codingpad
+                del self.measurement_w
             except Exception:
-                pass
+                logging.warning("Error closing measurement window")
 
         if hasattr(self, "codingpad"):
             try:
                 self.codingpad.close()
                 del self.codingpad
             except Exception:
-                pass
+                logging.warning("Error closing coding pad window")
 
         if hasattr(self, "subjects_pad"):
             try:
                 self.subjects_pad.close()
                 del self.subjects_pad
             except Exception:
-                pass
+                logging.warning("Error closing subjects pad window")
 
         if hasattr(self, "spectro"):
             try:
                 self.spectro.close()
                 del self.spectro
             except Exception:
-                pass
+                logging.warning("Error closing spectrogram window")
 
         if hasattr(self, "waveform"):
             try:
                 self.waveform.close()
                 del self.waveform
             except Exception:
-                pass
+                logging.warning("Error closing waveform window")
 
         if hasattr(self, "plot_events"):
             try:
                 self.plot_events.close()
                 del self.plot_events
             except Exception:
-                pass
+                logging.warning("Error closing plot events window")
 
         if hasattr(self, "results"):
             try:
                 self.results.close()
                 del self.results
             except Exception:
-                pass
+                logging.warning("Error closing results window")
 
         if hasattr(self, "mapCreatorWindow"):
             try:
                 self.mapCreatorWindow.close()
                 del self.mapCreatorWindow
             except Exception:
-                pass
+                logging.warning("Error closing map creator window")
 
         if hasattr(self, "video_equalizer_wgt"):
             try:
                 self.video_equalizer_wgt.close()
                 del self.video_equalizer_wgt
             except Exception:
-                pass
+                logging.warning("Error closing video equalizer window")
+
+        if hasattr(self, "view_dataframe"):
+            try:
+                self.view_dataframe.close()
+                del self.view_dataframe
+            except Exception:
+                logging.warning("Error closing the plugin results window")
 
         # delete behavior coding map
         for idx in self.bcm_dict:
@@ -2671,22 +2592,12 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         except Exception:
             logging.debug("error in observation time interval")
 
-    # TODO: replace by event_type in project_functions
-    def eventType(self, code):
-        """
-        returns type of event for code
-        """
-        for idx in self.pj[cfg.ETHOGRAM]:
-            if self.pj[cfg.ETHOGRAM][idx][cfg.BEHAVIOR_CODE] == code:
-                return self.pj[cfg.ETHOGRAM][idx][cfg.TYPE]
-        return None
-
     def extract_observed_behaviors(self, selected_observations, selectedSubjects):
         """
         extract unique behaviors codes from obs_id observation
         """
 
-        observed_behaviors = []
+        observed_behaviors: list = []
 
         # extract events from selected observations
         all_events = [self.pj[cfg.OBSERVATIONS][x][cfg.EVENTS] for x in self.pj[cfg.OBSERVATIONS] if x in selected_observations]
@@ -2752,8 +2663,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             return
 
         # select dir if many observations
-        plot_directory = ""
-        file_format = "png"
+        plot_directory: str = ""
+        file_format: str = "png"
         if len(selected_observations) > 1:
             plot_directory = QFileDialog.getExistingDirectory(
                 self,
@@ -3026,12 +2937,12 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 flag_all_upper = True
                 if pj[cfg.ETHOGRAM]:
                     for idx in pj[cfg.ETHOGRAM]:
-                        if pj[cfg.ETHOGRAM][idx]["key"].islower():
+                        if pj[cfg.ETHOGRAM][idx][cfg.BEHAVIOR_KEY].islower():
                             flag_all_upper = False
 
                 if pj[cfg.SUBJECTS]:
                     for idx in pj[cfg.SUBJECTS]:
-                        if pj[cfg.SUBJECTS][idx]["key"].islower():
+                        if pj[cfg.SUBJECTS][idx][cfg.SUBJECT_KEY].islower():
                             flag_all_upper = False
 
                 if (
@@ -3048,7 +2959,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     == cfg.YES
                 ):
                     for idx in pj[cfg.ETHOGRAM]:
-                        pj[cfg.ETHOGRAM][idx]["key"] = pj[cfg.ETHOGRAM][idx]["key"].lower()
+                        pj[cfg.ETHOGRAM][idx][cfg.BEHAVIOR_KEY] = pj[cfg.ETHOGRAM][idx][cfg.BEHAVIOR_KEY].lower()
                         # convert modifier short cuts to lower case
                         for modifier_set in pj[cfg.ETHOGRAM][idx][cfg.MODIFIERS]:
                             try:
@@ -3065,7 +2976,22 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                                 logging.warning("error during convertion of modifier short cut to lower case")
 
                     for idx in pj[cfg.SUBJECTS]:
-                        pj[cfg.SUBJECTS][idx]["key"] = pj[cfg.SUBJECTS][idx]["key"].lower()
+                        pj[cfg.SUBJECTS][idx][cfg.SUBJECT_KEY] = pj[cfg.SUBJECTS][idx][cfg.SUBJECT_KEY].lower()
+
+            # check project integrity
+            if self.config_param.get(cfg.CHECK_PROJECT_INTEGRITY, True):
+                msg = project_functions.check_project_integrity(
+                    pj,
+                    self.timeFormat,
+                    project_path,
+                    media_file_available=True,
+                )
+                if msg:
+                    self.results = dialog.Results_dialog()
+                    self.results.setWindowTitle("Project integrity results")
+                    self.results.ptText.clear()
+                    self.results.ptText.appendHtml(f"Some issues were found in the project<br><br>{msg}")
+                    self.results.show()
 
             self.load_project(project_path, project_changed, pj)
             del pj
@@ -3412,19 +3338,19 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         del newProjectWindow
 
-    def save_project_json(self, projectFileName: str) -> int:
+    def save_project_json(self, project_file_name: str) -> int:
         """
         save project to JSON file
         convert Decimal type in float
 
         Args:
-            projectFileName (str): path of project to save
+            project_file_name (str): path of project to save
 
         Returns:
             str:
         """
 
-        logging.debug(f"init save_project_json function {projectFileName}")
+        logging.debug(f"init save_project_json function {project_file_name}")
 
         if self.save_project_json_started:
             logging.warning("Function save_project_json already launched")
@@ -3447,8 +3373,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         # project file indentation
         file_indentation = self.config_param.get(cfg.PROJECT_FILE_INDENTATION, cfg.PROJECT_FILE_INDENTATION_DEFAULT_VALUE)
         try:
-            if projectFileName.endswith(".boris.gz"):
-                with gzip.open(projectFileName, mode="wt", encoding="utf-8") as f_out:
+            if project_file_name.endswith(".boris.gz"):
+                with gzip.open(project_file_name, mode="wt", encoding="utf-8") as f_out:
                     f_out.write(
                         json.dumps(
                             self.pj,
@@ -3457,7 +3383,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                         )
                     )
             else:  # .boris and other extensions
-                with open(projectFileName, "w") as f_out:
+                with open(project_file_name, "w") as f_out:
                     f_out.write(
                         json.dumps(
                             self.pj,
@@ -3547,10 +3473,35 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
             if self.save_project_json(project_new_file_name) == 0:
                 self.projectFileName = project_new_file_name
+
+                self.check_project_integrity_open_save()
+
                 # update windows title
                 menu_options.update_windows_title(self)
             else:
                 return "Not saved"
+
+    def check_project_integrity_open_save(self) -> None:
+        """
+        check project integrity
+        to be used after opening or saving the current project
+        """
+        if self.automaticBackup:
+            return
+
+        if self.config_param.get(cfg.CHECK_PROJECT_INTEGRITY, True):
+            msg = project_functions.check_project_integrity(
+                self.pj,
+                self.timeFormat,
+                self.projectFileName,
+                media_file_available=True,
+            )
+            if msg:
+                self.results = dialog.Results_dialog()
+                self.results.setWindowTitle("Project integrity results")
+                self.results.ptText.clear()
+                self.results.ptText.appendHtml(f"Some issues were found in the project<br><br>{msg}")
+                self.results.show()
 
     def save_project_activated(self):
         """
@@ -3617,8 +3568,12 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             if r:
                 self.projectFileName = ""
                 return r
+            self.check_project_integrity_open_save()
+
         else:
-            return self.save_project_json(self.projectFileName)
+            r = self.save_project_json(self.projectFileName)
+            self.check_project_integrity_open_save()
+            return r
 
         return ""
 
@@ -5780,9 +5735,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             )
             return
 
-        import importlib
-
-        print(f"{self.config_param.get(cfg.ANALYSIS_PLUGINS, {})=}")
+        logging.debug(f"{self.config_param.get(cfg.ANALYSIS_PLUGINS, {})=}")
 
         plugin_name = self.sender().text()
         if plugin_name not in self.config_param.get(cfg.ANALYSIS_PLUGINS, {}):
@@ -5790,7 +5743,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             return
 
         plugin_path = self.config_param.get(cfg.ANALYSIS_PLUGINS, {})[plugin_name]
-        print(f"{plugin_path=}")
+
+        logging.debug(f"{plugin_path=}")
+
         if not pl.Path(plugin_path).is_file():
             QMessageBox.critical(self, cfg.programName, f"The plugin {plugin_path} was not found.")
             return
@@ -5801,31 +5756,14 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         spec = importlib.util.spec_from_file_location(module_name, plugin_path)
         plugin_module = importlib.util.module_from_spec(spec)
-        print(f"{plugin_module=}")
+
+        logging.debug(f"{plugin_module=}")
+
         spec.loader.exec_module(plugin_module)
 
-        print(
+        logging.info(
             f"{plugin_module.__plugin_name__} loaded v.{getattr(plugin_module, '__version__')} v. {getattr(plugin_module, '__version_date__')}"
         )
-
-        """
-        plugins_dir = pl.Path(__file__).parent / "analysis_plugins"
-
-        print(f"{plugins_dir=}")
-
-        module_path = f"{plugins_dir.name}.{plugin}"
-
-        print(f"{module_path=}")
-
-        try:
-            plugin_module = importlib.import_module(module_path)
-            print(f"{plugin} loaded v.{getattr(plugin_module, '__version__')} v. {getattr(plugin_module, '__version_date__')}")
-        except Exception:
-            QMessageBox.critical(self, cfg.programName, f"Error loding the plugin {plugin}")
-            return
-
-        print(f"{plugin_module=}")
-        """
 
         selected_observations, parameters = self.obs_param()
         if not selected_observations:
@@ -5833,18 +5771,23 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         df = project_functions.project2dataframe(self.pj, selected_observations)
 
-        print(f"{df.head()=}")
+        logging.debug("dataframe info")
+        logging.debug(f"{df.info()}")
+        logging.debug(f"{df.head()}")
 
-        df_results = plugin_module.main(df, observations_list=selected_observations, parameters=parameters)
-
-        from . import view_df
+        df_results, str_results = plugin_module.main(df, observations_list=selected_observations, parameters=parameters)
 
         self.view_dataframe = view_df.View_df(
             self.sender().text(), f"{plugin_module.__version__} ({plugin_module.__version_date__})", df_results
         )
         self.view_dataframe.show()
 
-        # print(f"{results=}")
+        if str_results:
+            self.results = dialog.Results_dialog()
+            self.results.setWindowTitle(self.sender().text())
+            self.results.ptText.clear()
+            self.results.ptText.appendPlainText(str_results)
+            self.results.show()
 
 
 def main():
@@ -5884,9 +5827,6 @@ def main():
 
     window = MainWindow(ffmpeg_bin)
 
-    # if window.config_param.get(cfg.DARK_MODE, cfg.DARK_MODE_DEFAULT_VALUE):
-    #    app.setStyleSheet(qdarkstyle.load_stylesheet(qt_api="PySide6"))
-
     # open project/start observation on command line
 
     project_to_open: str = ""
@@ -5918,6 +5858,20 @@ def main():
 
     window.show()
     window.raise_()
+
+    # check project integrity
+    msg = project_functions.check_project_integrity(
+        pj,
+        "S",
+        project_path,
+        media_file_available=True,
+    )
+    if msg:
+        results = dialog.Results_dialog()
+        results.setWindowTitle("Project integrity results")
+        results.ptText.clear()
+        results.ptText.appendHtml(f"Some issues were found in the project<br><br>{msg}")
+        results.show()
 
     if observation_to_open and "error" not in pj:
         r = observation_operations.load_observation(window, obs_id=observation_to_open, mode=cfg.OBS_START)

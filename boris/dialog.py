@@ -1,7 +1,7 @@
 """
 BORIS
 Behavioral Observation Research Interactive Software
-Copyright 2012-2024 Olivier Friard
+Copyright 2012-2025 Olivier Friard
 
 This file is part of BORIS.
 
@@ -430,165 +430,6 @@ class get_time_widget(QWidget):
             self.rb_datetime.setChecked(True)
 
 
-'''
-class get_time_widget(QWidget):
-    """
-    widget for selecting a time in various formats: secondes, HH:MM:SS:ZZZ or YYYY-mm-DD HH:MM:SS:ZZZ
-    """
-
-    def __init__(self, time_value=0, parent=None):
-        super().__init__(parent)
-
-        self.setWindowTitle("BORIS")
-
-        self.widget = QWidget()
-        self.widget.setObjectName("widget")
-
-        self.widget.setGeometry(QRect(60, 171, 278, 124))
-        self.verticalLayout = QVBoxLayout(self.widget)
-        self.verticalLayout.setContentsMargins(0, 0, 0, 0)
-        self.horizontalLayout_2 = QHBoxLayout()
-        self.horizontalLayout_2.setObjectName("horizontalLayout_2")
-        self.pb_sign = QPushButton(self.widget, clicked=self.pb_sign_clicked)
-        self.pb_sign.setText("+")
-        font = QFont()
-        font.setPointSize(14)
-        self.pb_sign.setFont(font)
-
-        self.horizontalLayout_2.addWidget(self.pb_sign)
-
-        self.gridLayout_3 = QGridLayout()
-        self.gridLayout = QGridLayout()
-
-        self.rb_seconds = QRadioButton(self.widget)
-        self.rb_seconds.toggled.connect(self.format_changed)
-        self.gridLayout.addWidget(self.rb_seconds, 0, 0, 1, 1)
-
-        self.le_seconds = QLineEdit(self.widget)
-        self.le_seconds.setText("0.000")
-        self.le_seconds.setValidator(QRegExpValidator(QRegExp("([0-9]+([.][0-9]*)?|[.][0-9]+)")))
-        self.gridLayout.addWidget(self.le_seconds, 0, 1, 1, 1)
-
-        self.lb_seconds = QLabel(self.widget)
-        self.lb_seconds.setText("seconds")
-        self.lb_seconds.setIndent(0)
-        self.gridLayout.addWidget(self.lb_seconds, 0, 2, 1, 1)
-
-        self.lb_hour = QLabel(self.widget)
-        self.lb_hour.setText("hour")
-        self.lb_hour.setIndent(0)
-        self.gridLayout.addWidget(self.lb_hour, 1, 1, 1, 1)
-
-        self.lb_hhmmss = QLabel(self.widget)
-        self.lb_hhmmss.setText("mm:ss.ms")
-        self.gridLayout.addWidget(self.lb_hhmmss, 1, 2, 1, 1)
-
-        self.rb_time = QRadioButton(self.widget)
-        self.rb_time.toggled.connect(self.format_changed)
-        self.gridLayout.addWidget(self.rb_time, 2, 0, 1, 1)
-
-        self.sb_hour = QSpinBox(self.widget)
-        self.sb_hour.setButtonSymbols(QAbstractSpinBox.NoButtons)
-        self.sb_hour.setMinimum(0)
-        self.sb_hour.setMaximum(cfg.HOUR_CUTOFF)
-        self.sb_hour.setDisplayIntegerBase(10)
-        self.gridLayout.addWidget(self.sb_hour, 2, 1, 1, 1)
-
-        self.te_time = QTimeEdit(self.widget)
-        self.te_time.setDisplayFormat("mm:ss.zzz")
-        self.gridLayout.addWidget(self.te_time, 2, 2, 1, 1)
-
-        self.gridLayout_3.addLayout(self.gridLayout, 0, 0, 1, 1)
-
-        self.gridLayout_2 = QGridLayout()
-        self.rb_datetime = QRadioButton(self.widget)
-        self.rb_datetime.toggled.connect(self.format_changed)
-
-        self.gridLayout_2.addWidget(self.rb_datetime, 0, 0, 1, 1)
-
-        self.dte = QDateTimeEdit(self.widget)
-        self.dte.setDisplayFormat("yyyy-MM-dd hh:mm:ss.zzz")
-
-        self.gridLayout_2.addWidget(self.dte, 0, 1, 1, 1)
-
-        self.gridLayout_3.addLayout(self.gridLayout_2, 1, 0, 1, 1)
-
-        self.horizontalLayout_2.addLayout(self.gridLayout_3)
-
-        self.verticalLayout.addLayout(self.horizontalLayout_2)
-
-        self.setLayout(self.verticalLayout)
-
-        if time_value:
-            self.set_time(time_value)
-
-        self.format_changed()
-
-    def format_changed(self):
-        self.le_seconds.setEnabled(self.rb_seconds.isChecked())
-        self.lb_seconds.setEnabled(self.rb_seconds.isChecked())
-        self.sb_hour.setEnabled(self.rb_time.isChecked())
-        self.te_time.setEnabled(self.rb_time.isChecked())
-        self.lb_hour.setEnabled(self.rb_time.isChecked())
-        self.lb_hhmmss.setEnabled(self.rb_time.isChecked())
-        self.dte.setEnabled(self.rb_datetime.isChecked())
-
-    def pb_sign_clicked(self):
-        if self.pb_sign.text() == "+":
-            self.pb_sign.setText("-")
-        else:
-            self.pb_sign.setText("+")
-
-    def get_time(self) -> dec:
-        """
-        return time in seconds
-        """
-
-        if self.rb_seconds.isChecked():
-            try:
-                time_sec = float(self.le_seconds.text())
-            except Exception:
-                QMessageBox.warning(
-                    None,
-                    cfg.programName,
-                    "The value is not a decimal number",
-                    QMessageBox.Ok | QMessageBox.Default,
-                    QMessageBox.NoButton,
-                )
-                return None
-
-        if self.rb_time.isChecked():
-            time_sec = self.sb_hour.value() * 3600
-            time_sec += self.te_time.time().msecsSinceStartOfDay() / 1000
-
-        if self.rb_datetime.isChecked():
-            time_sec = self.dte.dateTime().toMSecsSinceEpoch() / 1000
-
-        if self.pb_sign.text() == "-":
-            time_sec = -time_sec
-
-        return dec(time_sec)
-
-    def set_time(self, new_time: float) -> None:
-        self.pb_sign.setText("-" if new_time < 0 else "+")
-
-        # seconds
-        self.le_seconds.setText(f"{new_time:0.3f}")
-
-        # hh:mm:ss.zzz
-        h = int(abs(new_time) // 3600)
-        m = int((abs(new_time) - h * 3600) // 60)
-        s = int((abs(new_time) - h * 3600 - m * 60))
-        ms = round((abs(new_time) - h * 3600 - m * 60 - s) * 1000)
-
-        self.sb_hour.setValue(h)
-        self.te_time.setTime(QTime(0, m, s, ms))
-
-        if new_time > cfg.DATE_CUTOFF:
-            self.dte.setDateTime(QDateTime().fromMSecsSinceEpoch(int(new_time * 1000)))
-'''
-
-
 class Ask_time(QDialog):
     def __init__(self, time_value=0):
         super().__init__()
@@ -940,51 +781,12 @@ class ChooseObservationsToImport(QDialog):
         return [item.text() for item in self.lw.selectedItems()]
 
 
-'''
-class Ask_time(QDialog):
-    """
-    "Ask time" dialog box using duration widget in duration_widget module
-    """
-
-    def __init__(self, time_format):
-        super().__init__()
-        hbox = QVBoxLayout(self)
-        self.label = QLabel()
-        self.label.setText("Go to time")
-        hbox.addWidget(self.label)
-
-        self.time_widget = duration_widget.Duration_widget()
-        if time_format == cfg.HHMMSS:
-            self.time_widget.set_format_hhmmss()
-        if time_format == cfg.S:
-            self.time_widget.set_format_s()
-
-        hbox.addWidget(self.time_widget)
-
-        self.pbOK = QPushButton("OK")
-        self.pbOK.clicked.connect(self.accept)
-        self.pbOK.setDefault(True)
-
-        self.pbCancel = QPushButton("Cancel")
-        self.pbCancel.clicked.connect(self.reject)
-
-        self.hbox2 = QHBoxLayout(self)
-        self.hbox2.addItem(QSpacerItem(241, 20, QSizePolicy.Expanding, QSizePolicy.Minimum))
-        self.hbox2.addWidget(self.pbCancel)
-        self.hbox2.addWidget(self.pbOK)
-        hbox.addLayout(self.hbox2)
-        self.setLayout(hbox)
-        self.setWindowTitle("Time")
-'''
-
-
 class FindInEvents(QWidget):
     """
     "find in events" dialog box
     """
 
     clickSignal = Signal(str)
-
     currentIdx: int = -1
 
     def __init__(self):
@@ -1028,10 +830,11 @@ class FindInEvents(QWidget):
         hbox.addWidget(self.lb_message)
 
         hbox2 = QHBoxLayout()
+        hbox2.addItem(QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum))
         self.pbOK = QPushButton("Find")
         self.pbOK.clicked.connect(lambda: self.click("FIND"))
         self.pbCancel = QPushButton(cfg.CLOSE)
-        self.pbCancel.clicked.connect(lambda: self.click(cfg.CLOSE))
+        self.pbCancel.clicked.connect(lambda: self.click("CLOSE"))
         hbox2.addWidget(self.pbCancel)
         hbox2.addWidget(self.pbOK)
         hbox.addLayout(hbox2)
@@ -1060,22 +863,6 @@ class FindReplaceEvents(QWidget):
         self.combo_fields.addItems(("Choose a field", "Subject", "Behavior", "Modifiers", "Comment"))
         hbox.addWidget(self.combo_fields)
 
-        # self.cbSubject = QCheckBox("Subject")
-        # self.cbSubject.setChecked(False)
-        # hbox.addWidget(self.cbSubject)
-
-        # self.cbBehavior = QCheckBox("Behavior")
-        # self.cbBehavior.setChecked(False)
-        # hbox.addWidget(self.cbBehavior)
-
-        # self.cbModifier = QCheckBox("Modifiers")
-        # self.cbModifier.setChecked(False)
-        # hbox.addWidget(self.cbModifier)
-
-        # self.cbComment = QCheckBox("Comment")
-        # self.cbComment.setChecked(False)
-        # hbox.addWidget(self.cbComment)
-
         self.lbFind = QLabel("Find")
         hbox.addWidget(self.lbFind)
 
@@ -1098,6 +885,8 @@ class FindReplaceEvents(QWidget):
 
         hbox2 = QHBoxLayout()
 
+        hbox2.addItem(QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum))
+
         self.pbCancel = QPushButton(cfg.CANCEL, clicked=lambda: self.click("CANCEL"))
         hbox2.addWidget(self.pbCancel)
 
@@ -1118,64 +907,9 @@ class FindReplaceEvents(QWidget):
         self.clickSignal.emit(msg)
 
 
-'''
-class explore_project_dialog(QDialog):
-    """
-    "explore project" dialog box
-    """
-
-    def __init__(self):
-        super().__init__()
-
-        self.setWindowTitle("Explore project")
-
-        hbox = QVBoxLayout()
-
-        hbox.addWidget(QLabel("Search in all observations"))
-
-        self.lb_subject = QLabel("Subject")
-        hbox.addWidget(self.lb_subject)
-        self.find_subject = QLineEdit()
-        hbox.addWidget(self.find_subject)
-
-        self.lb_behav = QLabel("Behaviors")
-        hbox.addWidget(self.lb_behav)
-        self.find_behavior = QLineEdit()
-        hbox.addWidget(self.find_behavior)
-
-        self.lb_modifier = QLabel("Modifier")
-        hbox.addWidget(self.lb_modifier)
-        self.find_modifier = QLineEdit()
-        hbox.addWidget(self.find_modifier)
-
-        self.lb_comment = QLabel("Comment")
-        hbox.addWidget(self.lb_comment)
-        self.find_comment = QLineEdit()
-        hbox.addWidget(self.find_comment)
-
-        self.cb_case_sensitive = QCheckBox("Case sensitive")
-        self.cb_case_sensitive.setChecked(False)
-        hbox.addWidget(self.cb_case_sensitive)
-
-        self.lb_message = QLabel()
-        hbox.addWidget(self.lb_message)
-
-        hbox2 = QHBoxLayout()
-        self.pbOK = QPushButton("Find")
-        self.pbOK.clicked.connect(self.accept)
-        self.pbCancel = QPushButton("Cancel")
-        self.pbCancel.clicked.connect(self.reject)
-        hbox2.addWidget(self.pbCancel)
-        hbox2.addWidget(self.pbOK)
-        hbox.addLayout(hbox2)
-
-        self.setLayout(hbox)
-'''
-
-
 class Results_dialog(QDialog):
     """
-    widget for visualizing text output
+    widget for visualizing text output in HTML
     """
 
     def __init__(self):
@@ -1270,10 +1004,10 @@ class View_data(QDialog):
 
         hbox2.addItem(QSpacerItem(40, 20, QSizePolicy.Expanding, QSizePolicy.Minimum))
 
-        self.pbCancel = QPushButton("Cancel", clicked=self.reject)
+        self.pbCancel = QPushButton(cfg.CANCEL, clicked=self.reject)
         hbox2.addWidget(self.pbCancel)
 
-        self.pbOK = QPushButton("OK", clicked=self.accept)
+        self.pbOK = QPushButton(cfg.OK, clicked=self.accept)
         hbox2.addWidget(self.pbOK)
 
         vbox.addLayout(hbox2)
@@ -1306,13 +1040,12 @@ class View_explore_project_results(QWidget):
         vbox.addWidget(self.tw)
 
         hbox2 = QHBoxLayout()
-        hbox2.addWidget(QPushButton("OK", clicked=self.close))
+        hbox2.addItem(QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum))
+        hbox2.addWidget(QPushButton(cfg.CLOSE, clicked=self.close))
 
         vbox.addLayout(hbox2)
 
         self.setLayout(vbox)
-
-        # self.resize(540, 640)
 
     def tw_cellDoubleClicked(self, r, c):
         self.double_click_signal.emit(self.tw.item(r, 0).text(), int(self.tw.item(r, 1).text()))

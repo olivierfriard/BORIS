@@ -1,7 +1,7 @@
 """
 BORIS
 Behavioral Observation Research Interactive Software
-Copyright 2012-2024 Olivier Friard
+Copyright 2012-2025 Olivier Friard
 
 
   This program is free software; you can redistribute it and/or modify
@@ -74,12 +74,12 @@ def select_observations2(self, mode: str, windows_title: str = "") -> Tuple[str,
 
             # observed time interval
             interval = project_functions.observed_interval(pj[cfg.OBSERVATIONS][obs])
-            observed_interval_str = str(interval[1] - interval[0])
+            observed_interval_str = str(round(interval[1] - interval[0], 3))
 
             # media
-            media = ""
+            media: str = ""
             if pj[cfg.OBSERVATIONS][obs][cfg.TYPE] == cfg.MEDIA:
-                media_list = []
+                media_list: list = []
                 if pj[cfg.OBSERVATIONS][obs][cfg.FILE]:
                     for player in sorted(pj[cfg.OBSERVATIONS][obs][cfg.FILE].keys()):
                         for media in pj[cfg.OBSERVATIONS][obs][cfg.FILE][player]:
@@ -94,13 +94,13 @@ def select_observations2(self, mode: str, windows_title: str = "") -> Tuple[str,
                 media = cfg.LIVE
 
             if pj[cfg.OBSERVATIONS][obs][cfg.TYPE] == cfg.IMAGES:
-                dir_list = []
+                dir_list: list = []
                 for dir_path in pj[cfg.OBSERVATIONS][obs].get(cfg.DIRECTORIES_LIST, []):
                     dir_list.append(dir_path)
                 media = "; ".join(dir_list)
 
             # independent variables
-            indepvar = []
+            indepvar: list = []
             if cfg.INDEPENDENT_VARIABLES in pj[cfg.OBSERVATIONS][obs]:
                 for var_label in indep_var_header:
                     if var_label in pj[cfg.OBSERVATIONS][obs][cfg.INDEPENDENT_VARIABLES]:

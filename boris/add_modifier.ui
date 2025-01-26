@@ -60,7 +60,7 @@
          <item>
           <spacer name="verticalSpacer">
            <property name="orientation">
-            <enum>Qt::Vertical</enum>
+            <enum>Qt::Orientation::Vertical</enum>
            </property>
            <property name="sizeHint" stdset="0">
             <size>
@@ -77,21 +77,21 @@
          <item>
           <widget class="QPushButton" name="pbAddModifier">
            <property name="text">
-            <string/>
+            <string>-&gt;</string>
            </property>
           </widget>
          </item>
          <item>
           <widget class="QPushButton" name="pbModifyModifier">
            <property name="text">
-            <string/>
+            <string>&lt;-</string>
            </property>
           </widget>
          </item>
          <item>
           <spacer name="verticalSpacer_2">
            <property name="orientation">
-            <enum>Qt::Vertical</enum>
+            <enum>Qt::Orientation::Vertical</enum>
            </property>
            <property name="sizeHint" stdset="0">
             <size>
@@ -114,16 +114,16 @@
             </size>
            </property>
            <property name="tabPosition">
-            <enum>QTabWidget::North</enum>
+            <enum>QTabWidget::TabPosition::North</enum>
            </property>
            <property name="tabShape">
-            <enum>QTabWidget::Rounded</enum>
+            <enum>QTabWidget::TabShape::Rounded</enum>
            </property>
            <property name="currentIndex">
             <number>-1</number>
            </property>
            <property name="elideMode">
-            <enum>Qt::ElideNone</enum>
+            <enum>Qt::TextElideMode::ElideNone</enum>
            </property>
            <property name="documentMode">
             <bool>true</bool>
@@ -208,6 +208,13 @@
             </widget>
            </item>
            <item>
+            <widget class="QPushButton" name="pb_sort_modifiers">
+             <property name="text">
+              <string>Sort modifiers</string>
+             </property>
+            </widget>
+           </item>
+           <item>
             <widget class="QPushButton" name="pbRemoveModifier">
              <property name="text">
               <string>Remove modifier</string>
@@ -215,13 +222,6 @@
             </widget>
            </item>
           </layout>
-         </item>
-         <item>
-          <widget class="QPushButton" name="pb_sort_modifiers">
-           <property name="text">
-            <string>Sort modifiers</string>
-           </property>
-          </widget>
          </item>
          <item>
           <layout class="QHBoxLayout" name="horizontalLayout_3">
@@ -232,17 +232,6 @@
              </property>
             </widget>
            </item>
-           <item>
-            <widget class="QPushButton" name="pbRemoveSet">
-             <property name="text">
-              <string>Remove set of modifiers</string>
-             </property>
-            </widget>
-           </item>
-          </layout>
-         </item>
-         <item>
-          <layout class="QHBoxLayout" name="horizontalLayout_4">
            <item>
             <widget class="QPushButton" name="pbMoveSetLeft">
              <property name="text">
@@ -257,7 +246,17 @@
              </property>
             </widget>
            </item>
+           <item>
+            <widget class="QPushButton" name="pbRemoveSet">
+             <property name="text">
+              <string>Remove set of modifiers</string>
+             </property>
+            </widget>
+           </item>
           </layout>
+         </item>
+         <item>
+          <layout class="QHBoxLayout" name="horizontalLayout_4"/>
          </item>
          <item>
           <widget class="QPushButton" name="pb_add_subjects">
@@ -276,7 +275,7 @@
          <item>
           <spacer name="verticalSpacer_3">
            <property name="orientation">
-            <enum>Qt::Vertical</enum>
+            <enum>Qt::Orientation::Vertical</enum>
            </property>
            <property name="sizeHint" stdset="0">
             <size>
@@ -295,7 +294,7 @@
        <item>
         <spacer name="horizontalSpacer">
          <property name="orientation">
-          <enum>Qt::Horizontal</enum>
+          <enum>Qt::Orientation::Horizontal</enum>
          </property>
          <property name="sizeHint" stdset="0">
           <size>

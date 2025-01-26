@@ -1,7 +1,7 @@
 """
 BORIS
 Behavioral Observation Research Interactive Software
-Copyright 2012-2024 Olivier Friard
+Copyright 2012-2025 Olivier Friard
 
 This file is part of BORIS.
 
@@ -196,6 +196,8 @@ def preferences(self):
         )
     except Exception:
         preferencesWindow.cb_hwdec.setCurrentIndex(cfg.MPV_HWDEC_OPTIONS.index(cfg.MPV_HWDEC_DEFAULT_VALUE))
+    # check integrity
+    preferencesWindow.cb_check_integrity_at_opening.setChecked(self.config_param.get(cfg.CHECK_PROJECT_INTEGRITY, True))
 
     # BORIS plugins
     preferencesWindow.lv_all_plugins.itemClicked.connect(show_plugin_info)
@@ -352,6 +354,9 @@ def preferences(self):
 
         # MPV hwdec
         self.config_param[cfg.MPV_HWDEC] = cfg.MPV_HWDEC_OPTIONS[preferencesWindow.cb_hwdec.currentIndex()]
+
+        # check project integrity
+        self.config_param[cfg.CHECK_PROJECT_INTEGRITY] = preferencesWindow.cb_check_integrity_at_opening.isChecked()
 
         # update BORIS analysis plugins
         self.config_param[cfg.ANALYSIS_PLUGINS] = {}

@@ -25,7 +25,7 @@
         <bool>true</bool>
        </property>
        <property name="currentIndex">
-        <number>2</number>
+        <number>0</number>
        </property>
        <widget class="QWidget" name="tab_project">
         <attribute name="title">
@@ -133,6 +133,13 @@
             <widget class="QComboBox" name="combo_project_file_indentation"/>
            </item>
           </layout>
+         </item>
+         <item>
+          <widget class="QCheckBox" name="cb_check_integrity_at_opening">
+           <property name="text">
+            <string>Check project integrity at opening</string>
+           </property>
+          </widget>
          </item>
          <item>
           <spacer name="verticalSpacer_2">

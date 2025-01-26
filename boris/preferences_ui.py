@@ -123,6 +123,11 @@ class Ui_prefDialog(object):
 
         self.verticalLayout_5.addLayout(self.horizontalLayout_9)
 
+        self.cb_check_integrity_at_opening = QCheckBox(self.tab_project)
+        self.cb_check_integrity_at_opening.setObjectName(u"cb_check_integrity_at_opening")
+
+        self.verticalLayout_5.addWidget(self.cb_check_integrity_at_opening)
+
         self.verticalSpacer_2 = QSpacerItem(20, 40, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding)
 
         self.verticalLayout_5.addItem(self.verticalSpacer_2)
@@ -505,7 +510,7 @@ class Ui_prefDialog(object):
 
         self.retranslateUi(prefDialog)
 
-        self.tabWidget.setCurrentIndex(2)
+        self.tabWidget.setCurrentIndex(0)
 
 
         QMetaObject.connectSlotsByName(prefDialog)
@@ -523,6 +528,7 @@ class Ui_prefDialog(object):
         self.cbCheckForNewVersion.setText(QCoreApplication.translate("prefDialog", u"Check for new version and news", None))
         self.lb_hwdec.setText(QCoreApplication.translate("prefDialog", u"MPV player hardware video decoding", None))
         self.lb_project_file_indent.setText(QCoreApplication.translate("prefDialog", u"Project file indentation type", None))
+        self.cb_check_integrity_at_opening.setText(QCoreApplication.translate("prefDialog", u"Check project integrity at opening", None))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab_project), QCoreApplication.translate("prefDialog", u"Project", None))
         self.label_4.setText(QCoreApplication.translate("prefDialog", u"Fast forward/backward value (seconds)", None))
         self.cb_adapt_fast_jump.setText(QCoreApplication.translate("prefDialog", u"Adapt the fast forward/backward jump to playback speed", None))
