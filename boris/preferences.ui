@@ -137,7 +137,7 @@
          <item>
           <widget class="QCheckBox" name="cb_check_integrity_at_opening">
            <property name="text">
-            <string>Check project integrity at opening</string>
+            <string>Check project integrity when opening and saving project (recommended)</string>
            </property>
           </widget>
          </item>

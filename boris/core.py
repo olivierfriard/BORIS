@@ -5856,22 +5856,22 @@ def main():
                 QMessageBox.information(window, cfg.programName, msg)
             window.load_project(project_path, project_changed, pj)
 
+        # check project integrity
+        msg = project_functions.check_project_integrity(
+            pj,
+            "S",
+            project_path,
+            media_file_available=True,
+        )
+        if msg:
+            results = dialog.Results_dialog()
+            results.setWindowTitle("Project integrity results")
+            results.ptText.clear()
+            results.ptText.appendHtml(f"Some issues were found in the project<br><br>{msg}")
+            results.show()
+
     window.show()
     window.raise_()
-
-    # check project integrity
-    msg = project_functions.check_project_integrity(
-        pj,
-        "S",
-        project_path,
-        media_file_available=True,
-    )
-    if msg:
-        results = dialog.Results_dialog()
-        results.setWindowTitle("Project integrity results")
-        results.ptText.clear()
-        results.ptText.appendHtml(f"Some issues were found in the project<br><br>{msg}")
-        results.show()
 
     if observation_to_open and "error" not in pj:
         r = observation_operations.load_observation(window, obs_id=observation_to_open, mode=cfg.OBS_START)
