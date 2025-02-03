@@ -24,7 +24,9 @@ import os
 import logging
 import time
 import tempfile
+import json
 import subprocess
+import socket
 import sys
 from decimal import Decimal as dec
 import pathlib as pl
@@ -1234,6 +1236,82 @@ def check_creation_date(self) -> Tuple[int, dict]:
         return (0, media_creation_time)  # OK all media have a 'creation time' tag
 
 
+def init_mpv(self):
+    """Start mpv process and embed it in the PySide6 application."""
+
+    print("start MPV process")
+
+    """
+    print(f"{self.winId()=}")
+    print(f"{str(int(self.winId()))=}")
+    """
+
+    subprocess.Popen(
+        [
+            "mpv",
+            "--no-border",
+            "--ontop",  # mpv window on top
+            "--osc=no",  # no on screen commands
+            "--input-ipc-server=" + cfg.MPV_SOCKET,
+            # "--wid=" + str(int(self.winId())),  # Embed in the widget
+            "--idle",  # Keeps mpv running with no video
+        ],
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+    )
+
+    # print(f"init mpv:  {self.mpv_process=}")
+
+
+def send_command(command):
+    """Send a JSON command to the mpv IPC server."""
+
+    print(f"send commnand {command}")
+    # print(f"{self.mpv_process=}")
+
+    try:
+        # Create a Unix socket
+        with socket.socket(socket.AF_UNIX, socket.SOCK_STREAM) as client:
+            # Connect to the MPV IPC server
+            from pathlib import Path
+
+            print(f"{Path(cfg.MPV_SOCKET).is_socket()=}")
+
+            client.connect(cfg.MPV_SOCKET)
+            # Send the JSON command
+            client.sendall(json.dumps(command).encode("utf-8") + b"\n")
+            # Receive the response
+            response = client.recv(2000)
+
+            print()
+            print(f"{response=}")
+
+            # Parse the response as JSON
+            response_splitted = response.split(b"\n")
+            print(f"{response_splitted=}")
+            data = None
+            for r in response_splitted:
+                print(f"{r=}")
+                if not r:
+                    continue
+                response_data = json.loads(r.decode("utf-8"))
+                if "data" in response_data:
+                    data = response_data.get("data")
+            # response_data = json.loads(response.decode("utf-8"))
+            # print(f"{response_data=}")
+            # return response_data.get("data")
+
+            return data
+
+    except FileNotFoundError:
+        raise
+        print("Error: Socket file not found.")
+    except Exception as e:
+        raise
+        print(f"An error occurred: {e}")
+    return None
+
+
 def initialize_new_media_observation(self) -> bool:
     """
     initialize new observation from media file(s)
@@ -1261,6 +1339,12 @@ def initialize_new_media_observation(self) -> bool:
         )
         self.playerType = cfg.VIEWER_MEDIA
         return True
+
+    if sys.platform.startswith(cfg.MACOS_CODE):
+        pass
+        init_mpv(self)
+
+        # print(f"{self.process=}")
 
     self.playerType = cfg.MEDIA
     self.fps = 0
@@ -1299,566 +1383,586 @@ def initialize_new_media_observation(self) -> bool:
     """
 
     # create dock widgets for players
-    for i in range(cfg.N_PLAYER):
-        n_player = str(i + 1)
-        if (
-            n_player not in self.pj[cfg.OBSERVATIONS][self.observationId][cfg.FILE]
-            or not self.pj[cfg.OBSERVATIONS][self.observationId][cfg.FILE][n_player]
-        ):
-            continue
-
-        # Not pretty but the unique solution I have found to capture the click signal for each player
-
-        if i == 0:  # first player
-            p0 = player_dock_widget.DW_player(0, self)
 
-            @p0.player.property_observer("time-pos")
-            def time_observer(_name, value):
-                if value is not None:
-                    self.time_observer_signal.emit(value)
-
-            @p0.player.property_observer("eof-reached")
-            def eof_reached(_name, value):
-                if value is not None:
-                    self.mpv_eof_reached_signal.emit(value)
+    if not sys.platform.startswith(cfg.MACOS_CODE):
+        for i in range(cfg.N_PLAYER):
+            n_player = str(i + 1)
+            if (
+                n_player not in self.pj[cfg.OBSERVATIONS][self.observationId][cfg.FILE]
+                or not self.pj[cfg.OBSERVATIONS][self.observationId][cfg.FILE][n_player]
+            ):
+                continue
+
+            # Not pretty but the unique solution I have found to capture the click signal for each player
 
-            @p0.player.on_key_press("MBTN_LEFT")
-            def mbtn_left0():
-                self.video_click_signal.emit(0, "MBTN_LEFT")
+            if i == 0:  # first player
+                p0 = player_dock_widget.DW_player(0, self)
 
-            @p0.player.on_key_press("MBTN_RIGHT")
-            def mbtn_right0():
-                self.video_click_signal.emit(0, "MBTN_RIGHT")
+                @p0.player.property_observer("time-pos")
+                def time_observer(_name, value):
+                    if value is not None:
+                        self.time_observer_signal.emit(value)
 
-            @p0.player.on_key_press("MBTN_LEFT_DBL")
-            def mbtn_left_dbl0():
-                self.video_click_signal.emit(0, "MBTN_LEFT_DBL")
+                @p0.player.property_observer("eof-reached")
+                def eof_reached(_name, value):
+                    if value is not None:
+                        self.mpv_eof_reached_signal.emit(value)
 
-            @p0.player.on_key_press("MBTN_RIGHT_DBL")
-            def mbtn_right_dbl0():
-                self.video_click_signal.emit(0, "MBTN_RIGHT_DBL")
+                @p0.player.on_key_press("MBTN_LEFT")
+                def mbtn_left0():
+                    self.video_click_signal.emit(0, "MBTN_LEFT")
 
-            @p0.player.on_key_press("Ctrl+WHEEL_UP")
-            def ctrl_wheel_up0():
-                self.video_click_signal.emit(0, "Ctrl+WHEEL_UP")
+                @p0.player.on_key_press("MBTN_RIGHT")
+                def mbtn_right0():
+                    self.video_click_signal.emit(0, "MBTN_RIGHT")
 
-            @p0.player.on_key_press("Ctrl+WHEEL_DOWN")
-            def ctrl_wheel_down0():
-                self.video_click_signal.emit(0, "Ctrl+WHEEL_DOWN")
+                @p0.player.on_key_press("MBTN_LEFT_DBL")
+                def mbtn_left_dbl0():
+                    self.video_click_signal.emit(0, "MBTN_LEFT_DBL")
 
-            @p0.player.on_key_press("WHEEL_UP")
-            def wheel_up0():
-                self.video_click_signal.emit(0, "WHEEL_UP")
+                @p0.player.on_key_press("MBTN_RIGHT_DBL")
+                def mbtn_right_dbl0():
+                    self.video_click_signal.emit(0, "MBTN_RIGHT_DBL")
 
-            @p0.player.on_key_press("WHEEL_DOWN")
-            def wheel_down0():
-                self.video_click_signal.emit(0, "WHEEL_DOWN")
+                @p0.player.on_key_press("Ctrl+WHEEL_UP")
+                def ctrl_wheel_up0():
+                    self.video_click_signal.emit(0, "Ctrl+WHEEL_UP")
 
-            @p0.player.on_key_press("Shift+WHEEL_UP")
-            def shift_wheel_up0():
-                self.video_click_signal.emit(0, "Shift+WHEEL_UP")
+                @p0.player.on_key_press("Ctrl+WHEEL_DOWN")
+                def ctrl_wheel_down0():
+                    self.video_click_signal.emit(0, "Ctrl+WHEEL_DOWN")
 
-            @p0.player.on_key_press("Shift+WHEEL_DOWN")
-            def shift_wheel_down0():
-                self.video_click_signal.emit(0, "Shift+WHEEL_DOWN")
+                @p0.player.on_key_press("WHEEL_UP")
+                def wheel_up0():
+                    self.video_click_signal.emit(0, "WHEEL_UP")
 
-            @p0.player.on_key_press("Shift+MBTN_LEFT")
-            def shift_mbtn_left0():
-                self.video_click_signal.emit(0, "Shift+MBTN_LEFT")
+                @p0.player.on_key_press("WHEEL_DOWN")
+                def wheel_down0():
+                    self.video_click_signal.emit(0, "WHEEL_DOWN")
 
-            self.dw_player.append(p0)
+                @p0.player.on_key_press("Shift+WHEEL_UP")
+                def shift_wheel_up0():
+                    self.video_click_signal.emit(0, "Shift+WHEEL_UP")
 
-        if i == 1:  # second player
-            p1 = player_dock_widget.DW_player(1, self)
+                @p0.player.on_key_press("Shift+WHEEL_DOWN")
+                def shift_wheel_down0():
+                    self.video_click_signal.emit(0, "Shift+WHEEL_DOWN")
 
-            @p1.player.on_key_press("MBTN_LEFT")
-            def mbtn_left1():
-                self.video_click_signal.emit(1, "MBTN_LEFT")
+                @p0.player.on_key_press("Shift+MBTN_LEFT")
+                def shift_mbtn_left0():
+                    self.video_click_signal.emit(0, "Shift+MBTN_LEFT")
 
-            @p1.player.on_key_press("MBTN_RIGHT")
-            def mbtn_right1():
-                self.video_click_signal.emit(1, "MBTN_RIGHT")
+                self.dw_player.append(p0)
 
-            @p1.player.on_key_press("MBTN_LEFT_DBL")
-            def mbtn_left_dbl1():
-                self.video_click_signal.emit(1, "MBTN_LEFT_DBL")
+            if i == 1:  # second player
+                p1 = player_dock_widget.DW_player(1, self)
 
-            @p1.player.on_key_press("MBTN_RIGHT_DBL")
-            def mbtn_right_dbl1():
-                self.video_click_signal.emit(1, "MBTN_RIGHT_DBL")
+                @p1.player.on_key_press("MBTN_LEFT")
+                def mbtn_left1():
+                    self.video_click_signal.emit(1, "MBTN_LEFT")
 
-            @p1.player.on_key_press("Ctrl+WHEEL_UP")
-            def ctrl_wheel_up1():
-                self.video_click_signal.emit(1, "Ctrl+WHEEL_UP")
+                @p1.player.on_key_press("MBTN_RIGHT")
+                def mbtn_right1():
+                    self.video_click_signal.emit(1, "MBTN_RIGHT")
 
-            @p1.player.on_key_press("Ctrl+WHEEL_DOWN")
-            def ctrl_wheel_down1():
-                self.video_click_signal.emit(1, "Ctrl+WHEEL_DOWN")
+                @p1.player.on_key_press("MBTN_LEFT_DBL")
+                def mbtn_left_dbl1():
+                    self.video_click_signal.emit(1, "MBTN_LEFT_DBL")
 
-            @p1.player.on_key_press("WHEEL_UP")
-            def wheel_up1():
-                self.video_click_signal.emit(1, "WHEEL_UP")
+                @p1.player.on_key_press("MBTN_RIGHT_DBL")
+                def mbtn_right_dbl1():
+                    self.video_click_signal.emit(1, "MBTN_RIGHT_DBL")
 
-            @p1.player.on_key_press("WHEEL_DOWN")
-            def wheel_down1():
-                self.video_click_signal.emit(1, "WHEEL_DOWN")
+                @p1.player.on_key_press("Ctrl+WHEEL_UP")
+                def ctrl_wheel_up1():
+                    self.video_click_signal.emit(1, "Ctrl+WHEEL_UP")
 
-            @p1.player.on_key_press("Shift+WHEEL_UP")
-            def shift_wheel_up1():
-                self.video_click_signal.emit(1, "Shift+WHEEL_UP")
+                @p1.player.on_key_press("Ctrl+WHEEL_DOWN")
+                def ctrl_wheel_down1():
+                    self.video_click_signal.emit(1, "Ctrl+WHEEL_DOWN")
 
-            @p1.player.on_key_press("Shift+WHEEL_DOWN")
-            def shift_wheel_down1():
-                self.video_click_signal.emit(1, "Shift+WHEEL_DOWN")
+                @p1.player.on_key_press("WHEEL_UP")
+                def wheel_up1():
+                    self.video_click_signal.emit(1, "WHEEL_UP")
 
-            @p1.player.on_key_press("Shift+MBTN_LEFT")
-            def shift_mbtn_left1():
-                self.video_click_signal.emit(1, "Shift+MBTN_LEFT")
+                @p1.player.on_key_press("WHEEL_DOWN")
+                def wheel_down1():
+                    self.video_click_signal.emit(1, "WHEEL_DOWN")
 
-            self.dw_player.append(p1)
+                @p1.player.on_key_press("Shift+WHEEL_UP")
+                def shift_wheel_up1():
+                    self.video_click_signal.emit(1, "Shift+WHEEL_UP")
 
-        if i == 2:
-            p2 = player_dock_widget.DW_player(2, self)
+                @p1.player.on_key_press("Shift+WHEEL_DOWN")
+                def shift_wheel_down1():
+                    self.video_click_signal.emit(1, "Shift+WHEEL_DOWN")
 
-            @p2.player.on_key_press("MBTN_LEFT")
-            def mbtn_left2():
-                self.video_click_signal.emit(2, "MBTN_LEFT")
+                @p1.player.on_key_press("Shift+MBTN_LEFT")
+                def shift_mbtn_left1():
+                    self.video_click_signal.emit(1, "Shift+MBTN_LEFT")
 
-            @p2.player.on_key_press("MBTN_RIGHT")
-            def mbtn_right2():
-                self.video_click_signal.emit(2, "MBTN_RIGHT")
+                self.dw_player.append(p1)
 
-            @p2.player.on_key_press("MBTN_LEFT_DBL")
-            def mbtn_left_dbl2():
-                self.video_click_signal.emit(2, "MBTN_LEFT_DBL")
+            if i == 2:
+                p2 = player_dock_widget.DW_player(2, self)
 
-            @p2.player.on_key_press("MBTN_RIGHT_DBL")
-            def mbtn_right_dbl2():
-                self.video_click_signal.emit(2, "MBTN_RIGHT_DBL")
+                @p2.player.on_key_press("MBTN_LEFT")
+                def mbtn_left2():
+                    self.video_click_signal.emit(2, "MBTN_LEFT")
 
-            @p2.player.on_key_press("Ctrl+WHEEL_UP")
-            def ctrl_wheel_up2():
-                self.video_click_signal.emit(2, "Ctrl+WHEEL_UP")
+                @p2.player.on_key_press("MBTN_RIGHT")
+                def mbtn_right2():
+                    self.video_click_signal.emit(2, "MBTN_RIGHT")
 
-            @p2.player.on_key_press("Ctrl+WHEEL_DOWN")
-            def ctrl_wheel_down2():
-                self.video_click_signal.emit(2, "Ctrl+WHEEL_DOWN")
+                @p2.player.on_key_press("MBTN_LEFT_DBL")
+                def mbtn_left_dbl2():
+                    self.video_click_signal.emit(2, "MBTN_LEFT_DBL")
 
-            @p2.player.on_key_press("WHEEL_UP")
-            def wheel_up2():
-                self.video_click_signal.emit(2, "WHEEL_UP")
+                @p2.player.on_key_press("MBTN_RIGHT_DBL")
+                def mbtn_right_dbl2():
+                    self.video_click_signal.emit(2, "MBTN_RIGHT_DBL")
 
-            @p2.player.on_key_press("WHEEL_DOWN")
-            def wheel_down2():
-                self.video_click_signal.emit(2, "WHEEL_DOWN")
+                @p2.player.on_key_press("Ctrl+WHEEL_UP")
+                def ctrl_wheel_up2():
+                    self.video_click_signal.emit(2, "Ctrl+WHEEL_UP")
 
-            @p2.player.on_key_press("Shift+WHEEL_UP")
-            def shift_wheel_up2():
-                self.video_click_signal.emit(2, "Shift+WHEEL_UP")
+                @p2.player.on_key_press("Ctrl+WHEEL_DOWN")
+                def ctrl_wheel_down2():
+                    self.video_click_signal.emit(2, "Ctrl+WHEEL_DOWN")
 
-            @p2.player.on_key_press("Shift+WHEEL_DOWN")
-            def shift_wheel_down2():
-                self.video_click_signal.emit(2, "Shift+WHEEL_DOWN")
+                @p2.player.on_key_press("WHEEL_UP")
+                def wheel_up2():
+                    self.video_click_signal.emit(2, "WHEEL_UP")
 
-            @p2.player.on_key_press("Shift+MBTN_LEFT")
-            def shift_mbtn_left2():
-                self.video_click_signal.emit(2, "Shift+MBTN_LEFT")
+                @p2.player.on_key_press("WHEEL_DOWN")
+                def wheel_down2():
+                    self.video_click_signal.emit(2, "WHEEL_DOWN")
 
-            self.dw_player.append(p2)
+                @p2.player.on_key_press("Shift+WHEEL_UP")
+                def shift_wheel_up2():
+                    self.video_click_signal.emit(2, "Shift+WHEEL_UP")
 
-        if i == 3:
-            p3 = player_dock_widget.DW_player(3, self)
+                @p2.player.on_key_press("Shift+WHEEL_DOWN")
+                def shift_wheel_down2():
+                    self.video_click_signal.emit(2, "Shift+WHEEL_DOWN")
 
-            @p3.player.on_key_press("MBTN_LEFT")
-            def mbtn_left3():
-                self.video_click_signal.emit(3, "MBTN_LEFT")
+                @p2.player.on_key_press("Shift+MBTN_LEFT")
+                def shift_mbtn_left2():
+                    self.video_click_signal.emit(2, "Shift+MBTN_LEFT")
 
-            @p3.player.on_key_press("MBTN_RIGHT")
-            def mbtn_right3():
-                self.video_click_signal.emit(3, "MBTN_RIGHT")
+                self.dw_player.append(p2)
 
-            @p3.player.on_key_press("MBTN_LEFT_DBL")
-            def mbtn_left_dbl3():
-                self.video_click_signal.emit(3, "MBTN_LEFT_DBL")
+            if i == 3:
+                p3 = player_dock_widget.DW_player(3, self)
 
-            @p3.player.on_key_press("MBTN_RIGHT_DBL")
-            def mbtn_right_dbl3():
-                self.video_click_signal.emit(3, "MBTN_RIGHT_DBL")
+                @p3.player.on_key_press("MBTN_LEFT")
+                def mbtn_left3():
+                    self.video_click_signal.emit(3, "MBTN_LEFT")
 
-            @p3.player.on_key_press("Ctrl+WHEEL_UP")
-            def ctrl_wheel_up3():
-                self.video_click_signal.emit(3, "Ctrl+WHEEL_UP")
+                @p3.player.on_key_press("MBTN_RIGHT")
+                def mbtn_right3():
+                    self.video_click_signal.emit(3, "MBTN_RIGHT")
 
-            @p3.player.on_key_press("Ctrl+WHEEL_DOWN")
-            def ctrl_wheel_down3():
-                self.video_click_signal.emit(3, "Ctrl+WHEEL_DOWN")
+                @p3.player.on_key_press("MBTN_LEFT_DBL")
+                def mbtn_left_dbl3():
+                    self.video_click_signal.emit(3, "MBTN_LEFT_DBL")
 
-            @p3.player.on_key_press("WHEEL_UP")
-            def wheel_up3():
-                self.video_click_signal.emit(3, "WHEEL_UP")
+                @p3.player.on_key_press("MBTN_RIGHT_DBL")
+                def mbtn_right_dbl3():
+                    self.video_click_signal.emit(3, "MBTN_RIGHT_DBL")
 
-            @p3.player.on_key_press("WHEEL_DOWN")
-            def wheel_down3():
-                self.video_click_signal.emit(3, "WHEEL_DOWN")
+                @p3.player.on_key_press("Ctrl+WHEEL_UP")
+                def ctrl_wheel_up3():
+                    self.video_click_signal.emit(3, "Ctrl+WHEEL_UP")
 
-            @p3.player.on_key_press("Shift+WHEEL_UP")
-            def shift_wheel_up3():
-                self.video_click_signal.emit(3, "Shift+WHEEL_UP")
+                @p3.player.on_key_press("Ctrl+WHEEL_DOWN")
+                def ctrl_wheel_down3():
+                    self.video_click_signal.emit(3, "Ctrl+WHEEL_DOWN")
 
-            @p3.player.on_key_press("Shift+WHEEL_DOWN")
-            def shift_wheel_down3():
-                self.video_click_signal.emit(3, "Shift+WHEEL_DOWN")
+                @p3.player.on_key_press("WHEEL_UP")
+                def wheel_up3():
+                    self.video_click_signal.emit(3, "WHEEL_UP")
 
-            @p3.player.on_key_press("Shift+MBTN_LEFT")
-            def shift_mbtn_left3():
-                self.video_click_signal.emit(3, "Shift+MBTN_LEFT")
+                @p3.player.on_key_press("WHEEL_DOWN")
+                def wheel_down3():
+                    self.video_click_signal.emit(3, "WHEEL_DOWN")
 
-            self.dw_player.append(p3)
+                @p3.player.on_key_press("Shift+WHEEL_UP")
+                def shift_wheel_up3():
+                    self.video_click_signal.emit(3, "Shift+WHEEL_UP")
 
-        if i == 4:
-            p4 = player_dock_widget.DW_player(4, self)
+                @p3.player.on_key_press("Shift+WHEEL_DOWN")
+                def shift_wheel_down3():
+                    self.video_click_signal.emit(3, "Shift+WHEEL_DOWN")
 
-            @p4.player.on_key_press("MBTN_LEFT")
-            def mbtn_left4():
-                self.video_click_signal.emit(4, "MBTN_LEFT")
+                @p3.player.on_key_press("Shift+MBTN_LEFT")
+                def shift_mbtn_left3():
+                    self.video_click_signal.emit(3, "Shift+MBTN_LEFT")
 
-            @p4.player.on_key_press("MBTN_RIGHT")
-            def mbtn_right4():
-                self.video_click_signal.emit(4, "MBTN_RIGHT")
+                self.dw_player.append(p3)
 
-            @p4.player.on_key_press("MBTN_LEFT_DBL")
-            def mbtn_left_dbl4():
-                self.video_click_signal.emit(4, "MBTN_LEFT_DBL")
+            if i == 4:
+                p4 = player_dock_widget.DW_player(4, self)
 
-            @p4.player.on_key_press("MBTN_RIGHT_DBL")
-            def mbtn_right_dbl4():
-                self.video_click_signal.emit(4, "MBTN_RIGHT_DBL")
+                @p4.player.on_key_press("MBTN_LEFT")
+                def mbtn_left4():
+                    self.video_click_signal.emit(4, "MBTN_LEFT")
 
-            @p4.player.on_key_press("Ctrl+WHEEL_UP")
-            def ctrl_wheel_up4():
-                self.video_click_signal.emit(4, "Ctrl+WHEEL_UP")
+                @p4.player.on_key_press("MBTN_RIGHT")
+                def mbtn_right4():
+                    self.video_click_signal.emit(4, "MBTN_RIGHT")
 
-            @p4.player.on_key_press("Ctrl+WHEEL_DOWN")
-            def ctrl_wheel_down4():
-                self.video_click_signal.emit(4, "Ctrl+WHEEL_DOWN")
+                @p4.player.on_key_press("MBTN_LEFT_DBL")
+                def mbtn_left_dbl4():
+                    self.video_click_signal.emit(4, "MBTN_LEFT_DBL")
 
-            @p4.player.on_key_press("WHEEL_UP")
-            def wheel_up4():
-                self.video_click_signal.emit(4, "WHEEL_UP")
+                @p4.player.on_key_press("MBTN_RIGHT_DBL")
+                def mbtn_right_dbl4():
+                    self.video_click_signal.emit(4, "MBTN_RIGHT_DBL")
 
-            @p4.player.on_key_press("WHEEL_DOWN")
-            def wheel_down4():
-                self.video_click_signal.emit(4, "WHEEL_DOWN")
+                @p4.player.on_key_press("Ctrl+WHEEL_UP")
+                def ctrl_wheel_up4():
+                    self.video_click_signal.emit(4, "Ctrl+WHEEL_UP")
 
-            @p4.player.on_key_press("Shift+WHEEL_UP")
-            def shift_wheel_up4():
-                self.video_click_signal.emit(4, "Shift+WHEEL_UP")
+                @p4.player.on_key_press("Ctrl+WHEEL_DOWN")
+                def ctrl_wheel_down4():
+                    self.video_click_signal.emit(4, "Ctrl+WHEEL_DOWN")
 
-            @p4.player.on_key_press("Shift+WHEEL_DOWN")
-            def shift_wheel_down4():
-                self.video_click_signal.emit(4, "Shift+WHEEL_DOWN")
+                @p4.player.on_key_press("WHEEL_UP")
+                def wheel_up4():
+                    self.video_click_signal.emit(4, "WHEEL_UP")
 
-            @p4.player.on_key_press("Shift+MBTN_LEFT")
-            def shift_mbtn_left4():
-                self.video_click_signal.emit(4, "Shift+MBTN_LEFT")
+                @p4.player.on_key_press("WHEEL_DOWN")
+                def wheel_down4():
+                    self.video_click_signal.emit(4, "WHEEL_DOWN")
 
-            self.dw_player.append(p4)
+                @p4.player.on_key_press("Shift+WHEEL_UP")
+                def shift_wheel_up4():
+                    self.video_click_signal.emit(4, "Shift+WHEEL_UP")
 
-        if i == 5:
-            p5 = player_dock_widget.DW_player(5, self)
+                @p4.player.on_key_press("Shift+WHEEL_DOWN")
+                def shift_wheel_down4():
+                    self.video_click_signal.emit(4, "Shift+WHEEL_DOWN")
 
-            @p5.player.on_key_press("MBTN_LEFT")
-            def mbtn_left5():
-                self.video_click_signal.emit(5, "MBTN_LEFT")
+                @p4.player.on_key_press("Shift+MBTN_LEFT")
+                def shift_mbtn_left4():
+                    self.video_click_signal.emit(4, "Shift+MBTN_LEFT")
 
-            @p5.player.on_key_press("MBTN_RIGHT")
-            def mbtn_right5():
-                self.video_click_signal.emit(5, "MBTN_RIGHT")
+                self.dw_player.append(p4)
 
-            @p5.player.on_key_press("MBTN_LEFT_DBL")
-            def mbtn_left_dbl5():
-                self.video_click_signal.emit(5, "MBTN_LEFT_DBL")
+            if i == 5:
+                p5 = player_dock_widget.DW_player(5, self)
 
-            @p5.player.on_key_press("MBTN_RIGHT_DBL")
-            def mbtn_right_dbl5():
-                self.video_click_signal.emit(5, "MBTN_RIGHT_DBL")
+                @p5.player.on_key_press("MBTN_LEFT")
+                def mbtn_left5():
+                    self.video_click_signal.emit(5, "MBTN_LEFT")
 
-            @p5.player.on_key_press("Ctrl+WHEEL_UP")
-            def ctrl_wheel_up5():
-                self.video_click_signal.emit(5, "Ctrl+WHEEL_UP")
+                @p5.player.on_key_press("MBTN_RIGHT")
+                def mbtn_right5():
+                    self.video_click_signal.emit(5, "MBTN_RIGHT")
 
-            @p5.player.on_key_press("Ctrl+WHEEL_DOWN")
-            def ctrl_wheel_down5():
-                self.video_click_signal.emit(5, "Ctrl+WHEEL_DOWN")
+                @p5.player.on_key_press("MBTN_LEFT_DBL")
+                def mbtn_left_dbl5():
+                    self.video_click_signal.emit(5, "MBTN_LEFT_DBL")
 
-            @p5.player.on_key_press("WHEEL_UP")
-            def wheel_up5():
-                self.video_click_signal.emit(5, "WHEEL_UP")
+                @p5.player.on_key_press("MBTN_RIGHT_DBL")
+                def mbtn_right_dbl5():
+                    self.video_click_signal.emit(5, "MBTN_RIGHT_DBL")
 
-            @p5.player.on_key_press("WHEEL_DOWN")
-            def wheel_down5():
-                self.video_click_signal.emit(5, "WHEEL_DOWN")
+                @p5.player.on_key_press("Ctrl+WHEEL_UP")
+                def ctrl_wheel_up5():
+                    self.video_click_signal.emit(5, "Ctrl+WHEEL_UP")
 
-            @p5.player.on_key_press("Shift+WHEEL_UP")
-            def shift_wheel_up5():
-                self.video_click_signal.emit(5, "Shift+WHEEL_UP")
+                @p5.player.on_key_press("Ctrl+WHEEL_DOWN")
+                def ctrl_wheel_down5():
+                    self.video_click_signal.emit(5, "Ctrl+WHEEL_DOWN")
 
-            @p5.player.on_key_press("Shift+WHEEL_DOWN")
-            def shift_wheel_down5():
-                self.video_click_signal.emit(5, "Shift+WHEEL_DOWN")
+                @p5.player.on_key_press("WHEEL_UP")
+                def wheel_up5():
+                    self.video_click_signal.emit(5, "WHEEL_UP")
 
-            @p5.player.on_key_press("Shift+MBTN_LEFT")
-            def shift_mbtn_left5():
-                self.video_click_signal.emit(5, "Shift+MBTN_LEFT")
+                @p5.player.on_key_press("WHEEL_DOWN")
+                def wheel_down5():
+                    self.video_click_signal.emit(5, "WHEEL_DOWN")
 
-            self.dw_player.append(p5)
+                @p5.player.on_key_press("Shift+WHEEL_UP")
+                def shift_wheel_up5():
+                    self.video_click_signal.emit(5, "Shift+WHEEL_UP")
 
-        if i == 6:
-            p6 = player_dock_widget.DW_player(6, self)
+                @p5.player.on_key_press("Shift+WHEEL_DOWN")
+                def shift_wheel_down5():
+                    self.video_click_signal.emit(5, "Shift+WHEEL_DOWN")
 
-            @p6.player.on_key_press("MBTN_LEFT")
-            def mbtn_left6():
-                self.video_click_signal.emit(6, "MBTN_LEFT")
+                @p5.player.on_key_press("Shift+MBTN_LEFT")
+                def shift_mbtn_left5():
+                    self.video_click_signal.emit(5, "Shift+MBTN_LEFT")
 
-            @p6.player.on_key_press("MBTN_RIGHT")
-            def mbtn_right6():
-                self.video_click_signal.emit(6, "MBTN_RIGHT")
+                self.dw_player.append(p5)
 
-            @p6.player.on_key_press("MBTN_LEFT_DBL")
-            def mbtn_left_dbl6():
-                self.video_click_signal.emit(6, "MBTN_LEFT_DBL")
+            if i == 6:
+                p6 = player_dock_widget.DW_player(6, self)
 
-            @p6.player.on_key_press("MBTN_RIGHT_DBL")
-            def mbtn_right_dbl6():
-                self.video_click_signal.emit(6, "MBTN_RIGHT_DBL")
+                @p6.player.on_key_press("MBTN_LEFT")
+                def mbtn_left6():
+                    self.video_click_signal.emit(6, "MBTN_LEFT")
 
-            @p6.player.on_key_press("Ctrl+WHEEL_UP")
-            def ctrl_wheel_up6():
-                self.video_click_signal.emit(6, "Ctrl+WHEEL_UP")
+                @p6.player.on_key_press("MBTN_RIGHT")
+                def mbtn_right6():
+                    self.video_click_signal.emit(6, "MBTN_RIGHT")
 
-            @p6.player.on_key_press("Ctrl+WHEEL_DOWN")
-            def ctrl_wheel_down6():
-                self.video_click_signal.emit(6, "Ctrl+WHEEL_DOWN")
+                @p6.player.on_key_press("MBTN_LEFT_DBL")
+                def mbtn_left_dbl6():
+                    self.video_click_signal.emit(6, "MBTN_LEFT_DBL")
 
-            @p6.player.on_key_press("WHEEL_UP")
-            def wheel_up6():
-                self.video_click_signal.emit(6, "WHEEL_UP")
+                @p6.player.on_key_press("MBTN_RIGHT_DBL")
+                def mbtn_right_dbl6():
+                    self.video_click_signal.emit(6, "MBTN_RIGHT_DBL")
 
-            @p6.player.on_key_press("WHEEL_DOWN")
-            def wheel_down6():
-                self.video_click_signal.emit(6, "WHEEL_DOWN")
+                @p6.player.on_key_press("Ctrl+WHEEL_UP")
+                def ctrl_wheel_up6():
+                    self.video_click_signal.emit(6, "Ctrl+WHEEL_UP")
 
-            @p6.player.on_key_press("Shift+WHEEL_UP")
-            def shift_wheel_up6():
-                self.video_click_signal.emit(6, "Shift+WHEEL_UP")
+                @p6.player.on_key_press("Ctrl+WHEEL_DOWN")
+                def ctrl_wheel_down6():
+                    self.video_click_signal.emit(6, "Ctrl+WHEEL_DOWN")
 
-            @p6.player.on_key_press("Shift+WHEEL_DOWN")
-            def shift_wheel_down6():
-                self.video_click_signal.emit(6, "Shift+WHEEL_DOWN")
+                @p6.player.on_key_press("WHEEL_UP")
+                def wheel_up6():
+                    self.video_click_signal.emit(6, "WHEEL_UP")
 
-            @p6.player.on_key_press("Shift+MBTN_LEFT")
-            def shift_mbtn_left6():
-                self.video_click_signal.emit(6, "Shift+MBTN_LEFT")
+                @p6.player.on_key_press("WHEEL_DOWN")
+                def wheel_down6():
+                    self.video_click_signal.emit(6, "WHEEL_DOWN")
 
-            self.dw_player.append(p6)
+                @p6.player.on_key_press("Shift+WHEEL_UP")
+                def shift_wheel_up6():
+                    self.video_click_signal.emit(6, "Shift+WHEEL_UP")
 
-        if i == 7:
-            p7 = player_dock_widget.DW_player(7, self)
+                @p6.player.on_key_press("Shift+WHEEL_DOWN")
+                def shift_wheel_down6():
+                    self.video_click_signal.emit(6, "Shift+WHEEL_DOWN")
 
-            @p7.player.on_key_press("MBTN_LEFT")
-            def mbtn_left7():
-                self.video_click_signal.emit(7, "MBTN_LEFT")
+                @p6.player.on_key_press("Shift+MBTN_LEFT")
+                def shift_mbtn_left6():
+                    self.video_click_signal.emit(6, "Shift+MBTN_LEFT")
 
-            @p7.player.on_key_press("MBTN_RIGHT")
-            def mbtn_right7():
-                self.video_click_signal.emit(7, "MBTN_RIGHT")
+                self.dw_player.append(p6)
 
-            @p7.player.on_key_press("MBTN_LEFT_DBL")
-            def mbtn_left_dbl7():
-                self.video_click_signal.emit(7, "MBTN_LEFT_DBL")
+            if i == 7:
+                p7 = player_dock_widget.DW_player(7, self)
 
-            @p7.player.on_key_press("MBTN_RIGHT_DBL")
-            def mbtn_right_dbl7():
-                self.video_click_signal.emit(7, "MBTN_RIGHT_DBL")
+                @p7.player.on_key_press("MBTN_LEFT")
+                def mbtn_left7():
+                    self.video_click_signal.emit(7, "MBTN_LEFT")
 
-            @p7.player.on_key_press("Ctrl+WHEEL_UP")
-            def ctrl_wheel_up7():
-                self.video_click_signal.emit(7, "Ctrl+WHEEL_UP")
+                @p7.player.on_key_press("MBTN_RIGHT")
+                def mbtn_right7():
+                    self.video_click_signal.emit(7, "MBTN_RIGHT")
 
-            @p7.player.on_key_press("Ctrl+WHEEL_DOWN")
-            def ctrl_wheel_down7():
-                self.video_click_signal.emit(7, "Ctrl+WHEEL_DOWN")
+                @p7.player.on_key_press("MBTN_LEFT_DBL")
+                def mbtn_left_dbl7():
+                    self.video_click_signal.emit(7, "MBTN_LEFT_DBL")
 
-            @p7.player.on_key_press("WHEEL_UP")
-            def wheel_up7():
-                self.video_click_signal.emit(7, "WHEEL_UP")
+                @p7.player.on_key_press("MBTN_RIGHT_DBL")
+                def mbtn_right_dbl7():
+                    self.video_click_signal.emit(7, "MBTN_RIGHT_DBL")
 
-            @p7.player.on_key_press("WHEEL_DOWN")
-            def wheel_down7():
-                self.video_click_signal.emit(7, "WHEEL_DOWN")
+                @p7.player.on_key_press("Ctrl+WHEEL_UP")
+                def ctrl_wheel_up7():
+                    self.video_click_signal.emit(7, "Ctrl+WHEEL_UP")
 
-            @p7.player.on_key_press("Shift+WHEEL_UP")
-            def shift_wheel_up7():
-                self.video_click_signal.emit(7, "Shift+WHEEL_UP")
+                @p7.player.on_key_press("Ctrl+WHEEL_DOWN")
+                def ctrl_wheel_down7():
+                    self.video_click_signal.emit(7, "Ctrl+WHEEL_DOWN")
 
-            @p7.player.on_key_press("Shift+WHEEL_DOWN")
-            def shift_wheel_down7():
-                self.video_click_signal.emit(7, "Shift+WHEEL_DOWN")
+                @p7.player.on_key_press("WHEEL_UP")
+                def wheel_up7():
+                    self.video_click_signal.emit(7, "WHEEL_UP")
 
-            @p7.player.on_key_press("Shift+MBTN_LEFT")
-            def shift_mbtn_left7():
-                self.video_click_signal.emit(7, "Shift+MBTN_LEFT")
+                @p7.player.on_key_press("WHEEL_DOWN")
+                def wheel_down7():
+                    self.video_click_signal.emit(7, "WHEEL_DOWN")
 
-            self.dw_player.append(p7)
+                @p7.player.on_key_press("Shift+WHEEL_UP")
+                def shift_wheel_up7():
+                    self.video_click_signal.emit(7, "Shift+WHEEL_UP")
 
-        self.dw_player[-1].setFloating(False)
-        self.dw_player[-1].setVisible(False)
-        self.dw_player[-1].setFeatures(QDockWidget.DockWidgetFloatable | QDockWidget.DockWidgetMovable)
+                @p7.player.on_key_press("Shift+WHEEL_DOWN")
+                def shift_wheel_down7():
+                    self.video_click_signal.emit(7, "Shift+WHEEL_DOWN")
 
-        # place 4 players at the top of the main window and 4 at the bottom
-        self.addDockWidget(Qt.TopDockWidgetArea if i < 4 else Qt.BottomDockWidgetArea, self.dw_player[-1])
+                @p7.player.on_key_press("Shift+MBTN_LEFT")
+                def shift_mbtn_left7():
+                    self.video_click_signal.emit(7, "Shift+MBTN_LEFT")
 
-        self.dw_player[i].setVisible(True)
+                self.dw_player.append(p7)
 
-        # for receiving mouse event from frame viewer
-        self.dw_player[i].frame_viewer.mouse_pressed_signal.connect(self.frame_image_clicked)
+            self.dw_player[-1].setFloating(False)
+            self.dw_player[-1].setVisible(False)
+            self.dw_player[-1].setFeatures(QDockWidget.DockWidgetFloatable | QDockWidget.DockWidgetMovable)
 
-        # for receiving key event from dock widget
-        self.dw_player[i].key_pressed_signal.connect(self.signal_from_widget)
+            # place 4 players at the top of the main window and 4 at the bottom
+            self.addDockWidget(Qt.TopDockWidgetArea if i < 4 else Qt.BottomDockWidgetArea, self.dw_player[-1])
 
-        # for receiving event from volume slider
-        self.dw_player[i].volume_slider_moved_signal.connect(self.set_volume)
+            self.dw_player[i].setVisible(True)
 
-        # for receiving event from mute toolbutton
-        self.dw_player[i].mute_action_triggered_signal.connect(self.set_mute)
+            # for receiving mouse event from frame viewer
+            self.dw_player[i].frame_viewer.mouse_pressed_signal.connect(self.frame_image_clicked)
 
-        # for receiving resize event from dock widget
-        self.dw_player[i].resize_signal.connect(self.resize_dw)
+            # for receiving key event from dock widget
+            self.dw_player[i].key_pressed_signal.connect(self.signal_from_widget)
 
-        # add durations list
-        self.dw_player[i].media_durations: list = []
-        self.dw_player[i].cumul_media_durations: List[int] = [0]  # [idx for idx,x in enumerate(l) if l[idx-1]<pos<=x]
+            # for receiving event from volume slider
+            self.dw_player[i].volume_slider_moved_signal.connect(self.set_volume)
 
-        # add fps list
-        self.dw_player[i].fps = {}
+            # for receiving event from mute toolbutton
+            self.dw_player[i].mute_action_triggered_signal.connect(self.set_mute)
 
-        for mediaFile in self.pj[cfg.OBSERVATIONS][self.observationId][cfg.FILE][n_player]:
+            # for receiving resize event from dock widget
+            self.dw_player[i].resize_signal.connect(self.resize_dw)
+
+            # add durations list
+            self.dw_player[i].media_durations: list = []
+            self.dw_player[i].cumul_media_durations: List[int] = [0]  # [idx for idx,x in enumerate(l) if l[idx-1]<pos<=x]
+
+            # add fps list
+            self.dw_player[i].fps = {}
+
+            for mediaFile in self.pj[cfg.OBSERVATIONS][self.observationId][cfg.FILE][n_player]:
+                logging.debug(f"media file: {mediaFile}")
+
+                media_full_path = project_functions.full_path(mediaFile, self.projectFileName)
+
+                logging.debug(f"media_full_path: {media_full_path}")
+
+                # media duration
+                try:
+                    mediaLength = self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO][cfg.LENGTH][mediaFile] * 1000
+                    mediaFPS = self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO][cfg.FPS][mediaFile]
+                except Exception:
+                    logging.debug("media_info key not found in project")
+
+                    r = util.accurate_media_analysis(self.ffmpeg_bin, media_full_path)
+                    if "error" not in r:
+                        if cfg.MEDIA_INFO not in self.pj[cfg.OBSERVATIONS][self.observationId]:
+                            self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO] = {
+                                cfg.LENGTH: {},
+                                cfg.FPS: {},
+                            }
+                            if cfg.LENGTH not in self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO]:
+                                self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO][cfg.LENGTH] = {}
+                            if cfg.FPS not in self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO]:
+                                self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO][cfg.FPS] = {}
+
+                        self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO][cfg.LENGTH][mediaFile] = r["duration"]
+                        self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO][cfg.FPS][mediaFile] = r[cfg.FPS]
+
+                        mediaLength = r["duration"] * 1000
+                        mediaFPS = r[cfg.FPS]
+
+                        self.project_changed()
+
+                self.dw_player[i].media_durations.append(int(mediaLength))
+                self.dw_player[i].cumul_media_durations.append(self.dw_player[i].cumul_media_durations[-1] + int(mediaLength))
+
+                self.dw_player[i].fps[mediaFile] = mediaFPS
+
+                # add media file to playlist
+                self.dw_player[i].player.playlist_append(media_full_path)
+
+                # add media file name to player window title
+                self.dw_player[i].setWindowTitle(f"Player #{i + 1} ({pl.Path(media_full_path).name})")
+
+            # media duration cumuled in seconds
+            self.dw_player[i].cumul_media_durations_sec = [round(dec(x / 1000), 3) for x in self.dw_player[i].cumul_media_durations]
+
+            # check if BORIS is running on a Windows VM with the 'WMIC COMPUTERSYSTEM GET SERIALNUMBER' command
+            # because "auto" or "auto-safe" crash in Windows VM
+            # see https://superuser.com/questions/1128339/how-can-i-detect-if-im-within-a-vm-or-not
+
+            flag_vm = False
+            if sys.platform.startswith("win"):
+                p = subprocess.Popen(
+                    ["WMIC", "BIOS", "GET", "SERIALNUMBER"],
+                    stdout=subprocess.PIPE,
+                    stderr=subprocess.PIPE,
+                    shell=True,
+                )
+                out, _ = p.communicate()
+                flag_vm = b"SerialNumber  \r\r\n0 " in out
+                logging.debug(f"Running on Windows VM: {flag_vm}")
+
+            if not flag_vm:
+                self.dw_player[i].player.hwdec = self.config_param.get(cfg.MPV_HWDEC, cfg.MPV_HWDEC_DEFAULT_VALUE)
+            else:
+                self.dw_player[i].player.hwdec = cfg.MPV_HWDEC_NO
+
+            logging.debug(f"Player hwdec of player #{i} set to: {self.dw_player[i].player.hwdec}")
+            self.config_param[cfg.MPV_HWDEC] = self.dw_player[i].player.hwdec
+
+            self.dw_player[i].player.playlist_pos = 0
+            self.dw_player[i].player.wait_until_playing()
+            self.dw_player[i].player.pause = True
+            time.sleep(0.2)
+            # self.dw_player[i].player.wait_until_paused()
+            self.dw_player[i].player.seek(0, "absolute")
+            # do not close when playing finished
+            self.dw_player[i].player.keep_open = True
+            self.dw_player[i].player.keep_open_pause = False
+
+            self.dw_player[i].player.image_display_duration = self.pj[cfg.OBSERVATIONS][self.observationId].get(
+                cfg.IMAGE_DISPLAY_DURATION, 1
+            )
+
+            # position media
+            if cfg.OBSERVATION_TIME_INTERVAL in self.pj[cfg.OBSERVATIONS][self.observationId]:
+                self.seek_mediaplayer(int(self.pj[cfg.OBSERVATIONS][self.observationId][cfg.OBSERVATION_TIME_INTERVAL][0]), player=i)
+
+            # restore video zoom level
+            if cfg.ZOOM_LEVEL in self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO]:
+                self.dw_player[i].player.video_zoom = log2(
+                    self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO][cfg.ZOOM_LEVEL].get(n_player, 0)
+                )
+
+            # restore video pan
+            if cfg.PAN_X in self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO]:
+                self.dw_player[i].player.video_pan_x = self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO][cfg.PAN_X].get(
+                    n_player, 0
+                )
+            if cfg.PAN_Y in self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO]:
+                self.dw_player[i].player.video_pan_y = self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO][cfg.PAN_Y].get(
+                    n_player, 0
+                )
+
+            # restore rotation angle
+            if cfg.ROTATION_ANGLE in self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO]:
+                self.dw_player[i].player.video_rotate = self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO][
+                    cfg.ROTATION_ANGLE
+                ].get(n_player, 0)
+
+            # restore subtitle visibility
+            if cfg.DISPLAY_MEDIA_SUBTITLES in self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO]:
+                self.dw_player[i].player.sub_visibility = self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO][
+                    cfg.DISPLAY_MEDIA_SUBTITLES
+                ].get(n_player, True)
+
+            # restore overlays
+            if cfg.OVERLAY in self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO]:
+                if n_player in self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO][cfg.OVERLAY]:
+                    self.overlays[i] = self.dw_player[i].player.create_image_overlay()
+                    self.resize_dw(i)
+
+    else:  # macos
+        print(self.pj[cfg.OBSERVATIONS][self.observationId][cfg.FILE])
+
+        for mediaFile in self.pj[cfg.OBSERVATIONS][self.observationId][cfg.FILE]["1"]:
             logging.debug(f"media file: {mediaFile}")
 
             media_full_path = project_functions.full_path(mediaFile, self.projectFileName)
-
-            logging.debug(f"media_full_path: {media_full_path}")
-
-            # media duration
-            try:
-                mediaLength = self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO][cfg.LENGTH][mediaFile] * 1000
-                mediaFPS = self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO][cfg.FPS][mediaFile]
-            except Exception:
-                logging.debug("media_info key not found in project")
-
-                r = util.accurate_media_analysis(self.ffmpeg_bin, media_full_path)
-                if "error" not in r:
-                    if cfg.MEDIA_INFO not in self.pj[cfg.OBSERVATIONS][self.observationId]:
-                        self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO] = {
-                            cfg.LENGTH: {},
-                            cfg.FPS: {},
-                        }
-                        if cfg.LENGTH not in self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO]:
-                            self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO][cfg.LENGTH] = {}
-                        if cfg.FPS not in self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO]:
-                            self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO][cfg.FPS] = {}
-
-                    self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO][cfg.LENGTH][mediaFile] = r["duration"]
-                    self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO][cfg.FPS][mediaFile] = r[cfg.FPS]
-
-                    mediaLength = r["duration"] * 1000
-                    mediaFPS = r[cfg.FPS]
-
-                    self.project_changed()
-
-            self.dw_player[i].media_durations.append(int(mediaLength))
-            self.dw_player[i].cumul_media_durations.append(self.dw_player[i].cumul_media_durations[-1] + int(mediaLength))
-
-            self.dw_player[i].fps[mediaFile] = mediaFPS
-
-            # add media file to playlist
-            self.dw_player[i].player.playlist_append(media_full_path)
-
-            # add media file name to player window title
-            self.dw_player[i].setWindowTitle(f"Player #{i + 1} ({pl.Path(media_full_path).name})")
-
-        # media duration cumuled in seconds
-        self.dw_player[i].cumul_media_durations_sec = [round(dec(x / 1000), 3) for x in self.dw_player[i].cumul_media_durations]
-
-        # check if BORIS is running on a Windows VM with the 'WMIC COMPUTERSYSTEM GET SERIALNUMBER' command
-        # because "auto" or "auto-safe" crash in Windows VM
-        # see https://superuser.com/questions/1128339/how-can-i-detect-if-im-within-a-vm-or-not
-
-        flag_vm = False
-        if sys.platform.startswith("win"):
-            p = subprocess.Popen(
-                ["WMIC", "BIOS", "GET", "SERIALNUMBER"],
-                stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE,
-                shell=True,
-            )
-            out, _ = p.communicate()
-            flag_vm = b"SerialNumber  \r\r\n0 " in out
-            logging.debug(f"Running on Windows VM: {flag_vm}")
-
-        if not flag_vm:
-            self.dw_player[i].player.hwdec = self.config_param.get(cfg.MPV_HWDEC, cfg.MPV_HWDEC_DEFAULT_VALUE)
-        else:
-            self.dw_player[i].player.hwdec = cfg.MPV_HWDEC_NO
-
-        logging.debug(f"Player hwdec of player #{i} set to: {self.dw_player[i].player.hwdec}")
-        self.config_param[cfg.MPV_HWDEC] = self.dw_player[i].player.hwdec
-
-        self.dw_player[i].player.playlist_pos = 0
-        self.dw_player[i].player.wait_until_playing()
-        self.dw_player[i].player.pause = True
-        time.sleep(0.2)
-        # self.dw_player[i].player.wait_until_paused()
-        self.dw_player[i].player.seek(0, "absolute")
-        # do not close when playing finished
-        self.dw_player[i].player.keep_open = True
-        self.dw_player[i].player.keep_open_pause = False
-
-        self.dw_player[i].player.image_display_duration = self.pj[cfg.OBSERVATIONS][self.observationId].get(cfg.IMAGE_DISPLAY_DURATION, 1)
-
-        # position media
-        if cfg.OBSERVATION_TIME_INTERVAL in self.pj[cfg.OBSERVATIONS][self.observationId]:
-            self.seek_mediaplayer(int(self.pj[cfg.OBSERVATIONS][self.observationId][cfg.OBSERVATION_TIME_INTERVAL][0]), player=i)
-
-        # restore video zoom level
-        if cfg.ZOOM_LEVEL in self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO]:
-            self.dw_player[i].player.video_zoom = log2(
-                self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO][cfg.ZOOM_LEVEL].get(n_player, 0)
-            )
-
-        # restore video pan
-        if cfg.PAN_X in self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO]:
-            self.dw_player[i].player.video_pan_x = self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO][cfg.PAN_X].get(n_player, 0)
-        if cfg.PAN_Y in self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO]:
-            self.dw_player[i].player.video_pan_y = self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO][cfg.PAN_Y].get(n_player, 0)
-
-        # restore rotation angle
-        if cfg.ROTATION_ANGLE in self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO]:
-            self.dw_player[i].player.video_rotate = self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO][cfg.ROTATION_ANGLE].get(
-                n_player, 0
-            )
-
-        # restore subtitle visibility
-        if cfg.DISPLAY_MEDIA_SUBTITLES in self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO]:
-            self.dw_player[i].player.sub_visibility = self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO][
-                cfg.DISPLAY_MEDIA_SUBTITLES
-            ].get(n_player, True)
-
-        # restore overlays
-        if cfg.OVERLAY in self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO]:
-            if n_player in self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO][cfg.OVERLAY]:
-                self.overlays[i] = self.dw_player[i].player.create_image_overlay()
-                self.resize_dw(i)
+            send_command({"command": ["loadfile", media_full_path]})
+            # pause
+            send_command({"command": ["set_property", "pause", True]})
+            send_command({"command": ["set_property", "time-pos", 0]})
 
     menu_options.update_menu(self)
 
@@ -2049,8 +2153,9 @@ def initialize_new_media_observation(self) -> bool:
     self.load_tw_events(self.observationId)
 
     # initial synchro
-    for n_player in range(1, len(self.dw_player)):
-        self.sync_time(n_player, 0)
+    if not sys.platform.startswith(cfg.MACOS_CODE):
+        for n_player in range(1, len(self.dw_player)):
+            self.sync_time(n_player, 0)
 
     self.mpv_timer_out(value=0.0)
 

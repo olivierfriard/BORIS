@@ -76,4 +76,4 @@ def load_plugins(self):
             if plugin_name is not None and plugin_name not in self.config_param.get(cfg.EXCLUDED_PLUGINS, set()):
                 self.config_param[cfg.ANALYSIS_PLUGINS][plugin_name] = str(file_)
 
-    print(f"{self.config_param.get(cfg.ANALYSIS_PLUGINS, {})=}")
+    logging.debug(f"{self.config_param.get(cfg.ANALYSIS_PLUGINS, {})=}")

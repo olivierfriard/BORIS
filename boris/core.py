@@ -3962,7 +3962,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         """
         returns frame index for player player_idx
         """
-        estimated_frame_number = self.dw_player[player_idx].player.estimated_frame_number
+
+        if not sys.platform.startswith(cfg.MACOS_CODE):
+            estimated_frame_number = self.dw_player[player_idx].player.estimated_frame_number
+        else:
+            estimated_frame_number = observation_operations.send_command({"command": ["get_property", "estimated_frame_number"]})
         if estimated_frame_number is not None:
             return estimated_frame_number
         else:
@@ -4295,13 +4299,17 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         ct0 = cumulative_time_pos
 
-        if self.dw_player[0].player.time_pos is not None:
-            for n_player in range(1, len(self.dw_player)):
-                ct = self.getLaps(n_player=n_player)
+        if not sys.platform.startswith(cfg.MACOS_CODE):
+            if self.dw_player[0].player.time_pos is not None:
+                for n_player in range(1, len(self.dw_player)):
+                    ct = self.getLaps(n_player=n_player)
 
-                # sync players 2..8 if time diff >= 1 s
-                if abs(ct0 - (ct + dec(self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO][cfg.OFFSET][str(n_player + 1)]))) >= 1:
-                    self.sync_time(n_player, ct0)  # self.seek_mediaplayer(ct0, n_player)
+                    # sync players 2..8 if time diff >= 1 s
+                    if (
+                        abs(ct0 - (ct + dec(self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO][cfg.OFFSET][str(n_player + 1)])))
+                        >= 1
+                    ):
+                        self.sync_time(n_player, ct0)  # self.seek_mediaplayer(ct0, n_player)
 
         currentTimeOffset = dec(cumulative_time_pos + self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TIME_OFFSET])
 
@@ -4698,9 +4706,14 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
             if self.playerType == cfg.MEDIA:
                 # cumulative time
-                mem_laps = sum(self.dw_player[n_player].media_durations[0 : self.dw_player[n_player].player.playlist_pos]) + (
-                    0 if self.dw_player[n_player].player.time_pos is None else self.dw_player[n_player].player.time_pos * 1000
-                )
+                if not sys.platform.startswith(cfg.MACOS_CODE):
+                    mem_laps = sum(self.dw_player[n_player].media_durations[0 : self.dw_player[n_player].player.playlist_pos]) + (
+                        0 if self.dw_player[n_player].player.time_pos is None else self.dw_player[n_player].player.time_pos * 1000
+                    )
+                else:
+                    time_pos = observation_operations.send_command({"command": ["get_property", "time-pos"]})
+                    # TODO: fix!
+                    return dec(time_pos)
 
                 return dec(str(round(mem_laps / 1000, 3)))
 
@@ -5856,22 +5869,22 @@ def main():
                 QMessageBox.information(window, cfg.programName, msg)
             window.load_project(project_path, project_changed, pj)
 
+        # check project integrity
+        msg = project_functions.check_project_integrity(
+            pj,
+            "S",
+            project_path,
+            media_file_available=True,
+        )
+        if msg:
+            results = dialog.Results_dialog()
+            results.setWindowTitle("Project integrity results")
+            results.ptText.clear()
+            results.ptText.appendHtml(f"Some issues were found in the project<br><br>{msg}")
+            results.show()
+
     window.show()
     window.raise_()
-
-    # check project integrity
-    msg = project_functions.check_project_integrity(
-        pj,
-        "S",
-        project_path,
-        media_file_available=True,
-    )
-    if msg:
-        results = dialog.Results_dialog()
-        results.setWindowTitle("Project integrity results")
-        results.ptText.clear()
-        results.ptText.appendHtml(f"Some issues were found in the project<br><br>{msg}")
-        results.show()
 
     if observation_to_open and "error" not in pj:
         r = observation_operations.load_observation(window, obs_id=observation_to_open, mode=cfg.OBS_START)

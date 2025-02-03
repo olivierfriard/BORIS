@@ -24,10 +24,11 @@ import sys
 import logging
 import functools
 from PySide6.QtWidgets import QLabel, QDockWidget, QWidget, QHBoxLayout, QVBoxLayout, QSlider, QSizePolicy, QStackedWidget, QToolButton
-from PySide6.QtCore import Signal, QEvent, Qt, QPoint
-from PySide6.QtGui import QIcon, QAction, QPixmap, QPainter, QPen, QColor
+from PySide6.QtCore import Signal, QEvent, Qt
+from PySide6.QtGui import QIcon, QAction
 
 from . import mpv2 as mpv
+import config as cfg
 
 """
 try:
@@ -110,12 +111,15 @@ class DW_player(QDockWidget):
 
         self.videoframe = QWidget(self)
 
-        self.player = mpv.MPV(
-            wid=str(int(self.videoframe.winId())),
-            vo="x11" if sys.platform.startswith("linux") else "",
-            log_handler=functools.partial(mpv_logger, self.id_),
-            loglevel="debug",
-        )
+        if sys.platform.startswith(cfg.MACOS_CODE):
+            self.player = None
+        else:
+            self.player = mpv.MPV(
+                wid=str(int(self.videoframe.winId())),
+                vo="x11" if sys.platform.startswith("linux") else "",
+                log_handler=functools.partial(mpv_logger, self.id_),
+                loglevel="debug",
+            )
 
         self.player.screenshot_format = "png"
         self.hlayout.addWidget(self.videoframe)

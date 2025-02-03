@@ -528,7 +528,7 @@ class Ui_prefDialog(object):
         self.cbCheckForNewVersion.setText(QCoreApplication.translate("prefDialog", u"Check for new version and news", None))
         self.lb_hwdec.setText(QCoreApplication.translate("prefDialog", u"MPV player hardware video decoding", None))
         self.lb_project_file_indent.setText(QCoreApplication.translate("prefDialog", u"Project file indentation type", None))
-        self.cb_check_integrity_at_opening.setText(QCoreApplication.translate("prefDialog", u"Check project integrity at opening", None))
+        self.cb_check_integrity_at_opening.setText(QCoreApplication.translate("prefDialog", u"Check project integrity when opening and saving project (recommended)", None))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab_project), QCoreApplication.translate("prefDialog", u"Project", None))
         self.label_4.setText(QCoreApplication.translate("prefDialog", u"Fast forward/backward value (seconds)", None))
         self.cb_adapt_fast_jump.setText(QCoreApplication.translate("prefDialog", u"Adapt the fast forward/backward jump to playback speed", None))

@@ -22,6 +22,10 @@ This file is part of BORIS.
 
 programName: str = "BORIS"
 
+MACOS_CODE = "linux"  # "darwin"
+MPV_SOCKET = "/tmp/mpvsocket"
+
+
 ETHOGRAM_REPOSITORY_URL = "https://www.boris.unito.it/static/ethograms"
 
 project_format_version: str = "7.0"
