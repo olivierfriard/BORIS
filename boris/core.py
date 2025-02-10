@@ -5807,6 +5807,7 @@ def main():
     # QApplication.setAttribute(Qt.AA_EnableHighDpiScaling)
 
     app = QApplication(sys.argv)
+    app.setStyle("Fusion")
 
     locale.setlocale(locale.LC_NUMERIC, "C")
 
