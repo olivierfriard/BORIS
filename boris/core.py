@@ -102,6 +102,7 @@ from . import subjects_pad
 from . import version
 from . import event_operations
 from . import cmd_arguments
+
 from . import core_qrc
 from .core_ui import Ui_MainWindow
 import exifread
@@ -4274,7 +4275,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         # alarm
         if self.beep_every:
-            if cumulative_time_pos % (self.beep_every) <= 1:
+            if cumulative_time_pos % (self.beep_every) <= 0.1:
                 self.beep("beep")
 
         # scan sampling
@@ -4825,7 +4826,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             sound_type (str): type of sound
         """
 
-        QSoundEffect.play(f":/{sound_type}")
+        logging.debug(f"sound: {sound_type}")
+
+        self.sound = QSoundEffect()
+        self.sound.setSource(f"qrc:{sound_type}")
+        self.sound.play()
 
     def is_playing(self) -> bool:
         """
