@@ -346,6 +346,40 @@ def coding_time(observations: dict, observations_list: list) -> Tuple[Optional[d
     return start_coding, end_coding, coding_duration
 
 
+def time_intervals_range(observations: dict, observations_list: list) -> Tuple[Optional[dec], Optional[dec]]:
+    """
+    returns earliest start interval and latest end interval
+
+    Args:
+        observations (dict): observations of project
+        observations_list (list): list of selected observations
+
+    Returns:
+        decimal.Decimal: time of earliest start interval
+        decimal.Decimal: time of latest end interval
+
+    """
+    start_interval_list = []
+    end_interval_list = []
+    for obs_id in observations_list:
+        observation = observations[obs_id]
+        offset = observation[cfg.TIME_OFFSET]
+        start_interval_list.append(dec(observation[cfg.OBSERVATION_TIME_INTERVAL][0]) + offset)
+        end_interval_list.append(dec(observation[cfg.OBSERVATION_TIME_INTERVAL][1]) + offset)
+
+    if not start_interval_list:
+        earliest_start_interval = None
+    else:
+        earliest_start_interval = min([x for x in start_interval_list])
+
+    if not end_interval_list:
+        latest_end_interval = None
+    else:
+        latest_end_interval = min([x for x in end_interval_list])
+
+    return earliest_start_interval, latest_end_interval
+
+
 def observation_total_length(observation: dict) -> dec:
     """
     Observation media duration (if any)

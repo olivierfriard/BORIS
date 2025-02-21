@@ -59,6 +59,7 @@ class Param_panel(QDialog, Ui_Dialog):
         self.rb_media_duration.clicked.connect(lambda: self.rb_time_interval_selection(cfg.TIME_FULL_OBS))
         self.rb_observed_events.clicked.connect(lambda: self.rb_time_interval_selection(cfg.TIME_EVENTS))
         self.rb_user_defined.clicked.connect(lambda: self.rb_time_interval_selection(cfg.TIME_ARBITRARY_INTERVAL))
+        self.rb_obs_interval.clicked.connect(lambda: self.rb_time_interval_selection(cfg.TIME_OBS_INTERVAL))
 
         self.cbIncludeModifiers.stateChanged.connect(self.cb_exclude_non_coded_modifiers_visibility)
 
@@ -87,6 +88,13 @@ class Param_panel(QDialog, Ui_Dialog):
         elif button == cfg.TIME_FULL_OBS and len(self.selectedObservations) == 1 and self.media_duration is not None:
             self.start_time.set_time(0)
             self.end_time.set_time(self.media_duration)
+            self.frm_time_interval.setEnabled(False)
+            self.frm_time_interval.setVisible(True)
+
+        elif button == cfg.TIME_OBS_INTERVAL and len(self.selectedObservations) == 1:
+            end_interval = self.end_interval if self.end_interval != 0 else self.media_duration
+            self.start_time.set_time(self.start_interval)
+            self.end_time.set_time(end_interval)
             self.frm_time_interval.setEnabled(False)
             self.frm_time_interval.setVisible(True)
 
