@@ -2264,6 +2264,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         """
         populate table view with events
         """
+        logging.debug("populate tv_events")
+
         model = self.tv_events.model()
         if model is not None:
             self.tv_events.setModel(None)
@@ -2273,7 +2275,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         mem_behav: dict = {}
         state_events_list = util.state_behavior_codes(self.pj[cfg.ETHOGRAM])
 
-        state = [""] * len(self.pj[cfg.OBSERVATIONS][obs_id][cfg.EVENTS])
+        state: list = [""] * len(self.pj[cfg.OBSERVATIONS][obs_id][cfg.EVENTS])
 
         for idx, row in enumerate(self.pj[cfg.OBSERVATIONS][obs_id][cfg.EVENTS]):
             code = row[cfg.PJ_OBS_FIELDS[self.playerType][cfg.BEHAVIOR_CODE]]
@@ -2339,16 +2341,15 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         logging.debug(f"begin load events from obs in tableView: {obs_id}")
 
-        # t1 = time.time()
+        # print(self.pj[cfg.OBSERVATIONS][obs_id][cfg.EVENTS])
+
         self.populate_tv_events(
             obs_id,
-            [s.capitalize() for s in cfg.TW_EVENTS_FIELDS[self.playerType]],
+            [s.capitalize() for s in cfg.TW_EVENTS_FIELDS[self.playerType]],  # header
             self.timeFormat,
             self.filtered_behaviors,
             self.filtered_subjects,
         )
-
-        # print("load table view:", time.time() - t1)
 
         return
 
@@ -3931,11 +3932,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             ethogram_idx = [x for x in self.pj[cfg.ETHOGRAM] if self.pj[cfg.ETHOGRAM][x][cfg.BEHAVIOR_CODE] == code][0]
 
             event = self.full_event(ethogram_idx)
-            # MEDIA / LIVE
-            """
-            if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE] in (cfg.MEDIA, cfg.LIVE):
-                time_ = self.getLaps()
-            """
 
             # IMAGES
             if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE] == cfg.IMAGES:
@@ -3947,11 +3943,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 event[cfg.FRAME_INDEX] = self.get_frame_index()
 
             time_, cumulative_time = self.get_obs_time()
-
-            """
-            print(time_)
-            print(cumulative_time)
-            """
 
             if self.pj[cfg.OBSERVATIONS][self.observationId].get(cfg.MEDIA_CREATION_DATE_AS_OFFSET, False):
                 write_event.write_event(self, event, time_)
@@ -4795,7 +4786,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                         flag_player_playing = True
                         self.pause_video()
 
-            self.codingMapWindow = modifiers_coding_map.ModifiersCodingMapWindowClass(
+            self.codingMapWindow = modifiers_coding_map.ModifiersCodingMapWindow(
                 self.pj[cfg.CODING_MAP][self.pj[cfg.ETHOGRAM][behavior_idx]["coding map"]]
             )
 
@@ -4872,7 +4863,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
     def keyPressEvent(self, event) -> None:
         """
-        http://qt-project.org/doc/qt-5.0/qtcore/qt.html#Key-enum
         https://github.com/pyqt/python-qt5/blob/master/PySide6/qml/builtins.qmltypes
 
         ESC: 16777216
@@ -5181,8 +5171,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     write_event.write_event(self, event, time_)
                 else:
                     write_event.write_event(self, event, memLaps)
-
-                # write_event.write_event(self, event, memLaps)
 
             elif subject_idx is not None:
                 self.update_subject(self.pj[cfg.SUBJECTS][subject_idx][cfg.SUBJECT_NAME])

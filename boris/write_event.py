@@ -272,8 +272,6 @@ def write_event(self, event: dict, mem_time: dec) -> int:
                     # check if editing (original_modifiers key)
                     currentModifiers = event.get("original_modifiers", "")
 
-                    # print(f"{event=}")
-
                     modifiers_selector = select_modifiers.ModifiersList(
                         event[cfg.BEHAVIOR_CODE], eval(str(event[cfg.MODIFIERS])), currentModifiers
                     )
@@ -350,8 +348,6 @@ def write_event(self, event: dict, mem_time: dec) -> int:
                 if ev[cfg.EVENT_SUBJECT_FIELD_IDX] == self.currentSubject:
                     if ev[cfg.EVENT_BEHAVIOR_FIELD_IDX] == cs:
                         cm[cs] = ev[cfg.EVENT_MODIFIER_FIELD_IDX]
-
-        # print(f"{cm=}")
 
         if flag_ask_at_stop:
             # set modifier to START behavior

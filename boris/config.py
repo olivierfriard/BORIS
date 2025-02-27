@@ -254,13 +254,16 @@ MEDIA_FILE_PATH_IDX = 2
 HAS_AUDIO_IDX = 6
 
 STATE_EVENT = "State event"
+STATE_EVENT_WITH_CODING_MAP = "State event with coding map"
+
 POINT_EVENT = "Point event"
+POINT_EVENT_WITH_CODING_MAP = "Point event with coding map"
 
 BEHAVIOR_TYPES = [
-    "Point event",
-    "State event",
-    "Point event with coding map",
-    "State event with coding map",
+    POINT_EVENT,
+    STATE_EVENT,
+    POINT_EVENT_WITH_CODING_MAP,
+    STATE_EVENT_WITH_CODING_MAP,
 ]
 
 DEFAULT_BEHAVIOR_TYPE = "Point event"

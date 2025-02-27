@@ -39,7 +39,7 @@ from PySide6.QtWidgets import (
 )
 
 
-class ModifiersCodingMapWindowClass(QDialog):
+class ModifiersCodingMapWindow(QDialog):
     class View(QGraphicsView):
         mousePress = Signal(QMouseEvent)
 
@@ -56,7 +56,7 @@ class ModifiersCodingMapWindowClass(QDialog):
             self.scene().update()
 
     def __init__(self, modifiers_coding_map):
-        super(ModifiersCodingMapWindowClass, self).__init__()
+        super(ModifiersCodingMapWindow, self).__init__()
 
         self.areasList = {}
         self.polygonsList2 = {}
