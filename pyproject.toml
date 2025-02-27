@@ -50,10 +50,6 @@ build-backend = "setuptools.build_meta"
 [tool.distutils.bdist_wheel]
 universal = true
 
-[tool.black]
-line-length = 140
-
-
 [tool.ruff]
 line-length = 140
 exclude = ["*_ui.py", "mpv*"]
