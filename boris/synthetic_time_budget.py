@@ -64,11 +64,15 @@ def synthetic_time_budget(self) -> None:
 
     start_coding, end_coding, _ = observation_operations.coding_time(self.pj[cfg.OBSERVATIONS], selected_observations)
 
+    start_interval, end_interval = observation_operations.time_intervals_range(self.pj[cfg.OBSERVATIONS], selected_observations)
+
     synth_tb_param = select_subj_behav.choose_obs_subj_behav_category(
         self,
         selected_observations,
         start_coding=start_coding,
         end_coding=end_coding,
+        start_interval=start_interval,
+        end_interval=end_interval,
         maxTime=max_media_duration_all_obs,
         show_exclude_non_coded_behaviors=False,
         by_category=False,
@@ -179,6 +183,8 @@ def synthetic_binned_time_budget(self) -> None:
 
     start_coding, end_coding, _ = observation_operations.coding_time(self.pj[cfg.OBSERVATIONS], selected_observations)
 
+    start_interval, end_interval = observation_operations.time_intervals_range(self.pj[cfg.OBSERVATIONS], selected_observations)
+
     # exit with message if events do not have timestamp
     if start_coding.is_nan():
         QMessageBox.critical(
@@ -195,6 +201,8 @@ def synthetic_binned_time_budget(self) -> None:
         selected_observations,
         start_coding=start_coding,
         end_coding=end_coding,
+        start_interval=start_interval,
+        end_interval=end_interval,
         maxTime=max_media_duration_all_obs,
         show_exclude_non_coded_behaviors=False,
         by_category=False,

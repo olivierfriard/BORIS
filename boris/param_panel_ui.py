@@ -175,6 +175,11 @@ class Ui_Dialog(object):
 
         self.horizontalLayout_5.addWidget(self.rb_user_defined)
 
+        self.rb_obs_interval = QRadioButton(self.frm_time)
+        self.rb_obs_interval.setObjectName(u"rb_obs_interval")
+
+        self.horizontalLayout_5.addWidget(self.rb_obs_interval)
+
         self.rb_media_duration = QRadioButton(self.frm_time)
         self.rb_media_duration.setObjectName(u"rb_media_duration")
         self.rb_media_duration.setCheckable(True)
@@ -288,6 +293,7 @@ class Ui_Dialog(object):
         self.lb_time_interval.setText(QCoreApplication.translate("Dialog", u"Time interval", None))
         self.rb_observed_events.setText(QCoreApplication.translate("Dialog", u"Observed events", None))
         self.rb_user_defined.setText(QCoreApplication.translate("Dialog", u"User defined", None))
+        self.rb_obs_interval.setText(QCoreApplication.translate("Dialog", u"Interval of observation", None))
         self.rb_media_duration.setText(QCoreApplication.translate("Dialog", u"Media file(s) duration", None))
         self.lbStartTime.setText(QCoreApplication.translate("Dialog", u"Start time", None))
         self.label_2.setText("")

@@ -232,6 +232,13 @@
            </widget>
           </item>
           <item>
+           <widget class="QRadioButton" name="rb_obs_interval">
+            <property name="text">
+             <string>Interval of observation</string>
+            </property>
+           </widget>
+          </item>
+          <item>
            <widget class="QRadioButton" name="rb_media_duration">
             <property name="text">
              <string>Media file(s) duration</string>
