@@ -429,11 +429,15 @@ def time_budget(self, mode: str, mode2: str = "list"):
 
     start_coding, end_coding, _ = observation_operations.coding_time(self.pj[cfg.OBSERVATIONS], selected_observations)
 
+    start_interval, end_interval = observation_operations.time_intervals_range(self.pj[cfg.OBSERVATIONS], selected_observations)
+
     parameters: dict = select_subj_behav.choose_obs_subj_behav_category(
         self,
         selected_observations,
         start_coding=start_coding,
         end_coding=end_coding,
+        start_interval=start_interval,
+        end_interval=end_interval,
         maxTime=max_media_duration_all_obs,
         by_category=(mode == "by_category"),
         n_observations=len(selected_observations),
@@ -496,6 +500,13 @@ def time_budget(self, mode: str, mode2: str = "list"):
                         max_time = float(obs_length)
                 except Exception:
                     max_time = float(obs_length)
+
+            if parameters[cfg.TIME_INTERVAL] == cfg.TIME_OBS_INTERVAL:
+                obs_interval = self.pj[cfg.OBSERVATIONS][obsId][cfg.OBSERVATION_TIME_INTERVAL]
+                offset = float(self.pj[cfg.OBSERVATIONS][obsId][cfg.TIME_OFFSET])
+                min_time = float(obs_interval[0]) + offset
+                # Use max media duration for max time if no interval is defined (=0)
+                max_time = float(obs_interval[1]) + offset if obs_interval[1] != 0 else float(obs_length)
 
             if parameters[cfg.TIME_INTERVAL] == cfg.TIME_EVENTS:  # events duration
                 try:

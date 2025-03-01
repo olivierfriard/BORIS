@@ -352,17 +352,22 @@ def event_filtering(self):
 
     max_media_duration_all_obs, _ = observation_operations.media_duration(self.pj[cfg.OBSERVATIONS], selected_observations)
 
+    start_interval, end_interval = observation_operations.time_intervals_range(self.pj[cfg.OBSERVATIONS], selected_observations)
+
     parameters = select_subj_behav.choose_obs_subj_behav_category(
         self,
         selected_observations,
         start_coding=start_coding,
         end_coding=end_coding,
+        start_interval=start_interval,
+        end_interval=end_interval,
         maxTime=max_media_duration_all_obs,
         show_include_modifiers=False,
         show_exclude_non_coded_behaviors=False,
         by_category=False,
         n_observations=len(selected_observations),
     )
+
     if parameters == {}:
         return
 

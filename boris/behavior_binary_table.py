@@ -79,6 +79,14 @@ def create_behavior_binary_table(pj: dict, selected_observations: list, paramete
                 max_obs_length, _ = observation_operations.observation_length(pj, [obs_id])
                 end_time = dec(max_obs_length)
 
+        if parameters_obs["time"] == cfg.TIME_OBS_INTERVAL:
+            obs_interval = pj[cfg.OBSERVATIONS][obs_id][cfg.OBSERVATION_TIME_INTERVAL]
+            offset = pj[cfg.OBSERVATIONS][obs_id][cfg.TIME_OFFSET]
+            start_time = dec(obs_interval[0]) + offset
+            # Use max observation length for end time if no interval is defined (=0)
+            max_obs_length, _ = observation_operations.observation_length(pj, [obs_id])
+            end_time = dec(obs_interval[1]) + offset if obs_interval[1] != 0 else dec(max_obs_length)
+
         if obs_id not in results_df:
             results_df[obs_id] = {}
 
@@ -201,11 +209,15 @@ def behavior_binary_table(self):
 
     start_coding, end_coding, _ = observation_operations.coding_time(self.pj[cfg.OBSERVATIONS], selected_observations)
 
+    start_interval, end_interval = observation_operations.time_intervals_range(self.pj[cfg.OBSERVATIONS], selected_observations)
+
     parameters = select_subj_behav.choose_obs_subj_behav_category(
         self,
         selected_observations,
         start_coding=start_coding,
         end_coding=end_coding,
+        start_interval=start_interval,
+        end_interval=end_interval,
         maxTime=max_media_duration_all_obs,
         show_include_modifiers=True,
         show_exclude_non_coded_behaviors=True,

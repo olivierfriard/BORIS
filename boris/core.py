@@ -2691,11 +2691,15 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 return
         start_coding, end_coding, _ = observation_operations.coding_time(self.pj[cfg.OBSERVATIONS], selected_observations)
 
+        start_interval, end_interval = observation_operations.time_intervals_range(self.pj[cfg.OBSERVATIONS], selected_observations)
+
         parameters = select_subj_behav.choose_obs_subj_behav_category(
             self,
             selected_observations,
             start_coding=start_coding,
             end_coding=end_coding,
+            start_interval=start_interval,
+            end_interval=end_interval,
             maxTime=max_obs_length,
             show_exclude_non_coded_behaviors=True,
             by_category=False,
@@ -2790,11 +2794,15 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         start_coding, end_coding, _ = observation_operations.coding_time(self.pj[cfg.OBSERVATIONS], selected_observations)
 
+        start_interval, end_interval = observation_operations.time_intervals_range(self.pj[cfg.OBSERVATIONS], selected_observations)
+
         parameters = select_subj_behav.choose_obs_subj_behav_category(
             self,
             selected_observations,
             start_coding=start_coding,
             end_coding=end_coding,
+            start_interval=start_interval,
+            end_interval=end_interval,
             maxTime=max_obs_length if len(selected_observations) > 1 else selectedObsTotalMediaLength,
             show_include_modifiers=False,
             show_exclude_non_coded_behaviors=True,
@@ -3711,6 +3719,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         start_coding, end_coding, _ = observation_operations.coding_time(self.pj[cfg.OBSERVATIONS], selected_observations)
 
+        start_interval, end_interval = observation_operations.time_intervals_range(self.pj[cfg.OBSERVATIONS], selected_observations)
+
         if start_coding.is_nan():
             QMessageBox.critical(
                 None,
@@ -3726,6 +3736,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             selected_observations,
             start_coding=start_coding,
             end_coding=end_coding,
+            start_interval=start_interval,
+            end_interval=end_interval,
             maxTime=max_media_duration_all_obs,
             show_include_modifiers=False,
             show_exclude_non_coded_behaviors=False,
@@ -5719,11 +5731,15 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         start_coding, end_coding, _ = observation_operations.coding_time(self.pj[cfg.OBSERVATIONS], selected_observations)
 
+        start_interval, end_interval = observation_operations.time_intervals_range(self.pj[cfg.OBSERVATIONS], selected_observations)
+
         parameters: dict = select_subj_behav.choose_obs_subj_behav_category(
             self,
             selected_observations,
             start_coding=start_coding,
             end_coding=end_coding,
+            start_interval=start_interval,
+            end_interval=end_interval,
             maxTime=max_media_duration_all_obs,
             by_category=False,
             n_observations=len(selected_observations),

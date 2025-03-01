@@ -91,12 +91,16 @@ class Param_panel(QDialog, Ui_Dialog):
             self.frm_time_interval.setEnabled(False)
             self.frm_time_interval.setVisible(True)
 
-        elif button == cfg.TIME_OBS_INTERVAL and len(self.selectedObservations) == 1:
-            end_interval = self.end_interval if self.end_interval != 0 else self.media_duration
-            self.start_time.set_time(self.start_interval)
-            self.end_time.set_time(end_interval)
-            self.frm_time_interval.setEnabled(False)
-            self.frm_time_interval.setVisible(True)
+        elif button == cfg.TIME_OBS_INTERVAL:
+            if not ((self.start_interval is None) or self.start_interval.is_nan()):
+                # Set start_time and end_time widgets values even if it is not shown with
+                # more than 1 observation as some analyses might use it (eg: advanced event filtering)
+                end_interval = self.end_interval if self.end_interval != 0 else self.media_duration
+                self.start_time.set_time(self.start_interval)
+                self.end_time.set_time(end_interval)
+                self.frm_time_interval.setEnabled(False)
+                if len(self.selectedObservations) == 1:
+                    self.frm_time_interval.setVisible(True)
 
         else:
             self.frm_time_interval.setVisible(False)

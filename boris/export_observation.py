@@ -310,6 +310,7 @@ def export_tabular_events(
     interval = parameters["time"]
 
     start_coding, end_coding, coding_duration = observation_operations.coding_time(pj[cfg.OBSERVATIONS], [obs_id])
+    start_interval, end_interval = observation_operations.time_intervals_range(pj[cfg.OBSERVATIONS], [obs_id])
 
     if interval == cfg.TIME_EVENTS:
         min_time = start_coding
@@ -329,6 +330,12 @@ def export_tabular_events(
     if interval == cfg.TIME_ARBITRARY_INTERVAL:
         min_time = parameters[cfg.START_TIME]
         max_time = parameters[cfg.END_TIME]
+
+    if interval == cfg.TIME_OBS_INTERVAL:
+        max_media_duration, _ = observation_operations.media_duration(pj[cfg.OBSERVATIONS], [obs_id])
+        min_time = start_interval
+        # Use max media duration for max time if no interval is defined (=0)
+        max_time = end_interval if end_interval != 0 else max_media_duration
 
     logging.debug(f"min_time: {min_time}  max_time: {max_time}")
 
@@ -647,6 +654,8 @@ def export_aggregated_events(pj: dict, parameters: dict, obsId: str, force_numbe
     data = tablib.Dataset()
 
     start_coding, end_coding, coding_duration = observation_operations.coding_time(pj[cfg.OBSERVATIONS], [obsId])
+    start_interval, end_interval = observation_operations.time_intervals_range(pj[cfg.OBSERVATIONS], [obsId])
+
     if start_coding is None and end_coding is None:  # no events
         return data, 0
 
@@ -667,6 +676,12 @@ def export_aggregated_events(pj: dict, parameters: dict, obsId: str, force_numbe
     if interval == cfg.TIME_ARBITRARY_INTERVAL:
         min_time = float(parameters[cfg.START_TIME])
         max_time = float(parameters[cfg.END_TIME])
+
+    if interval == cfg.TIME_OBS_INTERVAL:
+        max_media_duration, _ = observation_operations.media_duration(pj[cfg.OBSERVATIONS], [obsId])
+        min_time = float(start_interval)
+        # Use max media duration for max time if no interval is defined (=0)
+        max_time = float(end_interval) if end_interval != 0 else float(max_media_duration)
 
     logging.debug(f"min_time: {min_time}  max_time: {max_time}")
 
