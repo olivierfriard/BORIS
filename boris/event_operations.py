@@ -40,6 +40,7 @@ from .edit_event import DlgEditEvent, EditSelectedEvents
 
 from PySide6.QtWidgets import QMessageBox, QInputDialog, QLineEdit, QAbstractItemView, QApplication
 from PySide6.QtCore import QTime, Qt
+from PySide6.QtGui import QClipboard
 
 
 def add_event(self):
@@ -879,8 +880,8 @@ def copy_selected_events(self):
     print(f"{copied_events=}")
 
     cb = QApplication.clipboard()
-    cb.clear(mode=cb.Clipboard)
-    cb.setText("\n".join(copied_events), mode=cb.Clipboard)
+    cb.clear(mode=QClipboard.Mode.Clipboard)
+    cb.setText("\n".join(copied_events), mode=QClipboard.Mode.Clipboard)
 
     logging.debug("Selected events copied in clipboard")
 
