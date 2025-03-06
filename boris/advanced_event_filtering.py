@@ -235,7 +235,7 @@ class Advanced_event_filtering_dialog(QDialog):
         self.tw.clear()
 
         if flag_error or self.rb_details.isChecked():
-            self.lb_results.setText(f"Results ({len(self.out)} event{'s'*(len(self.out) > 1)})")
+            self.lb_results.setText(f"Results ({len(self.out)} event{'s' * (len(self.out) > 1)})")
 
             self.tw.setRowCount(len(self.out))
             self.tw.setColumnCount(len(self.details_header))  # obs_id, comment, start, stop, duration
@@ -261,7 +261,7 @@ class Advanced_event_filtering_dialog(QDialog):
                     ]
                 )
 
-            self.lb_results.setText(f"Results ({len(summary)} observation{'s'*(len(summary) > 1)})")
+            self.lb_results.setText(f"Results ({len(summary)} observation{'s' * (len(summary) > 1)})")
             self.tw.setRowCount(len(summary))
             self.tw.setColumnCount(len(self.summary_header))  # obs_id, mean, stdev
             self.tw.setHorizontalHeaderLabels(self.summary_header)
@@ -385,7 +385,7 @@ def event_filtering(self):
         cursor.execute("SELECT MIN(start), MAX(stop) FROM aggregated_events")
         min_time, max_time = cursor.fetchone()
 
-    if parameters[cfg.TIME_INTERVAL] == cfg.TIME_ARBITRARY_INTERVAL:
+    if parameters[cfg.TIME_INTERVAL] in (cfg.TIME_ARBITRARY_INTERVAL, cfg.TIME_OBS_INTERVAL):
         min_time = float(parameters[cfg.START_TIME])
         max_time = float(parameters[cfg.END_TIME])
 
@@ -448,6 +448,6 @@ def event_filtering(self):
 
     w = Advanced_event_filtering_dialog(events)
     w.lb_time_interval.setText(
-        ("Time interval: " f"{util.smart_time_format(min_time, self.timeFormat)} - " f"{util.smart_time_format(max_time, self.timeFormat)}")
+        (f"Time interval: {util.smart_time_format(min_time, self.timeFormat)} - {util.smart_time_format(max_time, self.timeFormat)}")
     )
     w.exec_()

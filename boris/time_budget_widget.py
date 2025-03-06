@@ -456,7 +456,7 @@ def time_budget(self, mode: str, mode2: str = "list"):
     if start_coding is not None and not start_coding.is_nan():
         cancel_pressed, parameters[cfg.EXCLUDED_BEHAVIORS] = self.filter_behaviors(
             title="Select behaviors to exclude from the total time",
-            text=("The duration of the selected behaviors will " "be subtracted from the total time"),
+            text=("The duration of the selected behaviors will be subtracted from the total time"),
             table="",
             behavior_type=[cfg.STATE_EVENT],
         )
@@ -575,7 +575,7 @@ def time_budget(self, mode: str, mode2: str = "list"):
                                 % 2
                             ):
                                 cursor.execute(
-                                    ("INSERT INTO events (observation, subject, code, type, modifiers, occurence) " "VALUES (?,?,?,?,?,?)"),
+                                    ("INSERT INTO events (observation, subject, code, type, modifiers, occurence) VALUES (?,?,?,?,?,?)"),
                                     (obsId, subj, behav, "STATE", modifier[0], max_time),
                                 )
                         try:
@@ -888,7 +888,7 @@ def time_budget(self, mode: str, mode2: str = "list"):
                                 % 2
                             ):
                                 cursor.execute(
-                                    ("INSERT INTO events (observation, subject, code, type, modifiers, occurence) " "VALUES (?,?,?,?,?,?)"),
+                                    ("INSERT INTO events (observation, subject, code, type, modifiers, occurence) VALUES (?,?,?,?,?,?)"),
                                     (obsId, subj, behav, "STATE", modifier[0], min_time),
                                 )
                             if (
@@ -904,7 +904,7 @@ def time_budget(self, mode: str, mode2: str = "list"):
                                 % 2
                             ):
                                 cursor.execute(
-                                    ("INSERT INTO events (observation, subject, code, type, modifiers, occurence) " "VALUES (?,?,?,?,?,?)"),
+                                    ("INSERT INTO events (observation, subject, code, type, modifiers, occurence) VALUES (?,?,?,?,?,?)"),
                                     (obsId, subj, behav, cfg.STATE, modifier[0], max_time),
                                 )
                         try:

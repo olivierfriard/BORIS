@@ -929,7 +929,7 @@ def time_budget_analysis(
             else:  # no modifiers
                 if cfg.POINT in project_functions.event_type(behavior, ethogram):
                     cursor.execute(
-                        ("SELECT occurence, observation FROM events " "WHERE subject = ? AND code = ? ORDER BY observation, occurence"),
+                        ("SELECT occurence, observation FROM events WHERE subject = ? AND code = ? ORDER BY observation, occurence"),
                         (subject, behavior),
                     )
 

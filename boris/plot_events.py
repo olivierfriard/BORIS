@@ -196,7 +196,7 @@ def create_behaviors_bar_plot(
             except Exception:
                 max_time = float(obs_length)
 
-        if param["time"] == cfg.TIME_ARBITRARY_INTERVAL:
+        if param["time"] in (cfg.TIME_ARBITRARY_INTERVAL, cfg.TIME_OBS_INTERVAL):
             min_time = float(start_time)
             max_time = float(end_time)
 
@@ -235,7 +235,7 @@ def create_behaviors_bar_plot(
             for behavior in distinct_behav:
                 # number of occurences
                 cursor.execute(
-                    ("SELECT COUNT(*) AS count FROM aggregated_events " "WHERE observation = ? AND subject = ? AND behavior = ?"),
+                    ("SELECT COUNT(*) AS count FROM aggregated_events WHERE observation = ? AND subject = ? AND behavior = ?"),
                     (
                         obs_id,
                         subject,
@@ -530,7 +530,7 @@ def create_events_plot(
 
                 # total duration
                 cursor.execute(
-                    ("SELECT start, stop FROM aggregated_events " "WHERE  subject = ? AND behavior = ? AND modifiers = ?"),
+                    ("SELECT start, stop FROM aggregated_events WHERE  subject = ? AND behavior = ? AND modifiers = ?"),
                     (
                         subject,
                         behavior,

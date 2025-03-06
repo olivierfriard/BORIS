@@ -148,7 +148,7 @@ def export_events_jwatcher(
         if fmf_file_path.exists():
             fmf_creation_answer = dialog.MessageDialog(
                 cfg.programName,
-                (f"The {fmf_file_path} file already exists.<br>" "What do you want to do?"),
+                (f"The {fmf_file_path} file already exists.<br>What do you want to do?"),
                 [cfg.OVERWRITE, "Skip file creation", cfg.CANCEL],
             )
 
@@ -190,7 +190,7 @@ def export_events_jwatcher(
         if faf_file_path.exists():
             faf_creation_answer = dialog.MessageDialog(
                 cfg.programName,
-                (f"The {faf_file_path} file already exists.<br>" "What do you want to do?"),
+                (f"The {faf_file_path} file already exists.<br>What do you want to do?"),
                 [cfg.OVERWRITE, "Skip file creation", cfg.CANCEL],
             )
             if faf_creation_answer == cfg.CANCEL:

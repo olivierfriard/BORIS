@@ -247,8 +247,7 @@ def choose_obs_subj_behav_category(
             )
             return {cfg.SELECTED_SUBJECTS: [], cfg.SELECTED_BEHAVIORS: []}
 
-    elif (paramPanelWindow.rb_obs_interval.isChecked() and 
-          not ((start_interval is None) or start_interval.is_nan())):
+    elif paramPanelWindow.rb_obs_interval.isChecked() and not ((start_interval is None) or start_interval.is_nan()):
         startTime = paramPanelWindow.start_time.get_time()
         endTime = paramPanelWindow.end_time.get_time()
 

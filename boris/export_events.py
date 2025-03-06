@@ -599,7 +599,7 @@ def export_aggregated_events(self):
         return
 
     if outputFormat == cfg.SDIS_EXT:  # SDIS format
-        out: str = "% SDIS file created by BORIS (www.boris.unito.it) " f"at {util.datetime_iso8601(dt.datetime.now())}\nTimed <seconds>;\n"
+        out: str = f"% SDIS file created by BORIS (www.boris.unito.it) at {util.datetime_iso8601(dt.datetime.now())}\nTimed <seconds>;\n"
         for obs_id in selected_observations:
             # observation id
             out += "\n<{}>\n".format(obs_id)
@@ -625,10 +625,7 @@ def export_aggregated_events(self):
                 fileName = f"{pl.Path(exportDir) / util.safeFileName(obs_id)}.{outputFormat}"
                 with open(fileName, "wb") as f:
                     f.write(str.encode(out))
-                out = (
-                    "% SDIS file created by BORIS (www.boris.unito.it) "
-                    f"at {util.datetime_iso8601(dt.datetime.now())}\nTimed <seconds>;\n"
-                )
+                out = f"% SDIS file created by BORIS (www.boris.unito.it) at {util.datetime_iso8601(dt.datetime.now())}\nTimed <seconds>;\n"
 
         if flag_group:
             with open(fileName, "wb") as f:
@@ -716,9 +713,7 @@ def export_events_as_textgrid(self) -> None:
         "        intervals: size = {intervalsSize}\n"
     )
 
-    interval_template = (
-        "        intervals [{count}]:\n" "            xmin = {xmin}\n" "            xmax = {xmax}\n" '            text = "{name}"\n'
-    )
+    interval_template = '        intervals [{count}]:\n            xmin = {xmin}\n            xmax = {xmax}\n            text = "{name}"\n'
 
     point_subject_header = (
         "    item [{subject_index}]:\n"
@@ -729,7 +724,7 @@ def export_events_as_textgrid(self) -> None:
         "        points: size = {intervalsSize}\n"
     )
 
-    point_template = "        points [{count}]:\n" "            number = {number}\n" '            mark = "{mark}"\n'
+    point_template = '        points [{count}]:\n            number = {number}\n            mark = "{mark}"\n'
 
     # widget for results
     self.results = dialog.Results_dialog()
@@ -960,10 +955,7 @@ def export_events_as_textgrid(self) -> None:
 
             # POINT events
             cursor.execute(
-                (
-                    "SELECT start, behavior FROM aggregated_events "
-                    "WHERE observation = ? AND subject = ? AND type = 'POINT' ORDER BY start"
-                ),
+                ("SELECT start, behavior FROM aggregated_events WHERE observation = ? AND subject = ? AND type = 'POINT' ORDER BY start"),
                 (obs_id, subject),
             )
 
