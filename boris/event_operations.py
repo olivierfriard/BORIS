@@ -40,6 +40,7 @@ from .edit_event import DlgEditEvent, EditSelectedEvents
 
 from PySide6.QtWidgets import QMessageBox, QInputDialog, QLineEdit, QAbstractItemView, QApplication
 from PySide6.QtCore import QTime, Qt
+from PySide6.QtGui import QClipboard
 
 
 def add_event(self):
@@ -219,9 +220,6 @@ def filter_events(self):
     parameters = select_subj_behav.choose_obs_subj_behav_category(
         self,
         selected_observations=[],  # empty selection of observations for selecting all subjects and behaviors
-        start_coding=dec("NaN"),
-        end_coding=dec("NaN"),
-        maxTime=None,
         show_include_modifiers=False,
         show_exclude_non_coded_behaviors=False,
         by_category=False,
@@ -879,8 +877,8 @@ def copy_selected_events(self):
     print(f"{copied_events=}")
 
     cb = QApplication.clipboard()
-    cb.clear(mode=cb.Clipboard)
-    cb.setText("\n".join(copied_events), mode=cb.Clipboard)
+    cb.clear(mode=QClipboard.Mode.Clipboard)
+    cb.setText("\n".join(copied_events), mode=QClipboard.Mode.Clipboard)
 
     logging.debug("Selected events copied in clipboard")
 
