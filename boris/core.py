@@ -52,7 +52,7 @@ from decimal import Decimal as dec
 from decimal import ROUND_DOWN
 import gzip
 from collections import deque
-
+import pandas as pd
 import matplotlib
 import zipfile
 import shutil
@@ -5816,19 +5816,27 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         logging.debug(f"{df.info()}")
         logging.debug(f"{df.head()}")
 
-        df_results, str_results = plugin_module.main(df, observations_list=selected_observations, parameters=parameters)
+        # df_results, str_results = plugin_module.main(df, observations_list=selected_observations, parameters=parameters)
 
-        self.view_dataframe = view_df.View_df(
-            self.sender().text(), f"{plugin_module.__version__} ({plugin_module.__version_date__})", df_results
-        )
-        self.view_dataframe.show()
+        plugin_results = plugin_module.main(df, observations_list=selected_observations, parameters=parameters)
+        # test if tuple: if not transform to tuple
+        if not isinstance(plugin_results, tuple):
+            plugin_results = tuple([plugin_results])
 
-        if str_results:
-            self.results = dialog.Results_dialog()
-            self.results.setWindowTitle(self.sender().text())
-            self.results.ptText.clear()
-            self.results.ptText.appendPlainText(str_results)
-            self.results.show()
+        self.plugin_visu: list = []
+        for result in plugin_results:
+            if isinstance(result, str):
+                self.plugin_visu.append(dialog.Results_dialog())
+                self.plugin_visu[-1].setWindowTitle(self.sender().text())
+                self.plugin_visu[-1].ptText.clear()
+                self.plugin_visu[-1].ptText.appendPlainText(result)
+
+            if isinstance(result, pd.DataFrame):
+                self.plugin_visu.append(
+                    view_df.View_df(self.sender().text(), f"{plugin_module.__version__} ({plugin_module.__version_date__})", result)
+                )
+
+            self.plugin_visu[-1].show()
 
 
 def main():

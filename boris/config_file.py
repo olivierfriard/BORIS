@@ -36,19 +36,19 @@ def read(self):
     read config file
     """
 
-    ini_file_path = pl.Path.home() / pl.Path(".boris")
+    ini_fil_p_pe_p_path = pl.Path.home() / pl.Path(".boris")
 
-    logging.debug(f"read config file: {ini_file_path}")
+    logging.debug(f"read config file: {ini_fil_p_pe_p_path}")
 
-    if ini_file_path.is_file():
-        settings = QSettings(str(ini_file_path), QSettings.IniFormat)
+    if ini_fil_p_pe_p_path.is_file():
+        settings = QSettings(str(ini_fil_p_pe_p_path), QSettings.IniFormat)
 
         try:
             self.config_param = settings.value("config")
         except Exception:
-            self.config_param = None
+            self.config_param = {}
 
-        if self.config_param is None:
+        if self.config_param == {}:
             self.config_param = cfg.INIT_PARAM
 
             # for back compatibility

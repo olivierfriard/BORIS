@@ -17,10 +17,9 @@ def run(df: pd.DataFrame):
     Calculate the number of occurrences of behaviors by subject.
     """
 
-    string_results: str = ""
     df_results: pd.DataFrame = df.groupby(["Subject", "Behavior"])["Behavior"].count().reset_index(name="number of occurences")
 
-    return df_results, string_results
+    return df_results
 
 
 def main(df: pd.DataFrame, observations_list: list = [], parameters: dict = {}) -> pd.DataFrame:
