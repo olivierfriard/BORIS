@@ -60,7 +60,7 @@ import shutil
 matplotlib.use("QtAgg")
 
 import PySide6
-from PySide6.QtCore import Qt, QPoint, Signal, QEvent, QDateTime, QUrl, QAbstractTableModel, qVersion, QElapsedTimer
+from PySide6.QtCore import Qt, QPoint, Signal, QEvent, QDateTime, QUrl, QAbstractTableModel, qVersion, QElapsedTimer, QSettings
 from PySide6.QtGui import QIcon, QPixmap, QFont, QKeyEvent, QDesktopServices, QColor, QPainter, QPolygon, QAction
 from PySide6.QtMultimedia import QSoundEffect
 from PySide6.QtWidgets import (
@@ -1382,9 +1382,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         ask user for updating
         """
 
-        versionURL = "https://www.boris.unito.it/static/ver4.dat"
+        version_URL = "https://www.boris.unito.it/static/ver4.dat"
         try:
-            last_version = urllib.request.urlopen(versionURL).read().strip().decode("utf-8")
+            last_version = urllib.request.urlopen(version_URL).read().strip().decode("utf-8")
         except Exception:
             QMessageBox.warning(self, cfg.programName, "Can not check for updates...")
             return
@@ -3488,8 +3488,15 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         check project integrity
         to be used after opening or saving the current project
         """
+
+        logging.debug("check project integrity open save")
+
         if self.automaticBackup:
             return
+
+        logging.debug(
+            f"{self.config_param[cfg.CHECK_PROJECT_INTEGRITY] if cfg.CHECK_PROJECT_INTEGRITY in self.config_param else "Check project integrity config NOT FOUND"=}"
+        )
 
         if self.config_param.get(cfg.CHECK_PROJECT_INTEGRITY, True):
             msg = project_functions.check_project_integrity(
@@ -5864,18 +5871,31 @@ def main():
             window.load_project(project_path, project_changed, pj)
 
         # check project integrity
-        msg = project_functions.check_project_integrity(
-            pj,
-            "S",
-            project_path,
-            media_file_available=True,
-        )
-        if msg:
-            results = dialog.Results_dialog()
-            results.setWindowTitle("Project integrity results")
-            results.ptText.clear()
-            results.ptText.appendHtml(f"Some issues were found in the project<br><br>{msg}")
-            results.show()
+        # read config
+        config_param: dict = {}
+        ini_file_path = pl.Path.home() / pl.Path(".boris")
+        if ini_file_path.is_file():
+            settings = QSettings(str(ini_file_path), QSettings.IniFormat)
+            try:
+                config_param = settings.value("config")
+            except Exception:
+                config_param = {}
+        if config_param == {}:
+            config_param = cfg.INIT_PARAM
+
+        if config_param.get(cfg.CHECK_PROJECT_INTEGRITY, True):
+            msg = project_functions.check_project_integrity(
+                pj,
+                "S",
+                project_path,
+                media_file_available=True,
+            )
+            if msg:
+                results = dialog.Results_dialog()
+                results.setWindowTitle("Project integrity results")
+                results.ptText.clear()
+                results.ptText.appendHtml(f"Some issues were found in the project<br><br>{msg}")
+                results.show()
 
     window.show()
     window.raise_()
