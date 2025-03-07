@@ -5830,13 +5830,21 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 self.plugin_visu[-1].setWindowTitle(self.sender().text())
                 self.plugin_visu[-1].ptText.clear()
                 self.plugin_visu[-1].ptText.appendPlainText(result)
-
-            if isinstance(result, pd.DataFrame):
+                self.plugin_visu[-1].show()
+            elif isinstance(result, pd.DataFrame):
                 self.plugin_visu.append(
                     view_df.View_df(self.sender().text(), f"{plugin_module.__version__} ({plugin_module.__version_date__})", result)
                 )
-
-            self.plugin_visu[-1].show()
+                self.plugin_visu[-1].show()
+            else:
+                # result is not str nor dataframe
+                QMessageBox.critical(
+                    None,
+                    cfg.programName,
+                    f"Plugin returns an unknown object type: {type(result)}\n\nPlugins must return str and/or Pandas Dataframes.\nCheck the plugin code.",
+                    QMessageBox.Ok | QMessageBox.Default,
+                    QMessageBox.NoButton,
+                )
 
 
 def main():
