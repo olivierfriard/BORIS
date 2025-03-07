@@ -196,7 +196,7 @@ def create_behaviors_bar_plot(
             except Exception:
                 max_time = float(obs_length)
 
-        if param["time"] == cfg.TIME_ARBITRARY_INTERVAL:
+        if param["time"] in (cfg.TIME_ARBITRARY_INTERVAL, cfg.TIME_OBS_INTERVAL):
             min_time = float(start_time)
             max_time = float(end_time)
 
@@ -235,7 +235,7 @@ def create_behaviors_bar_plot(
             for behavior in distinct_behav:
                 # number of occurences
                 cursor.execute(
-                    ("SELECT COUNT(*) AS count FROM aggregated_events " "WHERE observation = ? AND subject = ? AND behavior = ?"),
+                    ("SELECT COUNT(*) AS count FROM aggregated_events WHERE observation = ? AND subject = ? AND behavior = ?"),
                     (
                         obs_id,
                         subject,
@@ -440,6 +440,13 @@ def create_events_plot(
             min_time = 0.0
             max_time = float(obs_length)
 
+        if interval == cfg.TIME_OBS_INTERVAL:
+            obs_interval = self.pj[cfg.OBSERVATIONS][obs_id][cfg.OBSERVATION_TIME_INTERVAL]
+            offset = float(self.pj[cfg.OBSERVATIONS][obs_id][cfg.TIME_OFFSET])
+            min_time = float(obs_interval[0]) + offset
+            # Use max media duration for max time if no interval is defined (=0)
+            max_time = float(obs_interval[1]) + offset if obs_interval[1] != 0 else float(obs_length)
+
         if interval == cfg.TIME_EVENTS:
             try:
                 min_time = float(self.pj[cfg.OBSERVATIONS][obs_id][cfg.EVENTS][0][0])  # first event
@@ -523,7 +530,7 @@ def create_events_plot(
 
                 # total duration
                 cursor.execute(
-                    ("SELECT start, stop FROM aggregated_events " "WHERE  subject = ? AND behavior = ? AND modifiers = ?"),
+                    ("SELECT start, stop FROM aggregated_events WHERE  subject = ? AND behavior = ? AND modifiers = ?"),
                     (
                         subject,
                         behavior,

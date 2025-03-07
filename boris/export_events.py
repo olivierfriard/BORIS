@@ -72,15 +72,19 @@ def export_events_as_behavioral_sequences(self, separated_subjects=False, timed=
     if len(selected_observations) == 1:
         max_media_duration_all_obs, _ = observation_operations.media_duration(self.pj[cfg.OBSERVATIONS], selected_observations)
         start_coding, end_coding, _ = observation_operations.coding_time(self.pj[cfg.OBSERVATIONS], selected_observations)
+        start_interval, end_interval = observation_operations.time_intervals_range(self.pj[cfg.OBSERVATIONS], selected_observations)
     else:
         max_media_duration_all_obs = None
         start_coding, end_coding = dec("NaN"), dec("NaN")
+        start_interval, end_interval = dec("NaN"), dec("NaN")
 
     parameters = select_subj_behav.choose_obs_subj_behav_category(
         self,
         selected_observations,
         start_coding=start_coding,
         end_coding=end_coding,
+        start_interval=start_interval,
+        end_interval=end_interval,
         maxTime=max_media_duration_all_obs,
         show_include_modifiers=True,
         show_exclude_non_coded_behaviors=False,
@@ -161,15 +165,19 @@ def export_tabular_events(self, mode: str = "tabular") -> None:
     if len(selected_observations) == 1:
         max_media_duration_all_obs, _ = observation_operations.media_duration(self.pj[cfg.OBSERVATIONS], selected_observations)
         start_coding, end_coding, _ = observation_operations.coding_time(self.pj[cfg.OBSERVATIONS], selected_observations)
+        start_interval, end_interval = observation_operations.time_intervals_range(self.pj[cfg.OBSERVATIONS], selected_observations)
     else:
         max_media_duration_all_obs = None
         start_coding, end_coding = dec("NaN"), dec("NaN")
+        start_interval, end_interval = dec("NaN"), dec("NaN")
 
     parameters = select_subj_behav.choose_obs_subj_behav_category(
         self,
         selected_observations,
         start_coding=start_coding,
         end_coding=end_coding,
+        start_interval=start_interval,
+        end_interval=end_interval,
         maxTime=max_media_duration_all_obs,
         show_include_modifiers=False,
         show_exclude_non_coded_behaviors=False,
@@ -361,15 +369,19 @@ def export_aggregated_events(self):
     if len(selected_observations) == 1:
         max_media_duration_all_obs, _ = observation_operations.media_duration(self.pj[cfg.OBSERVATIONS], selected_observations)
         start_coding, end_coding, _ = observation_operations.coding_time(self.pj[cfg.OBSERVATIONS], selected_observations)
+        start_interval, end_interval = observation_operations.time_intervals_range(self.pj[cfg.OBSERVATIONS], selected_observations)
     else:
         max_media_duration_all_obs = None
         start_coding, end_coding = dec("NaN"), dec("NaN")
+        start_interval, end_interval = dec("NaN"), dec("NaN")
 
     parameters = select_subj_behav.choose_obs_subj_behav_category(
         self,
         selected_observations,
         start_coding=start_coding,
         end_coding=end_coding,
+        start_interval=start_interval,
+        end_interval=end_interval,
         maxTime=max_media_duration_all_obs,
         show_include_modifiers=False,
         show_exclude_non_coded_behaviors=False,
@@ -587,7 +599,7 @@ def export_aggregated_events(self):
         return
 
     if outputFormat == cfg.SDIS_EXT:  # SDIS format
-        out: str = "% SDIS file created by BORIS (www.boris.unito.it) " f"at {util.datetime_iso8601(dt.datetime.now())}\nTimed <seconds>;\n"
+        out: str = f"% SDIS file created by BORIS (www.boris.unito.it) at {util.datetime_iso8601(dt.datetime.now())}\nTimed <seconds>;\n"
         for obs_id in selected_observations:
             # observation id
             out += "\n<{}>\n".format(obs_id)
@@ -613,10 +625,7 @@ def export_aggregated_events(self):
                 fileName = f"{pl.Path(exportDir) / util.safeFileName(obs_id)}.{outputFormat}"
                 with open(fileName, "wb") as f:
                     f.write(str.encode(out))
-                out = (
-                    "% SDIS file created by BORIS (www.boris.unito.it) "
-                    f"at {util.datetime_iso8601(dt.datetime.now())}\nTimed <seconds>;\n"
-                )
+                out = f"% SDIS file created by BORIS (www.boris.unito.it) at {util.datetime_iso8601(dt.datetime.now())}\nTimed <seconds>;\n"
 
         if flag_group:
             with open(fileName, "wb") as f:
@@ -665,11 +674,15 @@ def export_events_as_textgrid(self) -> None:
 
     start_coding, end_coding, _ = observation_operations.coding_time(self.pj[cfg.OBSERVATIONS], selected_observations)
 
+    start_interval, end_interval = observation_operations.time_intervals_range(self.pj[cfg.OBSERVATIONS], selected_observations)
+
     parameters = select_subj_behav.choose_obs_subj_behav_category(
         self,
         selected_observations,
         start_coding=start_coding,
         end_coding=end_coding,
+        start_interval=start_interval,
+        end_interval=end_interval,
         show_include_modifiers=False,
         show_exclude_non_coded_behaviors=False,
         maxTime=max_obs_length,
@@ -700,9 +713,7 @@ def export_events_as_textgrid(self) -> None:
         "        intervals: size = {intervalsSize}\n"
     )
 
-    interval_template = (
-        "        intervals [{count}]:\n" "            xmin = {xmin}\n" "            xmax = {xmax}\n" '            text = "{name}"\n'
-    )
+    interval_template = '        intervals [{count}]:\n            xmin = {xmin}\n            xmax = {xmax}\n            text = "{name}"\n'
 
     point_subject_header = (
         "    item [{subject_index}]:\n"
@@ -713,7 +724,7 @@ def export_events_as_textgrid(self) -> None:
         "        points: size = {intervalsSize}\n"
     )
 
-    point_template = "        points [{count}]:\n" "            number = {number}\n" '            mark = "{mark}"\n'
+    point_template = '        points [{count}]:\n            number = {number}\n            mark = "{mark}"\n'
 
     # widget for results
     self.results = dialog.Results_dialog()
@@ -772,6 +783,14 @@ def export_events_as_textgrid(self) -> None:
         if parameters["time"] == cfg.TIME_ARBITRARY_INTERVAL:
             min_time = float(parameters[cfg.START_TIME])
             max_time = float(parameters[cfg.END_TIME])
+
+        if parameters["time"] == cfg.TIME_OBS_INTERVAL:
+            max_media_duration, _ = observation_operations.media_duration(self.pj[cfg.OBSERVATIONS], [obs_id])
+            obs_interval = self.pj[cfg.OBSERVATIONS][obs_id][cfg.OBSERVATION_TIME_INTERVAL]
+            offset = float(self.pj[cfg.OBSERVATIONS][obs_id][cfg.TIME_OFFSET])
+            min_time = float(obs_interval[0]) + offset
+            # Use max media duration for max time if no interval is defined (=0)
+            max_time = float(obs_interval[1]) + offset if obs_interval[1] != 0 else float(max_media_duration)
 
         # delete events outside time interval
         cursor.execute(
@@ -936,10 +955,7 @@ def export_events_as_textgrid(self) -> None:
 
             # POINT events
             cursor.execute(
-                (
-                    "SELECT start, behavior FROM aggregated_events "
-                    "WHERE observation = ? AND subject = ? AND type = 'POINT' ORDER BY start"
-                ),
+                ("SELECT start, behavior FROM aggregated_events WHERE observation = ? AND subject = ? AND type = 'POINT' ORDER BY start"),
                 (obs_id, subject),
             )
 

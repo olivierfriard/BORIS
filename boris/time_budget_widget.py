@@ -429,11 +429,15 @@ def time_budget(self, mode: str, mode2: str = "list"):
 
     start_coding, end_coding, _ = observation_operations.coding_time(self.pj[cfg.OBSERVATIONS], selected_observations)
 
+    start_interval, end_interval = observation_operations.time_intervals_range(self.pj[cfg.OBSERVATIONS], selected_observations)
+
     parameters: dict = select_subj_behav.choose_obs_subj_behav_category(
         self,
         selected_observations,
         start_coding=start_coding,
         end_coding=end_coding,
+        start_interval=start_interval,
+        end_interval=end_interval,
         maxTime=max_media_duration_all_obs,
         by_category=(mode == "by_category"),
         n_observations=len(selected_observations),
@@ -452,7 +456,7 @@ def time_budget(self, mode: str, mode2: str = "list"):
     if start_coding is not None and not start_coding.is_nan():
         cancel_pressed, parameters[cfg.EXCLUDED_BEHAVIORS] = self.filter_behaviors(
             title="Select behaviors to exclude from the total time",
-            text=("The duration of the selected behaviors will " "be subtracted from the total time"),
+            text=("The duration of the selected behaviors will be subtracted from the total time"),
             table="",
             behavior_type=[cfg.STATE_EVENT],
         )
@@ -496,6 +500,13 @@ def time_budget(self, mode: str, mode2: str = "list"):
                         max_time = float(obs_length)
                 except Exception:
                     max_time = float(obs_length)
+
+            if parameters[cfg.TIME_INTERVAL] == cfg.TIME_OBS_INTERVAL:
+                obs_interval = self.pj[cfg.OBSERVATIONS][obsId][cfg.OBSERVATION_TIME_INTERVAL]
+                offset = float(self.pj[cfg.OBSERVATIONS][obsId][cfg.TIME_OFFSET])
+                min_time = float(obs_interval[0]) + offset
+                # Use max media duration for max time if no interval is defined (=0)
+                max_time = float(obs_interval[1]) + offset if obs_interval[1] != 0 else float(obs_length)
 
             if parameters[cfg.TIME_INTERVAL] == cfg.TIME_EVENTS:  # events duration
                 try:
@@ -564,7 +575,7 @@ def time_budget(self, mode: str, mode2: str = "list"):
                                 % 2
                             ):
                                 cursor.execute(
-                                    ("INSERT INTO events (observation, subject, code, type, modifiers, occurence) " "VALUES (?,?,?,?,?,?)"),
+                                    ("INSERT INTO events (observation, subject, code, type, modifiers, occurence) VALUES (?,?,?,?,?,?)"),
                                     (obsId, subj, behav, "STATE", modifier[0], max_time),
                                 )
                         try:
@@ -877,7 +888,7 @@ def time_budget(self, mode: str, mode2: str = "list"):
                                 % 2
                             ):
                                 cursor.execute(
-                                    ("INSERT INTO events (observation, subject, code, type, modifiers, occurence) " "VALUES (?,?,?,?,?,?)"),
+                                    ("INSERT INTO events (observation, subject, code, type, modifiers, occurence) VALUES (?,?,?,?,?,?)"),
                                     (obsId, subj, behav, "STATE", modifier[0], min_time),
                                 )
                             if (
@@ -893,7 +904,7 @@ def time_budget(self, mode: str, mode2: str = "list"):
                                 % 2
                             ):
                                 cursor.execute(
-                                    ("INSERT INTO events (observation, subject, code, type, modifiers, occurence) " "VALUES (?,?,?,?,?,?)"),
+                                    ("INSERT INTO events (observation, subject, code, type, modifiers, occurence) VALUES (?,?,?,?,?,?)"),
                                     (obsId, subj, behav, cfg.STATE, modifier[0], max_time),
                                 )
                         try:

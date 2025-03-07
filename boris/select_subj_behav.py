@@ -38,6 +38,8 @@ def choose_obs_subj_behav_category(
     selected_observations: list,
     start_coding: Optional[dec] = dec("NaN"),  #  Union[..., None]
     end_coding: Optional[dec] = dec("NaN"),
+    start_interval: Optional[dec] = dec("NaN"),
+    end_interval: Optional[dec] = dec("NaN"),
     maxTime: Optional[dec] = None,
     show_include_modifiers: bool = True,
     show_exclude_non_coded_behaviors: bool = True,
@@ -66,7 +68,7 @@ def choose_obs_subj_behav_category(
             "selected behaviors": selectedBehaviors,
             "include modifiers": True/False,
             "exclude behaviors": True/False,
-            "time": TIME_FULL_OBS / TIME_EVENTS / TIME_ARBITRARY_INTERVAL
+            "time": TIME_FULL_OBS / TIME_EVENTS / TIME_ARBITRARY_INTERVAL / TIME_OBS_INTERVAL
             "start time": startTime,
             "end time": endTime
             }
@@ -97,6 +99,8 @@ def choose_obs_subj_behav_category(
     paramPanelWindow.media_duration = maxTime
     paramPanelWindow.start_coding = start_coding
     paramPanelWindow.end_coding = end_coding
+    paramPanelWindow.start_interval = start_interval
+    paramPanelWindow.end_interval = end_interval
 
     if self.timeFormat == cfg.S:
         paramPanelWindow.start_time.rb_seconds.setChecked(True)
@@ -112,6 +116,7 @@ def choose_obs_subj_behav_category(
             paramPanelWindow.rb_observed_events.setEnabled(False)
             paramPanelWindow.frm_time_interval.setVisible(False)
             paramPanelWindow.rb_user_defined.setVisible(False)
+            paramPanelWindow.rb_obs_interval.setVisible(False)
             paramPanelWindow.rb_media_duration.setVisible(False)
         else:
             paramPanelWindow.frm_time_interval.setEnabled(False)
@@ -242,6 +247,10 @@ def choose_obs_subj_behav_category(
             )
             return {cfg.SELECTED_SUBJECTS: [], cfg.SELECTED_BEHAVIORS: []}
 
+    elif paramPanelWindow.rb_obs_interval.isChecked() and not ((start_interval is None) or start_interval.is_nan()):
+        startTime = paramPanelWindow.start_time.get_time()
+        endTime = paramPanelWindow.end_time.get_time()
+
     else:
         startTime = None
         endTime = None
@@ -255,6 +264,8 @@ def choose_obs_subj_behav_category(
         time_param = cfg.TIME_FULL_OBS
     if paramPanelWindow.rb_observed_events.isChecked():
         time_param = cfg.TIME_EVENTS
+    if paramPanelWindow.rb_obs_interval.isChecked():
+        time_param = cfg.TIME_OBS_INTERVAL
     if paramPanelWindow.rb_user_defined.isChecked():
         time_param = cfg.TIME_ARBITRARY_INTERVAL
 
