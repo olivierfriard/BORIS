@@ -5841,7 +5841,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 QMessageBox.critical(
                     None,
                     cfg.programName,
-                    f"Plugin returns an unknown object type: {type(result)}\n\nPlugins must return str and/or Pandas Dataframes.\nCheck the plugin code.",
+                    (
+                        f"Plugin returns an unknown object type: {type(result)}\n\n"
+                        "Plugins must return str and/or Pandas Dataframes.\n"
+                        "Check the plugin code."
+                    ),
                     QMessageBox.Ok | QMessageBox.Default,
                     QMessageBox.NoButton,
                 )
