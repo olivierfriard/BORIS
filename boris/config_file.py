@@ -36,19 +36,19 @@ def read(self):
     read config file
     """
 
-    iniFilePath = pl.Path.home() / pl.Path(".boris")
+    ini_fil_p_pe_p_path = pl.Path.home() / pl.Path(".boris")
 
-    logging.debug(f"read config file: {iniFilePath}")
+    logging.debug(f"read config file: {ini_fil_p_pe_p_path}")
 
-    if iniFilePath.is_file():
-        settings = QSettings(str(iniFilePath), QSettings.IniFormat)
+    if ini_fil_p_pe_p_path.is_file():
+        settings = QSettings(str(ini_fil_p_pe_p_path), QSettings.IniFormat)
 
         try:
             self.config_param = settings.value("config")
         except Exception:
-            self.config_param = None
+            self.config_param = {}
 
-        if self.config_param is None:
+        if self.config_param == {}:
             self.config_param = cfg.INIT_PARAM
 
             # for back compatibility
@@ -245,7 +245,7 @@ def read(self):
             if (
                 dialog.MessageDialog(
                     cfg.programName,
-                    ("The colors list contain colors that are very light.\n" "Do you want to reload the default colors list?"),
+                    ("The colors list contain colors that are very light.\nDo you want to reload the default colors list?"),
                     [cfg.NO, cfg.YES],
                 )
                 == cfg.YES
@@ -262,7 +262,7 @@ def read(self):
             if (
                 dialog.MessageDialog(
                     cfg.programName,
-                    ("The colors list contain colors that are very light.\n" "Do you want to reload the default colors list?"),
+                    ("The colors list contain colors that are very light.\nDo you want to reload the default colors list?"),
                     [cfg.NO, cfg.YES],
                 )
                 == cfg.YES

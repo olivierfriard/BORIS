@@ -381,7 +381,8 @@ def write_event(self, event: dict, mem_time: dec) -> int:
                 behavior_to_stop = [
                     self.pj[cfg.ETHOGRAM][x]
                     for x in self.pj[cfg.ETHOGRAM]
-                    if self.pj[cfg.ETHOGRAM][x][cfg.BEHAVIOR_CODE] == cs and self.pj[cfg.ETHOGRAM][x]["type"] == cfg.STATE_EVENT
+                    if self.pj[cfg.ETHOGRAM][x][cfg.BEHAVIOR_CODE] == cs
+                    and self.pj[cfg.ETHOGRAM][x]["type"] in (cfg.STATE_EVENT, cfg.STATE_EVENT_WITH_CODING_MAP)
                 ]
                 if behavior_to_stop:
                     behavior_to_stop = behavior_to_stop[0]

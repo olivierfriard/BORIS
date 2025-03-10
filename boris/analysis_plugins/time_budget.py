@@ -26,8 +26,6 @@ def run(df: pd.DataFrame):
     - % of total subject observation duration
     """
 
-    string_results: str = "test\ntest1"
-
     group_by = ["Subject", "Behavior"]
 
     dfs = [
@@ -60,7 +58,7 @@ def run(df: pd.DataFrame):
     for df in dfs[1:]:
         merged_df = pd.merge(merged_df, df, on=group_by)
 
-    return merged_df, string_results
+    return merged_df
 
 
 def main(df: pd.DataFrame, observations_list: list = [], parameters: dict = {}) -> pd.DataFrame:

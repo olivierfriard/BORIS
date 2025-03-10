@@ -52,7 +52,7 @@ from decimal import Decimal as dec
 from decimal import ROUND_DOWN
 import gzip
 from collections import deque
-
+import pandas as pd
 import matplotlib
 import zipfile
 import shutil
@@ -60,7 +60,7 @@ import shutil
 matplotlib.use("QtAgg")
 
 import PySide6
-from PySide6.QtCore import Qt, QPoint, Signal, QEvent, QDateTime, QUrl, QAbstractTableModel, qVersion, QElapsedTimer
+from PySide6.QtCore import Qt, QPoint, Signal, QEvent, QDateTime, QUrl, QAbstractTableModel, qVersion, QElapsedTimer, QSettings
 from PySide6.QtGui import QIcon, QPixmap, QFont, QKeyEvent, QDesktopServices, QColor, QPainter, QPolygon, QAction
 from PySide6.QtMultimedia import QSoundEffect
 from PySide6.QtWidgets import (
@@ -771,7 +771,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         title="Select the behaviors to show in the ethogram table",
         text="Behaviors to show in ethogram list",
         table=cfg.ETHOGRAM,
-        behavior_type=[cfg.STATE_EVENT, cfg.POINT_EVENT],
+        behavior_type=cfg.STATE_EVENT_TYPES,
     ) -> Tuple[bool, list]:
         """
         allow user to:
@@ -793,7 +793,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         if not self.pj[cfg.ETHOGRAM]:
             return True, []
 
-        behavior_type = [x.upper() for x in behavior_type]
+        # behavior_type = [x.upper() for x in behavior_type]
 
         paramPanelWindow = param_panel.Param_panel()
         paramPanelWindow.setWindowTitle(title)
@@ -1382,9 +1382,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         ask user for updating
         """
 
-        versionURL = "https://www.boris.unito.it/static/ver4.dat"
+        version_URL = "https://www.boris.unito.it/static/ver4.dat"
         try:
-            last_version = urllib.request.urlopen(versionURL).read().strip().decode("utf-8")
+            last_version = urllib.request.urlopen(version_URL).read().strip().decode("utf-8")
         except Exception:
             QMessageBox.warning(self, cfg.programName, "Can not check for updates...")
             return
@@ -3495,8 +3495,15 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         check project integrity
         to be used after opening or saving the current project
         """
+
+        logging.debug("check project integrity open save")
+
         if self.automaticBackup:
             return
+
+        logging.debug(
+            f"{self.config_param[cfg.CHECK_PROJECT_INTEGRITY] if cfg.CHECK_PROJECT_INTEGRITY in self.config_param else "Check project integrity config NOT FOUND"=}"
+        )
 
         if self.config_param.get(cfg.CHECK_PROJECT_INTEGRITY, True):
             msg = project_functions.check_project_integrity(
@@ -4807,7 +4814,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                         flag_player_playing = True
                         self.pause_video()
 
-            self.codingMapWindow = modifiers_coding_map.ModifiersCodingMapWindowClass(
+            self.codingMapWindow = modifiers_coding_map.ModifiersCodingMapWindow(
                 self.pj[cfg.CODING_MAP][self.pj[cfg.ETHOGRAM][behavior_idx]["coding map"]]
             )
 
@@ -5809,19 +5816,39 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         logging.debug(f"{df.info()}")
         logging.debug(f"{df.head()}")
 
-        df_results, str_results = plugin_module.main(df, observations_list=selected_observations, parameters=parameters)
+        # df_results, str_results = plugin_module.main(df, observations_list=selected_observations, parameters=parameters)
 
-        self.view_dataframe = view_df.View_df(
-            self.sender().text(), f"{plugin_module.__version__} ({plugin_module.__version_date__})", df_results
-        )
-        self.view_dataframe.show()
+        plugin_results = plugin_module.main(df, observations_list=selected_observations, parameters=parameters)
+        # test if tuple: if not transform to tuple
+        if not isinstance(plugin_results, tuple):
+            plugin_results = tuple([plugin_results])
 
-        if str_results:
-            self.results = dialog.Results_dialog()
-            self.results.setWindowTitle(self.sender().text())
-            self.results.ptText.clear()
-            self.results.ptText.appendPlainText(str_results)
-            self.results.show()
+        self.plugin_visu: list = []
+        for result in plugin_results:
+            if isinstance(result, str):
+                self.plugin_visu.append(dialog.Results_dialog())
+                self.plugin_visu[-1].setWindowTitle(self.sender().text())
+                self.plugin_visu[-1].ptText.clear()
+                self.plugin_visu[-1].ptText.appendPlainText(result)
+                self.plugin_visu[-1].show()
+            elif isinstance(result, pd.DataFrame):
+                self.plugin_visu.append(
+                    view_df.View_df(self.sender().text(), f"{plugin_module.__version__} ({plugin_module.__version_date__})", result)
+                )
+                self.plugin_visu[-1].show()
+            else:
+                # result is not str nor dataframe
+                QMessageBox.critical(
+                    None,
+                    cfg.programName,
+                    (
+                        f"Plugin returns an unknown object type: {type(result)}\n\n"
+                        "Plugins must return str and/or Pandas Dataframes.\n"
+                        "Check the plugin code."
+                    ),
+                    QMessageBox.Ok | QMessageBox.Default,
+                    QMessageBox.NoButton,
+                )
 
 
 def main():
@@ -5892,18 +5919,31 @@ def main():
             window.load_project(project_path, project_changed, pj)
 
         # check project integrity
-        msg = project_functions.check_project_integrity(
-            pj,
-            "S",
-            project_path,
-            media_file_available=True,
-        )
-        if msg:
-            results = dialog.Results_dialog()
-            results.setWindowTitle("Project integrity results")
-            results.ptText.clear()
-            results.ptText.appendHtml(f"Some issues were found in the project<br><br>{msg}")
-            results.show()
+        # read config
+        config_param: dict = {}
+        ini_file_path = pl.Path.home() / pl.Path(".boris")
+        if ini_file_path.is_file():
+            settings = QSettings(str(ini_file_path), QSettings.IniFormat)
+            try:
+                config_param = settings.value("config")
+            except Exception:
+                config_param = {}
+        if config_param == {}:
+            config_param = cfg.INIT_PARAM
+
+        if config_param.get(cfg.CHECK_PROJECT_INTEGRITY, True):
+            msg = project_functions.check_project_integrity(
+                pj,
+                "S",
+                project_path,
+                media_file_available=True,
+            )
+            if msg:
+                results = dialog.Results_dialog()
+                results.setWindowTitle("Project integrity results")
+                results.ptText.clear()
+                results.ptText.appendHtml(f"Some issues were found in the project<br><br>{msg}")
+                results.show()
 
     window.show()
     window.raise_()
