@@ -82,6 +82,8 @@ def get_cooccurence(self):
     if not_ok or not selected_observations:
         return
 
+    max_media_duration_all_obs, _ = observation_operations.media_duration(self.pj[cfg.OBSERVATIONS], selected_observations)
+
     start_coding, end_coding, _ = observation_operations.coding_time(self.pj[cfg.OBSERVATIONS], selected_observations)
     # exit with message if events do not have timestamp
     if start_coding.is_nan():
@@ -94,12 +96,18 @@ def get_cooccurence(self):
         )
         return
 
+    start_interval, end_interval = observation_operations.time_intervals_range(self.pj[cfg.OBSERVATIONS], selected_observations)
+
     while True:
         flag_ok: bool = True
         parameters = select_subj_behav.choose_obs_subj_behav_category(
             self,
             selected_observations,
-            window_title="Select the behaviors",
+            start_coding=start_coding,
+            end_coding=end_coding,
+            start_interval=start_interval,
+            end_interval=end_interval,
+            maxTime=max_media_duration_all_obs,
             n_observations=len(selected_observations),
             show_include_modifiers=False,
             show_exclude_non_coded_behaviors=True,

@@ -220,9 +220,6 @@ def filter_events(self):
     parameters = select_subj_behav.choose_obs_subj_behav_category(
         self,
         selected_observations=[],  # empty selection of observations for selecting all subjects and behaviors
-        start_coding=dec("NaN"),
-        end_coding=dec("NaN"),
-        maxTime=None,
         show_include_modifiers=False,
         show_exclude_non_coded_behaviors=False,
         by_category=False,
