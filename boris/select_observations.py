@@ -55,9 +55,7 @@ def select_observations2(self, mode: str, windows_title: str = "") -> Tuple[str,
             indep_var_header.append(pj[cfg.INDEPENDENT_VARIABLES][idx]["label"])
             column_type.append(pj[cfg.INDEPENDENT_VARIABLES][idx]["type"])
 
-    state_events_list = [
-        pj[cfg.ETHOGRAM][x][cfg.BEHAVIOR_CODE] for x in pj[cfg.ETHOGRAM] if cfg.STATE in pj[cfg.ETHOGRAM][x][cfg.TYPE].upper()
-    ]
+    state_events_list = util.state_behavior_codes(pj[cfg.ETHOGRAM])
 
     data: list = []
     not_paired: list = []

@@ -212,7 +212,7 @@ def events_snapshots(self):
                         if start < time_interval:
                             start = dec("0.000")
 
-                        if cfg.POINT in behavior_state:
+                        if behavior_state in cfg.POINT_EVENT_TYPES:
                             media_path = project_functions.full_path(
                                 self.pj[cfg.OBSERVATIONS][obs_id][cfg.FILE][nplayer][mediaFileIdx],
                                 self.projectFileName,
@@ -222,7 +222,7 @@ def events_snapshots(self):
                             if vframes == 0:
                                 vframes = 1
 
-                        if cfg.STATE in behavior_state:
+                        if behavior_state in cfg.STATE_EVENT_TYPES:
                             if idx % 2 == 0:
                                 # check if stop is on same media file
                                 if (
@@ -413,7 +413,7 @@ def extract_events(self):
                     rows = [{"occurence": util.float2decimal(r["occurence"])} for r in cursor.fetchall()]
 
                     behavior_state = project_functions.event_type(behavior, self.pj[cfg.ETHOGRAM])
-                    if cfg.STATE in behavior_state and len(rows) % 2:  # unpaired events
+                    if behavior_state in cfg.STATE_EVENT_TYPES and len(rows) % 2:  # unpaired events
                         continue
 
                     for idx, row in enumerate(rows):
@@ -472,7 +472,7 @@ def extract_events(self):
                             new_extension = ".wav"
                             codecs = "-vn"
 
-                        if cfg.POINT in behavior_state:
+                        if behavior_state in cfg.POINT_EVENT_TYPES:
                             globalStart = dec("0.000") if row["occurence"] < timeOffset else round(row["occurence"] - timeOffset, 3)
                             start = round(
                                 row["occurence"]
@@ -494,7 +494,7 @@ def extract_events(self):
                                 3,
                             )
 
-                        if cfg.STATE in behavior_state:
+                        if behavior_state in cfg.STATE_EVENT_TYPES:
                             if idx % 2 == 0:
                                 # check if stop is on same media file
                                 if (

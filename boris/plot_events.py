@@ -47,7 +47,7 @@ def default_value(ethogram, behavior, parameter):
     return value for duration in case of point event
     """
     default_value_ = 0
-    if project_functions.event_type(behavior, ethogram) == "POINT EVENT" and parameter in ["duration"]:
+    if project_functions.event_type(behavior, ethogram) in cfg.POINT_EVENT_TYPES and parameter in ["duration"]:
         default_value_ = "NA"
     return default_value_
 
@@ -246,7 +246,7 @@ def create_behaviors_bar_plot(
                     behaviors[subject][behavior]["number of occurences"] = 0 if row["count"] is None else row["count"]
 
                 # total duration
-                if cfg.STATE in project_functions.event_type(behavior, pj[cfg.ETHOGRAM]):
+                if project_functions.event_type(behavior, pj[cfg.ETHOGRAM]) in cfg.STATE_EVENT_TYPES:
                     cursor.execute(
                         (
                             "SELECT SUM(stop - start) AS duration FROM aggregated_events "
@@ -290,7 +290,7 @@ def create_behaviors_bar_plot(
                     except Exception:
                         colors.append("darkgray")
 
-                if cfg.STATE in project_functions.event_type(behavior, pj[cfg.ETHOGRAM]):
+                if project_functions.event_type(behavior, pj[cfg.ETHOGRAM]) in cfg.STATE_EVENT_TYPES:
                     durations.append(behaviors[subject][behavior]["duration"])
                     x_labels_duration.append(behavior)
 

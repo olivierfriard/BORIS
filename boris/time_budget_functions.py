@@ -35,14 +35,14 @@ from . import project_functions
 from . import observation_operations
 
 
-def default_value(ethogram: dict, behav: str, param):
+def default_value(ethogram: dict, behavior_code: str, param):
     """
     return value for duration in case of point event
     """
     default_value_ = 0.0
-    behav_type = project_functions.event_type(behav, ethogram)
+    behavior_type = project_functions.event_type(behavior_code, ethogram)
 
-    if behav_type == "POINT EVENT" and param in (
+    if behavior_type in cfg.POINT_EVENT_TYPES and param in (
         "duration",
         "duration mean",
         "duration stdev",
@@ -50,7 +50,7 @@ def default_value(ethogram: dict, behav: str, param):
     ):
         default_value_ = cfg.NA
 
-    if behav_type == "STATE EVENT" and param in (
+    if behavior_type in cfg.STATE_EVENT_TYPES and param in (
         "duration mean",
         "duration stdev",
     ):
@@ -331,7 +331,7 @@ def synthetic_time_budget_bin(pj: dict, selected_observations: list, parameters_
                     behaviors[subject][behav]["number"] = nocc
 
                     behav_type = project_functions.event_type(behav[0], pj[cfg.ETHOGRAM])
-                    if behav_type == "STATE EVENT":
+                    if behav_type in cfg.STATE_EVENT_TYPES:
                         dur = interval_len(interval_intersec)
                         behaviors[subject][behav]["duration"] = f"{dur:.3f}"
                         behaviors[subject][behav]["duration mean"] = f"{interval_mean(interval_intersec):.3f}"
@@ -343,7 +343,7 @@ def synthetic_time_budget_bin(pj: dict, selected_observations: list, parameters_
                             proportion = dur / ((time_bin_end - time_bin_start) - time_to_subtract)
                         behaviors[subject][behav]["proportion of time"] = f"{proportion:.3f}"
 
-                    if behav_type == "POINT EVENT":
+                    if behav_type in cfg.POINT_EVENT_TYPES:
                         behaviors[subject][behav]["duration"] = cfg.NA
                         behaviors[subject][behav]["duration mean"] = cfg.NA
                         behaviors[subject][behav]["duration stdev"] = cfg.NA
@@ -703,7 +703,7 @@ def time_budget_analysis(
 
                 if not distinct_modifiers:
                     if not parameters[cfg.EXCLUDE_BEHAVIORS]:
-                        if cfg.STATE in project_functions.event_type(behavior, ethogram):
+                        if project_functions.event_type(behavior, ethogram) in cfg.STATE_EVENT_TYPES:
                             # check if observation from pictures
                             if parameters["start time"] == dec("0.000") and parameters["end time"] == dec("0.000"):
                                 duration = cfg.NA
@@ -739,10 +739,8 @@ def time_budget_analysis(
                             )
                     continue
 
-                if cfg.POINT in project_functions.event_type(behavior, ethogram):
+                if project_functions.event_type(behavior, ethogram) in cfg.POINT_EVENT_TYPES:
                     for modifier in distinct_modifiers:
-                        print(f"{modifier=}")
-
                         cursor.execute(
                             (
                                 "SELECT occurence, observation FROM events "
@@ -813,7 +811,7 @@ def time_budget_analysis(
                             }
                         )
 
-                if cfg.STATE in project_functions.event_type(behavior, ethogram):
+                if project_functions.event_type(behavior, ethogram) in cfg.STATE_EVENT_TYPES:
                     for modifier in distinct_modifiers:
                         cursor.execute(
                             (
@@ -927,7 +925,7 @@ def time_budget_analysis(
                             )
 
             else:  # no modifiers
-                if cfg.POINT in project_functions.event_type(behavior, ethogram):
+                if project_functions.event_type(behavior, ethogram) in cfg.POINT_EVENT_TYPES:
                     cursor.execute(
                         ("SELECT occurence, observation FROM events WHERE subject = ? AND code = ? ORDER BY observation, occurence"),
                         (subject, behavior),
@@ -992,7 +990,7 @@ def time_budget_analysis(
                         }
                     )
 
-                if cfg.STATE in project_functions.event_type(behavior, ethogram):
+                if project_functions.event_type(behavior, ethogram) in cfg.STATE_EVENT_TYPES:
                     cursor.execute(
                         ("SELECT occurence, observation FROM events WHERE subject = ? AND code = ? ORDER BY observation, occurence"),
                         (subject, behavior),
@@ -1123,7 +1121,7 @@ def time_budget_analysis(
                 if category not in categories[subject]:
                     categories[subject][category] = {"duration": 0, "number": 0}
 
-                if cfg.STATE in project_functions.event_type(behav["behavior"], ethogram):
+                if project_functions.event_type(behav["behavior"], ethogram) in cfg.STATE_EVENT_TYPES:
                     if behav["duration"] not in ("-", cfg.NA) and categories[subject][category]["duration"] not in (
                         "-",
                         cfg.NA,

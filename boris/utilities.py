@@ -522,7 +522,7 @@ def behav_category_user_color(behavioral_categories: dict, name: str) -> Union[s
 
 def state_behavior_codes(ethogram: dict) -> list:
     """
-    behavior codes defined as STATE event
+    returns a list of behavior codes defined as STATE event
 
     Args:
         ethogram (dict): ethogram dictionary
@@ -531,12 +531,12 @@ def state_behavior_codes(ethogram: dict) -> list:
         list: list of behavior codes defined as STATE event
 
     """
-    return [ethogram[x][cfg.BEHAVIOR_CODE] for x in ethogram if ethogram[x][cfg.TYPE] in (cfg.STATE_EVENT, cfg.STATE_EVENT_WITH_CODING_MAP)]
+    return [ethogram[x][cfg.BEHAVIOR_CODE] for x in ethogram if ethogram[x][cfg.TYPE] in cfg.STATE_EVENT_TYPES]
 
 
 def point_behavior_codes(ethogram: dict) -> list:
     """
-    behavior codes defined as POINT event
+    returns a list of behavior codes defined as POINT event
 
     Args:
         ethogram (dict): ethogram dictionary

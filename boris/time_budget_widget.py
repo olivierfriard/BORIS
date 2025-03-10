@@ -458,7 +458,7 @@ def time_budget(self, mode: str, mode2: str = "list"):
             title="Select behaviors to exclude from the total time",
             text=("The duration of the selected behaviors will be subtracted from the total time"),
             table="",
-            behavior_type=[cfg.STATE_EVENT],
+            behavior_type=cfg.STATE_EVENT_TYPES,
         )
         if cancel_pressed:
             return
@@ -527,7 +527,7 @@ def time_budget(self, mode: str, mode2: str = "list"):
                 for subj in parameters[cfg.SELECTED_SUBJECTS]:
                     for behav in parameters[cfg.SELECTED_BEHAVIORS]:
                         # if cfg.POINT in self.eventType(behav).upper():
-                        if cfg.POINT in project_functions.event_type(behav, self.pj[cfg.ETHOGRAM]):
+                        if project_functions.event_type(behav, self.pj[cfg.ETHOGRAM]) in cfg.POINT_EVENT_TYPES:
                             continue
 
                         # extract modifiers
@@ -864,7 +864,7 @@ def time_budget(self, mode: str, mode2: str = "list"):
                 # check intervals
                 for subj in parameters[cfg.SELECTED_SUBJECTS]:
                     for behav in parameters[cfg.SELECTED_BEHAVIORS]:
-                        if cfg.POINT in project_functions.event_type(behav, self.pj[cfg.ETHOGRAM]):
+                        if project_functions.event_type(behav, self.pj[cfg.ETHOGRAM]) in cfg.POINT_EVENT_TYPES:
                             continue
 
                         cursor.execute(

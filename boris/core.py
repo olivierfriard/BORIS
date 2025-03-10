@@ -771,7 +771,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         title="Select the behaviors to show in the ethogram table",
         text="Behaviors to show in ethogram list",
         table=cfg.ETHOGRAM,
-        behavior_type=[cfg.STATE_EVENT, cfg.POINT_EVENT],
+        behavior_type=cfg.STATE_EVENT_TYPES,
     ) -> Tuple[bool, list]:
         """
         allow user to:
@@ -793,7 +793,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         if not self.pj[cfg.ETHOGRAM]:
             return True, []
 
-        behavior_type = [x.upper() for x in behavior_type]
+        # behavior_type = [x.upper() for x in behavior_type]
 
         paramPanelWindow = param_panel.Param_panel()
         paramPanelWindow.setWindowTitle(title)

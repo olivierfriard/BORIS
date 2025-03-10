@@ -29,7 +29,7 @@ import tablib
 import pickle
 
 from PySide6.QtCore import Qt
-from PySide6.QtGui import QColor, QFont
+from PySide6.QtGui import QFont
 from PySide6.QtWidgets import QApplication, QFileDialog, QListWidgetItem, QMessageBox, QTableWidgetItem
 
 
@@ -223,7 +223,7 @@ def select_behaviors(
     paramPanelWindow.resize(800, 600)
     paramPanelWindow.setWindowTitle(title)
     paramPanelWindow.lbBehaviors.setText(text)
-    for w in [
+    for w in (
         paramPanelWindow.lwSubjects,
         paramPanelWindow.pbSelectAllSubjects,
         paramPanelWindow.pbUnselectAllSubjects,
@@ -233,7 +233,7 @@ def select_behaviors(
         paramPanelWindow.cbExcludeBehaviors,
         paramPanelWindow.frm_time,
         paramPanelWindow.frm_time_bin_size,
-    ]:
+    ):
         w.setVisible(False)
 
     if behavioral_categories:
@@ -318,7 +318,7 @@ def import_ethogram_from_dict(self, project: dict):
     if self.twBehaviors.rowCount():
         response = dialog.MessageDialog(
             cfg.programName,
-            ("Some behaviors are already configured. " "Do you want to append behaviors or replace them?"),
+            ("Some behaviors are already configured. Do you want to append behaviors or replace them?"),
             [cfg.APPEND, cfg.REPLACE, cfg.CANCEL],
         )
         if response == cfg.REPLACE:
@@ -473,7 +473,7 @@ def import_behaviors_from_project(self):
     import ethogram from a BORIS project file
     """
     file_name, _ = QFileDialog.getOpenFileName(
-        self, "Import behaviors from BORIS project file", "", ("Project files (*.boris *.boris.gz);;" "All files (*)")
+        self, "Import behaviors from BORIS project file", "", ("Project files (*.boris *.boris.gz);;All files (*)")
     )
     if not file_name:
         return
@@ -887,7 +887,7 @@ def import_subjects_from_project(self):
     """
 
     file_name, _ = QFileDialog().getOpenFileName(
-        self, "Import subjects from project file", "", ("Project files (*.boris *.boris.gz);;" "All files (*)")
+        self, "Import subjects from project file", "", ("Project files (*.boris *.boris.gz);;All files (*)")
     )
     if not file_name:
         return
@@ -907,7 +907,7 @@ def import_subjects_from_project(self):
     if self.twSubjects.rowCount():
         response = dialog.MessageDialog(
             cfg.programName,
-            ("There are subjects already configured. " "Do you want to append subjects or replace them?"),
+            ("There are subjects already configured. Do you want to append subjects or replace them?"),
             [cfg.APPEND, cfg.REPLACE, cfg.CANCEL],
         )
 
@@ -941,7 +941,7 @@ def import_subjects_from_text_file(self):
     if self.twSubjects.rowCount():
         response = dialog.MessageDialog(
             cfg.programName,
-            ("There are subjects already configured. " "Do you want to append subjects or replace them?"),
+            ("There are subjects already configured. Do you want to append subjects or replace them?"),
             [cfg.APPEND, cfg.REPLACE, cfg.CANCEL],
         )
 
@@ -1048,7 +1048,7 @@ def import_indep_variables_from_project(self):
         self,
         "Import independent variables from project file",
         "",
-        ("Project files (*.boris *.boris.gz);;" "All files (*)"),
+        ("Project files (*.boris *.boris.gz);;All files (*)"),
     )
     if not file_name:
         return

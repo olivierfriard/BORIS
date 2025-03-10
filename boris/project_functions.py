@@ -37,10 +37,11 @@ from PySide6.QtCore import Qt
 from . import config as cfg
 from . import db_functions
 from . import dialog
+from . import observation_operations
 from . import portion as I
+from . import project_functions
 from . import utilities as util
 from . import version
-from . import observation_operations
 
 
 def check_observation_exhaustivity(
@@ -583,9 +584,9 @@ def create_subtitles(pj: dict, selected_observations: list, parameters: dict, ex
             return "", ""
         else:
             return (
-                f"""<font color="{cfg.subtitlesColors[
-                        parameters[cfg.SELECTED_SUBJECTS].index(row['subject']) % len(cfg.subtitlesColors)
-                    ]}">""",
+                f"""<font color="{
+                    cfg.subtitlesColors[parameters[cfg.SELECTED_SUBJECTS].index(row["subject"]) % len(cfg.subtitlesColors)]
+                }">""",
                 "</font>",
             )
 
@@ -652,7 +653,7 @@ def create_subtitles(pj: dict, selected_observations: list, parameters: dict, ex
                     modifiers_str = f"\n{row['modifiers'].replace('|', ', ')}"
                 else:
                     modifiers_str = ""
-                out += ("{idx}\n" "{start} --> {stop}\n" "{col1}{subject}: {behavior}" "{modifiers}" "{col2}\n\n").format(
+                out += ("{idx}\n{start} --> {stop}\n{col1}{subject}: {behavior}{modifiers}{col2}\n\n").format(
                     idx=idx + 1,
                     start=util.seconds2time(row["start"]).replace(".", ","),
                     stop=util.seconds2time(row["stop"] if row["type"] == cfg.STATE else row["stop"] + cfg.POINT_EVENT_ST_DURATION).replace(
@@ -760,7 +761,7 @@ def create_subtitles(pj: dict, selected_observations: list, parameters: dict, ex
                         else:
                             modifiers_str = ""
 
-                        out += ("{idx}\n" "{start} --> {stop}\n" "{col1}{subject}: {behavior}" "{modifiers}" "{col2}\n\n").format(
+                        out += ("{idx}\n{start} --> {stop}\n{col1}{subject}: {behavior}{modifiers}{col2}\n\n").format(
                             idx=idx + 1,
                             start=util.seconds2time(row["start"] - init).replace(".", ","),
                             stop=util.seconds2time(
@@ -1531,12 +1532,12 @@ def event_type(code: str, ethogram: dict) -> str | None:
         code (str): behavior code
 
     Returns:
-        str: "STATE EVENT", "POINT EVENT" or None if code not found in ethogram
+        str: behavior type
     """
 
     for idx in ethogram:
         if ethogram[idx][cfg.BEHAVIOR_CODE] == code:
-            return ethogram[idx][cfg.TYPE].upper()
+            return ethogram[idx][cfg.TYPE]
     return None
 
 
@@ -1563,7 +1564,7 @@ def fix_unpaired_state_events(ethogram: dict, observation: dict, fix_at_time: de
         ]
 
         for behavior in sorted(set(behaviors)):
-            if (behavior in ethogram_behaviors) and (cfg.STATE in event_type(behavior, ethogram).upper()):
+            if (behavior in ethogram_behaviors) and (event_type(behavior, ethogram) in cfg.STATE_EVENT_TYPES):
                 lst, memTime = [], {}
                 for event in [
                     event
@@ -1620,8 +1621,9 @@ def fix_unpaired_state_events2(ethogram: dict, events: list, fix_at_time: dec) -
         behaviors: list = [event[cfg.EVENT_BEHAVIOR_FIELD_IDX] for event in events if event[cfg.EVENT_SUBJECT_FIELD_IDX] == subject]
 
         for behavior in sorted(set(behaviors)):
-            if (behavior in ethogram_behaviors) and (cfg.STATE in event_type(behavior, ethogram).upper()):
-                lst, memTime = [], {}
+            if (behavior in ethogram_behaviors) and (event_type(behavior, ethogram) in cfg.STATE_EVENT_TYPES):
+                lst: list = []
+                memTime: dict = {}
                 for event in [
                     event
                     for event in events
@@ -1883,7 +1885,15 @@ def project2dataframe(pj: dict, observations_list: list = []) -> pd.DataFrame:
         "Comment stop": "string",
     }
 
-    state_behaviors = [pj[cfg.ETHOGRAM][x][cfg.BEHAVIOR_CODE] for x in pj[cfg.ETHOGRAM] if pj[cfg.ETHOGRAM][x]["type"] == cfg.STATE_EVENT]
+    """
+    state_behaviors = [
+        pj[cfg.ETHOGRAM][x][cfg.BEHAVIOR_CODE]
+        for x in pj[cfg.ETHOGRAM]
+        if pj[cfg.ETHOGRAM][x]["type"] in (cfg.STATE_EVENT, cfg.STATE_EVENT_WITH_CODING_MAP)
+    ]
+    """
+
+    state_behaviors = project_functions.state_behavior_codes(pj[cfg.ETHOGRAM])
 
     for obs_id in pj[cfg.OBSERVATIONS]:
         if observations_list and obs_id not in observations_list:
