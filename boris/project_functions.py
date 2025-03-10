@@ -1893,7 +1893,7 @@ def project2dataframe(pj: dict, observations_list: list = []) -> pd.DataFrame:
     ]
     """
 
-    state_behaviors = project_functions.state_behavior_codes(pj[cfg.ETHOGRAM])
+    state_behaviors = util.state_behavior_codes(pj[cfg.ETHOGRAM])
 
     for obs_id in pj[cfg.OBSERVATIONS]:
         if observations_list and obs_id not in observations_list:
