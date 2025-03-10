@@ -60,7 +60,18 @@ import shutil
 matplotlib.use("QtAgg")
 
 import PySide6
-from PySide6.QtCore import Qt, QPoint, Signal, QEvent, QDateTime, QUrl, QAbstractTableModel, qVersion, QElapsedTimer, QSettings
+from PySide6.QtCore import (
+    Qt,
+    QPoint,
+    Signal,
+    QEvent,
+    QDateTime,
+    QUrl,
+    QAbstractTableModel,
+    qVersion,
+    QElapsedTimer,
+    QSettings,
+)
 from PySide6.QtGui import QIcon, QPixmap, QFont, QKeyEvent, QDesktopServices, QColor, QPainter, QPolygon, QAction
 from PySide6.QtMultimedia import QSoundEffect
 from PySide6.QtWidgets import (
@@ -229,6 +240,19 @@ class TableModel(QAbstractTableModel):
                         return self._data[row][event_idx]
 
 
+"""
+class ButtonEventFilter(QObject):
+    def eventFilter(self, obj, event):
+        print("event filter")
+        if isinstance(obj, QPushButton) and event.type() == QEvent.KeyPress:
+            print("keypress")
+            if event.key() in (Qt.Key_Enter, Qt.Key_Return, Qt.Key_Space):
+                print("enter sapce")
+                return False  # Block the event
+        return super().eventFilter(obj, event)
+"""
+
+
 class MainWindow(QMainWindow, Ui_MainWindow):
     """
     Main BORIS window
@@ -368,6 +392,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     def __init__(self, ffmpeg_bin, parent=None):
         super(MainWindow, self).__init__(parent)
         self.setupUi(self)
+
+        # disable trigger with RETURN or SPACE keys
+        """filter_obj = ButtonEventFilter()
+        self.pb_live_obs.installEventFilter(filter_obj)"""
+        self.pb_live_obs.setFocusPolicy(Qt.NoFocus)
 
         self.ffmpeg_bin = ffmpeg_bin
         # set icons
@@ -4951,6 +4980,19 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         flagPlayerPlaying = self.is_playing()
 
+        # play / pause with space bar
+        if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE] == cfg.LIVE:
+            if ek in (Qt.Key_Space, Qt.Key_Enter, Qt.Key_Return):
+                if self.liveObservationStarted:
+                    if (
+                        dialog.MessageDialog(cfg.programName, "Are you sure to stop the current live observation?", [cfg.YES, cfg.NO])
+                        == cfg.YES
+                    ):
+                        self.start_live_observation()
+                else:
+                    self.start_live_observation()
+                return
+
         if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE] == cfg.MEDIA:
             # speed down
             if ek == Qt.Key_End:
@@ -5556,7 +5598,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     def actionQuit_activated(self):
         self.close()
 
-    def play_video(self):
+    def play_video(self) -> bool | None:
         """
         play video
         check if first player ended
@@ -5565,32 +5607,34 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         if self.geometric_measurements_mode:
             return
 
-        if self.playerType == cfg.MEDIA:
-            # check if player 1 is ended
-            for i, dw in enumerate(self.dw_player):
-                if (
-                    str(i + 1) in self.pj[cfg.OBSERVATIONS][self.observationId][cfg.FILE]
-                    and self.pj[cfg.OBSERVATIONS][self.observationId][cfg.FILE][str(i + 1)]
-                ):
-                    dw.player.pause = False
+        if self.playerType != cfg.MEDIA:
+            return
 
-            self.lb_player_status.clear()
+        # check if player 1 is ended
+        for i, dw in enumerate(self.dw_player):
+            if (
+                str(i + 1) in self.pj[cfg.OBSERVATIONS][self.observationId][cfg.FILE]
+                and self.pj[cfg.OBSERVATIONS][self.observationId][cfg.FILE][str(i + 1)]
+            ):
+                dw.player.pause = False
 
-            # if self.pj[cfg.OBSERVATIONS][self.observationId].get(cfg.VISUALIZE_WAVEFORM, False) \
-            #    or self.pj[cfg.OBSERVATIONS][self.observationId].get(VISUALIZE_SPECTROGRAM, False):
+        self.lb_player_status.clear()
 
-            self.statusbar.showMessage("", 0)
+        # if self.pj[cfg.OBSERVATIONS][self.observationId].get(cfg.VISUALIZE_WAVEFORM, False) \
+        #    or self.pj[cfg.OBSERVATIONS][self.observationId].get(VISUALIZE_SPECTROGRAM, False):
 
-            self.plot_timer.start()
+        self.statusbar.showMessage("", 0)
 
-            # start all timer for plotting data
-            for data_timer in self.ext_data_timer_list:
-                data_timer.start()
+        self.plot_timer.start()
 
-            self.actionPlay.setIcon(QIcon(f":/pause_{self.theme_mode()}"))
-            self.actionPlay.setText("Pause")
+        # start all timer for plotting data
+        for data_timer in self.ext_data_timer_list:
+            data_timer.start()
 
-            return True
+        self.actionPlay.setIcon(QIcon(f":/pause_{self.theme_mode()}"))
+        self.actionPlay.setText("Pause")
+
+        return True
 
     def pause_video(self, msg: str = "Player paused"):
         """
@@ -5628,12 +5672,16 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         """
         button 'play' activated
         """
+        if not self.observationId:
+            return
 
-        if self.observationId and self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE] == cfg.MEDIA:
-            if not self.is_playing():
-                self.play_video()
-            else:
-                self.pause_video()
+        if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE] != cfg.MEDIA:
+            return
+
+        if not self.is_playing():
+            self.play_video()
+        else:
+            self.pause_video()
 
     def jumpBackward_activated(self):
         """

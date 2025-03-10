@@ -43,8 +43,9 @@ from PySide6.QtWidgets import (
     QSlider,
     QMainWindow,
     QDockWidget,
+    QPushButton,
 )
-from PySide6.QtCore import Qt, QDateTime, QTimer
+from PySide6.QtCore import Qt, QDateTime, QTimer, QObject, QEvent
 from PySide6.QtGui import QFont, QIcon, QTextCursor
 
 from PySide6 import QtTest
@@ -2224,6 +2225,7 @@ def initialize_new_live_observation(self):
 
     # button start enabled
     self.pb_live_obs.setEnabled(True)
+
     self.w_live.setVisible(True)
     self.w_obs_info.setVisible(True)
 
