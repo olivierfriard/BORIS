@@ -20,15 +20,16 @@ This file is part of BORIS.
 
 """
 
-import logging
-import sys
-import pathlib as pl
-import traceback
-import platform
-import datetime as dt
-import subprocess
 from decimal import Decimal as dec
 from typing import Union
+import datetime as dt
+import logging
+import math
+import pathlib as pl
+import platform
+import subprocess
+import sys
+import traceback
 
 from PySide6.QtCore import Qt, Signal, qVersion, QRect, QTime, QDateTime, QSize
 from PySide6.QtWidgets import (
@@ -408,6 +409,9 @@ class get_time_widget(QWidget):
         """
         set time on time widget
         """
+
+        if math.isnan(new_time):
+            return
 
         self.pb_sign.setText("-" if new_time < 0 else "+")
 

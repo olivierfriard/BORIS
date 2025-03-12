@@ -21,6 +21,7 @@ This file is part of BORIS.
 """
 
 from decimal import Decimal as dec
+import math
 
 from PySide6.QtWidgets import (
     QDialog,
@@ -67,14 +68,7 @@ class DlgEditEvent(QDialog, Ui_Form):
             for w in (self.lb_frame_idx, self.sb_frame_idx, self.cb_set_frame_idx_na):
                 w.setVisible(False)
 
-        if (observation_type in (cfg.LIVE, cfg.MEDIA)) or (observation_type == cfg.IMAGES and self.time_value != cfg.NA):
-            # self.time_widget = duration_widget.Duration_widget(self.time_value)
-            # if time_format == cfg.S:
-            #    self.time_widget.set_format_s()
-            # if time_format == cfg.HHMMSS:
-            #    self.time_widget.set_format_hhmmss()
-
-            # future time widget
+        if (observation_type in (cfg.LIVE, cfg.MEDIA)) or (observation_type == cfg.IMAGES and not math.isnan(self.time_value)):
             self.time_widget = dialog.get_time_widget(self.time_value)
 
             if time_format == cfg.S:
@@ -87,6 +81,7 @@ class DlgEditEvent(QDialog, Ui_Form):
             self.horizontalLayout_2.insertWidget(0, self.time_widget)
 
         if observation_type == cfg.IMAGES:
+            self.time_widget = dialog.get_time_widget(self.time_value)
             # hide frame index widgets
             for w in (self.lb_frame_idx, self.sb_frame_idx, self.cb_set_frame_idx_na, self.pb_set_to_current_time):
                 w.setVisible(False)

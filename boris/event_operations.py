@@ -78,10 +78,13 @@ def add_event(self):
     )
     editWindow.setWindowTitle("Add a new event")
 
-    sortedSubjects = [""] + sorted([self.pj[cfg.SUBJECTS][x][cfg.SUBJECT_NAME] for x in self.pj[cfg.SUBJECTS]])
+    sortedSubjects = [cfg.NO_FOCAL_SUBJECT] + sorted([self.pj[cfg.SUBJECTS][x][cfg.SUBJECT_NAME] for x in self.pj[cfg.SUBJECTS]])
+
+    print(f"{sortedSubjects=}")
 
     editWindow.cobSubject.addItems(sortedSubjects)
-    editWindow.cobSubject.setCurrentIndex(editWindow.cobSubject.findText(self.currentSubject, Qt.MatchFixedString))
+    if self.currentSubject:
+        editWindow.cobSubject.setCurrentIndex(editWindow.cobSubject.findText(self.currentSubject, Qt.MatchFixedString))
 
     sortedCodes = sorted([self.pj[cfg.ETHOGRAM][x][cfg.BEHAVIOR_CODE] for x in self.pj[cfg.ETHOGRAM]])
 
@@ -103,7 +106,9 @@ def add_event(self):
                 if self.pj[cfg.ETHOGRAM][idx][cfg.BEHAVIOR_CODE] == editWindow.cobCode.currentText():
                     event = self.full_event(idx)
 
-                    event[cfg.SUBJECT] = editWindow.cobSubject.currentText()
+                    event[cfg.SUBJECT] = (
+                        "" if editWindow.cobSubject.currentText() == cfg.NO_FOCAL_SUBJECT else editWindow.cobSubject.currentText()
+                    )
                     if editWindow.leComment.toPlainText():
                         event[cfg.COMMENT] = editWindow.leComment.toPlainText()
 
@@ -152,7 +157,9 @@ def add_event(self):
                 if self.pj[cfg.ETHOGRAM][idx][cfg.BEHAVIOR_CODE] == editWindow.cobCode.currentText():
                     event = self.full_event(idx)
 
-                    event[cfg.SUBJECT] = editWindow.cobSubject.currentText()
+                    event[cfg.SUBJECT] = (
+                        "" if editWindow.cobSubject.currentText() == cfg.NO_FOCAL_SUBJECT else editWindow.cobSubject.currentText()
+                    )
                     if editWindow.leComment.toPlainText():
                         event[cfg.COMMENT] = editWindow.leComment.toPlainText()
 
@@ -684,10 +691,9 @@ def edit_event(self):
                     if self.pj[cfg.ETHOGRAM][key][cfg.BEHAVIOR_CODE] == edit_window.cobCode.currentText():
                         event = self.full_event(key)
                         # subject
-                        if edit_window.cobSubject.currentText() == cfg.NO_FOCAL_SUBJECT:
-                            event[cfg.SUBJECT] = ""
-                        else:
-                            event[cfg.SUBJECT] = edit_window.cobSubject.currentText()
+                        event[cfg.SUBJECT] = (
+                            "" if edit_window.cobSubject.currentText() == cfg.NO_FOCAL_SUBJECT else edit_window.cobSubject.currentText()
+                        )
 
                         event[cfg.COMMENT] = edit_window.leComment.toPlainText()
 
@@ -746,7 +752,9 @@ def edit_event(self):
                         else:
                             event[cfg.TIME] = edit_window.time_widget.get_time()
 
-                        event[cfg.SUBJECT] = edit_window.cobSubject.currentText()
+                        event[cfg.SUBJECT] = (
+                            "" if edit_window.cobSubject.currentText() == cfg.NO_FOCAL_SUBJECT else edit_window.cobSubject.currentText()
+                        )
                         event[cfg.COMMENT] = edit_window.leComment.toPlainText()
                         event["row"] = pj_event_idx
                         event["original_modifiers"] = self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS][pj_event_idx][
