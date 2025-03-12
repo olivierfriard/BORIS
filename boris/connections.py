@@ -160,7 +160,9 @@ def connections(self):
     self.actionAll_transitions.triggered.connect(lambda: transitions.transitions_matrix(self, "frequency"))
     self.actionNumber_of_transitions.triggered.connect(lambda: transitions.transitions_matrix(self, "number"))
 
-    self.actionFrequencies_of_transitions_after_behaviors.triggered.connect(lambda: self.transitions_matrix("frequencies_after_behaviors"))
+    self.actionFrequencies_of_transitions_after_behaviors.triggered.connect(
+        lambda: transitions.transitions_matrix(self, "frequencies_after_behaviors")
+    )
 
     # menu playback
     self.actionJumpTo.triggered.connect(self.jump_to)
