@@ -98,6 +98,7 @@ def get_cooccurence(self):
 
     start_interval, end_interval = observation_operations.time_intervals_range(self.pj[cfg.OBSERVATIONS], selected_observations)
 
+    # loop on choose subjects /behaviors until parameters are OK
     while True:
         flag_ok: bool = True
         parameters = select_subj_behav.choose_obs_subj_behav_category(
@@ -113,7 +114,7 @@ def get_cooccurence(self):
             show_exclude_non_coded_behaviors=True,
         )
 
-        if parameters == {}:  # cancel button pressed
+        if not parameters:  # cancel button pressed
             return
 
         if not parameters[cfg.SELECTED_SUBJECTS]:

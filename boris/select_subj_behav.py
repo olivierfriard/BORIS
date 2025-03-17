@@ -123,6 +123,10 @@ def choose_obs_subj_behav_category(
             paramPanelWindow.start_time.set_time(start_coding)
             paramPanelWindow.end_time.set_time(end_coding)
 
+    # check observation time interval
+    if start_interval is None or start_interval.is_nan() or end_interval is None or end_interval.is_nan():
+        paramPanelWindow.rb_obs_interval.setEnabled(False)
+
     if selected_observations:
         observedSubjects = project_functions.extract_observed_subjects(self.pj, selected_observations)
     else:

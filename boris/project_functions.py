@@ -39,7 +39,6 @@ from . import db_functions
 from . import dialog
 from . import observation_operations
 from . import portion as I
-from . import project_functions
 from . import utilities as util
 from . import version
 
@@ -1806,9 +1805,11 @@ def project2dataframe(pj: dict, observations_list: list = []) -> pd.DataFrame:
 
     data = {
         "Observation id": [],
-        # "Observation date": [],
-        # "Description": [],
-        # "Observation type": [],
+        "Observation date": [],
+        "Description": [],
+        "Observation type": [],
+        "Observation interval start": [],
+        "Observation interval stop": [],
         # "Source": [],
         # "Time offset (s)": [],
         # "Coding duration": [],
@@ -1847,9 +1848,11 @@ def project2dataframe(pj: dict, observations_list: list = []) -> pd.DataFrame:
 
     type_ = {
         "Observation id": "string",
-        # "Observation date": "string",
-        # "Description": "string",
-        # "Observation type": "string",
+        "Observation date": "string",
+        "Description": "string",
+        "Observation type": "string",
+        "Observation interval start": "float64",
+        "Observation interval stop": "float64",
         # "Source": "string",
         # "Time offset (s)": "string",
         # "Coding duration": "float64",
@@ -1904,9 +1907,21 @@ def project2dataframe(pj: dict, observations_list: list = []) -> pd.DataFrame:
             if idx_event in stop_event_idx:
                 continue
             data["Observation id"].append(obs_id)
-            # data["Observation date"].append(pj["observations"][obs_id]["date"])
-            # data["Description"].append(pj["observations"][obs_id]["description"])
-            # data["Observation type"].append(pj["observations"][obs_id]["type"])
+            data["Observation date"].append(pj["observations"][obs_id]["date"])
+            data["Description"].append(" ".join(pj["observations"][obs_id]["description"].splitlines()))
+            data["Observation type"].append(pj["observations"][obs_id]["type"])
+
+            data["Observation interval start"].append(
+                pj["observations"][obs_id]["observation time interval"][0]
+                if pj["observations"][obs_id]["observation time interval"][0]
+                else None
+            )
+            data["Observation interval stop"].append(
+                pj["observations"][obs_id]["observation time interval"][1]
+                if pj["observations"][obs_id]["observation time interval"][1]
+                else None
+            )
+
             # data["Source"].append("")
             # data["Time offset (s)"].append(pj["observations"][obs_id]["time offset"])
             # data["Coding duration"].append("")
@@ -1932,7 +1947,7 @@ def project2dataframe(pj: dict, observations_list: list = []) -> pd.DataFrame:
                     data[modifier_set].append(np.nan)
 
             data["Behavior type"].append(cfg.STATE_EVENT if event[2] in state_behaviors else cfg.POINT_EVENT)
-            data["Start (s)"].append(event[0])
+            data["Start (s)"].append(float(event[0]))
             if event[2] in state_behaviors:
                 # search stop
                 # print(f"==> {idx_event=} {event[1:4]=}")
@@ -1941,8 +1956,8 @@ def project2dataframe(pj: dict, observations_list: list = []) -> pd.DataFrame:
                     if event2[1:4] == event[1:4]:
                         # print("found")
                         stop_event_idx.add(idx_event2)
-                        data["Stop (s)"].append(event2[0])
-                        data["Duration (s)"].append(event2[0] - event[0])
+                        data["Stop (s)"].append(float(event2[0]))
+                        data["Duration (s)"].append(float(event2[0] - event[0]))
                         data["Comment start"].append(event[4])
                         data["Comment stop"].append(event2[4])
                         break
@@ -1950,9 +1965,17 @@ def project2dataframe(pj: dict, observations_list: list = []) -> pd.DataFrame:
                     raise ("not paired")
 
             else:  # point
-                data["Stop (s)"].append(event[0])
+                data["Stop (s)"].append(float(event[0]))
                 data["Duration (s)"].append(np.nan)
                 data["Comment start"].append(event[4])
                 data["Comment stop"].append(event[4])
+
+    # Set the display option to show all rows and columns
+    pd.set_option("display.max_rows", None)
+    pd.set_option("display.max_columns", None)
+
+    pd.DataFrame(data).info()
+
+    print(pd.DataFrame(data))
 
     return pd.DataFrame(data)

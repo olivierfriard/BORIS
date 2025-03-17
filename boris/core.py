@@ -34,7 +34,6 @@ import json
 import logging
 import pathlib as pl
 import platform
-import importlib
 import re
 import PIL.Image
 import PIL.ImageEnhance
@@ -52,7 +51,6 @@ from decimal import Decimal as dec
 from decimal import ROUND_DOWN
 import gzip
 from collections import deque
-import pandas as pd
 import matplotlib
 import zipfile
 import shutil
@@ -129,7 +127,6 @@ from . import config_file
 from . import select_subj_behav
 from . import observation_operations
 from . import write_event
-from . import view_df
 
 
 # matplotlib.pyplot.switch_backend("Qt5Agg")
@@ -5762,6 +5759,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.extract_frame(self.dw_player[0])
 
     def obs_param(self):
+        """
+        allow user to select observations and then subjects and behaviors
+        """
         _, selected_observations = select_observations.select_observations2(self, mode=cfg.MULTIPLE, windows_title="")
 
         if not selected_observations:
@@ -5786,7 +5786,13 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         start_coding, end_coding, _ = observation_operations.coding_time(self.pj[cfg.OBSERVATIONS], selected_observations)
 
+        print(f"{start_coding=}")
+        print(f"{end_coding=}")
+
         start_interval, end_interval = observation_operations.time_intervals_range(self.pj[cfg.OBSERVATIONS], selected_observations)
+
+        print(f"{start_interval=}")
+        print(f"{end_interval=}")
 
         parameters: dict = select_subj_behav.choose_obs_subj_behav_category(
             self,
@@ -5803,100 +5809,14 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         if parameters == {}:
             return [], {}
 
+        print(f"{parameters=}")
+
         if not parameters[cfg.SELECTED_SUBJECTS] or not parameters[cfg.SELECTED_BEHAVIORS]:
             QMessageBox.warning(None, cfg.programName, "Select subject(s) and behavior(s) to analyze")
             return [], {}
 
         logging.debug(f"{parameters=}")
         return selected_observations, parameters
-
-    def run_plugin(self):
-        """
-        run plugin
-        """
-        if not self.project:
-            QMessageBox.warning(
-                self,
-                cfg.programName,
-                "No observations found. Open a project first",
-                QMessageBox.Ok | QMessageBox.Default,
-                QMessageBox.NoButton,
-            )
-            return
-
-        logging.debug(f"{self.config_param.get(cfg.ANALYSIS_PLUGINS, {})=}")
-
-        plugin_name = self.sender().text()
-        if plugin_name not in self.config_param.get(cfg.ANALYSIS_PLUGINS, {}):
-            QMessageBox.critical(self, cfg.programName, f"Plugin '{plugin_name}' not found")
-            return
-
-        plugin_path = self.config_param.get(cfg.ANALYSIS_PLUGINS, {})[plugin_name]
-
-        logging.debug(f"{plugin_path=}")
-
-        if not pl.Path(plugin_path).is_file():
-            QMessageBox.critical(self, cfg.programName, f"The plugin {plugin_path} was not found.")
-            return
-
-        logging.debug(f"run plugin from {plugin_path}")
-
-        module_name = pl.Path(plugin_path).stem
-
-        spec = importlib.util.spec_from_file_location(module_name, plugin_path)
-        plugin_module = importlib.util.module_from_spec(spec)
-
-        logging.debug(f"{plugin_module=}")
-
-        spec.loader.exec_module(plugin_module)
-
-        logging.info(
-            f"{plugin_module.__plugin_name__} loaded v.{getattr(plugin_module, '__version__')} v. {getattr(plugin_module, '__version_date__')}"
-        )
-
-        selected_observations, parameters = self.obs_param()
-        if not selected_observations:
-            return
-
-        df = project_functions.project2dataframe(self.pj, selected_observations)
-
-        logging.debug("dataframe info")
-        logging.debug(f"{df.info()}")
-        logging.debug(f"{df.head()}")
-
-        # df_results, str_results = plugin_module.main(df, observations_list=selected_observations, parameters=parameters)
-
-        plugin_results = plugin_module.main(df, observations_list=selected_observations, parameters=parameters)
-        # test if tuple: if not transform to tuple
-        if not isinstance(plugin_results, tuple):
-            plugin_results = tuple([plugin_results])
-
-        self.plugin_visu: list = []
-        for result in plugin_results:
-            if isinstance(result, str):
-                self.plugin_visu.append(dialog.Results_dialog())
-                self.plugin_visu[-1].setWindowTitle(self.sender().text())
-                self.plugin_visu[-1].ptText.clear()
-                self.plugin_visu[-1].ptText.appendPlainText(result)
-                self.plugin_visu[-1].show()
-            elif isinstance(result, pd.DataFrame):
-                self.plugin_visu.append(
-                    view_df.View_df(self.sender().text(), f"{plugin_module.__version__} ({plugin_module.__version_date__})", result)
-                )
-                self.plugin_visu[-1].show()
-            else:
-                # result is not str nor dataframe
-                QMessageBox.critical(
-                    None,
-                    cfg.programName,
-                    (
-                        f"Plugin returns an unknown object type: {type(result)}\n\n"
-                        "Plugins must return str and/or Pandas Dataframes.\n"
-                        "Check the plugin code."
-                    ),
-                    QMessageBox.Ok | QMessageBox.Default,
-                    QMessageBox.NoButton,
-                )
 
 
 def main():

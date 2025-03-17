@@ -43,9 +43,8 @@ from PySide6.QtWidgets import (
     QSlider,
     QMainWindow,
     QDockWidget,
-    QPushButton,
 )
-from PySide6.QtCore import Qt, QDateTime, QTimer, QObject, QEvent
+from PySide6.QtCore import Qt, QDateTime, QTimer
 from PySide6.QtGui import QFont, QIcon, QTextCursor
 
 from PySide6 import QtTest
@@ -365,8 +364,9 @@ def time_intervals_range(observations: dict, observations_list: list) -> Tuple[O
     for obs_id in observations_list:
         observation = observations[obs_id]
         offset = observation[cfg.TIME_OFFSET]
-        start_interval_list.append(dec(observation[cfg.OBSERVATION_TIME_INTERVAL][0]) + offset)
-        end_interval_list.append(dec(observation[cfg.OBSERVATION_TIME_INTERVAL][1]) + offset)
+        if dec(observation[cfg.OBSERVATION_TIME_INTERVAL][0]) + offset and dec(observation[cfg.OBSERVATION_TIME_INTERVAL][1]) + offset:
+            start_interval_list.append(dec(observation[cfg.OBSERVATION_TIME_INTERVAL][0]) + offset)
+            end_interval_list.append(dec(observation[cfg.OBSERVATION_TIME_INTERVAL][1]) + offset)
 
     if not start_interval_list:
         earliest_start_interval = None
@@ -376,7 +376,7 @@ def time_intervals_range(observations: dict, observations_list: list) -> Tuple[O
     if not end_interval_list:
         latest_end_interval = None
     else:
-        latest_end_interval = min([x for x in end_interval_list])
+        latest_end_interval = max([x for x in end_interval_list])
 
     return earliest_start_interval, latest_end_interval
 
