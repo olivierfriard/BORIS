@@ -1888,14 +1888,6 @@ def project2dataframe(pj: dict, observations_list: list = []) -> pd.DataFrame:
         "Comment stop": "string",
     }
 
-    """
-    state_behaviors = [
-        pj[cfg.ETHOGRAM][x][cfg.BEHAVIOR_CODE]
-        for x in pj[cfg.ETHOGRAM]
-        if pj[cfg.ETHOGRAM][x]["type"] in (cfg.STATE_EVENT, cfg.STATE_EVENT_WITH_CODING_MAP)
-    ]
-    """
-
     state_behaviors = util.state_behavior_codes(pj[cfg.ETHOGRAM])
 
     for obs_id in pj[cfg.OBSERVATIONS]:

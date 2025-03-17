@@ -18,7 +18,7 @@ def run(df: pd.DataFrame):
     Calculate the following values:
 
     - Total number of occurences of behavior
-    - Total duration of behavior (in seconds)
+    - Total duration of behavior (in seconds)  (pandas.DataFrame.sum() ignore NaN values when computing the sum. Use min_count=1)
     - Duration mean of behavior (in seconds)
     - Standard deviation of behavior duration (in seconds)
     - Inter-event intervals mean (in seconds)
@@ -26,11 +26,15 @@ def run(df: pd.DataFrame):
     - % of total subject observation duration
     """
 
+    print("running time budget plugin")
+
+    print(df)
+
     group_by = ["Subject", "Behavior"]
 
     dfs = [
         df.groupby(group_by)["Behavior"].count().reset_index(name="number of occurences"),
-        df.groupby(group_by)["Duration (s)"].sum().reset_index(name="total duration"),
+        df.groupby(group_by)["Duration (s)"].sum(min_count=1).reset_index(name="total duration"),
         df.groupby(group_by)["Duration (s)"].mean().astype(float).round(3).reset_index(name="duration mean"),
         df.groupby(group_by)["Duration (s)"].std().astype(float).round(3).reset_index(name="duration std dev"),
     ]
@@ -48,7 +52,7 @@ def run(df: pd.DataFrame):
     interval = (df.groupby(["Subject"])["Stop (s)"].max() - df.groupby(["Subject"])["Start (s)"].min()).replace(0, np.nan)
 
     dfs.append(
-        (100 * df.groupby(group_by)["Duration (s)"].sum() / interval)
+        (100 * df.groupby(group_by)["Duration (s)"].sum(min_count=1) / interval)
         .astype(float)
         .round(3)
         .reset_index(name="% of total subject observation duration")

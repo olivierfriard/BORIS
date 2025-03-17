@@ -21,6 +21,7 @@ Copyright 2012-2025 Olivier Friard
 
 import importlib
 import logging
+import numpy as np
 import pandas as pd
 from pathlib import Path
 
@@ -122,14 +123,9 @@ def plugin_df_filter(df: pd.DataFrame, observations_list: list = [], parameters:
             df_interval.loc[df["Start (s)"] < df["Observation interval start"], "Start (s)"] = df["Observation interval start"]
             df_interval.loc[df["Stop (s)"] > df["Observation interval stop"], "Stop (s)"] = df["Observation interval stop"]
 
-            df_interval.loc[:, "Duration (s)"] = df_interval["Stop (s)"] - df_interval["Start (s)"]
+            df_interval.loc[:, "Duration (s)"] = (df_interval["Stop (s)"] - df_interval["Start (s)"]).replace(0, np.nan)
 
             df = df_interval
-
-            print("filtered")
-            print("=" * 50)
-
-            print(f"{df=}")
 
         else:
             # filter selected time interval
@@ -149,9 +145,15 @@ def plugin_df_filter(df: pd.DataFrame, observations_list: list = [], parameters:
                 df_interval.loc[df["Start (s)"] < MIN_TIME, "Start (s)"] = MIN_TIME
                 df_interval.loc[df["Stop (s)"] > MAX_TIME, "Stop (s)"] = MAX_TIME
 
-                df_interval.loc[:, "Duration (s)"] = df_interval["Stop (s)"] - df_interval["Start (s)"]
+                df_interval.loc[:, "Duration (s)"] = (df_interval["Stop (s)"] - df_interval["Start (s)"]).replace(0, np.nan)
 
                 df = df_interval
+
+    print("filtered")
+    print("=" * 50)
+
+    print(f"{df=}")
+
     return df
 
 
@@ -159,8 +161,6 @@ def run_plugin(self, plugin_name):
     """
     run plugin
     """
-
-    print(f"{plugin_name=}")
 
     if not self.project:
         QMessageBox.warning(
@@ -174,7 +174,6 @@ def run_plugin(self, plugin_name):
 
     logging.debug(f"{self.config_param.get(cfg.ANALYSIS_PLUGINS, {})=}")
 
-    # plugin_name = self.sender().text()
     if plugin_name not in self.config_param.get(cfg.ANALYSIS_PLUGINS, {}):
         QMessageBox.critical(self, cfg.programName, f"Plugin '{plugin_name}' not found")
         return
@@ -214,12 +213,11 @@ def run_plugin(self, plugin_name):
     logging.debug(f"{df.head()}")
     """
 
-    # df_results, str_results = plugin_module.main(df, observations_list=selected_observations, parameters=parameters)
-
+    # filter the dataframe with parameters
     filtered_df = plugin_df_filter(df, observations_list=selected_observations, parameters=parameters)
 
     plugin_results = plugin_module.run(filtered_df)
-    # test if tuple: if not transform to tuple
+    # test if plugin_tests is a tuple: if not transform to tuple
     if not isinstance(plugin_results, tuple):
         plugin_results = tuple([plugin_results])
 
