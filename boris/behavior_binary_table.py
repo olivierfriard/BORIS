@@ -216,6 +216,8 @@ def behavior_binary_table(self):
         selected_observations,
         start_coding=start_coding,
         end_coding=end_coding,
+        # start_interval=start_interval,
+        # end_interval=end_interval,
         start_interval=start_interval,
         end_interval=end_interval,
         maxTime=max_media_duration_all_obs,
@@ -224,7 +226,7 @@ def behavior_binary_table(self):
         by_category=False,
         n_observations=len(selected_observations),
     )
-    if parameters == {}:
+    if not parameters:
         return
     if not parameters[cfg.SELECTED_SUBJECTS] or not parameters[cfg.SELECTED_BEHAVIORS]:
         QMessageBox.warning(None, cfg.programName, "Select subject(s) and behavior(s) to analyze")

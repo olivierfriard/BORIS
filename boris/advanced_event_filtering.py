@@ -359,8 +359,10 @@ def event_filtering(self):
         selected_observations,
         start_coding=start_coding,
         end_coding=end_coding,
-        start_interval=start_interval,
-        end_interval=end_interval,
+        # start_interval=start_interval,
+        # end_interval=end_interval,
+        start_interval=None,
+        end_interval=None,
         maxTime=max_media_duration_all_obs,
         show_include_modifiers=False,
         show_exclude_non_coded_behaviors=False,
@@ -368,7 +370,7 @@ def event_filtering(self):
         n_observations=len(selected_observations),
     )
 
-    if parameters == {}:
+    if not parameters:
         return
 
     if not parameters[cfg.SELECTED_SUBJECTS] or not parameters[cfg.SELECTED_BEHAVIORS]:

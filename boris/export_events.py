@@ -76,7 +76,7 @@ def export_events_as_behavioral_sequences(self, separated_subjects=False, timed=
     else:
         max_media_duration_all_obs = None
         start_coding, end_coding = dec("NaN"), dec("NaN")
-        start_interval, end_interval = dec("NaN"), dec("NaN")
+        start_interval, end_interval = None, None
 
     parameters = select_subj_behav.choose_obs_subj_behav_category(
         self,
@@ -169,7 +169,7 @@ def export_tabular_events(self, mode: str = "tabular") -> None:
     else:
         max_media_duration_all_obs = None
         start_coding, end_coding = dec("NaN"), dec("NaN")
-        start_interval, end_interval = dec("NaN"), dec("NaN")
+        start_interval, end_interval = None, None
 
     parameters = select_subj_behav.choose_obs_subj_behav_category(
         self,
@@ -373,7 +373,7 @@ def export_aggregated_events(self):
     else:
         max_media_duration_all_obs = None
         start_coding, end_coding = dec("NaN"), dec("NaN")
-        start_interval, end_interval = dec("NaN"), dec("NaN")
+        start_interval, end_interval = None, None
 
     parameters = select_subj_behav.choose_obs_subj_behav_category(
         self,
@@ -681,8 +681,10 @@ def export_events_as_textgrid(self) -> None:
         selected_observations,
         start_coding=start_coding,
         end_coding=end_coding,
-        start_interval=start_interval,
-        end_interval=end_interval,
+        # start_interval=start_interval,
+        # end_interval=end_interval,
+        start_interval=None,
+        end_interval=None,
         show_include_modifiers=False,
         show_exclude_non_coded_behaviors=False,
         maxTime=max_obs_length,
