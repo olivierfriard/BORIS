@@ -3631,6 +3631,18 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         else:
             current_time = self.getLaps()
 
+        # check if observation time interval
+        if self.pj[cfg.OBSERVATIONS][self.observationId].get(cfg.OBSERVATION_TIME_INTERVAL, [0, 0])[1]:
+            # check if current time outside of interval
+            if current_time >= self.pj[cfg.OBSERVATIONS][self.observationId].get(cfg.OBSERVATION_TIME_INTERVAL, [None, None])[1]:
+                self.beep("beep")
+                self.liveTimer.stop()
+                self.liveObservationStarted = False
+                # set current time to end of observation interval
+                current_time = dec(self.pj[cfg.OBSERVATIONS][self.observationId].get(cfg.OBSERVATION_TIME_INTERVAL, [None, None])[1])                
+                self.pb_live_obs.setText("Live observation finished")
+
+
         self.lb_current_media_time.setText(util.convertTime(self.timeFormat, current_time))
 
         # extract State events
@@ -3660,13 +3672,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 self.liveTimer.stop()
                 self.pb_live_obs.setText("Live observation stopped (scan sampling)")
 
-        # observation time interval
-        if self.pj[cfg.OBSERVATIONS][self.observationId].get(cfg.OBSERVATION_TIME_INTERVAL, [0, 0])[1]:
-            if current_time >= self.pj[cfg.OBSERVATIONS][self.observationId].get(cfg.OBSERVATION_TIME_INTERVAL, [0, 0])[1]:
-                self.beep("beep")
-                self.liveTimer.stop()
-                self.liveObservationStarted = False
-                self.pb_live_obs.setText("Live observation finished")
 
     def start_live_observation(self):
         """
