@@ -40,23 +40,30 @@ def save_geometry(widget: QWidget, widget_name: str):
         logging.warning(f"error during saving {widget_name} geometry")
 
 
-def restore_geometry(widget: QWidget, widget_name: str, default_geometry):
+def restore_geometry(widget: QWidget, widget_name: str, default_width_height):
     """
     restore window geometry in ini file
     """
+    def default_resize(widget, default_width_height):
+        if default_width_height != (0, 0):
+            try:
+                widget.resize(default_width_height[0], default_width_height[1])
+            except Exception:
+                logging.warning("Error during restoring default")
 
+
+    logging.debug(f'restore geometry function for {widget_name}')
     try:
         ini_file_path = pl.Path.home() / pl.Path(".boris")
         if ini_file_path.is_file():
             settings = QSettings(str(ini_file_path), QSettings.IniFormat)
             widget.restoreGeometry(settings.value(f"{widget_name} geometry"))
+            logging.debug(f'geometry restored for {widget_name}  {settings.value(f"{widget_name} geometry")}')
+        else:
+            default_resize(widget, default_width_height)
     except Exception:
         logging.warning(f"error during restoring {widget_name} geometry")
-        if default_geometry != (0, 0):
-            try:
-                widget.resize(default_geometry[0], default_geometry[1])
-            except Exception:
-                logging.warning("Error during restoring default")
+        default_resize(widget, default_width_height)
 
 
 def set_icons(self, theme_mode: str) -> None:
