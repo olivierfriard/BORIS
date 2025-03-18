@@ -746,7 +746,7 @@ def time_budget(self, mode: str, mode2: str = "list"):
 
         self.tb.twTB.resizeColumnsToContents()
 
-        gui_utilities.restore_geometry(self.tb, "time budget", (0, 0))
+        gui_utilities.restore_geometry(self.tb, "time budget", (800, 600))
 
         self.tb.show()
 
