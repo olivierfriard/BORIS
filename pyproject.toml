@@ -39,10 +39,6 @@ Issues = "https://github.com/olivierfriard/BORIS/issues"
 [project.scripts]
 boris-behav-obs = "boris-behav-obs:main"
 
-[build-system]
-requires = ["setuptools", "wheel"]
-build-backend = "setuptools.build_meta"
-
 
 [tool.distutils.bdist_wheel]
 universal = true
