@@ -23,7 +23,18 @@ This file is part of BORIS.
 import sys
 import logging
 import functools
-from PySide6.QtWidgets import QLabel, QDockWidget, QWidget, QHBoxLayout, QVBoxLayout, QSlider, QSizePolicy, QStackedWidget, QToolButton
+from PySide6.QtWidgets import (
+    QApplication,
+    QLabel,
+    QDockWidget,
+    QWidget,
+    QHBoxLayout,
+    QVBoxLayout,
+    QSlider,
+    QSizePolicy,
+    QStackedWidget,
+    QToolButton,
+)
 from PySide6.QtCore import Signal, QEvent, Qt
 from PySide6.QtGui import QIcon, QAction
 
@@ -141,7 +152,10 @@ class DW_player(QDockWidget):
         self.mute_button.setFocusPolicy(Qt.NoFocus)
         self.mute_button.setAutoRaise(True)
         self.mute_action = QAction()
-        self.mute_action.setIcon(QIcon(":/volume_xmark"))
+
+        theme_mode = "dark" if QApplication.instance().palette().window().color().value() < 128 else "light"
+
+        self.mute_action.setIcon(QIcon(f":/volume_xmark_{theme_mode}"))
         self.mute_action.triggered.connect(self.mute_action_triggered)
         self.mute_button.setDefaultAction(self.mute_action)
 
@@ -180,10 +194,11 @@ class DW_player(QDockWidget):
         """
         emit signal when mute action is triggered
         """
+        theme_mode = "dark" if QApplication.instance().palette().window().color().value() < 128 else "light"
         if self.player.mute:
-            self.mute_action.setIcon(QIcon(":/volume_xmark"))
+            self.mute_action.setIcon(QIcon(f":/volume_xmark_{theme_mode}"))
         else:
-            self.mute_action.setIcon(QIcon(":/volume_off"))
+            self.mute_action.setIcon(QIcon(f":/volume_off_{theme_mode}"))
         self.mute_action_triggered_signal.emit(self.id_)
 
     def keyPressEvent(self, event):
