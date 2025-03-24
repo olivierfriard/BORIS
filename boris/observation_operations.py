@@ -359,14 +359,17 @@ def time_intervals_range(observations: dict, observations_list: list) -> Tuple[O
         decimal.Decimal: time of latest end interval
 
     """
-    start_interval_list = []
-    end_interval_list = []
+    start_interval_list: list = []
+    end_interval_list: list = []
     for obs_id in observations_list:
         observation = observations[obs_id]
         offset = observation[cfg.TIME_OFFSET]
-        if dec(observation[cfg.OBSERVATION_TIME_INTERVAL][0]) + offset and dec(observation[cfg.OBSERVATION_TIME_INTERVAL][1]) + offset:
-            start_interval_list.append(dec(observation[cfg.OBSERVATION_TIME_INTERVAL][0]) + offset)
-            end_interval_list.append(dec(observation[cfg.OBSERVATION_TIME_INTERVAL][1]) + offset)
+        # check if observation interval is defined
+        if not observation[cfg.OBSERVATION_TIME_INTERVAL][0] and not observation[cfg.OBSERVATION_TIME_INTERVAL][1]:
+            return None, None
+
+        start_interval_list.append(dec(observation[cfg.OBSERVATION_TIME_INTERVAL][0]) + offset)
+        end_interval_list.append(dec(observation[cfg.OBSERVATION_TIME_INTERVAL][1]) + offset)
 
     if not start_interval_list:
         earliest_start_interval = None

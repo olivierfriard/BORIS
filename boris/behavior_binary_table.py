@@ -85,7 +85,7 @@ def create_behavior_binary_table(pj: dict, selected_observations: list, paramete
             start_time = dec(obs_interval[0]) + offset
             # Use max observation length for end time if no interval is defined (=0)
             max_obs_length, _ = observation_operations.observation_length(pj, [obs_id])
-            end_time = dec(obs_interval[1]) + offset if obs_interval[1] != 0 else dec(max_obs_length)
+            end_time = dec(obs_interval[1]) + offset if obs_interval[1] not in (0, None) else dec(max_obs_length)
 
         if obs_id not in results_df:
             results_df[obs_id] = {}
@@ -166,8 +166,8 @@ def behavior_binary_table(self):
         None,
         cfg.programName,
         (
-            "Depending of the length of your observations "
-            "the execution of this function may be very long.<br>"
+            "Depending on the length of yours observations "
+            "the execution of this function may take a long time.<br>"
             "The program interface may freeze, be patient. <br>"
         ),
     )
@@ -216,8 +216,6 @@ def behavior_binary_table(self):
         selected_observations,
         start_coding=start_coding,
         end_coding=end_coding,
-        # start_interval=start_interval,
-        # end_interval=end_interval,
         start_interval=start_interval,
         end_interval=end_interval,
         maxTime=max_media_duration_all_obs,
