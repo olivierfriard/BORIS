@@ -441,7 +441,7 @@ def create_events_plot(
             max_time = float(obs_length)
 
         if interval == cfg.TIME_OBS_INTERVAL:
-            obs_interval = self.pj[cfg.OBSERVATIONS][obs_id][cfg.OBSERVATION_TIME_INTERVAL]
+            obs_interval = self.pj[cfg.OBSERVATIONS][obs_id].get(cfg.OBSERVATION_TIME_INTERVAL, [0, 0])
             offset = float(self.pj[cfg.OBSERVATIONS][obs_id][cfg.TIME_OFFSET])
             min_time = float(obs_interval[0]) + offset
             # Use max media duration for max time if no interval is defined (=0)

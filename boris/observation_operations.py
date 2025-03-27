@@ -365,7 +365,10 @@ def time_intervals_range(observations: dict, observations_list: list) -> Tuple[O
         observation = observations[obs_id]
         offset = observation[cfg.TIME_OFFSET]
         # check if observation interval is defined
-        if not observation[cfg.OBSERVATION_TIME_INTERVAL][0] and not observation[cfg.OBSERVATION_TIME_INTERVAL][1]:
+        if (
+            not observation.get(cfg.OBSERVATION_TIME_INTERVAL, [None, None])[0]
+            and not observation.get(cfg.OBSERVATION_TIME_INTERVAL, [None, None])[1]
+        ):
             return None, None
 
         start_interval_list.append(dec(observation[cfg.OBSERVATION_TIME_INTERVAL][0]) + offset)
@@ -875,8 +878,8 @@ def new_observation(self, mode: str = cfg.NEW, obsId: str = "") -> None:
             observationWindow.cb_observation_time_interval.setText(
                 (
                     "Limit observation to a time interval: "
-                    f"{self.pj[cfg.OBSERVATIONS][obsId][cfg.OBSERVATION_TIME_INTERVAL][0]} - "
-                    f"{self.pj[cfg.OBSERVATIONS][obsId][cfg.OBSERVATION_TIME_INTERVAL][1]}"
+                    f"{self.pj[cfg.OBSERVATIONS][obsId].get(cfg.OBSERVATION_TIME_INTERVAL, [0, 0])[0]} - "
+                    f"{self.pj[cfg.OBSERVATIONS][obsId].get(cfg.OBSERVATION_TIME_INTERVAL, [0, 0])[1]}"
                 )
             )
 
@@ -1953,8 +1956,9 @@ def initialize_new_media_observation(self) -> bool:
             )
 
             # position media
-            if cfg.OBSERVATION_TIME_INTERVAL in self.pj[cfg.OBSERVATIONS][self.observationId]:
-                self.seek_mediaplayer(int(self.pj[cfg.OBSERVATIONS][self.observationId][cfg.OBSERVATION_TIME_INTERVAL][0]), player=i)
+            self.seek_mediaplayer(
+                int(self.pj[cfg.OBSERVATIONS][self.observationId].get(cfg.OBSERVATION_TIME_INTERVAL, [0, 0])[0]), player=i
+            )
 
             # restore video zoom level
             if cfg.ZOOM_LEVEL in self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO]:

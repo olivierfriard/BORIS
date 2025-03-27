@@ -260,7 +260,7 @@ def synthetic_time_budget_bin(pj: dict, selected_observations: list, parameters_
             max_time = dec(end_time)
 
         if time_interval == cfg.TIME_OBS_INTERVAL:
-            obs_interval = pj[cfg.OBSERVATIONS][obs_id][cfg.OBSERVATION_TIME_INTERVAL]
+            obs_interval = pj[cfg.OBSERVATIONS][obs_id].get(cfg.OBSERVATION_TIME_INTERVAL, [0, 0])
             offset = pj[cfg.OBSERVATIONS][obs_id][cfg.TIME_OFFSET]
             min_time = dec(obs_interval[0]) + offset
             # Use max media duration for max time if no interval is defined (=0)

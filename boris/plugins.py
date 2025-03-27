@@ -65,24 +65,44 @@ def load_plugins(self):
     """
     load selected plugins in analysis menu
     """
+
+    def msg():
+        QMessageBox.warning(
+            self,
+            cfg.programName,
+            f"A plugin with the same name is already loaded ({self.config_param[cfg.ANALYSIS_PLUGINS][plugin_name]}).\n\nThe plugin from {file_} is not loaded.",
+            QMessageBox.Ok | QMessageBox.Default,
+            QMessageBox.NoButton,
+        )
+
     self.menu_plugins.clear()
     self.config_param[cfg.ANALYSIS_PLUGINS] = {}
 
     # load BORIS plugins
-    for file_ in (Path(__file__).parent / "analysis_plugins").glob("*.py"):
+    for file_ in sorted((Path(__file__).parent / "analysis_plugins").glob("*.py")):
         if file_.name == "__init__.py":
             continue
         plugin_name = get_plugin_name(file_)
         if plugin_name is not None and plugin_name not in self.config_param.get(cfg.EXCLUDED_PLUGINS, set()):
+            # check if plugin with same name already loaded
+            if plugin_name in self.config_param[cfg.ANALYSIS_PLUGINS]:
+                msg()
+                continue
+
             self.config_param[cfg.ANALYSIS_PLUGINS][plugin_name] = str(file_)
 
     # load personal plugins
     if self.config_param.get(cfg.PERSONAL_PLUGINS_DIR, ""):
-        for file_ in Path(self.config_param.get(cfg.PERSONAL_PLUGINS_DIR, "")).glob("*.py"):
+        for file_ in sorted(Path(self.config_param.get(cfg.PERSONAL_PLUGINS_DIR, "")).glob("*.py")):
             if file_.name == "__init__.py":
                 continue
             plugin_name = get_plugin_name(file_)
             if plugin_name is not None and plugin_name not in self.config_param.get(cfg.EXCLUDED_PLUGINS, set()):
+                # check if plugin with same name already loaded
+                if plugin_name in self.config_param[cfg.ANALYSIS_PLUGINS]:
+                    msg()
+                    continue
+
                 self.config_param[cfg.ANALYSIS_PLUGINS][plugin_name] = str(file_)
 
     logging.debug(f"{self.config_param.get(cfg.ANALYSIS_PLUGINS, {})=}")
@@ -108,7 +128,7 @@ def plugin_df_filter(df: pd.DataFrame, observations_list: list = [], parameters:
         # filter selected behaviors
         df = df[df["Behavior"].isin(parameters["selected behaviors"])]
 
-        if parameters["time"] == "interval of observation":
+        if parameters["time"] == cfg.TIME_OBS_INTERVAL:
             # filter each observation with observation interval start/stop
 
             # keep events between observation interval start time and observation interval stop/end
@@ -142,6 +162,7 @@ def plugin_df_filter(df: pd.DataFrame, observations_list: list = [], parameters:
                     | ((df["Start (s)"] < MIN_TIME) & (df["Stop (s)"] > MAX_TIME))
                 ]
 
+                # cut state events to interval
                 df_interval.loc[df["Start (s)"] < MIN_TIME, "Start (s)"] = MIN_TIME
                 df_interval.loc[df["Stop (s)"] > MAX_TIME, "Stop (s)"] = MAX_TIME
 
@@ -152,7 +173,7 @@ def plugin_df_filter(df: pd.DataFrame, observations_list: list = [], parameters:
     print("filtered")
     print("=" * 50)
 
-    print(f"{df=}")
+    # print(f"{df=}")
 
     return df
 
@@ -205,7 +226,11 @@ def run_plugin(self, plugin_name):
     if not selected_observations:
         return
 
+    logging.info("preparing dtaaframe for plugin")
+
     df = project_functions.project2dataframe(self.pj, selected_observations)
+
+    logging.info("done")
 
     """
     logging.debug("dataframe info")
@@ -214,7 +239,9 @@ def run_plugin(self, plugin_name):
     """
 
     # filter the dataframe with parameters
+    logging.info("filtering dataframe for plugin")
     filtered_df = plugin_df_filter(df, observations_list=selected_observations, parameters=parameters)
+    logging.info("done")
 
     plugin_results = plugin_module.run(filtered_df)
     # test if plugin_tests is a tuple: if not transform to tuple

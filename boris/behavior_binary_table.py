@@ -80,7 +80,7 @@ def create_behavior_binary_table(pj: dict, selected_observations: list, paramete
                 end_time = dec(max_obs_length)
 
         if parameters_obs["time"] == cfg.TIME_OBS_INTERVAL:
-            obs_interval = pj[cfg.OBSERVATIONS][obs_id][cfg.OBSERVATION_TIME_INTERVAL]
+            obs_interval = pj[cfg.OBSERVATIONS][obs_id].get(cfg.OBSERVATION_TIME_INTERVAL, [0, 0])
             offset = pj[cfg.OBSERVATIONS][obs_id][cfg.TIME_OFFSET]
             start_time = dec(obs_interval[0]) + offset
             # Use max observation length for end time if no interval is defined (=0)

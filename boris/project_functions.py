@@ -1899,20 +1899,12 @@ def project2dataframe(pj: dict, observations_list: list = []) -> pd.DataFrame:
             if idx_event in stop_event_idx:
                 continue
             data["Observation id"].append(obs_id)
-            data["Observation date"].append(pj["observations"][obs_id]["date"])
-            data["Description"].append(" ".join(pj["observations"][obs_id]["description"].splitlines()))
-            data["Observation type"].append(pj["observations"][obs_id]["type"])
+            data["Observation date"].append(pj[cfg.OBSERVATIONS][obs_id]["date"])
+            data["Description"].append(" ".join(pj[cfg.OBSERVATIONS][obs_id]["description"].splitlines()))
+            data["Observation type"].append(pj[cfg.OBSERVATIONS][obs_id]["type"])
 
-            data["Observation interval start"].append(
-                pj["observations"][obs_id]["observation time interval"][0]
-                if pj["observations"][obs_id]["observation time interval"][0]
-                else None
-            )
-            data["Observation interval stop"].append(
-                pj["observations"][obs_id]["observation time interval"][1]
-                if pj["observations"][obs_id]["observation time interval"][1]
-                else None
-            )
+            data["Observation interval start"].append(pj[cfg.OBSERVATIONS][obs_id].get(cfg.OBSERVATION_TIME_INTERVAL, [None, None])[0])
+            data["Observation interval stop"].append(pj[cfg.OBSERVATIONS][obs_id].get(cfg.OBSERVATION_TIME_INTERVAL, [None, None])[1])
 
             # data["Source"].append("")
             # data["Time offset (s)"].append(pj["observations"][obs_id]["time offset"])

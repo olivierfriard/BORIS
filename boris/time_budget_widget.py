@@ -504,7 +504,7 @@ def time_budget(self, mode: str, mode2: str = "list"):
                     max_time = float(obs_length)
 
             if parameters[cfg.TIME_INTERVAL] == cfg.TIME_OBS_INTERVAL:
-                obs_interval = self.pj[cfg.OBSERVATIONS][obsId][cfg.OBSERVATION_TIME_INTERVAL]
+                obs_interval = self.pj[cfg.OBSERVATIONS][obsId].get(cfg.OBSERVATION_TIME_INTERVAL, [0, 0])
                 offset = float(self.pj[cfg.OBSERVATIONS][obsId][cfg.TIME_OFFSET])
                 min_time = float(obs_interval[0]) + offset
                 # Use max media duration for max time if no interval is defined (=0)
