@@ -1456,8 +1456,6 @@ def accurate_media_analysis(ffmpeg_bin: str, file_name: str) -> dict:
 
     ffprobe_results = ffprobe_media_analysis(ffmpeg_bin, file_name)
 
-    print(f"{ffprobe_results=}")
-
     logging.debug(f"file_name: {file_name}")
     logging.debug(f"ffprobe_results: {ffprobe_results}")
 

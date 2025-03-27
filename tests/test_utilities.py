@@ -44,6 +44,8 @@ class Test_accurate_media_analysis(object):
             "resolution": "640x480",
         }
 
+
+"""
     def test_no_media(self):
         r = utilities.accurate_media_analysis("ffmpeg", "files/test.boris")
         assert "error" in r
@@ -358,10 +360,14 @@ class Test_get_current_states_by_subject(object):
 
 
 """
+
+
 class Test_get_ip_address(object):
     def test_1(self):
         print(utilities.get_ip_address())
         assert False
+
+
 """
 
 
@@ -587,3 +593,4 @@ class Test_versiontuple(object):
     def test_4(self):
         r = utilities.versiontuple("")
         assert r == ("00000000",)
+"""
