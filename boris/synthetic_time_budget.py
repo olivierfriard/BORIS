@@ -95,7 +95,7 @@ def synthetic_time_budget(self) -> None:
             title="Select behaviors to exclude from the total time",
             text="The duration of the selected behaviors will be subtracted from the total time",
             table="",
-            behavior_type=[cfg.STATE_EVENT],
+            behavior_type=cfg.STATE_EVENT_TYPES,
         )
         if cancel_pressed:
             return
@@ -227,7 +227,7 @@ def synthetic_binned_time_budget(self) -> None:
         title="Select behaviors to exclude",
         text=("The duration of the selected behaviors will be subtracted from the total time"),
         table="",
-        behavior_type=[cfg.STATE_EVENT],
+        behavior_type=cfg.STATE_EVENT_TYPES,
     )
     if cancel_pressed:
         return

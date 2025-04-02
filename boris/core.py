@@ -794,10 +794,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
     def filter_behaviors(
         self,
-        title="Select the behaviors to show in the ethogram table",
-        text="Behaviors to show in ethogram list",
-        table=cfg.ETHOGRAM,
-        behavior_type=cfg.STATE_EVENT_TYPES,
+        title: str = "Select the behaviors to show in the ethogram table",
+        text: str = "Behaviors to show in ethogram list",
+        table: str = cfg.ETHOGRAM,
+        behavior_type: list = cfg.STATE_EVENT_TYPES,
     ) -> Tuple[bool, list]:
         """
         allow user to:
@@ -809,6 +809,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             title (str): title of dialog box
             text (str): text of dialog box
             table (str): table where behaviors will be filtered
+            behavior_type
 
         Returns:
             (None if table = ETHOGRAM)
@@ -858,21 +859,22 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             categories = ["###no category###"]
 
         for category in categories:
-            if category != "###no category###":
-                if category == "":
-                    paramPanelWindow.item = QListWidgetItem("No category")
-                    paramPanelWindow.item.setData(34, "No category")
-                else:
-                    paramPanelWindow.item = QListWidgetItem(category)
-                    paramPanelWindow.item.setData(34, category)
+            if category == "###no category###":
+                continue
+            if category == "":
+                paramPanelWindow.item = QListWidgetItem("No category")
+                paramPanelWindow.item.setData(34, "No category")
+            else:
+                paramPanelWindow.item = QListWidgetItem(category)
+                paramPanelWindow.item.setData(34, category)
 
-                font = QFont()
-                font.setBold(True)
-                paramPanelWindow.item.setFont(font)
-                paramPanelWindow.item.setData(33, "category")
-                paramPanelWindow.item.setData(35, False)
+            font = QFont()
+            font.setBold(True)
+            paramPanelWindow.item.setFont(font)
+            paramPanelWindow.item.setData(33, "category")
+            paramPanelWindow.item.setData(35, False)
 
-                paramPanelWindow.lwBehaviors.addItem(paramPanelWindow.item)
+            paramPanelWindow.lwBehaviors.addItem(paramPanelWindow.item)
 
             # check if behavior type must be shown
             for behavior in [self.pj[cfg.ETHOGRAM][x][cfg.BEHAVIOR_CODE] for x in util.sorted_keys(self.pj[cfg.ETHOGRAM])]:

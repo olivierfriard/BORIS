@@ -271,7 +271,9 @@ def connections(self):
     self.actionViewBehavior.triggered.connect(self.view_behavior)
     self.twEthogram.addAction(self.actionViewBehavior)
 
-    self.actionFilterBehaviors.triggered.connect(lambda: self.filter_behaviors(table=cfg.ETHOGRAM))
+    self.actionFilterBehaviors.triggered.connect(
+        lambda: self.filter_behaviors(table=cfg.ETHOGRAM, behavior_type=cfg.STATE_EVENT_TYPES + cfg.POINT_EVENT_TYPES)
+    )
     self.twEthogram.addAction(self.actionFilterBehaviors)
 
     self.actionShowAllBehaviors.triggered.connect(self.show_all_behaviors)

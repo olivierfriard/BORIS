@@ -121,7 +121,10 @@ def export_events_jwatcher(
             except Exception:
                 # coded behavior not defined in ethogram
                 continue
-            if [ethogram[k][cfg.TYPE] for k in ethogram if ethogram[k][cfg.BEHAVIOR_CODE] == behav_code] == [cfg.STATE_EVENT]:
+            if [ethogram[k][cfg.TYPE] for k in ethogram if ethogram[k][cfg.BEHAVIOR_CODE] == behav_code] in [
+                [cfg.STATE_EVENT],
+                [cfg.STATE_EVENT_WITH_CODING_MAP],
+            ]:
                 if behav_code in mem_number_of_state_events:
                     mem_number_of_state_events[behav_code] += 1
                 else:
