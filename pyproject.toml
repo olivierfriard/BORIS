@@ -1,17 +1,16 @@
 [project]
 name = "boris-behav-obs"
-version = "9.2.2"
+version = "9.2.3"
 description = "BORIS - Behavioral Observation Research Interactive Software"
 authors = [{ name="Olivier Friard", email="olivier.friard@unito.it" }]
 readme = "README.rst"
-license = { file = "LICENSE.TXT" }
 requires-python = ">=3.12"
+license = "GPL-3.0-only"
 classifiers=[
         "Topic :: Scientific/Engineering",
         "Intended Audience :: Science/Research",
         "Intended Audience :: Education",
         "Programming Language :: Python :: 3.12",        
-        "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
         "Operating System :: OS Independent",
         "Topic :: Scientific/Engineering",
     ]
@@ -40,6 +39,13 @@ Issues = "https://github.com/olivierfriard/BORIS/issues"
 boris-behav-obs = "boris.core:main"
 
 
+[[tool.uv.index]]
+name = "pypi"
+url = "https://pypi.org/simple/"
+publish-url = "https://upload.pypi.org/legacy/"
+explicit = true
+
+
 [tool.distutils.bdist_wheel]
 universal = true
 
@@ -48,7 +54,7 @@ line-length = 140
 exclude = ["*_ui.py", "mpv*"]
 
 [tool.bumpver]
-current_version = "9.2.2"
+current_version = "9.2.3"
 version_pattern = "MAJOR.MINOR.PATCH"
 
 
