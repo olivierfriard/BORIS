@@ -21,6 +21,7 @@ This file is part of BORIS.
 """
 
 import binascii
+import io
 import json
 import os
 
@@ -34,7 +35,6 @@ from PySide6.QtCore import (
     QLineF,
 )
 from PySide6.QtGui import QColor, QBrush, QMouseEvent, QPixmap, QIcon, QPen, QPolygon, QPolygonF, QAction
-
 from PySide6.QtWidgets import (
     QGraphicsPolygonItem,
     QGraphicsEllipseItem,
@@ -55,6 +55,11 @@ from PySide6.QtWidgets import (
     QInputDialog,
     QFileDialog,
     QApplication,
+    QListWidget,
+    QSplitter,
+    QSpacerItem,
+    QSizePolicy,
+    QFrame,
 )
 
 from . import config as cfg
@@ -91,8 +96,11 @@ class ModifiersMapCreatorWindow(QMainWindow):
             self.setScene(QGraphicsScene(self))
             self.scene().update()
 
-    bitmapFileName, mapName, fileName = "", "", ""
-    flagNewArea, flagMapChanged = False, False
+    bitmapFileName: str = ""
+    mapName: str = ""
+    fileName: str = ""
+    flagNewArea: bool = False
+    flag_map_changed: bool = False
     areasList, polygonsList2 = {}, {}
     areaColor = QColor("lime")
 
@@ -147,79 +155,125 @@ class ModifiersMapCreatorWindow(QMainWindow):
         fileMenu.addSeparator()
         fileMenu.addAction(self.exitAction)
 
+        splitter1 = QSplitter(Qt.Vertical)
+
         self.view = self.View(self)
         self.view.mousePress.connect(self.viewMousePressEvent)
+        splitter1.addWidget(self.view)
 
-        self.btLoad = QPushButton("Load bitmap", self)
-        self.btLoad.clicked.connect(self.loadBitmap)
-        self.btLoad.setVisible(False)
+        vlayout_list = QVBoxLayout()
+        vlayout_list.addWidget(QLabel("List of modifiers"))
+
+        self.area_list = QListWidget(self)
+        self.area_list.itemClicked.connect(self.area_list_item_click)
+        vlayout_list.addWidget(self.area_list)
+        w = QWidget()
+        w.setLayout(vlayout_list)
+        splitter1.addWidget(w)
+        splitter1.setSizes([300, 100])
+        splitter1.setStretchFactor(2, 8)
+
+        hlayout_cmd = QHBoxLayout()
 
         self.btNewArea = QPushButton("New modifier", self)
         self.btNewArea.clicked.connect(self.newArea)
         self.btNewArea.setVisible(False)
+        hlayout_cmd.addWidget(self.btNewArea)
 
-        self.hlayout = QHBoxLayout()
+        self.btSaveArea = QPushButton("Save modifier", self)
+        self.btSaveArea.clicked.connect(self.saveArea)
+        self.btSaveArea.setVisible(False)
+        hlayout_cmd.addWidget(self.btSaveArea)
+
+        self.btCancelAreaCreation = QPushButton("Cancel new modifier", self)
+        self.btCancelAreaCreation.clicked.connect(self.cancelAreaCreation)
+        self.btCancelAreaCreation.setVisible(False)
+        hlayout_cmd.addWidget(self.btCancelAreaCreation)
+
+        hlayout_cmd.addItem(QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum))
+
+        self.btDeleteArea = QPushButton("Delete selected modifier", self)
+        self.btDeleteArea.clicked.connect(self.deleteArea)
+        self.btDeleteArea.setVisible(False)
+        self.btDeleteArea.setEnabled(False)
+        hlayout_cmd.addWidget(self.btDeleteArea)
+
+        hlayout_area = QHBoxLayout()
 
         self.lb = QLabel("Modifier")
         self.lb.setVisible(False)
-        self.hlayout.addWidget(self.lb)
+        hlayout_area.addWidget(self.lb)
 
         self.leAreaCode = QLineEdit(self)
         self.leAreaCode.setVisible(False)
-        self.hlayout.addWidget(self.leAreaCode)
+        hlayout_area.addWidget(self.leAreaCode)
 
         self.btColor = QPushButton()
         self.btColor.clicked.connect(self.chooseColor)
         self.btColor.setVisible(False)
         self.btColor.setStyleSheet("QWidget {{background-color:{}}}".format(self.areaColor.name()))
-        self.hlayout.addWidget(self.btColor)
+        hlayout_area.addWidget(self.btColor)
 
         self.slAlpha = QSlider(Qt.Horizontal)
         self.slAlpha.setRange(20, 100)
         self.slAlpha.setValue(50)
         self.slAlpha.valueChanged.connect(self.slAlpha_changed)
         self.slAlpha.setVisible(False)
-        self.hlayout.addWidget(self.slAlpha)
+        hlayout_area.addWidget(self.slAlpha)
 
         self.slAlpha_changed(50)
-        """
-        self.btCancelMap = QPushButton("Cancel modifiers map", self)
-        self.btCancelMap.clicked.connect(self.cancelMap)
-        self.btCancelMap.setVisible(False)
-        """
 
-        layout = QVBoxLayout()
-        layout.addWidget(self.view)
-        layout.addWidget(self.btLoad)
+        vlayout_frame = QVBoxLayout()
+        vlayout_frame.addLayout(hlayout_cmd)
+        vlayout_frame.addLayout(hlayout_area)
+        vlayout_frame.addItem(QSpacerItem(20, 40, QSizePolicy.Minimum, QSizePolicy.Expanding))
 
-        hlayout2 = QHBoxLayout()
-        hlayout2.addWidget(self.btNewArea)
+        frame = QFrame()
+        frame.setFrameStyle(QFrame.Panel | QFrame.Plain)
+        frame.setMinimumHeight(120)
+        frame.setMaximumHeight(120)
 
-        self.btSaveArea = QPushButton("Save modifier", self)
-        self.btSaveArea.clicked.connect(self.saveArea)
-        self.btSaveArea.setVisible(False)
-        hlayout2.addWidget(self.btSaveArea)
+        frame.setLayout(vlayout_frame)
 
-        self.btCancelAreaCreation = QPushButton("Cancel new modifier", self)
-        self.btCancelAreaCreation.clicked.connect(self.cancelAreaCreation)
-        self.btCancelAreaCreation.setVisible(False)
-        hlayout2.addWidget(self.btCancelAreaCreation)
+        vlayout = QVBoxLayout()
 
-        self.btDeleteArea = QPushButton("Delete selected modifier", self)
-        self.btDeleteArea.clicked.connect(self.deleteArea)
-        self.btDeleteArea.setVisible(True)
-        self.btDeleteArea.setEnabled(False)
-        hlayout2.addWidget(self.btDeleteArea)
-
-        layout.addLayout(hlayout2)
-        layout.addLayout(self.hlayout)
-        """layout.addWidget(self.btCancelMap)"""
+        vlayout.addWidget(splitter1)
+        vlayout.addWidget(frame)
 
         main_widget = QWidget(self)
-        main_widget.setLayout(layout)
+        main_widget.setLayout(vlayout)
         self.setCentralWidget(main_widget)
 
         self.statusBar().showMessage("")
+
+    def area_list_item_click(self, item):
+        """
+        select the polygon corresponding to the clicked area
+        """
+
+        if self.selectedPolygon:
+            self.selectedPolygon.setPen(QPen(designColor, penWidth, penStyle, Qt.RoundCap, Qt.RoundJoin))
+            self.selectedPolygon = None
+            self.selectedPolygonMemBrush = None
+
+        print(f"{item.text()=}")
+
+        modifier_name = item.text()
+
+        self.selectedPolygon = self.polygonsList2[item.text()]
+
+        self.selectedPolygonMemBrush = self.selectedPolygon.brush()
+
+        self.selectedPolygon.setPen(QPen(QColor(255, 0, 0, 255), 2, Qt.SolidLine, Qt.RoundCap, Qt.RoundJoin))
+
+        self.leAreaCode.setText(modifier_name)
+        for widget in (self.leAreaCode, self.lb, self.btDeleteArea, self.btColor, self.slAlpha):
+            widget.setVisible(True)
+
+        self.areaColor = self.selectedPolygon.brush().color()
+        self.btColor.setStyleSheet(f"QWidget {{background-color:{self.selectedPolygon.brush().color().name()}}}")
+
+        self.slAlpha.setValue(int(self.selectedPolygon.brush().color().alpha() / 255 * 100))
 
     def slAlpha_changed(self, val):
         """
@@ -256,7 +310,7 @@ class ModifiersMapCreatorWindow(QMainWindow):
             self.closedPolygon.setBrush(self.areaColor)
 
     def closeEvent(self, event):
-        if self.flagMapChanged:
+        if self.flag_map_changed:
             response = dialog.MessageDialog(
                 "BORIS - Modifiers map creator",
                 "What to do about the current unsaved modifiers coding map?",
@@ -461,7 +515,7 @@ class ModifiersMapCreatorWindow(QMainWindow):
         create a new map
         """
 
-        if self.flagMapChanged:
+        if self.flag_map_changed:
             response = dialog.MessageDialog(
                 cfg.programName + " - Modifiers map creator",
                 "What to do about the current unsaved coding map?",
@@ -493,17 +547,14 @@ class ModifiersMapCreatorWindow(QMainWindow):
 
         self.setWindowTitle(cfg.programName + " - Map creator tool - " + self.mapName)
 
-        self.btLoad.setVisible(True)
-        """self.btCancelMap.setVisible(True)"""
-
-        self.statusBar().showMessage('Click "Load bitmap" button to select and load a bitmap into the viewer')
+        self.loadBitmap()
 
     def openMap(self):
         """
         load bitmap from data
         show it in view scene
         """
-        if self.flagMapChanged:
+        if self.flag_map_changed:
             response = dialog.MessageDialog(
                 cfg.programName + " - Map creator",
                 "What to do about the current unsaved coding map?",
@@ -525,7 +576,7 @@ class ModifiersMapCreatorWindow(QMainWindow):
         )
 
         if not fileName:
-            self.statusBar().showMessage("No file", 5000)
+            return
         try:
             self.codingMap = json.loads(open(fileName, "r").read())
         except Exception:
@@ -582,44 +633,42 @@ class ModifiersMapCreatorWindow(QMainWindow):
 
         self.btNewArea.setVisible(True)
 
-        self.btLoad.setVisible(False)
-
         self.saveMapAction.setEnabled(True)
         self.saveAsMapAction.setEnabled(True)
         self.mapNameAction.setEnabled(True)
         self.statusBar().showMessage('Click "New area" to create a new area')
 
-    def saveMap(self):
-        if self.fileName:
-            # create dict with map name key
-            mapDict = {"name": self.mapName}
-
-            # add areas
-            mapDict["areas"] = self.areasList
-
-            import io
-
-            # Save QPixmap to QByteArray via QBuffer.
-            byte_array = QByteArray()
-            buffer = QBuffer(byte_array)
-            buffer.open(QIODevice.WriteOnly)
-            self.pixmap.save(buffer, "PNG")
-
-            string_io = io.BytesIO(byte_array)
-
-            string_io.seek(0)
-
-            # add bitmap
-            mapDict["bitmap"] = binascii.b2a_base64(string_io.read()).decode("utf-8")
-
-            with open(self.fileName, "w") as outfile:
-                outfile.write(json.dumps(mapDict))
-
-            self.flagMapChanged = False
-
-            return True
-        else:
+    def saveMap(self) -> bool:
+        """
+        save the modifier coding map on file
+        """
+        if not self.fileName:
             return False
+        # create dict with map name key
+        mapDict = {"name": self.mapName}
+
+        # add areas
+        mapDict["areas"] = self.areasList
+
+        # Save QPixmap to QByteArray via QBuffer.
+        byte_array = QByteArray()
+        buffer = QBuffer(byte_array)
+        buffer.open(QIODevice.WriteOnly)
+        self.pixmap.save(buffer, "PNG")
+
+        string_io = io.BytesIO(byte_array)
+
+        string_io.seek(0)
+
+        # add bitmap
+        mapDict["bitmap"] = binascii.b2a_base64(string_io.read()).decode("utf-8")
+
+        with open(self.fileName, "w") as outfile:
+            outfile.write(json.dumps(mapDict))
+
+        self.flag_map_changed = False
+
+        return True
 
     def saveAsMap_clicked(self):
         filters = "Modifiers map (*.boris_map);;All files (*)"
@@ -681,6 +730,9 @@ class ModifiersMapCreatorWindow(QMainWindow):
         )
 
     def saveArea(self):
+        """
+        save the new modifier in the list
+        """
         if not self.closedPolygon:
             QMessageBox.critical(
                 self,
@@ -692,7 +744,7 @@ class ModifiersMapCreatorWindow(QMainWindow):
             QMessageBox.critical(self, cfg.programName, "You must define a closed area")
             return
 
-        # check if no area code
+        # check if no modifier name
         if not self.leAreaCode.text():
             QMessageBox.critical(self, cfg.programName, "You must define a code for the new modifier")
             return
@@ -707,10 +759,9 @@ class ModifiersMapCreatorWindow(QMainWindow):
                 )
                 return
 
-        # check if area code already used
-
+        # check if modifier name already used
         if self.leAreaCode.text() in self.areasList:
-            QMessageBox.critical(self, cfg.programName, "The modifier is already in use")
+            QMessageBox.critical(self, cfg.programName, "The modifier name is already in use")
             return
 
         # create polygon
@@ -737,18 +788,25 @@ class ModifiersMapCreatorWindow(QMainWindow):
         self.flagNewArea = False
         self.closedPolygon = None
 
-        self.btSaveArea.setVisible(False)
-        self.btCancelAreaCreation.setVisible(False)
-        self.lb.setVisible(False)
-        self.leAreaCode.setVisible(False)
-        self.btColor.setVisible(False)
-        self.slAlpha.setVisible(False)
-        self.btDeleteArea.setVisible(True)
+        for widget in (
+            self.btSaveArea,
+            self.btCancelAreaCreation,
+            self.lb,
+            self.leAreaCode,
+            self.btColor,
+            self.slAlpha,
+            self.btDeleteArea,
+            self.btNewArea,
+        ):
+            widget.setVisible(False)
+
         self.btNewArea.setVisible(True)
 
         self.leAreaCode.setText("")
 
-        self.flagMapChanged = True
+        self.update_area_list()
+
+        self.flag_map_changed = True
         self.statusBar().showMessage("New modifier saved", 5000)
 
     def cancelAreaCreation(self):
@@ -777,6 +835,14 @@ class ModifiersMapCreatorWindow(QMainWindow):
         self.leAreaCode.setVisible(False)
         self.leAreaCode.setText("")
 
+    def update_area_list(self):
+        self.area_list.clear()
+
+        print(f"{self.polygonsList2=}")
+
+        for modifier_name in self.polygonsList2:
+            self.area_list.addItem(modifier_name)
+
     def deleteArea(self):
         """
         remove selected area from map
@@ -789,22 +855,22 @@ class ModifiersMapCreatorWindow(QMainWindow):
             del self.polygonsList2[self.selectedPolygonAreaCode]
             del self.areasList[self.selectedPolygonAreaCode]
 
-            self.flagMapChanged = True
+            self.flag_map_changed = True
 
         self.view.elList = []
 
         self.view._start = 0
         self.view.points = []
         self.flagNewArea = False
-        self.btSaveArea.setVisible(False)
-        self.lb.setVisible(False)
 
-        self.btColor.setVisible(False)
-        self.slAlpha.setVisible(False)
+        for widget in (self.btSaveArea, self.lb, self.btColor, self.slAlpha, self.leAreaCode):
+            widget.setVisible(False)
+
         self.btNewArea.setVisible(True)
 
-        self.leAreaCode.setVisible(False)
         self.leAreaCode.setText("")
+
+        self.update_area_list()
 
     def cancelMap(self):
         """
@@ -814,22 +880,18 @@ class ModifiersMapCreatorWindow(QMainWindow):
         self.areasList = {}
         self.polygonsList2 = {}
         self.view.scene().clear()
-        self.btLoad.setVisible(False)
         self.btDeleteArea.setVisible(False)
         self.btNewArea.setVisible(False)
         self.saveMapAction.setEnabled(False)
         self.saveAsMapAction.setEnabled(False)
         self.mapNameAction.setEnabled(False)
         self.statusBar().showMessage("")
-        self.flagMapChanged = False
+        self.flag_map_changed = False
 
     def loadBitmap(self):
         """
         load bitmap as background for coding map
-        resize bitmap to 512 px if bigger
         """
-
-        maxSize = 512
 
         fileName, _ = QFileDialog().getOpenFileName(self, "Load bitmap", "", "bitmap files (*.png *.jpg);;All files (*)")
 
@@ -839,6 +901,8 @@ class ModifiersMapCreatorWindow(QMainWindow):
 
         self.pixmap.load(self.bitmapFileName)
 
+        # scale image
+        """
         if self.pixmap.size().width() > maxSize or self.pixmap.size().height() > maxSize:
             self.pixmap = self.pixmap.scaled(maxSize, maxSize, Qt.KeepAspectRatio)
             QMessageBox.information(
@@ -847,9 +911,7 @@ class ModifiersMapCreatorWindow(QMainWindow):
                 "The bitmap was resized to %d x %d pixels\nThe original file was not modified"
                 % (self.pixmap.size().width(), self.pixmap.size().height()),
             )
-
-        # scale image
-        # pixmap = pixmap.scaled (256, 256, Qt.KeepAspectRatio)
+        """
 
         self.view.setSceneRect(0, 0, self.pixmap.size().width(), self.pixmap.size().height())
         pixitem = QGraphicsPixmapItem(self.pixmap)
@@ -858,14 +920,13 @@ class ModifiersMapCreatorWindow(QMainWindow):
 
         self.btNewArea.setVisible(True)
 
-        self.btLoad.setVisible(False)
         self.saveMapAction.setEnabled(True)
         self.saveAsMapAction.setEnabled(True)
         self.mapNameAction.setEnabled(True)
 
         self.statusBar().showMessage("""Click "New modifier" to create a new modifier""")
 
-        self.flagMapChanged = True
+        self.flag_map_changed = True
 
 
 if __name__ == "__main__":

@@ -93,7 +93,7 @@ from PIL.ImageQt import Image
 from . import dialog
 from . import gui_utilities
 from . import events_cursor
-from . import map_creator
+from . import modifier_coding_map_creator
 from . import geometric_measurement
 from . import modifiers_coding_map
 from . import advanced_event_filtering
@@ -1336,7 +1336,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         """
         show modifiers coding map creator window and hide program main window
         """
-        self.mapCreatorWindow = map_creator.ModifiersMapCreatorWindow()
+        self.mapCreatorWindow = modifier_coding_map_creator.ModifiersMapCreatorWindow()
         self.mapCreatorWindow.move(self.pos())
         self.mapCreatorWindow.resize(cfg.CODING_MAP_RESIZE_W, cfg.CODING_MAP_RESIZE_H)
         self.mapCreatorWindow.show()

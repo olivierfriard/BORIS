@@ -154,11 +154,6 @@ class BehaviorsMapCreatorWindow(QMainWindow):
         fileMenu.addAction(self.exitAction)
 
         splitter1 = QSplitter(Qt.Vertical)
-        """
-        splitter1.addWidget(splitter1)
-        splitter1.addWidget(bottom)
-        """
-        """vlayout_list = QVBoxLayout()"""
 
         self.view = self.View(self)
         self.view.mousePress.connect(self.viewMousePressEvent)
@@ -168,7 +163,6 @@ class BehaviorsMapCreatorWindow(QMainWindow):
         vlayout_list.addWidget(QLabel("Defined area"))
 
         self.area_list = QListWidget(self)
-        # self.area_list.setMaximumHeight(120)
         self.area_list.itemClicked.connect(self.area_list_item_click)
         vlayout_list.addWidget(self.area_list)
         w = QWidget()
@@ -176,10 +170,6 @@ class BehaviorsMapCreatorWindow(QMainWindow):
         splitter1.addWidget(w)
         splitter1.setSizes([300, 100])
         splitter1.setStretchFactor(2, 8)
-
-        self.btLoad = QPushButton("Load bitmap", self)
-        self.btLoad.clicked.connect(self.loadBitmap)
-        self.btLoad.setVisible(False)
 
         hlayout_cmd = QHBoxLayout()
 
@@ -249,16 +239,9 @@ class BehaviorsMapCreatorWindow(QMainWindow):
         frame.setLayout(vlayout_frame)
 
         vlayout = QVBoxLayout()
-        """
-        vlayout.addWidget(self.view)
-        vlayout.addWidget(QLabel("Defined area"))
-        vlayout.addWidget(self.area_list)
-        """
-        vlayout.addWidget(splitter1)
-        """vlayout.addLayout(vlayout_view_list)"""
 
+        vlayout.addWidget(splitter1)
         vlayout.addWidget(frame)
-        vlayout.addWidget(self.btLoad)
 
         main_widget = QWidget(self)
         main_widget.setLayout(vlayout)
@@ -642,9 +625,6 @@ class BehaviorsMapCreatorWindow(QMainWindow):
 
         self.loadBitmap()
 
-        # self.btLoad.setVisible(True)
-        # self.statusBar().showMessage('Click "Load bitmap" button to select and load a bitmap into the viewer')
-
     def openMap(self):
         """
         open a coding map from file
@@ -720,7 +700,6 @@ class BehaviorsMapCreatorWindow(QMainWindow):
             self.polygonsList2.append([areaCode, polygon])
 
         self.btNewArea.setVisible(True)
-        self.btLoad.setVisible(False)
 
         self.saveMapAction.setEnabled(True)
         self.saveAsMapAction.setEnabled(True)
@@ -832,7 +811,7 @@ class BehaviorsMapCreatorWindow(QMainWindow):
         self.btDeleteArea.setVisible(False)
 
         self.statusBar().showMessage(
-            ("Click on bitmap to set the vertices of the area with the mouse " "(right click will cancel the last point)")
+            ("Click on bitmap to set the vertices of the area with the mouse (right click will cancel the last point)")
         )
 
     def saveArea(self):
@@ -840,7 +819,7 @@ class BehaviorsMapCreatorWindow(QMainWindow):
             QMessageBox.critical(
                 self,
                 cfg.programName,
-                ("You must close your area before saving it.\n" "The last vertex must correspond to the first one."),
+                ("You must close your area before saving it.\nThe last vertex must correspond to the first one."),
             )
 
         if len(self.view.points) < 3:
@@ -858,14 +837,15 @@ class BehaviorsMapCreatorWindow(QMainWindow):
 
         # draw polygon
         self.closedPolygon.setBrush(QBrush(self.areaColor, Qt.SolidPattern))
-        # self.polygonsList2[self.leAreaCode.text()] = self.closedPolygon
         self.polygonsList2.append([self.leAreaCode.text(), self.closedPolygon])
 
-        self.closedPolygon, self.flagNewArea = None, None
+        self.flagNewArea = None
+        self.closedPolygon = None
         self.view._start = 0
-        self.view.points, self.view.elList = [], []
+        self.view.points = []
+        self.view.elList = []
 
-        for widget in [
+        for widget in (
             self.btSaveArea,
             self.btCancelAreaCreation,
             self.lb,
@@ -875,17 +855,17 @@ class BehaviorsMapCreatorWindow(QMainWindow):
             self.slAlpha,
             self.btDeleteArea,
             self.btNewArea,
-        ]:
+        ):
             widget.setVisible(False)
 
         self.btNewArea.setVisible(True)
 
         self.leAreaCode.setText("")
 
+        self.update_area_list()
+
         self.flag_map_changed = True
         self.statusBar().showMessage("New area saved", 5000)
-
-        self.update_area_list()
 
     def cancelAreaCreation(self):
         if self.closedPolygon:
@@ -945,18 +925,15 @@ class BehaviorsMapCreatorWindow(QMainWindow):
         self.view._start = 0
         self.view.points = []
         self.flagNewArea = False
-        self.btSaveArea.setVisible(False)
-        self.lb.setVisible(False)
 
-        self.btColor.setVisible(False)
-        self.slAlpha.setVisible(False)
+        for widget in (self.btSaveArea, self.lb, self.btColor, self.slAlpha, self.leAreaCode, self.btDeleteArea):
+            widget.setVisible(False)
+
         self.btNewArea.setVisible(True)
 
-        self.leAreaCode.setVisible(False)
         self.leAreaCode.setText("")
         self.btEditAreaCode.setVisible(False)
 
-        self.btDeleteArea.setVisible(False)
         self.statusBar().showMessage("")
 
         self.update_area_list()
@@ -968,7 +945,6 @@ class BehaviorsMapCreatorWindow(QMainWindow):
         self.flagNewArea = False
         self.polygonsList2 = []
         self.view.scene().clear()
-        self.btLoad.setVisible(False)
         self.btDeleteArea.setVisible(False)
         self.btNewArea.setVisible(False)
         self.saveMapAction.setEnabled(False)
@@ -1017,7 +993,6 @@ class BehaviorsMapCreatorWindow(QMainWindow):
 
         self.btNewArea.setVisible(True)
 
-        self.btLoad.setVisible(False)
         self.saveMapAction.setEnabled(True)
         self.saveAsMapAction.setEnabled(True)
         self.addToProject.setEnabled(True)

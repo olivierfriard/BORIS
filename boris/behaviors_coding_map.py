@@ -20,6 +20,9 @@ This file is part of BORIS.
 
 """
 
+import json
+import binascii
+
 from PySide6.QtGui import QMouseEvent, QPixmap, QPolygonF, QColor, QBrush, QPen
 from PySide6.QtCore import Qt, Signal, QEvent, QPoint
 from PySide6.QtWidgets import (
@@ -38,12 +41,10 @@ from PySide6.QtWidgets import (
     QApplication,
 )
 
-import json
-import binascii
 from . import config as cfg
 
-codeSeparator = ","
-penWidth = 0
+codeSeparator: str = ","
+penWidth: int = 0
 penStyle = Qt.NoPen
 
 
