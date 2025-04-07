@@ -154,6 +154,8 @@ class BehaviorsMapCreatorWindow(QMainWindow):
         fileMenu.addSeparator()
         fileMenu.addAction(self.mapNameAction)
         fileMenu.addSeparator()
+        fileMenu.addAction(self.resizeAction)
+        fileMenu.addSeparator()
         fileMenu.addAction(self.addToProject)
         fileMenu.addSeparator()
         fileMenu.addAction(self.exitAction)
@@ -706,7 +708,6 @@ class BehaviorsMapCreatorWindow(QMainWindow):
                 newPolygon.append(QPoint(p[0], p[1]))
 
             # draw polygon
-            """polygon = QGraphicsPolygonItem(None, None) if QT_VERSION_STR[0] == "4" else QGraphicsPolygonItem()"""
             polygon = QGraphicsPolygonItem()
             polygon.setPolygon(newPolygon)
             clr = QColor()
@@ -720,10 +721,14 @@ class BehaviorsMapCreatorWindow(QMainWindow):
 
         self.btNewArea.setVisible(True)
 
-        self.saveMapAction.setEnabled(True)
-        self.saveAsMapAction.setEnabled(True)
-        self.addToProject.setEnabled(True)
-        self.mapNameAction.setEnabled(True)
+        for action in (
+            self.saveMapAction,
+            self.saveAsMapAction,
+            self.addToProject,
+            self.mapNameAction,
+            self.resizeAction,
+        ):
+            action.setEnabled(True)
 
         self.update_area_list()
 
@@ -809,7 +814,7 @@ class BehaviorsMapCreatorWindow(QMainWindow):
 
     def newArea(self):
         if not self.bitmapFileName:
-            QMessageBox.critical(self, cfg.programName, "A bitmap must be loaded before to define areas")
+            QMessageBox.critical(self, cfg.programName, "An image must be loaded before to define areas")
             return
 
         if self.selectedPolygon:
@@ -963,6 +968,9 @@ class BehaviorsMapCreatorWindow(QMainWindow):
         """
         self.flagNewArea = False
         self.polygonsList2 = []
+        self.closedPolygon = None
+        self.selectedPolygon = None
+        self.area_list.clear()
         self.view.scene().clear()
         self.btDeleteArea.setVisible(False)
         self.btNewArea.setVisible(False)
@@ -970,7 +978,11 @@ class BehaviorsMapCreatorWindow(QMainWindow):
         self.saveAsMapAction.setEnabled(False)
         self.addToProject.setEnabled(False)
         self.mapNameAction.setEnabled(False)
+        self.resizeAction.setEnabled(False)
         self.statusBar().showMessage("")
+
+        self.btNewArea.setVisible(True)
+        self.btNewArea.setEnabled(True)
 
         self.flag_map_changed = False
 
@@ -1026,7 +1038,36 @@ class BehaviorsMapCreatorWindow(QMainWindow):
         """
         resize the bitmap
         """
-        self.pixmap = self.pixmap.scaled(cfg.CODING_MAP_RESIZE_W, cfg.CODING_MAP_RESIZE_H, Qt.KeepAspectRatio)
+
+        if self.polygonsList2:
+            if (
+                dialog.MessageDialog(
+                    "BORIS - Behaviors map creator",
+                    "The map contains modifiers. Erase all modifiers",
+                    (cfg.NO, cfg.YES),
+                )
+                == cfg.NO
+            ):
+                return
+
+        integer, ok = QInputDialog.getInt(
+            self, "Resize image", "New horizontal size (in pixels)", value=self.pixmap.size().width(), minValue=100, maxValue=3048, step=10
+        )
+        if not ok:
+            return
+
+        self.cancelMap()
+
+        h = int(self.pixmap.size().width() / (self.pixmap.size().width() / integer))
+
+        self.pixmap = self.pixmap.scaled(integer, h, Qt.KeepAspectRatio)
+
+        self.view.scene().clear()
+        self.view.setSceneRect(0, 0, self.pixmap.size().width(), self.pixmap.size().height())
+        pixitem = QGraphicsPixmapItem(self.pixmap)
+        pixitem.setPos(0, 0)
+        self.view.scene().addItem(pixitem)
+
         QMessageBox.information(
             self,
             cfg.programName,
