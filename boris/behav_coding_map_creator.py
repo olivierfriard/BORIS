@@ -131,6 +131,11 @@ class BehaviorsMapCreatorWindow(QMainWindow):
         self.mapNameAction.setEnabled(False)
         self.mapNameAction.triggered.connect(self.mapName_clicked)
 
+        self.resizeAction = QAction(QIcon(), "Resize the image", self)
+        self.resizeAction.setStatusTip("Resize the image")
+        self.resizeAction.setEnabled(False)
+        self.resizeAction.triggered.connect(self.resize_clicked)
+
         self.addToProject = QAction(QIcon(), "Add coding map to project", self)
         self.addToProject.setStatusTip("Add coding map to project")
         self.addToProject.setEnabled(False)
@@ -1011,10 +1016,25 @@ class BehaviorsMapCreatorWindow(QMainWindow):
         self.saveAsMapAction.setEnabled(True)
         self.addToProject.setEnabled(True)
         self.mapNameAction.setEnabled(True)
+        self.resizeAction.setEnabled(True)
 
         self.statusBar().showMessage("""Click "New behavior area" to create a new behavior area""")
 
         self.flag_map_changed = True
+
+    def resize_clicked(self):
+        """
+        resize the bitmap
+        """
+        self.pixmap = self.pixmap.scaled(cfg.CODING_MAP_RESIZE_W, cfg.CODING_MAP_RESIZE_H, Qt.KeepAspectRatio)
+        QMessageBox.information(
+            self,
+            cfg.programName,
+            (
+                f"The bitmap was resized to {self.pixmap.size().width()}x{self.pixmap.size().height()} pixels\n"
+                "The original file was not modified"
+            ),
+        )
 
 
 def behaviors_coding_map_creator(self):
