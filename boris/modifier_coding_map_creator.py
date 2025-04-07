@@ -256,8 +256,6 @@ class ModifiersMapCreatorWindow(QMainWindow):
             self.selectedPolygon = None
             self.selectedPolygonMemBrush = None
 
-        print(f"{item.text()=}")
-
         modifier_name = item.text()
 
         self.selectedPolygon = self.polygonsList2[item.text()]
