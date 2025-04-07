@@ -20,10 +20,14 @@ This file is part of BORIS.
 
 """
 
+# to run this file, use
+# python -m boris.modifier_coding_map_creator
+
 import binascii
 import io
 import json
 import os
+import re
 
 from PySide6.QtCore import (
     Qt,
@@ -67,7 +71,7 @@ from . import dialog
 from . import utilities as util
 
 designColor = QColor(255, 0, 0, 128)  # red opacity: 50%
-penWidth = 0
+penWidth: int = 0
 penStyle = Qt.NoPen
 selectedBrush = QBrush()
 selectedBrush.setStyle(Qt.SolidPattern)
@@ -87,8 +91,9 @@ class ModifiersMapCreatorWindow(QMainWindow):
         def mousePressEvent(self, event):
             self.mousePress.emit(event)
 
-        _start = 0
-        elList, points = [], []
+        _start: int = 0
+        elList: list = []
+        points: list = []
 
         def __init__(self, parent):
             QGraphicsView.__init__(self, parent)
@@ -101,7 +106,8 @@ class ModifiersMapCreatorWindow(QMainWindow):
     fileName: str = ""
     flagNewArea: bool = False
     flag_map_changed: bool = False
-    areasList, polygonsList2 = {}, {}
+    areasList: dict = {}
+    polygonsList2: dict = {}
     areaColor = QColor("lime")
 
     def __init__(self):
@@ -211,7 +217,7 @@ class ModifiersMapCreatorWindow(QMainWindow):
         self.btColor = QPushButton()
         self.btColor.clicked.connect(self.chooseColor)
         self.btColor.setVisible(False)
-        self.btColor.setStyleSheet("QWidget {{background-color:{}}}".format(self.areaColor.name()))
+        self.btColor.setStyleSheet(f"QWidget {{ background-color:{self.areaColor.name()} }}")
         hlayout_area.addWidget(self.btColor)
 
         self.slAlpha = QSlider(Qt.Horizontal)
@@ -262,28 +268,46 @@ class ModifiersMapCreatorWindow(QMainWindow):
 
         self.selectedPolygonMemBrush = self.selectedPolygon.brush()
 
+        self.selectedPolygonAreaCode = modifier_name
+
         self.selectedPolygon.setPen(QPen(QColor(255, 0, 0, 255), 2, Qt.SolidLine, Qt.RoundCap, Qt.RoundJoin))
 
         self.leAreaCode.setText(modifier_name)
-        for widget in (self.leAreaCode, self.lb, self.btDeleteArea, self.btColor, self.slAlpha):
+        for widget in (self.lb, self.leAreaCode, self.btSaveArea, self.btDeleteArea, self.btColor, self.slAlpha):
             widget.setVisible(True)
+
+        self.btSaveArea.setText("Update modifier")
+        self.btDeleteArea.setEnabled(True)
 
         self.areaColor = self.selectedPolygon.brush().color()
         self.btColor.setStyleSheet(f"QWidget {{background-color:{self.selectedPolygon.brush().color().name()}}}")
 
-        self.slAlpha.setValue(int(self.selectedPolygon.brush().color().alpha() / 255 * 100))
+        self.slAlpha.setValue(int(self.areaColor.alpha() / 255 * 100))
+
+    def get_current_alpha_value(self) -> str | None:
+        """
+        returns current alpha value (from button text)
+        """
+        match = re.search(r"(\d+)", self.btColor.text())
+
+        if match:
+            opacity_value = int(match.group(1))  # Convert the extracted string to an integer
+            return opacity_value
+        else:
+            return None
 
     def slAlpha_changed(self, val):
         """
         opacity slider value changed
         """
 
-        self.btColor.setText("Opacity: {} %".format(val))
+        self.btColor.setText(f"Opacity: {val}")
         self.areaColor.setAlpha(int(val / 100 * 255))
 
         if self.selectedPolygon:
             self.selectedPolygon.setBrush(self.areaColor)
-            self.areasList[self.leAreaCode.text()]["color"] = self.areaColor.rgba()
+
+            # self.areasList[self.leAreaCode.text()]["color"] = self.areaColor.rgba()
 
         if self.closedPolygon:
             self.closedPolygon.setBrush(self.areaColor)
@@ -296,30 +320,32 @@ class ModifiersMapCreatorWindow(QMainWindow):
         cd.setWindowFlags(Qt.WindowStaysOnTopHint)
         cd.setOptions(QColorDialog.ShowAlphaChannel | QColorDialog.DontUseNativeDialog)
 
-        if cd.exec_():
+        if cd.exec():
             self.areaColor = cd.currentColor()
+            self.areaColor.setAlpha(int(self.get_current_alpha_value() / 100 * 255))
+
             self.btColor.setStyleSheet(f"QWidget {{background-color:{self.areaColor.name()}}}")
 
-        if self.selectedPolygon:
-            self.selectedPolygon.setBrush(self.areaColor)
-            self.areasList[self.leAreaCode.text()]["color"] = self.areaColor.rgba()
+            if self.selectedPolygon:
+                self.selectedPolygon.setBrush(self.areaColor)
+                self.areasList[self.leAreaCode.text()]["color"] = self.areaColor.rgba()
 
-        if self.closedPolygon:
-            self.closedPolygon.setBrush(self.areaColor)
+            if self.closedPolygon:
+                self.closedPolygon.setBrush(self.areaColor)
 
     def closeEvent(self, event):
         if self.flag_map_changed:
             response = dialog.MessageDialog(
                 "BORIS - Modifiers map creator",
                 "What to do about the current unsaved modifiers coding map?",
-                ["Save", "Discard", "Cancel"],
+                [cfg.SAVE, cfg.DISCARD, cfg.CANCEL],
             )
 
-            if response == "Save":
+            if response == cfg.SAVE:
                 if not self.saveMap_clicked():
                     event.ignore()
 
-            if response == "Cancel":
+            if response == cfg.CANCEL:
                 event.ignore()
                 return
 
@@ -331,12 +357,52 @@ class ModifiersMapCreatorWindow(QMainWindow):
         check if area selected with mouse
         """
 
+        def new_polygon():
+            """
+            create a newpolygon
+            """
+            newPolygon = QPolygonF()
+            for p in self.view.points:
+                newPolygon.append(QPoint(p[0], p[1]))
+
+            # draw polygon a red polygon
+            self.closedPolygon = QGraphicsPolygonItem(newPolygon)
+            self.closedPolygon.setPen(QPen(designColor, penWidth, penStyle, Qt.RoundCap, Qt.RoundJoin))
+            self.closedPolygon.setBrush(self.areaColor)
+            self.view.scene().addItem(self.closedPolygon)
+
+        def add_last_line():
+            """
+            add last line to start point
+            """
+            line = QGraphicsLineItem(
+                QLineF(
+                    self.view._start,
+                    QPoint(self.view.points[0][0], self.view.points[0][1]),
+                )
+            )
+            line.setPen(
+                QPen(
+                    designColor,
+                    penWidth,
+                    Qt.SolidLine,
+                    Qt.RoundCap,
+                    Qt.RoundJoin,
+                )
+            )
+
+            self.view.scene().addItem(line)
+            self.view.elList.append(line)
+
+            self.statusBar().showMessage("Area completed")
+
         if not self.bitmapFileName:
             return
 
         self.btDeleteArea.setEnabled(False)
 
-        test = self.view.mapToScene(event.pos()).toPoint()
+        # test = self.view.mapToScene(event.pos()).toPoint()
+        test = self.view.mapToScene(event.position().toPoint()).toPoint()
 
         if test.x() < 0 or test.y() < 0 or test.x() > self.pixmap.size().width() or test.y() > self.pixmap.size().height():
             return
@@ -350,10 +416,12 @@ class ModifiersMapCreatorWindow(QMainWindow):
                 self.selectedPolygon = None
                 self.selectedPolygonMemBrush = None
 
-            for areaCode in self.polygonsList2:
+            for idx, areaCode in enumerate(sorted(self.polygonsList2.keys())):
+                for widget in (self.lb, self.leAreaCode, self.btSaveArea, self.btDeleteArea, self.btColor, self.slAlpha):
+                    widget.setVisible(False)
+
                 if self.polygonsList2[areaCode].contains(test):
-                    if txt:
-                        txt += ","
+                    txt += "," if txt else ""
 
                     txt += areaCode
                     self.selectedPolygon = self.polygonsList2[areaCode]
@@ -372,20 +440,24 @@ class ModifiersMapCreatorWindow(QMainWindow):
                     )
 
                     self.leAreaCode.setText(areaCode)
-                    self.leAreaCode.setVisible(True)
                     self.btDeleteArea.setEnabled(True)
 
-                    self.areaColor = self.selectedPolygon.brush().color()
-                    self.btColor.setStyleSheet("QWidget {{background-color:{}}}".format(self.selectedPolygon.brush().color().name()))
-                    self.btColor.setVisible(True)
+                    # select area in list widget
+                    item = self.area_list.item(idx)
+                    self.area_list.setCurrentItem(item)
 
-                    self.slAlpha.setValue(int(self.selectedPolygon.brush().color().alpha() / 255 * 100))
-                    self.slAlpha.setVisible(True)
+                    for widget in (self.lb, self.leAreaCode, self.btSaveArea, self.btDeleteArea, self.btColor, self.slAlpha):
+                        widget.setVisible(True)
+
+                    self.areaColor = self.selectedPolygon.brush().color()
+                    self.btColor.setStyleSheet(f"QWidget {{background-color:{self.selectedPolygon.brush().color().name()} }}")
+
+                    self.slAlpha.setValue(int(self.areaColor.alpha() / 255 * 100))
 
                     break
 
             if txt:
-                self.statusBar().showMessage("Modifier{}: {}".format("s" if "," in txt else "", txt))
+                self.statusBar().showMessage(f"Modifier{'s' if ',' in txt else ''}: {txt}")
             else:
                 self.statusBar().showMessage("")
 
@@ -395,7 +467,7 @@ class ModifiersMapCreatorWindow(QMainWindow):
                 self.slAlpha.setVisible(False)
             return
 
-        # delete last line item
+        # right button: delete last line item
         if (event.buttons() & Qt.RightButton) and not self.closedPolygon:
             if self.view.points:
                 self.view.points = self.view.points[0:-1]
@@ -409,6 +481,11 @@ class ModifiersMapCreatorWindow(QMainWindow):
             if self.view.elList:
                 self.view.scene().removeItem(self.view.elList[-1])
                 self.view.elList = self.view.elList[0:-1]
+
+        # middle button automatically close the polygon
+        if (event.buttons() & Qt.MiddleButton) and not self.closedPolygon:
+            add_last_line()
+            new_polygon()
 
         # add line item
         if event.buttons() == Qt.LeftButton and not self.closedPolygon:
@@ -429,40 +506,8 @@ class ModifiersMapCreatorWindow(QMainWindow):
 
                 # test if polygon closed (dist min 10 px)
                 if abs(end.x() - self.view.points[0][0]) < 10 and abs(end.y() - self.view.points[0][1]) < 10:
-                    line = QGraphicsLineItem(
-                        QLineF(
-                            self.view._start,
-                            QPoint(self.view.points[0][0], self.view.points[0][1]),
-                        )
-                    )
-                    line.setPen(
-                        QPen(
-                            designColor,
-                            penWidth,
-                            Qt.SolidLine,
-                            Qt.RoundCap,
-                            Qt.RoundJoin,
-                        )
-                    )
-
-                    self.view.scene().addItem(line)
-                    self.view.elList.append(line)
-
-                    self.statusBar().showMessage("Area completed")
-
-                    # create polygon
-                    newPolygon = QPolygonF()
-                    for p in self.view.points:
-                        newPolygon.append(QPoint(p[0], p[1]))
-
-                    # draw polygon a red polygon
-                    self.closedPolygon = QGraphicsPolygonItem(newPolygon)
-
-                    self.closedPolygon.setPen(QPen(designColor, penWidth, penStyle, Qt.RoundCap, Qt.RoundJoin))
-
-                    self.closedPolygon.setBrush(self.areaColor)
-
-                    self.view.scene().addItem(self.closedPolygon)
+                    add_last_line()
+                    new_polygon()
 
                     return
 
@@ -506,7 +551,7 @@ class ModifiersMapCreatorWindow(QMainWindow):
         )
         if ok:
             self.mapName = text
-            self.setWindowTitle("{} - Modifiers map creator tool - {}".format(cfg.programName, self.mapName))
+            self.setWindowTitle(f"{cfg.programName} - Modifiers map creator tool - {self.mapName}")
 
     def newMap(self):
         """
@@ -556,14 +601,14 @@ class ModifiersMapCreatorWindow(QMainWindow):
             response = dialog.MessageDialog(
                 cfg.programName + " - Map creator",
                 "What to do about the current unsaved coding map?",
-                ["Save", "Discard", "Cancel"],
+                (cfg.SAVE, cfg.DISCARD, cfg.CANCEL),
             )
 
-            if response == "Save":
+            if response == cfg.SAVE:
                 if not self.saveMap_clicked():
                     return
 
-            if response == "Cancel":
+            if response == cfg.CANCEL:
                 return
 
         fileName, _ = QFileDialog().getOpenFileName(
@@ -581,7 +626,7 @@ class ModifiersMapCreatorWindow(QMainWindow):
             QMessageBox.critical(
                 self,
                 cfg.programName,
-                "The file {} seems not a behaviors coding map...".format(fileName),
+                f"The file {fileName} seems not a behaviors coding map...",
             )
             return
 
@@ -596,6 +641,7 @@ class ModifiersMapCreatorWindow(QMainWindow):
         self.fileName = fileName
 
         self.areasList = self.codingMap["areas"]  # dictionary of dictionaries
+
         bitmapContent = binascii.a2b_base64(self.codingMap["bitmap"])
 
         self.pixmap.loadFromData(bitmapContent)
@@ -634,7 +680,10 @@ class ModifiersMapCreatorWindow(QMainWindow):
         self.saveMapAction.setEnabled(True)
         self.saveAsMapAction.setEnabled(True)
         self.mapNameAction.setEnabled(True)
-        self.statusBar().showMessage('Click "New area" to create a new area')
+
+        self.update_area_list()
+
+        self.statusBar().showMessage('Click the "New modifier" button to create a new modifier')
 
     def saveMap(self) -> bool:
         """
@@ -704,8 +753,11 @@ class ModifiersMapCreatorWindow(QMainWindow):
         return False
 
     def newArea(self):
+        """
+        create a new area
+        """
         if not self.bitmapFileName:
-            QMessageBox.critical(self, cfg.programName, "A bitmap must be loaded before to define areas")
+            QMessageBox.critical(self, cfg.programName, "An image must be loaded before to define areas")
             return
 
         if self.selectedPolygon:
@@ -713,78 +765,96 @@ class ModifiersMapCreatorWindow(QMainWindow):
             self.selectedPolygon = None
 
         self.flagNewArea = True
-        self.btSaveArea.setVisible(True)
-        self.btCancelAreaCreation.setVisible(True)
-        self.btNewArea.setVisible(False)
-        self.lb.setVisible(True)
         self.leAreaCode.clear()
-        self.leAreaCode.setVisible(True)
-        self.btColor.setVisible(True)
-        self.slAlpha.setVisible(True)
+
+        for widget in (
+            self.btSaveArea,
+            self.btCancelAreaCreation,
+            self.lb,
+            self.leAreaCode,
+            self.btColor,
+            self.slAlpha,
+        ):
+            widget.setVisible(True)
+
+        self.btSaveArea.setText("Save modifier")
+
+        self.btNewArea.setVisible(False)
         self.btDeleteArea.setVisible(False)
 
         self.statusBar().showMessage(
-            "Select the vertices of the area for this modifier with the mouse (right click will cancel the last point)"
+            "Draw a polygon by clicking the vertices (right-click will delete the last point, middle-click will close the polygon)"
         )
 
     def saveArea(self):
         """
         save the new modifier in the list
         """
-        if not self.closedPolygon:
-            QMessageBox.critical(
-                self,
-                cfg.programName,
-                "You must close your area before saving it.\nThe last vertex must correspond to the first one.",
-            )
-
-        if len(self.view.points) < 3:
-            QMessageBox.critical(self, cfg.programName, "You must define a closed area")
-            return
-
-        # check if no modifier name
-        if not self.leAreaCode.text():
-            QMessageBox.critical(self, cfg.programName, "You must define a code for the new modifier")
-            return
 
         # check if not allowed character
-        for c in "|,()":
+        for c in cfg.CHAR_FORBIDDEN_IN_MODIFIERS:
             if c in self.leAreaCode.text():
                 QMessageBox.critical(
                     self,
                     cfg.programName,
-                    "The modifier contains a character that is not allowed <b>()|,</b>.",
+                    f"The modifier contains a character that is not allowed <b>{cfg.CHAR_FORBIDDEN_IN_MODIFIERS}</b>.",
                 )
                 return
 
-        # check if modifier name already used
-        if self.leAreaCode.text() in self.areasList:
-            QMessageBox.critical(self, cfg.programName, "The modifier name is already in use")
-            return
+        # check if modification
+        if "save" in self.btSaveArea.text().lower():
+            if not self.closedPolygon:
+                QMessageBox.critical(
+                    self,
+                    cfg.programName,
+                    "You must close your area before saving it.\nThe last vertex must correspond to the first one.",
+                )
 
-        # create polygon
-        newPolygon = QPolygon()
-        for p in self.view.points:
-            newPolygon.append(QPoint(p[0], p[1]))
+            if len(self.view.points) < 3:
+                QMessageBox.critical(self, cfg.programName, "You must define a closed area")
+                return
 
-        self.areasList[self.leAreaCode.text()] = {
-            "geometry": self.view.points,
-            "color": self.areaColor.rgba(),
-        }
+            # check if no modifier name
+            if not self.leAreaCode.text():
+                QMessageBox.critical(self, cfg.programName, "You must define a code for the new modifier")
+                return
 
-        # remove all lines
-        for line in self.view.elList:
-            self.view.scene().removeItem(line)
+            # check if modifier name already used
+            if self.leAreaCode.text() in self.areasList:
+                QMessageBox.critical(self, cfg.programName, "The modifier name is already in use")
+                return
 
-        # draw polygon
-        self.closedPolygon.setBrush(QBrush(self.areaColor, Qt.SolidPattern))
-        self.polygonsList2[self.leAreaCode.text()] = self.closedPolygon
-        self.closedPolygon = None
-        self.view._start = 0
-        self.view.points = []
-        self.view.elList = []
-        self.flagNewArea = False
-        self.closedPolygon = None
+            # create polygon
+            newPolygon = QPolygon()
+            for p in self.view.points:
+                newPolygon.append(QPoint(p[0], p[1]))
+
+            self.areasList[self.leAreaCode.text()] = {
+                "geometry": self.view.points,
+                "color": self.areaColor.rgba(),
+            }
+
+            # remove all lines
+            for line in self.view.elList:
+                self.view.scene().removeItem(line)
+
+            # draw polygon
+            self.closedPolygon.setBrush(QBrush(self.areaColor, Qt.SolidPattern))
+            self.polygonsList2[self.leAreaCode.text()] = self.closedPolygon
+            self.closedPolygon = None
+            self.view._start = 0
+            self.view.points = []
+            self.view.elList = []
+            self.flagNewArea = False
+
+            self.statusBar().showMessage("New modifier saved", 5000)
+
+        else:  # modification
+            if self.leAreaCode.text() not in self.polygonsList2:
+                self.polygonsList2[self.leAreaCode.text()] = self.polygonsList2.pop(self.area_list.currentItem().text())
+                self.polygonsList2[self.leAreaCode.text()].setBrush(self.areaColor)
+
+            self.statusBar().showMessage("Modifier modified", 5000)
 
         for widget in (
             self.btSaveArea,
@@ -799,13 +869,9 @@ class ModifiersMapCreatorWindow(QMainWindow):
             widget.setVisible(False)
 
         self.btNewArea.setVisible(True)
-
         self.leAreaCode.setText("")
-
         self.update_area_list()
-
         self.flag_map_changed = True
-        self.statusBar().showMessage("New modifier saved", 5000)
 
     def cancelAreaCreation(self):
         if self.closedPolygon:
@@ -834,11 +900,14 @@ class ModifiersMapCreatorWindow(QMainWindow):
         self.leAreaCode.setText("")
 
     def update_area_list(self):
+        """
+        update the area list widget
+        """
         self.area_list.clear()
 
         print(f"{self.polygonsList2=}")
 
-        for modifier_name in self.polygonsList2:
+        for modifier_name in sorted(self.polygonsList2.keys()):
             self.area_list.addItem(modifier_name)
 
     def deleteArea(self):
@@ -848,10 +917,14 @@ class ModifiersMapCreatorWindow(QMainWindow):
 
         if self.selectedPolygon:
             self.view.scene().removeItem(self.selectedPolygon)
-            self.view.scene().removeItem(self.polygonsList2[self.selectedPolygonAreaCode])
 
-            del self.polygonsList2[self.selectedPolygonAreaCode]
-            del self.areasList[self.selectedPolygonAreaCode]
+            if self.selectedPolygonAreaCode:
+                self.view.scene().removeItem(self.polygonsList2[self.selectedPolygonAreaCode])
+                del self.polygonsList2[self.selectedPolygonAreaCode]
+                del self.areasList[self.selectedPolygonAreaCode]
+
+            self.selectedPolygonAreaCode = None
+            self.selectedPolygon = None
 
             self.flag_map_changed = True
 
@@ -867,6 +940,7 @@ class ModifiersMapCreatorWindow(QMainWindow):
         self.btNewArea.setVisible(True)
 
         self.leAreaCode.setText("")
+        self.statusBar().showMessage("")
 
         self.update_area_list()
 
@@ -932,6 +1006,25 @@ if __name__ == "__main__":
 
     app = QApplication(sys.argv)
     window = ModifiersMapCreatorWindow()
-    window.resize(640, 640)
+    window.resize(800, 700)
+
+    print(f"{window.width()=}")
+    print(f"{window.height()=}")
+
+    # Get the screen geometry (screen size and position)
+    screen_geometry = app.primaryScreen().geometry()
+
+    print(f"{screen_geometry=}")
+
+    # Calculate the center of the screen
+    center_x = (screen_geometry.width() - window.width()) // 2
+    center_y = (screen_geometry.height() - window.height()) // 2
+
+    print(f"{center_x=}")
+    print(f"{center_y=}")
+
+    # Move the widget to the center of the screen
+    window.move(center_x, center_y)
+
     window.show()
-    sys.exit(app.exec_())
+    sys.exit(app.exec())

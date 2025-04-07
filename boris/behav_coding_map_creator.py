@@ -114,14 +114,14 @@ class BehaviorsMapCreatorWindow(QMainWindow):
         self.openMapAction.setStatusTip("Open a behaviors coding map")
         self.openMapAction.triggered.connect(self.openMap)
 
-        self.saveMapAction = QAction(QIcon(), "&Save the current behaviors coding map", self)
+        self.saveMapAction = QAction(QIcon(), "&Save the behavior coding map", self)
         self.saveMapAction.setShortcut("Ctrl+S")
-        self.saveMapAction.setStatusTip("Save the current behaviors coding map")
+        self.saveMapAction.setStatusTip("Save the behavior coding map")
         self.saveMapAction.setEnabled(False)
         self.saveMapAction.triggered.connect(self.saveMap_clicked)
 
-        self.saveAsMapAction = QAction(QIcon(), "Save the current behaviors coding map as ...", self)
-        self.saveAsMapAction.setStatusTip("Save the current behaviors coding map as ...")
+        self.saveAsMapAction = QAction(QIcon(), "Save the behavior coding map as ...", self)
+        self.saveAsMapAction.setStatusTip("Save the behavior coding map as ...")
         self.saveAsMapAction.setEnabled(False)
         self.saveAsMapAction.triggered.connect(self.saveAsMap_clicked)
 
@@ -288,19 +288,21 @@ class BehaviorsMapCreatorWindow(QMainWindow):
 
         self.selectedPolygon.setPen(QPen(QColor(255, 0, 0, 255), 2, Qt.SolidLine, Qt.RoundCap, Qt.RoundJoin))
 
-        self.lb.setVisible(True)
         self.leAreaCode.setText(ac)
-        self.leAreaCode.setVisible(True)
-        self.btEditAreaCode.setVisible(True)
 
-        self.btDeleteArea.setVisible(True)
+        for widget in (
+            self.lb,
+            self.leAreaCode,
+            self.btEditAreaCode,
+            self.btDeleteArea,
+            self.btColor,
+            self.slAlpha,
+        ):
+            widget.setVisible(True)
 
         self.areaColor = self.selectedPolygon.brush().color()
         self.btColor.setStyleSheet(f"QWidget {{background-color:{self.selectedPolygon.brush().color().name()}}}")
-        self.btColor.setVisible(True)
-
-        self.slAlpha.setValue(int(self.selectedPolygon.brush().color().alpha() / 255 * 100))
-        self.slAlpha.setVisible(True)
+        self.slAlpha.setValue(int(self.areaColor.alpha() / 255 * 100))
 
     def edit_area_code(self):
         """
@@ -352,9 +354,7 @@ class BehaviorsMapCreatorWindow(QMainWindow):
         cd.setWindowFlags(Qt.WindowStaysOnTopHint)
         cd.setOptions(QColorDialog.DontUseNativeDialog)
 
-        # col = cd.getColor()
-        # if col.isValid():
-        if cd.exec_():
+        if cd.exec():
             self.areaColor = cd.currentColor()
             self.btColor.setStyleSheet(f"QWidget {{background-color:{self.areaColor.name()}}}")
             self.areaColor.setAlpha(int(self.slAlpha.value() / 100 * 255))
@@ -423,30 +423,29 @@ class BehaviorsMapCreatorWindow(QMainWindow):
                 self.selectedPolygon = None
                 self.selectedPolygonMemBrush = None
 
+            print(self.polygonsList2)
+            idx = 0
             for areaCode, pg in self.polygonsList2:
                 if pg.contains(test):
                     self.selectedPolygon = pg
-
                     self.selectedPolygonMemBrush = self.selectedPolygon.brush()
-
                     self.selectedPolygon.setPen(QPen(QColor(255, 0, 0, 255), 2, Qt.SolidLine, Qt.RoundCap, Qt.RoundJoin))
-
-                    self.lb.setVisible(True)
                     self.leAreaCode.setText(areaCode)
-                    self.leAreaCode.setVisible(True)
-                    # self.leAreaCode.setEnabled(False)
-                    self.btEditAreaCode.setVisible(True)
 
-                    self.btDeleteArea.setVisible(True)
+                    for widget in (self.lb, self.leAreaCode, self.btEditAreaCode, self.btColor, self.slAlpha, self.btDeleteArea):
+                        widget.setVisible(True)
 
                     self.areaColor = self.selectedPolygon.brush().color()
                     self.btColor.setStyleSheet(f"QWidget {{background-color:{self.selectedPolygon.brush().color().name()}}}")
-                    self.btColor.setVisible(True)
 
-                    self.slAlpha.setValue(int(self.selectedPolygon.brush().color().alpha() / 255 * 100))
-                    self.slAlpha.setVisible(True)
+                    self.slAlpha.setValue(int(self.areaColor.alpha() / 255 * 100))
+
+                    # select area in list widget
+                    item = self.area_list.item(idx)
+                    self.area_list.setCurrentItem(item)
 
                     break
+                idx += 1
 
             if not self.selectedPolygon:
                 self.leAreaCode.setVisible(False)
@@ -471,6 +470,20 @@ class BehaviorsMapCreatorWindow(QMainWindow):
             if self.view.elList:
                 self.view.scene().removeItem(self.view.elList[-1])
                 self.view.elList = self.view.elList[0:-1]
+
+        # middle button automatically close the polygon
+        if (event.buttons() & Qt.MiddleButton) and not self.closedPolygon:
+            line = QGraphicsLineItem(QLineF(self.view._start, QPoint(self.view.points[0][0], self.view.points[0][1])))
+            line.setPen(QPen(designColor, penWidth, Qt.SolidLine, Qt.RoundCap, Qt.RoundJoin))
+
+            self.view.scene().addItem(line)
+            self.view.elList.append(line)
+
+            self.statusBar().showMessage("Area completed")
+
+            # create polygon
+            add_polygon()
+            return
 
         # add line item
         if event.buttons() == Qt.LeftButton and not self.closedPolygon:
@@ -647,7 +660,7 @@ class BehaviorsMapCreatorWindow(QMainWindow):
         )
 
         if not fileName:
-            self.statusBar().showMessage("No file", 5000)
+            return
         try:
             self.codingMap = json.loads(open(fileName, "r").read())
         except Exception:
@@ -656,6 +669,7 @@ class BehaviorsMapCreatorWindow(QMainWindow):
 
         if "coding_map_type" not in self.codingMap or self.codingMap["coding_map_type"] != "BORIS behaviors coding map":
             QMessageBox.critical(self, cfg.programName, f"The file {fileName} is not a BORIS behaviors coding map.")
+            return
 
         self.cancelMap()
 
@@ -1028,6 +1042,11 @@ if __name__ == "__main__":
 
     app = QApplication(sys.argv)
     window = BehaviorsMapCreatorWindow(["North zone", "East zone", "South zone", "West zone"])
+    window.bcm_list = []
     window.resize(cfg.CODING_MAP_RESIZE_W, cfg.CODING_MAP_RESIZE_H)
+    screen_geometry = app.primaryScreen().geometry()
+    center_x = (screen_geometry.width() - window.width()) // 2
+    center_y = (screen_geometry.height() - window.height()) // 2
+    window.move(center_x, center_y)
     window.show()
-    sys.exit(app.exec_())
+    sys.exit(app.exec())
