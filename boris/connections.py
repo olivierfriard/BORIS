@@ -49,7 +49,6 @@ from . import (
     video_operations,
     project_functions,
     external_processes,
-    plugins,
 )
 
 from . import state_events as state_events

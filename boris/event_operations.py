@@ -906,15 +906,18 @@ def paste_clipboard_to_events(self):
         content.append(line.split("\t"))
 
     if set(length) != set([len(cfg.PJ_EVENTS_FIELDS[self.playerType])]):
-        QMessageBox.warning(
-            self,
+        msg_box = QMessageBox(
+            QMessageBox.Warning,
             cfg.programName,
             (
-                "The clipboard does not contain events!\n"
+                "The clipboard does not contain events!<br>"
                 f"For an observation from <b>{self.playerType}</b> "
                 f"the events must be organized in {len(cfg.PJ_EVENTS_FIELDS[self.playerType])} columns separated by <TAB> character"
             ),
         )
+        msg_box.setWindowFlags(msg_box.windowFlags() | Qt.WindowStaysOnTopHint)
+        msg_box.exec()
+
         return
 
     for event in content:

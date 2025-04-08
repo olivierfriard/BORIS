@@ -68,6 +68,8 @@ def write_event(self, event: dict, mem_time: dec) -> int:
             )
             return 1
 
+        print(f"{mem_time=}")
+
         if mem_time < self.pj[cfg.OBSERVATIONS][self.observationId].get(cfg.OBSERVATION_TIME_INTERVAL, [0, 0])[0]:
             _ = dialog.MessageDialog(
                 cfg.programName,

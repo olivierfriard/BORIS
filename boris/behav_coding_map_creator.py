@@ -1084,7 +1084,9 @@ def behaviors_coding_map_creator(self):
     """
 
     if not self.project:
-        QMessageBox.warning(self, cfg.programName, "No project found", QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
+        QMessageBox.warning(
+            self, cfg.programName, "Create or open a project first", QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton
+        )
         return
 
     codes_list = [self.pj[cfg.ETHOGRAM][key][cfg.BEHAVIOR_CODE] for key in self.pj[cfg.ETHOGRAM]]

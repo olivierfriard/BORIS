@@ -4047,11 +4047,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             try:
                 behavior_idx = [key for key in self.pj[cfg.ETHOGRAM] if self.pj[cfg.ETHOGRAM][key][cfg.BEHAVIOR_CODE] == code][0]
             except Exception:
-                QMessageBox.critical(
-                    self,
-                    cfg.programName,
-                    f"The code <b>{code}</b> of behavior coding map does not exist in ethogram.",
+                msg_box = QMessageBox(
+                    QMessageBox.Critical, cfg.programName, f"The code <b>{code}</b> of behavior coding map does not exist in ethogram."
                 )
+                msg_box.setWindowFlags(msg_box.windowFlags() | Qt.WindowStaysOnTopHint)
+                msg_box.exec()
                 return
 
             event = self.full_event(behavior_idx)
@@ -4071,8 +4071,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 write_event.write_event(self, event, time_)
             else:
                 write_event.write_event(self, event, cumulative_time)
-
-            # write_event.write_event(self.event, self.getLaps())
 
     def keypress_signal_from_behaviors_coding_map(self, event):
         """
@@ -4786,12 +4784,13 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             return dec("0")
 
         if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE] == cfg.LIVE:
-            if "Live observation finished" in self.pb_live_obs.text():
-                return dec("NaN"), None
+            if "finished" in self.pb_live_obs.text():
+                return dec("NaN"), dec("NaN")
             if self.liveObservationStarted:
-                return dec(str(round(self.liveStartTime.elapsed() / 1000, 3))), None
+                t = dec(str(round(self.liveStartTime.elapsed() / 1000, 3)))
+                return t, t
             else:
-                return dec("0"), None
+                return dec("0"), dec("0")
 
         if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE] == cfg.IMAGES:
             if self.playerType == cfg.VIEWER_IMAGES:
