@@ -1,0 +1,35 @@
+name: Generate MD5 Sums for Release Assets
+
+on:
+  release:
+    types: [published]
+
+jobs:
+  generate-md5:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v3
+
+    - name: Download release assets
+      uses: robinraju/release-downloader@v1.8
+      with:
+        tag: ${{ github.event.release.tag_name }}
+        fileName: "*"
+        out-file-path: assets/
+
+    - name: Calculate MD5 checksums
+      run: |
+        cd assets
+        for file in *; do
+          md5sum "$file"
+        done > md5sums.txt
+
+    - name: Upload md5sums.txt to the release
+      uses: softprops/action-gh-release@v1
+      with:
+        tag_name: ${{ github.event.release.tag_name }}
+        files: assets/md5sums.txt
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
