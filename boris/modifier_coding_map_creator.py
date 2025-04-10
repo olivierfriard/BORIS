@@ -28,7 +28,7 @@ import io
 import json
 from pathlib import Path
 import re
-import resize_window
+import gui_utilities
 
 from PySide6.QtCore import (
     Qt,
@@ -1009,7 +1009,7 @@ if __name__ == "__main__":
     app = QApplication(sys.argv)
     window = ModifiersMapCreatorWindow()
 
-    resize_window.resize_center(app, window, cfg.CODING_MAP_RESIZE_W, cfg.CODING_MAP_RESIZE_H)
+    gui_utilities.resize_center(app, window, cfg.CODING_MAP_RESIZE_W, cfg.CODING_MAP_RESIZE_H)
 
     window.show()
     sys.exit(app.exec())

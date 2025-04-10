@@ -888,7 +888,7 @@ def new_observation(self, mode: str = cfg.NEW, obsId: str = "") -> None:
                 self.pj[cfg.OBSERVATIONS][obsId][cfg.CLOSE_BEHAVIORS_BETWEEN_VIDEOS]
             )
 
-    rv = observationWindow.exec_()
+    rv = observationWindow.exec()
 
     # save geometry
     gui_utilities.save_geometry(observationWindow, "new observation")

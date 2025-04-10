@@ -24,7 +24,7 @@ import binascii
 import io
 import json
 from pathlib import Path
-import resize_window
+import gui_utilities
 
 from PySide6.QtCore import QBuffer, QByteArray, QIODevice, QLineF, QPoint, Qt, Signal
 from PySide6.QtGui import QBrush, QColor, QIcon, QMouseEvent, QPen, QPixmap, QPolygonF, QAction
@@ -1106,6 +1106,6 @@ if __name__ == "__main__":
     app = QApplication(sys.argv)
     window = BehaviorsMapCreatorWindow(["North zone", "East zone", "South zone", "West zone"])
     window.bcm_list = []
-    resize_window.resize_center(app, window, cfg.CODING_MAP_RESIZE_W, cfg.CODING_MAP_RESIZE_H)
+    gui_utilities.resize_center(app, window, cfg.CODING_MAP_RESIZE_W, cfg.CODING_MAP_RESIZE_H)
     window.show()
     sys.exit(app.exec())

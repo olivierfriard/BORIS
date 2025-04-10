@@ -44,6 +44,7 @@ def restore_geometry(widget: QWidget, widget_name: str, default_width_height):
     """
     restore window geometry in ini file
     """
+
     def default_resize(widget, default_width_height):
         if default_width_height != (0, 0):
             try:
@@ -51,15 +52,14 @@ def restore_geometry(widget: QWidget, widget_name: str, default_width_height):
             except Exception:
                 logging.warning("Error during restoring default")
 
-
-    logging.debug(f'restore geometry function for {widget_name}')
+    logging.debug(f"restore geometry function for {widget_name}")
     try:
         ini_file_path = pl.Path.home() / pl.Path(".boris")
         if ini_file_path.is_file():
             settings = QSettings(str(ini_file_path), QSettings.IniFormat)
             print(settings.value(f"{widget_name} geometry"))
             widget.restoreGeometry(settings.value(f"{widget_name} geometry"))
-            logging.debug(f'geometry restored for {widget_name}  {settings.value(f"{widget_name} geometry")}')
+            logging.debug(f"geometry restored for {widget_name}  {settings.value(f'{widget_name} geometry')}")
         else:
             default_resize(widget, default_width_height)
     except Exception:
@@ -108,3 +108,20 @@ def set_icons(self, theme_mode: str) -> None:
     self.action_geometric_measurements.setIcon(QIcon(f":/measurement_{theme_mode}"))
     self.actionFind_in_current_obs.setIcon(QIcon(f":/find_{theme_mode}"))
     self.actionExplore_project.setIcon(QIcon(f":/explore_{theme_mode}"))
+
+
+def resize_center(app, window, width: int, height: int) -> None:
+    """
+    resize and center window
+    """
+    window.resize(width, height)
+    screen_geometry = app.primaryScreen().geometry()
+    if window.height() > screen_geometry.height():
+        window.resize(window.width(), int(screen_geometry.height() * 0.8))
+    if window.width() > screen_geometry.width():
+        window.resize(screen_geometry.width(), window.height())
+    # center
+    center_x = (screen_geometry.width() - window.width()) // 2
+    center_y = (screen_geometry.height() - window.height()) // 2
+
+    window.move(center_x, center_y)
