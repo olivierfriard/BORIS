@@ -2012,7 +2012,7 @@ def initialize_new_media_observation(self) -> bool:
     self.mpv_eof_reached_signal.connect(self.mpv_eof_reached)
     self.video_click_signal.connect(self.player_clicked)
 
-    self.actionPlay.setIcon(QIcon(f":/play_{self.theme_mode()}"))
+    self.actionPlay.setIcon(QIcon(f":/play_{gui_utilities.theme_mode()}"))
 
     self.display_statusbar_info(self.observationId)
 

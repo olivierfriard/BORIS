@@ -64,3 +64,8 @@ version_pattern = "MAJOR.MINOR.PATCH"
     'version = "{version}"',
 ]
 
+[dependency-groups]
+dev = [
+    "pytest>=8.3.5",
+]
+

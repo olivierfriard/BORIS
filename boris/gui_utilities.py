@@ -22,8 +22,17 @@ Copyright 2012-2025 Olivier Friard
 import pathlib as pl
 import logging
 from PySide6.QtCore import QSettings
-from PySide6.QtWidgets import QWidget
+from PySide6.QtWidgets import QWidget, QApplication
 from PySide6.QtGui import QIcon
+
+
+def theme_mode() -> str:
+    """
+    return the theme mode (dark or light) of the OS
+    """
+    palette = QApplication.instance().palette()
+    color = palette.window().color()
+    return "dark" if color.value() < 128 else "light"  # Dark mode if the color value is less than 128
 
 
 def save_geometry(widget: QWidget, widget_name: str):

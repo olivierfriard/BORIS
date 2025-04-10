@@ -28,7 +28,6 @@ import math
 import os
 import pathlib as pl
 import re
-import socket
 import subprocess
 import sys
 import urllib.parse
@@ -292,27 +291,6 @@ def return_file_header_footer(file_name: str, file_row_number: int = 0, row_numb
     return header, footer
 
 
-def bytes_to_str(b: bytes) -> str:
-    """
-    Translate bytes to string.
-
-    Args:
-        b (bytes): byte to convert
-
-    Returns:
-        str: converted byte
-    """
-
-    if isinstance(b, bytes):
-        fileSystemEncoding = sys.getfilesystemencoding()
-        # hack for PyInstaller
-        if fileSystemEncoding is None:
-            fileSystemEncoding = "UTF-8"
-        return b.decode(fileSystemEncoding)
-    else:
-        return b
-
-
 def convertTime(time_format: str, sec: Union[float, dec]) -> Union[str, None]:
     """
     convert time in base at the current format (S or HHMMSS)
@@ -379,20 +357,6 @@ def count_media_file(media_files: dict) -> int:
     count number of media file for observation
     """
     return sum([len(media_files[idx]) for idx in media_files])
-
-
-def file_content_md5(file_name: str) -> str:
-    """
-    returns the MD5 sum of file content
-    """
-    hash_md5 = hashlib.md5()
-    try:
-        with open(file_name, "rb") as f:
-            for chunk in iter(lambda: f.read(4096), b""):
-                hash_md5.update(chunk)
-        return hash_md5.hexdigest()
-    except FileNotFoundError:
-        return ""
 
 
 def txt2np_array(
@@ -760,19 +724,6 @@ def get_current_points_by_subject(
     return current_points
 
 
-def get_ip_address():
-    """Get current IP address
-
-    Args:
-
-    Returns:
-        str: IP address
-    """
-    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-    s.connect(("8.8.8.8", 80))
-    return s.getsockname()[0]
-
-
 def check_txt_file(file_name: str) -> dict:
     """
     Extract parameters of txt file (test for tsv csv)
@@ -950,7 +901,7 @@ def intfloatstr(s: str) -> int:
             return s
 
 
-def distance(p1, p2):
+def distance(p1: tuple, p2: tuple) -> float:
     """
     euclidean distance between 2 points
     """
@@ -987,12 +938,12 @@ def oriented_angle(P1: tuple, P2: tuple, P3: tuple) -> float:
     Calculate the oriented angle between two segments.
 
     Args:
-        P1: Coordinates of the vertex
-        P2: Coordinates of the first point
-        P3: Coordinates of the second point
+        P1 (tuple): Coordinates of the vertex
+        P2 (tuple): Coordinates of the first point
+        P3 (tuple): Coordinates of the second point
 
     Returns:
-        The oriented angle between the two segments in degrees.
+        float: The oriented angle between the two segments in degrees.
     """
 
     x1, y1 = P1
@@ -1006,6 +957,36 @@ def oriented_angle(P1: tuple, P2: tuple, P3: tuple) -> float:
     oriented_angle = math.degrees(angle_AB - angle_CD)
 
     return oriented_angle
+
+
+def oriented_angle_trigo(B: Tuple[float, float], A: Tuple[float, float], C: Tuple[float, float]) -> float:
+    """
+    Calculates the oriented angle between vectors BA and BC, in degrees.
+    The angle is positive in the counter-clockwise (trigonometric) direction.
+
+    Parameters:
+        B: The pivot point (the origin of the vectors BA and BC).
+        A, C: Points that define the vectors.
+
+    Returns:
+        Angle in degrees, between 0 and 360.
+    """
+    # Vectors BA and BC
+    v1 = (A[0] - B[0], A[1] - B[1])
+    v2 = (C[0] - B[0], C[1] - B[1])
+
+    # Dot product and 2D cross product (determinant)
+    dot = v1[0] * v2[0] + v1[1] * v2[1]
+    det = v1[0] * v2[1] - v1[1] * v2[0]
+
+    # Signed angle in radians, then converted to degrees
+    angle_rad = math.atan2(det, dot)
+    angle_deg = math.degrees(angle_rad)
+
+    if angle_deg < 0:
+        angle_deg += 360
+
+    return angle_deg
 
 
 def mem_info():

@@ -13,10 +13,13 @@ pytest test_utilities.py
 import pytest
 import os
 import sys
+import shutil
+import subprocess
 from decimal import Decimal
 import json
 import datetime
 import numpy as np
+from pathlib import Path
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
@@ -26,35 +29,45 @@ from boris import config
 
 @pytest.fixture()
 def before():
-    os.system("rm -rf output")
-    os.system("mkdir output")
+    if Path("output").is_dir():
+        shutil.rmtree("output")
+    os.makedirs("output", exist_ok=True)
 
 
 class Test_accurate_media_analysis(object):
+    def test_ffmpeg_available(self):
+        result = subprocess.run(["ffmpeg", "-version"], stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=True)
+        assert "ffmpeg version" in result.stdout.decode()
+
     def test_media_ok(self):
         r = utilities.accurate_media_analysis("ffmpeg", "files/geese1.mp4")
+
         assert r == {
+            "analysis_program": "ffprobe",
             "frames_number": 1548,
-            "duration_ms": Decimal("61920.00"),
-            "duration": Decimal("61.92"),
-            "fps": Decimal("25"),
+            "duration_ms": 61920.0,
+            "duration": 61.92,
+            "audio_duration": 61.92,
+            "fps": 25.0,
             "has_video": True,
             "has_audio": True,
-            "bitrate": 901,
+            "bitrate": 642009,
             "resolution": "640x480",
+            "sample_rate": 44100.0,
+            "file size": 6977208,
+            "audio_codec": "AAC (Advanced Audio Coding)",
+            "video_codec": "H.264 / AVC / MPEG-4 AVC / MPEG-4 part 10",
+            "creation_time": "2014-06-24 19:52:17",
+            "format_long_name": "QuickTime / MOV",
         }
 
-
-"""
     def test_no_media(self):
         r = utilities.accurate_media_analysis("ffmpeg", "files/test.boris")
         assert "error" in r
-        # assert r == {'error': 'This file do not seem to be a media file'}
 
     def test_media_does_not_exist(self):
         r = utilities.accurate_media_analysis("ffmpeg", "files/xxx")
         assert "error" in r
-        # assert r == {'error': 'This file do not seem to be a media file'}
 
 
 class Test_angle(object):
@@ -68,6 +81,54 @@ class Test_angle(object):
         assert round(utilities.angle((0, 0), (90, 0), (0, 90)), 3) == 90.0
 
 
+class Test_oriented_angle(object):
+    def test_angle0(self):
+        # angle must be 0
+        angle = utilities.oriented_angle((0, 0), (1, 0), (1, 0))
+        assert angle == 0.0
+
+    def test_angle_minus90(self):
+        # angle must be 0
+        angle = utilities.oriented_angle((0, 0), (1, 0), (0, 1))
+        # print(angle)
+        assert angle == -90.0
+
+    def test_angle_90(self):
+        # angle must be 90
+        angle = utilities.oriented_angle((0, 0), (1, 0), (0, -1))
+        assert angle == 90.0
+
+    def test_angle_180(self):
+        # angle must be -180
+        angle = utilities.oriented_angle((0, 0), (1, 0), (-1, 0))
+        print(angle)
+        assert angle == -180.0
+
+
+class Test_oriented_angle_trigo(object):
+    def test_orientated_angle_trigo_0(self):
+        # angle must be 0
+        angle = utilities.oriented_angle_trigo((0, 0), (1, 0), (1, 0))
+        assert angle == 0.0
+
+    def test_orientated_angle_trigo_90(self):
+        # angle must be 90
+        angle = utilities.oriented_angle_trigo((0, 0), (1, 0), (0, 1))
+        # print(angle)
+        assert angle == 90.0
+
+    def test_orientated_angle_trigo_minus90(self):
+        # angle must be 270
+        angle = utilities.oriented_angle_trigo((0, 0), (1, 0), (0, -1))
+        assert angle == 270
+
+    def test_orientated_angle_trigo_180(self):
+        # angle must be 180
+        angle = utilities.oriented_angle_trigo((0, 0), (1, 0), (-1, 0))
+        assert angle == 180.0
+
+
+"""
 class Test_behavior_color(object):
     def test_idx0(self):
         assert utilities.behavior_color(config.BEHAVIORS_PLOT_COLORS, 0) == "tab:blue"
@@ -75,13 +136,6 @@ class Test_behavior_color(object):
     def test_idx1000(self):
         assert utilities.behavior_color(config.BEHAVIORS_PLOT_COLORS, 1000) == "midnightblue"
 
-
-class Test_bytes_to_str(object):
-    def test_bytes(self):
-        assert utilities.bytes_to_str(b"abc 2.3") == "abc 2.3"
-
-    def test_str(self):
-        assert utilities.bytes_to_str("abc 2.3") == "abc 2.3"
 
 
 class Test_check_txt_file(object):
@@ -104,6 +158,8 @@ class Test_check_txt_file(object):
     def test_empty_file(self):
         r = utilities.check_txt_file("files/empty_file")
         assert r == {"error": "Could not determine delimiter"}
+
+"""
 
 
 class Test_complete(object):
@@ -133,15 +189,21 @@ class Test_datetime_iso8601(object):
         assert r == "2018-12-01 22:36:07"
 
 
+"""
+
 class Test_decimal_default(object):
     def test_1(self):
         assert utilities.decimal_default(Decimal("1.456")) == 1.456
         assert isinstance(utilities.decimal_default(Decimal("1.456")), float)
+"""
 
 
 class Test_distance(object):
     def test_1(self):
         utilities.distance((10, 10), (80, 120)) == 130.38404810405297
+
+    def test_0(self):
+        utilities.distance((10, 10), (10, 10)) == 0.0
 
 
 class Test_eol2space(object):
@@ -159,9 +221,9 @@ class Test_error_info(object):
     def test_error1(self):
         try:
             1 / 0
-        except:
+        except Exception:
             r = utilities.error_info(sys.exc_info())
-            assert str(r[0]) == "division by zero"
+            assert str(r[0]) == "<class 'ZeroDivisionError'>: division by zero"
             assert r[1] == "test_utilities.py"
 
 
@@ -169,18 +231,9 @@ class Test_extract_wav(object):
     @pytest.mark.usefixtures("before")
     def test_wav_from_mp4(self):
         r = utilities.extract_wav(ffmpeg_bin="ffmpeg", media_file_path="files/geese1.mp4", tmp_dir="output")
-        assert r == "output/geese1.mp4.wav"
-        assert os.path.isfile("output/geese1.mp4.wav")
-
-
-class Test_file_content_md5(object):
-    def test_file(self):
-        r = utilities.file_content_md5(file_name="files/geese1.mp4")
-        assert r == "66e19a1e182b7564c4e8c2b1874623b8"
-
-    def test_file_not_existing(self):
-        r = utilities.file_content_md5(file_name="files/xxx")
-        assert r == ""
+        print(r)
+        assert Path(r) == Path("output") / Path("geese1.mp4.wav")
+        assert (Path("output") / Path("geese1.mp4.wav")).is_file()
 
 
 class Test_float2decimal(object):
@@ -189,6 +242,7 @@ class Test_float2decimal(object):
         assert r == Decimal(str(0.001))
 
 
+"""
 class Test_get_current_points_by_subject(object):
     def test_no_events(self):
         pj = json.loads(open("files/test.boris").read())
@@ -362,14 +416,7 @@ class Test_get_current_states_by_subject(object):
 """
 
 
-class Test_get_ip_address(object):
-    def test_1(self):
-        print(utilities.get_ip_address())
-        assert False
-
-
 """
-
 
 class Test_intfloatstr(object):
     def test_str(self):
@@ -440,14 +487,14 @@ class Test_safe_xl_worksheet_title(object):
         )
 
     def test_title_with_forbidden_chars_xls(self):
-        # \/*[]:?
+        
         assert (
             utilities.safe_xl_worksheet_title(r"000\000/000*000[000]000:000?000 000", "xls")
             == "000 000 000 000 000 000 000 000"
         )
 
     def test_title_with_forbidden_chars_xlsx(self):
-        # \/*[]:?
+        
         assert (
             utilities.safe_xl_worksheet_title(r"000\000/000*000[000]000:000?000 000", "xls")
             == "000 000 000 000 000 000 000 000"

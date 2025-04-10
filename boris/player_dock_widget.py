@@ -23,6 +23,11 @@ This file is part of BORIS.
 import sys
 import logging
 import functools
+from . import mpv2 as mpv
+import config as cfg
+import gui_utilities
+
+
 from PySide6.QtWidgets import (
     QApplication,
     QLabel,
@@ -38,8 +43,6 @@ from PySide6.QtWidgets import (
 from PySide6.QtCore import Signal, QEvent, Qt
 from PySide6.QtGui import QIcon, QAction
 
-from . import mpv2 as mpv
-import config as cfg
 
 """
 try:
@@ -153,7 +156,7 @@ class DW_player(QDockWidget):
         self.mute_button.setAutoRaise(True)
         self.mute_action = QAction()
 
-        theme_mode = "dark" if QApplication.instance().palette().window().color().value() < 128 else "light"
+        theme_mode = gui_utilities.theme_mode()
 
         self.mute_action.setIcon(QIcon(f":/volume_xmark_{theme_mode}"))
         self.mute_action.triggered.connect(self.mute_action_triggered)
@@ -194,7 +197,7 @@ class DW_player(QDockWidget):
         """
         emit signal when mute action is triggered
         """
-        theme_mode = "dark" if QApplication.instance().palette().window().color().value() < 128 else "light"
+        theme_mode = gui_utilities.theme_mode()
         if self.player.mute:
             self.mute_action.setIcon(QIcon(f":/volume_xmark_{theme_mode}"))
         else:

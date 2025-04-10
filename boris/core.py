@@ -135,8 +135,9 @@ __version__ = version.__version__
 __version_date__ = version.__version_date__
 
 # check minimal version of python
-if util.versiontuple(platform.python_version()) < util.versiontuple("3.12"):
-    msg = f"BORIS requires Python 3.12+! You are using Python v. {platform.python_version()}\n"
+MIN_PYTHON_VERSION = "3.12"
+if util.versiontuple(platform.python_version()) < util.versiontuple(MIN_PYTHON_VERSION):
+    msg = f"BORIS requires Python {MIN_PYTHON_VERSION}+! You are using Python v. {platform.python_version()}\n"
     logging.critical(msg)
     sys.exit()
 
@@ -237,19 +238,6 @@ class TableModel(QAbstractTableModel):
                         return self._data[row][event_idx]
 
 
-"""
-class ButtonEventFilter(QObject):
-    def eventFilter(self, obj, event):
-        print("event filter")
-        if isinstance(obj, QPushButton) and event.type() == QEvent.KeyPress:
-            print("keypress")
-            if event.key() in (Qt.Key_Enter, Qt.Key_Return, Qt.Key_Space):
-                print("enter sapce")
-                return False  # Block the event
-        return super().eventFilter(obj, event)
-"""
-
-
 class MainWindow(QMainWindow, Ui_MainWindow):
     """
     Main BORIS window
@@ -301,7 +289,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     ext_data_timer_list: list = []
     projectFileName: str = ""
     mediaTotalLength = None
-    beep_every = 0
+    beep_every: float = 0.0
 
     plot_colors = cfg.BEHAVIORS_PLOT_COLORS
     behav_category_colors = cfg.CATEGORY_COLORS_LIST
@@ -315,19 +303,20 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     fast = 10
 
     currentStates: dict = {}
-    subject_name_index = {}
+    subject_name_index: dict = {}
     flag_slow = False
     play_rate: float = 1
     play_rate_step: float = 0.1
     currentSubject: str = ""  # contains the current subject of observation
-    coding_map_window_geometry = 0
 
     # FFmpeg
-    memx, memy, mem_player = -1, -1, -1
+    memx = -1
+    memy = -1
+    mem_player = -1
 
     # path for ffmpeg/ffmpeg.exe program
-    ffmpeg_bin = ""
-    ffmpeg_cache_dir = ""
+    ffmpeg_bin: str = ""
+    ffmpeg_cache_dir: str = ""
 
     # dictionary for FPS storing
     fps = 0
@@ -390,9 +379,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         super(MainWindow, self).__init__(parent)
         self.setupUi(self)
 
-        # disable trigger with RETURN or SPACE keys
-        """filter_obj = ButtonEventFilter()
-        self.pb_live_obs.installEventFilter(filter_obj)"""
         self.pb_live_obs.setFocusPolicy(Qt.NoFocus)
 
         self.ffmpeg_bin = ffmpeg_bin
@@ -418,25 +404,18 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.tb_export.setMenu(self.menu)
         """
 
-        gui_utilities.set_icons(self, theme_mode=self.theme_mode())
+        gui_utilities.set_icons(self, theme_mode=gui_utilities.theme_mode())
 
         self.setWindowTitle(f"{cfg.programName} ({__version__})")
 
-        self.w_obs_info.setVisible(False)
-
         self.lbLogoBoris.setPixmap(QPixmap(":/logo"))
-
         self.lbLogoBoris.setScaledContents(False)
         self.lbLogoBoris.setAlignment(Qt.AlignCenter)
-
-        # self.lbLogoUnito.setPixmap(QPixmap(":/dbios_unito"))
-        # self.lbLogoUnito.setScaledContents(False)
-        # self.lbLogoUnito.setAlignment(Qt.AlignCenter)
 
         self.toolBar.setEnabled(True)
 
         # start with dock widget invisible
-        for w in [self.dwEvents, self.dwEthogram, self.dwSubjects]:
+        for w in (self.w_obs_info, self.dwEvents, self.dwEthogram, self.dwSubjects):
             w.setVisible(False)
             w.keyPressEvent = self.keyPressEvent
 
@@ -475,15 +454,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.lbTimeOffset.setMinimumWidth(160)
         self.statusbar.addPermanentWidget(self.lbTimeOffset)
 
-        # play rate are now displayed in the main info widget
-        """
-        # SPEED
-        self.lbSpeed = QLabel()
-        self.lbSpeed.setFrameStyle(QFrame.StyledPanel)
-        self.lbSpeed.setMinimumWidth(40)
-        self.statusbar.addPermanentWidget(self.lbSpeed)
-        """
-
         # set painter for tv_events to highlight current row
         delegate = self.CustomItemDelegate()
         self.tv_events.setItemDelegate(delegate)
@@ -498,14 +468,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         plugins.load_plugins(self)
         plugins.add_plugins_to_menu(self)
-
-    def theme_mode(self):
-        """
-        return the theme mode (dark or light) of the OS
-        """
-        palette = QApplication.instance().palette()
-        color = palette.window().color()
-        return "dark" if color.value() < 128 else "light"  # Dark mode if the color value is less than 128
 
     class CustomItemDelegate(QStyledItemDelegate):
         def paint(self, painter, option, index):
@@ -3835,7 +3797,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         if self.geometric_measurements_mode:
             geometric_measurement.redraw_measurements(self)
 
-            self.actionPlay.setIcon(QIcon(f":/play_{self.theme_mode()}"))
+            self.actionPlay.setIcon(QIcon(f":/play_{gui_utilities.theme_mode()}"))
 
     def previous_frame(self) -> None:
         """
@@ -3859,7 +3821,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         if self.geometric_measurements_mode:
             geometric_measurement.redraw_measurements(self)
 
-            self.actionPlay.setIcon(QIcon(f":/play_{self.theme_mode()}"))
+            self.actionPlay.setIcon(QIcon(f":/play_{gui_utilities.theme_mode()}"))
 
     def run_event_outside(self):
         """
@@ -4463,7 +4425,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             for data_timer in self.ext_data_timer_list:
                 data_timer.stop()
 
-            self.actionPlay.setIcon(QIcon(f":/play_{self.theme_mode()}"))
+            self.actionPlay.setIcon(QIcon(f":/play_{gui_utilities.theme_mode()}"))
 
         if msg:
             self.lb_current_media_time.setText(msg)
@@ -5634,7 +5596,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         for data_timer in self.ext_data_timer_list:
             data_timer.start()
 
-        self.actionPlay.setIcon(QIcon(f":/pause_{self.theme_mode()}"))
+        self.actionPlay.setIcon(QIcon(f":/pause_{gui_utilities.theme_mode()}"))
         self.actionPlay.setText("Pause")
 
         return True
@@ -5668,7 +5630,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         for idx in self.plot_data:
             self.timer_plot_data_out(self.plot_data[idx])
 
-        self.actionPlay.setIcon(QIcon(f":/play_{self.theme_mode()}"))
+        self.actionPlay.setIcon(QIcon(f":/play_{gui_utilities.theme_mode()}"))
         self.actionPlay.setText("Play")
 
     def play_activated(self):
