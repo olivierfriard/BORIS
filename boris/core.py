@@ -135,8 +135,8 @@ __version__ = version.__version__
 __version_date__ = version.__version_date__
 
 # check minimal version of python
-if util.versiontuple(platform.python_version()) < util.versiontuple("3.8"):
-    msg = f"BORIS requires Python 3.8+! You are using Python v. {platform.python_version()}\n"
+if util.versiontuple(platform.python_version()) < util.versiontuple("3.12"):
+    msg = f"BORIS requires Python 3.12+! You are using Python v. {platform.python_version()}\n"
     logging.critical(msg)
     sys.exit()
 
@@ -5823,8 +5823,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
 
 def main():
-    # QApplication.setAttribute(Qt.AA_EnableHighDpiScaling)
-
     app = QApplication(sys.argv)
     app.setStyle("Fusion")
 
@@ -5917,7 +5915,7 @@ def main():
                 results.show()
 
     window.show()
-    window.raise_()
+    window.raise_()  # for overlapping widget (?)
 
     if observation_to_open and "error" not in pj:
         r = observation_operations.load_observation(window, obs_id=observation_to_open, mode=cfg.OBS_START)
