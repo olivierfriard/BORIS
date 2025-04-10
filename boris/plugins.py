@@ -82,6 +82,8 @@ def load_plugins(self):
     for file_ in sorted((Path(__file__).parent / "analysis_plugins").glob("*.py")):
         if file_.name == "__init__.py":
             continue
+        if file_.name.startswith("_"):
+            continue
         plugin_name = get_plugin_name(file_)
         if plugin_name is not None and plugin_name not in self.config_param.get(cfg.EXCLUDED_PLUGINS, set()):
             # check if plugin with same name already loaded
@@ -95,6 +97,8 @@ def load_plugins(self):
     if self.config_param.get(cfg.PERSONAL_PLUGINS_DIR, ""):
         for file_ in sorted(Path(self.config_param.get(cfg.PERSONAL_PLUGINS_DIR, "")).glob("*.py")):
             if file_.name == "__init__.py":
+                continue
+            if file_.name.startswith("_"):
                 continue
             plugin_name = get_plugin_name(file_)
             if plugin_name is not None and plugin_name not in self.config_param.get(cfg.EXCLUDED_PLUGINS, set()):

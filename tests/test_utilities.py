@@ -242,7 +242,6 @@ class Test_float2decimal(object):
         assert r == Decimal(str(0.001))
 
 
-"""
 class Test_get_current_points_by_subject(object):
     def test_no_events(self):
         pj = json.loads(open("files/test.boris").read())
@@ -331,7 +330,7 @@ class Test_get_current_states_by_subject(object):
             state_behaviors_codes=["s"],
             events=pj["observations"]["observation #1"]["events"],
             subjects=pj["subjects_conf"],
-            time=Decimal("0"),
+            time_=Decimal("0"),
             include_modifiers=False,
         )
         assert r == {"0": [], "1": []}
@@ -343,7 +342,7 @@ class Test_get_current_states_by_subject(object):
             state_behaviors_codes=["s"],
             events=pj["observations"]["observation #1"]["events"],
             subjects=pj["subjects_conf"],
-            time=Decimal("4.0"),
+            time_=Decimal("4.0"),
             include_modifiers=False,
         )
         assert r == {"0": ["s"], "1": []}
@@ -355,7 +354,7 @@ class Test_get_current_states_by_subject(object):
             state_behaviors_codes=["s"],
             events=pj["observations"]["observation #1"]["events"],
             subjects=pj["subjects_conf"],
-            time=Decimal("8.0"),
+            time_=Decimal("8.0"),
             include_modifiers=False,
         )
         assert r == {"0": [], "1": []}
@@ -367,7 +366,7 @@ class Test_get_current_states_by_subject(object):
             state_behaviors_codes=["s"],
             events=pj["observations"]["observation #1"]["events"],
             subjects=pj["subjects_conf"],
-            time=Decimal("-12.456"),
+            time_=Decimal("-12.456"),
             include_modifiers=False,
         )
         # print(r)
@@ -380,7 +379,7 @@ class Test_get_current_states_by_subject(object):
             state_behaviors_codes=["s"],
             events=pj["observations"]["offset positif"]["events"],
             subjects=pj["subjects_conf"],
-            time=Decimal("30"),
+            time_=Decimal("30"),
             include_modifiers=False,
         )
         # print(r)
@@ -393,7 +392,7 @@ class Test_get_current_states_by_subject(object):
             state_behaviors_codes=["r", "s"],
             events=pj["observations"]["modifiers"]["events"],
             subjects={"0": {"key": "", "name": "", "description": "no focal subject"}},
-            time=Decimal("20"),
+            time_=Decimal("20"),
             include_modifiers=False,
         )
         # print(r)
@@ -406,17 +405,12 @@ class Test_get_current_states_by_subject(object):
             state_behaviors_codes=["r", "s"],
             events=pj["observations"]["modifiers"]["events"],
             subjects={"0": {"key": "", "name": "", "description": "no focal subject"}},
-            time=Decimal("20"),
+            time_=Decimal("20"),
             include_modifiers=True,
         )
         # print(r)
         assert r == {"0": ["r (m1)"]}
 
-
-"""
-
-
-"""
 
 class Test_intfloatstr(object):
     def test_str(self):
@@ -469,10 +463,7 @@ class Test_safefilename(object):
 
 class Test_safe_xl_worksheet_title(object):
     def test_long_title_xls(self):
-        assert (
-            utilities.safe_xl_worksheet_title("0123456789012345678901234567890123456789", "xls")
-            == "0123456789012345678901234567890"
-        )
+        assert utilities.safe_xl_worksheet_title("0123456789012345678901234567890123456789", "xls") == "0123456789012345678901234567890"
 
     def test_long_title_xlsx(self):
         assert (
@@ -487,18 +478,10 @@ class Test_safe_xl_worksheet_title(object):
         )
 
     def test_title_with_forbidden_chars_xls(self):
-        
-        assert (
-            utilities.safe_xl_worksheet_title(r"000\000/000*000[000]000:000?000 000", "xls")
-            == "000 000 000 000 000 000 000 000"
-        )
+        assert utilities.safe_xl_worksheet_title(r"000\000/000*000[000]000:000?000 000", "xls") == "000 000 000 000 000 000 000 000"
 
     def test_title_with_forbidden_chars_xlsx(self):
-        
-        assert (
-            utilities.safe_xl_worksheet_title(r"000\000/000*000[000]000:000?000 000", "xls")
-            == "000 000 000 000 000 000 000 000"
-        )
+        assert utilities.safe_xl_worksheet_title(r"000\000/000*000[000]000:000?000 000", "xls") == "000 000 000 000 000 000 000 000"
 
 
 class Test_seconds_of_day(object):
@@ -555,10 +538,10 @@ class Test_test_ffmpeg_path(object):
         # print(r)
         assert r == (True, "")
 
-    def test_path_do_no_exist(self):
+    def test_path_do_not_exist(self):
         r = utilities.test_ffmpeg_path("xxx/ffmpeg")
-        # print(r)
-        assert r == (False, "FFmpeg is required but it was not found...<br>See https://www.ffmpeg.org")
+        print(r)
+        assert r == (False, "FFmpeg is required but it was not found.<br>See https://www.ffmpeg.org")
 
 
 class Test_time2seconds(object):
@@ -618,6 +601,8 @@ class Test_txt2np_array(object):
         assert r[2][0, 1] == 12.4144278
         assert list(r[2].shape) == [10658, 2]
 
+
+"""
 
 class Test_url2path(object):
     def test_1(self):
