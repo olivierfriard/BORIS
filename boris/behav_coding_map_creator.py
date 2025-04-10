@@ -24,6 +24,7 @@ import binascii
 import io
 import json
 from pathlib import Path
+import resize_window
 
 from PySide6.QtCore import QBuffer, QByteArray, QIODevice, QLineF, QPoint, Qt, Signal
 from PySide6.QtGui import QBrush, QColor, QIcon, QMouseEvent, QPen, QPixmap, QPolygonF, QAction
@@ -790,7 +791,6 @@ class BehaviorsMapCreatorWindow(QMainWindow):
 
         if not self.fileName:
             return
-        """if os.path.splitext(self.fileName)[1] != ".behav_coding_map":"""
         if Path(self.fileName).suffix != ".behav_coding_map":
             self.fileName += ".behav_coding_map"
         self.saveMap()
@@ -1106,10 +1106,6 @@ if __name__ == "__main__":
     app = QApplication(sys.argv)
     window = BehaviorsMapCreatorWindow(["North zone", "East zone", "South zone", "West zone"])
     window.bcm_list = []
-    window.resize(cfg.CODING_MAP_RESIZE_W, cfg.CODING_MAP_RESIZE_H)
-    screen_geometry = app.primaryScreen().geometry()
-    center_x = (screen_geometry.width() - window.width()) // 2
-    center_y = (screen_geometry.height() - window.height()) // 2
-    window.move(center_x, center_y)
+    resize_window.resize_center(app, window, cfg.CODING_MAP_RESIZE_W, cfg.CODING_MAP_RESIZE_H)
     window.show()
     sys.exit(app.exec())

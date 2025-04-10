@@ -1008,27 +1008,30 @@ class Observation(QDialog, Ui_Form):
 
         # check if observation id not empty
         if not self.leObservationId.text():
-            self.qm = QMessageBox()
-            self.qm.setIcon(QMessageBox.Critical)
-            self.qm.setText("The <b>observation id</b> is mandatory and must be unique.")
-            self.qm.exec_()
+            QMessageBox.critical(
+                self,
+                cfg.programName,
+                "The <b>observation id</b> is mandatory and must be unique.",
+            )
             return False
 
         # check if observation_type
         if not any((self.rb_media_files.isChecked(), self.rb_live.isChecked(), self.rb_images.isChecked())):
-            self.qm = QMessageBox()
-            self.qm.setIcon(QMessageBox.Critical)
-            self.qm.setText("Choose an observation type.")
-            self.qm.exec_()
+            QMessageBox.critical(
+                self,
+                cfg.programName,
+                "Choose an observation type.",
+            )
             return False
 
         # check if offset is correct
         if self.cb_time_offset.isChecked():
             if self.obs_time_offset.get_time() is None:
-                self.qm = QMessageBox()
-                self.qm.setIcon(QMessageBox.Critical)
-                self.qm.setText("Check the time offset value.")
-                self.qm.exec_()
+                QMessageBox.critical(
+                    self,
+                    cfg.programName,
+                    "Check the time offset value.",
+                )
                 return False
 
         if self.rb_media_files.isChecked():  # observation based on media file(s)
@@ -1051,18 +1054,20 @@ class Observation(QDialog, Ui_Form):
 
             # check if player #1 is used
             if not players_list or min(players_list) > 1:
-                self.qm = QMessageBox()
-                self.qm.setIcon(QMessageBox.Critical)
-                self.qm.setText("A media file must be loaded in player #1")
-                self.qm.exec_()
+                QMessageBox.critical(
+                    self,
+                    cfg.programName,
+                    "A media file must be loaded in player #1",
+                )
                 return False
 
             # check if players are used in crescent order
             if set(list(range(min(players_list), max(players_list) + 1))) != set(players_list):
-                self.qm = QMessageBox()
-                self.qm.setIcon(QMessageBox.Critical)
-                self.qm.setText("Some player are not used. Please reorganize your media files")
-                self.qm.exec_()
+                QMessageBox.critical(
+                    self,
+                    cfg.programName,
+                    "Some player are not used. Please reorganize your media files",
+                )
                 return False
 
             # check if more media in player #1 and media in other players

@@ -71,7 +71,12 @@ from . import utilities as util
 
 def MessageDialog(title: str, text: str, buttons: tuple) -> str:
     """
-    generic message dialog
+    show a generic message dialog and returns the text of the clicked button
+
+    Args:
+        title (str): Title of the dialog box
+        text (str): text of the dialog box
+        buttons (tuple): text for buttons
 
     Return
         str: text of the clicked button
@@ -83,8 +88,8 @@ def MessageDialog(title: str, text: str, buttons: tuple) -> str:
     for button in buttons:
         message.addButton(button, QMessageBox.YesRole)
 
-    # message.setWindowFlags(Qt.WindowStaysOnTopHint)
-    message.exec_()
+    message.setWindowFlags(Qt.WindowStaysOnTopHint)
+    message.exec()
     return message.clickedButton().text()
 
 

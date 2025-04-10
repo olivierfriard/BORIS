@@ -26,8 +26,9 @@ This file is part of BORIS.
 import binascii
 import io
 import json
-import os
+from pathlib import Path
 import re
+import resize_window
 
 from PySide6.QtCore import (
     Qt,
@@ -727,7 +728,8 @@ class ModifiersMapCreatorWindow(QMainWindow):
             self.fileName = fn
 
         if self.fileName:
-            if os.path.splitext(self.fileName)[1] != ".boris_map":
+            # if os.path.splitext(self.fileName)[1] != ".boris_map":
+            if Path(self.fileName).suffix != ".boris_map":
                 self.fileName += ".boris_map"
             self.saveMap()
 
@@ -744,7 +746,7 @@ class ModifiersMapCreatorWindow(QMainWindow):
             else:
                 self.fileName = fn
 
-            if self.fileName and os.path.splitext(self.fileName)[1] != ".boris_map":
+            if self.fileName and Path(self.fileName).suffix() != ".boris_map":
                 self.fileName += ".boris_map"
 
         if self.fileName:
@@ -1006,25 +1008,8 @@ if __name__ == "__main__":
 
     app = QApplication(sys.argv)
     window = ModifiersMapCreatorWindow()
-    window.resize(800, 700)
 
-    print(f"{window.width()=}")
-    print(f"{window.height()=}")
-
-    # Get the screen geometry (screen size and position)
-    screen_geometry = app.primaryScreen().geometry()
-
-    print(f"{screen_geometry=}")
-
-    # Calculate the center of the screen
-    center_x = (screen_geometry.width() - window.width()) // 2
-    center_y = (screen_geometry.height() - window.height()) // 2
-
-    print(f"{center_x=}")
-    print(f"{center_y=}")
-
-    # Move the widget to the center of the screen
-    window.move(center_x, center_y)
+    resize_window.resize_center(app, window, cfg.CODING_MAP_RESIZE_W, cfg.CODING_MAP_RESIZE_H)
 
     window.show()
     sys.exit(app.exec())
