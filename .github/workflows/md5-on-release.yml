@@ -19,6 +19,9 @@ jobs:
         fileName: "*"
         out-file-path: assets/
 
+    - name: Wait for 10 minutes
+      run: sleep 600
+
     - name: Calculate MD5 checksums
       run: |
         cd assets
