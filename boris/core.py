@@ -4317,11 +4317,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         if not sys.platform.startswith(cfg.MACOS_CODE):
             if self.dw_player[0].player.time_pos is not None:
                 for n_player in range(1, len(self.dw_player)):
-                    print(f"{n_player=}")
-
                     ct = self.getLaps(n_player=n_player)
-
-                    print(f"{ct=}")
 
                     # sync players 2..8 if time diff >= 1 s
                     if (
