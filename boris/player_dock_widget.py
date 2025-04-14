@@ -29,7 +29,6 @@ import gui_utilities
 
 
 from PySide6.QtWidgets import (
-    QApplication,
     QLabel,
     QDockWidget,
     QWidget,

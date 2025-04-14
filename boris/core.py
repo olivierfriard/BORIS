@@ -1468,7 +1468,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         # one media
         if self.dw_player[player].player.playlist_count == 1:
             if new_time < self.dw_player[player].player.duration:
-                self.dw_player[player].player.seek(new_time, "absolute+exact")
+                new_time_float = round(float(new_time), 3)
+
+                self.dw_player[player].player.seek(new_time_float, "absolute+exact")
 
                 if player == 0 and not self.user_move_slider:
                     self.video_slider.setValue(
@@ -4315,7 +4317,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         if not sys.platform.startswith(cfg.MACOS_CODE):
             if self.dw_player[0].player.time_pos is not None:
                 for n_player in range(1, len(self.dw_player)):
+                    print(f"{n_player=}")
+
                     ct = self.getLaps(n_player=n_player)
+
+                    print(f"{ct=}")
 
                     # sync players 2..8 if time diff >= 1 s
                     if (
