@@ -564,7 +564,7 @@ class Test_txt2np_array(object):
             file_name="files/xxx", columns_str="4,6", substract_first_value="False", converters={}, column_converter={}
         )
         # print(r)
-        assert r[0] == False
+        assert r[0] is False
         assert r[1] == "[Errno 2] No such file or directory: 'files/xxx'"
         assert list(r[2].shape) == [0]
 
@@ -576,7 +576,10 @@ class Test_txt2np_array(object):
             converters={},
             column_converter={},
         )
-        assert r[0] == False
+
+        print(r)
+
+        assert r[0] is False
         assert r[1] == "could not convert string to float: '14:38:58'"
         assert list(r[2].shape) == [0]
 
@@ -594,7 +597,7 @@ class Test_txt2np_array(object):
             },
             column_converter={4: "HHMMSS_2_seconds"},
         )
-        assert r[0] == True
+        assert r[0] is True
         assert r[1] == ""
         assert r[2][0, 0] == 52738.0
         assert r[2][1, 0] == 52740.0
