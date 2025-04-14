@@ -25,7 +25,7 @@ jobs:
     - name: Calculate MD5 checksums
       run: |
         cd assets
-        for file in *; do
+        for file in *.zip *.AppImage *.exe; do
           md5sum "$file"
         done > md5sums.txt
 
