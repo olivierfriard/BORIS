@@ -19,7 +19,7 @@ Copyright 2012-2025 Olivier Friard
   MA 02110-1301, USA.
 """
 
-from math import log2
+from math import log2, floor
 import os
 import logging
 import time
@@ -2405,12 +2405,14 @@ def event2media_file_name(observation: dict, timestamp: dec) -> Optional[str]:
         str: name of media file containing the event
     """
 
-    cumul_media_durations: list = [dec(0)]
+    cumul_media_durations: list = [float(0)]
     for media_file in observation[cfg.FILE]["1"]:
-        media_duration = dec(str(observation[cfg.MEDIA_INFO][cfg.LENGTH][media_file]))
-        cumul_media_durations.append(cumul_media_durations[-1] + media_duration)
+        media_duration = float(str(observation[cfg.MEDIA_INFO][cfg.LENGTH][media_file]))
+        # cut off media duration to 3 decimal places as that is how fine the player is
+        media_duration = float(floor(media_duration * 10**3) / 10**3)
+        cumul_media_durations.append(floor((cumul_media_durations[-1] + media_duration) * 10**3) / 10**3)
 
-    cumul_media_durations.remove(dec(0))
+    cumul_media_durations.remove(float(0))
 
     # test if timestamp is at end of last media
     if timestamp == cumul_media_durations[-1]:
@@ -2419,7 +2421,7 @@ def event2media_file_name(observation: dict, timestamp: dec) -> Optional[str]:
         player_idx = -1
         for idx, value in enumerate(cumul_media_durations):
             start = 0 if idx == 0 else cumul_media_durations[idx - 1]
-            if start <= timestamp < value:
+            if start <= float(timestamp) < value:
                 player_idx = idx
                 break
 
