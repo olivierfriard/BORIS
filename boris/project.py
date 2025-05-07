@@ -82,11 +82,11 @@ class BehavioralCategories(QDialog):
         # add categories
         self.lw.setColumnCount(2)
         self.lw.setHorizontalHeaderLabels(["Category name", "Color"])
-        # self.lw.verticalHeader().hide()
         self.lw.setEditTriggers(QAbstractItemView.NoEditTriggers)
 
-        # self.lw.setSelectionBehavior(QAbstractItemView.SelectRows)
         self.lw.setSelectionMode(QAbstractItemView.SingleSelection)
+
+        behavioral_categories: list = []
 
         if cfg.BEHAVIORAL_CATEGORIES_CONF in pj:
             self.lw.setRowCount(len(pj.get(cfg.BEHAVIORAL_CATEGORIES_CONF, {})))
@@ -95,7 +95,7 @@ class BehavioralCategories(QDialog):
                 # name
                 item = QTableWidgetItem()
                 item.setText(behav_cat[key]["name"])
-                # item.setFlags(Qt.ItemIsEnabled)
+                behavioral_categories.append(behav_cat[key]["name"])
                 self.lw.setItem(idx, 0, item)
                 # color
                 item = QTableWidgetItem()
@@ -103,24 +103,21 @@ class BehavioralCategories(QDialog):
                 if behav_cat[key].get(cfg.COLOR, ""):
                     item.setBackground(QColor(behav_cat[key].get(cfg.COLOR, "")))
                 else:
-                    # item.setBackground(QColor(230, 230, 230))
                     item.setBackground(self.not_editable_column_color())
-                # item.setFlags(Qt.ItemIsEnabled)
                 self.lw.setItem(idx, 1, item)
         else:
             self.lw.setRowCount(len(pj.get(cfg.BEHAVIORAL_CATEGORIES, [])))
             for idx, category in enumerate(sorted(pj.get(cfg.BEHAVIORAL_CATEGORIES, []))):
+                # name
                 item = QTableWidgetItem()
                 item.setText(category)
-                # item.setFlags(Qt.ItemIsEnabled)
+                behavioral_categories.append(category)
                 self.lw.setItem(idx, 0, item)
-
+                # color
                 item = QTableWidgetItem()
                 item.setText("")
-                # item.setFlags(Qt.ItemIsEnabled)
-                self.lw.setItem(idx, 1, item)
 
-            # self.lw.addItem(QListWidgetItem(category))
+                self.lw.setItem(idx, 1, item)
 
         self.vbox.addWidget(self.lw)
 
@@ -147,6 +144,41 @@ class BehavioralCategories(QDialog):
         self.vbox.addLayout(hbox1)
 
         self.setLayout(self.vbox)
+
+        # check if behavioral categories are present in events
+        behavioral_categories_in_ethogram = set(
+            sorted([pj[cfg.ETHOGRAM][idx].get(cfg.BEHAVIOR_CATEGORY, "") for idx in pj.get(cfg.ETHOGRAM, {})])
+        )
+
+        if behavioral_categories_in_ethogram.difference(set(behavioral_categories)):
+            if (
+                dialog.MessageDialog(
+                    cfg.programName,
+                    (
+                        "They are behavioral categories that are present in ethogram but not defined.<br>"
+                        f"{behavioral_categories_in_ethogram.difference(set(behavioral_categories))}<br>"
+                        "<br>"
+                        "Do you want to add them in the behavioral categories list?"
+                    ),
+                    [cfg.YES, cfg.NO],
+                )
+                == cfg.YES
+            ):
+                # add behavioral categories present in ethogram in behavioal categories list
+                rc = self.lw.rowCount()
+                self.lw.setRowCount(rc + len(behavioral_categories_in_ethogram.difference(set(behavioral_categories))))
+                for idx, category in enumerate(sorted(list(behavioral_categories_in_ethogram.difference(set(behavioral_categories))))):
+                    print(category)
+                    # name
+                    item = QTableWidgetItem()
+                    item.setText(category)
+                    # behavioral_categories.append(category)
+                    self.lw.setItem(rc + idx, 0, item)
+                    # color
+                    item = QTableWidgetItem()
+                    item.setText("")
+
+                    self.lw.setItem(rc + idx, 1, item)
 
     def not_editable_column_color(self):
         """
@@ -663,7 +695,7 @@ class projectDialog(QDialog, Ui_dlgProject):
             QMessageBox.warning(
                 self,
                 cfg.programName,
-                ("The following behavior{} are not defined in the ethogram:<br>" "{}").format(
+                ("The following behavior{} are not defined in the ethogram:<br>{}").format(
                     "s" if len(bcm_code_not_found) > 1 else "", ",".join(bcm_code_not_found)
                 ),
             )
@@ -733,7 +765,7 @@ class projectDialog(QDialog, Ui_dlgProject):
         behavioral categories manager
         """
 
-        bc = BehavioralCategories(self.pj)  # self.config_param.get(cfg.DARK_MODE, cfg.DEFAULT_FRAME_MODE)
+        bc = BehavioralCategories(self.pj)
 
         if bc.exec_():
             self.pj[cfg.BEHAVIORAL_CATEGORIES] = []
@@ -1377,7 +1409,7 @@ class projectDialog(QDialog, Ui_dlgProject):
             # let user select a coding maop
             file_name, _ = QFileDialog().getOpenFileName(
                 self,
-                "Select a modifier coding map for " f"{self.twBehaviors.item(row, cfg.behavioursFields['code']).text()} behavior",
+                f"Select a modifier coding map for {self.twBehaviors.item(row, cfg.behavioursFields['code']).text()} behavior",
                 "",
                 "BORIS map files (*.boris_map);;All files (*)",
             )
@@ -1759,24 +1791,40 @@ class projectDialog(QDialog, Ui_dlgProject):
             return {cfg.CANCEL: True}
 
         # check if behavior belong to category that is not in categories list
-        behavior_category: list = []
+        missing_behavior_category: list = []
         for idx in checked_ethogram:
             if cfg.BEHAVIOR_CATEGORY in checked_ethogram[idx]:
                 if checked_ethogram[idx][cfg.BEHAVIOR_CATEGORY]:
                     if checked_ethogram[idx][cfg.BEHAVIOR_CATEGORY] not in self.pj[cfg.BEHAVIORAL_CATEGORIES]:
-                        behavior_category.append((checked_ethogram[idx][cfg.BEHAVIOR_CODE], checked_ethogram[idx][cfg.BEHAVIOR_CATEGORY]))
-        if behavior_category:
+                        missing_behavior_category.append(
+                            (checked_ethogram[idx][cfg.BEHAVIOR_CODE], checked_ethogram[idx][cfg.BEHAVIOR_CATEGORY])
+                        )
+        if missing_behavior_category:
             response = dialog.MessageDialog(
                 f"{cfg.programName} - Behavioral categories",
                 (
-                    "The behavioral categorie(s) "
-                    f"{', '.join(set(['<b>' + x[1] + '</b>' + ' (used with <b>' + x[0] + '</b>)' for x in behavior_category]))} "
-                    "are no more defined in behavioral categories list"
+                    "The behavioral category/ies<br> "
+                    f"{', '.join(set(['<b>' + x[1] + '</b>' + ' (used with <b>' + x[0] + '</b>)<br>' for x in missing_behavior_category]))} "
+                    "are not defined in behavioral categories list.<br>"
                 ),
-                ["Add behavioral category/ies", "Ignore", cfg.CANCEL],
+                ["Add behavioral category/ies", cfg.IGNORE, cfg.CANCEL],
             )
             if response == "Add behavioral category/ies":
-                [self.pj[cfg.BEHAVIORAL_CATEGORIES].append(x1) for x1 in set(x[1] for x in behavior_category)]
+                if cfg.BEHAVIORAL_CATEGORIES_CONF not in self.pj:
+                    self.pj[cfg.BEHAVIORAL_CATEGORIES_CONF] = {}
+                for x1 in set(x[1] for x in missing_behavior_category):
+                    self.pj[cfg.BEHAVIORAL_CATEGORIES].append(x1)
+
+                    if self.pj[cfg.BEHAVIORAL_CATEGORIES_CONF]:
+                        index = str(max([int(k) for k in self.pj[cfg.BEHAVIORAL_CATEGORIES_CONF]]) + 1)
+                    else:
+                        index = "0"
+
+                    self.pj[cfg.BEHAVIORAL_CATEGORIES_CONF][index] = {
+                        "name": x1,
+                        cfg.COLOR: "",
+                    }
+
             if response == cfg.CANCEL:
                 return {cfg.CANCEL: True}
 

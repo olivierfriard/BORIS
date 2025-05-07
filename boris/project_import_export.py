@@ -89,9 +89,10 @@ def export_ethogram(self) -> None:
             return
         pj = dict(cfg.EMPTY_PROJECT)
         pj[cfg.ETHOGRAM] = dict(r)
-        # behavioral categories
 
+        # behavioral categories
         pj[cfg.BEHAVIORAL_CATEGORIES] = list(self.pj[cfg.BEHAVIORAL_CATEGORIES])
+        pj[cfg.BEHAVIORAL_CATEGORIES_CONF] = dict(self.pj.get(cfg.BEHAVIORAL_CATEGORIES_CONF, {}))
 
         # project file indentation
         file_indentation = self.config_param.get(cfg.PROJECT_FILE_INDENTATION, cfg.PROJECT_FILE_INDENTATION_DEFAULT_VALUE)
@@ -309,6 +310,7 @@ def import_ethogram_from_dict(self, project: dict):
     """
     # import behavioral_categories
     self.pj[cfg.BEHAVIORAL_CATEGORIES] = list(project.get(cfg.BEHAVIORAL_CATEGORIES, []))
+    self.pj[cfg.BEHAVIORAL_CATEGORIES_CONF] = list(project.get(cfg.BEHAVIORAL_CATEGORIES_CONF, {}))
 
     # configuration of behaviours
     if not (cfg.ETHOGRAM in project and project[cfg.ETHOGRAM]):

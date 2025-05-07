@@ -20,11 +20,13 @@ This file is part of BORIS.
 
 """
 
+from PySide6.QtWidgets import QFileDialog
+
 from . import config as cfg
 from . import utilities as util
 from . import dialog
 from . import project_functions
-from PySide6.QtWidgets import QFileDialog
+from . import utilities as util
 
 
 def get_info(self) -> None:
@@ -38,17 +40,17 @@ def get_info(self) -> None:
         if "error" in r:
             ffmpeg_output = f"File path: {media_full_path}<br><br>{r['error']}<br><br>"
         else:
-            ffmpeg_output = f"<br><b>{r['analysis_program'] } analysis</b><br>"
+            ffmpeg_output = f"<br><b>{r['analysis_program']} analysis</b><br>"
 
             ffmpeg_output += (
                 f"File path: <b>{media_full_path}</b><br><br>"
                 f"Duration: {r['duration']} seconds ({util.convertTime(self.timeFormat, r['duration'])})<br>"
+                f"FPS: {r['fps']}<br>"
+                f"Resolution: {r['resolution']} pixels<br>"
                 f"Format long name: {r.get('format_long_name', cfg.NA)}<br>"
                 f"Creation time: {r.get('creation_time', cfg.NA)}<br>"
-                f"Resolution: {r['resolution']}<br>"
                 f"Number of frames: {r['frames_number']}<br>"
                 f"Bitrate: {util.smart_size_format(r['bitrate'])}   <br>"
-                f"FPS: {r['fps']}<br>"
                 f"Has video: {r['has_video']}<br>"
                 f"Has audio: {r['has_audio']}<br>"
                 f"File size: {util.smart_size_format(r.get('file size', cfg.NA))}<br>"
@@ -70,6 +72,12 @@ def get_info(self) -> None:
 
             mpv_output = (
                 "<b>MPV information</b><br>"
+                f"Duration: {dw.player.duration} seconds ({util.seconds2time(dw.player.duration)})<br>"
+                # "Position: {} %<br>"
+                f"FPS: {dw.player.container_fps}<br>"
+                # "Rate: {}<br>"
+                f"Resolution: {dw.player.width}x{dw.player.height} pixels<br>"
+                # "Scale: {}<br>"
                 f"Video format: {dw.player.video_format}<br>"
                 # "State: {}<br>"
                 # "Media Resource Location: {}<br>"
@@ -77,12 +85,6 @@ def get_info(self) -> None:
                 # "Track: {}/{}<br>"
                 f"Number of media in media list: {dw.player.playlist_count}<br>"
                 f"Current time position: {dw.player.time_pos}<br>"
-                f"Duration: {dw.player.duration}<br>"
-                # "Position: {} %<br>"
-                f"FPS: {dw.player.container_fps}<br>"
-                # "Rate: {}<br>"
-                f"Video size: {dw.player.width}x{dw.player.height}<br>"
-                # "Scale: {}<br>"
                 f"Aspect ratio: {round(dw.player.width / dw.player.height, 3)}<br>"
                 # "is seekable? {}<br>"
                 # "has_vout? {}<br>"

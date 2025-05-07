@@ -21,7 +21,6 @@ Copyright 2012-2025 Olivier Friard
 
 import csv
 import datetime as dt
-import hashlib
 import json
 import logging
 import math

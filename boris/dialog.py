@@ -88,7 +88,7 @@ def MessageDialog(title: str, text: str, buttons: tuple) -> str:
     for button in buttons:
         message.addButton(button, QMessageBox.YesRole)
 
-    message.setWindowFlags(Qt.WindowStaysOnTopHint)
+    message.setWindowFlags(message.windowFlags() | Qt.WindowStaysOnTopHint)
     message.exec()
     return message.clickedButton().text()
 

@@ -114,7 +114,6 @@ from . import cmd_arguments
 
 from . import core_qrc
 from .core_ui import Ui_MainWindow
-import exifread
 from . import config as cfg
 from . import video_operations
 

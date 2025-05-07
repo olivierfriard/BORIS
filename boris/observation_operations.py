@@ -2406,15 +2406,15 @@ def event2media_file_name(observation: dict, timestamp: dec) -> Optional[str]:
     """
 
     cumul_media_durations: list = [dec(0)]
-    for media_file in observation[cfg.FILE]["1"]:
+    for media_file in observation[cfg.FILE][cfg.PLAYER1]:
         media_duration = dec(str(observation[cfg.MEDIA_INFO][cfg.LENGTH][media_file]))
-        cumul_media_durations.append(cumul_media_durations[-1] + media_duration)
+        cumul_media_durations.append(round(cumul_media_durations[-1] + media_duration, 3))
 
     cumul_media_durations.remove(dec(0))
 
     # test if timestamp is at end of last media
     if timestamp == cumul_media_durations[-1]:
-        player_idx = len(observation[cfg.FILE]["1"]) - 1
+        player_idx = len(observation[cfg.FILE][cfg.PLAYER1]) - 1
     else:
         player_idx = -1
         for idx, value in enumerate(cumul_media_durations):
@@ -2424,7 +2424,7 @@ def event2media_file_name(observation: dict, timestamp: dec) -> Optional[str]:
                 break
 
     if player_idx != -1:
-        video_file_name = observation[cfg.FILE]["1"][player_idx]
+        video_file_name = observation[cfg.FILE][cfg.PLAYER1][player_idx]
     else:
         video_file_name = None
 

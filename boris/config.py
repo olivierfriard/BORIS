@@ -155,6 +155,7 @@ CHECK_PROJECT_INTEGRITY = "check_project_integrity"
 YES = "Yes"
 NO = "No"
 CANCEL = "Cancel"
+IGNORE = "Ignore"
 APPEND = "Append"
 CLOSE = "Close"
 REPLACE = "Replace"
@@ -454,7 +455,8 @@ POINT = "POINT"
 START = "START"
 STOP = "STOP"
 
-PLAYER1, PLAYER2 = "1", "2"
+PLAYER1 = "1"
+PLAYER2 = "2"
 ALL_PLAYERS = [str(x + 1) for x in range(N_PLAYER)]
 
 VISUALIZE_SPECTROGRAM = "visualize_spectrogram"
@@ -701,6 +703,7 @@ EMPTY_PROJECT = {
     ETHOGRAM: {},
     OBSERVATIONS: {},
     BEHAVIORAL_CATEGORIES: [],
+    BEHAVIORAL_CATEGORIES_CONF: {},
     INDEPENDENT_VARIABLES: {},
     CODING_MAP: {},
     BEHAVIORS_CODING_MAP: [],
