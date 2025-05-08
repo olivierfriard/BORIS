@@ -184,7 +184,7 @@ class Info_widget(QWidget):
 
 class get_time_widget(QWidget):
     """
-    widget for selecting a time in various formats: secondes, HH:MM:SS:ZZZ or YYYY-mm-DD HH:MM:SS:ZZZ
+    widget for selecting a time in various formats: seconds, HH:MM:SS:ZZZ or YYYY-mm-DD HH:MM:SS:ZZZ
     """
 
     def __init__(self, time_value=dec(0), parent=None):
@@ -408,7 +408,7 @@ class get_time_widget(QWidget):
         if self.pb_sign.text() == "-":
             time_sec = -time_sec
 
-        return dec(time_sec) if time_sec is not None else None
+        return dec(time_sec).quantize(dec("0.001")) if time_sec is not None else None
 
     def set_time(self, new_time: dec) -> None:
         """

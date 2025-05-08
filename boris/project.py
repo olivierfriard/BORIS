@@ -150,12 +150,14 @@ class BehavioralCategories(QDialog):
             sorted([pj[cfg.ETHOGRAM][idx].get(cfg.BEHAVIOR_CATEGORY, "") for idx in pj.get(cfg.ETHOGRAM, {})])
         )
 
-        if behavioral_categories_in_ethogram.difference(set(behavioral_categories)):
+        if behavioral_categories_in_ethogram.difference(set(behavioral_categories)) and behavioral_categories_in_ethogram.difference(
+            set(behavioral_categories)
+        ) != {""}:
             if (
                 dialog.MessageDialog(
                     cfg.programName,
                     (
-                        "They are behavioral categories that are present in ethogram but not defined.<br>"
+                        "There are behavioral categories that are present in ethogram but not defined.<br>"
                         f"{behavioral_categories_in_ethogram.difference(set(behavioral_categories))}<br>"
                         "<br>"
                         "Do you want to add them in the behavioral categories list?"
@@ -210,7 +212,6 @@ class BehavioralCategories(QDialog):
             color = col_diag.currentColor()
             if color.name() == "#000000":  # black -> delete color
                 self.lw.item(row, 1).setText("")
-                # self.lw.item(row, 1).setBackground(QColor(230, 230, 230))
                 self.lw.item(row, 1).setBackground(self.not_editable_column_color())
             elif color.isValid():
                 self.lw.item(row, 1).setText(color.name())
@@ -820,18 +821,18 @@ class projectDialog(QDialog, Ui_dlgProject):
             column (int): column double-clicked
         """
 
-        # check if double click on excluded column
+        # excluded column
         if column == cfg.behavioursFields[cfg.EXCLUDED]:
             self.exclusion_matrix()
 
-        # check if double click on 'coding map' column
+        # coding map
         if column == cfg.behavioursFields[cfg.CODING_MAP_sp]:
             if "with coding map" in self.twBehaviors.item(row, cfg.behavioursFields[cfg.TYPE]).text():
                 self.behavior_type_changed(row)
             else:
                 QMessageBox.information(self, cfg.programName, "Change the behavior type on first column to select a coding map")
 
-        # check if double click on behavior type
+        # behavior type
         if column == cfg.behavioursFields["type"]:
             self.behavior_type_doubleclicked(row)
 
@@ -843,7 +844,7 @@ class projectDialog(QDialog, Ui_dlgProject):
         if column == cfg.behavioursFields[cfg.BEHAVIOR_CATEGORY]:
             self.category_doubleclicked(row)
 
-        # check if double click on modifiers
+        # modifiers
         if column == cfg.behavioursFields[cfg.MODIFIERS]:
             # check if behavior has coding map
             if (
@@ -897,16 +898,17 @@ class projectDialog(QDialog, Ui_dlgProject):
         if self.twBehaviors.item(row, cfg.behavioursFields[cfg.COLOR]).text():
             current_color = QColor(self.twBehaviors.item(row, cfg.behavioursFields[cfg.COLOR]).text())
             if current_color.isValid():
+                print(f"{current_color=}")
                 col_diag.setCurrentColor(current_color)
 
-        if col_diag.exec_():
+        if col_diag.exec():
             color = col_diag.currentColor()
             if color.name() == "#000000":  # black -> delete color
                 self.twBehaviors.item(row, cfg.behavioursFields[cfg.COLOR]).setText("")
                 self.twBehaviors.item(row, cfg.behavioursFields[cfg.COLOR]).setBackground(self.not_editable_column_color())
             elif color.isValid():
+                self.twBehaviors.item(row, cfg.behavioursFields[cfg.COLOR]).setBackground(QColor(color.name()))
                 self.twBehaviors.item(row, cfg.behavioursFields[cfg.COLOR]).setText(color.name())
-                self.twBehaviors.item(row, cfg.behavioursFields[cfg.COLOR]).setBackground(color)
 
     def category_doubleclicked(self, row):
         """

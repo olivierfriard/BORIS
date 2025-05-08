@@ -576,6 +576,8 @@ def edit_event(self):
 
     pj_event_idx = self.tv_idx2events_idx[tvevents_row]
 
+    print(f"{self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS]=}")
+
     time_value = self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS][pj_event_idx][
         cfg.PJ_OBS_FIELDS[self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE]][cfg.TIME]
     ]
@@ -601,9 +603,12 @@ def edit_event(self):
     )
     edit_window.setWindowTitle("Edit event")
 
+    print(f"{time_value=}")
+
     # time
     if time_value.is_nan():
         edit_window.cb_set_time_na.setChecked(True)
+
     if self.playerType in (cfg.VIEWER_MEDIA, cfg.VIEWER_LIVE, cfg.VIEWER_IMAGES):
         edit_window.pb_set_to_current_time.setVisible(False)
 
@@ -673,12 +678,15 @@ def edit_event(self):
 
     flag_ok = False  # for looping until event is OK or Cancel pressed
     while True:
-        if edit_window.exec_():  # button OK
+        if edit_window.exec():  # button OK
             self.project_changed()
 
             # MEDIA / LIVE
             if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE] in (cfg.MEDIA, cfg.LIVE):
                 new_time = edit_window.time_widget.get_time()
+
+                print(f"{new_time=}")
+
                 if new_time is None:
                     QMessageBox.warning(
                         self,
@@ -747,7 +755,11 @@ def edit_event(self):
                 for key in self.pj[cfg.ETHOGRAM]:
                     if self.pj[cfg.ETHOGRAM][key][cfg.BEHAVIOR_CODE] == edit_window.cobCode.currentText():
                         event = self.full_event(key)
-                        if edit_window.time_value == cfg.NA or (edit_window.cb_set_time_na.isChecked()):
+                        if (
+                            edit_window.time_value == cfg.NA
+                            or (isinstance(edit_window.time_value, dec) and edit_window.time_value.is_nan())
+                            or (edit_window.cb_set_time_na.isChecked())
+                        ):
                             event[cfg.TIME] = dec("NaN")
                         else:
                             event[cfg.TIME] = edit_window.time_widget.get_time()

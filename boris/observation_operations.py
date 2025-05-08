@@ -2407,8 +2407,11 @@ def event2media_file_name(observation: dict, timestamp: dec) -> Optional[str]:
 
     cumul_media_durations: list = [dec(0)]
     for media_file in observation[cfg.FILE][cfg.PLAYER1]:
-        media_duration = dec(str(observation[cfg.MEDIA_INFO][cfg.LENGTH][media_file]))
-        cumul_media_durations.append(round(cumul_media_durations[-1] + media_duration, 3))
+        try:
+            media_duration = dec(str(observation[cfg.MEDIA_INFO][cfg.LENGTH][media_file]))
+            cumul_media_durations.append(round(cumul_media_durations[-1] + media_duration, 3))
+        except KeyError:
+            return None
 
     cumul_media_durations.remove(dec(0))
 

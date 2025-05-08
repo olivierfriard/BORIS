@@ -404,7 +404,7 @@ def check_project_integrity(
     * check if media file are available (optional)
     * check if media length available
     * check independent variables
-    * check if coded subjects are defines
+    * check if coded subjects are defined
 
     Args:
         pj (dict): BORIS project
@@ -474,6 +474,7 @@ def check_project_integrity(
             if not timestamp.is_nan() and not (-2147483647 <= timestamp <= 2147483647):
                 out_events += f"Observation: <b>{obs_id}</b><br>The timestamp {timestamp} is not between -2147483647 and 2147483647.<br>"
 
+        """
         # check if media length available
         if pj[cfg.OBSERVATIONS][obs_id][cfg.TYPE] == cfg.MEDIA:
             for nplayer in cfg.ALL_PLAYERS:
@@ -484,6 +485,7 @@ def check_project_integrity(
                         except KeyError:
                             out += "<br><br>" if out else ""
                             out += f"Observation: <b>{obs_id}</b><br>Length not available for media file <b>{media_file}</b>"
+        """
 
     out += "<br><br>" if out else ""
     out += out_events
@@ -530,25 +532,46 @@ def check_project_integrity(
         ]
     )
 
-    out += "<br><br>" if out else ""
+    tmp_out: str = ""
     for obs_id in pj[cfg.OBSERVATIONS]:
         if cfg.INDEPENDENT_VARIABLES not in pj[cfg.OBSERVATIONS][obs_id]:
             continue
         for var_label in pj[cfg.OBSERVATIONS][obs_id][cfg.INDEPENDENT_VARIABLES]:
             if var_label in defined_set_var_label:
                 if pj[cfg.OBSERVATIONS][obs_id][cfg.INDEPENDENT_VARIABLES][var_label] not in defined_set_var_label[var_label].split(","):
-                    out += (
+                    tmp_out += (
                         f"{obs_id}: the <b>{pj[cfg.OBSERVATIONS][obs_id][cfg.INDEPENDENT_VARIABLES][var_label]}</b> value "
                         f" is not allowed for {var_label} (choose between {defined_set_var_label[var_label]})<br>"
                     )
+    if tmp_out:
+        out += "<br><br>" if out else ""
+        out += tmp_out
 
     # check if coded subjects are defined in the subjects list
+    tmp_out: str = ""
     subjects_list: list = [pj[cfg.SUBJECTS][x]["name"] for x in pj[cfg.SUBJECTS]]
     coded_subjects = set(util.flatten_list([[y[1] for y in pj[cfg.OBSERVATIONS][x].get(cfg.EVENTS, [])] for x in pj[cfg.OBSERVATIONS]]))
 
     for subject in coded_subjects:
         if subject and subject not in subjects_list:
-            out += f"The coded subject <b>{subject}</b> is not defined in the subjects list.<br>You can use the <b>Explore project</b> to fix it.<br><br>"
+            tmp_out += f"The coded subject <b>{subject}</b> is not defined in the subjects list.<br>You can use the <b>Explore project</b> to fix it.<br><br>"
+    if tmp_out:
+        out += "<br><br>" if out else ""
+        out += tmp_out
+
+    # check if media file have info in media_info section of project
+    tmp_out: str = ""
+    for obs_id in pj[cfg.OBSERVATIONS]:
+        for player in pj[cfg.OBSERVATIONS][obs_id][cfg.FILE]:
+            for media_file in pj[cfg.OBSERVATIONS][obs_id][cfg.FILE][player]:
+                for info in (cfg.LENGTH, cfg.FPS, cfg.HAS_AUDIO, cfg.HAS_VIDEO):
+                    if media_file not in pj[cfg.OBSERVATIONS][obs_id][cfg.MEDIA_INFO][info]:
+                        tmp_out += f"Observation <b>{obs_id}</b>:<br>"
+                        tmp_out += f"The media file {media_file} has no <b>{info}</b> info.<br>"
+    if tmp_out:
+        tmp_out += "<br>You should repick the media file to fix this issue."
+        out += "<br><br>" if out else ""
+        out += tmp_out
 
     return out
 
@@ -1168,13 +1191,8 @@ def observed_interval(observation: dict) -> Tuple[dec, dec]:
     """
     if not observation[cfg.EVENTS]:
         return (dec("0.0"), dec("0.0"))
-    if observation[cfg.TYPE] in (cfg.MEDIA, cfg.LIVE):
-        """
-        print("=" * 120)
-        print(observation[cfg.EVENTS])
-        print("=" * 120)
-        """
 
+    if observation[cfg.TYPE] in (cfg.MEDIA, cfg.LIVE):
         event_timestamp = [event[cfg.PJ_OBS_FIELDS[observation[cfg.TYPE]][cfg.TIME]] for event in observation[cfg.EVENTS]]
 
         return (
