@@ -129,7 +129,7 @@ def extract_video_creation_date(file_path: str) -> int | None:
         return None
 
 
-def extract_date_time_from_file_name(file_path: str) -> int:
+def extract_date_time_from_file_name(file_path: str) -> int | None:
     """
     extract YYYY-MM-DD_HHMMSS or YYYY-MM-DD_HH:MM:SS from file name
     """

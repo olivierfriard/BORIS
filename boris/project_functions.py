@@ -1202,7 +1202,11 @@ def observed_interval(observation: dict) -> Tuple[dec, dec]:
     if observation[cfg.TYPE] == cfg.IMAGES:
         events = [x[cfg.PJ_OBS_FIELDS[observation[cfg.TYPE]][cfg.IMAGE_INDEX]] for x in observation[cfg.EVENTS]]
 
-        return (dec(min(events)), dec(max(events)))
+        try:
+            dec(min(events))
+            return (dec(min(events)), dec(max(events)))
+        except Exception:
+            return (dec("NaN"), dec("NaN"))
 
 
 def events_start_stop(ethogram: dict, events: list, obs_type: str) -> List[tuple]:
