@@ -21,7 +21,7 @@ dependencies = [
     "pandas>=2.2.2",
     "tablib[html, ods, xls, xlsx, pandas, cli]>=3",
     "pyreadr",
-    "pyside6==6.8.0.2",
+    "pyside6==6.9",
     "hachoir>=3.3.0",
 ]
 
