@@ -1100,7 +1100,7 @@ def close_observation(self):
 
     logging.info(f"Close observation (player type: {self.playerType})")
 
-    # check observation events
+    # check observation state events
 
     flag_ok, msg = project_functions.check_state_events_obs(
         self.observationId,
@@ -1111,16 +1111,22 @@ def close_observation(self):
 
     if not flag_ok:
         out = f"The current observation has state event(s) that are not PAIRED:<br><br>{msg}"
-        results = dialog.Results_dialog()
+        results = dialog.Results_dialog_exit_code()
         results.setWindowTitle(f"{cfg.programName} - Check selected observations")
         results.ptText.setReadOnly(True)
         results.ptText.appendHtml(out)
-        results.pbSave.setVisible(False)
-        results.pbCancel.setText("Close observation")
-        results.pbCancel.setVisible(True)
-        results.pbOK.setText("Fix unpaired state events")
 
-        if results.exec_():  # fix events
+        results.pb1.setText("Close observation")
+        results.pb2.setText("Return to observation")
+        if self.playerType == cfg.IMAGES:
+            results.pb3.setVisible(False)
+        else:
+            results.pb3.setText("Fix unpaired state events")
+
+        r = results.exec()
+        if r == 2:  # Return to observation
+            return
+        if r == 3:  # Fix unpaired state events
             state_events.fix_unpaired_events(self, silent_mode=True)
 
     self.saved_state = self.saveState()

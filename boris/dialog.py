@@ -440,6 +440,11 @@ class get_time_widget(QWidget):
 
 
 class Ask_time(QDialog):
+    """
+    Qdialog class for asking time to user
+    User can select a time format between seconds, HHMMSS.zzz or YYY-mm-DD HH:MM:SS.zzz
+    """
+
     def __init__(self, time_value=0):
         super().__init__()
         self.setWindowTitle("")
@@ -453,10 +458,10 @@ class Ask_time(QDialog):
 
         hbox.addWidget(self.time_widget)
 
-        self.pbOK = QPushButton("OK", clicked=self.pb_ok_clicked)
+        self.pbOK = QPushButton(cfg.OK, clicked=self.pb_ok_clicked)
         self.pbOK.setDefault(True)
 
-        self.pbCancel = QPushButton("Cancel")
+        self.pbCancel = QPushButton(cfg.CANCEL)
         self.pbCancel.clicked.connect(self.reject)
 
         self.hbox2 = QHBoxLayout(self)
@@ -954,6 +959,70 @@ class Results_dialog(QDialog):
         self.setLayout(hbox)
 
         self.resize(800, 640)
+
+    def save_results(self):
+        """
+        save content of self.ptText
+        """
+
+        if not self.dataset:
+            file_name, _ = QFileDialog().getSaveFileName(self, "Save results", "", "Text files (*.txt *.tsv);;All files (*)")
+
+            if not file_name:
+                return
+            try:
+                with open(file_name, "w") as f:
+                    f.write(self.ptText.toPlainText())
+            except Exception:
+                QMessageBox.critical(self, cfg.programName, f"The file {file_name} can not be saved")
+
+        else:
+            self.done(cfg.SAVE_DATASET)
+
+
+class Results_dialog_exit_code(QDialog):
+    """
+    widget for visualizing text output
+    """
+
+    def __init__(self):
+        super().__init__()
+
+        self.dataset = False
+
+        self.setWindowTitle("")
+
+        hbox = QVBoxLayout()
+
+        self.lb = QLabel("")
+        hbox.addWidget(self.lb)
+
+        self.ptText = QPlainTextEdit()
+        self.ptText.setReadOnly(True)
+        hbox.addWidget(self.ptText)
+
+        hbox2 = QHBoxLayout()
+        hbox2.addItem(QSpacerItem(241, 20, QSizePolicy.Expanding, QSizePolicy.Minimum))
+
+        self.pbSave = QPushButton("Save results", clicked=self.save_results)
+        hbox2.addWidget(self.pbSave)
+
+        self.pb1 = QPushButton("1", clicked=lambda: self.done_(1))
+        hbox2.addWidget(self.pb1)
+
+        self.pb2 = QPushButton("2", clicked=lambda: self.done_(2))
+        hbox2.addWidget(self.pb2)
+
+        self.pb3 = QPushButton("3", clicked=lambda: self.done_(3))
+        hbox2.addWidget(self.pb3)
+
+        hbox.addLayout(hbox2)
+        self.setLayout(hbox)
+
+        self.resize(800, 640)
+
+    def done_(self, status):
+        self.done(status)
 
     def save_results(self):
         """

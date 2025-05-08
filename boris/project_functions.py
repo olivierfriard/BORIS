@@ -356,7 +356,7 @@ def check_state_events(pj: dict, observations_list: list) -> Tuple[bool, tuple]:
     use check_state_events_obs function
     """
 
-    logging.info("Check state events")
+    logging.info("Check state events function")
 
     out = ""
     not_paired_obs_list = []
@@ -1201,7 +1201,7 @@ def observed_interval(observation: dict) -> Tuple[dec, dec]:
         )
     if observation[cfg.TYPE] == cfg.IMAGES:
         events = [x[cfg.PJ_OBS_FIELDS[observation[cfg.TYPE]][cfg.IMAGE_INDEX]] for x in observation[cfg.EVENTS]]
-
+        # test if indexes contain NA
         try:
             dec(min(events))
             return (dec(min(events)), dec(max(events)))
@@ -1295,7 +1295,7 @@ def open_project_json(project_file_name: str) -> tuple:
         str: message
     """
 
-    logging.debug(f"open project: {project_file_name}")
+    logging.debug(f"open_project_json function: {project_file_name}")
 
     projectChanged: bool = False
     msg: str = ""
@@ -1633,6 +1633,8 @@ def fix_unpaired_state_events2(ethogram: dict, events: list, fix_at_time: dec) -
     Returns:
         list: list of events with state events fixed
     """
+
+    logging.debug("fix_unpaired_state_events2 function")
 
     closing_events_to_add: list = []
     subjects: list = [event[cfg.EVENT_SUBJECT_FIELD_IDX] for event in events]
