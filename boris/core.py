@@ -3477,7 +3477,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             return
 
         logging.debug(
-            f"{self.config_param[cfg.CHECK_PROJECT_INTEGRITY] if cfg.CHECK_PROJECT_INTEGRITY in self.config_param else "Check project integrity config NOT FOUND"=}"
+            f"{self.config_param[cfg.CHECK_PROJECT_INTEGRITY] if cfg.CHECK_PROJECT_INTEGRITY in self.config_param else 'Check project integrity config NOT FOUND'=}"
         )
 
         if self.config_param.get(cfg.CHECK_PROJECT_INTEGRITY, True):
