@@ -1342,21 +1342,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.pj[cfg.BEHAVIORS_CODING_MAP][idx] = dict(behav_coding_map)
             return
 
-            """
-            QMessageBox.critical(
-                None,
-                cfg.programName,
-                (
-                    "The current project already contains a behaviors coding map "
-                    f"with the same name (<b>{behav_coding_map['name']}</b>)"
-                ),
-                QMessageBox.Ok | QMessageBox.Default,
-                QMessageBox.NoButton,
-            )
-
-            return
-            """
-
         self.pj[cfg.BEHAVIORS_CODING_MAP].append(behav_coding_map)
         QMessageBox.information(
             self,
@@ -1526,7 +1511,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         jt.setWindowTitle("Jump to specific time")
         jt.label.setText("Set the time")
 
-        if jt.exec_():
+        if jt.exec():
             new_time = jt.time_widget.get_time()
             if new_time < 0:
                 return
@@ -1704,7 +1689,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 QMessageBox.critical(
                     None,
                     cfg.programName,
-                    ("The picture directory was changed since the creation of observation."),
+                    ("The picture directory has changed since the creation of observation."),
                     QMessageBox.Ok | QMessageBox.Default,
                     QMessageBox.NoButton,
                 )
@@ -1718,15 +1703,13 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             # extract EXIF tag
             if self.pj[cfg.OBSERVATIONS][self.observationId].get(cfg.USE_EXIF_DATE, False):
                 date_time_original = util.extract_exif_DateTimeOriginal(self.images_list[self.image_idx])
+
                 if date_time_original != -1:
                     msg += f"<br>EXIF Date/Time Original: <b>{datetime.datetime.fromtimestamp(date_time_original):%Y-%m-%d %H:%M:%S}</b>"
-                else:
-                    msg += "<br>EXIF Date/Time Original: <b>NA</b>"
 
-                if self.image_idx == 0 and date_time_original != -1:
-                    self.image_time_ref = date_time_original
+                    if self.image_idx == 0:
+                        self.image_time_ref = date_time_original
 
-                if date_time_original != -1:
                     if self.image_time_ref is not None:
                         seconds_from_1st = date_time_original - self.image_time_ref
 
@@ -1736,6 +1719,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                         seconds_from_1st_formated = seconds_from_1st
 
                 else:
+                    msg += "<br>EXIF Date/Time Original: <b>NA</b>"
                     seconds_from_1st_formated = cfg.NA
 
                 msg += f"<br>Time from 1st image: <b>{seconds_from_1st_formated}</b>"

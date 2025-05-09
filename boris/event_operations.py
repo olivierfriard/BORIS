@@ -70,7 +70,7 @@ def add_event(self):
 
     editWindow = DlgEditEvent(
         observation_type=self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE],
-        time_value=0,
+        time_value=dec("NaN"),
         image_idx=0,
         current_time=current_time,
         time_format=self.timeFormat,
@@ -173,8 +173,9 @@ def add_event(self):
                     time_ = dec("NaN")
                     if self.pj[cfg.OBSERVATIONS][self.observationId].get(cfg.USE_EXIF_DATE, False):
                         if self.playerType != cfg.VIEWER_IMAGES:
-                            if self.extract_exif_DateTimeOriginal(self.images_list[new_index]) != -1:
-                                time_ = self.extract_exif_DateTimeOriginal(self.images_list[new_index]) - self.image_time_ref
+                            exif_date_time = util.extract_exif_DateTimeOriginal(self.images_list[new_index])
+                            if exif_date_time != -1:
+                                time_ = exif_date_time - self.image_time_ref
 
                     elif self.pj[cfg.OBSERVATIONS][self.observationId].get(cfg.TIME_LAPSE, 0):
                         time_ = new_index * self.pj[cfg.OBSERVATIONS][self.observationId].get(cfg.TIME_LAPSE, 0)
@@ -609,6 +610,7 @@ def edit_event(self):
     if time_value.is_nan():
         edit_window.cb_set_time_na.setChecked(True)
 
+    # remove visibility of 'set current time' widget if VIEWER mode
     if self.playerType in (cfg.VIEWER_MEDIA, cfg.VIEWER_LIVE, cfg.VIEWER_IMAGES):
         edit_window.pb_set_to_current_time.setVisible(False)
 
@@ -642,20 +644,16 @@ def edit_event(self):
             sortedCodes.index(self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS][pj_event_idx][cfg.EVENT_BEHAVIOR_FIELD_IDX])
         )
     else:
-        logging.warning(
-            (
-                f"The behaviour {self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS][pj_event_idx][cfg.EVENT_BEHAVIOR_FIELD_IDX]} "
-                "does not exist longer in the ethogram"
-            )
+        msg: str = (
+            f"The behaviour {self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS][pj_event_idx][cfg.EVENT_BEHAVIOR_FIELD_IDX]} "
+            "does not exist longer in the ethogram"
         )
+        logging.warning(msg)
+
         QMessageBox.warning(
             self,
             cfg.programName,
-            (
-                "The behaviour "
-                f"<b>{self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS][pj_event_idx][cfg.EVENT_BEHAVIOR_FIELD_IDX]}</b> "
-                "does not exist more in the ethogram"
-            ),
+            msg,
         )
         edit_window.cobCode.setCurrentIndex(0)
 
@@ -663,15 +661,15 @@ def edit_event(self):
         f"original modifiers: {self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS][pj_event_idx][cfg.EVENT_MODIFIER_FIELD_IDX]}"
     )
 
-    # frame index
-    frame_idx = read_event_field(
-        self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS][pj_event_idx],
-        self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE],
-        cfg.FRAME_INDEX,
-    )
-    edit_window.sb_frame_idx.setValue(0 if frame_idx in (cfg.NA, None) else frame_idx)
-    if frame_idx in (cfg.NA, None):
-        edit_window.cb_set_frame_idx_na.setChecked(True)
+    # # frame index
+    # frame_idx = read_event_field(
+    #     self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS][pj_event_idx],
+    #     self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE],
+    #     cfg.FRAME_INDEX,
+    # )
+    # edit_window.sb_frame_idx.setValue(0 if frame_idx in (cfg.NA, None) else frame_idx)
+    # if frame_idx in (cfg.NA, None):
+    #     edit_window.cb_set_frame_idx_na.setChecked(True)
 
     # comment
     edit_window.leComment.setPlainText(self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS][pj_event_idx][cfg.EVENT_COMMENT_FIELD_IDX])
@@ -681,13 +679,16 @@ def edit_event(self):
         if edit_window.exec():  # button OK
             self.project_changed()
 
+            new_time = edit_window.time_widget.get_time()
+
+            if edit_window.cb_set_time_na.isChecked():
+                new_time = dec("NaN")
+
+            print(f"{new_time=}")
+
             # MEDIA / LIVE
             if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE] in (cfg.MEDIA, cfg.LIVE):
-                new_time = edit_window.time_widget.get_time()
-
-                print(f"{new_time=}")
-
-                if new_time is None:
+                if new_time.is_nan():
                     QMessageBox.warning(
                         self,
                         cfg.programName,
@@ -715,19 +716,17 @@ def edit_event(self):
                                     event[cfg.FRAME_INDEX] = frame_idx
                                     self.seek_mediaplayer(mem_time)
 
-                            """
-                            if not edit_window.sb_frame_idx.value() or edit_window.cb_set_frame_idx_na.isChecked():
-                                event[cfg.FRAME_INDEX] = cfg.NA
-                            else:
-                                if self.playerType == cfg.MEDIA:
-                                    mem_time = self.getLaps()
-                                    if not self.seek_mediaplayer(new_time):
-                                        frame_idx = self.get_frame_index()
-                                        event[cfg.FRAME_INDEX] = frame_idx
-                                        self.seek_mediaplayer(mem_time)
-
-                                # event[cfg.FRAME_INDEX] = edit_window.sb_frame_idx.value()
-                            """
+                            # if not edit_window.sb_frame_idx.value() or edit_window.cb_set_frame_idx_na.isChecked():
+                            #     event[cfg.FRAME_INDEX] = cfg.NA
+                            # else:
+                            #     if self.playerType == cfg.MEDIA:
+                            #         mem_time = self.getLaps()
+                            #         if not self.seek_mediaplayer(new_time):
+                            #             frame_idx = self.get_frame_index()
+                            #             event[cfg.FRAME_INDEX] = frame_idx
+                            #             self.seek_mediaplayer(mem_time)
+                            #
+                            #     # event[cfg.FRAME_INDEX] = edit_window.sb_frame_idx.value()
 
                         event["row"] = pj_event_idx
                         event["original_modifiers"] = self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS][pj_event_idx][
@@ -755,14 +754,7 @@ def edit_event(self):
                 for key in self.pj[cfg.ETHOGRAM]:
                     if self.pj[cfg.ETHOGRAM][key][cfg.BEHAVIOR_CODE] == edit_window.cobCode.currentText():
                         event = self.full_event(key)
-                        if (
-                            edit_window.time_value == cfg.NA
-                            or (isinstance(edit_window.time_value, dec) and edit_window.time_value.is_nan())
-                            or (edit_window.cb_set_time_na.isChecked())
-                        ):
-                            event[cfg.TIME] = dec("NaN")
-                        else:
-                            event[cfg.TIME] = edit_window.time_widget.get_time()
+                        event[cfg.TIME] = new_time
 
                         event[cfg.SUBJECT] = (
                             "" if edit_window.cobSubject.currentText() == cfg.NO_FOCAL_SUBJECT else edit_window.cobSubject.currentText()
@@ -820,7 +812,7 @@ def edit_time_selected_events(self):
         return
 
     d = w.time_widget.get_time()
-    if d is None or not d:
+    if d.is_nan() or not d:
         return
 
     if ":" in util.smart_time_format(abs(d)):

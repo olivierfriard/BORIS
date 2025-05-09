@@ -21,6 +21,7 @@ This file is part of BORIS.
 """
 
 from decimal import Decimal as dec
+import logging
 import math
 
 from PySide6.QtWidgets import (
@@ -44,7 +45,7 @@ class DlgEditEvent(QDialog, Ui_Form):
     def __init__(
         self,
         observation_type: str,
-        time_value: dec = dec(0),
+        time_value: dec = dec("NaN"),
         image_idx=None,
         current_time=0,
         time_format: str = cfg.S,
@@ -60,41 +61,48 @@ class DlgEditEvent(QDialog, Ui_Form):
         self.pb_set_to_current_time.setVisible(show_set_current_time)
         self.current_time = current_time
 
+        # hide frame index for all observations
+        # frame index is determined in base of time
+        for w in (
+            self.lb_frame_idx,
+            self.sb_frame_idx,
+            self.cb_set_frame_idx_na,
+        ):
+            w.setVisible(False)
+
         # hide image index
         if observation_type in (cfg.LIVE, cfg.MEDIA):
-            for w in (self.lb_image_idx, self.sb_image_idx, self.cb_set_time_na, self.pb_set_to_current_image_index):
+            # hide image index
+            for w in (
+                self.cb_set_time_na,
+                self.gb_image_index,
+            ):
                 w.setVisible(False)
-            # hide frame index because frame index is automatically extracted
-            for w in (self.lb_frame_idx, self.sb_frame_idx, self.cb_set_frame_idx_na):
-                w.setVisible(False)
 
-        if (observation_type in (cfg.LIVE, cfg.MEDIA)) or (observation_type == cfg.IMAGES and not math.isnan(self.time_value)):
-            self.time_widget = dialog.get_time_widget(self.time_value)
+        # widget for time
+        self.time_widget = dialog.get_time_widget(self.time_value)
 
-            if time_format == cfg.S:
-                self.time_widget.rb_seconds.setChecked(True)
-            if time_format == cfg.HHMMSS:
-                self.time_widget.rb_time.setChecked(True)
-            if self.time_value > cfg.DATE_CUTOFF:
-                self.time_widget.rb_datetime.setChecked(True)
+        if time_format == cfg.S:
+            self.time_widget.rb_seconds.setChecked(True)
+        if time_format == cfg.HHMMSS:
+            self.time_widget.rb_time.setChecked(True)
+        if not self.time_value.is_nan() and int(self.time_value) > cfg.DATE_CUTOFF:
+            self.time_widget.rb_datetime.setChecked(True)
 
-            self.horizontalLayout_2.insertWidget(0, self.time_widget)
+        self.horizontalLayout_3.insertWidget(0, self.time_widget)
 
         if observation_type == cfg.IMAGES:
-            self.time_widget = dialog.get_time_widget(self.time_value)
             # hide frame index widgets
-            for w in (self.lb_frame_idx, self.sb_frame_idx, self.cb_set_frame_idx_na, self.pb_set_to_current_time):
-                w.setVisible(False)
-            self.sb_image_idx.setValue(self.image_idx)
+            self.pb_set_to_current_time.setVisible(False)
 
-            # self.pb_set_to_current_time.setText("Set to current image index")
+            self.sb_image_idx.setValue(self.image_idx)
 
         self.pb_set_to_current_time.clicked.connect(self.set_to_current_time)
         self.pb_set_to_current_image_index.clicked.connect(self.set_to_current_image_index)
 
         self.cb_set_time_na.stateChanged.connect(self.time_na)
 
-        self.cb_set_frame_idx_na.stateChanged.connect(self.frame_idx_na)
+        # self.cb_set_frame_idx_na.stateChanged.connect(self.frame_idx_na)
         self.pbOK.clicked.connect(self.close_widget)
         self.pbCancel.clicked.connect(self.reject)
 
@@ -122,19 +130,24 @@ class DlgEditEvent(QDialog, Ui_Form):
         if self.observation_type in (cfg.LIVE, cfg.MEDIA):
             self.time_widget.set_time(dec(float(self.current_time)))
 
-    def frame_idx_na(self):
-        """
-        set/unset frame index NA
-        """
-        self.lb_frame_idx.setEnabled(not self.cb_set_frame_idx_na.isChecked())
-        self.sb_frame_idx.setEnabled(not self.cb_set_frame_idx_na.isChecked())
+    # def frame_idx_na(self):
+    #     """
+    #     set/unset frame index NA
+    #     """
+    #     self.lb_frame_idx.setEnabled(not self.cb_set_frame_idx_na.isChecked())
+    #     self.sb_frame_idx.setEnabled(not self.cb_set_frame_idx_na.isChecked())
 
     def time_na(self):
         """
         set/unset time to NA
         """
 
+        logging.debug("time_na function")
+
+        self.time_widget.setVisible(not self.cb_set_time_na.isChecked())
         self.time_widget.setEnabled(not self.cb_set_time_na.isChecked())
+
+        self.pb_set_to_current_time.setVisible(not self.cb_set_time_na.isChecked())
         self.pb_set_to_current_time.setEnabled(not self.cb_set_time_na.isChecked())
 
 

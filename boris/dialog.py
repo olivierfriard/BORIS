@@ -20,9 +20,8 @@ This file is part of BORIS.
 
 """
 
-from decimal import Decimal as dec
-from typing import Union
 import datetime as dt
+from decimal import Decimal as dec
 import logging
 import math
 import pathlib as pl
@@ -30,6 +29,7 @@ import platform
 import subprocess
 import sys
 import traceback
+from typing import Union
 
 from PySide6.QtCore import Qt, Signal, qVersion, QRect, QTime, QDateTime, QSize
 from PySide6.QtWidgets import (
@@ -383,7 +383,7 @@ class get_time_widget(QWidget):
             dec: time in seconds (None if no format selected)
         """
 
-        time_sec = None
+        time_sec = dec("NaN")
 
         if self.rb_seconds.isChecked():
             try:
@@ -396,7 +396,7 @@ class get_time_widget(QWidget):
                     QMessageBox.Ok | QMessageBox.Default,
                     QMessageBox.NoButton,
                 )
-                return None
+                return dec("NaN")
 
         if self.rb_time.isChecked():
             time_sec = self.sb_hour.value() * 3600
@@ -408,7 +408,7 @@ class get_time_widget(QWidget):
         if self.pb_sign.text() == "-":
             time_sec = -time_sec
 
-        return dec(time_sec).quantize(dec("0.001")) if time_sec is not None else None
+        return dec(time_sec).quantize(dec("0.001"))  # if time_sec is not None else None
 
     def set_time(self, new_time: dec) -> None:
         """
@@ -489,7 +489,7 @@ class Ask_time(QDialog):
             )
             return
         # test time value
-        if self.time_widget.get_time() is None:
+        if self.time_widget.get_time().is_nan():
             return
 
         self.accept()

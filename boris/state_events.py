@@ -109,7 +109,7 @@ def fix_unpaired_events(self, silent_mode: bool = False):
             return
 
         fix_at_time = w.time_widget.get_time()
-        if fix_at_time is None:
+        if fix_at_time.is_nan():
             QMessageBox.warning(
                 self,
                 cfg.programName,
