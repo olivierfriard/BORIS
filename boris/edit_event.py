@@ -22,7 +22,6 @@ This file is part of BORIS.
 
 from decimal import Decimal as dec
 import logging
-import math
 
 from PySide6.QtWidgets import (
     QDialog,

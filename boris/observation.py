@@ -24,10 +24,9 @@ import logging
 import os
 import pandas as pd
 import pathlib as pl
-import datetime as dt
 
 from PySide6.QtCore import Qt
-from PySide6.QtGui import QColor, QTextCursor, QAction
+from PySide6.QtGui import QColor
 from PySide6.QtWidgets import (
     QDialog,
     QVBoxLayout,
