@@ -175,7 +175,11 @@ def add_event(self):
                         if self.playerType != cfg.VIEWER_IMAGES:
                             exif_date_time = util.extract_exif_DateTimeOriginal(self.images_list[new_index])
                             if exif_date_time != -1:
-                                time_ = exif_date_time - self.image_time_ref
+                                time_ = exif_date_time
+
+                                # check if first value must be substracted
+                                if self.pj[cfg.OBSERVATIONS][self.observationId].get(cfg.SUBSTRACT_FIRST_EXIF_DATE, True):
+                                    time_ -= self.image_time_ref
 
                     elif self.pj[cfg.OBSERVATIONS][self.observationId].get(cfg.TIME_LAPSE, 0):
                         time_ = new_index * self.pj[cfg.OBSERVATIONS][self.observationId].get(cfg.TIME_LAPSE, 0)

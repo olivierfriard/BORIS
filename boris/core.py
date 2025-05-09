@@ -4691,7 +4691,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     self.pj[cfg.OBSERVATIONS][self.observationId].get(cfg.USE_EXIF_DATE, False)
                     and util.extract_exif_DateTimeOriginal(self.images_list[self.image_idx]) != -1
                 ):
-                    time_ = util.extract_exif_DateTimeOriginal(self.images_list[self.image_idx]) - self.image_time_ref
+                    time_ = util.extract_exif_DateTimeOriginal(self.images_list[self.image_idx])
+                    # check if first value must be substracted
+                    if self.pj[cfg.OBSERVATIONS][self.observationId].get(cfg.SUBSTRACT_FIRST_EXIF_DATE, True):
+                        time_ -= self.image_time_ref
 
                 elif self.pj[cfg.OBSERVATIONS][self.observationId].get(cfg.TIME_LAPSE, 0):
                     time_ = (self.image_idx + 1) * self.pj[cfg.OBSERVATIONS][self.observationId].get(cfg.TIME_LAPSE, 0)
@@ -4749,7 +4752,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     self.pj[cfg.OBSERVATIONS][self.observationId].get(cfg.USE_EXIF_DATE, False)
                     and util.extract_exif_DateTimeOriginal(self.images_list[self.image_idx]) != -1
                 ):
-                    time_ = util.extract_exif_DateTimeOriginal(self.images_list[self.image_idx]) - self.image_time_ref
+                    time_ = util.extract_exif_DateTimeOriginal(self.images_list[self.image_idx])
+                    # check if first value must be substracte
+                    if self.pj[cfg.OBSERVATIONS][self.observationId].get(cfg.SUBSTRACT_FIRST_EXIF_DATE, True):
+                        time_ -= self.image_time_ref
 
                 elif self.pj[cfg.OBSERVATIONS][self.observationId].get(cfg.TIME_LAPSE, 0):
                     time_ = (self.image_idx + 1) * self.pj[cfg.OBSERVATIONS][self.observationId].get(cfg.TIME_LAPSE, 0)

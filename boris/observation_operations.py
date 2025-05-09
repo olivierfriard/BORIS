@@ -1024,7 +1024,21 @@ def new_observation(self, mode: str = cfg.NEW, obsId: str = "") -> None:
             self.pj[cfg.OBSERVATIONS][new_obs_id][cfg.DIRECTORIES_LIST] = [
                 observationWindow.lw_images_directory.item(i).text() for i in range(observationWindow.lw_images_directory.count())
             ]
+
+            # check if exif data must be used
             self.pj[cfg.OBSERVATIONS][new_obs_id][cfg.USE_EXIF_DATE] = observationWindow.rb_use_exif.isChecked()
+
+            # ask if the value of the exif date time of the first picture must be substracted
+            # TODO: improve this
+            if self.pj[cfg.OBSERVATIONS][new_obs_id][cfg.USE_EXIF_DATE]:
+                response = dialog.MessageDialog(
+                    cfg.programName,
+                    "You choose to use the EXIF metadata. Do you want to substract the date time value of the first picture?",
+                    (cfg.YES, cfg.NO),
+                )
+                self.pj[cfg.OBSERVATIONS][new_obs_id][cfg.SUBSTRACT_FIRST_EXIF_DATE] = response == cfg.YES
+
+            # check if time lapse
             if observationWindow.rb_time_lapse.isChecked():
                 self.pj[cfg.OBSERVATIONS][new_obs_id][cfg.TIME_LAPSE] = observationWindow.sb_time_lapse.value()
             else:

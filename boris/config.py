@@ -37,6 +37,7 @@ SECONDS_PER_DAY: int = 86_400
 HOUR_CUTOFF: int = 7 * 24
 DATE_CUTOFF: int = HOUR_CUTOFF * 60 * 60  # 1 week
 
+# cutoff for displaying time in HH:MM:SS.zzz format
 SMART_TIME_CUTOFF_DEFAULT: int = 300
 
 # minimal project version for handling observations from images
@@ -218,6 +219,7 @@ OVERLAY = "video overlay"
 
 
 USE_EXIF_DATE = "use_exif_date"
+SUBSTRACT_FIRST_EXIF_DATE = "substract_first_exif_date"
 TIME_LAPSE = "time_lapse_delay"
 
 
