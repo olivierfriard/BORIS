@@ -21,7 +21,9 @@ Copyright 2012-2025 Olivier Friard
 
 """
 
+import logging
 from typing import Tuple
+
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QAbstractItemView
 
@@ -60,7 +62,12 @@ def select_observations2(self, mode: str, windows_title: str = "") -> Tuple[str,
     data: list = []
     not_paired: list = []
 
+    print(f"{hash(str(self.pj[cfg.OBSERVATIONS]))=}")
+
+    # check if observations changed
     if hash(str(self.pj[cfg.OBSERVATIONS])) != self.mem_hash_obs:
+        logging.debug("observations changed")
+
         for obs in sorted(list(pj[cfg.OBSERVATIONS].keys())):
             date = pj[cfg.OBSERVATIONS][obs]["date"].replace("T", " ")
             descr = util.eol2space(pj[cfg.OBSERVATIONS][obs][cfg.DESCRIPTION])
@@ -124,11 +131,12 @@ def select_observations2(self, mode: str, windows_title: str = "") -> Tuple[str,
             data, header=fields_list + indep_var_header, column_type=column_type, not_paired=not_paired
         )
         self.data = data
+        self.not_paired = not_paired
         self.mem_hash_obs = hash(str(self.pj[cfg.OBSERVATIONS]))
 
     else:
         obsList = observations_list.observationsList_widget(
-            self.data, header=fields_list + indep_var_header, column_type=column_type, not_paired=not_paired
+            self.data, header=fields_list + indep_var_header, column_type=column_type, not_paired=self.not_paired
         )
 
     if windows_title:

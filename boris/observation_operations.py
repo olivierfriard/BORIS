@@ -1100,7 +1100,6 @@ def new_observation(self, mode: str = cfg.NEW, obsId: str = "") -> None:
                     return "Observation not launched"
 
             if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE] == cfg.IMAGES:
-                # QMessageBox.critical(self, cfg.programName, "Observation from images directory is not yet implemented")
                 initialize_new_images_observation(self)
 
             self.load_tw_events(self.observationId)

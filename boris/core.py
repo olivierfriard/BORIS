@@ -308,9 +308,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     play_rate_step: float = 0.1
     currentSubject: str = ""  # contains the current subject of observation
 
-    # FFmpeg
-    memx = -1
-    memy = -1
+    # geometric measurements
     mem_player = -1
 
     # path for ffmpeg/ffmpeg.exe program
@@ -338,6 +336,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     save_project_json_started: bool = False
 
     mem_hash_obs: int = 0
+
+    # variables for list of observations
+    data: list = []
+    not_paired: list = []
 
     '''
     def add_button_menu(self, data, menu_obj):
