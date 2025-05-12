@@ -2297,11 +2297,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.tv_events.setModel(model)
 
         # column width
-        # https://doc.qt.io/qtforpython-5/PySide2/QtWidgets/QHeaderView.html#more
-        self.tv_events.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeToContents)
-
-        # self.table.setSortingEnabled(True)
-        # self.table.sortByColumn(0, Qt.AscendingOrder)
+        self.tv_events.horizontalHeader().setSectionResizeMode(QHeaderView.Interactive)
 
     def load_tw_events(self, obs_id) -> None:
         """
