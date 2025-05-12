@@ -1984,6 +1984,6 @@ def project2dataframe(pj: dict, observations_list: list = []) -> pd.DataFrame:
 
     pd.DataFrame(data).info()
 
-    print(pd.DataFrame(data))
+    # print(pd.DataFrame(data))
 
     return pd.DataFrame(data)

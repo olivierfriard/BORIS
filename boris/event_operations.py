@@ -80,8 +80,6 @@ def add_event(self):
 
     sortedSubjects = [cfg.NO_FOCAL_SUBJECT] + sorted([self.pj[cfg.SUBJECTS][x][cfg.SUBJECT_NAME] for x in self.pj[cfg.SUBJECTS]])
 
-    print(f"{sortedSubjects=}")
-
     editWindow.cobSubject.addItems(sortedSubjects)
     if self.currentSubject:
         editWindow.cobSubject.setCurrentIndex(editWindow.cobSubject.findText(self.currentSubject, Qt.MatchFixedString))
@@ -691,8 +689,6 @@ def edit_event(self):
             if edit_window.cb_set_time_na.isChecked():
                 new_time = dec("NaN")
 
-            print(f"{new_time=}")
-
             # MEDIA / LIVE
             if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE] in (cfg.MEDIA, cfg.LIVE):
                 if new_time.is_nan():
@@ -892,8 +888,6 @@ def copy_selected_events(self):
                 copied_events.append("\t".join([str(x) for x in event + [cfg.NA]]))
             else:
                 copied_events.append("\t".join([str(x) for x in event]))
-
-    print(f"{copied_events=}")
 
     cb = QApplication.clipboard()
     cb.clear(mode=QClipboard.Mode.Clipboard)

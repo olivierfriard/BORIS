@@ -1299,7 +1299,7 @@ def check_creation_date(self) -> Tuple[int, dict]:
 def init_mpv(self):
     """Start mpv process and embed it in the PySide6 application."""
 
-    print("start MPV process")
+    logging.debug("function: init_mpv")
 
     """
     print(f"{self.winId()=}")
@@ -1326,7 +1326,7 @@ def init_mpv(self):
 def send_command(command):
     """Send a JSON command to the mpv IPC server."""
 
-    print(f"send commnand {command}")
+    logging.debug("function: send commnand {command}")
     # print(f"{self.mpv_process=}")
 
     try:
