@@ -581,8 +581,6 @@ def edit_event(self):
 
     pj_event_idx = self.tv_idx2events_idx[tvevents_row]
 
-    print(f"{self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS]=}")
-
     time_value = self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS][pj_event_idx][
         cfg.PJ_OBS_FIELDS[self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE]][cfg.TIME]
     ]
@@ -598,6 +596,12 @@ def edit_event(self):
     else:
         current_value = self.getLaps()
 
+    # get exif date time
+    if self.pj[cfg.OBSERVATIONS][self.observationId].get(cfg.USE_EXIF_DATE, False):
+        exif_date_time = util.extract_exif_DateTimeOriginal(self.images_list[self.image_idx])
+    else:
+        exif_date_time = None
+
     edit_window = DlgEditEvent(
         observation_type=self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE],
         time_value=time_value,
@@ -605,10 +609,9 @@ def edit_event(self):
         current_time=current_value,
         time_format=self.timeFormat,
         show_set_current_time=True,
+        exif_date_time=exif_date_time,
     )
     edit_window.setWindowTitle("Edit event")
-
-    print(f"{time_value=}")
 
     # time
     if time_value.is_nan():

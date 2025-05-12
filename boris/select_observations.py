@@ -62,8 +62,6 @@ def select_observations2(self, mode: str, windows_title: str = "") -> Tuple[str,
     data: list = []
     not_paired: list = []
 
-    print(f"{hash(str(self.pj[cfg.OBSERVATIONS]))=}")
-
     # check if observations changed
     if hash(str(self.pj[cfg.OBSERVATIONS])) != self.mem_hash_obs:
         logging.debug("observations changed")

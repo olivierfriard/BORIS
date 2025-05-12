@@ -49,6 +49,7 @@ class DlgEditEvent(QDialog, Ui_Form):
         current_time=0,
         time_format: str = cfg.S,
         show_set_current_time: bool = False,
+        exif_date_time: dec | None = None,
         parent=None,
     ):
         super().__init__(parent)
@@ -59,6 +60,7 @@ class DlgEditEvent(QDialog, Ui_Form):
 
         self.pb_set_to_current_time.setVisible(show_set_current_time)
         self.current_time = current_time
+        self.exif_date_time = exif_date_time
 
         # hide frame index for all observations
         # frame index is determined in base of time
@@ -92,8 +94,7 @@ class DlgEditEvent(QDialog, Ui_Form):
 
         if observation_type == cfg.IMAGES:
             # hide frame index widgets
-            self.pb_set_to_current_time.setVisible(False)
-
+            self.pb_set_to_current_time.setVisible(self.exif_date_time is not None)
             self.sb_image_idx.setValue(self.image_idx)
 
         self.pb_set_to_current_time.clicked.connect(self.set_to_current_time)
@@ -126,8 +127,15 @@ class DlgEditEvent(QDialog, Ui_Form):
         """
         set time to current media time
         """
+
+        print(f"{self.current_time=}")
+
         if self.observation_type in (cfg.LIVE, cfg.MEDIA):
             self.time_widget.set_time(dec(float(self.current_time)))
+
+        if self.observation_type == cfg.IMAGES:
+            if self.exif_date_time is not None:
+                self.time_widget.set_time(dec(self.exif_date_time))
 
     # def frame_idx_na(self):
     #     """
@@ -146,7 +154,7 @@ class DlgEditEvent(QDialog, Ui_Form):
         self.time_widget.setVisible(not self.cb_set_time_na.isChecked())
         self.time_widget.setEnabled(not self.cb_set_time_na.isChecked())
 
-        self.pb_set_to_current_time.setVisible(not self.cb_set_time_na.isChecked())
+        self.pb_set_to_current_time.setVisible(not self.cb_set_time_na.isChecked() and self.exif_date_time is not None)
         self.pb_set_to_current_time.setEnabled(not self.cb_set_time_na.isChecked())
 
 
