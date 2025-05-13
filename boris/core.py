@@ -19,6 +19,7 @@ This file is part of BORIS.
   along with this program; if not see <http://www.gnu.org/licenses/>.
 
 """
+# ruff: noqa: E402
 
 import os
 import sys
@@ -29,16 +30,16 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "."))
 
 
 import datetime
-
 import json
 import logging
+
 import pathlib as pl
 import platform
 import re
 import PIL.Image
 import PIL.ImageEnhance
+from PIL.ImageQt import Image
 import subprocess
-
 import locale
 import tempfile
 import time
@@ -46,7 +47,6 @@ import urllib.error
 import urllib.parse
 import urllib.request
 from typing import Union, Tuple
-
 from decimal import Decimal as dec
 from decimal import ROUND_DOWN
 import gzip
@@ -88,60 +88,9 @@ from PySide6.QtWidgets import (
     QStyledItemDelegate,
     QTableWidgetItem,
 )
-from PIL.ImageQt import Image
 
-from . import dialog
-from . import gui_utilities
-from . import events_cursor
-from . import modifier_coding_map_creator
-from . import geometric_measurement
-from . import modifiers_coding_map
-from . import advanced_event_filtering
-from . import otx_parser
-from . import param_panel
-from . import plot_events
-from . import plot_spectrogram_rt
-from . import plot_waveform_rt
-from . import plot_events_rt
-from . import plugins
-from . import project_functions
 
-from . import select_observations
-from . import subjects_pad
-from . import version
-from . import event_operations
 from . import cmd_arguments
-
-from . import core_qrc
-from .core_ui import Ui_MainWindow
-from . import config as cfg
-from . import video_operations
-
-from . import project
-from . import utilities as util
-
-from . import menu_options as menu_options
-from . import connections as connections
-from . import config_file
-from . import select_subj_behav
-from . import observation_operations
-from . import write_event
-
-
-# matplotlib.pyplot.switch_backend("Qt5Agg")
-
-__version__ = version.__version__
-__version_date__ = version.__version_date__
-
-# check minimal version of python
-MIN_PYTHON_VERSION = "3.12"
-if util.versiontuple(platform.python_version()) < util.versiontuple(MIN_PYTHON_VERSION):
-    msg = f"BORIS requires Python {MIN_PYTHON_VERSION}+! You are using Python v. {platform.python_version()}\n"
-    logging.critical(msg)
-    sys.exit()
-
-if sys.platform == "darwin":  # for MacOS
-    os.environ["LC_ALL"] = "en_US.UTF-8"
 
 # parse command line arguments
 (options, args) = cmd_arguments.parse_arguments()
@@ -159,6 +108,56 @@ else:
         datefmt="%H:%M:%S",
         level=logging.INFO,
     )
+
+from . import utilities as util
+
+from . import dialog
+from . import gui_utilities
+from . import events_cursor
+from . import modifier_coding_map_creator
+from . import geometric_measurement
+from . import modifiers_coding_map
+from . import advanced_event_filtering
+from . import otx_parser
+from . import param_panel
+from . import plot_events
+from . import plot_spectrogram_rt
+from . import plot_waveform_rt
+from . import plot_events_rt
+from . import plugins
+from . import project_functions
+from . import select_observations
+from . import subjects_pad
+from . import version
+from . import event_operations
+from . import core_qrc
+from .core_ui import Ui_MainWindow
+from . import config as cfg
+from . import video_operations
+from . import project
+from . import menu_options as menu_options
+from . import connections as connections
+from . import config_file
+from . import select_subj_behav
+from . import observation_operations
+from . import write_event
+
+
+logging.debug("test")
+
+__version__ = version.__version__
+__version_date__ = version.__version_date__
+
+# check minimal version of python
+MIN_PYTHON_VERSION = "3.12"
+if util.versiontuple(platform.python_version()) < util.versiontuple(MIN_PYTHON_VERSION):
+    msg = f"BORIS requires Python {MIN_PYTHON_VERSION}+! You are using Python v. {platform.python_version()}\n"
+    logging.critical(msg)
+    sys.exit()
+
+if sys.platform == "darwin":  # for MacOS
+    os.environ["LC_ALL"] = "en_US.UTF-8"
+
 
 if options.version:
     print(f"version {__version__} release date: {__version_date__}")

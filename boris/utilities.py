@@ -22,6 +22,7 @@ Copyright 2012-2025 Olivier Friard
 import csv
 import datetime as dt
 import json
+
 import logging
 import math
 import os
@@ -51,11 +52,13 @@ from PIL.ImageQt import Image
 
 from . import config as cfg
 
+logger = logging.getLogger(__name__)
+
 try:
     from . import mpv2 as mpv
 except Exception:
-    logging.warning("MPV library not found")
-    QApplication(sys.argv)
+    logger.warning("MPV library not found")
+    """QApplication(sys.argv)
     QMessageBox.critical(
         None,
         cfg.programName,
@@ -63,6 +66,7 @@ except Exception:
         QMessageBox.Ok | QMessageBox.Default,
         QMessageBox.NoButton,
     )
+    """
 
     if sys.platform.startswith("win"):
         # download libmpv2.dll and ffprobe from https://github.com/boris-behav-obs/boris-behav-obs.github.io/releases/download/files/
@@ -76,12 +80,12 @@ except Exception:
         if sys.argv[0].endswith("__main__.py"):
             ffmpeg_dir = pl.Path(sys.argv[0]).resolve().parent / "misc"
 
-        logging.info(f"MPV library directory: {ffmpeg_dir}")
+        logger.info(f"MPV library directory: {ffmpeg_dir}")
 
         local_filename = ffmpeg_dir / "libmpv-2.dll"
-        logging.info("Downloading libmpv-2.dll...")
+        logger.info("Downloading libmpv-2.dll...")
         urllib.request.urlretrieve(url + "libmpv-2.dll", local_filename)
-        logging.info(f"File downloaded as {local_filename}")
+        logger.info(f"File downloaded as {local_filename}")
 
         from . import mpv2 as mpv
 

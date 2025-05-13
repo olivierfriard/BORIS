@@ -72,7 +72,7 @@ def read(self):
         if not isinstance(self.saved_state, QByteArray):
             self.saved_state = None
 
-        logging.debug(f"saved state: {self.saved_state}")
+        # logging.debug(f"saved state: {self.saved_state}")
 
         self.timeFormat = cfg.HHMMSS
         try:
