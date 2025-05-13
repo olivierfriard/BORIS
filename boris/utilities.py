@@ -19,32 +19,29 @@ Copyright 2012-2025 Olivier Friard
   MA 02110-1301, USA.
 """
 
+from decimal import Decimal as dec
+from decimal import getcontext, ROUND_DOWN
+from hachoir.metadata import extractMetadata
+from hachoir.parser import createParser
+from shutil import copyfile
+from typing import Union, Tuple
 import csv
+import datetime
 import datetime as dt
+import exifread
 import json
-
 import logging
 import math
+import numpy as np
 import os
 import pathlib as pl
 import re
 import subprocess
 import sys
 import urllib.parse
-import wave
-import exifread
-import datetime
-from decimal import Decimal as dec
-from decimal import getcontext, ROUND_DOWN
-from shutil import copyfile
-from typing import Union, Tuple
 import urllib.request
+import wave
 
-from hachoir.parser import createParser
-from hachoir.metadata import extractMetadata
-
-
-import numpy as np
 from PySide6.QtGui import QPixmap, QImage
 from PySide6.QtWidgets import QMessageBox, QApplication
 
@@ -58,7 +55,13 @@ try:
     from . import mpv2 as mpv
 except Exception:
     logger.warning("MPV library not found")
-    """QApplication(sys.argv)
+
+    import ctypes
+
+    ctypes.windll.user32.MessageBoxW(0, "The MPV library was not found!\nIt will be downloaded.", "BORIS", 0)
+
+    """
+    app = QApplication(sys.argv)
     QMessageBox.critical(
         None,
         cfg.programName,
@@ -66,6 +69,8 @@ except Exception:
         QMessageBox.Ok | QMessageBox.Default,
         QMessageBox.NoButton,
     )
+    app.quit()
+    del app
     """
 
     if sys.platform.startswith("win"):
