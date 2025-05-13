@@ -37,6 +37,7 @@ from decimal import Decimal as dec
 from decimal import getcontext, ROUND_DOWN
 from shutil import copyfile
 from typing import Union, Tuple
+import urllib.request
 
 from hachoir.parser import createParser
 from hachoir.metadata import extractMetadata
@@ -44,12 +45,48 @@ from hachoir.metadata import extractMetadata
 
 import numpy as np
 from PySide6.QtGui import QPixmap, QImage
+from PySide6.QtWidgets import QMessageBox, QApplication
 
 from PIL.ImageQt import Image
 
 from . import config as cfg
 
-from . import mpv2 as mpv
+try:
+    from . import mpv2 as mpv
+except Exception:
+    logging.warning("MPV library not found")
+    QApplication(sys.argv)
+    QMessageBox.critical(
+        None,
+        cfg.programName,
+        "MPV library not found!",
+        QMessageBox.Ok | QMessageBox.Default,
+        QMessageBox.NoButton,
+    )
+
+    if sys.platform.startswith("win"):
+        # download libmpv2.dll and ffprobe from https://github.com/boris-behav-obs/boris-behav-obs.github.io/releases/download/files/
+
+        url = "https://github.com/boris-behav-obs/boris-behav-obs.github.io/releases/download/files/"
+
+        ffmpeg_dir = ""
+        # search where to download libmpv-2.dll
+        if sys.argv[0].endswith("start_boris.py"):
+            ffmpeg_dir = pl.Path(sys.argv[0]).resolve().parent / "boris" / "misc"
+        if sys.argv[0].endswith("__main__.py"):
+            ffmpeg_dir = pl.Path(sys.argv[0]).resolve().parent / "misc"
+
+        logging.info(f"MPV library directory: {ffmpeg_dir}")
+
+        local_filename = ffmpeg_dir / "libmpv-2.dll"
+        logging.info("Downloading libmpv-2.dll...")
+        urllib.request.urlretrieve(url + "libmpv-2.dll", local_filename)
+        logging.info(f"File downloaded as {local_filename}")
+
+        from . import mpv2 as mpv
+
+    else:
+        sys.exit(5)
 
 """
 try:
