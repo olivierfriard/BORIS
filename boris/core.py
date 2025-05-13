@@ -23,17 +23,16 @@ This file is part of BORIS.
 
 import os
 import sys
+import pathlib as pl
 
-os.environ["PATH"] = os.path.dirname(__file__) + os.sep + "misc" + os.pathsep + os.environ["PATH"]
+# os.environ["PATH"] = os.path.dirname(__file__) + os.sep + "misc" + os.pathsep + os.environ["PATH"]
 
+os.environ["PATH"] = str(pl.Path(__file__).parent / "misc") + os.pathsep + os.environ["PATH"]
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), ".")))
-
 
 import datetime
 import json
 import logging
-
-import pathlib as pl
 import platform
 import re
 import PIL.Image
