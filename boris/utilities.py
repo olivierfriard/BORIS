@@ -36,6 +36,7 @@ import numpy as np
 import os
 import pathlib as pl
 import re
+import shutil
 import subprocess
 import sys
 import urllib.parse
@@ -43,7 +44,6 @@ import urllib.request
 import wave
 
 from PySide6.QtGui import QPixmap, QImage
-from PySide6.QtWidgets import QMessageBox, QApplication
 
 from PIL.ImageQt import Image
 
@@ -56,63 +56,56 @@ try:
 except Exception:
     logger.warning("MPV library not found")
 
-    import ctypes
-
-    ctypes.windll.user32.MessageBoxW(0, "The MPV library was not found!\nIt will be downloaded.", "BORIS", 0)
-
-    """
-    app = QApplication(sys.argv)
-    QMessageBox.critical(
-        None,
-        cfg.programName,
-        "MPV library not found!",
-        QMessageBox.Ok | QMessageBox.Default,
-        QMessageBox.NoButton,
-    )
-    app.quit()
-    del app
-    """
-
     if sys.platform.startswith("win"):
+        import ctypes
+
+        ctypes.windll.user32.MessageBoxW(0, "The MPV library was not found!\nIt will be downloaded.", "BORIS", 0)
+
         # download libmpv2.dll and ffprobe from https://github.com/boris-behav-obs/boris-behav-obs.github.io/releases/download/files/
 
         url = "https://github.com/boris-behav-obs/boris-behav-obs.github.io/releases/download/files/"
 
-        ffmpeg_dir = ""
+        external_files_dir = ""
         # search where to download libmpv-2.dll
         if sys.argv[0].endswith("start_boris.py"):
-            ffmpeg_dir = pl.Path(sys.argv[0]).resolve().parent / "boris" / "misc"
+            external_files_dir = pl.Path(sys.argv[0]).resolve().parent / "boris" / "misc"
         if sys.argv[0].endswith("__main__.py"):
-            ffmpeg_dir = pl.Path(sys.argv[0]).resolve().parent / "misc"
+            external_files_dir = pl.Path(sys.argv[0]).resolve().parent / "misc"
 
-        logger.info(f"MPV library directory: {ffmpeg_dir}")
+        logger.info(f"MPV library directory: {external_files_dir}")
 
-        local_filename = ffmpeg_dir / "libmpv-2.dll"
+        local_filename = external_files_dir / "libmpv-2.dll"
         logger.info("Downloading libmpv-2.dll...")
         urllib.request.urlretrieve(url + "libmpv-2.dll", local_filename)
         logger.info(f"File downloaded as {local_filename}")
 
-        from . import mpv2 as mpv
+        # reload package
+        try:
+            from . import mpv2 as mpv
+        except Exception:
+            logger.warning("MPV library not found after dowloading")
+            sys.exit(5)
 
+    elif sys.platform.startswith("linux"):
+        text = (
+            "The MPV library was not found!\nInstall it\n\n"
+            "With Debian/Ubuntu/Mint:\nsudo apt install libmpv2\n\n"
+            "With Fedora:\nsudo dnf install mpv-libs\n\n"
+            "With OpenSUSE:\nsudo zypper install mpv\n\n"
+            "Arch Linux / Manjaro:\nsudo pacman -S mpv\n\n"
+        )
+        if shutil.which("zenity") is not None:
+            subprocess.run(["zenity", "--error", f"--text={text}"])
+        elif shutil.which("kdialog"):
+            subprocess.run(["kdialog", "--msgbox", text])
+        elif shutil.which("gxmessage"):
+            subprocess.run(["gxmessage", text])
+        elif shutil.which("xmessage"):
+            subprocess.run(["xmessage", text])
+
+        sys.exit(5)
     else:
         sys.exit(5)
-
-"""
-try:
-    from . import mpv2 as mpv
-
-    # check if MPV API v. 1
-    # is v. 1 use the old version of mpv.py
-    try:
-        if "libmpv.so.1" in mpv.sofile:
-            from . import mpv as mpv
-    except AttributeError:
-        if "mpv-1.dll" in mpv.dll:
-            from . import mpv as mpv
-
-except RuntimeError:  # libmpv found but version too old
-    from . import mpv as mpv
-"""
 
 
 def extract_exif_DateTimeOriginal(file_path: str) -> int:
@@ -156,10 +149,10 @@ def extract_video_creation_date(file_path: str) -> int | None:
     returns the timestamp of the media creation date time with Hachoir
     """
 
-    logging.debug(f"extract_video_creation_date for {file_path}")
+    logger.debug(f"extract_video_creation_date for {file_path}")
 
     if not pl.Path(file_path).is_file():
-        logging.debug(f"{file_path} not found")
+        logger.debug(f"{file_path} not found")
         return None
     try:
         parser = createParser(file_path)
@@ -186,14 +179,14 @@ def extract_date_time_from_file_name(file_path: str) -> int | None:
 
         if matches:
             if pattern == r"\d{4}-\d{2}-\d{2}_\d{6}":
-                logging.debug(
+                logger.debug(
                     f"extract_date_time_from_file_name timestamp from {file_path}: {int(datetime.datetime.strptime(matches[0], '%Y-%m-%d_%H%M%S').timestamp())}"
                 )
 
                 return int(datetime.datetime.strptime(matches[0], "%Y-%m-%d_%H%M%S").timestamp())
 
             if pattern == r"\d{4}-\d{2}-\d{2}_\d{2}:\d{2}:\d{2}":
-                logging.debug(
+                logger.debug(
                     f"extract_date_time_from_file_name timestamp from {file_path}: {int(datetime.datetime.strptime(matches[0], '%Y-%m-%d_%H:%M:%S').timestamp())}"
                 )
 
@@ -844,9 +837,9 @@ def extract_wav(ffmpeg_bin: str, media_file_path: str, tmp_dir: str) -> str:
     try:
         wav = wave.open(media_file_path, "r")
         wav.close()
-        logging.debug(f"{media_file_path} is a WAV file. Copying in the temp directory...")
+        logger.debug(f"{media_file_path} is a WAV file. Copying in the temp directory...")
         copyfile(media_file_path, wav_file_path)
-        logging.debug(f"{media_file_path} copied in {wav_file_path}")
+        logger.debug(f"{media_file_path} copied in {wav_file_path}")
         return str(wav_file_path)
     except Exception:
         if wav_file_path.is_file():
@@ -861,7 +854,7 @@ def extract_wav(ffmpeg_bin: str, media_file_path: str, tmp_dir: str) -> str:
         )
         out, error = p.communicate()
         out, error = out.decode("utf-8"), error.decode("utf-8")
-        logging.debug(f"{out}, {error}")
+        logger.debug(f"{out}, {error}")
 
         if "does not contain any stream" not in error:
             if wav_file_path.is_file():
@@ -912,8 +905,8 @@ def seconds_of_day(timestamp: dt.datetime) -> dec:
         dev: number of seconds since the start of the day
     """
 
-    # logging.debug("function: seconds_of_day")
-    # logging.debug(f"{timestamp = }")
+    # logger.debug("function: seconds_of_day")
+    # logger.debug(f"{timestamp = }")
 
     t = timestamp.time()
     return dec(t.hour * 3600 + t.minute * 60 + t.second + t.microsecond / 1000000).quantize(dec("0.001"))
@@ -1246,8 +1239,8 @@ def test_ffmpeg_path(FFmpegPath: str) -> Tuple[bool, str]:
     """
 
     out, error = subprocess.Popen(f'"{FFmpegPath}" -version', stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True).communicate()
-    logging.debug(f"test ffmpeg path output: {out}")
-    logging.debug(f"test ffmpeg path error: {error}")
+    logger.debug(f"test ffmpeg path output: {out}")
+    logger.debug(f"test ffmpeg path error: {error}")
 
     if (b"avconv" in out) or (b"the Libav developers" in error):
         return False, "Please use FFmpeg from https://www.ffmpeg.org in place of FFmpeg from Libav project."
@@ -1482,8 +1475,8 @@ def accurate_media_analysis(ffmpeg_bin: str, file_name: str) -> dict:
 
     ffprobe_results = ffprobe_media_analysis(ffmpeg_bin, file_name)
 
-    logging.debug(f"file_name: {file_name}")
-    logging.debug(f"ffprobe_results: {ffprobe_results}")
+    logger.debug(f"file_name: {file_name}")
+    logger.debug(f"ffprobe_results: {ffprobe_results}")
 
     if ("error" not in ffprobe_results) and (ffprobe_results["bitrate"] is not None):
         return ffprobe_results

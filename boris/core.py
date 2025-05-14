@@ -5724,8 +5724,6 @@ def main():
     if not ret:
         if sys.platform.startswith("win"):
             # download ffmpeg and ffprobe from https://github.com/boris-behav-obs/boris-behav-obs.github.io/releases/download/files/
-            import urllib.request
-
             url = "https://github.com/boris-behav-obs/boris-behav-obs.github.io/releases/download/files/"
 
             ffmpeg_dir = ""
@@ -5735,13 +5733,13 @@ def main():
             if sys.argv[0].endswith("__main__.py"):
                 ffmpeg_dir = pl.Path(sys.argv[0]).resolve().parent / "misc"
 
-            print(f"{ffmpeg_dir=}")
+            logging.debug(f"{ffmpeg_dir=}")
 
             for file_ in ["ffmpeg.exe", "ffprobe.exe"]:
                 local_filename = ffmpeg_dir / file_
-                print(f"Downloading {file_}...")
+                logging.debug(f"Downloading {file_}...")
                 urllib.request.urlretrieve(url + file_, local_filename)
-                print(f"File downloaded as {local_filename}")
+                logging.debug(f"File downloaded as {local_filename}")
 
             # re-test for ffmpeg
             ret, msg = util.check_ffmpeg_path()
