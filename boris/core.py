@@ -5737,9 +5737,9 @@ def main():
 
             for file_ in ["ffmpeg.exe", "ffprobe.exe"]:
                 local_filename = ffmpeg_dir / file_
-                logging.debug(f"Downloading {file_}...")
+                logging.info(f"Downloading {file_}...")
                 urllib.request.urlretrieve(url + file_, local_filename)
-                logging.debug(f"File downloaded as {local_filename}")
+                logging.info(f"File downloaded as {local_filename}")
 
             # re-test for ffmpeg
             ret, msg = util.check_ffmpeg_path()
