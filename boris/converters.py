@@ -22,8 +22,6 @@ This file is part of BORIS.
 
 import sys
 import json
-import urllib.error
-import urllib.parse
 import urllib.request
 
 
@@ -314,7 +312,7 @@ def load_converters_from_file_repo(self, mode: str):
                         QMessageBox.critical(
                             self,
                             "BORIS",
-                            (f"The code of {converter_name} converter produces an error: " f"<br><b>{sys.exc_info()[1]}</b>"),
+                            (f"The code of {converter_name} converter produces an error: <br><b>{sys.exc_info()[1]}</b>"),
                         )
 
                     self.tw_converters.setRowCount(self.tw_converters.rowCount() + 1)

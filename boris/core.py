@@ -42,8 +42,6 @@ import subprocess
 import locale
 import tempfile
 import time
-import urllib.error
-import urllib.parse
 import urllib.request
 from typing import Union, Tuple
 from decimal import Decimal as dec
