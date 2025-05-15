@@ -67,14 +67,6 @@ except Exception:
 
         external_files_dir = ""
         # search where to download libmpv-2.dll
-        """
-        if sys.argv[0].endswith("start_boris.py"):
-            external_files_dir = pl.Path(sys.argv[0]).resolve().parent / "boris" / "misc"
-        if sys.argv[0].endswith("__main__.py"):
-            external_files_dir = pl.Path(sys.argv[0]).resolve().parent / "misc"
-        """
-        print(f"{sys.argv[0]=}")
-        print(f"{__file__=}")
 
         external_files_dir = pl.Path(__file__).parent / "misc"
         if not external_files_dir.is_dir():
@@ -1271,43 +1263,24 @@ def check_ffmpeg_path() -> Tuple[bool, str]:
         str: if bool True returns ffmpegpath else returns error message
     """
 
+    # search embedded ffmpeg
     if sys.platform.startswith("linux") or sys.platform.startswith("darwin"):
-        ffmpeg_path = pl.Path("")
-        # search embedded ffmpeg
-        if sys.argv[0].endswith("start_boris.py"):
-            ffmpeg_path = pl.Path(sys.argv[0]).resolve().parent / "boris" / "misc" / "ffmpeg"
-        if sys.argv[0].endswith("__main__.py"):
-            ffmpeg_path = pl.Path(sys.argv[0]).resolve().parent / "misc" / "ffmpeg"
+        ffmpeg_executable = pl.Path("ffmpeg")
+    elif sys.platform.startswith("win"):
+        ffmpeg_executable = pl.Path("ffmpeg.exe")
 
-        if not ffmpeg_path.is_file():
-            # search global ffmpeg
-            ffmpeg_path = "ffmpeg"
+    ffmpeg_path = pl.Path(__file__).parent / "misc" / ffmpeg_executable
 
-        # test ffmpeg
-        r, msg = test_ffmpeg_path(str(ffmpeg_path))
-        if r:
-            return True, str(ffmpeg_path)
-        else:
-            return False, "FFmpeg is not available"
+    if not ffmpeg_path.is_file():
+        # search global ffmpeg
+        ffmpeg_path = ffmpeg_executable
 
-    if sys.platform.startswith("win"):
-        ffmpeg_path = pl.Path("")
-        # search embedded ffmpeg
-        if sys.argv[0].endswith("start_boris.py"):
-            ffmpeg_path = pl.Path(sys.argv[0]).resolve().parent / "boris" / "misc" / "ffmpeg.exe"
-        if sys.argv[0].endswith("__main__.py"):
-            ffmpeg_path = pl.Path(sys.argv[0]).resolve().parent / "misc" / "ffmpeg.exe"
-
-        if not ffmpeg_path.is_file():
-            # search global ffmpeg
-            ffmpeg_path = "ffmpeg"
-
-        # test ffmpeg
-        r, msg = test_ffmpeg_path(str(ffmpeg_path))
-        if r:
-            return True, str(ffmpeg_path)
-        else:
-            return False, "FFmpeg is not available"
+    # test ffmpeg
+    r, msg = test_ffmpeg_path(str(ffmpeg_path))
+    if r:
+        return True, str(ffmpeg_path)
+    else:
+        return False, "FFmpeg is not available"
 
 
 def smart_size_format(n: Union[float, int, str, None]) -> str:
@@ -1327,6 +1300,49 @@ def smart_size_format(n: Union[float, int, str, None]) -> str:
     if n < 1_000_000_000:
         return f"{n / 1_000_000:,.1f} Mb"
     return f"{n / 1_000_000_000:,.1f} Gb"
+
+
+def get_systeminfo() -> str:
+    """
+    returns info about the system
+    """
+
+    # system info
+    systeminfo = ""
+    if sys.platform.startswith("win"):
+        # systeminfo = subprocess.getoutput("systeminfo")
+        systeminfo = subprocess.run("systeminfo /FO csv /NH", capture_output=True, text=True, encoding="mbcs", shell=True).stdout
+
+        import csv
+        from io import StringIO
+
+        # Parse it as CSV
+        f = StringIO(systeminfo)
+        reader = csv.reader(f)
+        parsed_data = list(reader)[0]
+        # Print specific fields by index
+        info_to_show = ""
+        info_to_show += f"Computer Name: {parsed_data[0]}\n"
+        info_to_show += f"OS Name: {parsed_data[1]}\n"
+        info_to_show += f"OS Version: {parsed_data[2]}\n"
+        info_to_show += f"System Manufacturer: {parsed_data[11]}\n"
+        info_to_show += f"System Model: {parsed_data[12]}\n"
+        info_to_show += f"Processor: {parsed_data[14]}\n"
+        info_to_show += f"Locale: {parsed_data[19]}\n"
+        info_to_show += f"Installed Memory: {parsed_data[22]}\n"
+
+        # info about graphic card
+        graphic_info = subprocess.run(
+            "wmic path win32_videocontroller get name", capture_output=True, text=True, encoding="mbcs", shell=True
+        ).stdout
+        info_to_show += graphic_info.replace("\n", "").replace("Name", "Graphic card model")
+
+        systeminfo = info_to_show
+
+    if sys.platform.startswith("linux"):
+        systeminfo = subprocess.getoutput("cat /etc/*rel*; uname -a")
+
+    return systeminfo
 
 
 def ffprobe_media_analysis(ffmpeg_bin: str, file_name: str) -> dict:

@@ -113,12 +113,7 @@ def global_error_message(exception_type, exception_value, traceback_object):
     )
     error_text += "".join(traceback.format_exception(exception_type, exception_value, traceback_object))
 
-    # system info
-    systeminfo = ""
-    if sys.platform.startswith("win"):
-        systeminfo = subprocess.getoutput("systeminfo")
-    if sys.platform.startswith("linux"):
-        systeminfo = subprocess.getoutput("cat /etc/*rel*; uname -a")
+    systeminfo = util.get_systeminfo()
 
     error_text += f"\n\nSystem info\n===========\n\n{systeminfo}"
 

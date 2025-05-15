@@ -5707,35 +5707,32 @@ def main():
 
     locale.setlocale(locale.LC_NUMERIC, "C")
 
-    # splashscreen
-    # no splashscreen for Mac because it can mask the first use dialog box
-
-    if (not options.nosplashscreen) and (sys.platform != "darwin"):
-        start = time.time()
-        splash = QSplashScreen(QPixmap(":/splash"))
-        splash.show()
-        splash.raise_()
-        app.processEvents()
-        while time.time() - start < 1:
-            time.sleep(0.001)
-
     # check FFmpeg
     ret, msg = util.check_ffmpeg_path()
     if not ret:
         if sys.platform.startswith("win"):
+            QMessageBox.warning(
+                None,
+                cfg.programName,
+                "FFmpeg is not available.<br>It will be downloaded",
+                QMessageBox.Ok | QMessageBox.Default,
+                QMessageBox.NoButton,
+            )
+
             # download ffmpeg and ffprobe from https://github.com/boris-behav-obs/boris-behav-obs.github.io/releases/download/files/
             url = "https://github.com/boris-behav-obs/boris-behav-obs.github.io/releases/download/files/"
 
-            ffmpeg_dir = ""
             # search where to download ffmpeg
-            if sys.argv[0].endswith("start_boris.py"):
-                ffmpeg_dir = pl.Path(sys.argv[0]).resolve().parent / "boris" / "misc"
-            if sys.argv[0].endswith("__main__.py"):
-                ffmpeg_dir = pl.Path(sys.argv[0]).resolve().parent / "misc"
+            ffmpeg_dir = pl.Path(__file__).parent / "misc"
 
+            print(f"{__file__=}")
             logging.debug(f"{ffmpeg_dir=}")
 
-            for file_ in ["ffmpeg.exe", "ffprobe.exe"]:
+            if not ffmpeg_dir.is_dir():
+                logging.info(f"Creating {ffmpeg_dir} directory")
+                ffmpeg_dir.mkdir(parents=True, exist_ok=True)
+
+            for file_ in ("ffmpeg.exe", "ffprobe.exe"):
                 local_filename = ffmpeg_dir / file_
                 logging.info(f"Downloading {file_}...")
                 urllib.request.urlretrieve(url + file_, local_filename)
@@ -5755,6 +5752,17 @@ def main():
             QMessageBox.NoButton,
         )
         sys.exit(3)
+
+    # splashscreen
+    # no splashscreen for Mac because it can mask the first use dialog box
+    if (not options.nosplashscreen) and (sys.platform != "darwin"):
+        start = time.time()
+        splash = QSplashScreen(QPixmap(":/splash"))
+        splash.show()
+        splash.raise_()
+        app.processEvents()
+        while time.time() - start < 1:
+            time.sleep(0.001)
 
     app.setApplicationName(cfg.programName)
 
