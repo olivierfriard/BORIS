@@ -1343,7 +1343,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         try:
             last_version = urllib.request.urlopen(version_URL).read().strip().decode("utf-8")
         except Exception:
-            QMessageBox.warning(self, cfg.programName, "Can not check for updates...")
+            QMessageBox.warning(self, cfg.programName, "Can not check for updates. Check your connection.")
             return
 
         # record check timestamp
@@ -5708,7 +5708,6 @@ def main():
             # search where to download ffmpeg
             ffmpeg_dir = pl.Path(__file__).parent / "misc"
 
-            print(f"{__file__=}")
             logging.debug(f"{ffmpeg_dir=}")
 
             if not ffmpeg_dir.is_dir():
@@ -5718,7 +5717,19 @@ def main():
             for file_ in ("ffmpeg.exe", "ffprobe.exe"):
                 local_filename = ffmpeg_dir / file_
                 logging.info(f"Downloading {file_}...")
-                urllib.request.urlretrieve(url + file_, local_filename)
+                try:
+                    urllib.request.urlretrieve(url + file_, local_filename)
+                except Exception:
+                    logging.critical("The FFmpeg program can not be downloaded! Check your connection.")
+                    QMessageBox.warning(
+                        None,
+                        cfg.programName,
+                        "The FFmpeg program can not be downloaded!\nCheck your connection.",
+                        QMessageBox.Ok | QMessageBox.Default,
+                        QMessageBox.NoButton,
+                    )
+                    sys.exit(3)
+
                 logging.info(f"File downloaded as {local_filename}")
 
             # re-test for ffmpeg

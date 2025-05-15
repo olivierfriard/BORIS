@@ -80,9 +80,13 @@ except Exception:
 
         local_filename = external_files_dir / "libmpv-2.dll"
         logger.info("Downloading libmpv-2.dll...")
-        urllib.request.urlretrieve(url + "libmpv-2.dll", local_filename)
-        logger.info(f"File downloaded as {local_filename}")
-
+        try:
+            urllib.request.urlretrieve(url + "libmpv-2.dll", local_filename)
+            logger.info(f"File downloaded as {local_filename}")
+        except Exception:
+            logger.critical("The MPV library can not be downloaded! Check your connection.")
+            ctypes.windll.user32.MessageBoxW(0, "The MPV library can not be downloaded!\nCheck your connection.", "BORIS", 0)
+            sys.exit(5)
         # reload package
         try:
             from . import mpv2 as mpv
