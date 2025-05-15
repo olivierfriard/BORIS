@@ -31,7 +31,6 @@ from . import config as cfg
 from . import utilities as util
 
 
-from PySide6.QtCore import qVersion
 from PySide6.QtGui import QPixmap
 from PySide6.QtWidgets import QMessageBox
 
@@ -40,8 +39,6 @@ def actionAbout_activated(self):
     """
     About dialog
     """
-
-    import PySide6
 
     programs_versions: list = ["MPV media player"]
 
@@ -108,6 +105,7 @@ def actionAbout_activated(self):
             '<a href="https://besjournals.onlinelibrary.wiley.com/doi/full/10.1111/2041-210X.12584">DOI:10.1111/2041-210X.12584</a>'
         )
     )
+    """
     n = "\n"
     current_system = platform.uname()
     details = (
@@ -123,8 +121,11 @@ def actionAbout_activated(self):
             f"Memory (RAM)  Total: {memory.get('total_memory', 'Not available'):.2f} Mb  "
             f"Free: {memory.get('free_memory', 'Not available'):.2f} Mb\n\n"
         )
+    """
 
-    details += n.join(programs_versions)
+    details = util.get_systeminfo()
+
+    details += "\n".join(programs_versions)
     """
     memory_in_use = f"{utilities.rss_memory_used(self.pid)} Mb" if utilities.rss_memory_used(self.pid) != -1 else "Not available"
     percent_memory_in_use = (f"({utilities.rss_memory_percent_used(self.pid):.1f} % of total memory)"

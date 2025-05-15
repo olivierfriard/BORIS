@@ -26,7 +26,6 @@ import logging
 import math
 import pathlib as pl
 import platform
-import subprocess
 import sys
 import traceback
 from typing import Union
@@ -98,24 +97,11 @@ def global_error_message(exception_type, exception_value, traceback_object):
     Global error management
     save error using loggin.critical and stdout
     """
-    import PySide6
 
-    error_text: str = (
-        f"BORIS version: {version.__version__}\n"
-        f"OS: {platform.uname().system} {platform.uname().release} {platform.uname().version}\n"
-        f"CPU: {platform.uname().machine} {platform.uname().processor}\n"
-        f"Python {platform.python_version()} ({'64-bit' if sys.maxsize > 2**32 else '32-bit'})\n"
-        f"Qt {qVersion()} - PySide {PySide6.__version__}\n"
-        f"MPV library version: {util.mpv_lib_version()[0]}\n"
-        f"MPV API version: {util.mpv_lib_version()[2]}\n"
-        f"MPV library file path: {util.mpv_lib_version()[1]}\n\n"
-        f"Error succeded at {dt.datetime.now():%Y-%m-%d %H:%M}\n\n"
-    )
+    error_text = "\n\nSystem info\n===========\n\n"
+    error_text += util.get_systeminfo()
+    error_text += f"Error succeded at {dt.datetime.now():%Y-%m-%d %H:%M}\n\n"
     error_text += "".join(traceback.format_exception(exception_type, exception_value, traceback_object))
-
-    systeminfo = util.get_systeminfo()
-
-    error_text += f"\n\nSystem info\n===========\n\n{systeminfo}"
 
     # write to stdout
     logging.critical(error_text)
@@ -124,8 +110,6 @@ def global_error_message(exception_type, exception_value, traceback_object):
     try:
         with open(pl.Path.home() / "boris_error.log", "w") as f_error:
             f_error.write(error_text)
-            f_error.write("\nSystem info:\n")
-            f_error.write(systeminfo + "\n")
     except Exception:
         logging.critical(f"Impossible to write to {pl.Path.home() / 'boris_error.log'}")
 

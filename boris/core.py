@@ -56,7 +56,6 @@ import shutil
 
 matplotlib.use("QtAgg")
 
-import PySide6
 from PySide6.QtCore import (
     Qt,
     QPoint,
@@ -65,7 +64,6 @@ from PySide6.QtCore import (
     QDateTime,
     QUrl,
     QAbstractTableModel,
-    qVersion,
     QElapsedTimer,
     QSettings,
 )
@@ -162,23 +160,8 @@ if options.version:
     print(f"version {__version__} release date: {__version_date__}")
     sys.exit(0)
 
-
 logging.debug("BORIS started")
-logging.info(f"BORIS version {__version__} release date: {__version_date__}")
-logging.info(f"Operating system: {platform.uname().system} {platform.uname().release} {platform.uname().version}")
-logging.info(f"CPU: {platform.uname().machine} {platform.uname().processor}")
-logging.info(f"Python {platform.python_version()} ({'64-bit' if sys.maxsize > 2**32 else '32-bit'})")
-logging.info(f"Qt {qVersion()} - PySide {PySide6.__version__}")
-
-
-(r, memory) = util.mem_info()
-if not r:
-    logging.info(
-        (
-            f"Memory (RAM)  Total: {memory.get('total_memory', 'Not available'):.2f} Mb  "
-            f"Free: {memory.get('free_memory', 'Not available'):.2f} Mb"
-        )
-    )
+logging.info(util.get_systeminfo())
 
 
 def excepthook(exception_type, exception_value, traceback_object):

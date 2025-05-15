@@ -35,6 +35,8 @@ import math
 import numpy as np
 import os
 import pathlib as pl
+from PIL.ImageQt import Image
+import platform
 import re
 import shutil
 import subprocess
@@ -43,11 +45,12 @@ import urllib.parse
 import urllib.request
 import wave
 
+from PySide6 import __version__ as pyside6_version
 from PySide6.QtGui import QPixmap, QImage
-
-from PIL.ImageQt import Image
+from PySide6.QtCore import qVersion
 
 from . import config as cfg
+from . import version
 
 logger = logging.getLogger(__name__)
 
@@ -1307,6 +1310,29 @@ def get_systeminfo() -> str:
     returns info about the system
     """
 
+    mpv_lib_version_, mpv_lib_file_path, mpv_api_version = mpv_lib_version()
+
+    system_info = (
+        f"BORIS version: {version.__version__}\n"
+        f"OS: {platform.uname().system} {platform.uname().release} {platform.uname().version}\n"
+        f"CPU: {platform.uname().machine} {platform.uname().processor}\n"
+        f"Python {platform.python_version()} ({'64-bit' if sys.maxsize > 2**32 else '32-bit'})\n"
+        f"Qt {qVersion()} - PySide {pyside6_version}\n"
+        f"MPV library version: {mpv_lib_version_}\n"
+        f"MPV API version: {mpv_api_version}\n"
+        f"MPV library file path: {mpv_lib_file_path}\n\n"
+    )
+
+    r, memory = mem_info()
+    if not r:
+        system_info += (
+            f"Memory (RAM)  Total: {memory.get('total_memory', 'Not available'):.2f} Mb  "
+            f"Free: {memory.get('free_memory', 'Not available'):.2f} Mb\n\n"
+        )
+
+    return system_info
+
+    """
     # system info
     systeminfo = ""
     if sys.platform.startswith("win"):
@@ -1343,6 +1369,7 @@ def get_systeminfo() -> str:
         systeminfo = subprocess.getoutput("cat /etc/*rel*; uname -a")
 
     return systeminfo
+    """
 
 
 def ffprobe_media_analysis(ffmpeg_bin: str, file_name: str) -> dict:
