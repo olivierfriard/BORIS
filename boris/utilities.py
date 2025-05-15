@@ -67,10 +67,19 @@ except Exception:
 
         external_files_dir = ""
         # search where to download libmpv-2.dll
+        """
         if sys.argv[0].endswith("start_boris.py"):
             external_files_dir = pl.Path(sys.argv[0]).resolve().parent / "boris" / "misc"
         if sys.argv[0].endswith("__main__.py"):
             external_files_dir = pl.Path(sys.argv[0]).resolve().parent / "misc"
+        """
+        print(f"{sys.argv[0]=}")
+        print(f"{__file__=}")
+
+        external_files_dir = pl.Path(__file__).parent / "misc"
+        if not external_files_dir.is_dir():
+            logger.info(f"Creating {external_files_dir} directory")
+            external_files_dir.mkdir(parents=True, exist_ok=True)
 
         logger.info(f"MPV library directory: {external_files_dir}")
 
