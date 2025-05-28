@@ -100,8 +100,8 @@ def write_event(self, event: dict, mem_time: dec) -> int:
                 """
                 print(f"{media_file_name=}")
                 print(f"{mem_time=}")
-                print(f"{dec(self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO][cfg.MEDIA_CREATION_TIME][media_file_name])=}")
                 """
+                print(f"{dec(self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO][cfg.MEDIA_CREATION_TIME][media_file_name])=}")
 
                 mem_time += dec(self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO][cfg.MEDIA_CREATION_TIME][media_file_name])
 
