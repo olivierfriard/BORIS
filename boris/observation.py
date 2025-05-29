@@ -1241,6 +1241,8 @@ class Observation(QDialog, Ui_Form):
              str: error message or empty string
         """
 
+        logging.debug(f"check_media function for {file_path}")
+
         media_info = util.accurate_media_analysis(self.ffmpeg_bin, file_path)
 
         logging.debug(f"{media_info=}")
