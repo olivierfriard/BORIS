@@ -43,30 +43,6 @@ from PySide6.QtCore import Signal, QEvent, Qt
 from PySide6.QtGui import QIcon, QAction
 
 
-"""
-try:
-    # import last version of python-mpv
-    from . import mpv2 as mpv
-
-    # check if MPV API v. 1
-    # is v. 1 use the old version of mpv.py
-    try:
-        if "libmpv.so.1" in mpv.sofile:
-            from . import mpv as mpv
-    except AttributeError:
-        if "mpv-1.dll" in mpv.dll:
-            from . import mpv as mpv
-
-except RuntimeError:  # libmpv found but version too old
-    from . import mpv as mpv
-
-except OSError:  # libmpv not found
-    msg = "LIBMPV library not found!\n"
-    logging.critical(msg)
-    sys.exit()
-"""
-
-
 class Clickable_label(QLabel):
     """
     QLabel class for visualiziong frames for geometric measurments
