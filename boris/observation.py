@@ -1243,7 +1243,7 @@ class Observation(QDialog, Ui_Form):
 
         media_info = util.accurate_media_analysis(self.ffmpeg_bin, file_path)
 
-        print(f"{media_info=}")
+        logging.debug(f"{media_info=}")
 
         if "error" in media_info:
             return (True, media_info["error"])
@@ -1265,6 +1265,9 @@ class Observation(QDialog, Ui_Form):
         self.mediaFPS[file_path] = float(media_info["fps"])
         self.mediaHasVideo[file_path] = media_info["has_video"]
         self.mediaHasAudio[file_path] = media_info["has_audio"]
+
+        logging.debug(f"{file_path=}")
+
         self.add_media_to_listview(file_path)
         return (False, "")
 
@@ -1341,9 +1344,6 @@ class Observation(QDialog, Ui_Form):
 
                 for file_path in file_paths:
                     (error, msg) = self.check_media(file_path, mode)
-
-                    print(f"{(error, msg)=}")
-
                     if error:
                         QMessageBox.critical(self, cfg.programName, f"<b>{file_path}</b>. {msg}")
 
