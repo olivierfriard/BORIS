@@ -1329,6 +1329,8 @@ class Observation(QDialog, Ui_Form):
         if "media " in mode:
             file_paths, _ = fd.getOpenFileNames(self, "Add media file(s)", "", "All files (*)")
 
+            logging.debug(f"{file_paths=}")
+
             if file_paths:
                 # store directory for next usage
                 self.mem_dir = str(pl.Path(file_paths[0]).parent)
