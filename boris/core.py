@@ -23,11 +23,11 @@ This file is part of BORIS.
 
 import os
 import sys
-import pathlib as pl
+from pathlib import Path
 
 # os.environ["PATH"] = os.path.dirname(__file__) + os.sep + "misc" + os.pathsep + os.environ["PATH"]
 
-os.environ["PATH"] = str(pl.Path(__file__).parent / "misc") + os.pathsep + os.environ["PATH"]
+os.environ["PATH"] = str(Path(__file__).parent / "misc") + os.pathsep + os.environ["PATH"]
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), ".")))
 
 import datetime
@@ -1023,8 +1023,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 tmp_dir = self.ffmpeg_cache_dir if self.ffmpeg_cache_dir and os.path.isdir(self.ffmpeg_cache_dir) else tempfile.gettempdir()
 
                 wav_file_path = (
-                    pl.Path(tmp_dir)
-                    / pl.Path(self.dw_player[0].player.playlist[self.dw_player[0].player.playlist_pos]["filename"] + ".wav").name
+                    Path(tmp_dir) / Path(self.dw_player[0].player.playlist[self.dw_player[0].player.playlist_pos]["filename"] + ".wav").name
                 )
 
                 self.spectro = plot_spectrogram_rt.Plot_spectrogram_RT()
@@ -1113,8 +1112,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 tmp_dir = self.ffmpeg_cache_dir if self.ffmpeg_cache_dir and os.path.isdir(self.ffmpeg_cache_dir) else tempfile.gettempdir()
 
                 wav_file_path = (
-                    pl.Path(tmp_dir)
-                    / pl.Path(self.dw_player[0].player.playlist[self.dw_player[0].player.playlist_pos]["filename"] + ".wav").name
+                    Path(tmp_dir) / Path(self.dw_player[0].player.playlist[self.dw_player[0].player.playlist_pos]["filename"] + ".wav").name
                 )
 
                 self.waveform = plot_waveform_rt.Plot_waveform_RT()
@@ -1224,8 +1222,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         try:
             wav_file_path = str(
-                pl.Path(tmp_dir)
-                / pl.Path(self.dw_player[0].player.playlist[self.dw_player[0].player.playlist_pos]["filename"] + ".wav").name
+                Path(tmp_dir) / Path(self.dw_player[0].player.playlist[self.dw_player[0].player.playlist_pos]["filename"] + ".wav").name
             )
         except Exception:
             return
@@ -1373,7 +1370,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             return
 
         # check if a .git is present
-        if (pl.Path(__file__).parent.parent / pl.Path(".git")).is_dir():
+        if (Path(__file__).parent.parent / Path(".git")).is_dir():
             QMessageBox.critical(self, cfg.programName, "A .git directory is present, BORIS cannot be automatically updated.")
             return
 
@@ -1403,7 +1400,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         # copy from temp dir to current BORIS dir
         try:
-            shutil.copytree(f"{temp_dir.name}/BORIS-{last_version}", pl.Path(__file__).parent.parent, dirs_exist_ok=True)
+            shutil.copytree(f"{temp_dir.name}/BORIS-{last_version}", Path(__file__).parent.parent, dirs_exist_ok=True)
         except Exception:
             QMessageBox.critical(self, cfg.programName, "A problem occurred during the copy the new version of BORIS.")
             return
@@ -1526,15 +1523,15 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             if self.image_idx == 0:
                 return
 
-            current_dir = pl.Path(self.images_list[self.image_idx]).parent
+            current_dir = Path(self.images_list[self.image_idx]).parent
             for image_path in self.images_list[self.image_idx - 1 :: -1]:
-                if pl.Path(image_path).parent != current_dir:
+                if Path(image_path).parent != current_dir:
                     self.image_idx = self.images_list.index(image_path)
 
                     # seek to first image of directory
-                    current_dir2 = pl.Path(self.images_list[self.image_idx]).parent
+                    current_dir2 = Path(self.images_list[self.image_idx]).parent
                     for image_path2 in self.images_list[self.image_idx - 1 :: -1]:
-                        if pl.Path(image_path2).parent != current_dir2:
+                        if Path(image_path2).parent != current_dir2:
                             self.image_idx = self.images_list.index(image_path2) + 1
                             break
                         if self.images_list.index(image_path2) == 0:
@@ -1571,9 +1568,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         if self.playerType == cfg.IMAGES:
             if len(self.pj[cfg.OBSERVATIONS][self.observationId].get(cfg.DIRECTORIES_LIST, [])) <= 1:
                 return
-            current_dir = pl.Path(self.images_list[self.image_idx]).parent
+            current_dir = Path(self.images_list[self.image_idx]).parent
             for image_path in self.images_list[self.image_idx + 1 :]:
-                if pl.Path(image_path).parent != current_dir:
+                if Path(image_path).parent != current_dir:
                     self.image_idx = self.images_list.index(image_path)
                     self.extract_frame(self.dw_player[0])
                     break
@@ -1706,8 +1703,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 msg += f"<br>Time from 1st image: <b>{seconds_from_1st_formated}</b>"
 
             # image path
-            msg += f"<br><br>Directory: <b>{pl.Path(self.images_list[self.image_idx]).parent}</b>"
-            msg += f"<br>File name: <b>{pl.Path(self.images_list[self.image_idx]).name}</b>"
+            msg += f"<br><br>Directory: <b>{Path(self.images_list[self.image_idx]).parent}</b>"
+            msg += f"<br>File name: <b>{Path(self.images_list[self.image_idx]).name}</b>"
             msg += f"<br><small>Image resolution: <b>{pixmap.size().width()}x{pixmap.size().height()}</b></small>"
 
             self.lb_current_media_time.setText(msg)
@@ -1819,16 +1816,16 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE] == cfg.IMAGES:
                 pixmap = QPixmap(self.images_list[self.image_idx])
                 # draw measurements
-                RADIUS = 6
+                # RADIUS = 6
                 painter = QPainter()
                 painter.begin(pixmap)
                 for element in self.measurement_w.draw_mem.get(self.image_idx, []):
                     painter = draw_element(painter, element)
                 painter.end()
 
-                image_file_path = str(pl.Path(output_dir) / f"{pl.Path(self.images_list[self.image_idx]).stem}.jpg")
+                image_file_path = str(Path(output_dir) / f"{Path(self.images_list[self.image_idx]).stem}.jpg")
                 # check if file already exists
-                if pl.Path(image_file_path).is_file():
+                if Path(image_file_path).is_file():
                     if (
                         dialog.MessageDialog(cfg.programName, f"The file {image_file_path} already exists.", (cfg.CANCEL, cfg.OVERWRITE))
                         == cfg.CANCEL
@@ -1841,11 +1838,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 for n_player, dw in enumerate(self.dw_player):
                     pixmap = util.pil2pixmap(dw.player.screenshot_raw())
 
-                    p = pl.Path(dw.player.playlist[dw.player.playlist_pos]["filename"])
-                    image_file_path = str(pl.Path(output_dir) / f"{p.stem}_{n_player}_{dw.player.estimated_frame_number:06}.jpg")
+                    p = Path(dw.player.playlist[dw.player.playlist_pos]["filename"])
+                    image_file_path = str(Path(output_dir) / f"{p.stem}_{n_player}_{dw.player.estimated_frame_number:06}.jpg")
 
                     # draw measurements
-                    RADIUS = 6
+                    # RADIUS = 6
                     painter = QPainter()
                     painter.begin(pixmap)
 
@@ -1856,7 +1853,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
                     painter.end()
                     # check if file already exists
-                    if pl.Path(image_file_path).is_file():
+                    if Path(image_file_path).is_file():
                         if (
                             dialog.MessageDialog(
                                 cfg.programName, f"The file {image_file_path} already exists.", (cfg.CANCEL, cfg.OVERWRITE)
@@ -1873,16 +1870,16 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     pixmap = QPixmap(self.images_list[frame_idx])
 
                     # draw measurements
-                    RADIUS = 6
+                    # RADIUS = 6
                     painter = QPainter()
                     painter.begin(pixmap)
                     for element in self.measurement_w.draw_mem.get(frame_idx, []):
                         painter = draw_element(painter, element)
                     painter.end()
 
-                    image_file_path = str(pl.Path(output_dir) / f"{pl.Path(self.images_list[frame_idx]).stem}.jpg")
+                    image_file_path = str(Path(output_dir) / f"{Path(self.images_list[frame_idx]).stem}.jpg")
                     # check if file already exists
-                    if pl.Path(image_file_path).is_file():
+                    if Path(image_file_path).is_file():
                         if (
                             dialog.MessageDialog(
                                 cfg.programName, f"The file {image_file_path} already exists.", (cfg.CANCEL, cfg.OVERWRITE)
@@ -1905,10 +1902,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
                 for frame_idx in d:
                     for n_player in d[frame_idx]:
-                        media_path = pl.Path(
+                        media_path = Path(
                             self.dw_player[n_player - 1].player.playlist[self.dw_player[n_player - 1].player.playlist_pos]["filename"]
                         )
-                        file_name = pl.Path(f"{media_path.stem}_{element['player']}_{frame_idx:06}")
+                        file_name = Path(f"{media_path.stem}_{element['player']}_{frame_idx:06}")
 
                         ffmpeg_command = [
                             self.ffmpeg_bin,
@@ -1919,14 +1916,14 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                             rf"select=gte(n\, {frame_idx})",
                             "-frames:v",
                             "1",
-                            str(pl.Path(output_dir) / file_name.with_suffix(".jpg")),
+                            str(Path(output_dir) / file_name.with_suffix(".jpg")),
                         ]
 
                         p = subprocess.Popen(ffmpeg_command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)  # do not use shell=True!
                         out, error = p.communicate()
 
-                        pixmap = QPixmap(str(pl.Path(output_dir) / file_name.with_suffix(".jpg")))
-                        RADIUS = 6
+                        pixmap = QPixmap(str(Path(output_dir) / file_name.with_suffix(".jpg")))
+                        # RADIUS = 6
                         painter = QPainter()
                         painter.begin(pixmap)
 
@@ -1935,10 +1932,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
                         painter.end()
                         # check if file already exists
-                        if (pl.Path(output_dir) / file_name.with_suffix(".jpg")).is_file():
+                        if (Path(output_dir) / file_name.with_suffix(".jpg")).is_file():
                             answer = dialog.MessageDialog(
                                 cfg.programName,
-                                f"The file {pl.Path(output_dir) / file_name.with_suffix('.jpg')} already exists.",
+                                f"The file {Path(output_dir) / file_name.with_suffix('.jpg')} already exists.",
                                 (cfg.CANCEL, cfg.OVERWRITE, "Abort"),
                             )
                             if answer == cfg.CANCEL:
@@ -1946,7 +1943,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                             if answer == "Abort":
                                 return
 
-                        pixmap.save(str(pl.Path(output_dir) / file_name.with_suffix(".jpg")), "JPG")
+                        pixmap.save(str(Path(output_dir) / file_name.with_suffix(".jpg")), "JPG")
 
     def resize_dw(self, dw_id):
         """
@@ -2420,7 +2417,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         """
         self.menuRecent_projects.clear()
         for project_file_path in self.recent_projects:
-            if pl.Path(project_file_path).is_file():
+            if Path(project_file_path).is_file():
                 action = QAction(self, visible=False, triggered=self.open_project_activated)
                 action.setText(project_file_path)
                 action.setVisible(True)
@@ -2751,7 +2748,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.projectChanged = project_changed
         self.load_behaviors_in_twEthogram([self.pj[cfg.ETHOGRAM][x][cfg.BEHAVIOR_CODE] for x in self.pj[cfg.ETHOGRAM]])
         self.load_subjects_in_twSubjects([self.pj[cfg.SUBJECTS][x][cfg.SUBJECT_NAME] for x in self.pj[cfg.SUBJECTS]])
-        self.projectFileName = str(pl.Path(project_path).absolute())
+        self.projectFileName = str(Path(project_path).absolute())
         self.project = True
         if str(self.projectFileName) not in self.recent_projects:
             self.recent_projects = [str(self.projectFileName)] + self.recent_projects
@@ -3335,7 +3332,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     project_new_file_name = os.path.splitext(os.path.splitext(project_new_file_name)[0])[0]
                 project_new_file_name += ".boris"
                 # check if file name with extension already exists
-                if pl.Path(project_new_file_name).is_file():
+                if Path(project_new_file_name).is_file():
                     if (
                         dialog.MessageDialog(
                             cfg.programName,
@@ -3351,7 +3348,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     project_new_file_name = os.path.splitext(project_new_file_name)[0]
                 project_new_file_name += ".boris.gz"
                 # check if file name with extension already exists
-                if pl.Path(project_new_file_name).is_file():
+                if Path(project_new_file_name).is_file():
                     if (
                         dialog.MessageDialog(
                             cfg.programName,
@@ -3431,7 +3428,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     self.projectFileName = os.path.splitext(os.path.splitext(self.projectFileName)[0])[0]
                 self.projectFileName += ".boris"
                 # check if file name with extension already exists
-                if pl.Path(self.projectFileName).is_file():
+                if Path(self.projectFileName).is_file():
                     if (
                         dialog.MessageDialog(
                             cfg.programName,
@@ -3450,7 +3447,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
                 self.projectFileName += ".boris.gz"
                 # check if file name with extension already exists
-                if pl.Path(self.projectFileName).is_file():
+                if Path(self.projectFileName).is_file():
                     if (
                         dialog.MessageDialog(
                             cfg.programName,
@@ -4237,7 +4234,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         # current media name
         if self.dw_player[0].player.playlist_pos is not None:
-            current_media_name = pl.Path(self.dw_player[0].player.playlist[self.dw_player[0].player.playlist_pos]["filename"]).name
+            current_media_name = Path(self.dw_player[0].player.playlist[self.dw_player[0].player.playlist_pos]["filename"]).name
             current_playlist_index = self.dw_player[0].player.playlist_pos
         else:
             current_media_name = ""
@@ -5136,7 +5133,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                         ),
                     )
                     return
-                media_file_name = pl.Path(self.dw_player[0].player.playlist[self.dw_player[0].player.playlist_pos]["filename"]).as_posix()
+                media_file_name = Path(self.dw_player[0].player.playlist[self.dw_player[0].player.playlist_pos]["filename"]).as_posix()
 
                 time_ -= self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO][cfg.MEDIA_CREATION_TIME][media_file_name]
 
@@ -5696,7 +5693,7 @@ def main():
             url = "https://github.com/boris-behav-obs/boris-behav-obs.github.io/releases/download/files/"
 
             # search where to download ffmpeg
-            ffmpeg_dir = pl.Path(__file__).parent / "misc"
+            ffmpeg_dir = Path(__file__).parent / "misc"
 
             logging.debug(f"{ffmpeg_dir=}")
 
@@ -5784,7 +5781,7 @@ def main():
         # check project integrity
         # read config
         config_param: dict = {}
-        ini_file_path = pl.Path.home() / pl.Path(".boris")
+        ini_file_path = Path.home() / Path(".boris")
         if ini_file_path.is_file():
             settings = QSettings(str(ini_file_path), QSettings.IniFormat)
             try:
