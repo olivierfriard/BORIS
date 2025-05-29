@@ -95,6 +95,9 @@ def write_event(self, event: dict, mem_time: dec) -> int:
         if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE] in (cfg.MEDIA):
             if self.pj[cfg.OBSERVATIONS][self.observationId].get(cfg.MEDIA_CREATION_DATE_AS_OFFSET, False):
                 media_file_name = self.dw_player[0].player.playlist[self.dw_player[0].player.playlist_pos]["filename"]
+
+                logging.debug(f"{media_file_name=}")
+
                 # add media creation date/time
 
                 """
