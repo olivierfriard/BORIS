@@ -1055,6 +1055,8 @@ def new_observation(self, mode: str = cfg.NEW, obsId: str = "") -> None:
             }
 
             if self.pj[cfg.OBSERVATIONS][new_obs_id][cfg.MEDIA_CREATION_DATE_AS_OFFSET]:
+                print("\n", observationWindow.media_creation_time, "\n")
+
                 self.pj[cfg.OBSERVATIONS][new_obs_id][cfg.MEDIA_INFO][cfg.MEDIA_CREATION_TIME] = observationWindow.media_creation_time
 
             try:
