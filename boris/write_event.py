@@ -98,6 +98,10 @@ def write_event(self, event: dict, mem_time: dec) -> int:
 
                 logging.debug(f"{media_file_name=}")
 
+                media_file_name_posix = pl.Path(media_file_name).as_posix()
+
+                logging.debug(f"{media_file_name_posix=}")
+
                 # add media creation date/time
 
                 """
@@ -106,7 +110,9 @@ def write_event(self, event: dict, mem_time: dec) -> int:
                 """
                 print(f"{self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO]=}")
 
-                mem_time += dec(self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO][cfg.MEDIA_CREATION_TIME][media_file_name])
+                mem_time += dec(
+                    self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO][cfg.MEDIA_CREATION_TIME][media_file_name_posix]
+                )
 
     # check if time > 2**31 - 1 (2147483647)
     if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE] in (cfg.MEDIA, cfg.VIEWER_MEDIA, cfg.LIVE, cfg.VIEWER_LIVE):

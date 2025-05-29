@@ -4044,14 +4044,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         """
         enable or disable video if any and audio if any
         """
-        # if video
-        # print(f"{n_player=} {enable=}")
-        # print(f"{self.dw_player[n_player].player.video_format=}")
-        # print(f"{self.dw_player[n_player].player.audio_bitrate=}")
-
-        # self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO][cfg.HAS_VIDEO][]
-        # if self.dw_player[n_player].player.playlist_pos is not None:
-        #    print(self.dw_player[n_player].player.playlist[self.dw_player[n_player].player.playlist_pos]["filename"])
 
         if self.dw_player[n_player].player.video_format:
             self.dw_player[n_player].stack.setCurrentIndex(1 if not enable else 0)
@@ -5144,7 +5136,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                         ),
                     )
                     return
-                media_file_name = self.dw_player[0].player.playlist[self.dw_player[0].player.playlist_pos]["filename"]
+                media_file_name = pl.Path(self.dw_player[0].player.playlist[self.dw_player[0].player.playlist_pos]["filename"]).as_posix()
 
                 time_ -= self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO][cfg.MEDIA_CREATION_TIME][media_file_name]
 
