@@ -231,7 +231,7 @@ def ffmpeg_process(self, action: str):
 
     match action:
         case "merge":
-            # ffmpeg -f concat -safe 0 -i join_video.txt -c copy output_demuxer.mp4
+            # ffmpeg -f concat -safe 0 -i join_video.txt -c copy output.mp4
             args = ["-hide_banner", "-y", "-f", "concat", "-safe", "0", "-i", file_list, "-c", "copy", output_file_name]
             self.processes.append([QProcess(self), [self.ffmpeg_bin, args, output_file_name]])
             self.processes[-1][0].setProcessChannelMode(QProcess.MergedChannels)
@@ -242,9 +242,9 @@ def ffmpeg_process(self, action: str):
             self.processes[-1][0].start(self.processes[-1][1][0], self.processes[-1][1][1])
 
         case "video_spectrogram":
-            # ffmpeg -i video.mp4 -filter_complex showspectrum=mode=combined:color=intensity:slide=1:scale=cbrt -y -acodec copy video_spectro.mp4
+            # ffmpeg -i video.mp4 -filter_complex showspectrum=mode=combined:color=intensity:slide=1:scale=cbrt -y -acodec copy output.mp4
             for file_name in sorted(file_names, reverse=True):
-                output_file_name = str(Path(file_name).with_suffix(f".spectro{Path(file_name).suffix}"))
+                output_file_name = str(Path(file_name).with_suffix(f".spectrogram{Path(file_name).suffix}"))
                 args = [
                     "-hide_banner",
                     "-y",
