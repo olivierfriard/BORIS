@@ -22,7 +22,7 @@ This file is part of BORIS.
 
 import os
 import tempfile
-import pathlib as pl
+from pathlib import Path
 import logging
 
 from PySide6.QtWidgets import QFileDialog, QMessageBox, QInputDialog
@@ -41,9 +41,9 @@ def ffmpeg_process(self, action: str):
     launch ffmpeg process with QProcess
 
     Args:
-        action (str): "reencode_resize, rotate, merge
+        action (str): "reencode_resize, rotate, merge, video_spectrogram
     """
-    if action not in ("reencode_resize", "rotate", "merge"):
+    if action not in ("reencode_resize", "rotate", "merge", "video_spectrogram"):
         return
 
     def readStdOutput(idx):
@@ -61,7 +61,7 @@ def ffmpeg_process(self, action: str):
         # self.processes_widget.lwi.clear()
         std_out = self.processes[idx - 1][0].readAllStandardOutput().data().decode("utf-8")
         if std_out:
-            self.processes_widget.lwi.addItems((f"{pl.Path(self.processes[idx - 1][1][2]).name}:   {std_out}",))
+            self.processes_widget.lwi.addItems((f"{Path(self.processes[idx - 1][1][2]).name}:   {std_out}",))
 
         """
         std_err = self.processes[idx - 1][0].readAllStandardError().data().decode("utf-8")
@@ -153,7 +153,7 @@ def ffmpeg_process(self, action: str):
         file_list_lst = []
         for file_name in file_names:
             file_list_lst.append(f"file '{file_name}'")
-            file_extensions.append(pl.Path(file_name).suffix)
+            file_extensions.append(Path(file_name).suffix)
         if len(set(file_extensions)) > 1:
             QMessageBox.critical(self, cfg.programName, "All media files must have the same format")
             return
@@ -162,13 +162,13 @@ def ffmpeg_process(self, action: str):
             output_file_name, _ = QFileDialog().getSaveFileName(self, "Output file name", "", "*")
             if output_file_name == "":
                 return
-            if pl.Path(output_file_name).suffix != file_extensions[0]:
+            if Path(output_file_name).suffix != file_extensions[0]:
                 QMessageBox.warning(
                     self,
                     cfg.programName,
                     (
                         "The extension of output file must be the same than the extension of input files "
-                        f"(<b>{file_extensions[0]}</b>).<br>You selected a {pl.Path(output_file_name).suffix} file."
+                        f"(<b>{file_extensions[0]}</b>).<br>You selected a {Path(output_file_name).suffix} file."
                     ),
                 )
             else:
@@ -215,93 +215,118 @@ def ffmpeg_process(self, action: str):
     self.processes_widget.resize(700, 300)
 
     self.processes_widget.setWindowFlags(Qt.WindowStaysOnTopHint)
-    if action == "reencode_resize":
-        self.processes_widget.setWindowTitle("Re-encoding and resizing with FFmpeg")
-    if action == "rotate":
-        self.processes_widget.setWindowTitle("Rotating the video with FFmpeg")
-    if action == "merge":
-        self.processes_widget.setWindowTitle("Merging media files")
+    match action:
+        case "reencode_resize":
+            self.processes_widget.setWindowTitle("Re-encoding and resizing with FFmpeg")
+        case "rotate":
+            self.processes_widget.setWindowTitle("Rotating the video with FFmpeg")
+        case "merge":
+            self.processes_widget.setWindowTitle("Merging media files")
+        case "video_spectrogram":
+            self.processes_widget.setWindowTitle("Creating a video spectrogram")
 
     self.processes_widget.label.setText("This operation can be long. Be patient...\nIn the meanwhile you can continue to use BORIS\n\n")
     self.processes_widget.number_of_files = len(file_names)
     self.processes_widget.show()
 
-    if action == "merge":
-        # ffmpeg -f concat -safe 0 -i join_video.txt -c copy output_demuxer.mp4
-        args = ["-hide_banner", "-y", "-f", "concat", "-safe", "0", "-i", file_list, "-c", "copy", output_file_name]
-        self.processes.append([QProcess(self), [self.ffmpeg_bin, args, output_file_name]])
-        self.processes[-1][0].setProcessChannelMode(QProcess.MergedChannels)
-        self.processes[-1][0].readyReadStandardOutput.connect(lambda: readStdOutput(len(self.processes)))
-        self.processes[-1][0].readyReadStandardError.connect(lambda: readStdOutput(len(self.processes)))
-        self.processes[-1][0].finished.connect(lambda: qprocess_finished(len(self.processes)))
+    match action:
+        case "merge":
+            # ffmpeg -f concat -safe 0 -i join_video.txt -c copy output_demuxer.mp4
+            args = ["-hide_banner", "-y", "-f", "concat", "-safe", "0", "-i", file_list, "-c", "copy", output_file_name]
+            self.processes.append([QProcess(self), [self.ffmpeg_bin, args, output_file_name]])
+            self.processes[-1][0].setProcessChannelMode(QProcess.MergedChannels)
+            self.processes[-1][0].readyReadStandardOutput.connect(lambda: readStdOutput(len(self.processes)))
+            self.processes[-1][0].readyReadStandardError.connect(lambda: readStdOutput(len(self.processes)))
+            self.processes[-1][0].finished.connect(lambda: qprocess_finished(len(self.processes)))
 
-        self.processes[-1][0].start(self.processes[-1][1][0], self.processes[-1][1][1])
+            self.processes[-1][0].start(self.processes[-1][1][0], self.processes[-1][1][1])
 
-    if action in ("reencode_resize", "rotate"):
-        for file_name in sorted(file_names, reverse=True):
-            if action == "reencode_resize":
+        case "video_spectrogram":
+            # ffmpeg -i video.mp4 -filter_complex showspectrum=mode=combined:color=intensity:slide=1:scale=cbrt -y -acodec copy video_spectro.mp4
+            for file_name in sorted(file_names, reverse=True):
+                output_file_name = str(Path(file_name).with_suffix(f".spectro{Path(file_name).suffix}"))
                 args = [
                     "-hide_banner",
                     "-y",
                     "-i",
-                    f"{file_name}",
-                    "-vf",
-                    f"scale={horiz_resol}:-1",
-                    "-b:v",
-                    f"{video_quality * 1024 * 1024}",
-                    f"{file_name}.re-encoded.{horiz_resol}px.{video_quality}Mb.avi",
+                    file_name,
+                    "-filter_complex",
+                    "showspectrum=mode=combined:color=intensity:slide=1:scale=cbrt",
+                    "-acodec",
+                    "copy",
+                    output_file_name,
                 ]
+                self.processes.append([QProcess(self), [self.ffmpeg_bin, args, output_file_name]])
+                self.processes[-1][0].setProcessChannelMode(QProcess.MergedChannels)
+                self.processes[-1][0].readyReadStandardOutput.connect(lambda: readStdOutput(len(self.processes)))
+                self.processes[-1][0].readyReadStandardError.connect(lambda: readStdOutput(len(self.processes)))
+                self.processes[-1][0].finished.connect(lambda: qprocess_finished(len(self.processes)))
 
-            if action == "rotate":
-                # check bitrate
-                r = util.accurate_media_analysis(self.ffmpeg_bin, file_name)
-                if "error" not in r and r["bitrate"] is not None:
-                    current_bitrate = r["bitrate"]
-                else:
-                    current_bitrate = 10_000_000
+                self.processes[-1][0].start(self.processes[-1][1][0], self.processes[-1][1][1])
 
-                if rotation_idx in (1, 2):
+        case "reencode_resize" | "rotate":
+            for file_name in sorted(file_names, reverse=True):
+                if action == "reencode_resize":
                     args = [
                         "-hide_banner",
                         "-y",
                         "-i",
                         f"{file_name}",
                         "-vf",
-                        f"transpose={rotation_idx}",
-                        "-codec:a",
-                        "copy",
+                        f"scale={horiz_resol}:-1",
                         "-b:v",
-                        f"{current_bitrate}",
-                        f"{file_name}.rotated{['', '90', '-90'][rotation_idx]}.avi",
+                        f"{video_quality * 1024 * 1024}",
+                        f"{file_name}.re-encoded.{horiz_resol}px.{video_quality}Mb.avi",
                     ]
 
-                if rotation_idx == 3:  # 180
-                    args = [
-                        "-hide_banner",
-                        "-y",
-                        "-i",
-                        f"{file_name}",
-                        "-vf",
-                        "transpose=2,transpose=2",
-                        "-codec:a",
-                        "copy",
-                        "-b:v",
-                        f"{current_bitrate}",
-                        f"{file_name}.rotated180.avi",
-                    ]
+                if action == "rotate":
+                    # check bitrate
+                    r = util.accurate_media_analysis(self.ffmpeg_bin, file_name)
+                    if "error" not in r and r["bitrate"] is not None:
+                        current_bitrate = r["bitrate"]
+                    else:
+                        current_bitrate = 10_000_000
 
-            logging.debug("Launch process")
-            logging.debug(f"{self.ffmpeg_bin} {' '.join(args)}")
+                    if rotation_idx in (1, 2):
+                        args = [
+                            "-hide_banner",
+                            "-y",
+                            "-i",
+                            f"{file_name}",
+                            "-vf",
+                            f"transpose={rotation_idx}",
+                            "-codec:a",
+                            "copy",
+                            "-b:v",
+                            f"{current_bitrate}",
+                            f"{file_name}.rotated{['', '90', '-90'][rotation_idx]}.avi",
+                        ]
 
-            self.processes.append([QProcess(self), [self.ffmpeg_bin, args, file_name]])
+                    if rotation_idx == 3:  # 180
+                        args = [
+                            "-hide_banner",
+                            "-y",
+                            "-i",
+                            f"{file_name}",
+                            "-vf",
+                            "transpose=2,transpose=2",
+                            "-codec:a",
+                            "copy",
+                            "-b:v",
+                            f"{current_bitrate}",
+                            f"{file_name}.rotated180.avi",
+                        ]
 
-            # self.processes[-1][0].setProcessChannelMode(QProcess.SeparateChannels)
+                logging.debug("Launch process")
+                logging.debug(f"{self.ffmpeg_bin} {' '.join(args)}")
 
-            ## FFmpeg output the work in progress on stderr
-            self.processes[-1][0].setProcessChannelMode(QProcess.MergedChannels)
-            self.processes[-1][0].readyReadStandardOutput.connect(lambda: readStdOutput(len(self.processes)))
-            # self.processes[-1][0].readyReadStandardError.connect(lambda: readStdOutput(len(self.processes)))
+                self.processes.append([QProcess(self), [self.ffmpeg_bin, args, file_name]])
 
-            self.processes[-1][0].finished.connect(lambda: qprocess_finished(len(self.processes)))
+                ## FFmpeg output the work in progress on stderr
+                self.processes[-1][0].setProcessChannelMode(QProcess.MergedChannels)
+                self.processes[-1][0].readyReadStandardOutput.connect(lambda: readStdOutput(len(self.processes)))
+                # self.processes[-1][0].readyReadStandardError.connect(lambda: readStdOutput(len(self.processes)))
 
-        self.processes[-1][0].start(self.processes[-1][1][0], self.processes[-1][1][1])
+                self.processes[-1][0].finished.connect(lambda: qprocess_finished(len(self.processes)))
+
+            self.processes[-1][0].start(self.processes[-1][1][0], self.processes[-1][1][1])

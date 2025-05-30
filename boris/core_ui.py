@@ -3,7 +3,7 @@
 ################################################################################
 ## Form generated from reading UI file 'core.ui'
 ##
-## Created by: Qt User Interface Compiler version 6.8.0
+## Created by: Qt User Interface Compiler version 6.9.0
 ##
 ## WARNING! All changes made in this file will be lost when recompiling UI file!
 ################################################################################
@@ -378,6 +378,8 @@ class Ui_MainWindow(object):
         self.actionAdd_frame_indexes.setObjectName(u"actionAdd_frame_indexes")
         self.action_load_plugins = QAction(MainWindow)
         self.action_load_plugins.setObjectName(u"action_load_plugins")
+        self.actionCreate_video_spectrogram = QAction(MainWindow)
+        self.actionCreate_video_spectrogram.setObjectName(u"actionCreate_video_spectrogram")
         self.centralwidget = QWidget(MainWindow)
         self.centralwidget.setObjectName(u"centralwidget")
         self.horizontalLayout_2 = QHBoxLayout(self.centralwidget)
@@ -484,7 +486,7 @@ class Ui_MainWindow(object):
         MainWindow.setCentralWidget(self.centralwidget)
         self.menubar = QMenuBar(MainWindow)
         self.menubar.setObjectName(u"menubar")
-        self.menubar.setGeometry(QRect(0, 0, 1509, 22))
+        self.menubar.setGeometry(QRect(0, 0, 1509, 20))
         self.menuHelp = QMenu(self.menubar)
         self.menuHelp.setObjectName(u"menuHelp")
         self.menuFile = QMenu(self.menubar)
@@ -775,6 +777,7 @@ class Ui_MainWindow(object):
         self.menuMedia_file.addAction(self.actionRecode_resize_video)
         self.menuMedia_file.addAction(self.actionRotate_video)
         self.menuMedia_file.addAction(self.actionMerge_media_files)
+        self.menuMedia_file.addAction(self.actionCreate_video_spectrogram)
         self.toolBar.addAction(self.action_obs_list)
         self.toolBar.addAction(self.actionPlay)
         self.toolBar.addAction(self.actionReset)
@@ -1029,6 +1032,7 @@ class Ui_MainWindow(object):
         self.actionConfigure_tvevents_columns.setText(QCoreApplication.translate("MainWindow", u"Configure columns", None))
         self.actionAdd_frame_indexes.setText(QCoreApplication.translate("MainWindow", u"Add frame indexes", None))
         self.action_load_plugins.setText(QCoreApplication.translate("MainWindow", u"Load plugins", None))
+        self.actionCreate_video_spectrogram.setText(QCoreApplication.translate("MainWindow", u"Create video spectrogram", None))
         self.lbLogoBoris.setText("")
         self.lbLogoUnito.setText("")
         self.lb_player_status.setText(QCoreApplication.translate("MainWindow", u"lb_player_status", None))

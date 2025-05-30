@@ -193,10 +193,11 @@ def connections(self):
     self.actionAdd_image_overlay_on_video.triggered.connect(lambda: image_overlay.add_image_overlay(self))
     self.actionRemove_image_overlay.triggered.connect(lambda: image_overlay.remove_image_overlay(self))
 
+    self.actionMedia_file_information_2.triggered.connect(lambda: media_file.get_info(self))
     self.actionRecode_resize_video.triggered.connect(lambda: external_processes.ffmpeg_process(self, "reencode_resize"))
     self.actionRotate_video.triggered.connect(lambda: external_processes.ffmpeg_process(self, "rotate"))
     self.actionMerge_media_files.triggered.connect(lambda: external_processes.ffmpeg_process(self, "merge"))
-    self.actionMedia_file_information_2.triggered.connect(lambda: media_file.get_info(self))
+    self.actionCreate_video_spectrogram.triggered.connect(lambda: external_processes.ffmpeg_process(self, "video_spectrogram"))
 
     self.actionCreate_transitions_flow_diagram.triggered.connect(transitions.transitions_dot_script)
     self.actionCreate_transitions_flow_diagram_2.triggered.connect(transitions.transitions_flow_diagram)

@@ -166,7 +166,7 @@
      <x>0</x>
      <y>0</y>
      <width>1509</width>
-     <height>22</height>
+     <height>20</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuHelp">
@@ -399,6 +399,7 @@
      <addaction name="actionRecode_resize_video"/>
      <addaction name="actionRotate_video"/>
      <addaction name="actionMerge_media_files"/>
+     <addaction name="actionCreate_video_spectrogram"/>
     </widget>
     <addaction name="menuMedia_file"/>
     <addaction name="action_block_dockwidgets"/>
@@ -1588,6 +1589,11 @@
   <action name="action_load_plugins">
    <property name="text">
     <string>Load plugins</string>
+   </property>
+  </action>
+  <action name="actionCreate_video_spectrogram">
+   <property name="text">
+    <string>Create video spectrogram</string>
    </property>
   </action>
  </widget>
