@@ -19,7 +19,7 @@ Copyright 2012-2025 Olivier Friard
   MA 02110-1301, USA.
 """
 
-from math import log2
+from math import log2, floor
 import os
 import logging
 import time
@@ -2429,12 +2429,26 @@ def event2media_file_name(observation: dict, timestamp: dec) -> Optional[str]:
     cumul_media_durations: list = [dec(0)]
     for media_file in observation[cfg.FILE][cfg.PLAYER1]:
         try:
+            media_duration = observation[cfg.MEDIA_INFO][cfg.LENGTH][media_file]
+            # cut off media duration to 3 decimal places as that is how fine the player is
+            media_duration = floor(media_duration * 10**3) / dec(10**3)
+            cumul_media_durations.append(floor((cumul_media_durations[-1] + media_duration) * 10**3) / dec(10**3))
+        except KeyError:
+            return None
+
+    """
+    cumul_media_durations: list = [dec(0)]
+    for media_file in observation[cfg.FILE][cfg.PLAYER1]:
+        try:
             media_duration = dec(str(observation[cfg.MEDIA_INFO][cfg.LENGTH][media_file]))
             cumul_media_durations.append(round(cumul_media_durations[-1] + media_duration, 3))
         except KeyError:
             return None
+    """
 
     cumul_media_durations.remove(dec(0))
+
+    logging.debug(f"{cumul_media_durations=}")
 
     # test if timestamp is at end of last media
     if timestamp == cumul_media_durations[-1]:
