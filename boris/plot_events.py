@@ -25,7 +25,7 @@ import pathlib as pl
 
 import matplotlib
 
-matplotlib.use("Qt5Agg")
+matplotlib.use("QtAgg")
 
 import matplotlib.dates
 

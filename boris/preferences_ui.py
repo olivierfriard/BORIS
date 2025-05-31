@@ -3,7 +3,7 @@
 ################################################################################
 ## Form generated from reading UI file 'preferences.ui'
 ##
-## Created by: Qt User Interface Compiler version 6.8.0
+## Created by: Qt User Interface Compiler version 6.9.0
 ##
 ## WARNING! All changes made in this file will be lost when recompiling UI file!
 ################################################################################
@@ -372,6 +372,10 @@ class Ui_prefDialog(object):
 
         self.horizontalLayout_7.addWidget(self.cbSpectrogramColorMap)
 
+        self.horizontalSpacer_2 = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
+
+        self.horizontalLayout_7.addItem(self.horizontalSpacer_2)
+
 
         self.verticalLayout_8.addLayout(self.horizontalLayout_7)
 
@@ -390,8 +394,133 @@ class Ui_prefDialog(object):
 
         self.horizontalLayout_10.addWidget(self.sb_time_interval)
 
+        self.horizontalSpacer_3 = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
+
+        self.horizontalLayout_10.addItem(self.horizontalSpacer_3)
+
 
         self.verticalLayout_8.addLayout(self.horizontalLayout_10)
+
+        self.horizontalLayout_18 = QHBoxLayout()
+        self.horizontalLayout_18.setObjectName(u"horizontalLayout_18")
+        self.label_16 = QLabel(self.tab_spectro)
+        self.label_16.setObjectName(u"label_16")
+
+        self.horizontalLayout_18.addWidget(self.label_16)
+
+        self.cb_window_type = QComboBox(self.tab_spectro)
+        self.cb_window_type.addItem("")
+        self.cb_window_type.addItem("")
+        self.cb_window_type.addItem("")
+        self.cb_window_type.setObjectName(u"cb_window_type")
+
+        self.horizontalLayout_18.addWidget(self.cb_window_type)
+
+        self.horizontalSpacer_4 = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
+
+        self.horizontalLayout_18.addItem(self.horizontalSpacer_4)
+
+
+        self.verticalLayout_8.addLayout(self.horizontalLayout_18)
+
+        self.horizontalLayout_19 = QHBoxLayout()
+        self.horizontalLayout_19.setObjectName(u"horizontalLayout_19")
+        self.label_17 = QLabel(self.tab_spectro)
+        self.label_17.setObjectName(u"label_17")
+
+        self.horizontalLayout_19.addWidget(self.label_17)
+
+        self.cb_NFFT = QComboBox(self.tab_spectro)
+        self.cb_NFFT.addItem("")
+        self.cb_NFFT.addItem("")
+        self.cb_NFFT.addItem("")
+        self.cb_NFFT.addItem("")
+        self.cb_NFFT.setObjectName(u"cb_NFFT")
+
+        self.horizontalLayout_19.addWidget(self.cb_NFFT)
+
+        self.horizontalSpacer_5 = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
+
+        self.horizontalLayout_19.addItem(self.horizontalSpacer_5)
+
+
+        self.verticalLayout_8.addLayout(self.horizontalLayout_19)
+
+        self.horizontalLayout_20 = QHBoxLayout()
+        self.horizontalLayout_20.setObjectName(u"horizontalLayout_20")
+        self.label_18 = QLabel(self.tab_spectro)
+        self.label_18.setObjectName(u"label_18")
+
+        self.horizontalLayout_20.addWidget(self.label_18)
+
+        self.sb_noverlap = QSpinBox(self.tab_spectro)
+        self.sb_noverlap.setObjectName(u"sb_noverlap")
+        self.sb_noverlap.setMaximum(900)
+        self.sb_noverlap.setSingleStep(10)
+        self.sb_noverlap.setValue(128)
+
+        self.horizontalLayout_20.addWidget(self.sb_noverlap)
+
+        self.horizontalSpacer_6 = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
+
+        self.horizontalLayout_20.addItem(self.horizontalSpacer_6)
+
+
+        self.verticalLayout_8.addLayout(self.horizontalLayout_20)
+
+        self.horizontalLayout_21 = QHBoxLayout()
+        self.horizontalLayout_21.setObjectName(u"horizontalLayout_21")
+        self.label_19 = QLabel(self.tab_spectro)
+        self.label_19.setObjectName(u"label_19")
+
+        self.horizontalLayout_21.addWidget(self.label_19)
+
+        self.sb_vmin = QSpinBox(self.tab_spectro)
+        self.sb_vmin.setObjectName(u"sb_vmin")
+        self.sb_vmin.setMinimum(-200)
+        self.sb_vmin.setMaximum(0)
+        self.sb_vmin.setValue(-100)
+
+        self.horizontalLayout_21.addWidget(self.sb_vmin)
+
+        self.label_21 = QLabel(self.tab_spectro)
+        self.label_21.setObjectName(u"label_21")
+
+        self.horizontalLayout_21.addWidget(self.label_21)
+
+        self.horizontalSpacer_7 = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
+
+        self.horizontalLayout_21.addItem(self.horizontalSpacer_7)
+
+
+        self.verticalLayout_8.addLayout(self.horizontalLayout_21)
+
+        self.horizontalLayout_22 = QHBoxLayout()
+        self.horizontalLayout_22.setObjectName(u"horizontalLayout_22")
+        self.label_20 = QLabel(self.tab_spectro)
+        self.label_20.setObjectName(u"label_20")
+
+        self.horizontalLayout_22.addWidget(self.label_20)
+
+        self.sb_vmin_2 = QSpinBox(self.tab_spectro)
+        self.sb_vmin_2.setObjectName(u"sb_vmin_2")
+        self.sb_vmin_2.setMinimum(-40)
+        self.sb_vmin_2.setMaximum(0)
+        self.sb_vmin_2.setValue(-20)
+
+        self.horizontalLayout_22.addWidget(self.sb_vmin_2)
+
+        self.label_22 = QLabel(self.tab_spectro)
+        self.label_22.setObjectName(u"label_22")
+
+        self.horizontalLayout_22.addWidget(self.label_22)
+
+        self.horizontalSpacer_8 = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
+
+        self.horizontalLayout_22.addItem(self.horizontalSpacer_8)
+
+
+        self.verticalLayout_8.addLayout(self.horizontalLayout_22)
 
         self.verticalSpacer_3 = QSpacerItem(20, 319, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding)
 
@@ -459,7 +588,7 @@ class Ui_prefDialog(object):
         self.label_9 = QLabel(self.tab_interface)
         self.label_9.setObjectName(u"label_9")
 
-        self.formLayout.setWidget(0, QFormLayout.LabelRole, self.label_9)
+        self.formLayout.setWidget(0, QFormLayout.ItemRole.LabelRole, self.label_9)
 
         self.sb_toolbar_icon_size = QSpinBox(self.tab_interface)
         self.sb_toolbar_icon_size.setObjectName(u"sb_toolbar_icon_size")
@@ -467,7 +596,7 @@ class Ui_prefDialog(object):
         self.sb_toolbar_icon_size.setMaximum(128)
         self.sb_toolbar_icon_size.setValue(24)
 
-        self.formLayout.setWidget(0, QFormLayout.FieldRole, self.sb_toolbar_icon_size)
+        self.formLayout.setWidget(0, QFormLayout.ItemRole.FieldRole, self.sb_toolbar_icon_size)
 
 
         self.verticalLayout_7.addLayout(self.formLayout)
@@ -510,7 +639,7 @@ class Ui_prefDialog(object):
 
         self.retranslateUi(prefDialog)
 
-        self.tabWidget.setCurrentIndex(0)
+        self.tabWidget.setCurrentIndex(4)
 
 
         QMetaObject.connectSlotsByName(prefDialog)
@@ -553,6 +682,22 @@ class Ui_prefDialog(object):
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab_ffmpeg), QCoreApplication.translate("prefDialog", u"FFmpeg framework", None))
         self.label_7.setText(QCoreApplication.translate("prefDialog", u"Spectrogram color map", None))
         self.label_12.setText(QCoreApplication.translate("prefDialog", u"Default time interval (s)", None))
+        self.label_16.setText(QCoreApplication.translate("prefDialog", u"Window type", None))
+        self.cb_window_type.setItemText(0, QCoreApplication.translate("prefDialog", u"Hanning", None))
+        self.cb_window_type.setItemText(1, QCoreApplication.translate("prefDialog", u"Hamming", None))
+        self.cb_window_type.setItemText(2, QCoreApplication.translate("prefDialog", u"blackmanharris", None))
+
+        self.label_17.setText(QCoreApplication.translate("prefDialog", u"NFFT", None))
+        self.cb_NFFT.setItemText(0, QCoreApplication.translate("prefDialog", u"256", None))
+        self.cb_NFFT.setItemText(1, QCoreApplication.translate("prefDialog", u"512", None))
+        self.cb_NFFT.setItemText(2, QCoreApplication.translate("prefDialog", u"1024", None))
+        self.cb_NFFT.setItemText(3, QCoreApplication.translate("prefDialog", u"2048", None))
+
+        self.label_18.setText(QCoreApplication.translate("prefDialog", u"noverlap", None))
+        self.label_19.setText(QCoreApplication.translate("prefDialog", u"vmin", None))
+        self.label_21.setText(QCoreApplication.translate("prefDialog", u"dBFS", None))
+        self.label_20.setText(QCoreApplication.translate("prefDialog", u"vmax", None))
+        self.label_22.setText(QCoreApplication.translate("prefDialog", u"dBFS", None))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab_spectro), QCoreApplication.translate("prefDialog", u"Spectrogram/Wave form", None))
         self.label_10.setText(QCoreApplication.translate("prefDialog", u"<html><head/><body><p>List of colors for behaviors. See <a href=\"https://matplotlib.org/api/colors_api.html\"><span style=\" text-decoration: underline; color:#0000ff;\">matplotlib colors</span></a></p></body></html>", None))
         self.pb_reset_behav_colors.setText(QCoreApplication.translate("prefDialog", u"Reset colors to default", None))

@@ -24,10 +24,10 @@ Copyright 2012-2025 Olivier Friard
 import wave
 import matplotlib
 
-matplotlib.use("Qt5Agg")
+matplotlib.use("QtAgg")
 
 import numpy as np
-
+from scipy import signal
 from . import config as cfg
 
 from PySide6.QtWidgets import (
@@ -42,8 +42,6 @@ from PySide6.QtCore import Signal, QEvent, Qt
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.figure import Figure
 import matplotlib.ticker as mticker
-
-# matplotlib.pyplot.switch_backend("Qt5Agg")
 
 
 class Plot_spectrogram_RT(QWidget):
@@ -115,7 +113,7 @@ class Plot_spectrogram_RT(QWidget):
         else:
             return False
 
-    def get_wav_info(self, wav_file: str):
+    def get_wav_info(self, wav_file: str) -> tuple[np.array, int]:
         """
         read wav file and extract information
 
@@ -184,7 +182,7 @@ class Plot_spectrogram_RT(QWidget):
 
         return {"media_length": self.media_length, "frame_rate": self.frame_rate}
 
-    def plot_spectro(self, current_time: float, force_plot: bool = False):
+    def plot_spectro(self, current_time: float, force_plot: bool = False) -> tuple[float, bool]:
         """
         plot sound spectrogram centered on the current time
 
@@ -200,15 +198,36 @@ class Plot_spectrogram_RT(QWidget):
 
         self.ax.clear()
 
+        window_type = "blackmanharris"
+        nfft = 1024
+        noverlap = 900
+        vmin = -100
+        vmax = -20
+
         # start
         if current_time <= self.interval / 2:
             self.ax.specgram(
-                self.sound_info[: int((self.interval) * self.frame_rate)],
+                self.sound_info[: int(self.interval * self.frame_rate)],
                 mode="psd",
-                # NFFT=1024,
+                NFFT=nfft,
                 Fs=self.frame_rate,
-                # noverlap=900,
+                noverlap=noverlap,
+                window=signal.get_window(window_type, nfft),
+                # matplotlib.mlab.window_hanning
+                # if window_type == "hanning"
+                # else matplotlib.mlab.window_hamming
+                # if window_type == "hamming"
+                # else matplotlib.mlab.window_blackmanharris
+                # if window_type == "blackmanharris"
+                # else matplotlib.mlab.window_hanning,
                 cmap=self.spectro_color_map,
+                vmin=vmin,
+                vmax=vmax,
+                # mode="psd",
+                ## NFFT=1024,
+                # Fs=self.frame_rate,
+                ## noverlap=900,
+                # cmap=self.spectro_color_map,
             )
 
             self.ax.set_xlim(current_time - self.interval / 2, current_time + self.interval / 2)
@@ -222,10 +241,25 @@ class Plot_spectrogram_RT(QWidget):
             self.ax.specgram(
                 self.sound_info[i:],
                 mode="psd",
-                # NFFT=1024,
+                NFFT=nfft,
                 Fs=self.frame_rate,
-                # noverlap=900,
+                noverlap=noverlap,
+                window=signal.get_window(window_type, nfft),
+                # matplotlib.mlab.window_hanning
+                # if window_type == "hanning"
+                # else matplotlib.mlab.window_hamming
+                # if window_type == "hamming"
+                # else matplotlib.mlab.window_blackmanharris
+                # if window_type == "blackmanharris"
+                # else matplotlib.mlab.window_hanning,
                 cmap=self.spectro_color_map,
+                vmin=vmin,
+                vmax=vmax,
+                # mode="psd",
+                ## NFFT=1024,
+                # Fs=self.frame_rate,
+                ## noverlap=900,
+                # cmap=self.spectro_color_map,
             )
 
             lim1 = current_time - (self.media_length - self.interval / 2)
@@ -248,10 +282,25 @@ class Plot_spectrogram_RT(QWidget):
                     )
                 ],
                 mode="psd",
-                # NFFT=1024,
+                NFFT=nfft,
                 Fs=self.frame_rate,
-                # noverlap=900,
+                noverlap=noverlap,
+                window=signal.get_window(window_type, nfft),
+                # matplotlib.mlab.window_hanning
+                # if window_type == "hanning"
+                # else matplotlib.mlab.window_hamming
+                # if window_type == "hamming"
+                # else matplotlib.mlab.window_blackmanharris
+                # if window_type == "blackmanharris"
+                # else matplotlib.mlab.window_hanning,
                 cmap=self.spectro_color_map,
+                vmin=vmin,
+                vmax=vmax,
+                # mode="psd",
+                ## NFFT=1024,
+                # Fs=self.frame_rate,
+                ## noverlap=900,
+                # cmap=self.spectro_color_map,
             )
 
             self.ax.xaxis.set_major_locator(mticker.FixedLocator(self.ax.get_xticks().tolist()))
