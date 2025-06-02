@@ -16,10 +16,11 @@ from PySide6.QtGui import (QBrush, QColor, QConicalGradient, QCursor,
     QImage, QKeySequence, QLinearGradient, QPainter,
     QPalette, QPixmap, QRadialGradient, QTransform)
 from PySide6.QtWidgets import (QApplication, QCheckBox, QComboBox, QDialog,
-    QDoubleSpinBox, QFormLayout, QGridLayout, QHBoxLayout,
-    QLabel, QLineEdit, QListWidget, QListWidgetItem,
-    QPlainTextEdit, QPushButton, QSizePolicy, QSpacerItem,
-    QSpinBox, QTabWidget, QVBoxLayout, QWidget)
+    QDoubleSpinBox, QFormLayout, QGridLayout, QGroupBox,
+    QHBoxLayout, QLabel, QLineEdit, QListWidget,
+    QListWidgetItem, QPlainTextEdit, QPushButton, QSizePolicy,
+    QSpacerItem, QSpinBox, QTabWidget, QVBoxLayout,
+    QWidget)
 
 class Ui_prefDialog(object):
     def setupUi(self, prefDialog):
@@ -358,16 +359,20 @@ class Ui_prefDialog(object):
         self.tabWidget.addTab(self.tab_ffmpeg, "")
         self.tab_spectro = QWidget()
         self.tab_spectro.setObjectName(u"tab_spectro")
-        self.verticalLayout_8 = QVBoxLayout(self.tab_spectro)
+        self.verticalLayout_13 = QVBoxLayout(self.tab_spectro)
+        self.verticalLayout_13.setObjectName(u"verticalLayout_13")
+        self.groupBox = QGroupBox(self.tab_spectro)
+        self.groupBox.setObjectName(u"groupBox")
+        self.verticalLayout_8 = QVBoxLayout(self.groupBox)
         self.verticalLayout_8.setObjectName(u"verticalLayout_8")
         self.horizontalLayout_7 = QHBoxLayout()
         self.horizontalLayout_7.setObjectName(u"horizontalLayout_7")
-        self.label_7 = QLabel(self.tab_spectro)
+        self.label_7 = QLabel(self.groupBox)
         self.label_7.setObjectName(u"label_7")
 
         self.horizontalLayout_7.addWidget(self.label_7)
 
-        self.cbSpectrogramColorMap = QComboBox(self.tab_spectro)
+        self.cbSpectrogramColorMap = QComboBox(self.groupBox)
         self.cbSpectrogramColorMap.setObjectName(u"cbSpectrogramColorMap")
 
         self.horizontalLayout_7.addWidget(self.cbSpectrogramColorMap)
@@ -381,12 +386,12 @@ class Ui_prefDialog(object):
 
         self.horizontalLayout_10 = QHBoxLayout()
         self.horizontalLayout_10.setObjectName(u"horizontalLayout_10")
-        self.label_12 = QLabel(self.tab_spectro)
+        self.label_12 = QLabel(self.groupBox)
         self.label_12.setObjectName(u"label_12")
 
         self.horizontalLayout_10.addWidget(self.label_12)
 
-        self.sb_time_interval = QSpinBox(self.tab_spectro)
+        self.sb_time_interval = QSpinBox(self.groupBox)
         self.sb_time_interval.setObjectName(u"sb_time_interval")
         self.sb_time_interval.setMinimum(2)
         self.sb_time_interval.setMaximum(360)
@@ -403,12 +408,12 @@ class Ui_prefDialog(object):
 
         self.horizontalLayout_18 = QHBoxLayout()
         self.horizontalLayout_18.setObjectName(u"horizontalLayout_18")
-        self.label_16 = QLabel(self.tab_spectro)
+        self.label_16 = QLabel(self.groupBox)
         self.label_16.setObjectName(u"label_16")
 
         self.horizontalLayout_18.addWidget(self.label_16)
 
-        self.cb_window_type = QComboBox(self.tab_spectro)
+        self.cb_window_type = QComboBox(self.groupBox)
         self.cb_window_type.addItem("")
         self.cb_window_type.addItem("")
         self.cb_window_type.addItem("")
@@ -425,12 +430,12 @@ class Ui_prefDialog(object):
 
         self.horizontalLayout_19 = QHBoxLayout()
         self.horizontalLayout_19.setObjectName(u"horizontalLayout_19")
-        self.label_17 = QLabel(self.tab_spectro)
+        self.label_17 = QLabel(self.groupBox)
         self.label_17.setObjectName(u"label_17")
 
         self.horizontalLayout_19.addWidget(self.label_17)
 
-        self.cb_NFFT = QComboBox(self.tab_spectro)
+        self.cb_NFFT = QComboBox(self.groupBox)
         self.cb_NFFT.addItem("")
         self.cb_NFFT.addItem("")
         self.cb_NFFT.addItem("")
@@ -448,12 +453,12 @@ class Ui_prefDialog(object):
 
         self.horizontalLayout_20 = QHBoxLayout()
         self.horizontalLayout_20.setObjectName(u"horizontalLayout_20")
-        self.label_18 = QLabel(self.tab_spectro)
+        self.label_18 = QLabel(self.groupBox)
         self.label_18.setObjectName(u"label_18")
 
         self.horizontalLayout_20.addWidget(self.label_18)
 
-        self.sb_noverlap = QSpinBox(self.tab_spectro)
+        self.sb_noverlap = QSpinBox(self.groupBox)
         self.sb_noverlap.setObjectName(u"sb_noverlap")
         self.sb_noverlap.setMaximum(900)
         self.sb_noverlap.setSingleStep(10)
@@ -470,12 +475,12 @@ class Ui_prefDialog(object):
 
         self.horizontalLayout_21 = QHBoxLayout()
         self.horizontalLayout_21.setObjectName(u"horizontalLayout_21")
-        self.label_19 = QLabel(self.tab_spectro)
+        self.label_19 = QLabel(self.groupBox)
         self.label_19.setObjectName(u"label_19")
 
         self.horizontalLayout_21.addWidget(self.label_19)
 
-        self.sb_vmin = QSpinBox(self.tab_spectro)
+        self.sb_vmin = QSpinBox(self.groupBox)
         self.sb_vmin.setObjectName(u"sb_vmin")
         self.sb_vmin.setMinimum(-200)
         self.sb_vmin.setMaximum(0)
@@ -483,7 +488,7 @@ class Ui_prefDialog(object):
 
         self.horizontalLayout_21.addWidget(self.sb_vmin)
 
-        self.label_21 = QLabel(self.tab_spectro)
+        self.label_21 = QLabel(self.groupBox)
         self.label_21.setObjectName(u"label_21")
 
         self.horizontalLayout_21.addWidget(self.label_21)
@@ -497,20 +502,20 @@ class Ui_prefDialog(object):
 
         self.horizontalLayout_22 = QHBoxLayout()
         self.horizontalLayout_22.setObjectName(u"horizontalLayout_22")
-        self.label_20 = QLabel(self.tab_spectro)
+        self.label_20 = QLabel(self.groupBox)
         self.label_20.setObjectName(u"label_20")
 
         self.horizontalLayout_22.addWidget(self.label_20)
 
-        self.sb_vmin_2 = QSpinBox(self.tab_spectro)
-        self.sb_vmin_2.setObjectName(u"sb_vmin_2")
-        self.sb_vmin_2.setMinimum(-40)
-        self.sb_vmin_2.setMaximum(0)
-        self.sb_vmin_2.setValue(-20)
+        self.sb_vmax = QSpinBox(self.groupBox)
+        self.sb_vmax.setObjectName(u"sb_vmax")
+        self.sb_vmax.setMinimum(-40)
+        self.sb_vmax.setMaximum(0)
+        self.sb_vmax.setValue(-20)
 
-        self.horizontalLayout_22.addWidget(self.sb_vmin_2)
+        self.horizontalLayout_22.addWidget(self.sb_vmax)
 
-        self.label_22 = QLabel(self.tab_spectro)
+        self.label_22 = QLabel(self.groupBox)
         self.label_22.setObjectName(u"label_22")
 
         self.horizontalLayout_22.addWidget(self.label_22)
@@ -522,9 +527,12 @@ class Ui_prefDialog(object):
 
         self.verticalLayout_8.addLayout(self.horizontalLayout_22)
 
+
+        self.verticalLayout_13.addWidget(self.groupBox)
+
         self.verticalSpacer_3 = QSpacerItem(20, 319, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding)
 
-        self.verticalLayout_8.addItem(self.verticalSpacer_3)
+        self.verticalLayout_13.addItem(self.verticalSpacer_3)
 
         self.tabWidget.addTab(self.tab_spectro, "")
         self.tab_colors = QWidget()
@@ -680,11 +688,12 @@ class Ui_prefDialog(object):
         self.lbFFmpegCacheDir.setText(QCoreApplication.translate("prefDialog", u"FFmpeg cache directory", None))
         self.pbBrowseFFmpegCacheDir.setText(QCoreApplication.translate("prefDialog", u"...", None))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab_ffmpeg), QCoreApplication.translate("prefDialog", u"FFmpeg framework", None))
-        self.label_7.setText(QCoreApplication.translate("prefDialog", u"Spectrogram color map", None))
+        self.groupBox.setTitle(QCoreApplication.translate("prefDialog", u"Spectrogram", None))
+        self.label_7.setText(QCoreApplication.translate("prefDialog", u"Color map", None))
         self.label_12.setText(QCoreApplication.translate("prefDialog", u"Default time interval (s)", None))
         self.label_16.setText(QCoreApplication.translate("prefDialog", u"Window type", None))
-        self.cb_window_type.setItemText(0, QCoreApplication.translate("prefDialog", u"Hanning", None))
-        self.cb_window_type.setItemText(1, QCoreApplication.translate("prefDialog", u"Hamming", None))
+        self.cb_window_type.setItemText(0, QCoreApplication.translate("prefDialog", u"hanning", None))
+        self.cb_window_type.setItemText(1, QCoreApplication.translate("prefDialog", u"hamming", None))
         self.cb_window_type.setItemText(2, QCoreApplication.translate("prefDialog", u"blackmanharris", None))
 
         self.label_17.setText(QCoreApplication.translate("prefDialog", u"NFFT", None))

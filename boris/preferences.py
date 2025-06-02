@@ -43,8 +43,6 @@ class Preferences(QDialog, Ui_prefDialog):
         self.setupUi(self)
 
         # plugins
-        """self.pb_add_plugin.clicked.connect(self.add_plugin)
-        self.pb_remove_plugin.clicked.connect(self.remove_plugin)"""
         self.pb_browse_plugins_dir.clicked.connect(self.browse_plugins_dir)
 
         self.pbBrowseFFmpegCacheDir.clicked.connect(self.browseFFmpegCacheDir)
@@ -87,7 +85,7 @@ class Preferences(QDialog, Ui_prefDialog):
         if (
             dialog.MessageDialog(
                 "BORIS",
-                ("Refresh will re-initialize " "all your preferences and close BORIS"),
+                ("Refresh will re-initialize all your preferences and close BORIS"),
                 [cfg.CANCEL, "Refresh preferences"],
             )
             == "Refresh preferences"
@@ -272,16 +270,21 @@ def preferences(self):
         preferencesWindow.cbSpectrogramColorMap.setCurrentIndex(cfg.SPECTROGRAM_COLOR_MAPS.index(self.spectrogram_color_map))
     except Exception:
         preferencesWindow.cbSpectrogramColorMap.setCurrentIndex(cfg.SPECTROGRAM_COLOR_MAPS.index(cfg.SPECTROGRAM_DEFAULT_COLOR_MAP))
-
-    try:
-        preferencesWindow.cbSpectrogramColorMap.setCurrentIndex(cfg.SPECTROGRAM_COLOR_MAPS.index(self.spectrogram_color_map))
-    except Exception:
-        preferencesWindow.cbSpectrogramColorMap.setCurrentIndex(cfg.SPECTROGRAM_COLOR_MAPS.index(cfg.SPECTROGRAM_DEFAULT_COLOR_MAP))
-
+    # time interval
     try:
         preferencesWindow.sb_time_interval.setValue(self.spectrogram_time_interval)
     except Exception:
         preferencesWindow.sb_time_interval.setValue(cfg.SPECTROGRAM_DEFAULT_TIME_INTERVAL)
+    # window type
+    preferencesWindow.cb_window_type.setCurrentText(self.config_param.get(cfg.SPECTROGRAM_WINDOW_TYPE, cfg.SPECTROGRAM_DEFAULT_WINDOW_TYPE))
+    # NFFT
+    preferencesWindow.cb_NFFT.setCurrentText(self.config_param.get(cfg.SPECTROGRAM_NFFT, cfg.SPECTROGRAM_DEFAULT_NFFT))
+    # noverlap
+    preferencesWindow.sb_noverlap.setValue(self.config_param.get(cfg.SPECTROGRAM_NOVERLAP, cfg.SPECTROGRAM_DEFAULT_NOVERLAP))
+    # vmin
+    preferencesWindow.sb_vmin.setValue(self.config_param.get(cfg.SPECTROGRAM_VMIN, cfg.SPECTROGRAM_DEFAULT_VMIN))
+    # vmax
+    preferencesWindow.sb_vmax.setValue(self.config_param.get(cfg.SPECTROGRAM_VMAX, cfg.SPECTROGRAM_DEFAULT_VMAX))
 
     # behavior colors
     if not self.plot_colors:
@@ -298,114 +301,137 @@ def preferences(self):
 
     gui_utilities.restore_geometry(preferencesWindow, "preferences", (700, 500))
 
-    if preferencesWindow.exec_():
-        gui_utilities.save_geometry(preferencesWindow, "preferences")
+    while True:
+        if preferencesWindow.exec():
+            if preferencesWindow.sb_vmin.value() >= preferencesWindow.sb_vmax.value():
+                QMessageBox.warning(self, cfg.programName, "Spectrogram parameters: the vmin value must be lower than the vmax value.")
+                continue
 
-        if preferencesWindow.flag_refresh:
-            # refresh preferences remove the config file
+            if preferencesWindow.sb_noverlap.value() >= int(preferencesWindow.cb_NFFT.currentText()):
+                QMessageBox.warning(self, cfg.programName, "Spectrogram parameters: the noverlap value must be lower than the NFFT value.")
+                continue
 
-            logging.debug("flag refresh ")
+            gui_utilities.save_geometry(preferencesWindow, "preferences")
 
-            self.config_param["refresh_preferences"] = True
-            self.close()
-            # check if refresh canceled for not saved project
-            if "refresh_preferences" in self.config_param:
-                if (Path.home() / ".boris").exists():
-                    os.remove(Path.home() / ".boris")
-                sys.exit()
+            if preferencesWindow.flag_refresh:
+                # refresh preferences remove the config file
 
-        if preferencesWindow.cbTimeFormat.currentIndex() == 0:
-            self.timeFormat = cfg.S
+                logging.debug("flag refresh ")
 
-        if preferencesWindow.cbTimeFormat.currentIndex() == 1:
-            self.timeFormat = cfg.HHMMSS
+                self.config_param["refresh_preferences"] = True
+                self.close()
+                # check if refresh canceled for not saved project
+                if "refresh_preferences" in self.config_param:
+                    if (Path.home() / ".boris").exists():
+                        os.remove(Path.home() / ".boris")
+                    sys.exit()
 
-        self.fast = preferencesWindow.sbffSpeed.value()
+            if preferencesWindow.cbTimeFormat.currentIndex() == 0:
+                self.timeFormat = cfg.S
 
-        self.config_param[cfg.ADAPT_FAST_JUMP] = preferencesWindow.cb_adapt_fast_jump.isChecked()
+            if preferencesWindow.cbTimeFormat.currentIndex() == 1:
+                self.timeFormat = cfg.HHMMSS
 
-        self.repositioningTimeOffset = preferencesWindow.sbRepositionTimeOffset.value()
+            self.fast = preferencesWindow.sbffSpeed.value()
 
-        self.play_rate_step = preferencesWindow.sbSpeedStep.value()
+            self.config_param[cfg.ADAPT_FAST_JUMP] = preferencesWindow.cb_adapt_fast_jump.isChecked()
 
-        self.automaticBackup = preferencesWindow.sbAutomaticBackup.value()
-        if self.automaticBackup:
-            self.automaticBackupTimer.start(self.automaticBackup * 60000)
+            self.repositioningTimeOffset = preferencesWindow.sbRepositionTimeOffset.value()
+
+            self.play_rate_step = preferencesWindow.sbSpeedStep.value()
+
+            self.automaticBackup = preferencesWindow.sbAutomaticBackup.value()
+            if self.automaticBackup:
+                self.automaticBackupTimer.start(self.automaticBackup * 60000)
+            else:
+                self.automaticBackupTimer.stop()
+
+            self.behav_seq_separator = preferencesWindow.leSeparator.text()
+
+            self.close_the_same_current_event = preferencesWindow.cbCloseSameEvent.isChecked()
+
+            self.confirmSound = preferencesWindow.cbConfirmSound.isChecked()
+
+            self.beep_every = preferencesWindow.sbBeepEvery.value()
+
+            self.alertNoFocalSubject = preferencesWindow.cbAlertNoFocalSubject.isChecked()
+
+            self.trackingCursorAboveEvent = preferencesWindow.cbTrackingCursorAboveEvent.isChecked()
+
+            self.checkForNewVersion = preferencesWindow.cbCheckForNewVersion.isChecked()
+
+            self.config_param[cfg.DISPLAY_SUBTITLES] = preferencesWindow.cb_display_subtitles.isChecked()
+
+            self.pause_before_addevent = preferencesWindow.cb_pause_before_addevent.isChecked()
+
+            # MPV hwdec
+            self.config_param[cfg.MPV_HWDEC] = cfg.MPV_HWDEC_OPTIONS[preferencesWindow.cb_hwdec.currentIndex()]
+
+            # check project integrity
+            self.config_param[cfg.CHECK_PROJECT_INTEGRITY] = preferencesWindow.cb_check_integrity_at_opening.isChecked()
+
+            # update BORIS analysis plugins
+            self.config_param[cfg.ANALYSIS_PLUGINS] = {}
+            self.config_param[cfg.EXCLUDED_PLUGINS] = set()
+            for i in range(preferencesWindow.lv_all_plugins.count()):
+                if preferencesWindow.lv_all_plugins.item(i).checkState() == Qt.Checked:
+                    self.config_param[cfg.ANALYSIS_PLUGINS][preferencesWindow.lv_all_plugins.item(i).text()] = (
+                        preferencesWindow.lv_all_plugins.item(i).data(100)
+                    )
+                else:
+                    self.config_param[cfg.EXCLUDED_PLUGINS].add(preferencesWindow.lv_all_plugins.item(i).text())
+
+            # update personal plugins
+            self.config_param[cfg.PERSONAL_PLUGINS_DIR] = preferencesWindow.le_personal_plugins_dir.text()
+            for i in range(preferencesWindow.lw_personal_plugins.count()):
+                if preferencesWindow.lw_personal_plugins.item(i).checkState() == Qt.Checked:
+                    self.config_param[cfg.ANALYSIS_PLUGINS][preferencesWindow.lw_personal_plugins.item(i).text()] = (
+                        preferencesWindow.lw_personal_plugins.item(i).data(100)
+                    )
+                else:
+                    self.config_param[cfg.EXCLUDED_PLUGINS].add(preferencesWindow.lw_personal_plugins.item(i).text())
+
+            plugins.load_plugins(self)
+            plugins.add_plugins_to_menu(self)
+
+            # project file indentation
+            self.config_param[cfg.PROJECT_FILE_INDENTATION] = cfg.PROJECT_FILE_INDENTATION_OPTIONS[
+                preferencesWindow.combo_project_file_indentation.currentIndex()
+            ]
+
+            if self.observationId:
+                self.load_tw_events(self.observationId)
+                self.display_statusbar_info(self.observationId)
+
+            self.ffmpeg_cache_dir = preferencesWindow.leFFmpegCacheDir.text()
+
+            # spectrogram
+            self.spectrogram_color_map = preferencesWindow.cbSpectrogramColorMap.currentText()
+            self.spectrogram_time_interval = preferencesWindow.sb_time_interval.value()
+            # window type
+            self.config_param[cfg.SPECTROGRAM_WINDOW_TYPE] = preferencesWindow.cb_window_type.currentText()
+            # NFFT
+            self.config_param[cfg.SPECTROGRAM_NFFT] = preferencesWindow.cb_NFFT.currentText()
+            # noverlap
+            self.config_param[cfg.SPECTROGRAM_NOVERLAP] = preferencesWindow.sb_noverlap.value()
+            # vmin
+            self.config_param[cfg.SPECTROGRAM_VMIN] = preferencesWindow.sb_vmin.value()
+            # vmax
+            self.config_param[cfg.SPECTROGRAM_VMAX] = preferencesWindow.sb_vmax.value()
+
+            # behav colors
+            self.plot_colors = preferencesWindow.te_behav_colors.toPlainText().split()
+            # category colors
+            self.behav_category_colors = preferencesWindow.te_category_colors.toPlainText().split()
+
+            # interface
+            self.config_param[cfg.TOOLBAR_ICON_SIZE] = preferencesWindow.sb_toolbar_icon_size.value()
+
+            menu_options.update_menu(self)
+
+            config_file.save(self)
+
+            break
+
         else:
-            self.automaticBackupTimer.stop()
-
-        self.behav_seq_separator = preferencesWindow.leSeparator.text()
-
-        self.close_the_same_current_event = preferencesWindow.cbCloseSameEvent.isChecked()
-
-        self.confirmSound = preferencesWindow.cbConfirmSound.isChecked()
-
-        self.beep_every = preferencesWindow.sbBeepEvery.value()
-
-        self.alertNoFocalSubject = preferencesWindow.cbAlertNoFocalSubject.isChecked()
-
-        self.trackingCursorAboveEvent = preferencesWindow.cbTrackingCursorAboveEvent.isChecked()
-
-        self.checkForNewVersion = preferencesWindow.cbCheckForNewVersion.isChecked()
-
-        self.config_param[cfg.DISPLAY_SUBTITLES] = preferencesWindow.cb_display_subtitles.isChecked()
-
-        self.pause_before_addevent = preferencesWindow.cb_pause_before_addevent.isChecked()
-
-        # MPV hwdec
-        self.config_param[cfg.MPV_HWDEC] = cfg.MPV_HWDEC_OPTIONS[preferencesWindow.cb_hwdec.currentIndex()]
-
-        # check project integrity
-        self.config_param[cfg.CHECK_PROJECT_INTEGRITY] = preferencesWindow.cb_check_integrity_at_opening.isChecked()
-
-        # update BORIS analysis plugins
-        self.config_param[cfg.ANALYSIS_PLUGINS] = {}
-        self.config_param[cfg.EXCLUDED_PLUGINS] = set()
-        for i in range(preferencesWindow.lv_all_plugins.count()):
-            if preferencesWindow.lv_all_plugins.item(i).checkState() == Qt.Checked:
-                self.config_param[cfg.ANALYSIS_PLUGINS][preferencesWindow.lv_all_plugins.item(i).text()] = (
-                    preferencesWindow.lv_all_plugins.item(i).data(100)
-                )
-            else:
-                self.config_param[cfg.EXCLUDED_PLUGINS].add(preferencesWindow.lv_all_plugins.item(i).text())
-
-        # update personal plugins
-        self.config_param[cfg.PERSONAL_PLUGINS_DIR] = preferencesWindow.le_personal_plugins_dir.text()
-        for i in range(preferencesWindow.lw_personal_plugins.count()):
-            if preferencesWindow.lw_personal_plugins.item(i).checkState() == Qt.Checked:
-                self.config_param[cfg.ANALYSIS_PLUGINS][preferencesWindow.lw_personal_plugins.item(i).text()] = (
-                    preferencesWindow.lw_personal_plugins.item(i).data(100)
-                )
-            else:
-                self.config_param[cfg.EXCLUDED_PLUGINS].add(preferencesWindow.lw_personal_plugins.item(i).text())
-
-        plugins.load_plugins(self)
-        plugins.add_plugins_to_menu(self)
-
-        # project file indentation
-        self.config_param[cfg.PROJECT_FILE_INDENTATION] = cfg.PROJECT_FILE_INDENTATION_OPTIONS[
-            preferencesWindow.combo_project_file_indentation.currentIndex()
-        ]
-
-        if self.observationId:
-            self.load_tw_events(self.observationId)
-            self.display_statusbar_info(self.observationId)
-
-        self.ffmpeg_cache_dir = preferencesWindow.leFFmpegCacheDir.text()
-
-        # spectrogram
-        self.spectrogram_color_map = preferencesWindow.cbSpectrogramColorMap.currentText()
-        # self.spectrogramHeight = preferencesWindow.sbSpectrogramHeight.value()
-        self.spectrogram_time_interval = preferencesWindow.sb_time_interval.value()
-
-        # behav colors
-        self.plot_colors = preferencesWindow.te_behav_colors.toPlainText().split()
-        # category colors
-        self.behav_category_colors = preferencesWindow.te_category_colors.toPlainText().split()
-
-        # interface
-        self.config_param[cfg.TOOLBAR_ICON_SIZE] = preferencesWindow.sb_toolbar_icon_size.value()
-
-        menu_options.update_menu(self)
-
-        config_file.save(self)
+            break

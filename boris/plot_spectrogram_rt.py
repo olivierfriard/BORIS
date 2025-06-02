@@ -198,11 +198,11 @@ class Plot_spectrogram_RT(QWidget):
 
         self.ax.clear()
 
-        window_type = "blackmanharris"
-        nfft = 1024
-        noverlap = 900
-        vmin = -100
-        vmax = -20
+        window_type = "blackmanharris"  # self.config_param.get(cfg.SPECTROGRAM_WINDOW_TYPE, cfg.SPECTROGRAM_DEFAULT_WINDOW_TYPE)
+        nfft = int(self.config_param.get(cfg.SPECTROGRAM_NFFT, cfg.SPECTROGRAM_DEFAULT_NFFT))
+        noverlap = self.config_param.get(cfg.SPECTROGRAM_NOVERLAP, cfg.SPECTROGRAM_DEFAULT_NOVERLAP)
+        vmin = self.config_param.get(cfg.SPECTROGRAM_VMIN, cfg.SPECTROGRAM_DEFAULT_VMIN)
+        vmax = self.config_param.get(cfg.SPECTROGRAM_VMAX, cfg.SPECTROGRAM_DEFAULT_VMAX)
 
         # start
         if current_time <= self.interval / 2:

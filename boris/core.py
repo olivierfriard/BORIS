@@ -1034,6 +1034,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 self.spectro.interval = self.spectrogram_time_interval
                 self.spectro.cursor_color = cfg.REALTIME_PLOT_CURSOR_COLOR
 
+                self.spectro.config_param = self.config_param
+
                 # color palette
                 try:
                     self.spectro.spectro_color_map = matplotlib.pyplot.get_cmap(self.spectrogram_color_map)
