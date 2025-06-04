@@ -19,10 +19,11 @@ Copyright 2012-2025 Olivier Friard
   MA 02110-1301, USA.
 """
 
-import json
 import datetime
-from pathlib import Path
+import gzip
+import json
 import pandas as pd
+from pathlib import Path
 
 from PySide6.QtWidgets import (
     QMessageBox,
@@ -49,8 +50,14 @@ def load_observations_from_boris_project(self, project_file_path: str):
         )
         return
 
+    if project_file_path.endswith(".boris.gz"):
+        file_in = gzip.open(project_file_path, mode="rt", encoding="utf-8")
+    else:
+        file_in = open(project_file_path, "r")
+    file_content = file_in.read()
+
     try:
-        fromProject = json.loads(open(project_file_path, "r").read())
+        fromProject = json.loads(file_content)
     except Exception:
         QMessageBox.critical(self, cfg.programName, "This project file seems corrupted")
         return
@@ -84,7 +91,7 @@ def load_observations_from_boris_project(self, project_file_path: str):
             if new_behav_set:
                 diag_result = dialog.MessageDialog(
                     cfg.programName,
-                    (f"Some coded behaviors in <b>{obs_id}</b> are " f"not defined in the ethogram:<br><b>{', '.join(new_behav_set)}</b>"),
+                    (f"Some coded behaviors in <b>{obs_id}</b> are not defined in the ethogram:<br><b>{', '.join(new_behav_set)}</b>"),
                     ["Interrupt import", "Skip observation", "Import observation"],
                 )
                 if diag_result == "Interrupt import":
@@ -103,7 +110,7 @@ def load_observations_from_boris_project(self, project_file_path: str):
             if new_subject_set and new_subject_set != {""}:
                 diag_result = dialog.MessageDialog(
                     cfg.programName,
-                    (f"Some coded subjects in <b>{obs_id}</b> are not defined in the project:<br>" f"<b>{', '.join(new_subject_set)}</b>"),
+                    (f"Some coded subjects in <b>{obs_id}</b> are not defined in the project:<br><b>{', '.join(new_subject_set)}</b>"),
                     ["Interrupt import", "Skip observation", "Import observation"],
                 )
 
@@ -116,7 +123,7 @@ def load_observations_from_boris_project(self, project_file_path: str):
             if obs_id in self.pj[cfg.OBSERVATIONS].keys():
                 diag_result = dialog.MessageDialog(
                     cfg.programName,
-                    (f"The observation <b>{obs_id}</b>" "already exists in the current project.<br>"),
+                    (f"The observation <b>{obs_id}</b>already exists in the current project.<br>"),
                     ["Interrupt import", "Skip observation", "Rename observation"],
                 )
                 if diag_result == "Interrupt import":
@@ -141,18 +148,11 @@ def load_observations_from_spreadsheet(self, project_file_path: str):
     import observations from a spreadsheet file
     """
 
-    if Path(project_file_path).suffix.upper() == ".XLSX":
+    if Path(project_file_path).suffix.lower() == ".xlsx":
         engine = "openpyxl"
-    elif Path(project_file_path).suffix.upper() == ".ODS":
+    elif Path(project_file_path).suffix.lower() == ".ods":
         engine = "odf"
     else:
-        QMessageBox.warning(
-            None,
-            cfg.programName,
-            ("The type of file was not recognized. Must be Microsoft-Excel XLSX format or OpenDocument ODS"),
-            QMessageBox.Ok | QMessageBox.Default,
-            QMessageBox.NoButton,
-        )
         return
 
     try:
@@ -167,7 +167,7 @@ def load_observations_from_spreadsheet(self, project_file_path: str):
         )
         return
 
-    expected_labels: list = ["time", "subject", "code", "modifier", "comment"]
+    expected_labels: list = ("time", "subject", "code", "modifier", "comment")
 
     df.columns = df.columns.str.upper()
 
@@ -210,16 +210,16 @@ def import_observations(self):
     """
 
     file_name, _ = QFileDialog().getOpenFileName(
-        None, "Choose a file", "", "BORIS project files (*.boris);;Spreadsheet files (*.ods *.xlsx *);;All files (*)"
+        None, "Choose a file", "", "BORIS project files (*.boris *.boris.gz);;Spreadsheet files (*.ods *.xlsx *);;All files (*)"
     )
 
     if not file_name:
         return
 
-    if Path(file_name).suffix == ".boris":
+    if file_name.endswith(".boris") or file_name.endswith(".boris.gz"):
         load_observations_from_boris_project(self, file_name)
 
-    if Path(file_name).suffix in (".ods", ".xlsx"):
+    elif Path(file_name).suffix.lower() in (".ods", ".xlsx"):
         if not self.observationId:
             QMessageBox.warning(
                 None,
@@ -231,3 +231,12 @@ def import_observations(self):
             return
 
         load_observations_from_spreadsheet(self, file_name)
+
+    else:
+        QMessageBox.warning(
+            None,
+            cfg.programName,
+            ("The type of file was not recognized. Must be a BORIS project or a Microsoft-Excel XLSX format or OpenDocument ODS"),
+            QMessageBox.Ok | QMessageBox.Default,
+            QMessageBox.NoButton,
+        )
