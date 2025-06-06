@@ -69,11 +69,19 @@ class Preferences(QDialog, Ui_prefDialog):
         for file_ in Path(directory).glob("*.py"):
             if file_.name.startswith("_"):
                 continue
-            item = QListWidgetItem(file_.stem)
+            plugin_name = plugins.get_plugin_name(file_)
+            if plugin_name is None:
+                continue
+            # check if personal plugin name is in BORIS plugins (case sensitive)
+            if plugin_name in [self.lv_all_plugins.item(i).text() for i in range(self.lv_all_plugins.count())]:
+                continue
+            item = QListWidgetItem(plugin_name)
+            # item = QListWidgetItem(file_.stem)
             item.setFlags(item.flags() | Qt.ItemIsUserCheckable)
             item.setCheckState(Qt.Checked)
-            item.setData(100, file_.stem)
+            item.setData(100, str(file_))
             self.lw_personal_plugins.addItem(item)
+
         if self.lw_personal_plugins.count() == 0:
             QMessageBox.warning(self, cfg.programName, f"No plugin found in {directory}")
 
@@ -135,14 +143,15 @@ def preferences(self):
         if item.text() not in self.config_param[cfg.ANALYSIS_PLUGINS]:
             return
 
-        import importlib
-
         plugin_path = item.data(100)
+
+        import importlib
 
         module_name = Path(plugin_path).stem
         spec = importlib.util.spec_from_file_location(module_name, plugin_path)
         plugin_module = importlib.util.module_from_spec(spec)
         spec.loader.exec_module(plugin_module)
+
         out: list = []
         out.append(plugin_module.__plugin_name__ + "\n")
         out.append(plugin_module.__author__)
