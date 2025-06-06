@@ -202,8 +202,6 @@ def preferences(self):
     preferencesWindow.lv_all_plugins.clear()
 
     for file_ in (Path(__file__).parent / "analysis_plugins").glob("*.py"):
-        if file_.name == "__init__.py":
-            continue
         if file_.name.startswith("_"):
             continue
         plugin_name = plugins.get_plugin_name(file_)
@@ -224,9 +222,25 @@ def preferences(self):
     preferencesWindow.lw_personal_plugins.clear()
     if self.config_param.get(cfg.PERSONAL_PLUGINS_DIR, ""):
         for file_ in Path(self.config_param[cfg.PERSONAL_PLUGINS_DIR]).glob("*.py"):
-            if file_.name == "__init__.py":
+            if file_.name.startswith("_"):
                 continue
             plugin_name = plugins.get_plugin_name(file_)
+            if plugin_name is None:
+                continue
+            # check if personal plugin name is in BORIS plugins (case sensitive)
+            if plugin_name in [preferencesWindow.lv_all_plugins.item(i).text() for i in range(preferencesWindow.lv_all_plugins.count())]:
+                continue
+            item = QListWidgetItem(plugin_name)
+            item.setFlags(item.flags() | Qt.ItemIsUserCheckable)
+            if plugin_name in self.config_param.get(cfg.EXCLUDED_PLUGINS, set()):
+                item.setCheckState(Qt.Unchecked)
+            else:
+                item.setCheckState(Qt.Checked)
+            item.setData(100, str(file_))
+            preferencesWindow.lw_personal_plugins.addItem(item)
+
+        for file_ in Path(self.config_param[cfg.PERSONAL_PLUGINS_DIR]).glob("*.R"):
+            plugin_name = plugins.get_r_plugin_name(file_)
             if plugin_name is None:
                 continue
             # check if personal plugin name is in BORIS plugins (case sensitive)

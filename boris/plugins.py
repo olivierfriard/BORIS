@@ -47,9 +47,9 @@ def add_plugins_to_menu(self):
         self.menu_plugins.addAction(action)
 
 
-def get_plugin_name(plugin_path: str):
+def get_plugin_name(plugin_path: str) -> str | None:
     """
-    get name of plugin
+    get name of a Python plugin
     """
     # search plugin name
     plugin_name = None
@@ -57,6 +57,20 @@ def get_plugin_name(plugin_path: str):
         for line in f_in:
             if line.startswith("__plugin_name__"):
                 plugin_name = line.split("=")[1].strip().replace('"', "")
+                break
+    return plugin_name
+
+
+def get_r_plugin_name(plugin_path: str) -> str | None:
+    """
+    get name of a R plugin
+    """
+    # search plugin name
+    plugin_name = None
+    with open(plugin_path, "r") as f_in:
+        for line in f_in:
+            if line.startswith("plugin_name"):
+                plugin_name = line.split("=")[1].strip().replace('"', "").replace("'", "")
                 break
     return plugin_name
 
@@ -80,14 +94,9 @@ def load_plugins(self):
 
     # load BORIS plugins
     for file_ in sorted((Path(__file__).parent / "analysis_plugins").glob("*.py")):
-        print(file_)
-        if file_.name == "__init__.py":
-            continue
         if file_.name.startswith("_"):
             continue
-        print(file_)
         plugin_name = get_plugin_name(file_)
-        print(f"{plugin_name=}")
         if plugin_name is not None and plugin_name not in self.config_param.get(cfg.EXCLUDED_PLUGINS, set()):
             # check if plugin with same name already loaded
             if plugin_name in self.config_param[cfg.ANALYSIS_PLUGINS]:
@@ -96,16 +105,26 @@ def load_plugins(self):
 
             self.config_param[cfg.ANALYSIS_PLUGINS][plugin_name] = str(file_)
 
-    print(f"{self.config_param[cfg.ANALYSIS_PLUGINS]=}")
-
     # load personal plugins
     if self.config_param.get(cfg.PERSONAL_PLUGINS_DIR, ""):
         for file_ in sorted(Path(self.config_param.get(cfg.PERSONAL_PLUGINS_DIR, "")).glob("*.py")):
-            if file_.name == "__init__.py":
-                continue
             if file_.name.startswith("_"):
                 continue
             plugin_name = get_plugin_name(file_)
+            if plugin_name is not None and plugin_name not in self.config_param.get(cfg.EXCLUDED_PLUGINS, set()):
+                # check if plugin with same name already loaded
+                if plugin_name in self.config_param[cfg.ANALYSIS_PLUGINS]:
+                    msg()
+                    continue
+
+                self.config_param[cfg.ANALYSIS_PLUGINS][plugin_name] = str(file_)
+
+    # load personal R plugins
+    if self.config_param.get(cfg.PERSONAL_PLUGINS_DIR, ""):
+        for file_ in sorted(Path(self.config_param.get(cfg.PERSONAL_PLUGINS_DIR, "")).glob("*.R")):
+            if file_.name.startswith("_"):
+                continue
+            plugin_name = get_r_plugin_name(file_)
             if plugin_name is not None and plugin_name not in self.config_param.get(cfg.EXCLUDED_PLUGINS, set()):
                 # check if plugin with same name already loaded
                 if plugin_name in self.config_param[cfg.ANALYSIS_PLUGINS]:
