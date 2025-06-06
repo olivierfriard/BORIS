@@ -80,11 +80,14 @@ def load_plugins(self):
 
     # load BORIS plugins
     for file_ in sorted((Path(__file__).parent / "analysis_plugins").glob("*.py")):
+        print(file_)
         if file_.name == "__init__.py":
             continue
         if file_.name.startswith("_"):
             continue
+        print(file_)
         plugin_name = get_plugin_name(file_)
+        print(f"{plugin_name=}")
         if plugin_name is not None and plugin_name not in self.config_param.get(cfg.EXCLUDED_PLUGINS, set()):
             # check if plugin with same name already loaded
             if plugin_name in self.config_param[cfg.ANALYSIS_PLUGINS]:
@@ -92,6 +95,8 @@ def load_plugins(self):
                 continue
 
             self.config_param[cfg.ANALYSIS_PLUGINS][plugin_name] = str(file_)
+
+    print(f"{self.config_param[cfg.ANALYSIS_PLUGINS]=}")
 
     # load personal plugins
     if self.config_param.get(cfg.PERSONAL_PLUGINS_DIR, ""):
@@ -203,7 +208,7 @@ def run_plugin(self, plugin_name):
         QMessageBox.critical(self, cfg.programName, f"Plugin '{plugin_name}' not found")
         return
 
-    plugin_path = self.config_param.get(cfg.ANALYSIS_PLUGINS, {})[plugin_name]
+    plugin_path: str = self.config_param.get(cfg.ANALYSIS_PLUGINS, {}).get(plugin_name, "")
 
     logging.debug(f"{plugin_path=}")
 
@@ -213,6 +218,7 @@ def run_plugin(self, plugin_name):
 
     logging.debug(f"run plugin from {plugin_path}")
 
+    # load plugin as module
     module_name = Path(plugin_path).stem
 
     spec = importlib.util.spec_from_file_location(module_name, plugin_path)
@@ -226,11 +232,12 @@ def run_plugin(self, plugin_name):
         f"{plugin_module.__plugin_name__} loaded v.{getattr(plugin_module, '__version__')} v. {getattr(plugin_module, '__version_date__')}"
     )
 
+    # select observations to analyze
     selected_observations, parameters = self.obs_param()
     if not selected_observations:
         return
 
-    logging.info("preparing dtaaframe for plugin")
+    logging.info("preparing dataframe for plugin")
 
     df = project_functions.project2dataframe(self.pj, selected_observations)
 
@@ -247,8 +254,10 @@ def run_plugin(self, plugin_name):
     filtered_df = plugin_df_filter(df, observations_list=selected_observations, parameters=parameters)
     logging.info("done")
 
+    # run plugin
     plugin_results = plugin_module.run(filtered_df)
-    # test if plugin_tests is a tuple: if not transform to tuple
+
+    # test if plugin_results is a tuple: if not transform it to tuple
     if not isinstance(plugin_results, tuple):
         plugin_results = tuple([plugin_results])
 

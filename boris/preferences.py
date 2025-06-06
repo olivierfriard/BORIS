@@ -67,11 +67,10 @@ class Preferences(QDialog, Ui_prefDialog):
         self.le_personal_plugins_dir.setText(directory)
         self.lw_personal_plugins.clear()
         for file_ in Path(directory).glob("*.py"):
+            if file_.name.startswith("_"):
+                continue
             item = QListWidgetItem(file_.stem)
             item.setFlags(item.flags() | Qt.ItemIsUserCheckable)
-            # if plugin_name in self.config_param.get(cfg.EXCLUDED_PLUGINS, set()):
-            #    item.setCheckState(Qt.Unchecked)
-            # else:
             item.setCheckState(Qt.Checked)
             item.setData(100, file_.stem)
             self.lw_personal_plugins.addItem(item)
@@ -204,6 +203,8 @@ def preferences(self):
 
     for file_ in (Path(__file__).parent / "analysis_plugins").glob("*.py"):
         if file_.name == "__init__.py":
+            continue
+        if file_.name.startswith("_"):
             continue
         plugin_name = plugins.get_plugin_name(file_)
         if plugin_name is not None:

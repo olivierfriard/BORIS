@@ -8,7 +8,7 @@ import pandas as pd
 
 __version__ = "0.0.1"
 __version_date__ = "2025-04-10"
-__plugin_name__ = "Behavior latency"
+__plugin_name__ = "Behavior latencyxxx"
 __author__ = "Olivier Friard - University of Torino - Italy"
 
 
