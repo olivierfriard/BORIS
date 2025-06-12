@@ -34,7 +34,7 @@ import logging
 import math
 import numpy as np
 import os
-import pathlib as pl
+from pathlib import Path
 from PIL.ImageQt import Image
 import platform
 import re
@@ -71,7 +71,7 @@ except Exception:
         external_files_dir = ""
         # search where to download libmpv-2.dll
 
-        external_files_dir = pl.Path(__file__).parent / "misc"
+        external_files_dir = Path(__file__).parent / "misc"
         if not external_files_dir.is_dir():
             logger.info(f"Creating {external_files_dir} directory")
             external_files_dir.mkdir(parents=True, exist_ok=True)
@@ -143,10 +143,10 @@ def extract_exif_DateTimeOriginal(file_path: str) -> int:
             else:
                 try:
                     # read from file name (YYYY-MM-DD_HHMMSS)
-                    return int(datetime.datetime.strptime(pl.Path(file_path).stem, "%Y-%m-%d_%H%M%S").timestamp())
+                    return int(datetime.datetime.strptime(Path(file_path).stem, "%Y-%m-%d_%H%M%S").timestamp())
                 except Exception:
                     # read from file name (YYYY-MM-DD_HH:MM:SS)
-                    return int(datetime.datetime.strptime(pl.Path(file_path).stem, "%Y-%m-%d_%H:%M:%S").timestamp())
+                    return int(datetime.datetime.strptime(Path(file_path).stem, "%Y-%m-%d_%H:%M:%S").timestamp())
 
     except Exception:
         return -1
@@ -159,7 +159,7 @@ def extract_video_creation_date(file_path: str) -> int | None:
 
     logger.debug(f"extract_video_creation_date for {file_path}")
 
-    if not pl.Path(file_path).is_file():
+    if not Path(file_path).is_file():
         logger.debug(f"{file_path} not found")
         return None
     try:
@@ -839,7 +839,7 @@ def extract_wav(ffmpeg_bin: str, media_file_path: str, tmp_dir: str) -> str:
         str: wav file path or "" if error
     """
 
-    wav_file_path = pl.Path(tmp_dir) / pl.Path(media_file_path + ".wav").name
+    wav_file_path = Path(tmp_dir) / Path(media_file_path + ".wav").name
 
     # check if media file is a wav file
     try:
@@ -1272,11 +1272,11 @@ def check_ffmpeg_path() -> Tuple[bool, str]:
 
     # search embedded ffmpeg
     if sys.platform.startswith("linux") or sys.platform.startswith("darwin"):
-        ffmpeg_executable = pl.Path("ffmpeg")
+        ffmpeg_executable = Path("ffmpeg")
     elif sys.platform.startswith("win"):
-        ffmpeg_executable = pl.Path("ffmpeg.exe")
+        ffmpeg_executable = Path("ffmpeg.exe")
 
-    ffmpeg_path = pl.Path(__file__).parent / "misc" / ffmpeg_executable
+    ffmpeg_path = Path(__file__).parent / "misc" / ffmpeg_executable
 
     if not ffmpeg_path.is_file():
         # search global ffmpeg
@@ -1387,8 +1387,11 @@ def ffprobe_media_analysis(ffmpeg_bin: str, file_name: str) -> dict:
     Returns:
         dict
     """
-    # ffprobe -v quiet -print_format json -show_format -show_streams /tmp/ramdisk/video1.mp4
+
+    # check ffprobe executable in same place than ffmpeg
     ffprobe_bin = ffmpeg_bin.replace("ffmpeg", "ffprobe")
+    if not Path(ffprobe_bin).is_file():
+        return {"error": "ffprobe not found"}
 
     command = f'"{ffprobe_bin}" -hide_banner -v error -print_format json -show_format -show_streams "{file_name}"'
 
@@ -1405,7 +1408,7 @@ def ffprobe_media_analysis(ffmpeg_bin: str, file_name: str) -> dict:
         video_bitrate = None
         audio_bitrate = []
         resolution = None
-        fps = 0
+        fps: float = 0
         sample_rate = None
         duration = None
         audio_duration = cfg.NA
@@ -1701,7 +1704,7 @@ def dir_images_number(dir_path_str: str) -> dict:
     return number of images in dir_path (see cfg.IMAGE_EXTENSIONS)
     """
 
-    dir_path = pl.Path(dir_path_str)
+    dir_path = Path(dir_path_str)
     if not dir_path.is_dir():
         return {"error": f"The directory {dir_path_str} does not exists"}
     img_count = 0
