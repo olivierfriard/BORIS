@@ -309,17 +309,26 @@ def run_plugin(self, plugin_name):
         plugin_results = plugin_module.run(filtered_df)
 
     if Path(plugin_path).suffix in (".R", ".r"):
-        from rpy2 import robjects
-        from rpy2.robjects import pandas2ri
-        from rpy2.robjects.packages import SignatureTranslatedAnonymousPackage
-        from rpy2.robjects.conversion import localconverter
+        try:
+            from rpy2 import robjects
+            from rpy2.robjects import pandas2ri
+            from rpy2.robjects.packages import SignatureTranslatedAnonymousPackage
+            from rpy2.robjects.conversion import localconverter
+        except Exception:
+            QMessageBox.critical(self, cfg.programName, f"The rpy2 Python module is not installed. R plugins cannot be used")
+            return
 
-        # Legge il codice R dal file
-        with open(plugin_path, "r") as f:
-            r_code = f.read()
+        # Read code from file
+        try:
+            with open(plugin_path, "r") as f:
+                r_code = f.read()
+        except Exception:
+            QMessageBox.critical(self, cfg.programName, f"Error reading the plugin {plugin_path}.")
+            return
 
-        plugin_version = "dummy"
-        plugin_version_date = "dummy"
+        # read version
+        plugin_version = [x.split("<-")[1].strip() for x in r_code.split("\n") if x.replace(" ", "").startswith("version<-")]
+        plugin_version_date = [x.split("<-")[1].strip() for x in r_code.split("\n") if x.replace(" ", "").startswith("version_date<")]
 
         r_plugin = SignatureTranslatedAnonymousPackage(r_code, "r_plugin")
 
@@ -330,8 +339,6 @@ def run_plugin(self, plugin_name):
 
         with localconverter(robjects.default_converter + pandas2ri.converter):
             plugin_results = robjects.conversion.rpy2py(r_result)
-
-        print(plugin_results)
 
     # test if plugin_results is a tuple: if not transform it to tuple
     if not isinstance(plugin_results, tuple):
