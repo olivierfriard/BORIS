@@ -335,6 +335,7 @@ def run_plugin(self, plugin_name):
             ),
             None,
         )
+        # read version date
         plugin_version_date = next(
             (
                 x.split("<-")[1].replace('"', "").replace("'", "").strip()
