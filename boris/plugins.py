@@ -315,7 +315,7 @@ def run_plugin(self, plugin_name):
             from rpy2.robjects.packages import SignatureTranslatedAnonymousPackage
             from rpy2.robjects.conversion import localconverter
         except Exception:
-            QMessageBox.critical(self, cfg.programName, f"The rpy2 Python module is not installed. R plugins cannot be used")
+            QMessageBox.critical(self, cfg.programName, "The rpy2 Python module is not installed. R plugins cannot be used")
             return
 
         # Read code from file
@@ -327,15 +327,33 @@ def run_plugin(self, plugin_name):
             return
 
         # read version
-        plugin_version = [x.split("<-")[1].strip() for x in r_code.split("\n") if x.replace(" ", "").startswith("version<-")]
-        plugin_version_date = [x.split("<-")[1].strip() for x in r_code.split("\n") if x.replace(" ", "").startswith("version_date<")]
+        plugin_version = next(
+            (
+                x.split("<-")[1].replace('"', "").replace("'", "").strip()
+                for x in r_code.splitlines()
+                if x.replace(" ", "").startswith("version<-")
+            ),
+            None,
+        )
+        plugin_version_date = next(
+            (
+                x.split("<-")[1].replace('"', "").replace("'", "").strip()
+                for x in r_code.split("\n")
+                if x.replace(" ", "").startswith("version_date<")
+            ),
+            None,
+        )
 
         r_plugin = SignatureTranslatedAnonymousPackage(r_code, "r_plugin")
 
         with localconverter(robjects.default_converter + pandas2ri.converter):
             r_df = robjects.conversion.py2rpy(filtered_df)
 
-        r_result = r_plugin.run(r_df)
+        try:
+            r_result = r_plugin.run(r_df)
+        except Exception as e:
+            QMessageBox.critical(self, cfg.programName, f"Error in the plugin {plugin_path}: {e}.")
+            return
 
         with localconverter(robjects.default_converter + pandas2ri.converter):
             plugin_results = robjects.conversion.rpy2py(r_result)
