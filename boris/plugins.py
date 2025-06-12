@@ -265,20 +265,6 @@ def run_plugin(self, plugin_name):
 
     logging.debug(f"run plugin from {plugin_path}")
 
-    # load plugin as module
-    module_name = Path(plugin_path).stem
-
-    spec = importlib.util.spec_from_file_location(module_name, plugin_path)
-    plugin_module = importlib.util.module_from_spec(spec)
-
-    logging.debug(f"{plugin_module=}")
-
-    spec.loader.exec_module(plugin_module)
-
-    logging.info(
-        f"{plugin_module.__plugin_name__} loaded v.{getattr(plugin_module, '__version__')} v. {getattr(plugin_module, '__version_date__')}"
-    )
-
     # select observations to analyze
     selected_observations, parameters = self.obs_param()
     if not selected_observations:
@@ -301,8 +287,51 @@ def run_plugin(self, plugin_name):
     filtered_df = plugin_df_filter(df, observations_list=selected_observations, parameters=parameters)
     logging.info("done")
 
-    # run plugin
-    plugin_results = plugin_module.run(filtered_df)
+    if Path(plugin_path).suffix == ".py":
+        # load plugin as module
+        module_name = Path(plugin_path).stem
+
+        spec = importlib.util.spec_from_file_location(module_name, plugin_path)
+        plugin_module = importlib.util.module_from_spec(spec)
+
+        logging.debug(f"{plugin_module=}")
+
+        spec.loader.exec_module(plugin_module)
+
+        plugin_version = plugin_module.__version__
+        plugin_version_date = plugin_module.__version_date__
+
+        logging.info(
+            f"{plugin_module.__plugin_name__} loaded v.{getattr(plugin_module, '__version__')} v. {getattr(plugin_module, '__version_date__')}"
+        )
+
+        # run plugin
+        plugin_results = plugin_module.run(filtered_df)
+
+    if Path(plugin_path).suffix in (".R", ".r"):
+        from rpy2 import robjects
+        from rpy2.robjects import pandas2ri
+        from rpy2.robjects.packages import SignatureTranslatedAnonymousPackage
+        from rpy2.robjects.conversion import localconverter
+
+        # Legge il codice R dal file
+        with open(plugin_path, "r") as f:
+            r_code = f.read()
+
+        plugin_version = "dummy"
+        plugin_version_date = "dummy"
+
+        r_plugin = SignatureTranslatedAnonymousPackage(r_code, "r_plugin")
+
+        with localconverter(robjects.default_converter + pandas2ri.converter):
+            r_df = robjects.conversion.py2rpy(filtered_df)
+
+        r_result = r_plugin.run(r_df)
+
+        with localconverter(robjects.default_converter + pandas2ri.converter):
+            plugin_results = robjects.conversion.rpy2py(r_result)
+
+        print(plugin_results)
 
     # test if plugin_results is a tuple: if not transform it to tuple
     if not isinstance(plugin_results, tuple):
@@ -317,7 +346,7 @@ def run_plugin(self, plugin_name):
             self.plugin_visu[-1].ptText.appendPlainText(result)
             self.plugin_visu[-1].show()
         elif isinstance(result, pd.DataFrame):
-            self.plugin_visu.append(view_df.View_df(plugin_name, f"{plugin_module.__version__} ({plugin_module.__version_date__})", result))
+            self.plugin_visu.append(view_df.View_df(plugin_name, f"{plugin_version} ({plugin_version_date})", result))
             self.plugin_visu[-1].show()
         else:
             # result is not str nor dataframe

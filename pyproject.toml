@@ -24,6 +24,7 @@ dependencies = [
     "pyside6==6.9",
     "hachoir>=3.3.0",
     "scipy>=1.15.3",
+    "rpy2>=3.6.1",
 ]
 
 [project.optional-dependencies]

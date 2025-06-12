@@ -1395,7 +1395,8 @@ def ffprobe_media_analysis(ffmpeg_bin: str, file_name: str) -> dict:
     p = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
     out, error = p.communicate()
     if error:
-        return {"error": f"{error}"}
+        if b"invalid data" in error:
+            return {"error": f"{error}"}
 
     try:
         hasVideo = False
@@ -1446,6 +1447,8 @@ def ffprobe_media_analysis(ffmpeg_bin: str, file_name: str) -> dict:
                                 fps = eval(stream["avg_frame_rate"])
                             except Exception:
                                 pass
+
+                fps = round(fps, 3)
 
                 if "duration" in stream:
                     duration = float(stream["duration"])

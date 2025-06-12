@@ -565,7 +565,7 @@ def check_project_integrity(
         for player in pj[cfg.OBSERVATIONS][obs_id][cfg.FILE]:
             for media_file in pj[cfg.OBSERVATIONS][obs_id][cfg.FILE][player]:
                 for info in (cfg.LENGTH, cfg.FPS, cfg.HAS_AUDIO, cfg.HAS_VIDEO):
-                    if media_file not in pj[cfg.OBSERVATIONS][obs_id][cfg.MEDIA_INFO][info]:
+                    if media_file not in pj[cfg.OBSERVATIONS][obs_id][cfg.MEDIA_INFO].get(info, {}):
                         tmp_out += f"Observation <b>{obs_id}</b>:<br>"
                         tmp_out += f"The media file {media_file} has no <b>{info}</b> info.<br>"
     if tmp_out:
