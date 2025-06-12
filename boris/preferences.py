@@ -35,6 +35,7 @@ from .preferences_ui import Ui_prefDialog
 
 from PySide6.QtWidgets import QDialog, QFileDialog, QListWidgetItem, QMessageBox
 from PySide6.QtCore import Qt
+from PySide6.QtGui import QFont
 
 
 class Preferences(QDialog, Ui_prefDialog):
@@ -55,6 +56,12 @@ class Preferences(QDialog, Ui_prefDialog):
         self.pbCancel.clicked.connect(self.reject)
 
         self.flag_refresh = False
+
+        # Create a monospace QFont
+        monospace_font = QFont("Courier New")  # or "Monospace", "Consolas", "Liberation Mono", etc.
+        monospace_font.setStyleHint(QFont.Monospace)
+        monospace_font.setPointSize(13)
+        self.pte_plugin_code.setFont(monospace_font)
 
     def browse_plugins_dir(self):
         """
@@ -145,20 +152,37 @@ def preferences(self):
 
         plugin_path = item.data(100)
 
-        import importlib
+        if Path(plugin_path).suffix == ".py":
+            import importlib
 
-        module_name = Path(plugin_path).stem
-        spec = importlib.util.spec_from_file_location(module_name, plugin_path)
-        plugin_module = importlib.util.module_from_spec(spec)
-        spec.loader.exec_module(plugin_module)
+            module_name = Path(plugin_path).stem
+            spec = importlib.util.spec_from_file_location(module_name, plugin_path)
+            plugin_module = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(plugin_module)
 
-        out: list = []
-        out.append(plugin_module.__plugin_name__ + "\n")
-        out.append(plugin_module.__author__)
-        out.append(f"{plugin_module.__version__} ({plugin_module.__version_date__})\n")
-        out.append(plugin_module.run.__doc__.strip())
+            out: list = []
+            out.append(plugin_module.__plugin_name__ + "\n")
+            out.append(plugin_module.__author__)
+            out.append(f"{plugin_module.__version__} ({plugin_module.__version_date__})\n")
+            out.append(plugin_module.run.__doc__.strip())
 
-        preferencesWindow.pte_plugin_description.setPlainText("\n".join(out))
+            preferencesWindow.pte_plugin_description.setPlainText("\n".join(out))
+
+        if Path(plugin_path).suffix == ".R":
+            plugin_description = plugins.get_r_plugin_description(plugin_path)
+            if plugin_description is not None:
+                preferencesWindow.pte_plugin_description.setPlainText("\n".join(plugin_description.split("\\n")))
+            else:
+                preferencesWindow.pte_plugin_description.setPlainText("Plugin description not found")
+
+        # display plugin code
+        try:
+            with open(plugin_path, "r") as f_in:
+                plugin_code = f_in.read()
+        except Exception:
+            plugin_code = "Not available"
+
+        preferencesWindow.pte_plugin_code.setPlainText(plugin_code)
 
     preferencesWindow = Preferences()
     preferencesWindow.tabWidget.setCurrentIndex(0)

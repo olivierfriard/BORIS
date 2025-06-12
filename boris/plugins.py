@@ -52,7 +52,7 @@ def get_plugin_name(plugin_path: str) -> str | None:
     get name of a Python plugin
     """
     # search plugin name
-    plugin_name = None
+    plugin_name: str | None = None
     with open(plugin_path, "r") as f_in:
         for line in f_in:
             if line.startswith("__plugin_name__"):
@@ -66,13 +66,41 @@ def get_r_plugin_name(plugin_path: str) -> str | None:
     get name of a R plugin
     """
     # search plugin name
-    plugin_name = None
+    plugin_name: str | None = None
     with open(plugin_path, "r") as f_in:
         for line in f_in:
             if line.startswith("plugin_name"):
-                plugin_name = line.split("=")[1].strip().replace('"', "").replace("'", "")
-                break
+                if "=" in line:
+                    plugin_name = line.split("=")[1].strip().replace('"', "").replace("'", "")
+                    break
+                elif "<-" in line:
+                    plugin_name = line.split("<-")[1].strip().replace('"', "").replace("'", "")
+                    break
+                else:
+                    plugin_name = None
+                    break
     return plugin_name
+
+
+def get_r_plugin_description(plugin_path: str) -> str | None:
+    """
+    get description of a R plugin
+    """
+    # search plugin name
+    plugin_description: str | None = None
+    with open(plugin_path, "r") as f_in:
+        for line in f_in:
+            if line.startswith("description"):
+                if "=" in line:
+                    plugin_description = line.split("=")[1].strip().replace('"', "").replace("'", "")
+                    break
+                elif "<-" in line:
+                    plugin_description = line.split("<-")[1].strip().replace('"', "").replace("'", "")
+                    break
+                else:
+                    plugin_description = None
+                    break
+    return plugin_description
 
 
 def load_plugins(self):
