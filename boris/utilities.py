@@ -23,7 +23,7 @@ from decimal import Decimal as dec
 from decimal import getcontext, ROUND_DOWN
 from hachoir.metadata import extractMetadata
 from hachoir.parser import createParser
-from shutil import copyfile
+from shutil import copyfile, which
 from typing import Union, Tuple
 import csv
 import datetime
@@ -1391,7 +1391,8 @@ def ffprobe_media_analysis(ffmpeg_bin: str, file_name: str) -> dict:
     # check ffprobe executable in same place than ffmpeg
     ffprobe_bin = ffmpeg_bin.replace("ffmpeg", "ffprobe")
     if not Path(ffprobe_bin).is_file():
-        return {"error": "ffprobe not found"}
+        if which(ffprobe_bin) is None:
+            return {"error": "ffprobe not found"}
 
     command = f'"{ffprobe_bin}" -hide_banner -v error -print_format json -show_format -show_streams "{file_name}"'
 
