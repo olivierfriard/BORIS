@@ -87,13 +87,6 @@ def zoom_level(self):
     for idx, dw in enumerate(self.dw_player):
         players_list.append(("dsb", f"Player #{idx + 1}", 0.1, 12, 0.1, 2**dw.player.video_zoom, 1))
 
-        """
-        zoom_levels: list = []
-        for choice in (2, 1, 0.5, 0.25):
-            zoom_levels.append((str(choice), "selected" if log2(choice) == dw.player.video_zoom else ""))
-        players_list.append(("il", f"Player #{idx + 1}", zoom_levels))
-        """
-
     zl = dialog.Input_dialog(label_caption="Select the zoom level", elements_list=players_list, title="Video zoom level")
     if not zl.exec_():
         return
@@ -114,6 +107,52 @@ def zoom_level(self):
                 zl.elements[f"Player #{idx + 1}"].value()
             )
             display_zoom_level(self)
+            self.project_changed()
+
+
+def change_player_offset(self):
+    """
+    display dialog box for setting the player time offset
+    """
+    logging.info("change the player time offset")
+
+    if cfg.OFFSET not in self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO]:
+        self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO][cfg.OFFSET] = {}
+
+    players_list: list = []
+
+    for idx, dw in enumerate(self.dw_player):
+        players_list.append(
+            (
+                "dsb",
+                f"Player #{idx + 1}",
+                -100000,
+                100000,
+                0.001,
+                self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO][cfg.OFFSET][str(idx + 1)],
+                3,
+            )
+        )
+
+    zl = dialog.Input_dialog(label_caption="Select the time offset", elements_list=players_list, title="Time offset")
+    if not zl.exec_():
+        return
+
+    for idx, dw in enumerate(self.dw_player):
+        if (
+            self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO][cfg.OFFSET].get(str(idx + 1), 0)
+            != zl.elements[f"Player #{idx + 1}"].value()
+        ):
+            logging.debug(f"time offset of player changed in {zl.elements[f'Player #{idx + 1}'].value()} for player {idx + 1}")
+
+            self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO][cfg.OFFSET][str(idx + 1)] = float(
+                zl.elements[f"Player #{idx + 1}"].value()
+            )
+
+            if self.dw_player[0].player.time_pos is not None:
+                cumulative_time_pos = self.getLaps()  # for player 1
+                self.sync_time(idx, cumulative_time_pos)
+
             self.project_changed()
 
 

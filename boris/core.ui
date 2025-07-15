@@ -166,7 +166,7 @@
      <x>0</x>
      <y>0</y>
      <width>1509</width>
-     <height>20</height>
+     <height>25</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuHelp">
@@ -361,6 +361,7 @@
     <addaction name="actionJumpForward"/>
     <addaction name="actionJumpBackward"/>
     <addaction name="actionJumpTo"/>
+    <addaction name="action_change_time_offset_of_players"/>
     <addaction name="action_deinterlace"/>
     <addaction name="separator"/>
     <addaction name="actionZoom_level"/>
@@ -1594,6 +1595,11 @@
   <action name="actionCreate_video_spectrogram">
    <property name="text">
     <string>Create video spectrogram</string>
+   </property>
+  </action>
+  <action name="action_change_time_offset_of_players">
+   <property name="text">
+    <string>Change time offset of players</string>
    </property>
   </action>
  </widget>
