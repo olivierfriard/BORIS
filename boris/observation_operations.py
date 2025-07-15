@@ -1055,8 +1055,6 @@ def new_observation(self, mode: str = cfg.NEW, obsId: str = "") -> None:
             }
 
             if self.pj[cfg.OBSERVATIONS][new_obs_id][cfg.MEDIA_CREATION_DATE_AS_OFFSET]:
-                print("\n", observationWindow.media_creation_time, "\n")
-
                 self.pj[cfg.OBSERVATIONS][new_obs_id][cfg.MEDIA_INFO][cfg.MEDIA_CREATION_TIME] = observationWindow.media_creation_time
 
             try:
@@ -2423,48 +2421,55 @@ def event2media_file_name(observation: dict, timestamp: dec) -> Optional[str]:
         timestamp (dec): time stamp
 
     Returns:
-        str: name of media file containing the event
+        str: path of media file containing the event
     """
-
-    cumul_media_durations: list = [dec(0)]
-    for media_file in observation[cfg.FILE][cfg.PLAYER1]:
-        try:
-            media_duration = observation[cfg.MEDIA_INFO][cfg.LENGTH][media_file]
-            # cut off media duration to 3 decimal places as that is how fine the player is
-            media_duration = floor(media_duration * 10**3) / dec(10**3)
-            cumul_media_durations.append(floor((cumul_media_durations[-1] + media_duration) * 10**3) / dec(10**3))
-        except KeyError:
-            return None
-
-    """
-    cumul_media_durations: list = [dec(0)]
-    for media_file in observation[cfg.FILE][cfg.PLAYER1]:
-        try:
-            media_duration = dec(str(observation[cfg.MEDIA_INFO][cfg.LENGTH][media_file]))
-            cumul_media_durations.append(round(cumul_media_durations[-1] + media_duration, 3))
-        except KeyError:
-            return None
-    """
-
-    cumul_media_durations.remove(dec(0))
-
-    logging.debug(f"{cumul_media_durations=}")
-
-    # test if timestamp is at end of last media
-    if timestamp == cumul_media_durations[-1]:
-        player_idx = len(observation[cfg.FILE][cfg.PLAYER1]) - 1
-    else:
-        player_idx = -1
-        for idx, value in enumerate(cumul_media_durations):
-            start = 0 if idx == 0 else cumul_media_durations[idx - 1]
-            if start <= timestamp < value:
-                player_idx = idx
+    if observation.get(cfg.MEDIA_CREATION_DATE_AS_OFFSET, False):
+        # media creation date/time was used for coding
+        video_file_name = None
+        for media_path in observation[cfg.MEDIA_INFO].get(cfg.MEDIA_CREATION_TIME, {}):
+            start_media = observation[cfg.MEDIA_INFO][cfg.MEDIA_CREATION_TIME][media_path]
+            duration = observation[cfg.MEDIA_INFO][cfg.LENGTH][media_path]
+            if start_media <= timestamp <= start_media + duration:
+                video_file_name = media_path
                 break
 
-    if player_idx != -1:
-        video_file_name = observation[cfg.FILE][cfg.PLAYER1][player_idx]
-    else:
-        video_file_name = None
+    else:  # no media creation date
+        cumul_media_durations: list = [dec(0)]
+        for media_file in observation[cfg.FILE][cfg.PLAYER1]:
+            try:
+                media_duration = observation[cfg.MEDIA_INFO][cfg.LENGTH][media_file]
+                # cut off media duration to 3 decimal places as that is how fine the player is
+                media_duration = floor(media_duration * 10**3) / dec(10**3)
+                cumul_media_durations.append(floor((cumul_media_durations[-1] + media_duration) * 10**3) / dec(10**3))
+            except KeyError:
+                return None
+
+        """
+        cumul_media_durations: list = [dec(0)]
+        for media_file in observation[cfg.FILE][cfg.PLAYER1]:
+            try:
+                media_duration = dec(str(observation[cfg.MEDIA_INFO][cfg.LENGTH][media_file]))
+                cumul_media_durations.append(round(cumul_media_durations[-1] + media_duration, 3))
+            except KeyError:
+                return None
+        """
+
+        cumul_media_durations.remove(dec(0))
+
+        logging.debug(f"{cumul_media_durations=}")
+
+        # test if timestamp is at end of last media
+        if timestamp == cumul_media_durations[-1]:
+            player_idx = len(observation[cfg.FILE][cfg.PLAYER1]) - 1
+        else:
+            player_idx = None
+            for idx, value in enumerate(cumul_media_durations):
+                start = 0 if idx == 0 else cumul_media_durations[idx - 1]
+                if start <= timestamp < value:
+                    player_idx = idx
+                    break
+
+        video_file_name = observation[cfg.FILE][cfg.PLAYER1][player_idx] if player_idx is not None else None
 
     return video_file_name
 

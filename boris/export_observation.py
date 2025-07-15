@@ -691,11 +691,6 @@ def export_aggregated_events(pj: dict, parameters: dict, obsId: str, force_numbe
     # obs description
     obs_description = util.eol2space(observation[cfg.DESCRIPTION])
 
-    """
-    obs_length = observation_operations.observation_total_length(pj[cfg.OBSERVATIONS][obsId])
-    logging.debug(f"obs_length: {obs_length}")
-    """
-
     _, _, connector = db_functions.load_aggregated_events_in_db(
         pj, parameters[cfg.SELECTED_SUBJECTS], [obsId], parameters[cfg.SELECTED_BEHAVIORS]
     )
@@ -798,6 +793,7 @@ def export_aggregated_events(pj: dict, parameters: dict, obsId: str, force_numbe
                     if observation[cfg.TYPE] == cfg.MEDIA:
                         observation_type = "Media file"
 
+                        # get the media file name of the start of event
                         media_file_name = observation_operations.event2media_file_name(observation, row["start"])
                         if media_file_name is None:
                             media_file_name = "Not found"
@@ -842,7 +838,7 @@ def export_aggregated_events(pj: dict, parameters: dict, obsId: str, force_numbe
                             observation["date"].replace("T", " "),
                             obs_description,
                             observation_type,
-                            media_file_str,
+                            media_file_str,  # list of media used in observation
                             pj[cfg.OBSERVATIONS][obsId][cfg.TIME_OFFSET],
                             f"{coding_duration:.3f}" if not coding_duration.is_nan() else cfg.NA,
                             media_durations_str,
