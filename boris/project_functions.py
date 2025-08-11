@@ -1539,8 +1539,8 @@ def open_project_json(project_file_name: str) -> tuple:
     # sort events by time asc
     for obs_id in pj[cfg.OBSERVATIONS]:
         if pj[cfg.OBSERVATIONS][obs_id][cfg.TYPE] in (cfg.LIVE, cfg.MEDIA):
-            #pj[cfg.OBSERVATIONS][obs_id][cfg.EVENTS].sort()
-            pj[cfg.OBSERVATIONS][obs_id][cfg.EVENTS].sort(        key=lambda x: x[0])
+            # sort events list using the first 3 items (time, subject, behavior)
+            pj[cfg.OBSERVATIONS][obs_id][cfg.EVENTS].sort(key=lambda x: x[:3])
 
     return project_file_name, projectChanged, pj, msg
 

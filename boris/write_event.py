@@ -472,8 +472,8 @@ def write_event(self, event: dict, mem_time: dec) -> int:
                 comment,
                 frame_idx,
             ]
-            # order by image index ASC
-            self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS].sort()
+            # order events list using time, subject, behavior
+            self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS].sort(key=lambda x: x[:3])
 
         elif self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE] == cfg.LIVE:
             self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS][event["row"]] = [
@@ -483,8 +483,8 @@ def write_event(self, event: dict, mem_time: dec) -> int:
                 modifier_str,
                 comment,
             ]
-            # order by image index ASC
-            self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS].sort()
+            # order events list using time, subject, behavior
+            self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS].sort(key=lambda x: x[:3])
 
         elif self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE] == cfg.IMAGES:
             self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS][event["row"]] = [

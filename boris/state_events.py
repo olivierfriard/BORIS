@@ -136,7 +136,7 @@ def fix_unpaired_events(self, silent_mode: bool = False):
 
             self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS].extend(events_to_add)
             self.project_changed()
-            self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS].sort()
+            self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS].sort(key=lambda x: x[:3])
             self.load_tw_events(self.observationId)
 
             index = self.tv_events.model().index(

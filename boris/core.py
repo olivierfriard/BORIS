@@ -4263,7 +4263,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
                 self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS].extend(events_to_add)
                 self.project_changed()
-                self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS].sort()
+                self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS].sort(key=lambda x: x[:3])
 
                 self.load_tw_events(self.observationId)
 
@@ -4361,14 +4361,12 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
                     events_to_add = project_functions.fix_unpaired_state_events2(self.pj[cfg.ETHOGRAM], events, time_to_stop)
 
-                    # print(f"{events_to_add=}")
-
                     if events_to_add:
                         self.statusbar.showMessage("The playlist has finished. Some ongoing state events were stopped automatically", 0)
 
                         self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS].extend(events_to_add)
                         self.project_changed()
-                        self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS].sort()
+                        self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS].sort(key=lambda x: x[:3])
 
                         self.load_tw_events(self.observationId)
 
