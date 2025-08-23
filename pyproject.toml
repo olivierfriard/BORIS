@@ -23,7 +23,8 @@ dependencies = [
     "pyreadr",
     "pyside6==6.9",
     "hachoir>=3.3.0",
-    "scipy>=1.15.3"
+    "scipy>=1.15.3",
+    "scikit-learn>=1.7.1",
 ]
 
 [project.optional-dependencies]
