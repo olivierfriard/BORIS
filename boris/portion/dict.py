@@ -28,7 +28,7 @@ class IntervalDict(MutableMapping):
     number of distinct values (not keys) that are stored.
     """
 
-    __slots__ = ('_storage', )
+    __slots__ = ("_storage",)
 
     def __init__(self, mapping_or_iterable=None):
         """
@@ -352,10 +352,10 @@ class IntervalDict(MutableMapping):
         return key in self.domain()
 
     def __repr__(self):
-        return '{}{}{}'.format(
-            '{',
-            ', '.join('{!r}: {!r}'.format(i, v) for i, v in self.items()),
-            '}',
+        return "{}{}{}".format(
+            "{",
+            ", ".join("{!r}: {!r}".format(i, v) for i, v in self.items()),
+            "}",
         )
 
     def __eq__(self, other):

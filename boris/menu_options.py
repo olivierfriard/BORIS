@@ -143,6 +143,8 @@ def update_menu(self):
         self.actionJumpForward,
         self.actionJumpBackward,
         self.actionJumpTo,
+        self.action_change_time_offset_of_players,
+        self.action_deinterlace,
         self.actionZoom_level,
         self.actionRotate_current_video,
         self.actionDisplay_subtitles,

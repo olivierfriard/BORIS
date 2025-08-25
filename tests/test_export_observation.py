@@ -34,7 +34,6 @@ def before():
 class Test_export_events(object):
     @pytest.mark.usefixtures("before")
     def test_export_tabular_tsv(self):
-
         pj = json.loads(open("files/test.boris").read())
         obs_id = "observation #1"
         parameters = {SELECTED_SUBJECTS: ["subject1", "subject2"], SELECTED_BEHAVIORS: ["p", "s"]}
@@ -50,13 +49,10 @@ class Test_export_events(object):
             output_format,
         )
 
-        assert (
-            open("files/test_export_events_tabular.tsv").read() == open("output/test_export_events_tabular.tsv").read()
-        )
+        assert open("files/test_export_events_tabular.tsv").read() == open("output/test_export_events_tabular.tsv").read()
 
     @pytest.mark.usefixtures("before")
     def test_export_tabular_csv(self):
-
         pj = json.loads(open("files/test.boris").read())
         obs_id = "observation #1"
         parameters = {SELECTED_SUBJECTS: ["subject1", "subject2"], SELECTED_BEHAVIORS: ["p", "s"]}
@@ -72,13 +68,10 @@ class Test_export_events(object):
             output_format,
         )
 
-        assert (
-            open("files/test_export_events_tabular.csv").read() == open("output/test_export_events_tabular.csv").read()
-        )
+        assert open("files/test_export_events_tabular.csv").read() == open("output/test_export_events_tabular.csv").read()
 
     @pytest.mark.usefixtures("before")
     def test_export_tabular_html(self):
-
         pj = json.loads(open("files/test.boris").read())
         obs_id = "observation #1"
         parameters = {SELECTED_SUBJECTS: ["subject1", "subject2"], SELECTED_BEHAVIORS: ["p", "s"]}
@@ -94,14 +87,10 @@ class Test_export_events(object):
             output_format,
         )
 
-        assert (
-            open("files/test_export_events_tabular.html").read()
-            == open("output/test_export_events_tabular.html").read()
-        )
+        assert open("files/test_export_events_tabular.html").read() == open("output/test_export_events_tabular.html").read()
 
     @pytest.mark.usefixtures("before")
     def test_export_tabular_xlsx(self):
-
         pj = json.loads(open("files/test.boris").read())
 
         obs_id = "observation #1"
@@ -343,7 +332,6 @@ class Test_export_aggregated_events(object):
 class Test_export_events_jwatcher(object):
     @pytest.mark.usefixtures("before")
     def test_1(self):
-
         pj = json.loads(open("files/test.boris").read())
 
         obs_id = "observation #1"
@@ -370,7 +358,6 @@ class Test_export_events_jwatcher(object):
 
 class Test_events_to_behavioral_sequences(object):
     def test_1(self):
-
         pj = json.loads(open("files/test.boris").read())
 
         obs_id = "observation #1"
@@ -391,7 +378,6 @@ class Test_events_to_behavioral_sequences(object):
         assert open("files/Test_events_to_behavioral_sequences_test_1").read() == out
 
     def test_2_separator_changed(self):
-
         pj = json.loads(open("files/test.boris").read())
 
         obs_id = "observation #1"
@@ -412,7 +398,6 @@ class Test_events_to_behavioral_sequences(object):
         assert open("files/Test_events_to_behavioral_sequences_test_2_separator").read() == out
 
     def test_3_no_behavior_found_for_selected_subject(self):
-
         pj = json.loads(open("files/test.boris").read())
 
         obs_id = "observation #1"
@@ -434,7 +419,6 @@ class Test_events_to_behavioral_sequences(object):
         assert out == ""
 
     def test_4_behaviors_with_modifiers(self):
-
         pj = json.loads(open("files/test.boris").read())
 
         obs_id = "modifiers"
@@ -455,7 +439,6 @@ class Test_events_to_behavioral_sequences(object):
         assert open("files/Test_events_to_behavioral_sequences_test_4_behaviors_with_modifiers").read() == out
 
     def test_5_observation_not_paired(self):
-
         pj = json.loads(open("files/test.boris").read())
 
         obs_id = "live not paired"
@@ -478,7 +461,6 @@ class Test_events_to_behavioral_sequences(object):
 
     @pytest.mark.usefixtures("before")
     def test_6_multirow_description(self):
-
         pj = json.loads(open("files/test.boris").read())
 
         observations = ["live export behavioral sequences"]

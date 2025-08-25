@@ -123,11 +123,7 @@ class addModifierDialog(QDialog, Ui_Dialog):
             if (
                 dialog.MessageDialog(
                     cfg.programName,
-                    (
-                        "You are working on a behavior.<br>"
-                        "If you close the window it will be lost.<br>"
-                        "Do you want to change modifiers set"
-                    ),
+                    ("You are working on a behavior.<br>If you close the window it will be lost.<br>Do you want to change modifiers set"),
                     [cfg.CLOSE, cfg.CANCEL],
                 )
                 == cfg.CANCEL

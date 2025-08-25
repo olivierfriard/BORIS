@@ -31,7 +31,7 @@ def iterate(interval, step, *, base=None, reverse=False):
     :return: a lazy iterator.
     """
     if base is None:
-        base = (lambda x: x)
+        base = lambda x: x
 
     exclude = operator.lt if not reverse else operator.gt
     include = operator.le if not reverse else operator.ge
@@ -39,7 +39,7 @@ def iterate(interval, step, *, base=None, reverse=False):
 
     value = base(interval.lower if not reverse else interval.upper)
     if (value == -inf and not reverse) or (value == inf and reverse):
-        raise ValueError('Cannot start iteration with infinity.')
+        raise ValueError("Cannot start iteration with infinity.")
 
     for i in interval if not reverse else reversed(interval):
         value = base(i.lower if not reverse else i.upper)

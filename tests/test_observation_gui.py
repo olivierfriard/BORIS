@@ -5,20 +5,19 @@ module for testing observation GUI
 pytest -s -vv test_observation_gui.py
 """
 
-
 import sys
 import os
 from PyQt5.QtCore import *
 
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 from boris import observation
 from boris import config
 
-def test_no_media_loaded(qtbot):
 
+def test_no_media_loaded(qtbot):
     w = observation.Observation("/tmp")
-    #w.show()
+    # w.show()
 
     qtbot.addWidget(w)
 
@@ -33,9 +32,8 @@ def test_no_media_loaded(qtbot):
 
 
 def test_no_obs_id(qtbot):
-
     w = observation.Observation("/tmp")
-    #w.show()
+    # w.show()
     qtbot.addWidget(w)
     w.ffmpeg_bin = "ffmpeg"
 
@@ -45,7 +43,7 @@ def test_no_obs_id(qtbot):
 
     def handle_dialog():
         qtbot.keyClick(w.qm, Qt.Key_Enter)
-        #qtbot.mouseClick(w.qm.Ok, Qt.LeftButton)
+        # qtbot.mouseClick(w.qm.Ok, Qt.LeftButton)
 
     QTimer.singleShot(1000, handle_dialog)
 
@@ -78,16 +76,16 @@ def test_players_in_crescent_order(qtbot):
     """
 
     w = observation.Observation("/tmp")
-    #w.show()
+    # w.show()
     qtbot.addWidget(w)
-    #w.mode = "new"
+    # w.mode = "new"
     w.pj = config.EMPTY_PROJECT
     w.ffmpeg_bin = "ffmpeg"
 
-    #w.leObservationId.setText("test")
+    # w.leObservationId.setText("test")
     media_file1 = "files/geese1.mp4"
     w.check_media("1", media_file1, True)
-    #w.add_media_to_listview("1", media_file1)
+    # w.add_media_to_listview("1", media_file1)
 
     media_file2 = "files/geese1.mp4"
     w.check_media("1", media_file2, True)
@@ -95,7 +93,7 @@ def test_players_in_crescent_order(qtbot):
 
     def handle_dialog():
         qtbot.keyClick(w.qm, Qt.Key_Enter)
-        #qtbot.mouseClick(w.qm.Ok, Qt.LeftButton)
+        # qtbot.mouseClick(w.qm.Ok, Qt.LeftButton)
 
     QTimer.singleShot(1000, handle_dialog)
 
@@ -105,9 +103,8 @@ def test_players_in_crescent_order(qtbot):
 
 
 def test_ok(qtbot):
-
     w = observation.Observation("/tmp")
-    #w.show()
+    # w.show()
     qtbot.addWidget(w)
     w.mode = "new"
     w.pj = config.EMPTY_PROJECT
@@ -122,17 +119,26 @@ def test_ok(qtbot):
 
     assert w.state == "accepted"
 
-    assert w.pj == {'time_format': 'hh:mm:ss', 'project_date': '', 'project_name': '', 'project_description': '',
-                    'project_format_version': config.project_format_version,
-                    'subjects_conf': {}, 'behaviors_conf': {}, 'observations': {},
-                    'behavioral_categories': [],
-                    'independent_variables': {}, 'coding_map': {}, 'behaviors_coding_map': [], 'converters': {}}
+    assert w.pj == {
+        "time_format": "hh:mm:ss",
+        "project_date": "",
+        "project_name": "",
+        "project_description": "",
+        "project_format_version": config.project_format_version,
+        "subjects_conf": {},
+        "behaviors_conf": {},
+        "observations": {},
+        "behavioral_categories": [],
+        "independent_variables": {},
+        "coding_map": {},
+        "behaviors_coding_map": [],
+        "converters": {},
+    }
 
 
 def test_cancel(qtbot):
-
     w = observation.Observation("/tmp")
-    #w.show()
+    # w.show()
     qtbot.addWidget(w)
     w.mode = "new"
     w.pj = config.EMPTY_PROJECT
@@ -148,16 +154,14 @@ def test_cancel(qtbot):
     assert w.pj == config.EMPTY_PROJECT
 
 
-
 def test_extract_wav_from_video(qtbot):
-
     try:
         os.remove("/tmp/geese1.mp4.wav")
     except Exception:
         pass
 
     w = observation.Observation("/tmp")
-    #w.show()
+    # w.show()
     qtbot.addWidget(w)
     w.mode = "new"
     w.pj = config.EMPTY_PROJECT
@@ -176,10 +180,9 @@ def test_extract_wav_from_video(qtbot):
 
 
 def test_extract_wav_from_wav(qtbot):
-
     w = observation.Observation("/tmp")
 
-    #w.show()
+    # w.show()
     qtbot.addWidget(w)
     w.mode = "new"
     w.pj = config.EMPTY_PROJECT
@@ -195,4 +198,3 @@ def test_extract_wav_from_wav(qtbot):
     w.extract_wav()
 
     assert os.path.isfile("/tmp/test.wav.wav")
-

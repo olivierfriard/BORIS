@@ -126,7 +126,7 @@ def cohen_kappa(cursor, obsid1: str, obsid2: str, interval: dec, selected_subjec
     first_event = cursor.execute(
         (
             "SELECT min(start) FROM aggregated_events "
-            f"WHERE observation in (?, ?) AND subject in ({','.join('?'*len(selected_subjects))}) "
+            f"WHERE observation in (?, ?) AND subject in ({','.join('?' * len(selected_subjects))}) "
         ),
         (obsid1, obsid2) + tuple(selected_subjects),
     ).fetchone()[0]
@@ -134,21 +134,18 @@ def cohen_kappa(cursor, obsid1: str, obsid2: str, interval: dec, selected_subjec
     logging.debug(f"first_event: {first_event}")
 
     last_event = cursor.execute(
-        (
-            "SELECT max(stop) FROM aggregated_events "
-            f"WHERE observation in (?, ?) AND subject in ({','.join('?'*len(selected_subjects))}) "
-        ),
+        (f"SELECT max(stop) FROM aggregated_events WHERE observation in (?, ?) AND subject in ({','.join('?' * len(selected_subjects))}) "),
         (obsid1, obsid2) + tuple(selected_subjects),
     ).fetchone()[0]
 
     logging.debug(f"last_event: {last_event}")
 
     nb_events1 = cursor.execute(
-        ("SELECT COUNT(*) FROM aggregated_events " f"WHERE observation = ? AND subject in ({','.join('?'*len(selected_subjects))}) "),
+        (f"SELECT COUNT(*) FROM aggregated_events WHERE observation = ? AND subject in ({','.join('?' * len(selected_subjects))}) "),
         (obsid1,) + tuple(selected_subjects),
     ).fetchone()[0]
     nb_events2 = cursor.execute(
-        ("SELECT COUNT(*) FROM aggregated_events " f"WHERE observation = ? AND subject in ({','.join('?'*len(selected_subjects))}) "),
+        (f"SELECT COUNT(*) FROM aggregated_events WHERE observation = ? AND subject in ({','.join('?' * len(selected_subjects))}) "),
         (obsid2,) + tuple(selected_subjects),
     ).fetchone()[0]
 
@@ -201,11 +198,7 @@ def cohen_kappa(cursor, obsid1: str, obsid2: str, interval: dec, selected_subjec
     logging.debug(f"contingency_table:\n {contingency_table}")
 
     template = (
-        "Observation: {obsid1}\n"
-        "number of events: {nb_events1}\n\n"
-        "Observation: {obsid2}\n"
-        "number of events: {nb_events2:.0f}\n\n"
-        "K = {K:.3f}"
+        "Observation: {obsid1}\nnumber of events: {nb_events1}\n\nObservation: {obsid2}\nnumber of events: {nb_events2:.0f}\n\nK = {K:.3f}"
     )
 
     # out += "Observation length: <b>{:.3f} s</b><br>".format(self.observationTotalMediaLength(obsid1))
@@ -470,7 +463,7 @@ def needleman_wunsch_identity(cursor, obsid1: str, obsid2: str, interval, select
     first_event = cursor.execute(
         (
             "SELECT min(start) FROM aggregated_events "
-            f"WHERE observation in (?, ?) AND subject in ({','.join('?'*len(selected_subjects))}) "
+            f"WHERE observation in (?, ?) AND subject in ({','.join('?' * len(selected_subjects))}) "
         ),
         (obsid1, obsid2) + tuple(selected_subjects),
     ).fetchone()[0]
@@ -483,22 +476,19 @@ def needleman_wunsch_identity(cursor, obsid1: str, obsid2: str, interval, select
     logging.debug(f"first_event: {first_event}")
 
     last_event = cursor.execute(
-        (
-            "SELECT max(stop) FROM aggregated_events "
-            f"WHERE observation in (?, ?) AND subject in ({','.join('?'*len(selected_subjects))}) "
-        ),
+        (f"SELECT max(stop) FROM aggregated_events WHERE observation in (?, ?) AND subject in ({','.join('?' * len(selected_subjects))}) "),
         (obsid1, obsid2) + tuple(selected_subjects),
     ).fetchone()[0]
 
     logging.debug(f"last_event: {last_event}")
 
     nb_events1 = cursor.execute(
-        ("SELECT COUNT(*) FROM aggregated_events " f"WHERE observation = ? AND subject in ({','.join('?'*len(selected_subjects))}) "),
+        (f"SELECT COUNT(*) FROM aggregated_events WHERE observation = ? AND subject in ({','.join('?' * len(selected_subjects))}) "),
         (obsid1,) + tuple(selected_subjects),
     ).fetchone()[0]
 
     nb_events2 = cursor.execute(
-        ("SELECT COUNT(*) FROM aggregated_events " f"WHERE observation = ? AND subject in ({','.join('?'*len(selected_subjects))}) "),
+        (f"SELECT COUNT(*) FROM aggregated_events WHERE observation = ? AND subject in ({','.join('?' * len(selected_subjects))}) "),
         (obsid2,) + tuple(selected_subjects),
     ).fetchone()[0]
 
@@ -606,9 +596,7 @@ def needleman_wunch(self):
 
     cursor = db_connector.cursor()
     out = (
-        "Needleman-Wunsch similarity\n\n"
-        f"Time unit: {interval:.3f} s\n"
-        f"Selected subjects: {', '.join(parameters[cfg.SELECTED_SUBJECTS])}\n\n"
+        f"Needleman-Wunsch similarity\n\nTime unit: {interval:.3f} s\nSelected subjects: {', '.join(parameters[cfg.SELECTED_SUBJECTS])}\n\n"
     )
     mem_done = []
     nws_results = np.ones((len(selected_observations), len(selected_observations)))

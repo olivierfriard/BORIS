@@ -252,7 +252,7 @@ if args.command:
 
         K, out = irr.cohen_kappa(cursor, observations_id_list[0], observations_id_list[1], interval, subjects, include_modifiers)
 
-        print(("Cohen's Kappa - Index of Inter-Rater Reliability\n\n" "Interval time: {interval:.3f} s\n").format(interval=interval))
+        print(("Cohen's Kappa - Index of Inter-Rater Reliability\n\nInterval time: {interval:.3f} s\n").format(interval=interval))
 
         print(out)
         sys.exit()

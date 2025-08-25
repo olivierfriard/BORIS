@@ -2,7 +2,7 @@ from collections import namedtuple
 from .const import Bound, inf
 
 
-Atomic = namedtuple('Atomic', ['left', 'lower', 'upper', 'right'])
+Atomic = namedtuple("Atomic", ["left", "lower", "upper", "right"])
 
 
 def mergeable(a, b):
@@ -96,7 +96,7 @@ class Interval:
     one of the helpers provided in this module (open, closed, openclosed, etc.)
     """
 
-    __slots__ = ('_intervals',)
+    __slots__ = ("_intervals",)
 
     def __init__(self, *intervals):
         """
@@ -111,7 +111,7 @@ class Interval:
                 if not interval.empty:
                     self._intervals.extend(interval._intervals)
             else:
-                raise TypeError('Parameters must be Interval instances')
+                raise TypeError("Parameters must be Interval instances")
 
         if len(self._intervals) == 0:
             # So we have at least one (empty) interval
@@ -181,10 +181,7 @@ class Interval:
         """
         True if interval is empty, False otherwise.
         """
-        return (
-            self.lower > self.upper or
-            (self.lower == self.upper and (self.left == Bound.OPEN or self.right == Bound.OPEN))
-        )
+        return self.lower > self.upper or (self.lower == self.upper and (self.left == Bound.OPEN or self.right == Bound.OPEN))
 
     @property
     def atomic(self):
@@ -307,7 +304,7 @@ class Interval:
             elif isinstance(value, tuple):
                 intervals.append(Interval.from_atomic(*value))
             else:
-                raise TypeError('Unsupported return type {} for {}'.format(type(value), value))
+                raise TypeError("Unsupported return type {} for {}".format(type(value), value))
 
         return Interval(*intervals)
 
@@ -350,7 +347,7 @@ class Interval:
                     return True
             return False
         else:
-            raise TypeError('Unsupported type {} for {}'.format(type(other), other))
+            raise TypeError("Unsupported type {} for {}".format(type(other), other))
 
     def intersection(self, other):
         """
@@ -468,14 +465,8 @@ class Interval:
             if item.empty:
                 return True
             elif self.atomic:
-                left = item.lower > self.lower or (
-                    item.lower == self.lower and
-                    (item.left == self.left or self.left == Bound.CLOSED)
-                )
-                right = item.upper < self.upper or (
-                    item.upper == self.upper and
-                    (item.right == self.right or self.right == Bound.CLOSED)
-                )
+                left = item.lower > self.lower or (item.lower == self.lower and (item.left == self.left or self.left == Bound.CLOSED))
+                right = item.upper < self.upper or (item.upper == self.upper and (item.right == self.right or self.right == Bound.CLOSED))
                 return left and right
             else:
                 selfiter = iter(self)
@@ -504,13 +495,11 @@ class Interval:
     def __invert__(self):
         complements = [
             Interval.from_atomic(Bound.OPEN, -inf, self.lower, ~self.left),
-            Interval.from_atomic(~self.right, self.upper, inf, Bound.OPEN)
+            Interval.from_atomic(~self.right, self.upper, inf, Bound.OPEN),
         ]
 
         for i, j in zip(self._intervals[:-1], self._intervals[1:]):
-            complements.append(
-                Interval.from_atomic(~i.right, i.upper, j.lower, ~j.left)
-            )
+            complements.append(Interval.from_atomic(~i.right, i.upper, j.lower, ~j.left))
 
         return Interval(*complements)
 
@@ -526,12 +515,7 @@ class Interval:
                 return False
 
             for a, b in zip(self._intervals, other._intervals):
-                eq = (
-                    a.left == b.left and
-                    a.lower == b.lower and
-                    a.upper == b.upper and
-                    a.right == b.right
-                )
+                eq = a.left == b.left and a.lower == b.lower and a.upper == b.upper and a.right == b.right
                 if not eq:
                     return False
             return True
@@ -543,8 +527,7 @@ class Interval:
             if self.right == Bound.OPEN:
                 return self.upper <= other.lower
             else:
-                return self.upper < other.lower or \
-                    (self.upper == other.lower and other.left == Bound.OPEN)
+                return self.upper < other.lower or (self.upper == other.lower and other.left == Bound.OPEN)
         else:
             return self.upper < other or (self.right == Bound.OPEN and self.upper == other)
 
@@ -553,8 +536,7 @@ class Interval:
             if self.left == Bound.OPEN:
                 return self.lower >= other.upper
             else:
-                return self.lower > other.upper or \
-                    (self.lower == other.upper and other.right == Bound.OPEN)
+                return self.lower > other.upper or (self.lower == other.upper and other.right == Bound.OPEN)
         else:
             return self.lower > other or (self.left == Bound.OPEN and self.lower == other)
 
@@ -563,8 +545,7 @@ class Interval:
             if self.right == Bound.OPEN:
                 return self.upper <= other.upper
             else:
-                return self.upper < other.upper or \
-                    (self.upper == other.upper and other.right == Bound.CLOSED)
+                return self.upper < other.upper or (self.upper == other.upper and other.right == Bound.CLOSED)
         else:
             return self.lower < other or (self.left == Bound.CLOSED and self.lower == other)
 
@@ -573,8 +554,7 @@ class Interval:
             if self.left == Bound.OPEN:
                 return self.lower >= other.lower
             else:
-                return self.lower > other.lower or \
-                    (self.lower == other.lower and other.left == Bound.CLOSED)
+                return self.lower > other.lower or (self.lower == other.lower and other.left == Bound.CLOSED)
         else:
             return self.upper > other or (self.right == Bound.CLOSED and self.upper == other)
 
@@ -586,16 +566,16 @@ class Interval:
 
         for interval in self:
             if interval.empty:
-                intervals.append('()')
+                intervals.append("()")
             elif interval.lower == interval.upper:
-                intervals.append('[{}]'.format(repr(interval.lower)))
+                intervals.append("[{}]".format(repr(interval.lower)))
             else:
                 intervals.append(
-                    '{}{},{}{}'.format(
-                        '[' if interval.left == Bound.CLOSED else '(',
+                    "{}{},{}{}".format(
+                        "[" if interval.left == Bound.CLOSED else "(",
                         repr(interval.lower),
                         repr(interval.upper),
-                        ']' if interval.right == Bound.CLOSED else ')',
+                        "]" if interval.right == Bound.CLOSED else ")",
                     )
                 )
-        return ' | '.join(intervals)
+        return " | ".join(intervals)

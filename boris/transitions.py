@@ -354,7 +354,7 @@ def transitions_flow_diagram():
             with open(tempfile.gettempdir() + os.sep + os.path.basename(file_name) + ".tmp.gv", "w") as f:
                 f.write(gv)
             result = subprocess.getoutput(
-                (f'dot -Tpng -o "{file_name}.png" ' f'"{tempfile.gettempdir() + os.sep + os.path.basename(file_name)}.tmp.gv"')
+                (f'dot -Tpng -o "{file_name}.png" "{tempfile.gettempdir() + os.sep + os.path.basename(file_name)}.tmp.gv"')
             )
             if not result:
                 out += f"<b>{file_name}.png</b> created<br>"

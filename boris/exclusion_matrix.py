@@ -42,7 +42,7 @@ class ExclusionMatrix(QDialog):
 
         self.label = QLabel()
         self.label.setText(
-            ("Check if behaviors are mutually exclusive.\n" "The Point events (displayed on blue background) cannot be excluded)")
+            ("Check if behaviors are mutually exclusive.\nThe Point events (displayed on blue background) cannot be excluded)")
         )
         hbox.addWidget(self.label)
 

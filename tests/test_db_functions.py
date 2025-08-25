@@ -19,7 +19,6 @@ from boris import db_functions
 
 class Test_load_events_in_db(object):
     def test_1(self):
-
         pj = json.loads(open("files/test.boris").read())
 
         cursor = db_functions.load_events_in_db(pj, ["subject1"], ["observation #1"], ["s"])
@@ -35,13 +34,10 @@ class Test_load_events_in_db(object):
         assert out == REF
 
     def test_2(self):
-
         pj = json.loads(open("files/test.boris").read())
 
         cursor = db_functions.load_events_in_db(pj, ["subject2"], ["live"], ["s", "p"])
-        cursor.execute(
-            "SELECT occurence FROM events WHERE observation = ? AND subject = ? AND code = ?", ("live", "subject2", "s")
-        )
+        cursor.execute("SELECT occurence FROM events WHERE observation = ? AND subject = ? AND code = ?", ("live", "subject2", "s"))
         out = ""
         for r in cursor.fetchall():
             out += "{}\n".format(r[0])
@@ -73,7 +69,6 @@ class Test_load_events_in_db(object):
 
 class Test_load_aggregated_events_in_db(object):
     def test_dump(self):
-
         pj = json.loads(open("files/test.boris").read())
 
         ok, msg, db = db_functions.load_aggregated_events_in_db(pj, [], ["observation #1", "observation #2"], [])
