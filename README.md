@@ -26,9 +26,7 @@ See the official [BORIS web site](https://www.boris.unito.it).
 [![PyPI version](https://img.shields.io/pypi/v/boris-behav-obs.svg)](https://pypi.org/project/boris-behav-obs/)
 ![BORIS scopus citations badge](https://penelope.unito.it/friard/boris_scopus_citations.svg)
 
-
-[![Star this repo](https://img.shields.io/github/stars/olivierfriard/BORIS?style=social)](https://github.com/olivierfriard/BORIS/stargazers)
-
+![GitHub Repo stars](https://img.shields.io/github/stars/<USERNAME>/<REPO>?label=&style=social)
 
 [![Please Star](https://img.shields.io/badge/⭐-Star%20this%20repo-blue?style=flat-square)](https://github.com/olivierfriard/BORIS/stargazers)
 
