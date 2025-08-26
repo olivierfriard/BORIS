@@ -702,7 +702,7 @@ def export_events_as_textgrid(self) -> None:
     if not export_dir:
         return
 
-    mem_command = ""
+    mem_command: str = ""
 
     # see https://www.fon.hum.uva.nl/praat/manual/TextGrid_file_formats.html
 
@@ -795,6 +795,7 @@ def export_events_as_textgrid(self) -> None:
             max_time = float(obs_interval[1]) + offset if obs_interval[1] != 0 else float(max_media_duration)
 
         # delete events outside time interval
+
         cursor.execute(
             "DELETE FROM aggregated_events WHERE observation = ? AND (start < ? AND stop < ?) OR (start > ? AND stop > ?)",
             (
@@ -838,46 +839,42 @@ def export_events_as_textgrid(self) -> None:
 
         next_obs: bool = False
 
-        """
-        total_media_duration = round(
-            observation_operations.observation_total_length(self.pj[cfg.OBSERVATIONS][obs_id]), 3
-        )
-        """
-
+        # number of items for size parameter
         cursor.execute(
             (
-                "SELECT COUNT(DISTINCT subject) FROM aggregated_events "
-                "WHERE observation = ? AND subject IN ({}) AND type = 'STATE' ".format(
-                    ",".join(["?"] * len(parameters[cfg.SELECTED_SUBJECTS]))
-                )
+                "SELECT COUNT(*) FROM (SELECT * FROM aggregated_events "
+                f"WHERE observation = ? AND subject IN ({','.join(['?'] * len(parameters[cfg.SELECTED_SUBJECTS]))}) GROUP BY subject, behavior) "
             ),
             [obs_id] + parameters[cfg.SELECTED_SUBJECTS],
         )
 
-        subjectsNum = int(cursor.fetchone()[0])
-        """subjectsMin = min_time"""
-        subjectsMax = max_time
+        subjects_num = int(cursor.fetchone()[0])
+        subjects_max = max_time
 
         out = (
             'File type = "ooTextFile"\n'
             'Object class = "TextGrid"\n'
             "\n"
             f"xmin = 0.0\n"
-            f"xmax = {subjectsMax}\n"
+            f"xmax = {subjects_max}\n"
             "tiers? <exists>\n"
-            f"size = {subjectsNum}\n"
+            f"size = {subjects_num}\n"
             "item []:\n"
         )
 
-        subject_index = 0
+        subject_index: int = 0
         for subject in parameters[cfg.SELECTED_SUBJECTS]:
+            print(f"{subject=}")
             if subject not in [
                 x[cfg.EVENT_SUBJECT_FIELD_IDX] if x[cfg.EVENT_SUBJECT_FIELD_IDX] else cfg.NO_FOCAL_SUBJECT
                 for x in self.pj[cfg.OBSERVATIONS][obs_id][cfg.EVENTS]
             ]:
                 continue
 
-            intervalsMin, intervalsMax = min_time, max_time
+            intervalsMin = min_time
+            intervalsMax = max_time
+
+            print(f"{intervalsMin=}")
 
             # STATE events
             cursor.execute(
@@ -892,68 +889,69 @@ def export_events_as_textgrid(self) -> None:
                 {"start": util.float2decimal(r["start"]), "stop": util.float2decimal(r["stop"]), "code": r["behavior"]}
                 for r in cursor.fetchall()
             ]
-            if not rows:
-                continue
+            if rows:
+                out += interval_subject_header
 
-            out += interval_subject_header
+                count = 0
 
-            count = 0
+                # check if 1st behavior starts at the beginning
+                if rows[0]["start"] > 0:
+                    count += 1
+                    out += interval_template.format(count=count, name="null", xmin=0.0, xmax=rows[0]["start"])
 
-            # check if 1st behavior starts at the beginning
-            if rows[0]["start"] > 0:
-                count += 1
-                out += interval_template.format(count=count, name="null", xmin=0.0, xmax=rows[0]["start"])
-
-            for idx, row in enumerate(rows):
-                # check if events are overlapping
-                if (idx + 1 < len(rows)) and (row["stop"] > rows[idx + 1]["start"]):
-                    self.results.ptText.appendHtml(
-                        (
-                            f"The events overlap for subject <b>{subject}</b> in the observation <b>{obs_id}</b>. "
-                            "It is not possible to create the Praat TextGrid file."
+                for idx, row in enumerate(rows):
+                    # check if events are overlapping
+                    if (idx + 1 < len(rows)) and (row["stop"] > rows[idx + 1]["start"]):
+                        self.results.ptText.appendHtml(
+                            (
+                                f"The events overlap for subject <b>{subject}</b> in the observation <b>{obs_id}</b>. "
+                                "It is not possible to create the Praat TextGrid file."
+                            )
                         )
-                    )
-                    QApplication.processEvents()
+                        QApplication.processEvents()
 
-                    next_obs = True
+                        next_obs = True
+                        break
+
+                    count += 1
+
+                    if (idx + 1 < len(rows)) and (rows[idx + 1]["start"] - dec("0.001") <= row["stop"] < rows[idx + 1]["start"]):
+                        xmax = rows[idx + 1]["start"]
+                    else:
+                        xmax = row["stop"]
+
+                    out += interval_template.format(count=count, name=row["code"], xmin=row["start"], xmax=xmax)
+
+                    # check if no behavior
+                    if (idx + 1 < len(rows)) and (row["stop"] < rows[idx + 1]["start"] - dec("0.001")):
+                        count += 1
+                        out += interval_template.format(
+                            count=count,
+                            name="null",
+                            xmin=row["stop"],
+                            xmax=rows[idx + 1]["start"],
+                        )
+
+                if next_obs:
                     break
 
-                count += 1
-
-                if (idx + 1 < len(rows)) and (rows[idx + 1]["start"] - dec("0.001") <= row["stop"] < rows[idx + 1]["start"]):
-                    xmax = rows[idx + 1]["start"]
-                else:
-                    xmax = row["stop"]
-
-                out += interval_template.format(count=count, name=row["code"], xmin=row["start"], xmax=xmax)
-
-                # check if no behavior
-                if (idx + 1 < len(rows)) and (row["stop"] < rows[idx + 1]["start"] - dec("0.001")):
+                # check if last event ends at the end of media file
+                if rows[-1]["stop"] < max_time:
                     count += 1
-                    out += interval_template.format(
-                        count=count,
-                        name="null",
-                        xmin=row["stop"],
-                        xmax=rows[idx + 1]["start"],
-                    )
+                    out += interval_template.format(count=count, name="null", xmin=rows[-1]["stop"], xmax=max_time)
 
-            if next_obs:
-                break
+                # add info
+                subject_index += 1
+                out = out.format(
+                    subject_index=subject_index,
+                    subject=subject,
+                    intervalsSize=count,
+                    intervalsMin=intervalsMin,
+                    intervalsMax=intervalsMax,
+                )
 
-            # check if last event ends at the end of media file
-            if rows[-1]["stop"] < max_time:
-                count += 1
-                out += interval_template.format(count=count, name="null", xmin=rows[-1]["stop"], xmax=max_time)
-
-            # add info
-            subject_index += 1
-            out = out.format(
-                subject_index=subject_index,
-                subject=subject,
-                intervalsSize=count,
-                intervalsMin=intervalsMin,
-                intervalsMax=intervalsMax,
-            )
+            print(f"{obs_id=}")
+            print(f"{subject=}")
 
             # POINT events
             cursor.execute(
@@ -964,6 +962,8 @@ def export_events_as_textgrid(self) -> None:
             rows = [{"start": util.float2decimal(r["start"]), "code": r["behavior"]} for r in cursor.fetchall()]
             if not rows:
                 continue
+
+            print(f"{rows=}")
 
             out += point_subject_header
 

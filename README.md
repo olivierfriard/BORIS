@@ -21,9 +21,9 @@ See the official [BORIS web site](https://www.boris.unito.it).
 [![Python web site](https://img.shields.io/badge/Made%20with-Python-1f425f.svg)](https://www.python.org)
 ![Python versions](https://img.shields.io/pypi/pyversions/boris-behav-obs)
 ![BORIS license](https://img.shields.io/pypi/l/boris-behav-obs)
-[![Number of downloads](https://static.pepy.tech/personalized-badge/boris-behav-obs?period=total&units=international_system&left_color=black&right_color=orange&left_text=Downloads)](https://pepy.tech/project/boris-behav-obs)
 [![PyPI version](https://img.shields.io/pypi/v/boris-behav-obs.svg)](https://pypi.org/project/boris-behav-obs/)
 
+[![Number of downloads](https://static.pepy.tech/personalized-badge/boris-behav-obs?period=total&units=international_system&left_color=black&right_color=orange&left_text=Downloads)](https://pepy.tech/project/boris-behav-obs)
 ![commit-activity](https://img.shields.io/github/commit-activity/m/olivierfriard/BORIS)
 ![GitHub last commit](https://img.shields.io/github/last-commit/olivierfriard/BORIS)
 

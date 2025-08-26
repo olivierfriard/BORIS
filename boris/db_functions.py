@@ -188,7 +188,7 @@ def load_aggregated_events_in_db(
         selected_behaviors = sorted([pj[cfg.ETHOGRAM][x][cfg.BEHAVIOR_CODE] for x in pj[cfg.ETHOGRAM]])
 
     # check if state events are paired
-    out = ""
+    out: str = ""
     for obs_id in selected_observations:
         r, msg = project_functions.check_state_events_obs(obs_id, pj[cfg.ETHOGRAM], pj[cfg.OBSERVATIONS][obs_id], cfg.HHMMSS)
         if not r:
@@ -212,12 +212,11 @@ def load_aggregated_events_in_db(
 
     db = sqlite3.connect(":memory:")
 
-    """
     # only for debugging
     import os
-    os.system("rm /tmp/ramdisk/aggreg.sqlite")
-    db = sqlite3.connect("/tmp/ramdisk/aggreg.sqlite", isolation_level=None)
-    """
+
+    os.system("rm /tmp/ramdisk/aggreg2.sqlite")
+    db = sqlite3.connect("/tmp/ramdisk/aggreg2.sqlite", isolation_level=None)
 
     db.row_factory = sqlite3.Row
     cursor2 = db.cursor()
