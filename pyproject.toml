@@ -16,7 +16,7 @@ classifiers=[
     ]
 dependencies = [
     "exifread>=3.0.0",
-    "numpy>=1.26.4",
+    "numpy==2.3.2",
     "matplotlib>=3.3.3",
     "pandas>=2.2.2",
     "tablib[html, ods, xls, xlsx, pandas, cli]>=3",
