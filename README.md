@@ -11,7 +11,7 @@ You can not longer run BORIS natively on MacOS (since v.8). Some alternatives to
 
 It provides also some analysis tools like time budget and some plotting functions.
 
-The BORIS paper has more than [![BORIS citations counter](http://penelope.unito.it/friard/boris_scopus_citations.png) citations](https://www.boris.unito.it/citations) in peer-reviewed scientific publications.
+The BORIS paper has more than [![BORIS citations counter](https://penelope.unito.it/friard/boris_scopus_citations.png) citations](https://www.boris.unito.it/citations) in peer-reviewed scientific publications.
 
 
 
@@ -24,10 +24,10 @@ See the official [BORIS web site](https://www.boris.unito.it).
 [![Number of downloads](https://static.pepy.tech/personalized-badge/boris-behav-obs?period=total&units=international_system&left_color=black&right_color=orange&left_text=Downloads)](https://pepy.tech/project/boris-behav-obs)
 ![commit-activity](https://img.shields.io/github/commit-activity/m/olivierfriard/BORIS)
 [![PyPI version](https://img.shields.io/pypi/v/boris-behav-obs.svg)](https://pypi.org/project/boris-behav-obs/)
-![BORIS scopus citations badge](http://penelope.unito.it/friard/boris_scopus_citations.svg)
+![BORIS scopus citations badge](https://penelope.unito.it/friard/boris_scopus_citations.svg)
 
 
-
+[![Star this repo](https://img.shields.io/github/stars/olivierfriard/BORIS?style=social)](https://github.com/olivierfriard/BORIS/stargazers)
 
 # Documentation
 
@@ -91,7 +91,7 @@ GNU General Public License for more details.
 
 Distributed with a [GPL v.3 license](LICENSE.TXT).
 
-Copyright (C) 2012-2024 Olivier Friard
+Copyright (C) 2012-2025 Olivier Friard
 
 
 
