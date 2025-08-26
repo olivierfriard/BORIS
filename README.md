@@ -11,9 +11,12 @@ You can not longer run BORIS natively on MacOS (since v.8). Some alternatives to
 
 It provides also some analysis tools like time budget and some plotting functions.
 
-The BORIS paper has more than [![BORIS citations counter](https://penelope.unito.it/friard/boris_scopus_citations.png) citations](https://www.boris.unito.it/citations) in peer-reviewed scientific publications.
+<!-- The BO-RIS paper has more than [![BORIS citations counter](https://penelope.unito.it/friard/boris_scopus_citations.png) citations](https://www.boris.unito.it/citations) in peer-reviewed scientific publications. -->
 
-S32 citations in peer-reviewed scientific publications.
+
+The BORIS paper has more than 2332 citations in peer-reviewed scientific publications.
+
+
 
 
 See the official [BORIS web site](https://www.boris.unito.it).
