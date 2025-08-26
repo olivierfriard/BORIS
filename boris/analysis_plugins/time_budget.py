@@ -26,10 +26,6 @@ def run(df: pd.DataFrame):
     - % of total subject observation duration
     """
 
-    print("running time budget plugin")
-
-    print(df)
-
     group_by = ["Subject", "Behavior"]
 
     dfs = [

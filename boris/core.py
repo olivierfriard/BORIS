@@ -205,7 +205,6 @@ class TableModel(QAbstractTableModel):
             if 0 <= row < self.rowCount():
                 column = index.column()
 
-                # print(self._data[:3])
                 if cfg.TW_EVENTS_FIELDS[self.observation_type][column] == "type":
                     return self._data[row][-1]
                 else:
@@ -2137,39 +2136,47 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             set_and_update_pan_and_zoom(new_pan_x, new_pan_y, new_zoom)
 
         if cmd == "MBTN_LEFT_DBL":
-            print("left dbl")
+            logging.debug("MBTN_LEFT_DBL")
             # ZOOM IN x2
             do_zoom_in_clicked_coords(zoom_increment=1)
             return
         if cmd == "MBTN_RIGHT_DBL":
+            logging.debug("MBTN_RIGHT_DBL")
             # ZOOM OUT x2
             do_zoom_in_clicked_coords(zoom_increment=-1)
             return
         if cmd == "Ctrl+WHEEL_UP":
+            logging.debug("Ctrl+WHEEL_UP")
             # ZOOM IN (3 wheel steps to zoom X2)
             do_zoom_in_clicked_coords(zoom_increment=1.0 / 3.0)
             return
         if cmd == "Ctrl+WHEEL_DOWN":
+            logging.debug("Ctrl+WHEEL_DOWN")
             # ZOOM OUT (3 wheel steps to zoom X2)
             do_zoom_in_clicked_coords(zoom_increment=-1.0 / 3.0)
             return
         if cmd == "WHEEL_UP":
+            logging.debug("WHEEL_UP")
             # PAN UP (VIDEO MOVES DOWN)
             do_pan_in_clicked_coords(pan_x_increment=0, pan_y_increment=+0.01)
             return
         if cmd == "WHEEL_DOWN":
+            logging.debug("WHEEL_DOWN")
             # PAN DOWN (VIDEO MOVES UP)
             do_pan_in_clicked_coords(pan_x_increment=0, pan_y_increment=-0.01)
             return
         if cmd == "Shift+WHEEL_UP":
+            logging.debug("Shift+WHEEL_UP")
             # PAN LEFT (VIDEO MOVES TO THE RIGHT)
             do_pan_in_clicked_coords(pan_x_increment=+0.01, pan_y_increment=0)
             return
         if cmd == "Shift+WHEEL_DOWN":
+            logging.debug("Shift+WHEEL_DOWN")
             # PAN RIGHT (VIDEO MOVES TO THE LEFT)
             do_pan_in_clicked_coords(pan_x_increment=-0.01, pan_y_increment=0)
             return
         if cmd == "Shift+MBTN_LEFT":
+            logging.debug("Shift+MBTN_LEFT")
             # RESET PAN AND ZOOM TO DEFAULT
             set_and_update_pan_and_zoom(pan_x=0, pan_y=0, zoom=0)
             return
@@ -3745,21 +3752,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
             # calculate time for current media file in case of many queued media files
 
-            print(mediaFileIdx_s)
-            print(type(eventtime_s))
-            print(durations)
-
             eventtime_onmedia_s = round(eventtime_s - util.float2decimal(sum(durations[0:mediaFileIdx_s])), 3)
             eventtime_onmedia_e = round(eventtime_e - util.float2decimal(sum(durations[0:mediaFileIdx_e])), 3)
 
-            print(row_s, media_path_s, eventtime_s, eventtime_onmedia_s)
-            print(self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS][row_s])
-
-            print(row_e, media_path_e, eventtime_e, eventtime_onmedia_e)
-            print(self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS][row_e])
-
             if media_path_s != media_path_e:
-                print("events are located on 2 different media files")
                 return
 
             media_path = media_path_s
@@ -3770,7 +3766,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             if "BORISEXTERNAL" in os.environ:
                 external_command_template = os.environ["BORISEXTERNAL"]
             else:
-                print("BORISEXTERNAL env var not defined")
                 return
 
             external_command = external_command_template.format(
@@ -3852,11 +3847,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 event[cfg.FRAME_INDEX] = self.get_frame_index()
 
             time_, cumulative_time = self.get_obs_time()
-
-            """
-            print(time_)
-            print(cumulative_time)
-            """
 
             if self.pj[cfg.OBSERVATIONS][self.observationId].get(cfg.MEDIA_CREATION_DATE_AS_OFFSET, False):
                 write_event.write_event(self, event, time_)
@@ -5222,25 +5212,20 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             if (not self.find_dialog.cbFindInSelectedEvents.isChecked()) or (
                 self.find_dialog.cbFindInSelectedEvents.isChecked() and event_idx in self.find_dialog.rowsToFind
             ):
-                print(f"{event=}")
-
                 # search only on filtered events
                 if event_idx not in self.tv_idx2events_idx:
                     continue
 
                 for idx in fields_list:
-                    print(f"{idx=}")
                     if (self.find_dialog.cb_case_sensitive.isChecked() and self.find_dialog.findText.text() in event[idx]) or (
                         not self.find_dialog.cb_case_sensitive.isChecked()
                         and self.find_dialog.findText.text().upper() in event[idx].upper()
                     ):
                         self.find_dialog.currentIdx = event_idx
 
-                        # self.twEvents.scrollToItem(self.twEvents.item(event_idx, 0))
                         index = self.tv_events.model().index(event_idx, 0)
                         self.tv_events.scrollTo(index, QAbstractItemView.EnsureVisible)
                         self.tv_events.selectRow(event_idx)
-                        # self.twEvents.selectRow(event_idx)
                         return
 
         if msg != "FIND_FROM_BEGINING":

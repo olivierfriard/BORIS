@@ -68,8 +68,6 @@ def write_event(self, event: dict, mem_time: dec) -> int:
             )
             return 1
 
-        print(f"{mem_time=}")
-
         if mem_time < self.pj[cfg.OBSERVATIONS][self.observationId].get(cfg.OBSERVATION_TIME_INTERVAL, [0, 0])[0]:
             _ = dialog.MessageDialog(
                 cfg.programName,
@@ -103,12 +101,6 @@ def write_event(self, event: dict, mem_time: dec) -> int:
                 logging.debug(f"{media_file_name_posix=}")
 
                 # add media creation date/time
-
-                """
-                print(f"{media_file_name=}")
-                print(f"{mem_time=}")
-                """
-                print(f"{self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO]=}")
 
                 mem_time += dec(
                     self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO][cfg.MEDIA_CREATION_TIME][media_file_name_posix]
@@ -413,7 +405,6 @@ def write_event(self, event: dict, mem_time: dec) -> int:
                         r = modifiers_selector.exec_()
                         if r:
                             selected_modifiers = modifiers_selector.get_modifiers()
-                            # print(f"{selected_modifiers=}")
 
                             behavior_to_stop_modifier_str: str = ""
                             for idx in util.sorted_keys(selected_modifiers):

@@ -431,7 +431,6 @@ class BehaviorsMapCreatorWindow(QMainWindow):
                 self.selectedPolygon = None
                 self.selectedPolygonMemBrush = None
 
-            print(self.polygonsList2)
             idx = 0
             for areaCode, pg in self.polygonsList2:
                 if pg.contains(test):

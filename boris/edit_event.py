@@ -128,21 +128,12 @@ class DlgEditEvent(QDialog, Ui_Form):
         set time to current media time
         """
 
-        print(f"{self.current_time=}")
-
         if self.observation_type in (cfg.LIVE, cfg.MEDIA):
             self.time_widget.set_time(dec(float(self.current_time)))
 
         if self.observation_type == cfg.IMAGES:
             if self.exif_date_time is not None:
                 self.time_widget.set_time(dec(self.exif_date_time))
-
-    # def frame_idx_na(self):
-    #     """
-    #     set/unset frame index NA
-    #     """
-    #     self.lb_frame_idx.setEnabled(not self.cb_set_frame_idx_na.isChecked())
-    #     self.sb_frame_idx.setEnabled(not self.cb_set_frame_idx_na.isChecked())
 
     def time_na(self):
         """

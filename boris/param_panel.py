@@ -96,11 +96,7 @@ class Param_panel(QDialog, Ui_Dialog):
                 # Set start_time and end_time widgets values even if it is not shown with
                 # more than 1 observation as some analyses might use it (eg: advanced event filtering)
 
-                print(f"{self.end_interval=}")
-
                 end_interval = self.end_interval if self.end_interval != 0 else self.media_duration
-
-                print(f"{end_interval=}")
 
                 self.start_time.set_time(self.start_interval)
                 self.end_time.set_time(end_interval)

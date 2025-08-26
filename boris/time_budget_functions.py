@@ -1021,15 +1021,6 @@ def time_budget_analysis(
                         continue
 
                     if len(rows) % 2:  # unpaired events
-                        """
-                        print()
-                        print(f"{subject=}")
-                        print(f"{behavior=}")
-                        print()
-                        for row in rows:
-                            print(f"{row['observation']=}  {row['occurence']=}")
-                        print()
-                        """
                         out_cat.append(
                             {
                                 "subject": subject,

@@ -49,8 +49,6 @@ class View_df(QWidget, Ui_Form):
         self.lb_plugin_info.setText(f"{plugin_name} v. {plugin_version}")
         self.setWindowTitle(f"{plugin_name} v. {plugin_version}")
 
-        # print(f"{self.df=}")
-
         self.pb_close.clicked.connect(self.close)
         self.pb_save.clicked.connect(self.save)
 

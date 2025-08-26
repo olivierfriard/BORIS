@@ -60,8 +60,6 @@ class Video_equalizer(QDialog, Ui_Equalizer):
         if n_player not in self.equalizer:
             return
 
-        print(self.equalizer)
-
         self.hs_brightness.setValue(self.equalizer[n_player]["hs_brightness"])
         self.lb_brightness.setText(str(self.equalizer[n_player]["hs_brightness"]))
 

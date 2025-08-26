@@ -66,7 +66,6 @@ def restore_geometry(widget: QWidget, widget_name: str, default_width_height):
         ini_file_path = pl.Path.home() / pl.Path(".boris")
         if ini_file_path.is_file():
             settings = QSettings(str(ini_file_path), QSettings.IniFormat)
-            print(settings.value(f"{widget_name} geometry"))
             widget.restoreGeometry(settings.value(f"{widget_name} geometry"))
             logging.debug(f"geometry restored for {widget_name}  {settings.value(f'{widget_name} geometry')}")
         else:
