@@ -22,8 +22,9 @@ See the official [BORIS web site](https://www.boris.unito.it).
 ![Python versions](https://img.shields.io/pypi/pyversions/boris-behav-obs)
 ![BORIS license](https://img.shields.io/pypi/l/boris-behav-obs)
 [![Number of downloads](https://static.pepy.tech/personalized-badge/boris-behav-obs?period=total&units=international_system&left_color=black&right_color=orange&left_text=Downloads)](https://pepy.tech/project/boris-behav-obs)
-![commit-activity](https://img.shields.io/github/commit-activity/m/olivierfriard/BORIS)
 [![PyPI version](https://img.shields.io/pypi/v/boris-behav-obs.svg)](https://pypi.org/project/boris-behav-obs/)
+
+![commit-activity](https://img.shields.io/github/commit-activity/m/olivierfriard/BORIS)
 ![GitHub last commit](https://img.shields.io/github/last-commit/olivierfriard/BORIS)
 
 ![BORIS scopus citations badge](https://penelope.unito.it/friard/boris_scopus_citations.svg)
@@ -47,8 +48,7 @@ Some [video tutorials](https://www.boris.unito.it/video_tutorials/) are availabl
 # Bug reports and feature requests
 
 
-To search for bugs, report them or request a feature, please use the github tracker:
-https://github.com/olivierfriard/BORIS/issues
+To search for bugs, report them or request a feature, please use the [GitHub issues tracker](https://github.com/olivierfriard/BORIS/issues)
 
 
 
