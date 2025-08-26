@@ -13,7 +13,7 @@ It provides also some analysis tools like time budget and some plotting function
 
 The BORIS paper has more than [![BORIS citations counter](https://penelope.unito.it/friard/boris_scopus_citations.png) citations](https://www.boris.unito.it/citations) in peer-reviewed scientific publications.
 
-
+S32 citations in peer-reviewed scientific publications.
 
 
 See the official [BORIS web site](https://www.boris.unito.it).

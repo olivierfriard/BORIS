@@ -169,8 +169,6 @@ def read(self):
         # check for new version
         self.checkForNewVersion = False
 
-        # print(f"{self.no_first_launch_dialog=}")
-
         if not self.no_first_launch_dialog:
             try:
                 if settings.value("check_for_new_version") is None:

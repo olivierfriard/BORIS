@@ -15,16 +15,16 @@ classifiers=[
         "Topic :: Scientific/Engineering",
     ]
 dependencies = [
-    "exifread>=3.0.0",
+    "exifread==3.5.1",
     "numpy==2.3.2",
-    "matplotlib>=3.3.3",
-    "pandas>=2.2.2",
-    "tablib[html, ods, xls, xlsx, pandas, cli]>=3",
-    "pyreadr",
+    "matplotlib==3.10.5",
+    "pandas==2.3.2",
+    "tablib[cli,html,ods,pandas,xls,xlsx]==3.8.0",
+    "pyreadr==0.5.3",
     "pyside6==6.9",
-    "hachoir>=3.3.0",
-    "scipy>=1.15.3",
-    "scikit-learn>=1.7.1",
+    "hachoir==3.3.0",
+    "scipy==1.16.1",
+    "scikit-learn==1.7.1",
 ]
 
 [project.optional-dependencies]
