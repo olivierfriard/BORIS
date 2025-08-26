@@ -907,8 +907,6 @@ class ModifiersMapCreatorWindow(QMainWindow):
         """
         self.area_list.clear()
 
-        print(f"{self.polygonsList2=}")
-
         for modifier_name in sorted(self.polygonsList2.keys()):
             self.area_list.addItem(modifier_name)
 

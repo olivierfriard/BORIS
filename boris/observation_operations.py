@@ -1301,10 +1301,8 @@ def init_mpv(self):
 
     logging.debug("function: init_mpv")
 
-    """
-    print(f"{self.winId()=}")
-    print(f"{str(int(self.winId()))=}")
-    """
+    # print(f"{self.winId()=}")
+    # print(f"{str(int(self.winId()))=}")
 
     subprocess.Popen(
         [
