@@ -29,6 +29,9 @@ See the official [BORIS web site](https://www.boris.unito.it).
 
 [![Star this repo](https://img.shields.io/github/stars/olivierfriard/BORIS?style=social)](https://github.com/olivierfriard/BORIS/stargazers)
 
+
+[![Please Star](https://img.shields.io/badge/⭐-Star%20this%20repo-blue?style=flat-square)](https://github.com/olivierfriard/BORIS/stargazers)
+
 # Documentation
 
 
