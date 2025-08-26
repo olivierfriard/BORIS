@@ -213,10 +213,11 @@ def load_aggregated_events_in_db(
     db = sqlite3.connect(":memory:")
 
     # only for debugging
+    """
     import os
-
-    os.system("rm /tmp/ramdisk/aggreg2.sqlite")
-    db = sqlite3.connect("/tmp/ramdisk/aggreg2.sqlite", isolation_level=None)
+    os.system("rm /tmp/ramdisk/aggregated_events.sqlite")
+    db = sqlite3.connect("/tmp/ramdisk/aggregated_events.sqlite", isolation_level=None)
+    """
 
     db.row_factory = sqlite3.Row
     cursor2 = db.cursor()

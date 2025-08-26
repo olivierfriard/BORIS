@@ -864,7 +864,6 @@ def export_events_as_textgrid(self) -> None:
 
         subject_index: int = 0
         for subject in parameters[cfg.SELECTED_SUBJECTS]:
-            print(f"{subject=}")
             if subject not in [
                 x[cfg.EVENT_SUBJECT_FIELD_IDX] if x[cfg.EVENT_SUBJECT_FIELD_IDX] else cfg.NO_FOCAL_SUBJECT
                 for x in self.pj[cfg.OBSERVATIONS][obs_id][cfg.EVENTS]
@@ -873,8 +872,6 @@ def export_events_as_textgrid(self) -> None:
 
             intervalsMin = min_time
             intervalsMax = max_time
-
-            print(f"{intervalsMin=}")
 
             # STATE events
             cursor.execute(
@@ -950,9 +947,6 @@ def export_events_as_textgrid(self) -> None:
                     intervalsMax=intervalsMax,
                 )
 
-            print(f"{obs_id=}")
-            print(f"{subject=}")
-
             # POINT events
             cursor.execute(
                 ("SELECT start, behavior FROM aggregated_events WHERE observation = ? AND subject = ? AND type = 'POINT' ORDER BY start"),
@@ -962,8 +956,6 @@ def export_events_as_textgrid(self) -> None:
             rows = [{"start": util.float2decimal(r["start"]), "code": r["behavior"]} for r in cursor.fetchall()]
             if not rows:
                 continue
-
-            print(f"{rows=}")
 
             out += point_subject_header
 
