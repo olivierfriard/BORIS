@@ -105,8 +105,10 @@ def get_r_plugin_description(plugin_path: str) -> str | None:
 
 def load_plugins(self):
     """
-    load selected plugins in analysis menu
+    load selected plugins in config_param
     """
+
+    logging.debug("Loading plugins")
 
     def msg():
         QMessageBox.warning(
@@ -124,7 +126,25 @@ def load_plugins(self):
     for file_ in sorted((Path(__file__).parent / "analysis_plugins").glob("*.py")):
         if file_.name.startswith("_"):
             continue
-        plugin_name = get_plugin_name(file_)
+
+        logging.debug(f"Loading plugin: {Path(file_).stem}")
+
+        # test module
+        module_name = Path(file_).stem
+        spec = importlib.util.spec_from_file_location(module_name, file_)
+        plugin_module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(plugin_module)
+        attributes_list = dir(plugin_module)
+
+        if "__plugin_name__" in attributes_list:
+            plugin_name = plugin_module.__plugin_name__
+        else:
+            continue
+
+        if "run" not in attributes_list:
+            continue
+
+        # plugin_name = get_plugin_name(file_)
         if plugin_name is not None and plugin_name not in self.config_param.get(cfg.EXCLUDED_PLUGINS, set()):
             # check if plugin with same name already loaded
             if plugin_name in self.config_param[cfg.ANALYSIS_PLUGINS]:
@@ -138,7 +158,25 @@ def load_plugins(self):
         for file_ in sorted(Path(self.config_param.get(cfg.PERSONAL_PLUGINS_DIR, "")).glob("*.py")):
             if file_.name.startswith("_"):
                 continue
-            plugin_name = get_plugin_name(file_)
+
+            logging.debug(f"Loading personal plugin: {Path(file_).stem}")
+
+            # test module
+            module_name = Path(file_).stem
+            spec = importlib.util.spec_from_file_location(module_name, file_)
+            plugin_module = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(plugin_module)
+            attributes_list = dir(plugin_module)
+
+            if "__plugin_name__" in attributes_list:
+                plugin_name = plugin_module.__plugin_name__
+            else:
+                continue
+
+            if "run" not in attributes_list:
+                continue
+
+            # plugin_name = get_plugin_name(file_)
             if plugin_name is not None and plugin_name not in self.config_param.get(cfg.EXCLUDED_PLUGINS, set()):
                 # check if plugin with same name already loaded
                 if plugin_name in self.config_param[cfg.ANALYSIS_PLUGINS]:

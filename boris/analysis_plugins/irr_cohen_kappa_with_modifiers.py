@@ -1,7 +1,7 @@
 """
 BORIS plugin
 
-Inter Rater Reliability (IRR) Unweighted Cohen Kappa with modifiers
+Inter Rater Reliability (IRR) Unweighted Cohen's Kappa with modifiers
 """
 
 import pandas as pd
@@ -9,13 +9,13 @@ from sklearn.metrics import cohen_kappa_score
 
 __version__ = "0.0.1"
 __version_date__ = "2025-08-25"
-__plugin_name__ = "Inter Rater Reliability - Unweighted Cohen Kappa with modifiers"
+__plugin_name__ = "Inter Rater Reliability - Unweighted Cohen's Kappa with modifiers"
 __author__ = "Olivier Friard - University of Torino - Italy"
 
 
 def run(df: pd.DataFrame):
     """
-    Calculate the Inter Rater Reliability - Unweighted Cohen Kappa with modifiers
+    Calculate the Inter Rater Reliability - Unweighted Cohen's Kappa with modifiers
     """
 
     # attribute a code for each interval

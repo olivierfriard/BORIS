@@ -979,12 +979,12 @@ def export_events_as_textgrid(self) -> None:
             continue
 
         # check if file already exists
-        if mem_command != cfg.OVERWRITE_ALL and pl.Path(f"{pl.Path(export_dir) / util.safeFileName(obs_id)}.textGrid").is_file():
+        if mem_command != cfg.OVERWRITE_ALL and pl.Path(f"{pl.Path(export_dir) / util.safeFileName(obs_id)}.TextGrid").is_file():
             if mem_command == cfg.SKIP_ALL:
                 continue
             mem_command = dialog.MessageDialog(
                 cfg.programName,
-                f"The file <b>{pl.Path(export_dir) / util.safeFileName(obs_id)}.textGrid</b> already exists.",
+                f"The file <b>{pl.Path(export_dir) / util.safeFileName(obs_id)}.TextGrid</b> already exists.",
                 [cfg.OVERWRITE, cfg.OVERWRITE_ALL, cfg.SKIP, cfg.SKIP_ALL, cfg.CANCEL],
             )
             if mem_command == cfg.CANCEL:
@@ -993,13 +993,13 @@ def export_events_as_textgrid(self) -> None:
                 continue
 
         try:
-            with open(f"{pl.Path(export_dir) / util.safeFileName(obs_id)}.textGrid", "w") as f:
+            with open(f"{pl.Path(export_dir) / util.safeFileName(obs_id)}.TextGrid", "w") as f:
                 f.write(out)
             file_count += 1
-            self.results.ptText.appendHtml(f"File {pl.Path(export_dir) / util.safeFileName(obs_id)}.textGrid was created.")
+            self.results.ptText.appendHtml(f"File {pl.Path(export_dir) / util.safeFileName(obs_id)}.TextGrid was created.")
             QApplication.processEvents()
         except Exception:
-            self.results.ptText.appendHtml(f"The file {pl.Path(export_dir) / util.safeFileName(obs_id)}.textGrid can not be created.")
+            self.results.ptText.appendHtml(f"The file {pl.Path(export_dir) / util.safeFileName(obs_id)}.TextGrid can not be created.")
             QApplication.processEvents()
 
     self.results.ptText.appendHtml(f"Done.  {file_count} file(s) were created in {export_dir}.")

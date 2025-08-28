@@ -1,7 +1,7 @@
 """
 BORIS plugin
 
-Inter Rater Reliability (IRR) Unweighted Cohen Kappa
+Inter Rater Reliability (IRR) Unweighted Cohen's Kappa
 """
 
 import pandas as pd
@@ -9,13 +9,37 @@ from sklearn.metrics import cohen_kappa_score
 
 __version__ = "0.0.1"
 __version_date__ = "2025-08-25"
-__plugin_name__ = "Inter Rater Reliability - Unweighted Cohen Kappa"
+__plugin_name__ = "Inter Rater Reliability - Unweighted Cohen's Kappa"
 __author__ = "Olivier Friard - University of Torino - Italy"
+__description__ = """
+This plugin calculates Cohen's Kappa to measure inter-rater reliability between two observers who code categorical behaviors over time intervals.
+Unlike the weighted version, this approach does not take into account the duration of the intervals.
+Each segment of time is treated equally, regardless of how long it lasts.
+
+How it works:
+
+Time segmentation
+The program identifies all the time boundaries (start and end points) used by both observers.
+These boundaries are merged into a common timeline, which is then divided into a set of non-overlapping elementary intervals.
+
+Assigning codes
+For each elementary interval, the program determines which behavior was coded by each observer.
+
+Comparison of codes
+The program builds two parallel lists of behavior codes, one for each observer.
+Each elementary interval is counted as one unit of observation, no matter how long the interval actually lasts.
+
+Cohen's Kappa calculation
+Using these two lists, the program computes Cohen's Kappa using the cohen_kappa_score function of the sklearn package.
+(see https://scikit-learn.org/stable/modules/generated/sklearn.metrics.cohen_kappa_score.html for details)
+This coefficient measures how much the observers agree on their coding, adjusted for the amount of agreement that would be expected by chance.
+
+"""
 
 
 def run(df: pd.DataFrame):
     """
-    Calculate the Inter Rater Reliability - Unweighted Cohen Kappa
+    Calculate the Inter Rater Reliability - Unweighted Cohen's Kappa
     """
 
     # attribute a code for each interval
@@ -40,6 +64,11 @@ def run(df: pd.DataFrame):
         for obs, group in df.groupby("Observation id")
     }
 
+    import pprint
+
+    pprint.pprint(grouped)
+    # print(f"{grouped=}")
+
     ck_results: dict = {}
     for idx1, obs_id1 in enumerate(unique_obs_list):
         obs1 = grouped[obs_id1]
@@ -57,7 +86,12 @@ def run(df: pd.DataFrame):
 
             obs1_codes = [get_code(t[0], obs1) for t in elementary_intervals]
 
+            pprint.pprint(obs1_codes)
+
             obs2_codes = [get_code(t[0], obs2) for t in elementary_intervals]
+            pprint.pprint(obs2_codes)
+
+            print()
 
             # Cohen's Kappa
             kappa = cohen_kappa_score(obs1_codes, obs2_codes)

@@ -1,7 +1,7 @@
 """
 BORIS plugin
 
-Inter Rater Reliability (IRR) Weighted Cohen Kappa with modifiers
+Inter Rater Reliability (IRR) Weighted Cohen's Kappa with modifiers
 """
 
 import pandas as pd
@@ -9,13 +9,13 @@ from typing import List, Tuple, Dict, Optional
 
 __version__ = "0.0.1"
 __version_date__ = "2025-08-25"
-__plugin_name__ = "Inter Rater Reliability - Weighted Cohen Kappa with modifiers"
+__plugin_name__ = "Inter Rater Reliability - Weighted Cohen's Kappa with modifiers"
 __author__ = "Olivier Friard - University of Torino - Italy"
 
 
 def run(df: pd.DataFrame):
     """
-    Calculate the Inter Rater Reliability - Weighted Cohen Kappa with modifiers
+    Calculate the Inter Rater Reliability - Weighted Cohen's Kappa with modifiers
     """
 
     def cohen_kappa_weighted_by_time(

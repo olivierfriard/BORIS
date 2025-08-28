@@ -1,7 +1,7 @@
 """
 BORIS plugin
 
-Inter Rater Reliability (IRR) Weighted Cohen Kappa
+Inter Rater Reliability (IRR) Weighted Cohen's Kappa
 """
 
 import pandas as pd
@@ -9,13 +9,35 @@ from typing import List, Tuple, Dict, Optional
 
 __version__ = "0.0.1"
 __version_date__ = "2025-08-25"
-__plugin_name__ = "Inter Rater Reliability - Weighted Cohen Kappa"
+__plugin_name__ = "Inter Rater Reliability - Weighted Cohen's Kappa"
 __author__ = "Olivier Friard - University of Torino - Italy"
+__description__ = """
+This plugin calculates Cohen’s Kappa to measure inter-rater reliability between two observers who code categorical behaviors over time intervals. Unlike the unweighted version, this approach takes into account the duration of each coded interval, giving more weight to longer intervals in the agreement calculation.
+
+How it works:
+
+Time segmentation
+The program collects all the time boundaries from both observers and merges them into a unified set of time points. These define a set of non-overlapping elementary intervals covering the entire observed period.
+
+Assigning codes
+For each elementary interval, the program identifies the behavior category assigned by each observer.
+
+Weighted contingency table
+Instead of treating each interval equally, the program assigns a weight equal to the duration of the interval. These durations are accumulated in a contingency table that records how much time was spent in each combination of categories across the two observers.
+
+Agreement calculation
+
+Observed agreement (po): The proportion of total time where both observers assigned the same category.
+
+Expected agreement (pe): The proportion of agreement expected by chance, based on the time-weighted marginal distributions of each observer’s coding.
+
+Cohen’s Kappa (κ): Computed from the weighted observed and expected agreements.
+"""
 
 
 def run(df: pd.DataFrame):
     """
-    Calculate the Inter Rater Reliability - Weighted Cohen Kappa
+    Calculate the Inter Rater Reliability - Weighted Cohen's Kappa
     """
 
     def cohen_kappa_weighted_by_time(

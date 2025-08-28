@@ -60,7 +60,7 @@ class Preferences(QDialog, Ui_prefDialog):
         # Create a monospace QFont
         monospace_font = QFont("Courier New")  # or "Monospace", "Consolas", "Liberation Mono", etc.
         monospace_font.setStyleHint(QFont.Monospace)
-        monospace_font.setPointSize(13)
+        monospace_font.setPointSize(12)
         self.pte_plugin_code.setFont(monospace_font)
 
     def browse_plugins_dir(self):
@@ -83,7 +83,6 @@ class Preferences(QDialog, Ui_prefDialog):
             if plugin_name in [self.lv_all_plugins.item(i).text() for i in range(self.lv_all_plugins.count())]:
                 continue
             item = QListWidgetItem(plugin_name)
-            # item = QListWidgetItem(file_.stem)
             item.setFlags(item.flags() | Qt.ItemIsUserCheckable)
             item.setCheckState(Qt.Checked)
             item.setData(100, str(file_))
@@ -152,6 +151,7 @@ def preferences(self):
 
         plugin_path = item.data(100)
 
+        # Python plugins
         if Path(plugin_path).suffix == ".py":
             import importlib
 
@@ -159,21 +159,35 @@ def preferences(self):
             spec = importlib.util.spec_from_file_location(module_name, plugin_path)
             plugin_module = importlib.util.module_from_spec(spec)
             spec.loader.exec_module(plugin_module)
+            attributes_list = dir(plugin_module)
 
             out: list = []
-            out.append(plugin_module.__plugin_name__ + "\n")
-            out.append(plugin_module.__author__)
-            out.append(f"{plugin_module.__version__} ({plugin_module.__version_date__})\n")
-            out.append(plugin_module.run.__doc__.strip())
+            out.append((plugin_module.__plugin_name__ + "\n") if "__plugin_name__" in attributes_list else "No plugin name provided")
+            out.append(plugin_module.__author__ if "__author__" in attributes_list else "No author provided")
+            version_str: str = ""
+            if "__version__" in attributes_list:
+                version_str += str(plugin_module.__version__)
+            if "__version_date__" in attributes_list:
+                version_str += " " if version_str else ""
+                version_str += f"({plugin_module.__version_date__})"
+
+            out.append(f"Version: {version_str}\n" if version_str else "No version provided")
+
+            # out.append(plugin_module.run.__doc__.strip())
+            # description
+            if "__description__" in attributes_list:
+                out.append("Description:\n")
+            out.append(plugin_module.__description__ if "__description__" in attributes_list else "No description provided")
 
             preferencesWindow.pte_plugin_description.setPlainText("\n".join(out))
 
+        # R plugins
         if Path(plugin_path).suffix == ".R":
             plugin_description = plugins.get_r_plugin_description(plugin_path)
             if plugin_description is not None:
                 preferencesWindow.pte_plugin_description.setPlainText("\n".join(plugin_description.split("\\n")))
             else:
-                preferencesWindow.pte_plugin_description.setPlainText("Plugin description not found")
+                preferencesWindow.pte_plugin_description.setPlainText("No description provided")
 
         # display plugin code
         try:
@@ -254,6 +268,7 @@ def preferences(self):
 
     preferencesWindow.lw_personal_plugins.clear()
     if self.config_param.get(cfg.PERSONAL_PLUGINS_DIR, ""):
+        # Python plugins
         for file_ in Path(self.config_param[cfg.PERSONAL_PLUGINS_DIR]).glob("*.py"):
             if file_.name.startswith("_"):
                 continue
@@ -272,6 +287,7 @@ def preferences(self):
             item.setData(100, str(file_))
             preferencesWindow.lw_personal_plugins.addItem(item)
 
+        # R plugins
         for file_ in Path(self.config_param[cfg.PERSONAL_PLUGINS_DIR]).glob("*.R"):
             plugin_name = plugins.get_r_plugin_name(file_)
             if plugin_name is None:
