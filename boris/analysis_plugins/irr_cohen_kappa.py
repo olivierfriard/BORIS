@@ -6,15 +6,17 @@ Inter Rater Reliability (IRR) Unweighted Cohen's Kappa
 
 import pandas as pd
 from sklearn.metrics import cohen_kappa_score
+from typing import Dict, Tuple
 
-__version__ = "0.0.1"
-__version_date__ = "2025-08-25"
+__version__ = "0.0.2"
+__version_date__ = "2025-08-29"
 __plugin_name__ = "Inter Rater Reliability - Unweighted Cohen's Kappa"
 __author__ = "Olivier Friard - University of Torino - Italy"
 __description__ = """
 This plugin calculates Cohen's Kappa to measure inter-rater reliability between two observers who code categorical behaviors over time intervals.
 Unlike the weighted version, this approach does not take into account the duration of the intervals.
 Each segment of time is treated equally, regardless of how long it lasts.
+This plugin does not take into account the modifiers.
 
 How it works:
 
@@ -37,23 +39,21 @@ This coefficient measures how much the observers agree on their coding, adjusted
 """
 
 
-def run(df: pd.DataFrame):
+def run(df: pd.DataFrame) -> pd.DataFrame:
     """
     Calculate the Inter Rater Reliability - Unweighted Cohen's Kappa
     """
 
-    # attribute a code for each interval
+    # Attribute all active codes for each interval
     def get_code(t_start, obs):
-        for seg in obs:
-            if t_start >= seg[0] and t_start < seg[1]:
-                return seg[2]
-        return ""
+        active_codes = [seg[2] for seg in obs if seg[0] <= t_start < seg[1]]
+        if not active_codes:
+            return ""
+        # Sort to ensure deterministic representation (e.g., "A+B" instead of "B+A")
+        return "+".join(sorted(active_codes))
 
-    # Get unique values as a numpy array
-    unique_obs = df["Observation id"].unique()
-
-    # Convert to a list
-    unique_obs_list = unique_obs.tolist()
+    # Get unique values
+    unique_obs_list = df["Observation id"].unique().tolist()
 
     # Convert to tuples grouped by observation
     grouped = {
@@ -64,15 +64,11 @@ def run(df: pd.DataFrame):
         for obs, group in df.groupby("Observation id")
     }
 
-    import pprint
-
-    pprint.pprint(grouped)
-    # print(f"{grouped=}")
-
-    ck_results: dict = {}
+    ck_results: Dict[Tuple[str, str], str] = {}
     for idx1, obs_id1 in enumerate(unique_obs_list):
         obs1 = grouped[obs_id1]
 
+        # Perfect agreement with itself
         ck_results[(obs_id1, obs_id1)] = "1.000"
 
         for obs_id2 in unique_obs_list[idx1 + 1 :]:
@@ -86,12 +82,7 @@ def run(df: pd.DataFrame):
 
             obs1_codes = [get_code(t[0], obs1) for t in elementary_intervals]
 
-            pprint.pprint(obs1_codes)
-
             obs2_codes = [get_code(t[0], obs2) for t in elementary_intervals]
-            pprint.pprint(obs2_codes)
-
-            print()
 
             # Cohen's Kappa
             kappa = cohen_kappa_score(obs1_codes, obs2_codes)

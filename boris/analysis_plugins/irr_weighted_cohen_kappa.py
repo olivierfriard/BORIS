@@ -7,31 +7,35 @@ Inter Rater Reliability (IRR) Weighted Cohen's Kappa
 import pandas as pd
 from typing import List, Tuple, Dict, Optional
 
-__version__ = "0.0.1"
-__version_date__ = "2025-08-25"
+__version__ = "0.0.2"
+__version_date__ = "2025-08-29"
 __plugin_name__ = "Inter Rater Reliability - Weighted Cohen's Kappa"
 __author__ = "Olivier Friard - University of Torino - Italy"
 __description__ = """
-This plugin calculates Cohen’s Kappa to measure inter-rater reliability between two observers who code categorical behaviors over time intervals. Unlike the unweighted version, this approach takes into account the duration of each coded interval, giving more weight to longer intervals in the agreement calculation.
+This plugin calculates Cohen's Kappa to measure inter-rater reliability between two observers who code categorical behaviors over time intervals.
+Unlike the unweighted version, this approach takes into account the duration of each coded interval, giving more weight to longer intervals in the agreement calculation.
+This plugin does not take into account the modifiers.
 
 How it works:
 
 Time segmentation
-The program collects all the time boundaries from both observers and merges them into a unified set of time points. These define a set of non-overlapping elementary intervals covering the entire observed period.
+The program collects all the time boundaries from both observers and merges them into a unified set of time points.
+These define a set of non-overlapping elementary intervals covering the entire observed period.
 
 Assigning codes
 For each elementary interval, the program identifies the behavior category assigned by each observer.
 
 Weighted contingency table
-Instead of treating each interval equally, the program assigns a weight equal to the duration of the interval. These durations are accumulated in a contingency table that records how much time was spent in each combination of categories across the two observers.
+Instead of treating each interval equally, the program assigns a weight equal to the duration of the interval.
+These durations are accumulated in a contingency table that records how much time was spent in each combination of categories across the two observers.
 
 Agreement calculation
 
 Observed agreement (po): The proportion of total time where both observers assigned the same category.
 
-Expected agreement (pe): The proportion of agreement expected by chance, based on the time-weighted marginal distributions of each observer’s coding.
+Expected agreement (pe): The proportion of agreement expected by chance, based on the time-weighted marginal distributions of each observer's coding.
 
-Cohen’s Kappa (κ): Computed from the weighted observed and expected agreements.
+Cohen's Kappa (κ): Computed from the weighted observed and expected agreements.
 """
 
 
@@ -63,12 +67,12 @@ def run(df: pd.DataFrame):
         # 2. Build elementary intervals (non-overlapping time bins)
         elementary_intervals = [(time_points[i], time_points[i + 1]) for i in range(len(time_points) - 1)]
 
-        # 3. Helper: get the active code for an observer at a given time
+        # 3. # Attribute all active codes for each interval
         def get_code(t: float, obs: List[Tuple[float, float, str]]) -> Optional[str]:
-            for seg in obs:
-                if seg[0] <= t < seg[1]:
-                    return seg[2]
-            return None  # in case no segment covers this time
+            active_codes = [seg[2] for seg in obs if seg[0] <= t < seg[1]]
+            if not active_codes:
+                return None
+            return "+".join(sorted(active_codes))  # rappresentazione deterministica
 
         # 4. Build weighted contingency table (durations instead of counts)
         contingency: Dict[Tuple[Optional[str], Optional[str]], float] = {}
