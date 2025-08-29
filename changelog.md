@@ -1,8 +1,8 @@
-*v. 9.6.4*
+**v. 9.6.4 202-08-29**
 
 * changed extension of texgrid files from .textgrid to .Textgrid
 
-
+* Added concurrent behaviors in IRR Cohen's kappa plugins
 
 **v. 9.6.3 2025-08-26**
 
