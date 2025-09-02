@@ -1,3 +1,7 @@
+
+* Added a rounding option to Cohen's kappa plugins. The number of decimals for rounding can be negative (with a value of -1, 123.456 will round to 120.0)
+
+
 **v. 9.6.4 202-08-29**
 
 * changed extension of texgrid files from .textgrid to .Textgrid
