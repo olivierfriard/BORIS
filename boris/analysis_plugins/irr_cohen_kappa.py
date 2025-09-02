@@ -60,7 +60,7 @@ def run(df: pd.DataFrame) -> pd.DataFrame:
         None, "Rounding", "Enter the number of decimal places for rounding (can be negative)", value=3, minValue=-5, maxValue=3, step=1
     )
 
-    # rount times
+    # round times
     df["Start (s)"] = df["Start (s)"].round(round_decimals)
     df["Stop (s)"] = df["Stop (s)"].round(round_decimals)
 

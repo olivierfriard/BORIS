@@ -9,8 +9,8 @@ import pandas as pd
 from sklearn.metrics import cohen_kappa_score
 from PySide6.QtWidgets import QInputDialog
 
-__version__ = "0.0.2"
-__version_date__ = "2025-08-29"
+__version__ = "0.0.3"
+__version_date__ = "2025-09-02"
 __plugin_name__ = "Inter Rater Reliability - Unweighted Cohen's Kappa with modifiers"
 __author__ = "Olivier Friard - University of Torino - Italy"
 __description__ = """
@@ -59,7 +59,7 @@ def run(df: pd.DataFrame):
         None, "Rounding", "Enter the number of decimal places for rounding (can be negative)", value=3, minValue=-5, maxValue=3, step=1
     )
 
-    # rount times
+    # round times
     df["Start (s)"] = df["Start (s)"].round(round_decimals)
     df["Stop (s)"] = df["Stop (s)"].round(round_decimals)
 

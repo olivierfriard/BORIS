@@ -7,8 +7,10 @@ Inter Rater Reliability (IRR) Weighted Cohen's Kappa
 import pandas as pd
 from typing import List, Tuple, Dict, Optional
 
-__version__ = "0.0.2"
-__version_date__ = "2025-08-29"
+from PySide6.QtWidgets import QInputDialog
+
+__version__ = "0.0.3"
+__version_date__ = "2025-09-02"
 __plugin_name__ = "Inter Rater Reliability - Weighted Cohen's Kappa"
 __author__ = "Olivier Friard - University of Torino - Italy"
 __description__ = """
@@ -72,7 +74,7 @@ def run(df: pd.DataFrame):
             active_codes = [seg[2] for seg in obs if seg[0] <= t < seg[1]]
             if not active_codes:
                 return None
-            return "+".join(sorted(active_codes))  # rappresentazione deterministica
+            return "+".join(sorted(active_codes))
 
         # 4. Build weighted contingency table (durations instead of counts)
         contingency: Dict[Tuple[Optional[str], Optional[str]], float] = {}
@@ -103,6 +105,15 @@ def run(df: pd.DataFrame):
         kappa = (po - pe) / (1 - pe) if (1 - pe) != 0 else 0.0
 
         return kappa, po, pe, contingency
+
+    # ask user for the number of decimal places for rounding (can be negative)
+    round_decimals, ok = QInputDialog.getInt(
+        None, "Rounding", "Enter the number of decimal places for rounding (can be negative)", value=3, minValue=-5, maxValue=3, step=1
+    )
+
+    # round times
+    df["Start (s)"] = df["Start (s)"].round(round_decimals)
+    df["Stop (s)"] = df["Stop (s)"].round(round_decimals)
 
     # Get unique values as a numpy array
     unique_obs = df["Observation id"].unique()
