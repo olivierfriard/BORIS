@@ -21,6 +21,7 @@ Copyright 2012-2025 Olivier Friard
 
 """
 
+import sys
 import logging
 import pathlib as pl
 import shutil
@@ -230,8 +231,11 @@ def display_zoom_level(self) -> None:
     display the zoom level
     """
     msg: str = "Zoom level: <b>"
-    for player in self.dw_player:
-        msg += f"{2**player.player.video_zoom:.1f} "
+    if not sys.platform.startswith(cfg.MACOS_CODE):
+        for player in self.dw_player:
+            msg += f"{2**player.player.video_zoom:.1f} "
+    else:
+        msg += f"{2 ** self.mpv_widget.get_video_zoom():.1f} "
     msg += "</b>"
     self.lb_zoom_level.setText(msg)
 

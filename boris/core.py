@@ -3862,7 +3862,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         if not sys.platform.startswith(cfg.MACOS_CODE):
             estimated_frame_number = self.dw_player[player_idx].player.estimated_frame_number
         else:
-            estimated_frame_number = observation_operations.send_command({"command": ["get_property", "estimated_frame_number"]})
+            """estimated_frame_number = observation_operations.send_command({"command": ["get_property", "estimated_frame_number"]})"""
+            estimated_frame_number = self.mpv_widget.estimated_frame_number()
+
         if estimated_frame_number is not None:
             return estimated_frame_number
         else:
@@ -4199,8 +4201,12 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         currentTimeOffset = dec(cumulative_time_pos + self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TIME_OFFSET])
 
-        all_media_duration = sum(self.dw_player[0].media_durations) / 1000
-        current_media_duration = self.dw_player[0].player.duration  # mediaplayer_length
+        if not sys.platform.startswith(cfg.MACOS_CODE):
+            all_media_duration = sum(self.dw_player[0].media_durations) / 1000
+            current_media_duration = self.dw_player[0].player.duration  # mediaplayer_length
+        else:
+            # FIX
+            current_media_duration = 1000
         self.mediaTotalLength = current_media_duration
 
         # current state(s)
@@ -4598,7 +4604,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                         0 if self.dw_player[n_player].player.time_pos is None else self.dw_player[n_player].player.time_pos * 1000
                     )
                 else:
-                    time_pos = observation_operations.send_command({"command": ["get_property", "time-pos"]})
+                    """time_pos = observation_operations.send_command({"command": ["get_property", "time-pos"]})"""
+                    time_pos = self.mpv_widget.get_position()
                     # TODO: fix!
                     return dec(time_pos)
 

@@ -110,7 +110,7 @@ class DW_player(QDockWidget):
                 loglevel="debug",
             )
 
-        self.player.screenshot_format = "png"
+            self.player.screenshot_format = "png"
         self.hlayout.addWidget(self.videoframe)
 
         # layout volume slider and mute button

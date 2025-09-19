@@ -43,6 +43,7 @@ from PySide6.QtWidgets import (
     QSlider,
     QMainWindow,
     QDockWidget,
+    QWidget,
 )
 from PySide6.QtCore import Qt, QDateTime, QTimer
 from PySide6.QtGui import QFont, QIcon, QTextCursor
@@ -1296,6 +1297,22 @@ def check_creation_date(self) -> Tuple[int, dict]:
         return (0, media_creation_time)  # OK all media have a 'creation time' tag
 
 
+'''
+def init_socket(self):
+    """Initialize the JSON IPC socket."""
+    self.sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+    QTimer.singleShot(1000, self.connect_socket)  # Allow time for mpv to initialize
+
+    def connect_socket(self):
+        """Connect to the mpv IPC socket."""
+        try:
+            self.sock.connect(cfg.MPV_SOCKET)
+            print("Connected to mpv IPC server.")
+        except socket.error as e:
+            print(f"Failed to connect to mpv IPC server: {e}")
+        print("end of connect_socket")
+
+
 def init_mpv(self):
     """Start mpv process and embed it in the PySide6 application."""
 
@@ -1303,6 +1320,8 @@ def init_mpv(self):
 
     # print(f"{self.winId()=}")
     # print(f"{str(int(self.winId()))=}")
+
+    print("start mpv process")
 
     subprocess.Popen(
         [
@@ -1368,6 +1387,94 @@ def send_command(command):
         raise
         print(f"An error occurred: {e}")
     return None
+'''
+
+
+class MPVWidget(QWidget):
+    def __init__(self, socket_path=cfg.MPV_SOCKET, parent=None):
+        super().__init__(parent)
+        self.socket_path = socket_path
+        self.process = None
+        self.sock = None
+        self.init_mpv()
+        self.init_socket()
+        print("init mpvwidget")
+
+    def init_mpv(self):
+        """Start mpv process and embed it in the PySide6 application."""
+        print("start")
+        print(f"{self.winId()=}")
+        self.process = subprocess.Popen(
+            [
+                "mpv",
+                "--no-border",
+                "--osc=no",  # no on screen commands
+                "--input-ipc-server=" + self.socket_path,
+                "--wid=" + str(int(self.winId())),  # Embed in the widget
+                "--idle",  # Keeps mpv running with no video
+            ],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+        )
+
+        print(self.process)
+
+    def init_socket(self):
+        """Initialize the JSON IPC socket."""
+        self.sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+        QTimer.singleShot(1000, self.connect_socket)  # Allow time for mpv to initialize
+
+    def connect_socket(self):
+        """Connect to the mpv IPC socket."""
+        try:
+            self.sock.connect(self.socket_path)
+            print("Connected to mpv IPC server.")
+        except socket.error as e:
+            print(f"Failed to connect to mpv IPC server: {e}")
+        print("end of connect_socket")
+
+    def send_command(self, command):
+        """Send a JSON command to the mpv IPC server."""
+        try:
+            # Create a Unix socket
+            with socket.socket(socket.AF_UNIX, socket.SOCK_STREAM) as client:
+                # Connect to the MPV IPC server
+                client.connect(self.socket_path)
+                # Send the JSON command
+                # print(f"{json.dumps(command).encode('utf-8')=}")
+                client.sendall(json.dumps(command).encode("utf-8") + b"\n")
+                # Receive the response
+                response = client.recv(2000)
+                print()
+                print(f"{response=}")
+                # Parse the response as JSON
+                response_data = json.loads(response.decode("utf-8"))
+                print(f"{response_data=}")
+                # Return the 'data' field which contains the playback position
+                return response_data.get("data")
+        except FileNotFoundError:
+            print("Error: Socket file not found.")
+        except Exception as e:
+            print(f"An error occurred: {e}")
+        return None
+
+    def load_file(self, file_path) -> None:
+        """Load a media file in mpv."""
+        self.send_command({"command": ["loadfile", file_path]})
+        self.pause()
+        self.send_command({"command": ["set_property", "time-pos", 0]})
+
+    def estimated_frame_number(self):
+        return self.send_command({"command": ["get_property", "estimated_frame_number-pos"]})
+
+    def get_position(self):
+        return self.send_command({"command": ["get_property", "time-pos"]})
+
+    def get_video_zoom(self):
+        return self.send_command({"command": ["get_property", "video-zoom"]})
+
+    def pause(self):
+        return self.send_command({"command": ["set_property", "pause", True]})
 
 
 def initialize_new_media_observation(self) -> bool:
@@ -1397,10 +1504,6 @@ def initialize_new_media_observation(self) -> bool:
         )
         self.playerType = cfg.VIEWER_MEDIA
         return True
-
-    if sys.platform.startswith(cfg.MACOS_CODE):
-        pass
-        init_mpv(self)
 
         # print(f"{self.process=}")
 
@@ -1442,19 +1545,21 @@ def initialize_new_media_observation(self) -> bool:
 
     # create dock widgets for players
 
-    if not sys.platform.startswith(cfg.MACOS_CODE):
-        for i in range(cfg.N_PLAYER):
-            n_player = str(i + 1)
-            if (
-                n_player not in self.pj[cfg.OBSERVATIONS][self.observationId][cfg.FILE]
-                or not self.pj[cfg.OBSERVATIONS][self.observationId][cfg.FILE][n_player]
-            ):
-                continue
+    # if not sys.platform.startswith(cfg.MACOS_CODE):
+    for i in range(cfg.N_PLAYER):
+        n_player = str(i + 1)
+        if (
+            n_player not in self.pj[cfg.OBSERVATIONS][self.observationId][cfg.FILE]
+            or not self.pj[cfg.OBSERVATIONS][self.observationId][cfg.FILE][n_player]
+        ):
+            continue
 
-            # Not pretty but the unique solution I have found to capture the click signal for each player
+        # Not pretty but the unique solution I have found to capture the click signal for each player
 
-            if i == 0:  # first player
-                p0 = player_dock_widget.DW_player(0, self)
+        if i == 0:  # first player
+            p0 = player_dock_widget.DW_player(0, self)
+
+            if not sys.platform.startswith(cfg.MACOS_CODE):
 
                 @p0.player.property_observer("time-pos")
                 def time_observer(_name, value):
@@ -1510,10 +1615,12 @@ def initialize_new_media_observation(self) -> bool:
                 def shift_mbtn_left0():
                     self.video_click_signal.emit(0, "Shift+MBTN_LEFT")
 
-                self.dw_player.append(p0)
+            self.dw_player.append(p0)
 
-            if i == 1:  # second player
-                p1 = player_dock_widget.DW_player(1, self)
+        if i == 1:  # second player
+            p1 = player_dock_widget.DW_player(1, self)
+
+            if not sys.platform.startswith(cfg.MACOS_CODE):
 
                 @p1.player.on_key_press("MBTN_LEFT")
                 def mbtn_left1():
@@ -1559,10 +1666,12 @@ def initialize_new_media_observation(self) -> bool:
                 def shift_mbtn_left1():
                     self.video_click_signal.emit(1, "Shift+MBTN_LEFT")
 
-                self.dw_player.append(p1)
+            self.dw_player.append(p1)
 
-            if i == 2:
-                p2 = player_dock_widget.DW_player(2, self)
+        if i == 2:
+            p2 = player_dock_widget.DW_player(2, self)
+
+            if not sys.platform.startswith(cfg.MACOS_CODE):
 
                 @p2.player.on_key_press("MBTN_LEFT")
                 def mbtn_left2():
@@ -1608,10 +1717,12 @@ def initialize_new_media_observation(self) -> bool:
                 def shift_mbtn_left2():
                     self.video_click_signal.emit(2, "Shift+MBTN_LEFT")
 
-                self.dw_player.append(p2)
+            self.dw_player.append(p2)
 
-            if i == 3:
-                p3 = player_dock_widget.DW_player(3, self)
+        if i == 3:
+            p3 = player_dock_widget.DW_player(3, self)
+
+            if not sys.platform.startswith(cfg.MACOS_CODE):
 
                 @p3.player.on_key_press("MBTN_LEFT")
                 def mbtn_left3():
@@ -1657,10 +1768,12 @@ def initialize_new_media_observation(self) -> bool:
                 def shift_mbtn_left3():
                     self.video_click_signal.emit(3, "Shift+MBTN_LEFT")
 
-                self.dw_player.append(p3)
+            self.dw_player.append(p3)
 
-            if i == 4:
-                p4 = player_dock_widget.DW_player(4, self)
+        if i == 4:
+            p4 = player_dock_widget.DW_player(4, self)
+
+            if not sys.platform.startswith(cfg.MACOS_CODE):
 
                 @p4.player.on_key_press("MBTN_LEFT")
                 def mbtn_left4():
@@ -1706,10 +1819,12 @@ def initialize_new_media_observation(self) -> bool:
                 def shift_mbtn_left4():
                     self.video_click_signal.emit(4, "Shift+MBTN_LEFT")
 
-                self.dw_player.append(p4)
+            self.dw_player.append(p4)
 
-            if i == 5:
-                p5 = player_dock_widget.DW_player(5, self)
+        if i == 5:
+            p5 = player_dock_widget.DW_player(5, self)
+
+            if not sys.platform.startswith(cfg.MACOS_CODE):
 
                 @p5.player.on_key_press("MBTN_LEFT")
                 def mbtn_left5():
@@ -1755,10 +1870,11 @@ def initialize_new_media_observation(self) -> bool:
                 def shift_mbtn_left5():
                     self.video_click_signal.emit(5, "Shift+MBTN_LEFT")
 
-                self.dw_player.append(p5)
+            self.dw_player.append(p5)
 
-            if i == 6:
-                p6 = player_dock_widget.DW_player(6, self)
+        if i == 6:
+            p6 = player_dock_widget.DW_player(6, self)
+            if not sys.platform.startswith(cfg.MACOS_CODE):
 
                 @p6.player.on_key_press("MBTN_LEFT")
                 def mbtn_left6():
@@ -1804,10 +1920,12 @@ def initialize_new_media_observation(self) -> bool:
                 def shift_mbtn_left6():
                     self.video_click_signal.emit(6, "Shift+MBTN_LEFT")
 
-                self.dw_player.append(p6)
+            self.dw_player.append(p6)
 
-            if i == 7:
-                p7 = player_dock_widget.DW_player(7, self)
+        if i == 7:
+            p7 = player_dock_widget.DW_player(7, self)
+
+            if not sys.platform.startswith(cfg.MACOS_CODE):
 
                 @p7.player.on_key_press("MBTN_LEFT")
                 def mbtn_left7():
@@ -1853,39 +1971,40 @@ def initialize_new_media_observation(self) -> bool:
                 def shift_mbtn_left7():
                     self.video_click_signal.emit(7, "Shift+MBTN_LEFT")
 
-                self.dw_player.append(p7)
+            self.dw_player.append(p7)
 
-            self.dw_player[-1].setFloating(False)
-            self.dw_player[-1].setVisible(False)
-            self.dw_player[-1].setFeatures(QDockWidget.DockWidgetFloatable | QDockWidget.DockWidgetMovable)
+        self.dw_player[-1].setFloating(False)
+        self.dw_player[-1].setVisible(False)
+        self.dw_player[-1].setFeatures(QDockWidget.DockWidgetFloatable | QDockWidget.DockWidgetMovable)
 
-            # place 4 players at the top of the main window and 4 at the bottom
-            self.addDockWidget(Qt.TopDockWidgetArea if i < 4 else Qt.BottomDockWidgetArea, self.dw_player[-1])
+        # place 4 players at the top of the main window and 4 at the bottom
+        self.addDockWidget(Qt.TopDockWidgetArea if i < 4 else Qt.BottomDockWidgetArea, self.dw_player[-1])
 
-            self.dw_player[i].setVisible(True)
+        self.dw_player[i].setVisible(True)
 
-            # for receiving mouse event from frame viewer
-            self.dw_player[i].frame_viewer.mouse_pressed_signal.connect(self.frame_image_clicked)
+        # for receiving mouse event from frame viewer
+        self.dw_player[i].frame_viewer.mouse_pressed_signal.connect(self.frame_image_clicked)
 
-            # for receiving key event from dock widget
-            self.dw_player[i].key_pressed_signal.connect(self.signal_from_widget)
+        # for receiving key event from dock widget
+        self.dw_player[i].key_pressed_signal.connect(self.signal_from_widget)
 
-            # for receiving event from volume slider
-            self.dw_player[i].volume_slider_moved_signal.connect(self.set_volume)
+        # for receiving event from volume slider
+        self.dw_player[i].volume_slider_moved_signal.connect(self.set_volume)
 
-            # for receiving event from mute toolbutton
-            self.dw_player[i].mute_action_triggered_signal.connect(self.set_mute)
+        # for receiving event from mute toolbutton
+        self.dw_player[i].mute_action_triggered_signal.connect(self.set_mute)
 
-            # for receiving resize event from dock widget
-            self.dw_player[i].resize_signal.connect(self.resize_dw)
+        # for receiving resize event from dock widget
+        self.dw_player[i].resize_signal.connect(self.resize_dw)
 
-            # add durations list
-            self.dw_player[i].media_durations: list = []
-            self.dw_player[i].cumul_media_durations: List[int] = [0]  # [idx for idx,x in enumerate(l) if l[idx-1]<pos<=x]
+        # add durations list
+        self.dw_player[i].media_durations: list = []
+        self.dw_player[i].cumul_media_durations: List[int] = [0]  # [idx for idx,x in enumerate(l) if l[idx-1]<pos<=x]
 
-            # add fps list
-            self.dw_player[i].fps = {}
+        # add fps list
+        self.dw_player[i].fps = {}
 
+        if not sys.platform.startswith(cfg.MACOS_CODE):
             for mediaFile in self.pj[cfg.OBSERVATIONS][self.observationId][cfg.FILE][n_player]:
                 logging.debug(f"media file: {mediaFile}")
 
@@ -1920,24 +2039,26 @@ def initialize_new_media_observation(self) -> bool:
 
                         self.project_changed()
 
-                self.dw_player[i].media_durations.append(int(mediaLength))
-                self.dw_player[i].cumul_media_durations.append(self.dw_player[i].cumul_media_durations[-1] + int(mediaLength))
+            self.dw_player[i].media_durations.append(int(mediaLength))
+            self.dw_player[i].cumul_media_durations.append(self.dw_player[i].cumul_media_durations[-1] + int(mediaLength))
 
-                self.dw_player[i].fps[mediaFile] = mediaFPS
+            self.dw_player[i].fps[mediaFile] = mediaFPS
 
+            if not sys.platform.startswith(cfg.MACOS_CODE):
                 # add media file to playlist
                 self.dw_player[i].player.playlist_append(media_full_path)
 
-                # add media file name to player window title
-                self.dw_player[i].setWindowTitle(f"Player #{i + 1} ({pl.Path(media_full_path).name})")
+            # add media file name to player window title
+            self.dw_player[i].setWindowTitle(f"Player #{i + 1} ({pl.Path(media_full_path).name})")
 
-            # media duration cumuled in seconds
-            self.dw_player[i].cumul_media_durations_sec = [round(dec(x / 1000), 3) for x in self.dw_player[i].cumul_media_durations]
+        # media duration cumuled in seconds
+        self.dw_player[i].cumul_media_durations_sec = [round(dec(x / 1000), 3) for x in self.dw_player[i].cumul_media_durations]
 
-            # check if BORIS is running on a Windows VM with the 'WMIC COMPUTERSYSTEM GET SERIALNUMBER' command
-            # because "auto" or "auto-safe" crash in Windows VM
-            # see https://superuser.com/questions/1128339/how-can-i-detect-if-im-within-a-vm-or-not
+        # check if BORIS is running on a Windows VM with the 'WMIC COMPUTERSYSTEM GET SERIALNUMBER' command
+        # because "auto" or "auto-safe" crash in Windows VM
+        # see https://superuser.com/questions/1128339/how-can-i-detect-if-im-within-a-vm-or-not
 
+        if not sys.platform.startswith(cfg.MACOS_CODE):
             flag_vm = False
             if sys.platform.startswith("win"):
                 p = subprocess.Popen(
@@ -2011,17 +2132,22 @@ def initialize_new_media_observation(self) -> bool:
                     self.overlays[i] = self.dw_player[i].player.create_image_overlay()
                     self.resize_dw(i)
 
-    else:  # macos
+    if sys.platform.startswith(cfg.MACOS_CODE):
+        self.mpv_widget = MPVWidget()
+
         print(self.pj[cfg.OBSERVATIONS][self.observationId][cfg.FILE])
 
         for mediaFile in self.pj[cfg.OBSERVATIONS][self.observationId][cfg.FILE]["1"]:
             logging.debug(f"media file: {mediaFile}")
 
             media_full_path = project_functions.full_path(mediaFile, self.projectFileName)
-            send_command({"command": ["loadfile", media_full_path]})
+            self.mpv_widget.load_file(media_full_path)
+
             # pause
+            """
             send_command({"command": ["set_property", "pause", True]})
             send_command({"command": ["set_property", "time-pos", 0]})
+            """
 
     menu_options.update_menu(self)
 

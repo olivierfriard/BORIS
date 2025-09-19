@@ -23,7 +23,7 @@ This file is part of BORIS.
 programName: str = "BORIS"
 
 
-MACOS_CODE = "darwin"
+MACOS_CODE = "linux"
 MPV_SOCKET = "/tmp/mpvsocket"
 
 
