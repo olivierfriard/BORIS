@@ -466,7 +466,7 @@ def check_project_integrity(
                 out += "<br><br>" if out else ""
                 out += f"Observation: <b>{obs_id}</b><br>{msg}"
 
-    out_events = ""
+    out_events: str = ""
     for obs_id in pj[cfg.OBSERVATIONS]:
         # check if timestamp between -2147483647 and 2147483647
         for event in pj[cfg.OBSERVATIONS][obs_id][cfg.EVENTS]:
@@ -572,6 +572,41 @@ def check_project_integrity(
         tmp_out += "<br>You should repick the media file to fix this issue."
         out += "<br><br>" if out else ""
         out += tmp_out
+
+    # check if the number of coded modifiers correspond to the number of sets of modifier
+    obs_results: dict = {}
+    for obs_id in pj[cfg.OBSERVATIONS]:
+        for event_idx, event in enumerate(pj[cfg.OBSERVATIONS][obs_id][cfg.EVENTS]):
+            # event[2]
+            for idx in pj[cfg.ETHOGRAM]:
+                if pj[cfg.ETHOGRAM][idx]["code"] == event[2]:
+                    break
+            else:
+                raise
+            if (not event[3]) and not pj[cfg.ETHOGRAM][idx][cfg.MODIFIERS]:
+                continue
+
+            if len(event[3].split("|")) != len(pj[cfg.ETHOGRAM][idx][cfg.MODIFIERS]):
+                print("behavior", event[2])
+                print(f"modifier(s) #{event[3]}#", len(event[3].split("|")))
+                print(pj[cfg.ETHOGRAM][idx]["code"], pj[cfg.ETHOGRAM][idx][cfg.MODIFIERS])
+                print()
+                if obs_id not in obs_results:
+                    obs_results[obs_id] = []
+
+                obs_results[obs_id].append(
+                    (
+                        f"Event #{event_idx}: the coded modifiers for {event[2]} are {len(event[3].split('|'))} "
+                        f"but {len(pj[cfg.ETHOGRAM][idx][cfg.MODIFIERS])} sets were defined in ethogram."
+                    )
+                )
+
+    if obs_results:
+        out += "<br><br>" if out else ""
+        for o in obs_results:
+            out += f"<br>Observation <b>{o}</b>:<br>"
+            out += "<br>".join(obs_results[o])
+            out += "<br><br>"
 
     return out
 
@@ -1779,7 +1814,7 @@ def explore_project(self) -> None:
         QMessageBox.information(self, cfg.programName, "No events found")
 
 
-def project2dataframe(pj: dict, observations_list: list = []) -> pd.DataFrame:
+def project2dataframe(pj: dict, observations_list: list = []) -> Tuple[str, pd.DataFrame]:
     """
     returns a pandas dataframe containing observations data
     """
@@ -1950,7 +1985,10 @@ def project2dataframe(pj: dict, observations_list: list = []) -> pd.DataFrame:
             count_set = 0
             for modifier_set in all_modifier_sets:
                 if event[2] == modifier_set[0]:
-                    data[modifier_set].append(event[3].split("|")[count_set])
+                    try:
+                        data[modifier_set].append(event[3].split("|")[count_set])
+                    except Exception:
+                        return f"Modifier error for {event[2]} in observation {obs_id}", pd.DataFrame()
                     count_set += 1
                 else:
                     data[modifier_set].append(np.nan)
@@ -1971,7 +2009,7 @@ def project2dataframe(pj: dict, observations_list: list = []) -> pd.DataFrame:
                         data["Comment stop"].append(event2[4])
                         break
                 else:
-                    raise ("not paired")
+                    return f"Some events are not paired in {obs_id}", pd.DataFrame()
 
             else:  # point
                 data["Stop (s)"].append(float(event[0]))
@@ -1985,4 +2023,4 @@ def project2dataframe(pj: dict, observations_list: list = []) -> pd.DataFrame:
 
     pd.DataFrame(data).info()
 
-    return pd.DataFrame(data)
+    return "", pd.DataFrame(data)
