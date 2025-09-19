@@ -310,7 +310,11 @@ def run_plugin(self, plugin_name):
 
     logging.info("preparing dataframe for plugin")
 
-    df = project_functions.project2dataframe(self.pj, selected_observations)
+    message, df = project_functions.project2dataframe(self.pj, selected_observations)
+    if message:
+        logging.critical(message)
+        QMessageBox.critical(self, cfg.programName, message)
+        return
 
     logging.info("done")
 
