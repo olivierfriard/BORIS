@@ -87,9 +87,6 @@ class macos_MPV:
     class for managing mpv through iptc
     """
 
-    playlist_count = 1
-    playlist_pos = 1
-    playlist: list = [{"filename": "aaaa"}, {"filename": "bbbbb"}]
     media_durations: list = []
     cumul_media_durations: list = []
     fps: list = []
@@ -99,7 +96,7 @@ class macos_MPV:
         self.socket_path = socket_path
         self.process = None
         self.sock = None
-        self.init_mpv()
+        # self.init_mpv()
         self.init_socket()
 
     def init_mpv(self):
@@ -156,11 +153,12 @@ class macos_MPV:
                 client.sendall(json.dumps(command).encode("utf-8") + b"\n")
                 # Receive the response
                 response = client.recv(2000)
-                print()
+
                 print(f"{response=}")
                 # Parse the response as JSON
                 response_data = json.loads(response.decode("utf-8"))
                 print(f"{response_data=}")
+                print()
                 # Return the 'data' field which contains the playback position
                 return response_data.get("data")
         except FileNotFoundError:
@@ -187,7 +185,8 @@ class macos_MPV:
 
     @video_zoom.setter
     def video_zoom(self, value):
-        self._video_zoom = value
+        self.send_command({"command": ["set_property", "video-zoom", value]})
+        return
 
     @property
     def pause(self):
@@ -204,8 +203,24 @@ class macos_MPV:
     def stop(self):
         return print("stopped")
 
+    @property
+    def playlist(self):
+        return self.send_command({"command": ["get_property", "playlist"]})
+
+    @property
+    def playlist_pos(self):
+        return self.send_command({"command": ["get_property", "playlist-pos"]})
+
+    @playlist_pos.setter
+    def playlist_pos(self, value):
+        return self.send_command({"command": ["set_property", "playlist-pos", value]})
+
+    @property
+    def playlist_count(self):
+        return self.send_command({"command": ["get_property", "playlist-count"]})
+
     def playlist_append(self, media):
-        self.playlist.append(media)
+        return self.send_command({"command": ["loadfile", media, "append"]})
 
     def wait_until_playing(self):
         return

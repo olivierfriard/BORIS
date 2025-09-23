@@ -1959,6 +1959,7 @@ def initialize_new_media_observation(self) -> bool:
 
         # add media file to playlist
         self.dw_player[i].player.playlist_append(media_full_path)
+        print(f"{self.dw_player[i].player.playlist=}")
 
         # add media file name to player window title
         self.dw_player[i].setWindowTitle(f"Player #{i + 1} ({pl.Path(media_full_path).name})")
