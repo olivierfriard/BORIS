@@ -231,11 +231,8 @@ def display_zoom_level(self) -> None:
     display the zoom level
     """
     msg: str = "Zoom level: <b>"
-    if not sys.platform.startswith(cfg.MACOS_CODE):
-        for player in self.dw_player:
-            msg += f"{2**player.player.video_zoom:.1f} "
-    else:
-        msg += f"{2 ** self.mpv_widget.get_video_zoom():.1f} "
+    for player in self.dw_player:
+        msg += f"{2**player.player.video_zoom:.1f} "
     msg += "</b>"
     self.lb_zoom_level.setText(msg)
 

@@ -39,8 +39,12 @@ from PySide6.QtWidgets import (
     QStackedWidget,
     QToolButton,
 )
-from PySide6.QtCore import Signal, QEvent, Qt
+from PySide6.QtCore import Signal, QEvent, Qt, QTimer
 from PySide6.QtGui import QIcon, QAction
+
+import socket
+import json
+import subprocess
 
 
 class Clickable_label(QLabel):
@@ -78,6 +82,144 @@ def mpv_logger(player_id, loglevel, component, message):
     logging.debug(f"MPV player #{player_id}: [{loglevel}] {component}: {message}")
 
 
+class macos_MPV:
+    """
+    class for managing mpv through iptc
+    """
+
+    playlist_count = 1
+    playlist_pos = 1
+    playlist: list = [{"filename": "aaaa"}, {"filename": "bbbbb"}]
+    media_durations: list = []
+    cumul_media_durations: list = []
+    fps: list = []
+    _pause: bool = False
+
+    def __init__(self, socket_path=cfg.MPV_SOCKET, parent=None):
+        self.socket_path = socket_path
+        self.process = None
+        self.sock = None
+        self.init_mpv()
+        self.init_socket()
+
+    def init_mpv(self):
+        """Start mpv process and embed it in the PySide6 application."""
+        print("init_mpv")
+        # print(f"{self.winId()=}")
+        self.process = subprocess.Popen(
+            [
+                "mpv",
+                "--no-border",
+                "--osc=no",  # no on screen commands
+                "--input-ipc-server=" + self.socket_path,
+                # "--wid=" + str(int(self.winId())),  # Embed in the widget
+                "--idle",  # Keeps mpv running with no video
+            ],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+        )
+
+        print(self.process)
+
+    def init_socket(self):
+        """
+        Initialize the JSON IPC socket.
+        """
+        print("init socket")
+        self.sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+        QTimer.singleShot(1000, self.connect_socket)  # Allow time for mpv to initialize
+
+    def connect_socket(self):
+        """
+        Connect to the mpv IPC socket.
+        """
+        print("connect socket")
+        try:
+            self.sock.connect(self.socket_path)
+            print("Connected to mpv IPC server.")
+        except socket.error as e:
+            print(f"Failed to connect to mpv IPC server: {e}")
+        print("end of connect_socket")
+
+    def send_command(self, command):
+        """
+        Send a JSON command to the mpv IPC server.
+        """
+        print(f"send command: {command}")
+        try:
+            # Create a Unix socket
+            with socket.socket(socket.AF_UNIX, socket.SOCK_STREAM) as client:
+                # Connect to the MPV IPC server
+                client.connect(self.socket_path)
+                # Send the JSON command
+                # print(f"{json.dumps(command).encode('utf-8')=}")
+                client.sendall(json.dumps(command).encode("utf-8") + b"\n")
+                # Receive the response
+                response = client.recv(2000)
+                print()
+                print(f"{response=}")
+                # Parse the response as JSON
+                response_data = json.loads(response.decode("utf-8"))
+                print(f"{response_data=}")
+                # Return the 'data' field which contains the playback position
+                return response_data.get("data")
+        except FileNotFoundError:
+            print("Error: Socket file not found.")
+        except Exception as e:
+            print(f"An error occurred: {e}")
+        return None
+
+    @property
+    def time_pos(self):
+        time_pos = self.send_command({"command": ["get_property", "time-pos"]})
+        print(f"time pos: {time_pos}")
+        return time_pos
+
+    @property
+    def duration(self):
+        duration_ = self.send_command({"command": ["get_property", "duration"]})
+        print(f"duration: {duration_}")
+        return duration_
+
+    @property
+    def video_zoom(self):
+        return self.send_command({"command": ["get_property", "video-zoom"]})
+
+    @video_zoom.setter
+    def video_zoom(self, value):
+        self._video_zoom = value
+
+    @property
+    def pause(self):
+        return 1
+
+    @pause.setter
+    def pause(self, value):
+        return self.send_command({"command": ["set_property", "pause", value]})
+
+    @property
+    def estimated_frame_number(self):
+        return self.send_command({"command": ["get_property", "estimated_frame_number-pos"]})
+
+    def stop(self):
+        return print("stopped")
+
+    def playlist_append(self, media):
+        self.playlist.append(media)
+
+    def wait_until_playing(self):
+        return
+
+    def seek(self, value, mode: str):
+        return
+
+    @property
+    def playback_time(self):
+        playback_time_ = self.send_command({"command": ["get_property", "playback-time"]})
+        print(f"playback_time: {playback_time_}")
+        return playback_time_
+
+
 class DW_player(QDockWidget):
     """
     Define the player class
@@ -101,7 +243,7 @@ class DW_player(QDockWidget):
         self.videoframe = QWidget(self)
 
         if sys.platform.startswith(cfg.MACOS_CODE):
-            self.player = None
+            self.player = macos_MPV()
         else:
             self.player = mpv.MPV(
                 wid=str(int(self.videoframe.winId())),

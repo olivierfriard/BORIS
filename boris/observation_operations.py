@@ -1298,98 +1298,6 @@ def check_creation_date(self) -> Tuple[int, dict]:
 
 
 '''
-def init_socket(self):
-    """Initialize the JSON IPC socket."""
-    self.sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
-    QTimer.singleShot(1000, self.connect_socket)  # Allow time for mpv to initialize
-
-    def connect_socket(self):
-        """Connect to the mpv IPC socket."""
-        try:
-            self.sock.connect(cfg.MPV_SOCKET)
-            print("Connected to mpv IPC server.")
-        except socket.error as e:
-            print(f"Failed to connect to mpv IPC server: {e}")
-        print("end of connect_socket")
-
-
-def init_mpv(self):
-    """Start mpv process and embed it in the PySide6 application."""
-
-    logging.debug("function: init_mpv")
-
-    # print(f"{self.winId()=}")
-    # print(f"{str(int(self.winId()))=}")
-
-    print("start mpv process")
-
-    subprocess.Popen(
-        [
-            "mpv",
-            "--no-border",
-            "--ontop",  # mpv window on top
-            "--osc=no",  # no on screen commands
-            "--input-ipc-server=" + cfg.MPV_SOCKET,
-            # "--wid=" + str(int(self.winId())),  # Embed in the widget
-            "--idle",  # Keeps mpv running with no video
-        ],
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
-    )
-
-    # print(f"init mpv:  {self.mpv_process=}")
-
-
-def send_command(command):
-    """Send a JSON command to the mpv IPC server."""
-
-    logging.debug("function: send commnand {command}")
-    # print(f"{self.mpv_process=}")
-
-    try:
-        # Create a Unix socket
-        with socket.socket(socket.AF_UNIX, socket.SOCK_STREAM) as client:
-            # Connect to the MPV IPC server
-            from pathlib import Path
-
-            print(f"{Path(cfg.MPV_SOCKET).is_socket()=}")
-
-            client.connect(cfg.MPV_SOCKET)
-            # Send the JSON command
-            client.sendall(json.dumps(command).encode("utf-8") + b"\n")
-            # Receive the response
-            response = client.recv(2000)
-
-            print()
-            print(f"{response=}")
-
-            # Parse the response as JSON
-            response_splitted = response.split(b"\n")
-            print(f"{response_splitted=}")
-            data = None
-            for r in response_splitted:
-                print(f"{r=}")
-                if not r:
-                    continue
-                response_data = json.loads(r.decode("utf-8"))
-                if "data" in response_data:
-                    data = response_data.get("data")
-            # response_data = json.loads(response.decode("utf-8"))
-            # print(f"{response_data=}")
-            # return response_data.get("data")
-
-            return data
-
-    except FileNotFoundError:
-        raise
-        print("Error: Socket file not found.")
-    except Exception as e:
-        raise
-        print(f"An error occurred: {e}")
-    return None
-'''
-
-
 class MPVWidget(QWidget):
     def __init__(self, socket_path=cfg.MPV_SOCKET, parent=None):
         super().__init__(parent)
@@ -1434,7 +1342,9 @@ class MPVWidget(QWidget):
         print("end of connect_socket")
 
     def send_command(self, command):
-        """Send a JSON command to the mpv IPC server."""
+        """
+        Send a JSON command to the mpv IPC server.
+        """
         try:
             # Create a Unix socket
             with socket.socket(socket.AF_UNIX, socket.SOCK_STREAM) as client:
@@ -1459,7 +1369,9 @@ class MPVWidget(QWidget):
         return None
 
     def load_file(self, file_path) -> None:
-        """Load a media file in mpv."""
+        """
+        Load a media file in mpv.
+        """
         self.send_command({"command": ["loadfile", file_path]})
         self.pause()
         self.send_command({"command": ["set_property", "time-pos", 0]})
@@ -1475,6 +1387,7 @@ class MPVWidget(QWidget):
 
     def pause(self):
         return self.send_command({"command": ["set_property", "pause", True]})
+'''
 
 
 def initialize_new_media_observation(self) -> bool:
@@ -2004,52 +1917,51 @@ def initialize_new_media_observation(self) -> bool:
         # add fps list
         self.dw_player[i].fps = {}
 
-        if not sys.platform.startswith(cfg.MACOS_CODE):
-            for mediaFile in self.pj[cfg.OBSERVATIONS][self.observationId][cfg.FILE][n_player]:
-                logging.debug(f"media file: {mediaFile}")
+        # if not sys.platform.startswith(cfg.MACOS_CODE):
+        for mediaFile in self.pj[cfg.OBSERVATIONS][self.observationId][cfg.FILE][n_player]:
+            logging.debug(f"media file: {mediaFile}")
 
-                media_full_path = project_functions.full_path(mediaFile, self.projectFileName)
+            media_full_path = project_functions.full_path(mediaFile, self.projectFileName)
 
-                logging.debug(f"media_full_path: {media_full_path}")
+            logging.debug(f"media_full_path: {media_full_path}")
 
-                # media duration
-                try:
-                    mediaLength = self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO][cfg.LENGTH][mediaFile] * 1000
-                    mediaFPS = self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO][cfg.FPS][mediaFile]
-                except Exception:
-                    logging.debug("media_info key not found in project")
+            # media duration
+            try:
+                mediaLength = self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO][cfg.LENGTH][mediaFile] * 1000
+                mediaFPS = self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO][cfg.FPS][mediaFile]
+            except Exception:
+                logging.debug("media_info key not found in project")
 
-                    r = util.accurate_media_analysis(self.ffmpeg_bin, media_full_path)
-                    if "error" not in r:
-                        if cfg.MEDIA_INFO not in self.pj[cfg.OBSERVATIONS][self.observationId]:
-                            self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO] = {
-                                cfg.LENGTH: {},
-                                cfg.FPS: {},
-                            }
-                            if cfg.LENGTH not in self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO]:
-                                self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO][cfg.LENGTH] = {}
-                            if cfg.FPS not in self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO]:
-                                self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO][cfg.FPS] = {}
+                r = util.accurate_media_analysis(self.ffmpeg_bin, media_full_path)
+                if "error" not in r:
+                    if cfg.MEDIA_INFO not in self.pj[cfg.OBSERVATIONS][self.observationId]:
+                        self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO] = {
+                            cfg.LENGTH: {},
+                            cfg.FPS: {},
+                        }
+                        if cfg.LENGTH not in self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO]:
+                            self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO][cfg.LENGTH] = {}
+                        if cfg.FPS not in self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO]:
+                            self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO][cfg.FPS] = {}
 
-                        self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO][cfg.LENGTH][mediaFile] = r["duration"]
-                        self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO][cfg.FPS][mediaFile] = r[cfg.FPS]
+                    self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO][cfg.LENGTH][mediaFile] = r["duration"]
+                    self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO][cfg.FPS][mediaFile] = r[cfg.FPS]
 
-                        mediaLength = r["duration"] * 1000
-                        mediaFPS = r[cfg.FPS]
+                    mediaLength = r["duration"] * 1000
+                    mediaFPS = r[cfg.FPS]
 
-                        self.project_changed()
+                    self.project_changed()
 
-            self.dw_player[i].media_durations.append(int(mediaLength))
-            self.dw_player[i].cumul_media_durations.append(self.dw_player[i].cumul_media_durations[-1] + int(mediaLength))
+        self.dw_player[i].media_durations.append(int(mediaLength))
+        self.dw_player[i].cumul_media_durations.append(self.dw_player[i].cumul_media_durations[-1] + int(mediaLength))
 
-            self.dw_player[i].fps[mediaFile] = mediaFPS
+        self.dw_player[i].fps[mediaFile] = mediaFPS
 
-            if not sys.platform.startswith(cfg.MACOS_CODE):
-                # add media file to playlist
-                self.dw_player[i].player.playlist_append(media_full_path)
+        # add media file to playlist
+        self.dw_player[i].player.playlist_append(media_full_path)
 
-            # add media file name to player window title
-            self.dw_player[i].setWindowTitle(f"Player #{i + 1} ({pl.Path(media_full_path).name})")
+        # add media file name to player window title
+        self.dw_player[i].setWindowTitle(f"Player #{i + 1} ({pl.Path(media_full_path).name})")
 
         # media duration cumuled in seconds
         self.dw_player[i].cumul_media_durations_sec = [round(dec(x / 1000), 3) for x in self.dw_player[i].cumul_media_durations]
@@ -2079,75 +1991,58 @@ def initialize_new_media_observation(self) -> bool:
             logging.debug(f"Player hwdec of player #{i} set to: {self.dw_player[i].player.hwdec}")
             self.config_param[cfg.MPV_HWDEC] = self.dw_player[i].player.hwdec
 
-            self.dw_player[i].player.playlist_pos = 0
-            self.dw_player[i].player.wait_until_playing()
-            self.dw_player[i].player.pause = True
-            time.sleep(0.2)
-            # self.dw_player[i].player.wait_until_paused()
-            self.dw_player[i].player.seek(0, "absolute")
-            # do not close when playing finished
-            self.dw_player[i].player.keep_open = True
-            self.dw_player[i].player.keep_open_pause = False
+        self.dw_player[i].player.playlist_pos = 0
+        self.dw_player[i].player.wait_until_playing()
+        self.dw_player[i].player.pause = True
+        time.sleep(0.2)
+        # self.dw_player[i].player.wait_until_paused()
+        self.dw_player[i].player.seek(0, "absolute")
+        # do not close when playing finished
+        self.dw_player[i].player.keep_open = True
+        self.dw_player[i].player.keep_open_pause = False
 
-            self.dw_player[i].player.image_display_duration = self.pj[cfg.OBSERVATIONS][self.observationId].get(
-                cfg.IMAGE_DISPLAY_DURATION, 1
+        self.dw_player[i].player.image_display_duration = self.pj[cfg.OBSERVATIONS][self.observationId].get(cfg.IMAGE_DISPLAY_DURATION, 1)
+
+        # position media
+        self.seek_mediaplayer(int(self.pj[cfg.OBSERVATIONS][self.observationId].get(cfg.OBSERVATION_TIME_INTERVAL, [0, 0])[0]), player=i)
+
+        # restore video zoom level
+        if cfg.ZOOM_LEVEL in self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO]:
+            self.dw_player[i].player.video_zoom = log2(
+                self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO][cfg.ZOOM_LEVEL].get(n_player, 0)
             )
 
-            # position media
-            self.seek_mediaplayer(
-                int(self.pj[cfg.OBSERVATIONS][self.observationId].get(cfg.OBSERVATION_TIME_INTERVAL, [0, 0])[0]), player=i
+        # restore video pan
+        if cfg.PAN_X in self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO]:
+            self.dw_player[i].player.video_pan_x = self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO][cfg.PAN_X].get(n_player, 0)
+        if cfg.PAN_Y in self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO]:
+            self.dw_player[i].player.video_pan_y = self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO][cfg.PAN_Y].get(n_player, 0)
+
+        # restore rotation angle
+        if cfg.ROTATION_ANGLE in self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO]:
+            self.dw_player[i].player.video_rotate = self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO][cfg.ROTATION_ANGLE].get(
+                n_player, 0
             )
 
-            # restore video zoom level
-            if cfg.ZOOM_LEVEL in self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO]:
-                self.dw_player[i].player.video_zoom = log2(
-                    self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO][cfg.ZOOM_LEVEL].get(n_player, 0)
-                )
+        # restore subtitle visibility
+        if cfg.DISPLAY_MEDIA_SUBTITLES in self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO]:
+            self.dw_player[i].player.sub_visibility = self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO][
+                cfg.DISPLAY_MEDIA_SUBTITLES
+            ].get(n_player, True)
 
-            # restore video pan
-            if cfg.PAN_X in self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO]:
-                self.dw_player[i].player.video_pan_x = self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO][cfg.PAN_X].get(
-                    n_player, 0
-                )
-            if cfg.PAN_Y in self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO]:
-                self.dw_player[i].player.video_pan_y = self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO][cfg.PAN_Y].get(
-                    n_player, 0
-                )
+        # restore overlays
+        if cfg.OVERLAY in self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO]:
+            if n_player in self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO][cfg.OVERLAY]:
+                self.overlays[i] = self.dw_player[i].player.create_image_overlay()
+                self.resize_dw(i)
 
-            # restore rotation angle
-            if cfg.ROTATION_ANGLE in self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO]:
-                self.dw_player[i].player.video_rotate = self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO][
-                    cfg.ROTATION_ANGLE
-                ].get(n_player, 0)
-
-            # restore subtitle visibility
-            if cfg.DISPLAY_MEDIA_SUBTITLES in self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO]:
-                self.dw_player[i].player.sub_visibility = self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO][
-                    cfg.DISPLAY_MEDIA_SUBTITLES
-                ].get(n_player, True)
-
-            # restore overlays
-            if cfg.OVERLAY in self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO]:
-                if n_player in self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO][cfg.OVERLAY]:
-                    self.overlays[i] = self.dw_player[i].player.create_image_overlay()
-                    self.resize_dw(i)
-
-    if sys.platform.startswith(cfg.MACOS_CODE):
-        self.mpv_widget = MPVWidget()
-
-        print(self.pj[cfg.OBSERVATIONS][self.observationId][cfg.FILE])
-
-        for mediaFile in self.pj[cfg.OBSERVATIONS][self.observationId][cfg.FILE]["1"]:
-            logging.debug(f"media file: {mediaFile}")
-
-            media_full_path = project_functions.full_path(mediaFile, self.projectFileName)
-            self.mpv_widget.load_file(media_full_path)
-
-            # pause
-            """
-            send_command({"command": ["set_property", "pause", True]})
-            send_command({"command": ["set_property", "time-pos", 0]})
-            """
+    # if sys.platform.startswith(cfg.MACOS_CODE):
+    #    self.mpv_widget = MPVWidget()
+    #    for mediaFile in self.pj[cfg.OBSERVATIONS][self.observationId][cfg.FILE]["1"]:
+    #        logging.debug(f"media file: {mediaFile}")
+    #
+    #        media_full_path = project_functions.full_path(mediaFile, self.projectFileName)
+    #        self.mpv_widget.load_file(media_full_path)
 
     menu_options.update_menu(self)
 

@@ -1428,55 +1428,58 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         if not self.dw_player[player].player.playlist_count:
             return
 
-        # one media
-        if self.dw_player[player].player.playlist_count == 1:
-            if new_time < self.dw_player[player].player.duration:
-                new_time_float = round(float(new_time), 3)
+        try:
+            # one media
+            if self.dw_player[player].player.playlist_count == 1:
+                if new_time < self.dw_player[player].player.duration:
+                    new_time_float = round(float(new_time), 3)
 
-                self.dw_player[player].player.seek(new_time_float, "absolute+exact")
+                    self.dw_player[player].player.seek(new_time_float, "absolute+exact")
 
-                if player == 0 and not self.user_move_slider:
-                    self.video_slider.setValue(
-                        round(self.dw_player[0].player.time_pos / self.dw_player[0].player.duration * (cfg.SLIDER_MAXIMUM - 1))
-                    )
-                return 0
-            else:
-                return 1
-
-        # many media
-        else:
-            if new_time < self.dw_player[player].cumul_media_durations_sec[-1]:
-                for idx, d in enumerate(self.dw_player[player].cumul_media_durations_sec[:-1]):
-                    if d <= new_time < self.dw_player[player].cumul_media_durations_sec[idx + 1]:
-                        self.dw_player[player].player.playlist_pos = idx
-                        time.sleep(0.5)
-
-                        self.dw_player[player].player.seek(
-                            round(
-                                float(new_time)
-                                - sum(self.dw_player[player].media_durations[0 : self.dw_player[player].player.playlist_pos]) / 1000,
-                                3,
-                            ),
-                            "absolute+exact",
+                    if player == 0 and not self.user_move_slider:
+                        self.video_slider.setValue(
+                            round(self.dw_player[0].player.time_pos / self.dw_player[0].player.duration * (cfg.SLIDER_MAXIMUM - 1))
                         )
+                    return 0
+                else:
+                    return 1
 
-                        break
-
-                if player == 0 and not self.user_move_slider:
-                    self.video_slider.setValue(
-                        round(self.dw_player[0].player.time_pos / self.dw_player[0].player.duration * (cfg.SLIDER_MAXIMUM - 1))
-                    )
-                return 0
+            # many media
             else:
-                QMessageBox.warning(
-                    self,
-                    cfg.programName,
-                    (
-                        "The indicated position is greater than the total media duration "
-                        f"({util.seconds2time(self.dw_player[player].cumul_media_durations_sec[-1])})"
-                    ),
-                )
-                return 1
+                if new_time < self.dw_player[player].cumul_media_durations_sec[-1]:
+                    for idx, d in enumerate(self.dw_player[player].cumul_media_durations_sec[:-1]):
+                        if d <= new_time < self.dw_player[player].cumul_media_durations_sec[idx + 1]:
+                            self.dw_player[player].player.playlist_pos = idx
+                            time.sleep(0.5)
+
+                            self.dw_player[player].player.seek(
+                                round(
+                                    float(new_time)
+                                    - sum(self.dw_player[player].media_durations[0 : self.dw_player[player].player.playlist_pos]) / 1000,
+                                    3,
+                                ),
+                                "absolute+exact",
+                            )
+
+                            break
+
+                    if player == 0 and not self.user_move_slider:
+                        self.video_slider.setValue(
+                            round(self.dw_player[0].player.time_pos / self.dw_player[0].player.duration * (cfg.SLIDER_MAXIMUM - 1))
+                        )
+                    return 0
+                else:
+                    QMessageBox.warning(
+                        self,
+                        cfg.programName,
+                        (
+                            "The indicated position is greater than the total media duration "
+                            f"({util.seconds2time(self.dw_player[player].cumul_media_durations_sec[-1])})"
+                        ),
+                    )
+                    return 1
+        except Exception:
+            return 0
 
     def jump_to(self) -> None:
         """
@@ -3859,11 +3862,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         returns frame index for player player_idx
         """
 
-        if not sys.platform.startswith(cfg.MACOS_CODE):
-            estimated_frame_number = self.dw_player[player_idx].player.estimated_frame_number
-        else:
-            """estimated_frame_number = observation_operations.send_command({"command": ["get_property", "estimated_frame_number"]})"""
-            estimated_frame_number = self.mpv_widget.estimated_frame_number()
+        estimated_frame_number = self.dw_player[player_idx].player.estimated_frame_number
 
         if estimated_frame_number is not None:
             return estimated_frame_number
@@ -4187,26 +4186,20 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         ct0 = cumulative_time_pos
 
-        if not sys.platform.startswith(cfg.MACOS_CODE):
-            if self.dw_player[0].player.time_pos is not None:
-                for n_player in range(1, len(self.dw_player)):
-                    ct = self.getLaps(n_player=n_player)
+        # if not sys.platform.startswith(cfg.MACOS_CODE):
+        if self.dw_player[0].player.time_pos is not None:
+            for n_player in range(1, len(self.dw_player)):
+                ct = self.getLaps(n_player=n_player)
 
-                    # sync players 2..8 if time diff >= 1 s
-                    if (
-                        abs(ct0 - (ct + dec(self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO][cfg.OFFSET][str(n_player + 1)])))
-                        >= 1
-                    ):
-                        self.sync_time(n_player, ct0)  # self.seek_mediaplayer(ct0, n_player)
+                # sync players 2..8 if time diff >= 1 s
+                if abs(ct0 - (ct + dec(self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO][cfg.OFFSET][str(n_player + 1)]))) >= 1:
+                    self.sync_time(n_player, ct0)  # self.seek_mediaplayer(ct0, n_player)
 
         currentTimeOffset = dec(cumulative_time_pos + self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TIME_OFFSET])
 
-        if not sys.platform.startswith(cfg.MACOS_CODE):
-            all_media_duration = sum(self.dw_player[0].media_durations) / 1000
-            current_media_duration = self.dw_player[0].player.duration  # mediaplayer_length
-        else:
-            # FIX
-            current_media_duration = 1000
+        all_media_duration = sum(self.dw_player[0].media_durations) / 1000
+        current_media_duration = self.dw_player[0].player.duration  # mediaplayer_length
+
         self.mediaTotalLength = current_media_duration
 
         # current state(s)
@@ -4599,15 +4592,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
             if self.playerType == cfg.MEDIA:
                 # cumulative time
-                if not sys.platform.startswith(cfg.MACOS_CODE):
-                    mem_laps = sum(self.dw_player[n_player].media_durations[0 : self.dw_player[n_player].player.playlist_pos]) + (
-                        0 if self.dw_player[n_player].player.time_pos is None else self.dw_player[n_player].player.time_pos * 1000
-                    )
-                else:
-                    """time_pos = observation_operations.send_command({"command": ["get_property", "time-pos"]})"""
-                    time_pos = self.mpv_widget.get_position()
-                    # TODO: fix!
-                    return dec(time_pos)
+                mem_laps = sum(self.dw_player[n_player].media_durations[0 : self.dw_player[n_player].player.playlist_pos]) + (
+                    0 if self.dw_player[n_player].player.time_pos is None else self.dw_player[n_player].player.time_pos * 1000
+                )
 
                 return dec(str(round(mem_laps / 1000, 3)))
 
@@ -5447,6 +5434,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         play video
         check if first player ended
         """
+
+        print("play")
 
         if self.geometric_measurements_mode:
             return
