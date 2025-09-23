@@ -4186,7 +4186,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         ct0 = cumulative_time_pos
 
-        # if not sys.platform.startswith(cfg.MACOS_CODE):
         if self.dw_player[0].player.time_pos is not None:
             for n_player in range(1, len(self.dw_player)):
                 ct = self.getLaps(n_player=n_player)
@@ -5435,7 +5434,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         check if first player ended
         """
 
-        print("play")
+        print("play_video")
 
         if self.geometric_measurements_mode:
             return
@@ -5474,6 +5473,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         pause media
         does not pause media if already paused (to prevent media played again)
         """
+
+        print("pause video")
 
         if self.playerType != cfg.MEDIA:
             return

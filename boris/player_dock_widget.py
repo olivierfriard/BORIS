@@ -142,7 +142,7 @@ class macos_MPV:
         """
         Send a JSON command to the mpv IPC server.
         """
-        print(f"send command: {command}")
+        # print(f"send command: {command}")
         try:
             # Create a Unix socket
             with socket.socket(socket.AF_UNIX, socket.SOCK_STREAM) as client:
@@ -157,8 +157,8 @@ class macos_MPV:
                 print(f"{response=}")
                 # Parse the response as JSON
                 response_data = json.loads(response.decode("utf-8"))
-                print(f"{response_data=}")
-                print()
+                # print(f"{response_data=}")
+                # print()
                 # Return the 'data' field which contains the playback position
                 return response_data.get("data")
         except FileNotFoundError:
@@ -190,10 +190,11 @@ class macos_MPV:
 
     @property
     def pause(self):
-        return 1
+        return self.send_command({"command": ["get_property", "pause"]})
 
     @pause.setter
     def pause(self, value):
+        print(f"set pause to {value}")
         return self.send_command({"command": ["set_property", "pause", value]})
 
     @property
@@ -233,6 +234,14 @@ class macos_MPV:
         playback_time_ = self.send_command({"command": ["get_property", "playback-time"]})
         print(f"playback_time: {playback_time_}")
         return playback_time_
+
+    def frame_step(self):
+        self.send_command({"command": ["frame-step"]})
+        return
+
+    def frame_back_step(self):
+        self.send_command({"command": ["frame-back-step"]})
+        return
 
 
 class DW_player(QDockWidget):
