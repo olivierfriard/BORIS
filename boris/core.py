@@ -1435,6 +1435,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     new_time_float = round(float(new_time), 3)
 
                     self.dw_player[player].player.seek(new_time_float, "absolute+exact")
+                    self.mpv_timer_out()
 
                     if player == 0 and not self.user_move_slider:
                         self.video_slider.setValue(
@@ -1478,8 +1479,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                         ),
                     )
                     return 1
-        except Exception:
-            print("error in seek mediaplayer function")
+        except Exception as e:
+            print(f"error in seek mediaplayer function: {e}")
             return 0
 
     def jump_to(self) -> None:
@@ -3689,6 +3690,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         if self.playerType == cfg.MEDIA:
             for dw in self.dw_player:
                 dw.player.frame_step()
+                self.mpv_timer_out()
                 if self.geometric_measurements_mode:
                     self.extract_frame(dw)
 
@@ -3713,6 +3715,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         if self.playerType == cfg.MEDIA:
             for dw in self.dw_player:
                 dw.player.frame_back_step()
+                self.mpv_timer_out()
                 if self.geometric_measurements_mode:
                     self.extract_frame(dw)
 
@@ -4152,8 +4155,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         print(f"{frame_idx=}")
         # frame_idx = 0
 
-        if value is None:
-            current_media_time_pos = 0
+        if value is None:  # ipc mpv
+            current_media_time_pos = self.dw_player[0].player.time_pos
         else:
             current_media_time_pos = value
 
@@ -5497,6 +5500,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     # stop all timer for plotting data
                     for data_timer in self.ext_data_timer_list:
                         data_timer.stop()
+
+                    if self.ipc_mpv_timer is not None:
+                        self.ipc_mpv_timer.stop()
+                        self.mpv_timer_out()
 
                     player.player.pause = True
 

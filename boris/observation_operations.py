@@ -2040,7 +2040,7 @@ def initialize_new_media_observation(self) -> bool:
     if sys.platform.startswith(cfg.MACOS_CODE):
         # activate timer
         self.ipc_mpv_timer = QTimer()
-        self.ipc_mpv_timer.setInterval(1000)
+        self.ipc_mpv_timer.setInterval(500)
         self.ipc_mpv_timer.timeout.connect(self.mpv_timer_out)
 
     else:
