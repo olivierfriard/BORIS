@@ -3690,13 +3690,15 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         if self.playerType == cfg.MEDIA:
             for dw in self.dw_player:
                 dw.player.frame_step()
-                self.mpv_timer_out()
+
                 if self.geometric_measurements_mode:
                     self.extract_frame(dw)
 
                 self.plot_timer_out()
                 for idx in self.plot_data:
                     self.timer_plot_data_out(self.plot_data[idx])
+
+            self.mpv_timer_out()
 
         if self.geometric_measurements_mode:
             geometric_measurement.redraw_measurements(self)
@@ -3715,13 +3717,15 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         if self.playerType == cfg.MEDIA:
             for dw in self.dw_player:
                 dw.player.frame_back_step()
-                self.mpv_timer_out()
+
                 if self.geometric_measurements_mode:
                     self.extract_frame(dw)
 
                 self.plot_timer_out()
                 for idx in self.plot_data:
                     self.timer_plot_data_out(self.plot_data[idx])
+
+            self.mpv_timer_out()
 
         if self.geometric_measurements_mode:
             geometric_measurement.redraw_measurements(self)
@@ -4323,14 +4327,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         """
 
         logging.info("Media end reached")
-
-        """
-        print(f"{self.dw_player[0].player.time_pos=}")
-        print(f"{self.dw_player[0].player.pause=}")
-        print(f"{self.dw_player[0].player.core_idle=}")
-        print(f"{self.dw_player[0].player.eof_reached=}")
-        print(f"{self.dw_player[0].player.playlist_pos=}")
-        """
 
         if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.CLOSE_BEHAVIORS_BETWEEN_VIDEOS]:
             if self.dw_player[0].player.eof_reached and self.dw_player[0].player.core_idle:
@@ -5553,13 +5549,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.seek_mediaplayer(new_time)
 
             self.update_visualizations()
-
-            # subtitles
-            """
-            st_track_number = 0 if self.config_param[DISPLAY_SUBTITLES] else -1
-            for player in self.dw_player:
-                player.mediaplayer.video_set_spu(st_track_number)
-            """
 
     def jumpForward_activated(self):
         """
