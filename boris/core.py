@@ -150,7 +150,7 @@ if util.versiontuple(platform.python_version()) < util.versiontuple(MIN_PYTHON_V
     logging.critical(msg)
     sys.exit()
 
-if sys.platform == "darwin":  # for MacOS
+if sys.platform.startswith("darwin"):  # for MacOS
     os.environ["LC_ALL"] = "en_US.UTF-8"
 
 
@@ -400,7 +400,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         # if BORIS is running on Mac lock all dockwidget features
         # because Qdockwidgets may have a strange behavior
-        if sys.platform == "darwin":
+        if sys.platform.startswith("darwin"):
             self.action_block_dockwidgets.setChecked(True)
             self.block_dockwidgets()
 
@@ -5794,7 +5794,7 @@ def main():
 
     # check ipc
     window.MPV_IPC_MODE = False
-    if options.ipc or sys.platform.startswith("linux"):
+    if options.ipc or sys.platform.startswith("darwin"):
         window.MPV_IPC_MODE = True
 
     window.show()

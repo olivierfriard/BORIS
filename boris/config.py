@@ -22,8 +22,7 @@ This file is part of BORIS.
 
 programName: str = "BORIS"
 
-
-MACOS_CODE = "linux"
+# socket for MPV IPC mode
 MPV_SOCKET = "/tmp/mpvsocket"
 
 
