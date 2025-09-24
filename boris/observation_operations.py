@@ -1471,7 +1471,7 @@ def initialize_new_media_observation(self) -> bool:
         if i == 0:  # first player
             p0 = player_dock_widget.DW_player(0, self)
 
-            if not sys.platform.startswith(cfg.MACOS_CODE):
+            if not self.MPV_IPC_MODE:
 
                 @p0.player.property_observer("time-pos")
                 def time_observer(_name, value):
@@ -1532,7 +1532,7 @@ def initialize_new_media_observation(self) -> bool:
         if i == 1:  # second player
             p1 = player_dock_widget.DW_player(1, self)
 
-            if not sys.platform.startswith(cfg.MACOS_CODE):
+            if not self.MPV_IPC_MODE:
 
                 @p1.player.on_key_press("MBTN_LEFT")
                 def mbtn_left1():
@@ -1583,7 +1583,7 @@ def initialize_new_media_observation(self) -> bool:
         if i == 2:
             p2 = player_dock_widget.DW_player(2, self)
 
-            if not sys.platform.startswith(cfg.MACOS_CODE):
+            if not self.MPV_IPC_MODE:
 
                 @p2.player.on_key_press("MBTN_LEFT")
                 def mbtn_left2():
@@ -1634,7 +1634,7 @@ def initialize_new_media_observation(self) -> bool:
         if i == 3:
             p3 = player_dock_widget.DW_player(3, self)
 
-            if not sys.platform.startswith(cfg.MACOS_CODE):
+            if not self.MPV_IPC_MODE:
 
                 @p3.player.on_key_press("MBTN_LEFT")
                 def mbtn_left3():
@@ -1685,7 +1685,7 @@ def initialize_new_media_observation(self) -> bool:
         if i == 4:
             p4 = player_dock_widget.DW_player(4, self)
 
-            if not sys.platform.startswith(cfg.MACOS_CODE):
+            if not self.MPV_IPC_MODE:
 
                 @p4.player.on_key_press("MBTN_LEFT")
                 def mbtn_left4():
@@ -1736,7 +1736,7 @@ def initialize_new_media_observation(self) -> bool:
         if i == 5:
             p5 = player_dock_widget.DW_player(5, self)
 
-            if not sys.platform.startswith(cfg.MACOS_CODE):
+            if not self.MPV_IPC_MODE:
 
                 @p5.player.on_key_press("MBTN_LEFT")
                 def mbtn_left5():
@@ -1786,7 +1786,7 @@ def initialize_new_media_observation(self) -> bool:
 
         if i == 6:
             p6 = player_dock_widget.DW_player(6, self)
-            if not sys.platform.startswith(cfg.MACOS_CODE):
+            if not self.MPV_IPC_MODE:
 
                 @p6.player.on_key_press("MBTN_LEFT")
                 def mbtn_left6():
@@ -1837,7 +1837,7 @@ def initialize_new_media_observation(self) -> bool:
         if i == 7:
             p7 = player_dock_widget.DW_player(7, self)
 
-            if not sys.platform.startswith(cfg.MACOS_CODE):
+            if not self.MPV_IPC_MODE:
 
                 @p7.player.on_key_press("MBTN_LEFT")
                 def mbtn_left7():
@@ -1957,7 +1957,6 @@ def initialize_new_media_observation(self) -> bool:
 
             # add media file to playlist
             self.dw_player[i].player.playlist_append(media_full_path)
-            print(f"{self.dw_player[i].player.playlist=}")
 
             # add media file name to player window title
             self.dw_player[i].setWindowTitle(f"Player #{i + 1} ({pl.Path(media_full_path).name})")
@@ -1969,7 +1968,7 @@ def initialize_new_media_observation(self) -> bool:
         # because "auto" or "auto-safe" crash in Windows VM
         # see https://superuser.com/questions/1128339/how-can-i-detect-if-im-within-a-vm-or-not
 
-        if not sys.platform.startswith(cfg.MACOS_CODE):
+        if not self.MPV_IPC_MODE:
             flag_vm = False
             if sys.platform.startswith("win"):
                 p = subprocess.Popen(
@@ -2037,7 +2036,7 @@ def initialize_new_media_observation(self) -> bool:
 
     menu_options.update_menu(self)
 
-    if sys.platform.startswith(cfg.MACOS_CODE):
+    if not self.MPV_IPC_MODE:
         # activate timer
         self.ipc_mpv_timer = QTimer()
         self.ipc_mpv_timer.setInterval(500)
@@ -2233,7 +2232,7 @@ def initialize_new_media_observation(self) -> bool:
     self.load_tw_events(self.observationId)
 
     # initial synchro
-    if not sys.platform.startswith(cfg.MACOS_CODE):
+    if not self.MPV_IPC_MODE:
         for n_player in range(1, len(self.dw_player)):
             self.sync_time(n_player, 0)
 

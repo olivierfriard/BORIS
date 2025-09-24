@@ -34,6 +34,8 @@ def parse_arguments():
     parser.add_option("-n", "--nosplashscreen", action="store_true", default=False, help="No splash screen")
     parser.add_option("-p", "--project", action="store", default="", dest="project", help="Project file")
     parser.add_option("-o", "--observation", action="store", default="", dest="observation", help="Observation id")
+    parser.add_option("-i", "--ipc", action="store_true", default="", dest="ipc", help="MPV IPC mode")
+
     parser.add_option(
         "-f",
         "--no-first-launch-dialog",

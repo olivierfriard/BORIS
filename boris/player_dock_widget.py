@@ -93,6 +93,7 @@ class DW_player(QDockWidget):
 
     def __init__(self, id_, parent=None):
         super().__init__(parent)
+        print("ipc", parent.MPV_IPC_MODE)
         self.id_ = id_
         self.setWindowTitle(f"Player #{id_ + 1}")
         self.setObjectName(f"player{id_ + 1}")
@@ -102,7 +103,7 @@ class DW_player(QDockWidget):
 
         self.videoframe = QWidget(self)
 
-        if sys.platform.startswith(cfg.MACOS_CODE):
+        if parent.MPV_IPC_MODE:
             self.player = ipc_mpv.IPC_MPV()
         else:
             self.player = mpv.MPV(

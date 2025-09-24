@@ -5792,6 +5792,11 @@ def main():
                 results.ptText.appendHtml(f"Some issues were found in the project<br><br>{msg}")
                 results.show()
 
+    # check ipc
+    window.MPV_IPC_MODE = False
+    if options.ipc or sys.platform.startswith("linux"):
+        window.MPV_IPC_MODE = True
+
     window.show()
     window.raise_()  # for overlapping widget (?)
 
