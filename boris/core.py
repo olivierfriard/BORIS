@@ -3947,7 +3947,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             if self.dw_player[0].player.duration is None:
                 return
             video_position = slider_position * self.dw_player[0].player.duration
-            self.dw_player[0].player.command("seek", str(video_position), "absolute")
+            # self.dw_player[0].player.command("seek", str(video_position), "absolute")
+            self.dw_player[0].player.seek(video_position, "absolute")
 
             self.plot_timer_out()
 

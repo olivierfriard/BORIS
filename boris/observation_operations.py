@@ -1950,17 +1950,17 @@ def initialize_new_media_observation(self) -> bool:
 
                     self.project_changed()
 
-        self.dw_player[i].media_durations.append(int(mediaLength))
-        self.dw_player[i].cumul_media_durations.append(self.dw_player[i].cumul_media_durations[-1] + int(mediaLength))
+            self.dw_player[i].media_durations.append(int(mediaLength))
+            self.dw_player[i].cumul_media_durations.append(self.dw_player[i].cumul_media_durations[-1] + int(mediaLength))
 
-        self.dw_player[i].fps[mediaFile] = mediaFPS
+            self.dw_player[i].fps[mediaFile] = mediaFPS
 
-        # add media file to playlist
-        self.dw_player[i].player.playlist_append(media_full_path)
-        print(f"{self.dw_player[i].player.playlist=}")
+            # add media file to playlist
+            self.dw_player[i].player.playlist_append(media_full_path)
+            print(f"{self.dw_player[i].player.playlist=}")
 
-        # add media file name to player window title
-        self.dw_player[i].setWindowTitle(f"Player #{i + 1} ({pl.Path(media_full_path).name})")
+            # add media file name to player window title
+            self.dw_player[i].setWindowTitle(f"Player #{i + 1} ({pl.Path(media_full_path).name})")
 
         # media duration cumuled in seconds
         self.dw_player[i].cumul_media_durations_sec = [round(dec(x / 1000), 3) for x in self.dw_player[i].cumul_media_durations]
