@@ -2037,7 +2037,16 @@ def initialize_new_media_observation(self) -> bool:
 
     menu_options.update_menu(self)
 
-    self.time_observer_signal.connect(self.mpv_timer_out)
+    if sys.platform.startswith(cfg.MACOS_CODE):
+        # activate timer
+        self.ipc_mpv_timer = QTimer()
+        self.ipc_mpv_timer.setInterval(1000)
+        self.ipc_mpv_timer.timeout.connect(self.mpv_timer_out)
+
+    else:
+        self.ipc_mpv_timer = None
+        self.time_observer_signal.connect(self.mpv_timer_out)
+
     self.mpv_eof_reached_signal.connect(self.mpv_eof_reached)
     self.video_click_signal.connect(self.player_clicked)
 

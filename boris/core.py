@@ -4133,7 +4133,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 self.dw_player[n_player].player.playlist_pos = self.dw_player[n_player].player.playlist_count - 1
                 self.seek_mediaplayer(self.dw_player[n_player].media_durations[-1], player=n_player)
 
-    def mpv_timer_out(self, value: Union[float, None], scroll_slider=True):
+    def mpv_timer_out(self, value: Union[float, None] = None, scroll_slider=True):
         """
         print the media current position and total length for MPV player
         scroll video slider to video position
@@ -4143,9 +4143,13 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         if not self.observationId:
             return
 
+        print("mpv timer out")
+
         cumulative_time_pos = self.getLaps()
+        print(f"{cumulative_time_pos=}")
         # get frame index
         frame_idx = self.get_frame_index()
+        print(f"{frame_idx=}")
         # frame_idx = 0
 
         if value is None:
@@ -4298,6 +4302,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 data_timer.stop()
 
             self.actionPlay.setIcon(QIcon(f":/play_{gui_utilities.theme_mode()}"))
+
+        print(f"{msg=}")
 
         if msg:
             self.lb_current_media_time.setText(msg)
@@ -5458,6 +5464,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         self.statusbar.showMessage("", 0)
 
+        if self.ipc_mpv_timer is not None:
+            self.ipc_mpv_timer.start()
+
         self.plot_timer.start()
 
         # start all timer for plotting data
@@ -5474,8 +5483,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         pause media
         does not pause media if already paused (to prevent media played again)
         """
-
-        print("pause video")
 
         if self.playerType != cfg.MEDIA:
             return
