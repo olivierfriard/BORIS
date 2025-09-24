@@ -82,9 +82,9 @@ def mpv_logger(player_id, loglevel, component, message):
     logging.debug(f"MPV player #{player_id}: [{loglevel}] {component}: {message}")
 
 
-class macos_MPV:
+class IPC_MPV:
     """
-    class for managing mpv through iptc
+    class for managing mpv through Inter Process Communication (IPC)
     """
 
     media_durations: list = []
@@ -95,12 +95,14 @@ class macos_MPV:
     def __init__(self, socket_path=cfg.MPV_SOCKET, parent=None):
         self.socket_path = socket_path
         self.process = None
-        self.sock = None
+        # self.sock = None
         # self.init_mpv()
-        self.init_socket()
+        # self.init_socket()
 
     def init_mpv(self):
-        """Start mpv process and embed it in the PySide6 application."""
+        """
+        Start mpv process and embed it in the PySide6 application.
+        """
         print("init_mpv")
         # print(f"{self.winId()=}")
         self.process = subprocess.Popen(
@@ -124,7 +126,7 @@ class macos_MPV:
         """
         print("init socket")
         self.sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
-        QTimer.singleShot(1000, self.connect_socket)  # Allow time for mpv to initialize
+        QTimer.singleShot(5000, self.connect_socket)  # Allow time for mpv to initialize
 
     def connect_socket(self):
         """
@@ -136,7 +138,7 @@ class macos_MPV:
             print("Connected to mpv IPC server.")
         except socket.error as e:
             print(f"Failed to connect to mpv IPC server: {e}")
-        print("end of connect_socket")
+        print("end of connect_socket fucntion")
 
     def send_command(self, command):
         """
@@ -154,11 +156,13 @@ class macos_MPV:
                 # Receive the response
                 response = client.recv(2000)
 
-                print(f"{response=}")
+                # print(f"{response=}")
                 # Parse the response as JSON
                 response_data = json.loads(response.decode("utf-8"))
-                # print(f"{response_data=}")
-                # print()
+                if response_data["error"] != "success":
+                    print(f"send command: {command}")
+                    print(f"{response_data=}")
+                    print()
                 # Return the 'data' field which contains the playback position
                 return response_data.get("data")
         except FileNotFoundError:
@@ -170,7 +174,6 @@ class macos_MPV:
     @property
     def time_pos(self):
         time_pos = self.send_command({"command": ["get_property", "time-pos"]})
-        print(f"time pos: {time_pos}")
         return time_pos
 
     @property
@@ -227,6 +230,7 @@ class macos_MPV:
         return
 
     def seek(self, value, mode: str):
+        self.send_command({"command": ["seek", value, mode]})
         return
 
     @property
@@ -241,6 +245,19 @@ class macos_MPV:
 
     def frame_back_step(self):
         self.send_command({"command": ["frame-back-step"]})
+        return
+
+    def screenshot_to_file(self, value):
+        self.send_command({"command": ["screenshot-to-file", value, "video"]})
+        return
+
+    @property
+    def speed(self):
+        return self.send_command({"command": ["get_property", "speed"]})
+
+    @speed.setter
+    def speed(self, value):
+        self.send_command({"command": ["set_property", "speed", value]})
         return
 
 
@@ -267,7 +284,7 @@ class DW_player(QDockWidget):
         self.videoframe = QWidget(self)
 
         if sys.platform.startswith(cfg.MACOS_CODE):
-            self.player = macos_MPV()
+            self.player = IPC_MPV()
         else:
             self.player = mpv.MPV(
                 wid=str(int(self.videoframe.winId())),

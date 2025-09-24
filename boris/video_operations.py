@@ -21,7 +21,6 @@ Copyright 2012-2025 Olivier Friard
 
 """
 
-import sys
 import logging
 import pathlib as pl
 import shutil
@@ -282,6 +281,7 @@ def video_faster_activated(self):
                 and self.pj[cfg.OBSERVATIONS][self.observationId][cfg.FILE][str(i + 1)]
             ):
                 player.player.speed = self.play_rate
+                print("speed")
 
         display_play_rate(self)
 

@@ -1458,7 +1458,6 @@ def initialize_new_media_observation(self) -> bool:
 
     # create dock widgets for players
 
-    # if not sys.platform.startswith(cfg.MACOS_CODE):
     for i in range(cfg.N_PLAYER):
         n_player = str(i + 1)
         if (
@@ -1917,7 +1916,6 @@ def initialize_new_media_observation(self) -> bool:
         # add fps list
         self.dw_player[i].fps = {}
 
-        # if not sys.platform.startswith(cfg.MACOS_CODE):
         for mediaFile in self.pj[cfg.OBSERVATIONS][self.observationId][cfg.FILE][n_player]:
             logging.debug(f"media file: {mediaFile}")
 
@@ -2036,14 +2034,6 @@ def initialize_new_media_observation(self) -> bool:
             if n_player in self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO][cfg.OVERLAY]:
                 self.overlays[i] = self.dw_player[i].player.create_image_overlay()
                 self.resize_dw(i)
-
-    # if sys.platform.startswith(cfg.MACOS_CODE):
-    #    self.mpv_widget = MPVWidget()
-    #    for mediaFile in self.pj[cfg.OBSERVATIONS][self.observationId][cfg.FILE]["1"]:
-    #        logging.debug(f"media file: {mediaFile}")
-    #
-    #        media_full_path = project_functions.full_path(mediaFile, self.projectFileName)
-    #        self.mpv_widget.load_file(media_full_path)
 
     menu_options.update_menu(self)
 

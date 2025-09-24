@@ -1479,6 +1479,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     )
                     return 1
         except Exception:
+            print("error in seek mediaplayer function")
             return 0
 
     def jump_to(self) -> None:
