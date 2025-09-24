@@ -260,6 +260,80 @@ class IPC_MPV:
         self.send_command({"command": ["set_property", "speed", value]})
         return
 
+    @property
+    def video_rotate(self):
+        return self.send_command({"command": ["get_property", "video-rotate"]})
+
+    @video_rotate.setter
+    def video_rotate(self, value):
+        self.send_command({"command": ["set_property", "video-rotate", value]})
+        return
+
+    @property
+    def sub_visibility(self):
+        return self.send_command({"command": ["get_property", "sub-visibility"]})
+
+    @sub_visibility.setter
+    def sub_visibility(self, value):
+        self.send_command({"command": ["set_property", "sub-visibility", value]})
+        return
+
+    @property
+    def brightness(self):
+        return self.send_command({"command": ["get_property", "brightness"]})
+
+    @brightness.setter
+    def brightness(self, value):
+        self.send_command({"command": ["set_property", "brightness", value]})
+        return
+
+    @property
+    def contrast(self):
+        return self.send_command({"command": ["get_property", "contrast"]})
+
+    @contrast.setter
+    def contrast(self, value):
+        self.send_command({"command": ["set_property", "contrast", value]})
+        return
+
+    @property
+    def saturation(self):
+        return self.send_command({"command": ["get_property", "saturation"]})
+
+    @saturation.setter
+    def saturation(self, value):
+        self.send_command({"command": ["set_property", "saturation", value]})
+        return
+
+    @property
+    def gamma(self):
+        return self.send_command({"command": ["get_property", "gamma"]})
+
+    @gamma.setter
+    def gamma(self, value):
+        self.send_command({"command": ["set_property", "gamma", value]})
+        return
+
+    @property
+    def hue(self):
+        return self.send_command({"command": ["get_property", "hue"]})
+
+    @hue.setter
+    def hue(self, value):
+        self.send_command({"command": ["set_property", "hue", value]})
+        return
+
+    """
+    @property
+    def xxx(self):
+        return self.send_command({"command": ["get_property", "xxx"]})
+
+    @xxx.setter
+    def xxx(self, value):
+        self.send_command({"command": ["set_property", "xxx", value]})
+        return
+    """
+
 
 class DW_player(QDockWidget):
     """
