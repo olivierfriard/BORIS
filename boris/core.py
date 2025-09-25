@@ -5811,6 +5811,7 @@ def main():
     window.MPV_IPC_MODE = False
     if options.ipc or sys.platform.startswith("darwin"):
         window.MPV_IPC_MODE = True
+        # check if mpv is available
         if not shutil.which("mpv"):
             logging.critical("The mpv command is not available on the path")
             QMessageBox.critical(
