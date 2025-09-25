@@ -44,6 +44,7 @@ import sys
 import urllib.parse
 import urllib.request
 import wave
+import socket
 
 from PySide6 import __version__ as pyside6_version
 from PySide6.QtGui import QPixmap, QImage
@@ -114,6 +115,22 @@ except Exception:
         sys.exit(5)
     else:
         sys.exit(5)
+
+
+def test_mpv_ipc(socket_path: str = "/tmp/mpvsocket") -> bool:
+    """
+    test if socket available
+    """
+    if not os.path.exists(socket_path):
+        return False
+
+    try:
+        client = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+        client.connect(socket_path)
+        client.close()
+        return True
+    except Exception:
+        return False
 
 
 def extract_exif_DateTimeOriginal(file_path: str) -> int:

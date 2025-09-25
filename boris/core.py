@@ -4236,6 +4236,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.show_current_states_in_subjects_table()
 
         # current media name
+        print(f"{self.dw_player[0].player.playlist_pos=}")
+        print(f"{self.dw_player[0].player.playlist=}")
+
         if self.dw_player[0].player.playlist_pos is not None:
             current_media_name = Path(self.dw_player[0].player.playlist[self.dw_player[0].player.playlist_pos]["filename"]).name
             current_playlist_index = self.dw_player[0].player.playlist_pos
@@ -5387,6 +5390,17 @@ class MainWindow(QMainWindow, Ui_MainWindow):
          and close program
         """
         logging.debug("function: closeEvent")
+
+        # close MPV in IPC mode
+        if self.MPV_IPC_MODE:
+            try:
+                self.dw_player[0].player.process.terminate()
+                try:
+                    self.dw_player[0].player.process.wait(timeout=3)  # wait up to 3s
+                except subprocess.TimeoutExpired:
+                    self.dw_player[0].player.process.kill()  # force if still alive
+            except Exception as e:
+                print(f"error stopping MPV process: {e}")
 
         # check if re-encoding
         if self.processes:

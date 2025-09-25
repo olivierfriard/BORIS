@@ -1457,7 +1457,6 @@ def initialize_new_media_observation(self) -> bool:
     """
 
     # create dock widgets for players
-
     for i in range(cfg.N_PLAYER):
         n_player = str(i + 1)
         if (
@@ -1915,6 +1914,12 @@ def initialize_new_media_observation(self) -> bool:
 
         # add fps list
         self.dw_player[i].fps = {}
+
+        if self.MPV_IPC_MODE:
+            while True:
+                print(f"{util.test_mpv_ipc()=}")
+                if util.test_mpv_ipc():
+                    break
 
         for mediaFile in self.pj[cfg.OBSERVATIONS][self.observationId][cfg.FILE][n_player]:
             logging.debug(f"media file: {mediaFile}")
