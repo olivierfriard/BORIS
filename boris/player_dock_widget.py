@@ -93,7 +93,7 @@ class DW_player(QDockWidget):
 
     def __init__(self, id_, parent=None):
         super().__init__(parent)
-        print("ipc", parent.MPV_IPC_MODE)
+        # print("ipc", parent.MPV_IPC_MODE)
         self.id_ = id_
         self.setWindowTitle(f"Player #{id_ + 1}")
         self.setObjectName(f"player{id_ + 1}")
@@ -104,7 +104,7 @@ class DW_player(QDockWidget):
         self.videoframe = QWidget(self)
 
         if parent.MPV_IPC_MODE:
-            self.player = ipc_mpv.IPC_MPV()
+            self.player = ipc_mpv.IPC_MPV(socket_path=f"{cfg.MPV_SOCKET}{self.id_}")
         else:
             self.player = mpv.MPV(
                 wid=str(int(self.videoframe.winId())),

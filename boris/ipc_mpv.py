@@ -15,8 +15,8 @@ class IPC_MPV:
     fps: list = []
     _pause: bool = False
 
-    def __init__(self, socket_path=cfg.MPV_SOCKET, parent=None):
-        print(f"{parent=}")
+    def __init__(self, socket_path: str = cfg.MPV_SOCKET, parent=None):
+        # print(f"{parent=}")
         self.socket_path = socket_path
         self.process = None
         # self.sock = None

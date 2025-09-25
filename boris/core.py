@@ -5394,11 +5394,12 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         # close MPV in IPC mode
         if self.MPV_IPC_MODE:
             try:
-                self.dw_player[0].player.process.terminate()
-                try:
-                    self.dw_player[0].player.process.wait(timeout=3)  # wait up to 3s
-                except subprocess.TimeoutExpired:
-                    self.dw_player[0].player.process.kill()  # force if still alive
+                for p in self.dw_player:
+                    p.player.process.terminate()
+                    try:
+                        p.player.process.wait(timeout=3)  # wait up to 3s
+                    except subprocess.TimeoutExpired:
+                        p.player.process.kill()  # force if still alive
             except Exception as e:
                 print(f"error stopping MPV process: {e}")
 

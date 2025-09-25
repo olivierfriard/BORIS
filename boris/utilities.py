@@ -117,7 +117,7 @@ except Exception:
         sys.exit(5)
 
 
-def test_mpv_ipc(socket_path: str = "/tmp/mpvsocket") -> bool:
+def test_mpv_ipc(socket_path: str = cfg.MPV_SOCKET) -> bool:
     """
     test if socket available
     """

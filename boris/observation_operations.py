@@ -1158,6 +1158,16 @@ def close_observation(self):
                 logging.info(f"Stop player #{i + 1}")
                 player.player.stop()
 
+                if self.MPV_IPC_MODE:
+                    try:
+                        player.player.process.terminate()
+                        try:
+                            player.player.process.wait(timeout=3)  # wait up to 3s
+                        except subprocess.TimeoutExpired:
+                            player.player.process.kill()  # force if still alive
+                    except Exception as e:
+                        print(f"error stopping MPV process: {e}")
+
         self.verticalLayout_3.removeWidget(self.video_slider)
 
         if self.video_slider is not None:
@@ -1295,99 +1305,6 @@ def check_creation_date(self) -> Tuple[int, dict]:
             return (1, {})
     else:
         return (0, media_creation_time)  # OK all media have a 'creation time' tag
-
-
-'''
-class MPVWidget(QWidget):
-    def __init__(self, socket_path=cfg.MPV_SOCKET, parent=None):
-        super().__init__(parent)
-        self.socket_path = socket_path
-        self.process = None
-        self.sock = None
-        self.init_mpv()
-        self.init_socket()
-        print("init mpvwidget")
-
-    def init_mpv(self):
-        """Start mpv process and embed it in the PySide6 application."""
-        print("start")
-        print(f"{self.winId()=}")
-        self.process = subprocess.Popen(
-            [
-                "mpv",
-                "--no-border",
-                "--osc=no",  # no on screen commands
-                "--input-ipc-server=" + self.socket_path,
-                "--wid=" + str(int(self.winId())),  # Embed in the widget
-                "--idle",  # Keeps mpv running with no video
-            ],
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
-        )
-
-        print(self.process)
-
-    def init_socket(self):
-        """Initialize the JSON IPC socket."""
-        self.sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
-        QTimer.singleShot(1000, self.connect_socket)  # Allow time for mpv to initialize
-
-    def connect_socket(self):
-        """Connect to the mpv IPC socket."""
-        try:
-            self.sock.connect(self.socket_path)
-            print("Connected to mpv IPC server.")
-        except socket.error as e:
-            print(f"Failed to connect to mpv IPC server: {e}")
-        print("end of connect_socket")
-
-    def send_command(self, command):
-        """
-        Send a JSON command to the mpv IPC server.
-        """
-        try:
-            # Create a Unix socket
-            with socket.socket(socket.AF_UNIX, socket.SOCK_STREAM) as client:
-                # Connect to the MPV IPC server
-                client.connect(self.socket_path)
-                # Send the JSON command
-                # print(f"{json.dumps(command).encode('utf-8')=}")
-                client.sendall(json.dumps(command).encode("utf-8") + b"\n")
-                # Receive the response
-                response = client.recv(2000)
-                print()
-                print(f"{response=}")
-                # Parse the response as JSON
-                response_data = json.loads(response.decode("utf-8"))
-                print(f"{response_data=}")
-                # Return the 'data' field which contains the playback position
-                return response_data.get("data")
-        except FileNotFoundError:
-            print("Error: Socket file not found.")
-        except Exception as e:
-            print(f"An error occurred: {e}")
-        return None
-
-    def load_file(self, file_path) -> None:
-        """
-        Load a media file in mpv.
-        """
-        self.send_command({"command": ["loadfile", file_path]})
-        self.pause()
-        self.send_command({"command": ["set_property", "time-pos", 0]})
-
-    def estimated_frame_number(self):
-        return self.send_command({"command": ["get_property", "estimated_frame_number-pos"]})
-
-    def get_position(self):
-        return self.send_command({"command": ["get_property", "time-pos"]})
-
-    def get_video_zoom(self):
-        return self.send_command({"command": ["get_property", "video-zoom"]})
-
-    def pause(self):
-        return self.send_command({"command": ["set_property", "pause", True]})
-'''
 
 
 def initialize_new_media_observation(self) -> bool:
@@ -1917,8 +1834,8 @@ def initialize_new_media_observation(self) -> bool:
 
         if self.MPV_IPC_MODE:
             while True:
-                print(f"{util.test_mpv_ipc()=}")
-                if util.test_mpv_ipc():
+                print(f"{util.test_mpv_ipc(f"{cfg.MPV_SOCKET}{i}")=}")
+                if util.test_mpv_ipc(f"{cfg.MPV_SOCKET}{i}"):
                     break
 
         for mediaFile in self.pj[cfg.OBSERVATIONS][self.observationId][cfg.FILE][n_player]:
