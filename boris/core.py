@@ -5807,10 +5807,20 @@ def main():
                 results.ptText.appendHtml(f"Some issues were found in the project<br><br>{msg}")
                 results.show()
 
-    # check ipc
+    # check mpv IPC mode
     window.MPV_IPC_MODE = False
     if options.ipc or sys.platform.startswith("darwin"):
         window.MPV_IPC_MODE = True
+        if not shutil.which("mpv"):
+            logging.critical("The mpv command is not available on the path")
+            QMessageBox.critical(
+                None,
+                cfg.programName,
+                ("The mpv command is not available on the path"),
+                QMessageBox.Ok | QMessageBox.Default,
+                QMessageBox.NoButton,
+            )
+            sys.exit()
 
     window.show()
     window.raise_()  # for overlapping widget (?)

@@ -1,8 +1,12 @@
 import socket
 import json
 import subprocess
-from PySide6.QtCore import QTimer
+
+# from PySide6.QtCore import QTimer
+import logging
 import config as cfg
+
+logger = logging.getLogger(__name__)
 
 
 class IPC_MPV:
@@ -27,7 +31,7 @@ class IPC_MPV:
         """
         Start mpv process and embed it in the PySide6 application.
         """
-        print("init_mpv")
+        logger.info("Start mpv ipc process")
         # print(f"{self.winId()=}")
         self.process = subprocess.Popen(
             [
@@ -44,8 +48,7 @@ class IPC_MPV:
             stderr=subprocess.PIPE,
         )
 
-        print(self.process)
-
+    '''
     def init_socket(self):
         """
         Initialize the JSON IPC socket.
@@ -53,7 +56,9 @@ class IPC_MPV:
         print("init socket")
         self.sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
         QTimer.singleShot(5000, self.connect_socket)  # Allow time for mpv to initialize
+    '''
 
+    '''
     def connect_socket(self):
         """
         Connect to the mpv IPC socket.
@@ -65,6 +70,7 @@ class IPC_MPV:
         except socket.error as e:
             print(f"Failed to connect to mpv IPC server: {e}")
         print("end of connect_socket fucntion")
+    '''
 
     def send_command(self, command):
         """
@@ -92,21 +98,19 @@ class IPC_MPV:
                 # Return the 'data' field which contains the playback position
                 return response_data.get("data")
         except FileNotFoundError:
-            print("Error: Socket file not found.")
+            logger.critical("Error: Socket file not found.")
         except Exception as e:
-            print(f"An error occurred: {e}")
+            logger.critical(f"An error occurred: {e}")
         return None
 
     @property
     def time_pos(self):
         time_pos = self.send_command({"command": ["get_property", "time-pos"]})
-        print(f"{time_pos=}")
         return time_pos
 
     @property
     def duration(self):
         duration_ = self.send_command({"command": ["get_property", "duration"]})
-        print(f"duration: {duration_}")
         return duration_
 
     @property

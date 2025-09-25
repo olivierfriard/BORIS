@@ -1834,8 +1834,9 @@ def initialize_new_media_observation(self) -> bool:
 
         if self.MPV_IPC_MODE:
             while True:
-                print(f"{util.test_mpv_ipc(f"{cfg.MPV_SOCKET}{i}")=}")
-                if util.test_mpv_ipc(f"{cfg.MPV_SOCKET}{i}"):
+                r = util.test_mpv_ipc(f"{cfg.MPV_SOCKET}{i}")
+                logging.debug(f"MPV IPC started: {r}")
+                if r:
                     break
 
         for mediaFile in self.pj[cfg.OBSERVATIONS][self.observationId][cfg.FILE][n_player]:
