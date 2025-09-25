@@ -1166,7 +1166,7 @@ def close_observation(self):
                         except subprocess.TimeoutExpired:
                             player.player.process.kill()  # force if still alive
                     except Exception as e:
-                        print(f"error stopping MPV process: {e}")
+                        logging.warning(f"Error stopping MPV process #{i}: {e}")
 
         self.verticalLayout_3.removeWidget(self.video_slider)
 
