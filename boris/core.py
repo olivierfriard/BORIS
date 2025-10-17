@@ -5687,10 +5687,11 @@ def main():
                 QMessageBox.warning(
                     None,
                     cfg.programName,
-                    "FFmpeg is not available.<br>It will be downloaded",
+                    "FFmpeg is not available.<br>It will be downloaded from the BORIS GitHub repository",
                     QMessageBox.Ok | QMessageBox.Default,
                     QMessageBox.NoButton,
                 )
+            logging.info("FFmpeg is not available. It will be downloaded from the BORIS GitHub repository")
 
             # download ffmpeg and ffprobe from https://github.com/boris-behav-obs/boris-behav-obs.github.io/releases/download/files/
             url = "https://github.com/boris-behav-obs/boris-behav-obs.github.io/releases/download/files/"
