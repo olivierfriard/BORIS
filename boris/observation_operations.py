@@ -19,19 +19,23 @@ Copyright 2012-2025 Olivier Friard
   MA 02110-1301, USA.
 """
 
+
+import logging
+from collections import deque
+import datetime as dt
+from decimal import Decimal as dec
+import json
 from math import log2, floor
 import os
-import logging
-import time
-import tempfile
-import json
-import subprocess
-import socket
-import sys
-from decimal import Decimal as dec
 import pathlib as pl
-import datetime as dt
+import socket
+import subprocess
+import sys
+import tempfile
+import time
 from typing import List, Tuple, Optional
+
+
 
 
 from PySide6.QtWidgets import (
@@ -1193,6 +1197,9 @@ def close_observation(self):
     self.close_tool_windows()
 
     self.observationId = ""
+
+    # delete undo queue
+    self.undo_queue = deque()
 
     if self.playerType in (cfg.MEDIA, cfg.IMAGES):
         """
