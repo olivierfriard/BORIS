@@ -236,8 +236,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     processes: list = []  # list of QProcess processes
     overlays: dict = {}  # dict for storing video overlays
 
-    undo_queue = deque()
-    undo_description = deque()
+    undo_queue = deque() # queue for undoing event operations
+    undo_description = deque() # queue for description of event operations
 
     current_player: int = 0  # id of the selected (left click) video player
 

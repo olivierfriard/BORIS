@@ -1,3 +1,8 @@
+**v. 9.6.6**
+
+* Fixed bug #899
+
+**v. 9.6.5**
 
 * Added a rounding option to Cohen's kappa plugins. The number of decimals for rounding can be negative (with a value of -1, 123.456 will round to 120.0)
 
