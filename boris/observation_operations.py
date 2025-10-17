@@ -1189,6 +1189,8 @@ def close_observation(self):
 
     # delete undo queue
     self.undo_queue = deque()
+    self.undo_description = deque()
+
 
     if self.playerType in (cfg.MEDIA, cfg.IMAGES):
         """
