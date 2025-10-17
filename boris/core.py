@@ -5683,13 +5683,14 @@ def main():
     ret, msg = util.check_ffmpeg_path()
     if not ret:
         if sys.platform.startswith("win"):
-            QMessageBox.warning(
-                None,
-                cfg.programName,
-                "FFmpeg is not available.<br>It will be downloaded",
-                QMessageBox.Ok | QMessageBox.Default,
-                QMessageBox.NoButton,
-            )
+            if (options.nosplashscreen):
+                QMessageBox.warning(
+                    None,
+                    cfg.programName,
+                    "FFmpeg is not available.<br>It will be downloaded",
+                    QMessageBox.Ok | QMessageBox.Default,
+                    QMessageBox.NoButton,
+                )
 
             # download ffmpeg and ffprobe from https://github.com/boris-behav-obs/boris-behav-obs.github.io/releases/download/files/
             url = "https://github.com/boris-behav-obs/boris-behav-obs.github.io/releases/download/files/"
