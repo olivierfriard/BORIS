@@ -5683,18 +5683,25 @@ def main():
     ret, msg = util.check_ffmpeg_path()
     if not ret:
         if sys.platform.startswith("win"):
-            if (options.nosplashscreen):
-                QMessageBox.warning(
-                    None,
-                    cfg.programName,
-                    "FFmpeg is not available.<br>It will be downloaded from the BORIS GitHub repository",
-                    QMessageBox.Ok | QMessageBox.Default,
-                    QMessageBox.NoButton,
-                )
+
+            import ctypes
+            MessageBoxTimeoutW = ctypes.windll.user32.MessageBoxTimeoutW
+            MessageBoxTimeoutW.argtypes = [ctypes.c_void_p, ctypes.c_wchar_p, ctypes.c_wchar_p,
+                                ctypes.c_uint, ctypes.c_uint, ctypes.c_uint]
+            ctypes.windll.user32.MessageBoxTimeoutW(None, "The FFmpeg framework is not available.\nIt will be downloaded from the BORIS GitHub repository.", "FFmpeg", 0, 0, 10000) # time out
+
+            # if (not options.nosplashscreen):
+            #     QMessageBox.warning(
+            #         None,
+            #         cfg.programName,
+            #         "FFmpeg is not available.<br>It will be downloaded from the BORIS GitHub repository",
+            #         QMessageBox.Ok | QMessageBox.Default,
+            #         QMessageBox.NoButton,
+            #     )
             logging.info("FFmpeg is not available. It will be downloaded from the BORIS GitHub repository")
 
             # download ffmpeg and ffprobe from https://github.com/boris-behav-obs/boris-behav-obs.github.io/releases/download/files/
-            url = "https://github.com/boris-behav-obs/boris-behav-obs.github.io/releases/download/files/"
+            url:str = "https://github.com/boris-behav-obs/boris-behav-obs.github.io/releases/download/files/"
 
             # search where to download ffmpeg
             ffmpeg_dir = Path(__file__).parent / "misc"

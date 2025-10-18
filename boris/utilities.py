@@ -64,17 +64,17 @@ except Exception:
         import ctypes
 
         logger.info("The MPV library was not found!\nIt will be downloaded from the BORIS GitHub repository")
-        ctypes.windll.user32.MessageBoxW(0, "The MPV library was not found!\nIt will be downloaded.", "BORIS", 0)
+        #ctypes.windll.user32.MessageBoxW(0, "The MPV library was not found!\nIt will be downloaded.", "BORIS", 0)
 
         # test if following function works on windows
-        #MessageBoxTimeoutW = ctypes.windll.user32.MessageBoxTimeoutW
-        #MessageBoxTimeoutW.argtypes = [ctypes.c_void_p, ctypes.c_wchar_p, ctypes.c_wchar_p,
-        #                       ctypes.c_uint, ctypes.c_uint, ctypes.c_uint]
-        #ctypes.windll.user32.MessageBoxTimeoutW(None, "The MPV library was not found!\nIt will be downloaded.", "MPV library", 0, 0, 10000) # time out
+        MessageBoxTimeoutW = ctypes.windll.user32.MessageBoxTimeoutW
+        MessageBoxTimeoutW.argtypes = [ctypes.c_void_p, ctypes.c_wchar_p, ctypes.c_wchar_p,
+                               ctypes.c_uint, ctypes.c_uint, ctypes.c_uint]
+        ctypes.windll.user32.MessageBoxTimeoutW(None, "The MPV library was not found.\nIt will be downloaded from the BORIS GitHub repository.", "MPV library", 0, 0, 10000) # time out
 
         # download libmpv2.dll from https://github.com/boris-behav-obs/boris-behav-obs.github.io/releases/download/files/
 
-        url = "https://github.com/boris-behav-obs/boris-behav-obs.github.io/releases/download/files/"
+        url:str = "https://github.com/boris-behav-obs/boris-behav-obs.github.io/releases/download/files/"
 
         external_files_dir = ""
         # search where to download libmpv-2.dll
