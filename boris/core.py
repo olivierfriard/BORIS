@@ -5849,6 +5849,10 @@ def main():
     if not options.nosplashscreen and (sys.platform != "darwin"):
         splash.finish(window)
 
+    # quit just after launch (used in the deployment procedure)
+    if options.quit:
+        sys.exit()
+
     return_code = app.exec()
 
     del window
