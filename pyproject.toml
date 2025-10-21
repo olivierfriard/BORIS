@@ -21,7 +21,7 @@ dependencies = [
     "pandas==2.3.2",
     "tablib[cli,html,ods,pandas,xls,xlsx]==3.8.0",
     "pyreadr==0.5.3",
-    "pyside6==6.9",
+    "pyside6==6.10",
     "hachoir==3.3.0",
     "scipy==1.16.1",
     "scikit-learn==1.7.1",
