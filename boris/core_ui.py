@@ -3,7 +3,7 @@
 ################################################################################
 ## Form generated from reading UI file 'core.ui'
 ##
-## Created by: Qt User Interface Compiler version 6.9.0
+## Created by: Qt User Interface Compiler version 6.10.0
 ##
 ## WARNING! All changes made in this file will be lost when recompiling UI file!
 ################################################################################
@@ -382,6 +382,9 @@ class Ui_MainWindow(object):
         self.actionCreate_video_spectrogram.setObjectName(u"actionCreate_video_spectrogram")
         self.action_change_time_offset_of_players = QAction(MainWindow)
         self.action_change_time_offset_of_players.setObjectName(u"action_change_time_offset_of_players")
+        self.action_add_comment = QAction(MainWindow)
+        self.action_add_comment.setObjectName(u"action_add_comment")
+        self.action_add_comment.setMenuRole(QAction.MenuRole.NoRole)
         self.centralwidget = QWidget(MainWindow)
         self.centralwidget.setObjectName(u"centralwidget")
         self.horizontalLayout_2 = QHBoxLayout(self.centralwidget)
@@ -488,7 +491,7 @@ class Ui_MainWindow(object):
         MainWindow.setCentralWidget(self.centralwidget)
         self.menubar = QMenuBar(MainWindow)
         self.menubar.setObjectName(u"menubar")
-        self.menubar.setGeometry(QRect(0, 0, 1509, 25))
+        self.menubar.setGeometry(QRect(0, 0, 1509, 20))
         self.menuHelp = QMenu(self.menubar)
         self.menuHelp.setObjectName(u"menuHelp")
         self.menuFile = QMenu(self.menubar)
@@ -1037,6 +1040,7 @@ class Ui_MainWindow(object):
         self.action_load_plugins.setText(QCoreApplication.translate("MainWindow", u"Load plugins", None))
         self.actionCreate_video_spectrogram.setText(QCoreApplication.translate("MainWindow", u"Create video spectrogram", None))
         self.action_change_time_offset_of_players.setText(QCoreApplication.translate("MainWindow", u"Change time offset of players", None))
+        self.action_add_comment.setText(QCoreApplication.translate("MainWindow", u"Add/Edit comment", None))
         self.lbLogoBoris.setText("")
         self.lbLogoUnito.setText("")
         self.lb_player_status.setText(QCoreApplication.translate("MainWindow", u"lb_player_status", None))

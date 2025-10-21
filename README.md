@@ -21,6 +21,8 @@ The BORIS paper has more than 2337 citations in peer-reviewed scientific publica
 
 See the official [BORIS web site](https://www.boris.unito.it).
 
+<a href="https://www.boris.unito.it" target="_blank"><img alt="Website" src="https://img.shields.io/website?url=https%3A%2F%2Fwww.boris.unito.it"></a>
+<a href="https://www.boris.unito.it/user_guide/" target="_blank"><img alt="User guide" src="https://img.shields.io/badge/Documentation-orange"></a>
 [![Python web site](https://img.shields.io/badge/Made%20with-Python-1f425f.svg)](https://www.python.org)
 ![Python versions](https://img.shields.io/pypi/pyversions/boris-behav-obs)
 ![BORIS license](https://img.shields.io/pypi/l/boris-behav-obs)
@@ -98,7 +100,3 @@ GNU General Public License for more details.
 Distributed with a [GPL v.3 license](LICENSE.TXT).
 
 Copyright (C) 2012-2025 Olivier Friard
-
-
-
-

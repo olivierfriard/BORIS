@@ -30,6 +30,7 @@ def parse_arguments():
     parser = OptionParser(usage=usage)
 
     parser.add_option("-d", "--debug", action="store_true", default=False, dest="debug", help="Use debugging mode")
+    parser.add_option("-q", "--quit", action="store_true", default=False, dest="quit", help="Quit after launch")
     parser.add_option("-v", "--version", action="store_true", default=False, dest="version", help="Print version")
     parser.add_option("-n", "--nosplashscreen", action="store_true", default=False, help="No splash screen")
     parser.add_option("-p", "--project", action="store", default="", dest="project", help="Project file")
