@@ -1,5 +1,5 @@
 # Set-ExecutionPolicy -Scope CurrentUser -ExecutionPolicy RemoteSigned
-# powershell -ExecutionPolicy ByPass -c "irm https://github.com/olivierfriard/BORIS/blob/master/deployment/windows_deployment_test.ps1 | iex"
+# powershell -ExecutionPolicy ByPass -c "irm https://raw.githubusercontent.com/olivierfriard/BORIS/refs/heads/master/deployment/windows_deployment_test.ps1 | iex"
 
 # Download and extract standalone Python 3.13.9 build, then install boris-behav-obs via pip
 
