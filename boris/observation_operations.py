@@ -19,7 +19,6 @@ Copyright 2012-2025 Olivier Friard
   MA 02110-1301, USA.
 """
 
-
 import logging
 from collections import deque
 import datetime as dt
@@ -34,8 +33,6 @@ import sys
 import tempfile
 import time
 from typing import List, Tuple, Optional
-
-
 
 
 from PySide6.QtWidgets import (
@@ -1190,7 +1187,6 @@ def close_observation(self):
     # delete undo queue
     self.undo_queue = deque()
     self.undo_description = deque()
-
 
     if self.playerType in (cfg.MEDIA, cfg.IMAGES):
         """

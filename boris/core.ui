@@ -166,7 +166,7 @@
      <x>0</x>
      <y>0</y>
      <width>1509</width>
-     <height>25</height>
+     <height>20</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuHelp">
@@ -1600,6 +1600,14 @@
   <action name="action_change_time_offset_of_players">
    <property name="text">
     <string>Change time offset of players</string>
+   </property>
+  </action>
+  <action name="action_add_comment">
+   <property name="text">
+    <string>Add/Edit comment</string>
+   </property>
+   <property name="menuRole">
+    <enum>QAction::MenuRole::NoRole</enum>
    </property>
   </action>
  </widget>

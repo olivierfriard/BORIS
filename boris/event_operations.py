@@ -454,6 +454,61 @@ def select_events_between_activated(self):
         self.tv_events.setSelectionMode(QAbstractItemView.ExtendedSelection)
 
 
+def add_comment(self):
+    """
+    add a comment to the selected events
+    operation can be undone with Undo
+    """
+    tvevents_rows_to_edit = set([index.row() for index in self.tv_events.selectionModel().selectedIndexes()])
+    if not len(tvevents_rows_to_edit):
+        QMessageBox.warning(self, cfg.programName, "No event selected!")
+        return
+
+    comment_str: str = ""
+    if len(tvevents_rows_to_edit) == 1:
+        pj_event_idx = self.tv_idx2events_idx[self.tv_events.selectionModel().selectedIndexes()[0].row()]
+        comment_str = self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS][pj_event_idx][
+            cfg.PJ_OBS_FIELDS[self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE]][cfg.COMMENT]
+        ]
+    else:
+        # check if comment is the same in all selected events
+
+        if (
+            len(
+                set(
+                    [
+                        self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS][self.tv_idx2events_idx[tvevents_row]][
+                            cfg.PJ_OBS_FIELDS[self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE]][cfg.COMMENT]
+                        ]
+                        for tvevents_row in tvevents_rows_to_edit
+                    ]
+                )
+            )
+            == 1
+        ):
+            pj_event_idx = self.tv_idx2events_idx[self.tv_events.selectionModel().selectedIndexes()[0].row()]
+            comment_str = self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS][pj_event_idx][
+                cfg.PJ_OBS_FIELDS[self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE]][cfg.COMMENT]
+            ]
+
+    new_comment, ok = QInputDialog.getText(self, "Add/Edit a comment", "Comment:", text=comment_str)
+    if not ok:
+        return
+
+    # fill the undo list
+    fill_events_undo_list(self, "Undo last comment operation")
+
+    for tvevents_row in tvevents_rows_to_edit:
+        pj_event_idx = self.tv_idx2events_idx[tvevents_row]
+
+        self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS][pj_event_idx][
+            cfg.PJ_OBS_FIELDS[self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE]][cfg.COMMENT]
+        ] = new_comment
+
+    # reload all events in tw
+    self.load_tw_events(self.observationId)
+
+
 def edit_selected_events(self):
     """
     edit one or more selected events for subject, behavior and/or comment

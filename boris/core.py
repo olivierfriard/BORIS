@@ -236,8 +236,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     processes: list = []  # list of QProcess processes
     overlays: dict = {}  # dict for storing video overlays
 
-    undo_queue = deque() # queue for undoing event operations
-    undo_description = deque() # queue for description of event operations
+    undo_queue = deque()  # queue for undoing event operations
+    undo_description = deque()  # queue for description of event operations
 
     current_player: int = 0  # id of the selected (left click) video player
 
@@ -3728,77 +3728,78 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         QMessageBox.warning(self, cfg.programName, "Function not yet implemented")
         return
 
-        if not self.observationId:
-            self.no_observation()
-            return
+        # if not self.observationId:
+        #    self.no_observation()
+        #    return
 
-        if self.twEvents.selectedItems():
-            row_s = self.twEvents.selectedItems()[0].row()
-            row_e = self.twEvents.selectedItems()[-1].row()
-            eventtime_s = self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS][row_s][0]
-            eventtime_e = self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS][row_e][0]
-
-            durations = []  # in seconds
-
-            # TODO: check for 2nd player
-            for mediaFile in self.pj[cfg.OBSERVATIONS][self.observationId][cfg.FILE][cfg.PLAYER1]:
-                durations.append(self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO]["length"][mediaFile])
-
-            mediaFileIdx_s = [idx1 for idx1, x in enumerate(durations) if eventtime_s >= sum(durations[0:idx1])][-1]
-            media_path_s = self.pj[cfg.OBSERVATIONS][self.observationId][cfg.FILE][cfg.PLAYER1][mediaFileIdx_s]
-
-            mediaFileIdx_e = [idx1 for idx1, x in enumerate(durations) if eventtime_e >= sum(durations[0:idx1])][-1]
-            media_path_e = self.pj[cfg.OBSERVATIONS][self.observationId][cfg.FILE][cfg.PLAYER1][mediaFileIdx_e]
-
-            # calculate time for current media file in case of many queued media files
-
-            eventtime_onmedia_s = round(eventtime_s - util.float2decimal(sum(durations[0:mediaFileIdx_s])), 3)
-            eventtime_onmedia_e = round(eventtime_e - util.float2decimal(sum(durations[0:mediaFileIdx_e])), 3)
-
-            if media_path_s != media_path_e:
-                return
-
-            media_path = media_path_s
-
-            # example of external command defined in environment:
-            # export BORISEXTERNAL="myprog -i {MEDIA_PATH} -s {START_S} -e {END_S} {DURATION_MS} --other"
-
-            if "BORISEXTERNAL" in os.environ:
-                external_command_template = os.environ["BORISEXTERNAL"]
-            else:
-                return
-
-            external_command = external_command_template.format(
-                OBS_ID=self.observationId,
-                MEDIA_PATH=f'"{media_path}"',
-                MEDIA_BASENAME=f'"{os.path.basename(media_path)}"',
-                START_S=eventtime_onmedia_s,
-                END_S=eventtime_onmedia_e,
-                START_MS=eventtime_onmedia_s * 1000,
-                END_MS=eventtime_onmedia_e * 1000,
-                DURATION_S=eventtime_onmedia_e - eventtime_onmedia_s,
-                DURATION_MS=(eventtime_onmedia_e - eventtime_onmedia_s) * 1000,
-            )
-
-            print(external_command)
-            """
-            p = subprocess.Popen(external_command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
-            """
-            """
-            if eventtimeS == eventtimeE:
-                q = []
-            else:
-                durationsec = eventtimeE-eventtimeS
-                q = ["--durationmsec",str(int(durationsec*1000))]
-            args = [ex, "-f",os.path.abspath(fn),"--seekmsec",str(int(eventtimeS*1000)),*q,*("--size 1 --track 1 --redetect 100")
-            .split(" ")]
-            if os.path.split(fn)[1].split("_")[0] in set(["A1","A2","A3","A4","A5","A6","A7","A8","A9","A10"]):
-                args.append("--flip")
-                args.append("2")
-            print (os.path.split(fn)[1].split("_")[0])
-            print ("running",ex,"with",args,"in",os.path.split(ex)[0])
-            #pid = subprocess.Popen(args,executable=ex,cwd=os.path.split(ex)[0])
-            """
+    #
+    # if self.twEvents.selectedItems():
+    #    row_s = self.twEvents.selectedItems()[0].row()
+    #    row_e = self.twEvents.selectedItems()[-1].row()
+    #    eventtime_s = self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS][row_s][0]
+    #    eventtime_e = self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS][row_e][0]
+    #
+    #    durations = []  # in seconds
+    #
+    #    # TODO: check for 2nd player
+    #    for mediaFile in self.pj[cfg.OBSERVATIONS][self.observationId][cfg.FILE][cfg.PLAYER1]:
+    #        durations.append(self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO]["length"][mediaFile])
+    #
+    #    mediaFileIdx_s = [idx1 for idx1, x in enumerate(durations) if eventtime_s >= sum(durations[0:idx1])][-1]
+    #    media_path_s = self.pj[cfg.OBSERVATIONS][self.observationId][cfg.FILE][cfg.PLAYER1][mediaFileIdx_s]
+    #
+    #    mediaFileIdx_e = [idx1 for idx1, x in enumerate(durations) if eventtime_e >= sum(durations[0:idx1])][-1]
+    #    media_path_e = self.pj[cfg.OBSERVATIONS][self.observationId][cfg.FILE][cfg.PLAYER1][mediaFileIdx_e]
+    #
+    #    # calculate time for current media file in case of many queued media files
+    #
+    #    eventtime_onmedia_s = round(eventtime_s - util.float2decimal(sum(durations[0:mediaFileIdx_s])), 3)
+    #    eventtime_onmedia_e = round(eventtime_e - util.float2decimal(sum(durations[0:mediaFileIdx_e])), 3)
+    #
+    #    if media_path_s != media_path_e:
+    #        return
+    #
+    #    media_path = media_path_s
+    #
+    #    # example of external command defined in environment:
+    #    # export BORISEXTERNAL="myprog -i {MEDIA_PATH} -s {START_S} -e {END_S} {DURATION_MS} --other"
+    #
+    #    if "BORISEXTERNAL" in os.environ:
+    #        external_command_template = os.environ["BORISEXTERNAL"]
+    #    else:
+    #        return
+    #
+    #    external_command = external_command_template.format(
+    #        OBS_ID=self.observationId,
+    #        MEDIA_PATH=f'"{media_path}"',
+    #        MEDIA_BASENAME=f'"{os.path.basename(media_path)}"',
+    #        START_S=eventtime_onmedia_s,
+    #        END_S=eventtime_onmedia_e,
+    #        START_MS=eventtime_onmedia_s * 1000,
+    #        END_MS=eventtime_onmedia_e * 1000,
+    #        DURATION_S=eventtime_onmedia_e - eventtime_onmedia_s,
+    #        DURATION_MS=(eventtime_onmedia_e - eventtime_onmedia_s) * 1000,
+    #    )
+    #
+    #    print(external_command)
+    #    """
+    #    p = subprocess.Popen(external_command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
+    #    """
+    #    """
+    #    if eventtimeS == eventtimeE:
+    #        q = []
+    #    else:
+    #        durationsec = eventtimeE-eventtimeS
+    #        q = ["--durationmsec",str(int(durationsec*1000))]
+    #    args = [ex, "-f",os.path.abspath(fn),"--seekmsec",str(int(eventtimeS*1000)),*q,*("--size 1 --track 1 --redetect 100")
+    #    .split(" ")]
+    #    if os.path.split(fn)[1].split("_")[0] in set(["A1","A2","A3","A4","A5","A6","A7","A8","A9","A10"]):
+    #        args.append("--flip")
+    #        args.append("2")
+    #    print (os.path.split(fn)[1].split("_")[0])
+    #    print ("running",ex,"with",args,"in",os.path.split(ex)[0])
+    #    #pid = subprocess.Popen(args,executable=ex,cwd=os.path.split(ex)[0])
+    #    """
 
     def no_media(self):
         QMessageBox.warning(self, cfg.programName, "There is no media available")
@@ -5666,12 +5667,18 @@ def main():
     ret, msg = util.check_ffmpeg_path()
     if not ret:
         if sys.platform.startswith("win"):
-
             import ctypes
+
             MessageBoxTimeoutW = ctypes.windll.user32.MessageBoxTimeoutW
-            MessageBoxTimeoutW.argtypes = [ctypes.c_void_p, ctypes.c_wchar_p, ctypes.c_wchar_p,
-                                ctypes.c_uint, ctypes.c_uint, ctypes.c_uint]
-            ctypes.windll.user32.MessageBoxTimeoutW(None, "The FFmpeg framework is not available.\nIt will be downloaded from the BORIS GitHub repository.", "FFmpeg", 0, 0, 10000) # time out
+            MessageBoxTimeoutW.argtypes = [ctypes.c_void_p, ctypes.c_wchar_p, ctypes.c_wchar_p, ctypes.c_uint, ctypes.c_uint, ctypes.c_uint]
+            ctypes.windll.user32.MessageBoxTimeoutW(
+                None,
+                "The FFmpeg framework is not available.\nIt will be downloaded from the BORIS GitHub repository.",
+                "FFmpeg",
+                0,
+                0,
+                10000,
+            )  # time out
 
             # if (not options.nosplashscreen):
             #     QMessageBox.warning(
@@ -5684,7 +5691,7 @@ def main():
             logging.info("FFmpeg is not available. It will be downloaded from the BORIS GitHub repository")
 
             # download ffmpeg and ffprobe from https://github.com/boris-behav-obs/boris-behav-obs.github.io/releases/download/files/
-            url:str = "https://github.com/boris-behav-obs/boris-behav-obs.github.io/releases/download/files/"
+            url: str = "https://github.com/boris-behav-obs/boris-behav-obs.github.io/releases/download/files/"
 
             # search where to download ffmpeg
             ffmpeg_dir = Path(__file__).parent / "misc"

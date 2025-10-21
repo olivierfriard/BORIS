@@ -120,6 +120,7 @@ def connections(self):
     self.actionSelect_observations.triggered.connect(lambda: event_operations.select_events_between_activated(self))
 
     self.actionEdit_selected_events.triggered.connect(lambda: event_operations.edit_selected_events(self))
+    self.action_add_comment.triggered.connect(lambda: event_operations.add_comment(self))
     self.actionEdit_event_time.triggered.connect(lambda: event_operations.edit_time_selected_events(self))
 
     self.actionCopy_events.triggered.connect(lambda: event_operations.copy_selected_events(self))
@@ -343,6 +344,8 @@ def connections(self):
 
     self.tv_events.addAction(self.actionAdd_event)
     self.tv_events.addAction(self.actionEdit_selected_events)
+    self.tv_events.addAction(self.action_add_comment)
+
     self.tv_events.addAction(self.actionEdit_event_time)
 
     self.tv_events.addAction(self.actionCopy_events)
