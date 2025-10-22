@@ -56,7 +56,6 @@ from . import version
 logger = logging.getLogger(__name__)
 
 if (sys.platform.startswith("win") or sys.platform.startswith("linux")) and ("-i" not in sys.argv) and ("--ipc" not in sys.argv):
-    xxx
     try:
         from . import mpv2 as mpv
     except Exception:

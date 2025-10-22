@@ -159,8 +159,7 @@ if options.version:
     sys.exit(0)
 
 logging.debug("BORIS started")
-if not sys.platform.startswith("darwin"):
-    logging.info(util.get_systeminfo())
+logging.info(util.get_systeminfo())
 
 
 def excepthook(exception_type, exception_value, traceback_object):
