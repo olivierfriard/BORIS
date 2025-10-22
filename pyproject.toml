@@ -49,16 +49,9 @@ publish-url = "https://upload.pypi.org/legacy/"
 explicit = true
 
 
-[tool.distutils.bdist_wheel]
-universal = true
-
 [tool.ruff]
 line-length = 140
 exclude = ["*_ui.py", "mpv*"]
-
-[tool.bumpver]
-current_version = "9.4.1"
-version_pattern = "MAJOR.MINOR.PATCH"
 
 
 [tool.bumpver.file_patterns]
