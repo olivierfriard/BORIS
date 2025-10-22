@@ -55,74 +55,75 @@ from . import version
 
 logger = logging.getLogger(__name__)
 
-try:
-    from . import mpv2 as mpv
-except Exception:
-    logger.warning("MPV library not found")
+if not sys.platform.startswith("darwin"):
+    try:
+        from . import mpv2 as mpv
+    except Exception:
+        logger.warning("MPV library not found")
 
-    if sys.platform.startswith("win"):
-        import ctypes
+        if sys.platform.startswith("win"):
+            import ctypes
 
-        logger.info("The MPV library was not found!\nIt will be downloaded from the BORIS GitHub repository")
-        # ctypes.windll.user32.MessageBoxW(0, "The MPV library was not found!\nIt will be downloaded.", "BORIS", 0)
+            logger.info("The MPV library was not found!\nIt will be downloaded from the BORIS GitHub repository")
+            # ctypes.windll.user32.MessageBoxW(0, "The MPV library was not found!\nIt will be downloaded.", "BORIS", 0)
 
-        # test if following function works on windows
-        MessageBoxTimeoutW = ctypes.windll.user32.MessageBoxTimeoutW
-        MessageBoxTimeoutW.argtypes = [ctypes.c_void_p, ctypes.c_wchar_p, ctypes.c_wchar_p, ctypes.c_uint, ctypes.c_uint, ctypes.c_uint]
-        ctypes.windll.user32.MessageBoxTimeoutW(
-            None, "The MPV library was not found.\nIt will be downloaded from the BORIS GitHub repository.", "MPV library", 0, 0, 10000
-        )  # time out
+            # test if following function works on windows
+            MessageBoxTimeoutW = ctypes.windll.user32.MessageBoxTimeoutW
+            MessageBoxTimeoutW.argtypes = [ctypes.c_void_p, ctypes.c_wchar_p, ctypes.c_wchar_p, ctypes.c_uint, ctypes.c_uint, ctypes.c_uint]
+            ctypes.windll.user32.MessageBoxTimeoutW(
+                None, "The MPV library was not found.\nIt will be downloaded from the BORIS GitHub repository.", "MPV library", 0, 0, 10000
+            )  # time out
 
-        # download libmpv2.dll from https://github.com/boris-behav-obs/boris-behav-obs.github.io/releases/download/files/
+            # download libmpv2.dll from https://github.com/boris-behav-obs/boris-behav-obs.github.io/releases/download/files/
 
-        url: str = "https://github.com/boris-behav-obs/boris-behav-obs.github.io/releases/download/files/"
+            url: str = "https://github.com/boris-behav-obs/boris-behav-obs.github.io/releases/download/files/"
 
-        external_files_dir = ""
-        # search where to download libmpv-2.dll
+            external_files_dir = ""
+            # search where to download libmpv-2.dll
 
-        external_files_dir = Path(__file__).parent / "misc"
-        if not external_files_dir.is_dir():
-            logger.info(f"Creating {external_files_dir} directory")
-            external_files_dir.mkdir(parents=True, exist_ok=True)
+            external_files_dir = Path(__file__).parent / "misc"
+            if not external_files_dir.is_dir():
+                logger.info(f"Creating {external_files_dir} directory")
+                external_files_dir.mkdir(parents=True, exist_ok=True)
 
-        logger.info(f"MPV library directory: {external_files_dir}")
+            logger.info(f"MPV library directory: {external_files_dir}")
 
-        local_filename = external_files_dir / "libmpv-2.dll"
-        logger.info("Downloading libmpv-2.dll...")
-        try:
-            urllib.request.urlretrieve(url + "libmpv-2.dll", local_filename)
-            logger.info(f"File downloaded as {local_filename}")
-        except Exception:
-            logger.critical("The MPV library can not be downloaded! Check your connection.")
-            ctypes.windll.user32.MessageBoxW(0, "The MPV library can not be downloaded!\nCheck your connection.", "BORIS", 0)
+            local_filename = external_files_dir / "libmpv-2.dll"
+            logger.info("Downloading libmpv-2.dll...")
+            try:
+                urllib.request.urlretrieve(url + "libmpv-2.dll", local_filename)
+                logger.info(f"File downloaded as {local_filename}")
+            except Exception:
+                logger.critical("The MPV library can not be downloaded! Check your connection.")
+                ctypes.windll.user32.MessageBoxW(0, "The MPV library can not be downloaded!\nCheck your connection.", "BORIS", 0)
+                sys.exit(5)
+            # reload package
+            try:
+                from . import mpv2 as mpv
+            except Exception:
+                logger.critical("MPV library not found after dowloading")
+                sys.exit(5)
+
+        elif sys.platform.startswith("linux"):
+            text = (
+                "The MPV library was not found!\nInstall it\n\n"
+                "With Debian/Ubuntu/Mint:\nsudo apt install libmpv2\n\n"
+                "With Fedora:\nsudo dnf install mpv-libs\n\n"
+                "With OpenSUSE:\nsudo zypper install mpv\n\n"
+                "Arch Linux / Manjaro:\nsudo pacman -S mpv\n\n"
+            )
+            if shutil.which("zenity") is not None:
+                subprocess.run(["zenity", "--error", f"--text={text}"])
+            elif shutil.which("kdialog"):
+                subprocess.run(["kdialog", "--msgbox", text])
+            elif shutil.which("gxmessage"):
+                subprocess.run(["gxmessage", text])
+            elif shutil.which("xmessage"):
+                subprocess.run(["xmessage", text])
+
             sys.exit(5)
-        # reload package
-        try:
-            from . import mpv2 as mpv
-        except Exception:
-            logger.critical("MPV library not found after dowloading")
+        else:
             sys.exit(5)
-
-    elif sys.platform.startswith("linux"):
-        text = (
-            "The MPV library was not found!\nInstall it\n\n"
-            "With Debian/Ubuntu/Mint:\nsudo apt install libmpv2\n\n"
-            "With Fedora:\nsudo dnf install mpv-libs\n\n"
-            "With OpenSUSE:\nsudo zypper install mpv\n\n"
-            "Arch Linux / Manjaro:\nsudo pacman -S mpv\n\n"
-        )
-        if shutil.which("zenity") is not None:
-            subprocess.run(["zenity", "--error", f"--text={text}"])
-        elif shutil.which("kdialog"):
-            subprocess.run(["kdialog", "--msgbox", text])
-        elif shutil.which("gxmessage"):
-            subprocess.run(["gxmessage", text])
-        elif shutil.which("xmessage"):
-            subprocess.run(["xmessage", text])
-
-        sys.exit(5)
-    else:
-        sys.exit(5)
 
 
 def test_mpv_ipc(socket_path: str = cfg.MPV_SOCKET) -> bool:
@@ -235,6 +236,9 @@ def mpv_lib_version() -> Tuple[str, str, str]:
     Returns:
         str: MPV library version
     """
+    if sys.platform.startswith("darwin"):
+        return "MPV IPC mode", "", ""
+
     mpv_lib_file = None
     if sys.platform.startswith("linux"):
         mpv_lib_file = mpv.sofile
