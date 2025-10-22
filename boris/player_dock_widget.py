@@ -23,6 +23,7 @@ This file is part of BORIS.
 import sys
 import logging
 import functools
+
 if not sys.platform.startswith("darwin"):
     from . import mpv2 as mpv
 import config as cfg

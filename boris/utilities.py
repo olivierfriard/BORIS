@@ -55,7 +55,8 @@ from . import version
 
 logger = logging.getLogger(__name__)
 
-if not sys.platform.startswith("darwin"):
+if (sys.platform.startswith("win") or sys.platform.startswith("linux")) and ("-i" not in sys.argv) and ("--ipc" not in sys.argv):
+    xxx
     try:
         from . import mpv2 as mpv
     except Exception:
@@ -236,7 +237,7 @@ def mpv_lib_version() -> Tuple[str, str, str]:
     Returns:
         str: MPV library version
     """
-    if sys.platform.startswith("darwin"):
+    if ("-i" in sys.argv) or ("--ipc" in sys.argv) or sys.platform.startswith("darwin"):
         return "MPV IPC mode", "", ""
 
     mpv_lib_file = None
