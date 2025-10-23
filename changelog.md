@@ -1,3 +1,9 @@
+
+**v. 9.7.1**
+
+* Added macOS support with mpv IPC mode
+
+
 **v. 9.6.6**
 
 * Fixed bug #899
