@@ -3,7 +3,7 @@
 ################################################################################
 ## Form generated from reading UI file 'preferences.ui'
 ##
-## Created by: Qt User Interface Compiler version 6.9.0
+## Created by: Qt User Interface Compiler version 6.10.0
 ##
 ## WARNING! All changes made in this file will be lost when recompiling UI file!
 ################################################################################
@@ -145,11 +145,8 @@ class Ui_prefDialog(object):
 
         self.horizontalLayout_4.addWidget(self.label_4)
 
-        self.sbffSpeed = QSpinBox(self.tab_observations)
+        self.sbffSpeed = QDoubleSpinBox(self.tab_observations)
         self.sbffSpeed.setObjectName(u"sbffSpeed")
-        self.sbffSpeed.setMinimum(0)
-        self.sbffSpeed.setMaximum(10000)
-        self.sbffSpeed.setValue(10)
 
         self.horizontalLayout_4.addWidget(self.sbffSpeed)
 
@@ -244,6 +241,26 @@ class Ui_prefDialog(object):
 
         self.verticalLayout.addWidget(self.cb_pause_before_addevent)
 
+        self.horizontalLayout_23 = QHBoxLayout()
+        self.horizontalLayout_23.setObjectName(u"horizontalLayout_23")
+        self.label_24 = QLabel(self.tab_observations)
+        self.label_24.setObjectName(u"label_24")
+        self.label_24.setEnabled(False)
+
+        self.horizontalLayout_23.addWidget(self.label_24)
+
+        self.sb_frame_step_size = QSpinBox(self.tab_observations)
+        self.sb_frame_step_size.setObjectName(u"sb_frame_step_size")
+        self.sb_frame_step_size.setEnabled(False)
+        self.sb_frame_step_size.setMinimum(1)
+        self.sb_frame_step_size.setMaximum(1000)
+        self.sb_frame_step_size.setValue(1)
+
+        self.horizontalLayout_23.addWidget(self.sb_frame_step_size)
+
+
+        self.verticalLayout.addLayout(self.horizontalLayout_23)
+
         self.verticalSpacer_4 = QSpacerItem(20, 391, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding)
 
         self.verticalLayout.addItem(self.verticalSpacer_4)
@@ -256,35 +273,35 @@ class Ui_prefDialog(object):
         self.splitter_2 = QSplitter(self.tab_analysis_plugins)
         self.splitter_2.setObjectName(u"splitter_2")
         self.splitter_2.setOrientation(Qt.Orientation.Horizontal)
-        self.widget = QWidget(self.splitter_2)
-        self.widget.setObjectName(u"widget")
-        self.verticalLayout_11 = QVBoxLayout(self.widget)
+        self.layoutWidget = QWidget(self.splitter_2)
+        self.layoutWidget.setObjectName(u"layoutWidget")
+        self.verticalLayout_11 = QVBoxLayout(self.layoutWidget)
         self.verticalLayout_11.setObjectName(u"verticalLayout_11")
         self.verticalLayout_11.setContentsMargins(0, 0, 0, 0)
-        self.label_13 = QLabel(self.widget)
+        self.label_13 = QLabel(self.layoutWidget)
         self.label_13.setObjectName(u"label_13")
 
         self.verticalLayout_11.addWidget(self.label_13)
 
-        self.lv_all_plugins = QListWidget(self.widget)
+        self.lv_all_plugins = QListWidget(self.layoutWidget)
         self.lv_all_plugins.setObjectName(u"lv_all_plugins")
 
         self.verticalLayout_11.addWidget(self.lv_all_plugins)
 
-        self.label_15 = QLabel(self.widget)
+        self.label_15 = QLabel(self.layoutWidget)
         self.label_15.setObjectName(u"label_15")
 
         self.verticalLayout_11.addWidget(self.label_15)
 
         self.horizontalLayout_16 = QHBoxLayout()
         self.horizontalLayout_16.setObjectName(u"horizontalLayout_16")
-        self.le_personal_plugins_dir = QLineEdit(self.widget)
+        self.le_personal_plugins_dir = QLineEdit(self.layoutWidget)
         self.le_personal_plugins_dir.setObjectName(u"le_personal_plugins_dir")
         self.le_personal_plugins_dir.setReadOnly(True)
 
         self.horizontalLayout_16.addWidget(self.le_personal_plugins_dir)
 
-        self.pb_browse_plugins_dir = QPushButton(self.widget)
+        self.pb_browse_plugins_dir = QPushButton(self.layoutWidget)
         self.pb_browse_plugins_dir.setObjectName(u"pb_browse_plugins_dir")
 
         self.horizontalLayout_16.addWidget(self.pb_browse_plugins_dir)
@@ -292,49 +309,49 @@ class Ui_prefDialog(object):
 
         self.verticalLayout_11.addLayout(self.horizontalLayout_16)
 
-        self.lw_personal_plugins = QListWidget(self.widget)
+        self.lw_personal_plugins = QListWidget(self.layoutWidget)
         self.lw_personal_plugins.setObjectName(u"lw_personal_plugins")
 
         self.verticalLayout_11.addWidget(self.lw_personal_plugins)
 
-        self.splitter_2.addWidget(self.widget)
+        self.splitter_2.addWidget(self.layoutWidget)
         self.splitter = QSplitter(self.splitter_2)
         self.splitter.setObjectName(u"splitter")
         self.splitter.setOrientation(Qt.Orientation.Vertical)
-        self.widget1 = QWidget(self.splitter)
-        self.widget1.setObjectName(u"widget1")
-        self.verticalLayout_12 = QVBoxLayout(self.widget1)
+        self.layoutWidget1 = QWidget(self.splitter)
+        self.layoutWidget1.setObjectName(u"layoutWidget1")
+        self.verticalLayout_12 = QVBoxLayout(self.layoutWidget1)
         self.verticalLayout_12.setObjectName(u"verticalLayout_12")
         self.verticalLayout_12.setContentsMargins(0, 0, 0, 0)
-        self.label_14 = QLabel(self.widget1)
+        self.label_14 = QLabel(self.layoutWidget1)
         self.label_14.setObjectName(u"label_14")
 
         self.verticalLayout_12.addWidget(self.label_14)
 
-        self.pte_plugin_description = QPlainTextEdit(self.widget1)
+        self.pte_plugin_description = QPlainTextEdit(self.layoutWidget1)
         self.pte_plugin_description.setObjectName(u"pte_plugin_description")
         self.pte_plugin_description.setReadOnly(True)
 
         self.verticalLayout_12.addWidget(self.pte_plugin_description)
 
-        self.splitter.addWidget(self.widget1)
-        self.widget2 = QWidget(self.splitter)
-        self.widget2.setObjectName(u"widget2")
-        self.verticalLayout_14 = QVBoxLayout(self.widget2)
+        self.splitter.addWidget(self.layoutWidget1)
+        self.layoutWidget2 = QWidget(self.splitter)
+        self.layoutWidget2.setObjectName(u"layoutWidget2")
+        self.verticalLayout_14 = QVBoxLayout(self.layoutWidget2)
         self.verticalLayout_14.setObjectName(u"verticalLayout_14")
         self.verticalLayout_14.setContentsMargins(0, 0, 0, 0)
-        self.label_23 = QLabel(self.widget2)
+        self.label_23 = QLabel(self.layoutWidget2)
         self.label_23.setObjectName(u"label_23")
 
         self.verticalLayout_14.addWidget(self.label_23)
 
-        self.pte_plugin_code = QPlainTextEdit(self.widget2)
+        self.pte_plugin_code = QPlainTextEdit(self.layoutWidget2)
         self.pte_plugin_code.setObjectName(u"pte_plugin_code")
         self.pte_plugin_code.setLineWrapMode(QPlainTextEdit.LineWrapMode.NoWrap)
 
         self.verticalLayout_14.addWidget(self.pte_plugin_code)
 
-        self.splitter.addWidget(self.widget2)
+        self.splitter.addWidget(self.layoutWidget2)
         self.splitter_2.addWidget(self.splitter)
 
         self.verticalLayout_15.addWidget(self.splitter_2)
@@ -676,7 +693,7 @@ class Ui_prefDialog(object):
 
         self.retranslateUi(prefDialog)
 
-        self.tabWidget.setCurrentIndex(2)
+        self.tabWidget.setCurrentIndex(1)
 
 
         QMetaObject.connectSlotsByName(prefDialog)
@@ -707,6 +724,7 @@ class Ui_prefDialog(object):
         self.cbTrackingCursorAboveEvent.setText(QCoreApplication.translate("prefDialog", u"Tracking cursor above current event", None))
         self.cbAlertNoFocalSubject.setText(QCoreApplication.translate("prefDialog", u"Alert if focal subject is not set", None))
         self.cb_pause_before_addevent.setText(QCoreApplication.translate("prefDialog", u"Pause media before \"Add event\" command", None))
+        self.label_24.setText(QCoreApplication.translate("prefDialog", u"Frame step size", None))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab_observations), QCoreApplication.translate("prefDialog", u"Observations", None))
         self.label_13.setText(QCoreApplication.translate("prefDialog", u"BORIS plugins", None))
         self.label_15.setText(QCoreApplication.translate("prefDialog", u"Personal plugins", None))

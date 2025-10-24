@@ -1425,7 +1425,7 @@ def open_project_json(project_file_name: str) -> tuple:
                 pj[cfg.OBSERVATIONS][obs][cfg.TYPE] = cfg.MEDIA
 
             # convert old media list in new one
-            d1:dict = {}
+            d1: dict = {}
             if len(pj[cfg.OBSERVATIONS][obs][cfg.FILE]):
                 d1 = {cfg.PLAYER1: [pj[cfg.OBSERVATIONS][obs][cfg.FILE][0]]}
 
@@ -1474,10 +1474,9 @@ def open_project_json(project_file_name: str) -> tuple:
     # check if behavioral categories are stored as a list
     if isinstance(pj[cfg.BEHAVIORAL_CATEGORIES_CONF], list):
         # convert to dict
-        pj[cfg.BEHAVIORAL_CATEGORIES_CONF] = {str(idx):{"name":bc} for idx, bc in enumerate(pj[cfg.BEHAVIORAL_CATEGORIES_CONF])}
+        pj[cfg.BEHAVIORAL_CATEGORIES_CONF] = {str(idx): {"name": bc} for idx, bc in enumerate(pj[cfg.BEHAVIORAL_CATEGORIES_CONF])}
         logging.info("Behavioral categories was converted from a list to a dictionary")
         projectChanged = True
-
 
     # add category key if not found
     for idx in pj[cfg.ETHOGRAM]:

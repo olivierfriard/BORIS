@@ -82,11 +82,11 @@ def read(self):
 
         logging.debug(f"time format: {self.timeFormat}")
 
-        self.fast = 10
+        self.fast = cfg.FAST_FORWARD_DEFAULT_VALUE
         try:
-            self.fast = int(settings.value("Time/fast_forward_speed"))
+            self.fast = float(settings.value("Time/fast_forward_speed"))
         except Exception:
-            self.fast = 10
+            self.fast = cfg.FAST_FORWARD_DEFAULT_VALUE
 
         logging.debug(f"Time/fast_forward_speed: {self.fast}")
 

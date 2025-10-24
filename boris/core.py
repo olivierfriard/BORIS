@@ -3681,14 +3681,18 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         """
         show next frame
         """
+        # frame_step_size = self.config_param.get(cfg.FRAME_STEP_SIZE, cfg.FRAME_STEP_SIZE_DEFAULT_VALUE)
+
         if self.playerType == cfg.IMAGES:
             if self.image_idx < len(self.images_list) - 1:
-                self.image_idx += 1
+                self.image_idx += 1  # frame_step_size
                 self.extract_frame(self.dw_player[0])
 
         if self.playerType == cfg.MEDIA:
             for dw in self.dw_player:
+                # for _ in range(frame_step_size):
                 dw.player.frame_step()
+                # time.sleep(0.5)
 
                 if self.geometric_measurements_mode:
                     self.extract_frame(dw)
@@ -4151,13 +4155,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         if not self.observationId:
             return
 
-        print("mpv timer out")
-
         cumulative_time_pos = self.getLaps()
-        print(f"{cumulative_time_pos=}")
         # get frame index
         frame_idx = self.get_frame_index()
-        print(f"{frame_idx=}")
         # frame_idx = 0
 
         if value is None:  # ipc mpv
@@ -4236,9 +4236,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.show_current_states_in_subjects_table()
 
         # current media name
-        print(f"{self.dw_player[0].player.playlist_pos=}")
-        print(f"{self.dw_player[0].player.playlist=}")
-
         if self.dw_player[0].player.playlist_pos is not None:
             current_media_name = Path(self.dw_player[0].player.playlist[self.dw_player[0].player.playlist_pos]["filename"]).name
             current_playlist_index = self.dw_player[0].player.playlist_pos

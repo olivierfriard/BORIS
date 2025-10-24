@@ -221,6 +221,9 @@ def preferences(self):
     preferencesWindow.cbConfirmSound.setChecked(self.confirmSound)
     # beep every
     preferencesWindow.sbBeepEvery.setValue(self.beep_every)
+    # frame step size
+    #preferencesWindow.sb_frame_step_size.setValue(self.config_param.get(cfg.FRAME_STEP_SIZE, cfg.FRAME_STEP_SIZE_DEFAULT_VALUE))
+
     # alert no focal subject
     preferencesWindow.cbAlertNoFocalSubject.setChecked(self.alertNoFocalSubject)
     # tracking cursor above event
@@ -417,6 +420,9 @@ def preferences(self):
             self.confirmSound = preferencesWindow.cbConfirmSound.isChecked()
 
             self.beep_every = preferencesWindow.sbBeepEvery.value()
+
+            # frame step size
+            #self.config_param[cfg.FRAME_STEP_SIZE] = preferencesWindow.sb_frame_step_size.value()
 
             self.alertNoFocalSubject = preferencesWindow.cbAlertNoFocalSubject.isChecked()
 
