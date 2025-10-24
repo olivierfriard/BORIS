@@ -43,7 +43,6 @@ import locale
 import tempfile
 import time
 import urllib.request
-from typing import Union, Tuple
 from decimal import Decimal as dec
 from decimal import ROUND_DOWN
 import gzip
@@ -242,7 +241,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     current_player: int = 0  # id of the selected (left click) video player
 
     mem_media_name: str = ""  # record current media name. Use to check if media changed
-    mem_playlist_index: Union[int, None] = None
+    mem_playlist_index: int | None = None
     saved_state = None
     user_move_slider: bool = False
     observationId: str = ""  # current observation id
@@ -739,7 +738,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         text: str = "Behaviors to show in ethogram list",
         table: str = cfg.ETHOGRAM,
         behavior_type: list = cfg.STATE_EVENT_TYPES,
-    ) -> Tuple[bool, list]:
+    ) -> tuple[bool, list]:
         """
         allow user to:
             filter behaviors in ethogram widget
@@ -3866,7 +3865,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 write_event.write_event(self, event, cumulative_time)
             # write_event.write_event(self, event, self.getLaps())
 
-    def get_frame_index(self, player_idx: int = 0) -> Union[int, str]:
+    def get_frame_index(self, player_idx: int = 0) -> int | str:
         """
         returns frame index for player player_idx
         """
@@ -4142,7 +4141,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 self.dw_player[n_player].player.playlist_pos = self.dw_player[n_player].player.playlist_count - 1
                 self.seek_mediaplayer(self.dw_player[n_player].media_durations[-1], player=n_player)
 
-    def mpv_timer_out(self, value: Union[float, None] = None, scroll_slider=True):
+    def mpv_timer_out(self, value: float | None = None, scroll_slider=True):
         """
         print the media current position and total length for MPV player
         scroll video slider to video position
@@ -4488,7 +4487,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 for x in self.pj[cfg.OBSERVATIONS][obs_id][cfg.EVENTS]
             )
 
-    def choose_behavior(self, obs_key) -> Union[None, str]:
+    def choose_behavior(self, obs_key) -> None | str:
         """
         fill listwidget with all behaviors coded by key
 
@@ -4520,7 +4519,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             else:
                 return None
 
-    def choose_subject(self, subject_key) -> Union[None, str]:
+    def choose_subject(self, subject_key) -> None | str:
         """
         fill listwidget with all subjects coded by key
 
@@ -4608,7 +4607,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
                 return dec(str(round(mem_laps / 1000, 3)))
 
-    def get_obs_time(self, n_player: int = 0) -> Tuple[dec, dec | None]:
+    def get_obs_time(self, n_player: int = 0) -> tuple[dec, dec | None]:
         """
         returns time in current media and cumulative time from begining of observation
         do not add time offset
