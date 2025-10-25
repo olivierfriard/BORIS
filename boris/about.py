@@ -40,7 +40,7 @@ def actionAbout_activated(self):
     About dialog
     """
 
-    programs_versions: list = ["MPV media player"]
+    programs_versions: list[str] = ["MPV media player"]
 
     mpv_lib_version, mpv_lib_file_path, mpv_api_version = util.mpv_lib_version()
     programs_versions.append(
@@ -53,13 +53,13 @@ def actionAbout_activated(self):
 
     # ffmpeg
     if self.ffmpeg_bin == "ffmpeg" and sys.platform.startswith("linux"):
-        ffmpeg_true_path = subprocess.getoutput("which ffmpeg")
+        ffmpeg_true_path: str = subprocess.getoutput("which ffmpeg")
     else:
         ffmpeg_true_path = self.ffmpeg_bin
     programs_versions.extend(
         [
             "\nFFmpeg",
-            subprocess.getoutput(f'"{self.ffmpeg_bin}" -version').split("\n")[0],
+            subprocess.getoutput(cmd=f'"{self.ffmpeg_bin}" -version').split(sep="\n")[0],
             f"Path: {ffmpeg_true_path}",
             "https://www.ffmpeg.org",
         ]
@@ -75,11 +75,11 @@ def actionAbout_activated(self):
     programs_versions.extend(["\nPandas", f"version {pd.__version__}", "https://pandas.pydata.org"])
 
     # graphviz
-    gv_result = subprocess.getoutput("dot -V")
+    gv_result = subprocess.getoutput(cmd="dot -V")
 
     programs_versions.extend(["\nGraphViz", gv_result if "graphviz" in gv_result else "not installed", "https://www.graphviz.org/"])
 
-    about_dialog = QMessageBox()
+    about_dialog: QMessageBox = QMessageBox()
     about_dialog.setIconPixmap(QPixmap(":/boris_unito"))
 
     about_dialog.setWindowTitle(f"About {cfg.programName}")

@@ -36,6 +36,7 @@ class IPC_MPV:
         self.process = subprocess.Popen(
             [
                 "mpv",
+                "--ontop",
                 "--no-border",
                 "--osc=no",  # no on screen commands
                 "--input-ipc-server=" + self.socket_path,
