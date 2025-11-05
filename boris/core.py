@@ -4318,8 +4318,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
             self.actionPlay.setIcon(QIcon(f":/play_{gui_utilities.theme_mode()}"))
 
-        print(f"{msg=}")
-
         if msg:
             self.lb_current_media_time.setText(msg)
 

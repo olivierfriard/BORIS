@@ -231,6 +231,10 @@ def display_zoom_level(self) -> None:
     """
     msg: str = "Zoom level: <b>"
     for player in self.dw_player:
+        vz = player.player.video_zoom
+        if vz is None:
+            self.lb_zoom_level.setText("-")
+            return
         msg += f"{2**player.player.video_zoom:.1f} "
     msg += "</b>"
     self.lb_zoom_level.setText(msg)

@@ -1964,7 +1964,7 @@ def initialize_new_media_observation(self) -> bool:
 
     menu_options.update_menu(self)
 
-    if not self.MPV_IPC_MODE:
+    if self.MPV_IPC_MODE:
         # activate timer
         self.ipc_mpv_timer = QTimer()
         self.ipc_mpv_timer.setInterval(500)

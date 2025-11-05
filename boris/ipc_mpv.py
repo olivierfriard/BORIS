@@ -49,30 +49,6 @@ class IPC_MPV:
             stderr=subprocess.PIPE,
         )
 
-    '''
-    def init_socket(self):
-        """
-        Initialize the JSON IPC socket.
-        """
-        print("init socket")
-        self.sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
-        QTimer.singleShot(5000, self.connect_socket)  # Allow time for mpv to initialize
-    '''
-
-    '''
-    def connect_socket(self):
-        """
-        Connect to the mpv IPC socket.
-        """
-        print("connect socket")
-        try:
-            self.sock.connect(self.socket_path)
-            print("Connected to mpv IPC server.")
-        except socket.error as e:
-            print(f"Failed to connect to mpv IPC server: {e}")
-        print("end of connect_socket fucntion")
-    '''
-
     def send_command(self, command):
         """
         Send a JSON command to the mpv IPC server.
@@ -93,9 +69,7 @@ class IPC_MPV:
                 # Parse the response as JSON
                 response_data = json.loads(response.decode("utf-8"))
                 if response_data["error"] != "success":
-                    print(f"send command: {command}")
-                    print(f"{response_data=}")
-                    print()
+                    logging.warning(f"send command: {command} response data: {response_data}")
                 # Return the 'data' field which contains the playback position
                 return response_data.get("data")
         except FileNotFoundError:
@@ -129,7 +103,6 @@ class IPC_MPV:
 
     @pause.setter
     def pause(self, value):
-        print(f"set pause to {value}")
         return self.send_command({"command": ["set_property", "pause", value]})
 
     @property
@@ -169,7 +142,6 @@ class IPC_MPV:
     @property
     def playback_time(self):
         playback_time_ = self.send_command({"command": ["get_property", "playback-time"]})
-        print(f"playback_time: {playback_time_}")
         return playback_time_
 
     def frame_step(self):
