@@ -476,10 +476,16 @@ def txt2np_array(
                 function += f"    {line}\n"
             function += """    return OUTPUT"""
 
+
             print('=============')
             print(function)
             print('=============')
 
+            import types
+            mod = types.ModuleType("converter_module")
+            exec(function, mod.__dict__)
+
+            '''
             try:
                 exec(function)
             except Exception:
@@ -489,8 +495,10 @@ def txt2np_array(
             print(f"{column_converter=}")
             print(locals())
             print(f"{conv_name=}")
+            '''
 
-            np_converters[column_idx - 1] = locals()['conv_name']
+            #np_converters[column_idx - 1] = locals()['conv_name']
+            np_converters[column_idx - 1] = getattr(mod, conv_name)
 
         else:
             return False, f"converter {cfg.converters_param[column_idx]} not found", np.array([])
