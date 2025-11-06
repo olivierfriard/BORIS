@@ -42,6 +42,7 @@ from PySide6.QtWidgets import (
     QApplication,
     QMenu,
     QListWidgetItem,
+    QHeaderView
 )
 
 from . import config as cfg
@@ -224,6 +225,10 @@ class Observation(QDialog, Ui_Form):
         self.pbCancel.clicked.connect(self.pbCancel_clicked)
 
         self.tw_data_files.cellDoubleClicked[int, int].connect(self.tw_data_files_cellDoubleClicked)
+        self.tw_data_files.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeToContents)
+
+        self.twVideo1.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeToContents)
+
 
         self.mediaDurations, self.mediaFPS, self.mediaHasVideo, self.mediaHasAudio, self.media_creation_time = {}, {}, {}, {}, {}
 

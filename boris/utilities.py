@@ -471,17 +471,26 @@ def txt2np_array(
             conv_name = column_converter[column_idx]
 
             function = f"""def {conv_name}(INPUT):\n"""
-            function += """    INPUT = INPUT.decode("utf-8") if isinstance(INPUT, bytes) else INPUT"""
+            function += """    INPUT = INPUT.decode("utf-8") if isinstance(INPUT, bytes) else INPUT\n\n"""
             for line in converters[conv_name]["code"].split("\n"):
                 function += f"    {line}\n"
             function += """    return OUTPUT"""
+
+            print('=============')
+            print(function)
+            print('=============')
 
             try:
                 exec(function)
             except Exception:
                 return False, f"error in converter: {sys.exc_info()[1]}", np.array([])
 
-            np_converters[column_idx - 1] = locals()[conv_name]
+            print(f"{converters=}")
+            print(f"{column_converter=}")
+            print(locals())
+            print(f"{conv_name=}")
+
+            np_converters[column_idx - 1] = locals()['conv_name']
 
         else:
             return False, f"converter {cfg.converters_param[column_idx]} not found", np.array([])
