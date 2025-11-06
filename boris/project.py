@@ -1977,7 +1977,7 @@ class projectDialog(QDialog, Ui_dlgProject):
         self.pj[cfg.INDEPENDENT_VARIABLES] = dict(self.indVar)
 
         # converters
-        converters = {}
+        converters:dict = {}
         for row in range(self.tw_converters.rowCount()):
             converters[self.tw_converters.item(row, 0).text()] = {
                 "name": self.tw_converters.item(row, 0).text(),
