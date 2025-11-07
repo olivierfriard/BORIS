@@ -501,7 +501,7 @@ def txt2np_array(
             np_converters[column_idx - 1] = getattr(mod, conv_name)
 
         else:
-            return False, f"converter {cfg.converters_param[column_idx]} not found", np.array([])
+            return False, f"converter {column_converter[column_idx]} not found", np.array([])
 
     # snif txt file
     try:
