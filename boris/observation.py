@@ -76,7 +76,10 @@ class AssignConverter(QDialog):
             self.cbb[-1].addItems(["None"] + sorted(converters.keys()))
 
             if column_idx in col_conv:
-                self.cbb[-1].setCurrentIndex((["None"] + sorted(converters.keys())).index(col_conv[column_idx]))
+                if col_conv[column_idx] in (["None"] + sorted(converters.keys())):
+                    self.cbb[-1].setCurrentIndex((["None"] + sorted(converters.keys())).index(col_conv[column_idx]))
+                else:
+                    self.cbb[-1].setCurrentIndex(0)
             else:
                 self.cbb[-1].setCurrentIndex(0)
             hbox.addWidget(self.cbb[-1])
