@@ -1,8 +1,29 @@
+"""
+BORIS
+Behavioral Observation Research Interactive Software
+Copyright 2012-2025 Olivier Friard
+
+This file is part of BORIS.
+
+  BORIS is free software; you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation; either version 3 of the License, or
+  any later version.
+
+  BORIS is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+
+  You should have received a copy of the GNU General Public License
+  along with this program; if not see <http://www.gnu.org/licenses/>.
+
+"""
+
 import socket
 import json
 import subprocess
 
-# from PySide6.QtCore import QTimer
 import logging
 import config as cfg
 
@@ -272,6 +293,25 @@ class IPC_MPV:
     @property
     def core_idle(self):
         return self.send_command({"command": ["get_property", "core-idle"]})
+
+    @property
+    def video_pan_x(self):
+        return self.send_command({"command": ["get_property", "video-pan-x"]})
+
+    @video_pan_x.setter
+    def video_pan_x(self, value):
+        self.send_command({"command": ["set_property", "video-pan-x", value]})
+        return
+
+    @property
+    def video_pan_y(self):
+        return self.send_command({"command": ["get_property", "video-pan-y"]})
+
+    @video_pan_y.setter
+    def video_pan_y(self, value):
+        self.send_command({"command": ["set_property", "video-pan-y", value]})
+        return
+
 
     """
     @property

@@ -1159,6 +1159,9 @@ def close_observation(self):
         logging.info("Stop plot timer")
         self.plot_timer.stop()
 
+        if self.MPV_IPC_MODE:
+            self.main_window_activation_timer.stop()
+
         for i, player in enumerate(self.dw_player):
             if (
                 str(i + 1) in self.pj[cfg.OBSERVATIONS][self.observationId][cfg.FILE]
@@ -1348,8 +1351,6 @@ def initialize_new_media_observation(self) -> bool:
         self.playerType = cfg.VIEWER_MEDIA
         return True
 
-        # print(f"{self.process=}")
-
     self.playerType = cfg.MEDIA
     self.fps = 0
 
@@ -1373,7 +1374,7 @@ def initialize_new_media_observation(self) -> bool:
 
     # add all media files to media lists
     self.setDockOptions(QMainWindow.AnimatedDocks | QMainWindow.AllowNestedDocks)
-    self.dw_player: list = []
+    self.dw_player = []
 
     # check if media creation time used as offset
     # TODO check if cfg.MEDIA_CREATION_TIME dict is present
@@ -1839,8 +1840,8 @@ def initialize_new_media_observation(self) -> bool:
         self.dw_player[i].resize_signal.connect(self.resize_dw)
 
         # add durations list
-        self.dw_player[i].media_durations: list = []
-        self.dw_player[i].cumul_media_durations: List[int] = [0]  # [idx for idx,x in enumerate(l) if l[idx-1]<pos<=x]
+        self.dw_player[i].media_durations = []
+        self.dw_player[i].cumul_media_durations = [0]  # [idx for idx,x in enumerate(l) if l[idx-1]<pos<=x]
 
         # add fps list
         self.dw_player[i].fps = {}
@@ -1851,6 +1852,13 @@ def initialize_new_media_observation(self) -> bool:
                 logging.debug(f"MPV IPC started: {r}")
                 if r:
                     break
+
+            # start timer for activating the main window
+            self.main_window_activation_timer = QTimer()
+            self.main_window_activation_timer.setInterval(500)
+            self.main_window_activation_timer.timeout.connect(self.activateWindow)
+            self.main_window_activation_timer.start()
+            
 
         for mediaFile in self.pj[cfg.OBSERVATIONS][self.observationId][cfg.FILE][n_player]:
             logging.debug(f"media file: {mediaFile}")

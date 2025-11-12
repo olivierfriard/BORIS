@@ -63,6 +63,7 @@ from PySide6.QtCore import (
     QAbstractTableModel,
     QElapsedTimer,
     QSettings,
+    QTimer
 )
 from PySide6.QtGui import QIcon, QPixmap, QFont, QKeyEvent, QDesktopServices, QColor, QPainter, QPolygon, QAction
 from PySide6.QtMultimedia import QSoundEffect
@@ -317,6 +318,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     # variables for list of observations
     data: list = []
     not_paired: list = []
+
 
     '''
     def add_button_menu(self, data, menu_obj):
@@ -5458,7 +5460,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         check if first player ended
         """
 
-        print("play_video")
+        logging.debug("play_video")
 
         if self.geometric_measurements_mode:
             return
