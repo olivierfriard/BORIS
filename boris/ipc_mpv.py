@@ -117,6 +117,14 @@ class IPC_MPV:
     def playlist(self):
         return self.send_command({"command": ["get_property", "playlist"]})
 
+    def playlist_next(self):
+        self.send_command({"command": ["playlist-next"]})
+        return
+
+    def playlist_prev(self):
+        self.send_command({"command": ["playlist-prev"]})
+        return
+
     @property
     def playlist_pos(self):
         return self.send_command({"command": ["get_property", "playlist-pos"]})
