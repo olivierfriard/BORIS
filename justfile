@@ -1,4 +1,8 @@
 
+# list of recipes
+default:
+    just --list
+
 # create a wheel with last version
 build:
     rm -rf *.egg-info build dist
