@@ -113,6 +113,8 @@ def observations_list(self):
     result, selected_obs = select_observations.select_observations2(self, cfg.SINGLE)
 
     if not selected_obs:
+        # activate main window
+        self.activateWindow()
         return
 
     if self.observationId:
@@ -122,9 +124,13 @@ def observations_list(self):
         )
         if response == cfg.NO:
             self.show_data_files()
+            # activate main window
+            self.activateWindow()
+
             return ""
         else:
             close_observation(self)
+
 
         QtTest.QTest.qWait(1000)
 
@@ -145,6 +151,8 @@ def observations_list(self):
             )
 
     logging.debug("end observations list")
+    # activate main window
+    self.activateWindow()
 
 
 def open_observation(self, mode: str) -> str:

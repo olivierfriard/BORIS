@@ -222,7 +222,7 @@ def preferences(self):
     # beep every
     preferencesWindow.sbBeepEvery.setValue(self.beep_every)
     # frame step size
-    #preferencesWindow.sb_frame_step_size.setValue(self.config_param.get(cfg.FRAME_STEP_SIZE, cfg.FRAME_STEP_SIZE_DEFAULT_VALUE))
+    # preferencesWindow.sb_frame_step_size.setValue(self.config_param.get(cfg.FRAME_STEP_SIZE, cfg.FRAME_STEP_SIZE_DEFAULT_VALUE))
 
     # alert no focal subject
     preferencesWindow.cbAlertNoFocalSubject.setChecked(self.alertNoFocalSubject)
@@ -422,7 +422,7 @@ def preferences(self):
             self.beep_every = preferencesWindow.sbBeepEvery.value()
 
             # frame step size
-            #self.config_param[cfg.FRAME_STEP_SIZE] = preferencesWindow.sb_frame_step_size.value()
+            # self.config_param[cfg.FRAME_STEP_SIZE] = preferencesWindow.sb_frame_step_size.value()
 
             self.alertNoFocalSubject = preferencesWindow.cbAlertNoFocalSubject.isChecked()
 
@@ -505,3 +505,6 @@ def preferences(self):
 
         else:
             break
+
+    # activate main window
+    self.activateWindow()

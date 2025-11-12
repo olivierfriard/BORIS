@@ -42,7 +42,7 @@ from PySide6.QtWidgets import (
     QApplication,
     QMenu,
     QListWidgetItem,
-    QHeaderView
+    QHeaderView,
 )
 
 from . import config as cfg
@@ -231,7 +231,6 @@ class Observation(QDialog, Ui_Form):
         self.tw_data_files.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeToContents)
 
         self.twVideo1.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeToContents)
-
 
         self.mediaDurations, self.mediaFPS, self.mediaHasVideo, self.mediaHasAudio, self.media_creation_time = {}, {}, {}, {}, {}
 

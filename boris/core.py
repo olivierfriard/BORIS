@@ -3951,13 +3951,13 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             if self.dw_player[0].player.duration is None:
                 return
             print(f"{slider_position=}")
-            
+
             d = self.dw_player[0].player.duration
             print(f"{d=}")
             if d is None:
                 return
             video_position = slider_position * d
-            #video_position = slider_position * self.dw_player[0].player.duration
+            # video_position = slider_position * self.dw_player[0].player.duration
             # self.dw_player[0].player.command("seek", str(video_position), "absolute")
             self.dw_player[0].player.seek(video_position, "absolute")
 
