@@ -5842,6 +5842,15 @@ def main():
             )
             sys.exit()
 
+        if sys.platform.startswith("darwin"):
+            QMessageBox.warning(
+                        None,
+                        cfg.programName,
+                        (f"This version of BORIS for macOS is still EXPERIMENTAL and should be used at your own risk."),
+                        QMessageBox.Ok | QMessageBox.Default,
+                        QMessageBox.NoButton,
+                    )
+
     window.show()
     window.raise_()  # for overlapping widget (?)
 

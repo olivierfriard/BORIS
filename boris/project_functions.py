@@ -1472,11 +1472,16 @@ def open_project_json(project_file_name: str) -> tuple:
             projectChanged = True
 
     # check if behavioral categories are stored as a list
-    if isinstance(pj[cfg.BEHAVIORAL_CATEGORIES_CONF], list):
-        # convert to dict
-        pj[cfg.BEHAVIORAL_CATEGORIES_CONF] = {str(idx): {"name": bc} for idx, bc in enumerate(pj[cfg.BEHAVIORAL_CATEGORIES_CONF])}
-        logging.info("Behavioral categories was converted from a list to a dictionary")
+    if cfg.BEHAVIORAL_CATEGORIES_CONF in pj:
+        if isinstance(pj[cfg.BEHAVIORAL_CATEGORIES_CONF], list):
+            # convert to dict
+            pj[cfg.BEHAVIORAL_CATEGORIES_CONF] = {str(idx): {"name": bc} for idx, bc in enumerate(pj[cfg.BEHAVIORAL_CATEGORIES_CONF])}
+            logging.info("Behavioral categories was converted from a list to a dictionary")
+            projectChanged = True
+    else:
+        pj[cfg.BEHAVIORAL_CATEGORIES_CONF] = dict()
         projectChanged = True
+
 
     # add category key if not found
     for idx in pj[cfg.ETHOGRAM]:
