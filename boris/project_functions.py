@@ -422,9 +422,11 @@ def check_project_integrity(
     out: str = ""
 
     # check if coded behaviors are defined in ethogram
-    r = check_coded_behaviors(pj)
-    if r:
+    if check_coded_behaviors(pj):
         out += f"The following behaviors are not defined in the ethogram: <b>{', '.join(r)}</b><br>"
+        flag_all_behaviors_defined = False
+    else:
+        flag_all_behaviors_defined = True
 
     # check for unpaired state events
     for obs_id in pj[cfg.OBSERVATIONS]:
@@ -577,26 +579,27 @@ def check_project_integrity(
     obs_results: dict = {}
     for obs_id in pj[cfg.OBSERVATIONS]:
         for event_idx, event in enumerate(pj[cfg.OBSERVATIONS][obs_id][cfg.EVENTS]):
-            # event[2]
             for idx in pj[cfg.ETHOGRAM]:
-                if pj[cfg.ETHOGRAM][idx]["code"] == event[2]:
+                if pj[cfg.ETHOGRAM][idx][cfg.BEHAVIOR_CODE] == event[cfg.EVENT_BEHAVIOR_FIELD_IDX]:
                     break
             else:
-                raise
-            if (not event[3]) and not pj[cfg.ETHOGRAM][idx][cfg.MODIFIERS]:
+                # behavior not defined in ethogram
                 continue
 
-            if len(event[3].split("|")) != len(pj[cfg.ETHOGRAM][idx][cfg.MODIFIERS]):
-                print("behavior", event[2])
-                print(f"modifier(s) #{event[3]}#", len(event[3].split("|")))
-                print(pj[cfg.ETHOGRAM][idx]["code"], pj[cfg.ETHOGRAM][idx][cfg.MODIFIERS])
-                print()
+            if (not event[cfg.EVENT_MODIFIER_FIELD_IDX]) and not pj[cfg.ETHOGRAM][idx][cfg.MODIFIERS]: # no modifiers
+                continue
+
+            if len(event[cfg.EVENT_MODIFIER_FIELD_IDX].split("|")) != len(pj[cfg.ETHOGRAM][idx][cfg.MODIFIERS]):
+                #print("behavior", event[cfg.EVENT_BEHAVIOR_FIELD_IDX])
+                #print(f"modifier(s) #{event[cfg.EVENT_MODIFIER_FIELD_IDX]}#", len(event[cfg.EVENT_MODIFIER_FIELD_IDX].split("|")))
+                #print(pj[cfg.ETHOGRAM][idx]["code"], pj[cfg.ETHOGRAM][idx][cfg.MODIFIERS])
+                #print()
                 if obs_id not in obs_results:
                     obs_results[obs_id] = []
 
                 obs_results[obs_id].append(
                     (
-                        f"Event #{event_idx}: the coded modifiers for {event[2]} are {len(event[3].split('|'))} "
+                        f"Event #{event_idx}: the coded modifiers for {event[cfg.EVENT_BEHAVIOR_FIELD_IDX]} are {len(event[cfg.EVENT_MODIFIER_FIELD_IDX].split('|'))} "
                         f"but {len(pj[cfg.ETHOGRAM][idx][cfg.MODIFIERS])} sets were defined in ethogram."
                     )
                 )
