@@ -586,14 +586,14 @@ def check_project_integrity(
                 # behavior not defined in ethogram
                 continue
 
-            if (not event[cfg.EVENT_MODIFIER_FIELD_IDX]) and not pj[cfg.ETHOGRAM][idx][cfg.MODIFIERS]: # no modifiers
+            if (not event[cfg.EVENT_MODIFIER_FIELD_IDX]) and not pj[cfg.ETHOGRAM][idx][cfg.MODIFIERS]:  # no modifiers
                 continue
 
             if len(event[cfg.EVENT_MODIFIER_FIELD_IDX].split("|")) != len(pj[cfg.ETHOGRAM][idx][cfg.MODIFIERS]):
-                #print("behavior", event[cfg.EVENT_BEHAVIOR_FIELD_IDX])
-                #print(f"modifier(s) #{event[cfg.EVENT_MODIFIER_FIELD_IDX]}#", len(event[cfg.EVENT_MODIFIER_FIELD_IDX].split("|")))
-                #print(pj[cfg.ETHOGRAM][idx]["code"], pj[cfg.ETHOGRAM][idx][cfg.MODIFIERS])
-                #print()
+                # print("behavior", event[cfg.EVENT_BEHAVIOR_FIELD_IDX])
+                # print(f"modifier(s) #{event[cfg.EVENT_MODIFIER_FIELD_IDX]}#", len(event[cfg.EVENT_MODIFIER_FIELD_IDX].split("|")))
+                # print(pj[cfg.ETHOGRAM][idx]["code"], pj[cfg.ETHOGRAM][idx][cfg.MODIFIERS])
+                # print()
                 if obs_id not in obs_results:
                     obs_results[obs_id] = []
 
@@ -1484,7 +1484,6 @@ def open_project_json(project_file_name: str) -> tuple:
     else:
         pj[cfg.BEHAVIORAL_CATEGORIES_CONF] = dict()
         projectChanged = True
-
 
     # add category key if not found
     for idx in pj[cfg.ETHOGRAM]:

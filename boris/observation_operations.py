@@ -1856,7 +1856,8 @@ def initialize_new_media_observation(self) -> bool:
             # start timer for activating the main window
             self.main_window_activation_timer = QTimer()
             self.main_window_activation_timer.setInterval(500)
-            self.main_window_activation_timer.timeout.connect(self.activateWindow)
+            #self.main_window_activation_timer.timeout.connect(self.activateWindow)
+            self.main_window_activation_timer.timeout.connect(self.activate_main_window)
             self.main_window_activation_timer.start()
             
 

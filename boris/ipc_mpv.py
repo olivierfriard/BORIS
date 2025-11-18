@@ -62,7 +62,8 @@ class IPC_MPV:
                 "--osc=no",  # no on screen commands
                 "--input-ipc-server=" + self.socket_path,
                 # "--wid=" + str(int(self.winId())),  # Embed in the widget
-                "--idle",  # Keeps mpv running with no video
+                "--idle=yes",  # Keeps mpv running with no video
+                "--keep-open=always",
                 "--input-default-bindings=no",
                 "--input-vo-keyboard=no",
             ],
@@ -311,7 +312,6 @@ class IPC_MPV:
     def video_pan_y(self, value):
         self.send_command({"command": ["set_property", "video-pan-y", value]})
         return
-
 
     """
     @property

@@ -235,7 +235,10 @@ def display_zoom_level(self) -> None:
         if vz is None:
             self.lb_zoom_level.setText("-")
             return
-        msg += f"{2**player.player.video_zoom:.1f} "
+        if player.player.video_zoom is not None:
+            msg += f"{2**player.player.video_zoom:.1f} "
+        else:
+            msg += "NA "
     msg += "</b>"
     self.lb_zoom_level.setText(msg)
 

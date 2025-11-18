@@ -1206,7 +1206,7 @@ def time2seconds(time_: str) -> dec:
             return dec("0.000")
 
 
-def seconds2time(sec: dec) -> str:
+def seconds2time(sec: dec | None) -> str:
     """
     convert seconds to hh:mm:ss.sss format
 
@@ -1215,6 +1215,8 @@ def seconds2time(sec: dec) -> str:
     Returns:
         str: time in format hh:mm:ss
     """
+    if sec is None:
+        return cfg.NA
 
     if math.isnan(sec):
         return cfg.NA

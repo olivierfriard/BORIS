@@ -41,6 +41,7 @@ from PIL.ImageQt import Image
 import subprocess
 import locale
 import tempfile
+import math
 import time
 import urllib.request
 from decimal import Decimal as dec
@@ -53,18 +54,7 @@ import shutil
 
 matplotlib.use("QtAgg")
 
-from PySide6.QtCore import (
-    Qt,
-    QPoint,
-    Signal,
-    QEvent,
-    QDateTime,
-    QUrl,
-    QAbstractTableModel,
-    QElapsedTimer,
-    QSettings,
-    QTimer
-)
+from PySide6.QtCore import Qt, QPoint, Signal, QEvent, QDateTime, QUrl, QAbstractTableModel, QElapsedTimer, QSettings, QTimer
 from PySide6.QtGui import QIcon, QPixmap, QFont, QKeyEvent, QDesktopServices, QColor, QPainter, QPolygon, QAction
 from PySide6.QtMultimedia import QSoundEffect
 from PySide6.QtWidgets import (
@@ -318,7 +308,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     # variables for list of observations
     data: list = []
     not_paired: list = []
-
 
     '''
     def add_button_menu(self, data, menu_obj):
@@ -1511,15 +1500,17 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         logging.debug("previous media file")
 
         if self.playerType == cfg.MEDIA:
-            if len(self.pj[cfg.OBSERVATIONS][self.observationId][cfg.FILE][cfg.PLAYER1]) == 1:
-                return
+            #if len(self.pj[cfg.OBSERVATIONS][self.observationId][cfg.FILE][cfg.PLAYER1]) == 1:
+            #    self.seek_mediaplayer(dec(0))
+            #    return
 
             # check if media not first media
             if self.dw_player[0].player.playlist_pos > 0:
                 self.dw_player[0].player.playlist_prev()
 
             elif self.dw_player[0].player.playlist_count == 1:
-                self.statusbar.showMessage("There is only one media file", 5000)
+                self.seek_mediaplayer(dec(0))
+                #self.statusbar.showMessage("There is only one media file", 5000)
 
             if hasattr(self, "spectro"):
                 self.spectro.memChunk = -1
@@ -4154,6 +4145,21 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 self.dw_player[n_player].player.playlist_pos = self.dw_player[n_player].player.playlist_count - 1
                 self.seek_mediaplayer(self.dw_player[n_player].media_durations[-1], player=n_player)
 
+    def activate_main_window(self):
+        """
+        activate main window in order to capture keyboard events
+        called only in IPC mode
+        """
+        # check if eof reached
+        #print(f"{self.dw_player[0].player.playlist_pos=}")
+        #print(f"{self.dw_player[0].player.playlist_count=}")
+        if self.dw_player[0].player.eof_reached and self.dw_player[0].player.core_idle:
+            logging.debug("end of playlist reached")
+            if self.dw_player[0].player.playlist_pos is not None and self.dw_player[0].player.playlist_count is not None:
+                if self.dw_player[0].player.playlist_pos == self.dw_player[0].player.playlist_count - 1:
+                    self.pause_video()
+        self.activateWindow()
+
     def mpv_timer_out(self, value: float | None = None, scroll_slider=True):
         """
         print the media current position and total length for MPV player
@@ -4213,8 +4219,12 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 ct = self.getLaps(n_player=n_player)
 
                 # sync players 2..8 if time diff >= 1 s
-                if abs(ct0 - (ct + dec(self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO][cfg.OFFSET][str(n_player + 1)]))) >= 1:
-                    self.sync_time(n_player, ct0)  # self.seek_mediaplayer(ct0, n_player)
+                print(f"{ct0=}")
+                print(f"{ct=}")
+                print(f"{self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO][cfg.OFFSET][str(n_player + 1)]=}")
+                if not math.isnan(ct) and not math.isnan(ct0):
+                    if abs(ct0 - (ct + dec(self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO][cfg.OFFSET][str(n_player + 1)]))) >= 1:
+                        self.sync_time(n_player, ct0)  # self.seek_mediaplayer(ct0, n_player)
 
         currentTimeOffset = dec(cumulative_time_pos + self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TIME_OFFSET])
 
@@ -4245,9 +4255,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.show_current_states_in_subjects_table()
 
         # current media name
-        if self.dw_player[0].player.playlist_pos is not None:
-            current_media_name = Path(self.dw_player[0].player.playlist[self.dw_player[0].player.playlist_pos]["filename"]).name
-            current_playlist_index = self.dw_player[0].player.playlist_pos
+        playlist = self.dw_player[0].player.playlist
+        playlist_pos = self.dw_player[0].player.playlist_pos
+        if playlist is not None and playlist_pos is not None:
+            current_media_name = Path(playlist[playlist_pos]["filename"]).name
+            current_playlist_index = playlist_pos
         else:
             current_media_name = ""
             current_playlist_index = None
@@ -4605,6 +4617,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
             if self.playerType == cfg.MEDIA:
                 # cumulative time
+                if self.dw_player[n_player].player.time_pos is not None:
+                    return dec("NaN")
                 mem_laps = sum(self.dw_player[n_player].media_durations[0 : self.dw_player[n_player].player.playlist_pos]) + (
                     0 if self.dw_player[n_player].player.time_pos is None else self.dw_player[n_player].player.time_pos * 1000
                 )
@@ -4624,7 +4638,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         """
 
         if not self.observationId:
-            return dec("0")
+            return dec("0"), dec("0")
 
         if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE] == cfg.LIVE:
             if "finished" in self.pb_live_obs.text():
@@ -5468,6 +5482,13 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         if self.playerType != cfg.MEDIA:
             return
 
+        # check if playlist is ended. If it is ended restart playlist from beginning
+        if self.dw_player[0].player.eof_reached and self.dw_player[0].player.core_idle:
+            if self.dw_player[0].player.playlist_pos is not None and self.dw_player[0].player.playlist_count is not None:
+                if self.dw_player[0].player.playlist_pos == self.dw_player[0].player.playlist_count - 1:
+                    self.seek_mediaplayer(dec(0))
+
+
         # check if player 1 is ended
         for i, dw in enumerate(self.dw_player):
             if (
@@ -5477,9 +5498,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 dw.player.pause = False
 
         self.lb_player_status.clear()
-
-        # if self.pj[cfg.OBSERVATIONS][self.observationId].get(cfg.VISUALIZE_WAVEFORM, False) \
-        #    or self.pj[cfg.OBSERVATIONS][self.observationId].get(VISUALIZE_SPECTROGRAM, False):
 
         self.statusbar.showMessage("", 0)
 
@@ -5557,16 +5575,19 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
             decrement = self.fast * self.play_rate if self.config_param.get(cfg.ADAPT_FAST_JUMP, cfg.ADAPT_FAST_JUMP_DEFAULT) else self.fast
 
-            new_time = (
-                sum(self.dw_player[0].media_durations[0 : self.dw_player[0].player.playlist_pos]) / 1000
-                + self.dw_player[0].player.playback_time
-                - decrement
-            )
+            try:
+                new_time = (
+                    sum(self.dw_player[0].media_durations[0 : self.dw_player[0].player.playlist_pos]) / 1000
+                    + self.dw_player[0].player.playback_time
+                    - decrement
+                )
+            except Exception:
+                return
 
             if new_time < decrement:
                 new_time = 0
 
-            self.seek_mediaplayer(new_time)
+            self.seek_mediaplayer(dec(new_time))
 
             self.update_visualizations()
 
@@ -5580,13 +5601,16 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
             logging.info(f"Jump forward for {increment} seconds")
 
-            new_time = (
-                sum(self.dw_player[0].media_durations[0 : self.dw_player[0].player.playlist_pos]) / 1000
-                + self.dw_player[0].player.playback_time
-                + increment
-            )
+            try:
+                new_time = (
+                    sum(self.dw_player[0].media_durations[0 : self.dw_player[0].player.playlist_pos]) / 1000
+                    + self.dw_player[0].player.playback_time
+                    + increment
+                )
+            except Exception:
+                return
 
-            self.seek_mediaplayer(new_time)
+            self.seek_mediaplayer(dec(new_time))
 
             self.update_visualizations()
 
@@ -5844,12 +5868,12 @@ def main():
 
         if sys.platform.startswith("darwin"):
             QMessageBox.warning(
-                        None,
-                        cfg.programName,
-                        (f"This version of BORIS for macOS is still EXPERIMENTAL and should be used at your own risk."),
-                        QMessageBox.Ok | QMessageBox.Default,
-                        QMessageBox.NoButton,
-                    )
+                None,
+                cfg.programName,
+                (f"This version of BORIS for macOS is still EXPERIMENTAL and should be used at your own risk."),
+                QMessageBox.Ok | QMessageBox.Default,
+                QMessageBox.NoButton,
+            )
 
     window.show()
     window.raise_()  # for overlapping widget (?)
@@ -5877,3 +5901,4 @@ def main():
     del window
 
     sys.exit(return_code)
+
