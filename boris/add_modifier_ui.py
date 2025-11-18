@@ -3,7 +3,7 @@
 ################################################################################
 ## Form generated from reading UI file 'add_modifier.ui'
 ##
-## Created by: Qt User Interface Compiler version 6.8.0
+## Created by: Qt User Interface Compiler version 6.10.0
 ##
 ## WARNING! All changes made in this file will be lost when recompiling UI file!
 ################################################################################
@@ -24,18 +24,16 @@ class Ui_Dialog(object):
     def setupUi(self, Dialog):
         if not Dialog.objectName():
             Dialog.setObjectName(u"Dialog")
-        Dialog.resize(1088, 654)
-        self.verticalLayout_5 = QVBoxLayout(Dialog)
-        self.verticalLayout_5.setObjectName(u"verticalLayout_5")
+        Dialog.resize(1339, 789)
+        self.verticalLayout_4 = QVBoxLayout(Dialog)
+        self.verticalLayout_4.setObjectName(u"verticalLayout_4")
         self.cb_ask_at_stop = QCheckBox(Dialog)
         self.cb_ask_at_stop.setObjectName(u"cb_ask_at_stop")
 
-        self.verticalLayout_5.addWidget(self.cb_ask_at_stop)
+        self.verticalLayout_4.addWidget(self.cb_ask_at_stop)
 
-        self.verticalLayout_4 = QVBoxLayout()
-        self.verticalLayout_4.setObjectName(u"verticalLayout_4")
-        self.horizontalLayout_5 = QHBoxLayout()
-        self.horizontalLayout_5.setObjectName(u"horizontalLayout_5")
+        self.horizontalLayout_8 = QHBoxLayout()
+        self.horizontalLayout_8.setObjectName(u"horizontalLayout_8")
         self.verticalLayout_2 = QVBoxLayout()
         self.verticalLayout_2.setObjectName(u"verticalLayout_2")
         self.lbModifier = QLabel(Dialog)
@@ -69,7 +67,7 @@ class Ui_Dialog(object):
         self.verticalLayout_2.addItem(self.verticalSpacer)
 
 
-        self.horizontalLayout_5.addLayout(self.verticalLayout_2)
+        self.horizontalLayout_8.addLayout(self.verticalLayout_2)
 
         self.verticalLayout_3 = QVBoxLayout()
         self.verticalLayout_3.setObjectName(u"verticalLayout_3")
@@ -88,7 +86,7 @@ class Ui_Dialog(object):
         self.verticalLayout_3.addItem(self.verticalSpacer_2)
 
 
-        self.horizontalLayout_5.addLayout(self.verticalLayout_3)
+        self.horizontalLayout_8.addLayout(self.verticalLayout_3)
 
         self.verticalLayout = QVBoxLayout()
         self.verticalLayout.setObjectName(u"verticalLayout")
@@ -102,30 +100,42 @@ class Ui_Dialog(object):
 
         self.verticalLayout.addWidget(self.tabWidgetModifiersSets)
 
+        self.horizontalLayout_5 = QHBoxLayout()
+        self.horizontalLayout_5.setObjectName(u"horizontalLayout_5")
         self.lb_name = QLabel(Dialog)
         self.lb_name.setObjectName(u"lb_name")
 
-        self.verticalLayout.addWidget(self.lb_name)
+        self.horizontalLayout_5.addWidget(self.lb_name)
 
         self.le_name = QLineEdit(Dialog)
         self.le_name.setObjectName(u"le_name")
 
-        self.verticalLayout.addWidget(self.le_name)
+        self.horizontalLayout_5.addWidget(self.le_name)
 
+
+        self.verticalLayout.addLayout(self.horizontalLayout_5)
+
+        self.horizontalLayout_6 = QHBoxLayout()
+        self.horizontalLayout_6.setObjectName(u"horizontalLayout_6")
         self.lb_description = QLabel(Dialog)
         self.lb_description.setObjectName(u"lb_description")
 
-        self.verticalLayout.addWidget(self.lb_description)
+        self.horizontalLayout_6.addWidget(self.lb_description)
 
         self.le_description = QLineEdit(Dialog)
         self.le_description.setObjectName(u"le_description")
 
-        self.verticalLayout.addWidget(self.le_description)
+        self.horizontalLayout_6.addWidget(self.le_description)
 
+
+        self.verticalLayout.addLayout(self.horizontalLayout_6)
+
+        self.horizontalLayout_7 = QHBoxLayout()
+        self.horizontalLayout_7.setObjectName(u"horizontalLayout_7")
         self.lbType = QLabel(Dialog)
         self.lbType.setObjectName(u"lbType")
 
-        self.verticalLayout.addWidget(self.lbType)
+        self.horizontalLayout_7.addWidget(self.lbType)
 
         self.cbType = QComboBox(Dialog)
         self.cbType.addItem("")
@@ -134,7 +144,14 @@ class Ui_Dialog(object):
         self.cbType.addItem("")
         self.cbType.setObjectName(u"cbType")
 
-        self.verticalLayout.addWidget(self.cbType)
+        self.horizontalLayout_7.addWidget(self.cbType)
+
+        self.horizontalSpacer_3 = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
+
+        self.horizontalLayout_7.addItem(self.horizontalSpacer_3)
+
+
+        self.verticalLayout.addLayout(self.horizontalLayout_7)
 
         self.lbValues = QLabel(Dialog)
         self.lbValues.setObjectName(u"lbValues")
@@ -198,28 +215,32 @@ class Ui_Dialog(object):
 
         self.horizontalLayout_4 = QHBoxLayout()
         self.horizontalLayout_4.setObjectName(u"horizontalLayout_4")
-
-        self.verticalLayout.addLayout(self.horizontalLayout_4)
-
         self.pb_add_subjects = QPushButton(Dialog)
         self.pb_add_subjects.setObjectName(u"pb_add_subjects")
 
-        self.verticalLayout.addWidget(self.pb_add_subjects)
+        self.horizontalLayout_4.addWidget(self.pb_add_subjects)
 
         self.pb_load_file = QPushButton(Dialog)
         self.pb_load_file.setObjectName(u"pb_load_file")
 
-        self.verticalLayout.addWidget(self.pb_load_file)
+        self.horizontalLayout_4.addWidget(self.pb_load_file)
+
+        self.horizontalSpacer_2 = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
+
+        self.horizontalLayout_4.addItem(self.horizontalSpacer_2)
+
+
+        self.verticalLayout.addLayout(self.horizontalLayout_4)
 
         self.verticalSpacer_3 = QSpacerItem(20, 40, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding)
 
         self.verticalLayout.addItem(self.verticalSpacer_3)
 
 
-        self.horizontalLayout_5.addLayout(self.verticalLayout)
+        self.horizontalLayout_8.addLayout(self.verticalLayout)
 
 
-        self.verticalLayout_4.addLayout(self.horizontalLayout_5)
+        self.verticalLayout_4.addLayout(self.horizontalLayout_8)
 
         self.horizontalLayout_2 = QHBoxLayout()
         self.horizontalLayout_2.setObjectName(u"horizontalLayout_2")
@@ -241,9 +262,6 @@ class Ui_Dialog(object):
         self.verticalLayout_4.addLayout(self.horizontalLayout_2)
 
 
-        self.verticalLayout_5.addLayout(self.verticalLayout_4)
-
-
         self.retranslateUi(Dialog)
 
         self.tabWidgetModifiersSets.setCurrentIndex(-1)
@@ -256,8 +274,8 @@ class Ui_Dialog(object):
         Dialog.setWindowTitle(QCoreApplication.translate("Dialog", u"Set modifiers", None))
         self.cb_ask_at_stop.setText(QCoreApplication.translate("Dialog", u"Ask for modifier(s) when behavior stops", None))
         self.lbModifier.setText(QCoreApplication.translate("Dialog", u"Modifier", None))
-        self.lbCode.setText(QCoreApplication.translate("Dialog", u"Key code", None))
-        self.lbCodeHelp.setText(QCoreApplication.translate("Dialog", u"Key code is case sensitive. Type one character or a function key (F1, F2... F12)", None))
+        self.lbCode.setText(QCoreApplication.translate("Dialog", u"Shortcut", None))
+        self.lbCodeHelp.setText(QCoreApplication.translate("Dialog", u"The shortcut is case sensitive. Type one character or a function key (F1, F2... F12)", None))
         self.pbAddModifier.setText(QCoreApplication.translate("Dialog", u"->", None))
         self.pbModifyModifier.setText(QCoreApplication.translate("Dialog", u"<-", None))
         self.lb_name.setText(QCoreApplication.translate("Dialog", u"Set name", None))

@@ -4219,9 +4219,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 ct = self.getLaps(n_player=n_player)
 
                 # sync players 2..8 if time diff >= 1 s
-                print(f"{ct0=}")
-                print(f"{ct=}")
-                print(f"{self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO][cfg.OFFSET][str(n_player + 1)]=}")
                 if not math.isnan(ct) and not math.isnan(ct0):
                     if abs(ct0 - (ct + dec(self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO][cfg.OFFSET][str(n_player + 1)]))) >= 1:
                         self.sync_time(n_player, ct0)  # self.seek_mediaplayer(ct0, n_player)
@@ -4617,7 +4614,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
             if self.playerType == cfg.MEDIA:
                 # cumulative time
-                if self.dw_player[n_player].player.time_pos is not None:
+                if self.dw_player[n_player].player.time_pos is None:
                     return dec("NaN")
                 mem_laps = sum(self.dw_player[n_player].media_durations[0 : self.dw_player[n_player].player.playlist_pos]) + (
                     0 if self.dw_player[n_player].player.time_pos is None else self.dw_player[n_player].player.time_pos * 1000
