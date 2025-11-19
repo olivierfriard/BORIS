@@ -13,7 +13,7 @@ It provides also some analysis tools like time budget and some plotting function
 <!-- The BO-RIS paper has more than [![BORIS citations counter](https://penelope.unito.it/friard/boris_scopus_citations.png) citations](https://www.boris.unito.it/citations) in peer-reviewed scientific publications. -->
 
 
-The BORIS paper has more than 2442 citations in peer-reviewed scientific publications.
+The BORIS paper has more than 2443 citations in peer-reviewed scientific publications.
 
 
 
