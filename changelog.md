@@ -1,3 +1,9 @@
+
+**v. 9.7.8 2025-11-18**
+
+* fixed bug introduced in v. 9.7.7
+
+
 **v. 9.7.7 2025-11-17**
 
 * fixed issue #910

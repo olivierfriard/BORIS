@@ -24,6 +24,7 @@ import logging
 import numpy as np
 import pandas as pd
 from pathlib import Path
+import copy
 
 from PySide6.QtGui import QAction
 from PySide6.QtWidgets import QMessageBox
@@ -297,6 +298,7 @@ def run_plugin(self, plugin_name):
 
     logging.debug(f"{plugin_path=}")
 
+    # check if plugin file exists
     if not Path(plugin_path).is_file():
         QMessageBox.critical(self, cfg.programName, f"The plugin {plugin_path} was not found.")
         return
@@ -329,6 +331,7 @@ def run_plugin(self, plugin_name):
     filtered_df = plugin_df_filter(df, observations_list=selected_observations, parameters=parameters)
     logging.info("done")
 
+    # Python plugin
     if Path(plugin_path).suffix == ".py":
         # load plugin as module
         module_name = Path(plugin_path).stem
@@ -347,9 +350,25 @@ def run_plugin(self, plugin_name):
             f"{plugin_module.__plugin_name__} loaded v.{getattr(plugin_module, '__version__')} v. {getattr(plugin_module, '__version_date__')}"
         )
 
-        # run plugin
-        plugin_results = plugin_module.run(filtered_df)
+        # check arguments required by the run function of the plugin
+        import inspect
+        dataframe_required = False
+        project_required = False
+        for param in inspect.signature(plugin_module.run).parameters.values():
+            if param.annotation is pd.DataFrame:
+                dataframe_required = True
+            if param.annotation is dict:
+                project_required = True
 
+        # check if plugin needs the entire project
+        if project_required:
+            plugin_results = plugin_module.run(filtered_df, copy.deepcopy((self.pj)))
+        else:
+            # run plugin
+            plugin_results = plugin_module.run(filtered_df)
+
+
+    # R plugin
     if Path(plugin_path).suffix in (".R", ".r"):
         try:
             from rpy2 import robjects
