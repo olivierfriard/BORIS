@@ -352,21 +352,22 @@ def run_plugin(self, plugin_name):
 
         # check arguments required by the run function of the plugin
         import inspect
+
         dataframe_required = False
         project_required = False
-        for param in inspect.signature(plugin_module.run).parameters.values():
-            if param.annotation is pd.DataFrame:
+        # for param in inspect.signature(plugin_module.run).parameters.values():
+        for name, annotation in inspect.getfullargspec(plugin_module.run).annotations.items():
+            if name == "df" and annotation is pd.DataFrame:
                 dataframe_required = True
-            if param.annotation is dict:
+            if name == "pj" and annotation is dict:
                 project_required = True
 
         # check if plugin needs the entire project
         if project_required:
-            plugin_results = plugin_module.run(filtered_df, copy.deepcopy((self.pj)))
+            plugin_results = plugin_module.run(df=filtered_df, pj=copy.deepcopy((self.pj)))
         else:
             # run plugin
-            plugin_results = plugin_module.run(filtered_df)
-
+            plugin_results = plugin_module.run(df=filtered_df)
 
     # R plugin
     if Path(plugin_path).suffix in (".R", ".r"):
