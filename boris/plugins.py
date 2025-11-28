@@ -25,6 +25,7 @@ import numpy as np
 import pandas as pd
 from pathlib import Path
 import copy
+import inspect
 
 from PySide6.QtGui import QAction
 from PySide6.QtWidgets import QMessageBox
@@ -310,27 +311,6 @@ def run_plugin(self, plugin_name):
     if not selected_observations:
         return
 
-    logging.info("preparing dataframe for plugin")
-
-    message, df = project_functions.project2dataframe(self.pj, selected_observations)
-    if message:
-        logging.critical(message)
-        QMessageBox.critical(self, cfg.programName, message)
-        return
-
-    logging.info("done")
-
-    """
-    logging.debug("dataframe info")
-    logging.debug(f"{df.info()}")
-    logging.debug(f"{df.head()}")
-    """
-
-    # filter the dataframe with parameters
-    logging.info("filtering dataframe for plugin")
-    filtered_df = plugin_df_filter(df, observations_list=selected_observations, parameters=parameters)
-    logging.info("done")
-
     # Python plugin
     if Path(plugin_path).suffix == ".py":
         # load plugin as module
@@ -351,23 +331,45 @@ def run_plugin(self, plugin_name):
         )
 
         # check arguments required by the run function of the plugin
-        import inspect
-
         dataframe_required = False
         project_required = False
         # for param in inspect.signature(plugin_module.run).parameters.values():
         for name, annotation in inspect.getfullargspec(plugin_module.run).annotations.items():
             if name == "df" and annotation is pd.DataFrame:
                 dataframe_required = True
-            if name == "pj" and annotation is dict:
+            if name == "project" and annotation is dict:
                 project_required = True
 
-        # check if plugin needs the entire project
+        # create arguments for the plugin run function
+        plugin_kwargs: dict = {}
+
+        if dataframe_required:
+            logging.info("preparing dataframe for plugin")
+            message, df = project_functions.project2dataframe(self.pj, selected_observations)
+            if message:
+                logging.critical(message)
+                QMessageBox.critical(self, cfg.programName, message)
+                return
+            logging.info("done")
+
+            # filter the dataframe with parameters
+            logging.info("filtering dataframe for plugin")
+            filtered_df = plugin_df_filter(df, observations_list=selected_observations, parameters=parameters)
+            logging.info("done")
+
+            plugin_kwargs["df"] = filtered_df
+
         if project_required:
-            plugin_results = plugin_module.run(df=filtered_df, pj=copy.deepcopy((self.pj)))
-        else:
-            # run plugin
-            plugin_results = plugin_module.run(df=filtered_df)
+            pj_copy = copy.deepcopy(self.pj)
+
+            # remove unselected observations from project
+            for obs_id in self.pj[cfg.OBSERVATIONS]:
+                if obs_id not in selected_observations:
+                    del pj_copy[cfg.OBSERVATIONS][obs_id]
+
+            plugin_kwargs["project"] = pj_copy
+
+        plugin_results = plugin_module.run(**plugin_kwargs)
 
     # R plugin
     if Path(plugin_path).suffix in (".R", ".r"):
@@ -379,6 +381,21 @@ def run_plugin(self, plugin_name):
         except Exception:
             QMessageBox.critical(self, cfg.programName, "The rpy2 Python module is not installed. R plugins cannot be used")
             return
+
+        logging.info("preparing dataframe for plugin")
+
+        message, df = project_functions.project2dataframe(self.pj, selected_observations)
+        if message:
+            logging.critical(message)
+            QMessageBox.critical(self, cfg.programName, message)
+            return
+
+        logging.info("done")
+
+        # filter the dataframe with parameters
+        logging.info("filtering dataframe for plugin")
+        filtered_df = plugin_df_filter(df, observations_list=selected_observations, parameters=parameters)
+        logging.info("done")
 
         # Read code from file
         try:

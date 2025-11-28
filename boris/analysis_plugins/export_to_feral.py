@@ -6,6 +6,9 @@ Export to FERAL (getferal.ai)
 
 import pandas as pd
 import json
+from pathlib import Path
+
+from PySide6.QtWidgets import QFileDialog
 
 __version__ = "0.1.0"
 __version_date__ = "2025-11-27"
@@ -13,7 +16,7 @@ __plugin_name__ = "Export observations to FERAL"
 __author__ = "Olivier Friard - University of Torino - Italy"
 
 
-def run(df: pd.DataFrame, pj: dict):
+def run(df: pd.DataFrame, project: dict):
     """
     Export observations to FERAL
     See https://www.getferal.ai/ > Label Preparation
@@ -29,54 +32,72 @@ def run(df: pd.DataFrame, pj: dict):
         },
     }
 
-    # class names
-    class_names = {x: pj["behaviors_conf"][x]["code"] for x in pj["behaviors_conf"]}
-    out["class_names"] = class_names
-    reversed_class_names = {pj["behaviors_conf"][x]["code"]: int(x) for x in pj["behaviors_conf"]}
-    print(f"{class_names=}")
-    print(f"{reversed_class_names=}")
+    log: list = []
 
-    observations: list = sorted([x for x in pj["observations"]])
+    # class names
+    class_names = {x: project["behaviors_conf"][x]["code"] for x in project["behaviors_conf"]}
+    out["class_names"] = class_names
+    reversed_class_names = {project["behaviors_conf"][x]["code"]: int(x) for x in project["behaviors_conf"]}
+    log.append(f"{class_names=}")
+
+    observations: list = sorted([x for x in project["observations"]])
+    log.append(f"{observations=}")
+
     labels: dict = {}
     for observation_id in observations:
         # skip if no events
-        if not pj["observations"][observation_id]["events"]:
+        if not project["observations"][observation_id]["events"]:
             print(f"No events for observation {observation_id}")
             continue
+
         # check number of media file in player #1
-        if len(pj["observations"][observation_id]["file"]["1"]) != 1:
-            print(f"The observation {observation_id} contains more than one video")
-            continue
-        # check number of coded subjects
-        print(set([x[1] for x in pj["observations"][observation_id]["events"]]))
-        if len(set([x[1] for x in pj["observations"][observation_id]["events"]])) != 1:
-            print(f"The observation {observation_id} contains more than one subject")
+        if len(project["observations"][observation_id]["file"]["1"]) != 1:
+            log.append(f"The observation {observation_id} contains more than one video")
             continue
 
-        media_file_path: str = pj["observations"][observation_id]["file"]["1"][0]
+        # check number of coded subjects
+        if len(set([x[1] for x in project["observations"][observation_id]["events"]])) != 1:
+            log.append(f"The observation {observation_id} contains more than one subject")
+            continue
+
+        media_file_path: str = project["observations"][observation_id]["file"]["1"][0]
+        media_file_name = str(Path(media_file_path).name)
         # extract FPS
-        FPS = pj["observations"][observation_id]["media_info"]["fps"][media_file_path]
-        print(FPS)
+        FPS = project["observations"][observation_id]["media_info"]["fps"][media_file_path]
+        log.append(f"{media_file_name} {FPS=}")
         # extract media duration
-        duration = pj["observations"][observation_id]["media_info"]["length"][media_file_path]
-        print(duration)
+        duration = project["observations"][observation_id]["media_info"]["length"][media_file_path]
+        log.append(f"{media_file_name} {duration=}")
 
         number_of_frames = int(duration / (1 / FPS))
-        print(f"{number_of_frames=}")
-        labels[observation_id] = [0] * number_of_frames
+        log.append(f"{number_of_frames=}")
+
+        labels[media_file_name] = [0] * number_of_frames
 
         for idx in range(number_of_frames):
             t = idx * (1 / FPS)
-            behaviors = df[(df["Start (s)"] <= t) & (df["Stop (s)"] >= t)]["Behavior"].unique().tolist()
+            behaviors = (
+                df[(df["Observation id"] == observation_id) & (df["Start (s)"] <= t) & (df["Stop (s)"] >= t)]["Behavior"].unique().tolist()
+            )
             if len(behaviors) > 1:
-                print(f"The observation {observation_id} contains more than one behavior for frame {idx}")
-                del labels[observation_id]
+                log.append(f"The observation {observation_id} contains more than one behavior for frame {idx}")
+                del labels[media_file_name]
                 break
-            print(t, behaviors)
+            # print(t, behaviors)
             if behaviors:
                 behaviors_idx = reversed_class_names[behaviors[0]]
-                print(behaviors_idx)
-                labels[observation_id][idx] = behaviors_idx
+                labels[media_file_name][idx] = behaviors_idx
 
     out["labels"] = labels
-    return json.dumps(out, separators=(",", ": "))  # , indent=2, separators=(",", ": "))
+
+    filename, _ = QFileDialog.getSaveFileName(
+        None,
+        "Choose a file to save",
+        "",  # start directory
+        "JSON files (*.json);;All files (*.*)",
+    )
+    if filename:
+        with open(filename, "w") as f_out:
+            f_out.write(json.dumps(out, separators=(",", ": ")))
+
+    return "\n".join(log)
