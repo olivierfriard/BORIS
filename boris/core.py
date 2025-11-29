@@ -1500,7 +1500,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         logging.debug("previous media file")
 
         if self.playerType == cfg.MEDIA:
-            #if len(self.pj[cfg.OBSERVATIONS][self.observationId][cfg.FILE][cfg.PLAYER1]) == 1:
+            # if len(self.pj[cfg.OBSERVATIONS][self.observationId][cfg.FILE][cfg.PLAYER1]) == 1:
             #    self.seek_mediaplayer(dec(0))
             #    return
 
@@ -1510,7 +1510,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
             elif self.dw_player[0].player.playlist_count == 1:
                 self.seek_mediaplayer(dec(0))
-                #self.statusbar.showMessage("There is only one media file", 5000)
+                # self.statusbar.showMessage("There is only one media file", 5000)
 
             if hasattr(self, "spectro"):
                 self.spectro.memChunk = -1
@@ -4151,8 +4151,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         called only in IPC mode
         """
         # check if eof reached
-        #print(f"{self.dw_player[0].player.playlist_pos=}")
-        #print(f"{self.dw_player[0].player.playlist_count=}")
+        # print(f"{self.dw_player[0].player.playlist_pos=}")
+        # print(f"{self.dw_player[0].player.playlist_count=}")
         if self.dw_player[0].player.eof_reached and self.dw_player[0].player.core_idle:
             logging.debug("end of playlist reached")
             if self.dw_player[0].player.playlist_pos is not None and self.dw_player[0].player.playlist_count is not None:
@@ -4220,8 +4220,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
                 # sync players 2..8 if time diff >= 1 s
                 if not math.isnan(ct) and not math.isnan(ct0):
-                    if abs(ct0 - (ct + dec(self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO][cfg.OFFSET][str(n_player + 1)]))) >= 1:
-                        self.sync_time(n_player, ct0)  # self.seek_mediaplayer(ct0, n_player)
+                    if (
+                        abs(ct0 - (ct + dec(self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO][cfg.OFFSET][str(n_player + 1)])))
+                        >= 1
+                    ):
+                        self.sync_time(n_player, float(ct0))  # self.seek_mediaplayer(ct0, n_player)
 
         currentTimeOffset = dec(cumulative_time_pos + self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TIME_OFFSET])
 
@@ -5485,7 +5488,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 if self.dw_player[0].player.playlist_pos == self.dw_player[0].player.playlist_count - 1:
                     self.seek_mediaplayer(dec(0))
 
-
         # check if player 1 is ended
         for i, dw in enumerate(self.dw_player):
             if (
@@ -5867,7 +5869,7 @@ def main():
             QMessageBox.warning(
                 None,
                 cfg.programName,
-                (f"This version of BORIS for macOS is still EXPERIMENTAL and should be used at your own risk."),
+                ("This version of BORIS for macOS is still EXPERIMENTAL and should be used at your own risk."),
                 QMessageBox.Ok | QMessageBox.Default,
                 QMessageBox.NoButton,
             )
@@ -5898,4 +5900,3 @@ def main():
     del window
 
     sys.exit(return_code)
-

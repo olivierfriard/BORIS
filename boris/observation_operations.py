@@ -26,7 +26,7 @@ from decimal import Decimal as dec
 import json
 from math import log2, floor
 import os
-import pathlib as pl
+from pathlib import Path
 import socket
 import subprocess
 import sys
@@ -89,10 +89,10 @@ def export_observations_list_clicked(self):
         return
 
     output_format = cfg.FILE_NAME_SUFFIX[filter_]
-    if pl.Path(file_name).suffix != "." + output_format:
-        file_name = str(pl.Path(file_name)) + "." + output_format
+    if Path(file_name).suffix != "." + output_format:
+        file_name = str(Path(file_name)) + "." + output_format
         # check if file name with extension already exists
-        if pl.Path(file_name).is_file():
+        if Path(file_name).is_file():
             if dialog.MessageDialog(cfg.programName, f"The file {file_name} already exists.", [cfg.CANCEL, cfg.OVERWRITE]) == cfg.CANCEL:
                 return
 
@@ -130,7 +130,6 @@ def observations_list(self):
             return ""
         else:
             close_observation(self)
-
 
         QtTest.QTest.qWait(1000)
 
@@ -602,7 +601,7 @@ def new_observation(self, mode: str = cfg.NEW, obsId: str = "") -> None:
             close_observation(self)
 
     observationWindow = observation.Observation(
-        tmp_dir=self.ffmpeg_cache_dir if (self.ffmpeg_cache_dir and pl.Path(self.ffmpeg_cache_dir).is_dir()) else tempfile.gettempdir(),
+        tmp_dir=self.ffmpeg_cache_dir if (self.ffmpeg_cache_dir and Path(self.ffmpeg_cache_dir).is_dir()) else tempfile.gettempdir(),
         project_path=self.projectFileName,
         converters=self.pj.get(cfg.CONVERTERS, {}),
         time_format=self.timeFormat,
@@ -1315,7 +1314,7 @@ def check_creation_date(self) -> Tuple[int, dict]:
 
         if ret == 1:  #  use file creation time
             for media in not_tagged_media_list:
-                media_creation_time[media] = pl.Path(media).stat().st_ctime
+                media_creation_time[media] = Path(media).stat().st_ctime
             return (0, media_creation_time)  # OK use media file creation date/time
         else:
             return (1, {})
@@ -1856,10 +1855,9 @@ def initialize_new_media_observation(self) -> bool:
             # start timer for activating the main window
             self.main_window_activation_timer = QTimer()
             self.main_window_activation_timer.setInterval(500)
-            #self.main_window_activation_timer.timeout.connect(self.activateWindow)
+            # self.main_window_activation_timer.timeout.connect(self.activateWindow)
             self.main_window_activation_timer.timeout.connect(self.activate_main_window)
             self.main_window_activation_timer.start()
-            
 
         for mediaFile in self.pj[cfg.OBSERVATIONS][self.observationId][cfg.FILE][n_player]:
             logging.debug(f"media file: {mediaFile}")
@@ -1904,7 +1902,7 @@ def initialize_new_media_observation(self) -> bool:
             self.dw_player[i].player.playlist_append(media_full_path)
 
             # add media file name to player window title
-            self.dw_player[i].setWindowTitle(f"Player #{i + 1} ({pl.Path(media_full_path).name})")
+            self.dw_player[i].setWindowTitle(f"Player #{i + 1} ({Path(media_full_path).name})")
 
         # media duration cumuled in seconds
         self.dw_player[i].cumul_media_durations_sec = [round(dec(x / 1000), 3) for x in self.dw_player[i].cumul_media_durations]
@@ -2013,7 +2011,7 @@ def initialize_new_media_observation(self) -> bool:
         tmp_dir = self.ffmpeg_cache_dir if self.ffmpeg_cache_dir and os.path.isdir(self.ffmpeg_cache_dir) else tempfile.gettempdir()
 
         wav_file_path = (
-            pl.Path(tmp_dir) / pl.Path(self.dw_player[0].player.playlist[self.dw_player[0].player.playlist_pos]["filename"] + ".wav").name
+            Path(tmp_dir) / Path(self.dw_player[0].player.playlist[self.dw_player[0].player.playlist_pos]["filename"] + ".wav").name
         )
 
         if not wav_file_path.is_file():
@@ -2029,7 +2027,7 @@ def initialize_new_media_observation(self) -> bool:
         tmp_dir = self.ffmpeg_cache_dir if self.ffmpeg_cache_dir and os.path.isdir(self.ffmpeg_cache_dir) else tempfile.gettempdir()
 
         wav_file_path = (
-            pl.Path(tmp_dir) / pl.Path(self.dw_player[0].player.playlist[self.dw_player[0].player.playlist_pos]["filename"] + ".wav").name
+            Path(tmp_dir) / Path(self.dw_player[0].player.playlist[self.dw_player[0].player.playlist_pos]["filename"] + ".wav").name
         )
 
         if not wav_file_path.is_file():
@@ -2313,8 +2311,8 @@ def initialize_new_images_observation(self):
                 sorted(
                     list(
                         set(
-                            [str(x) for x in pl.Path(full_dir_path).glob(pattern)]
-                            + [str(x) for x in pl.Path(full_dir_path).glob(pattern.upper())]
+                            [str(x) for x in Path(full_dir_path).glob(pattern)]
+                            + [str(x) for x in Path(full_dir_path).glob(pattern.upper())]
                         )
                     )
                 )
@@ -2439,26 +2437,31 @@ def event2media_file_name(observation: dict, timestamp: dec) -> Optional[str]:
 
 def create_observations(self):
     """
-    Create observations from a media file directory
+    Create observations from a directory of media files
     """
-    # print(self.pj[cfg.OBSERVATIONS])
 
-    dir_path = QFileDialog.getExistingDirectory(None, "Select directory", os.getenv("HOME"))
-    if not dir_path:
+    if not (dir_path := QFileDialog.getExistingDirectory(None, "Select directory", os.getenv("HOME"))):
         return
 
-    dlg = dialog.Input_dialog(
-        label_caption="Set the following observation parameters",
-        elements_list=[
+    elements_list: list = []
+    if util.is_subdir(Path(dir_path), Path(self.projectFileName).parent):
+        elements_list.append(("cb", "Use relative paths", False))
+
+    elements_list.extend(
+        [
             ("cb", "Recurse the subdirectories", False),
-            ("cb", "Save the absolute media file path", True),
             ("cb", "Visualize spectrogram", False),
             ("cb", "Visualize waveform", False),
             ("cb", "Media creation date as offset", False),
             ("cb", "Close behaviors between videos", False),
             ("dsb", "Time offset (in seconds)", 0.0, 86400, 1, 0, 3),
             ("dsb", "Media scan sampling duration (in seconds)", 0.0, 86400, 1, 0, 3),
-        ],
+        ]
+    )
+
+    dlg = dialog.Input_dialog(
+        label_caption="Set the following observation parameters",
+        elements_list=elements_list,
         title="Observation parameters",
     )
     if not dlg.exec_():
@@ -2467,9 +2470,9 @@ def create_observations(self):
     file_count: int = 0
 
     if dlg.elements["Recurse the subdirectories"].isChecked():
-        files_list = pl.Path(dir_path).rglob("*")
+        files_list = Path(dir_path).rglob("*")
     else:
-        files_list = pl.Path(dir_path).glob("*")
+        files_list = Path(dir_path).glob("*")
 
     for file in files_list:
         if not file.is_file():
@@ -2479,22 +2482,25 @@ def create_observations(self):
             if not r.get("frames_number", 0):
                 continue
 
-            if dlg.elements["Save the absolute media file path"].isChecked():
-                media_file = str(file)
+            if "Use relative paths" in dlg.elements and dlg.elements["Use relative paths"].isChecked():
+                media_file = str(file.relative_to(Path(self.projectFileName).parent))
             else:
-                try:
-                    media_file = str(file.relative_to(pl.Path(self.projectFileName).parent))
-                except ValueError:
-                    QMessageBox.critical(
-                        self,
-                        cfg.programName,
-                        (
-                            f"the media file <b>{file}</b> can not be relative to the project directory "
-                            f"(<b>{pl.Path(self.projectFileName).parent}</b>)"
-                            "<br><br>Aborting the creation of observations"
-                        ),
-                    )
-                    return
+                media_file = str(file)
+
+            # else:
+            #    try:
+            #        media_file = str(file.relative_to(Path(self.projectFileName).parent))
+            #    except ValueError:
+            #        QMessageBox.critical(
+            #            self,
+            #            cfg.programName,
+            #            (
+            #                f"the media file <b>{file}</b> can not be relative to the project directory "
+            #                f"(<b>{Path(self.projectFileName).parent}</b>)"
+            #                "<br><br>Aborting the creation of observations"
+            #            ),
+            #        )
+            #        return
 
             if media_file in self.pj[cfg.OBSERVATIONS]:
                 QMessageBox.critical(
@@ -2534,5 +2540,7 @@ def create_observations(self):
         message: str = f"{file_count} observation(s) were created" if file_count > 1 else "One observation was created"
     else:
         message: str = f"No media file were found in {dir_path}"
+
+    menu_options.update_menu(self)
 
     QMessageBox.information(self, cfg.programName, message)

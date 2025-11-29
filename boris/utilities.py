@@ -126,6 +126,15 @@ if (sys.platform.startswith("win") or sys.platform.startswith("linux")) and ("-i
             sys.exit(5)
 
 
+def is_subdir(a: Path, b: Path) -> bool:
+    """
+    Return True if directory A is inside directory B.
+    """
+    a = a.resolve()
+    b = b.resolve()
+    return a.is_relative_to(b)
+
+
 def test_mpv_ipc(socket_path: str = cfg.MPV_SOCKET) -> bool:
     """
     test if socket available
