@@ -171,7 +171,14 @@
             </widget>
            </item>
            <item>
-            <widget class="QDoubleSpinBox" name="sbffSpeed"/>
+            <widget class="QDoubleSpinBox" name="sbffSpeed">
+             <property name="decimals">
+              <number>3</number>
+             </property>
+             <property name="maximum">
+              <double>1000000.000000000000000</double>
+             </property>
+            </widget>
            </item>
           </layout>
          </item>
