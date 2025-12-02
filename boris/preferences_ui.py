@@ -147,6 +147,8 @@ class Ui_prefDialog(object):
 
         self.sbffSpeed = QDoubleSpinBox(self.tab_observations)
         self.sbffSpeed.setObjectName(u"sbffSpeed")
+        self.sbffSpeed.setDecimals(3)
+        self.sbffSpeed.setMaximum(1000000.000000000000000)
 
         self.horizontalLayout_4.addWidget(self.sbffSpeed)
 
