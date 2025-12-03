@@ -746,7 +746,7 @@ class ModifiersMapCreatorWindow(QMainWindow):
             else:
                 self.fileName = fn
 
-            if self.fileName and Path(self.fileName).suffix() != ".boris_map":
+            if self.fileName and Path(self.fileName).suffix != ".boris_map":
                 self.fileName += ".boris_map"
 
         if self.fileName:
