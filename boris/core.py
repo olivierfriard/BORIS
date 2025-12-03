@@ -645,7 +645,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         """
         handle click received from subjects pad
         """
-        # q = QKeyEvent(QEvent.KeyPress, Qt.Key_Enter, Qt.NoModifier, text="#subject#" + subject)
         q = QKeyEvent(QEvent.Type.KeyPress, Qt.Key.Key_Enter, Qt.KeyboardModifier.NoModifier, text="#subject#" + subject)
         self.keyPressEvent(q)
 
