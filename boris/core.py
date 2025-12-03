@@ -630,7 +630,14 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         """
         handle click received from coding pad
         """
-        q = QKeyEvent(QEvent.KeyPress, Qt.Key_Enter, Qt.NoModifier, text=behaviorCode)
+        #q = QKeyEvent(QEvent.KeyPress, Qt.Key_Enter, Qt.NoModifier, text=behaviorCode)
+        #print(q)
+        #self.keyPressEvent(q)
+
+        q = QKeyEvent(    QEvent.Type.KeyPress,    Qt.Key.Key_Enter,    Qt.KeyboardModifier.NoModifier,    text=behaviorCode)
+        print(q)
+
+
         self.keyPressEvent(q)
 
     def close_signal_from_coding_pad(self, geometry, preferences):
@@ -698,7 +705,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.subjects_pad = subjects_pad.SubjectsPad(self.pj, filtered_subjects)
             self.subjects_pad.setWindowFlags(Qt.WindowStaysOnTopHint)
             self.subjects_pad.sendEventSignal.connect(self.signal_from_subjects_pad)
-            self.subjects_pad.clickSignal.connect(self.click_signal_from_subjects_pad)
+            self.subjects_pad.click_signal.connect(self.click_signal_from_subjects_pad)
             self.subjects_pad.close_signal.connect(self.close_signal_from_subjects_pad)
             self.subjects_pad.show()
 
@@ -4845,7 +4852,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         # play / pause with space bar
         if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE] == cfg.LIVE:
-            if ek in (Qt.Key_Space, Qt.Key_Enter, Qt.Key_Return):
+            print(f"{ek=}")
+            print(Qt.Key_Space, Qt.Key_Enter, Qt.Key_Return)
+            #if ek in (Qt.Key_Space, Qt.Key_Enter, Qt.Key_Return):
+            if ek == Qt.Key_Space:
                 if self.liveObservationStarted:
                     if (
                         dialog.MessageDialog(cfg.programName, "Are you sure to stop the current live observation?", [cfg.YES, cfg.NO])

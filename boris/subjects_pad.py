@@ -27,7 +27,7 @@ from . import utilities as util
 
 
 class SubjectsPad(QWidget):
-    clickSignal = Signal(str)
+    click_signal = Signal(str)
     sendEventSignal = Signal(QEvent)
     close_signal = Signal(QRect)
 
@@ -77,7 +77,7 @@ class SubjectsPad(QWidget):
             widget.pushButton.clicked.connect(lambda: self.click(subject))
 
     def click(self, subject):
-        self.clickSignal.emit(subject)
+        self.click_signal.emit(subject)
 
     def eventFilter(self, receiver, event):
         """

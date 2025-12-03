@@ -38,7 +38,7 @@ class Button(QWidget):
 
 
 class CodingPad(QWidget):
-    clickSignal = Signal(str)
+    click_signal = Signal(str)
     sendEventSignal = Signal(QEvent)
     close_signal = Signal(QRect, dict)
 
@@ -208,7 +208,8 @@ class CodingPad(QWidget):
         """
         Button clicked
         """
-        self.clickSignal.emit(behavior_code)
+        print(f"{behavior_code=}")
+        self.click_signal.emit(behavior_code)
 
     def eventFilter(self, receiver, event) -> bool:
         """
@@ -261,7 +262,7 @@ def show_coding_pad(self):
         self.codingpad.setWindowFlags(Qt.WindowStaysOnTopHint)
         self.codingpad.sendEventSignal.connect(self.signal_from_widget)
 
-        self.codingpad.clickSignal.connect(self.click_signal_from_coding_pad)
+        self.codingpad.click_signal.connect(self.click_signal_from_coding_pad)
         self.codingpad.close_signal.connect(self.close_signal_from_coding_pad)
         self.codingpad.show()
 
