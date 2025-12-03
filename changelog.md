@@ -1,4 +1,10 @@
 
+
+**v. 9.7.10 2025-12-02**
+
+* modified the maximum value of fast for/backward parameter
+
+
 **v. 9.7.8 2025-11-18**
 
 * fixed bug introduced in v. 9.7.7
