@@ -119,12 +119,12 @@ class BehaviorsMapCreatorWindow(QMainWindow):
         self.saveMapAction.setShortcut("Ctrl+S")
         self.saveMapAction.setStatusTip("Save the behavior coding map")
         self.saveMapAction.setEnabled(False)
-        self.saveMapAction.triggered.connect(self.saveMap_clicked)
+        self.saveMapAction.triggered.connect(self.save_map_clicked)
 
         self.saveAsMapAction = QAction(QIcon(), "Save the behavior coding map as ...", self)
         self.saveAsMapAction.setStatusTip("Save the behavior coding map as ...")
         self.saveAsMapAction.setEnabled(False)
-        self.saveAsMapAction.triggered.connect(self.saveAsMap_clicked)
+        self.saveAsMapAction.triggered.connect(self.save_as_map_clicked)
 
         self.mapNameAction = QAction(QIcon(), "&Edit name of behaviors coding map", self)
         self.mapNameAction.setShortcut("Ctrl+M")
@@ -389,7 +389,7 @@ class BehaviorsMapCreatorWindow(QMainWindow):
             )
 
             if response == cfg.SAVE:
-                if not self.saveMap_clicked():
+                if not self.save_map_clicked():
                     event.ignore()
 
             if response == cfg.CANCEL:
@@ -615,7 +615,7 @@ class BehaviorsMapCreatorWindow(QMainWindow):
             )
 
             if response == cfg.SAVE:
-                if not self.saveMap_clicked():
+                if not self.save_map_clicked():
                     return
 
             if response == cfg.CANCEL:
@@ -659,7 +659,7 @@ class BehaviorsMapCreatorWindow(QMainWindow):
                 ["Save", "Discard", "Cancel"],
             )
 
-            if (response == "Save" and not self.saveMap_clicked()) or (response == "Cancel"):
+            if (response == "Save" and not self.save_map_clicked()) or (response == "Cancel"):
                 return
 
         fileName, _ = QFileDialog(self).getOpenFileName(
@@ -783,7 +783,7 @@ class BehaviorsMapCreatorWindow(QMainWindow):
         else:
             return False
 
-    def saveAsMap_clicked(self):
+    def save_as_map_clicked(self):
         filters = "Behaviors coding map (*.behav_coding_map);;All files (*)"
 
         self.fileName, _ = QFileDialog.getSaveFileName(self, "Save behaviors coding map as", "", filters)
@@ -794,7 +794,7 @@ class BehaviorsMapCreatorWindow(QMainWindow):
             self.fileName += ".behav_coding_map"
         self.saveMap()
 
-    def saveMap_clicked(self):
+    def save_map_clicked(self):
         if not self.fileName:
             self.fileName, _ = QFileDialog().getSaveFileName(
                 self,

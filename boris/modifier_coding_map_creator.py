@@ -134,7 +134,7 @@ class ModifiersMapCreatorWindow(QMainWindow):
         self.saveMapAction.setShortcut("Ctrl+S")
         self.saveMapAction.setStatusTip("Save modifiers map")
         self.saveMapAction.setEnabled(False)
-        self.saveMapAction.triggered.connect(self.saveMap_clicked)
+        self.saveMapAction.triggered.connect(self.save_map_clicked)
 
         self.saveAsMapAction = QAction(QIcon(), "Save modifiers map as", self)
         self.saveAsMapAction.setStatusTip("Save modifiers map as")
@@ -343,7 +343,7 @@ class ModifiersMapCreatorWindow(QMainWindow):
             )
 
             if response == cfg.SAVE:
-                if not self.saveMap_clicked():
+                if not self.save_map_clicked():
                     event.ignore()
 
             if response == cfg.CANCEL:
@@ -567,7 +567,7 @@ class ModifiersMapCreatorWindow(QMainWindow):
             )
 
             if response == "Save":
-                if not self.saveMap_clicked():
+                if not self.save_map_clicked():
                     return
 
             if response == "Cancel":
@@ -606,7 +606,7 @@ class ModifiersMapCreatorWindow(QMainWindow):
             )
 
             if response == cfg.SAVE:
-                if not self.saveMap_clicked():
+                if not self.save_map_clicked():
                     return
 
             if response == cfg.CANCEL:
@@ -733,7 +733,7 @@ class ModifiersMapCreatorWindow(QMainWindow):
                 self.fileName += ".boris_map"
             self.saveMap()
 
-    def saveMap_clicked(self):
+    def save_map_clicked(self):
         if not self.fileName:
             fn = QFileDialog(self).getSaveFileName(
                 self,
