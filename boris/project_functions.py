@@ -422,7 +422,7 @@ def check_project_integrity(
     out: str = ""
 
     # check if coded behaviors are defined in ethogram
-    r = check_coded_behaviors(pj) 
+    r = check_coded_behaviors(pj)
     if r:
         out += f"The following behaviors are not defined in the ethogram: <b>{', '.join(r)}</b><br>"
         flag_all_behaviors_defined = False

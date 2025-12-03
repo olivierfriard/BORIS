@@ -630,13 +630,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         """
         handle click received from coding pad
         """
-        #q = QKeyEvent(QEvent.KeyPress, Qt.Key_Enter, Qt.NoModifier, text=behaviorCode)
-        #print(q)
-        #self.keyPressEvent(q)
-
-        q = QKeyEvent(    QEvent.Type.KeyPress,    Qt.Key.Key_Enter,    Qt.KeyboardModifier.NoModifier,    text=behaviorCode)
-        print(q)
-
+        q = QKeyEvent(QEvent.Type.KeyPress, Qt.Key.Key_Enter, Qt.KeyboardModifier.NoModifier, text=behaviorCode)
 
         self.keyPressEvent(q)
 
@@ -651,7 +645,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         """
         handle click received from subjects pad
         """
-        q = QKeyEvent(QEvent.KeyPress, Qt.Key_Enter, Qt.NoModifier, text="#subject#" + subject)
+        # q = QKeyEvent(QEvent.KeyPress, Qt.Key_Enter, Qt.NoModifier, text="#subject#" + subject)
+        q = QKeyEvent(QEvent.Type.KeyPress, Qt.Key.Key_Enter, Qt.KeyboardModifier.NoModifier, text="#subject#" + subject)
         self.keyPressEvent(q)
 
     def signal_from_subjects_pad(self, event):
@@ -4852,9 +4847,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         # play / pause with space bar
         if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE] == cfg.LIVE:
-            print(f"{ek=}")
-            print(Qt.Key_Space, Qt.Key_Enter, Qt.Key_Return)
-            #if ek in (Qt.Key_Space, Qt.Key_Enter, Qt.Key_Return):
+            # if ek in (Qt.Key_Space, Qt.Key_Enter, Qt.Key_Return):
             if ek == Qt.Key_Space:
                 if self.liveObservationStarted:
                     if (
