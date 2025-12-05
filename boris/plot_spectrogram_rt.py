@@ -205,6 +205,9 @@ class Plot_spectrogram_RT(QWidget):
         vmin = self.config_param.get(cfg.SPECTROGRAM_VMIN, cfg.SPECTROGRAM_DEFAULT_VMIN)
         vmax = self.config_param.get(cfg.SPECTROGRAM_VMAX, cfg.SPECTROGRAM_DEFAULT_VMAX)
 
+        if current_time is None:
+            return
+
         # start
         if current_time <= self.interval / 2:
             self.ax.specgram(

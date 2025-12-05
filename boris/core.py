@@ -4258,7 +4258,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         # current media name
         playlist = self.dw_player[0].player.playlist
         playlist_pos = self.dw_player[0].player.playlist_pos
-        if playlist is not None and playlist_pos is not None:
+        if playlist is not None and playlist_pos is not None and playlist:
             current_media_name = Path(playlist[playlist_pos]["filename"]).name
             current_playlist_index = playlist_pos
         else:
@@ -4339,7 +4339,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             # set video scroll bar
 
             if scroll_slider and not self.user_move_slider:
-                self.video_slider.setValue(round(current_media_time_pos / current_media_duration * (cfg.SLIDER_MAXIMUM - 1)))
+                if current_media_time_pos is not None and current_media_duration is not None:
+                    self.video_slider.setValue(round(current_media_time_pos / current_media_duration * (cfg.SLIDER_MAXIMUM - 1)))
 
     def mpv_eof_reached(self):
         """

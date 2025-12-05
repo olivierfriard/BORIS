@@ -156,7 +156,7 @@ class Plot_waveform_RT(QWidget):
         self.interval += 5 * action
         self.plot_waveform(current_time=self.time_mem, force_plot=True)
 
-    def plot_waveform(self, current_time: float, force_plot: bool = False):
+    def plot_waveform(self, current_time: float, force_plot: bool = False) -> None:
         """
         plot sound waveform centered on the current time
 
@@ -171,6 +171,9 @@ class Plot_waveform_RT(QWidget):
         self.time_mem = current_time
 
         self.ax.clear()
+
+        if current_time is None:
+            return
 
         # start
         if current_time <= self.interval / 2:
