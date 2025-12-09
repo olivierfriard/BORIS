@@ -4258,7 +4258,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         # current media name
         playlist = self.dw_player[0].player.playlist
         playlist_pos = self.dw_player[0].player.playlist_pos
-        if playlist is not None and playlist_pos is not None and playlist:
+        if playlist and playlist_pos is not None:
             current_media_name = Path(playlist[playlist_pos]["filename"]).name
             current_playlist_index = playlist_pos
         else:
@@ -4297,12 +4297,13 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.mem_media_name = current_media_name
         self.mem_playlist_index = current_playlist_index
 
-        playlist_length = len(self.dw_player[0].player.playlist)
-
         # update observation info
         msg = ""
         if self.dw_player[0].player.time_pos is not None:  # check if video
-            msg = f"Current media name: <b>{current_media_name}</b> (#{self.dw_player[0].player.playlist_pos + 1} / {playlist_length})<br>"
+            if playlist and current_playlist_index is not None:
+                msg = f"Current media name: <b>{current_media_name}</b> (#{current_playlist_index + 1} / {len(playlist)})<br>"
+            else:
+                msg = f"Current media name: <b>{current_media_name}</b><br>"
 
             msg += (
                 f"Media position: <b>{util.convertTime(self.timeFormat, current_media_time_pos)}</b> / "
