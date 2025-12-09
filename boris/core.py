@@ -4297,9 +4297,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.mem_media_name = current_media_name
         self.mem_playlist_index = current_playlist_index
 
-        playlist_length = len(self.dw_player[0].player.playlist)
-
         # update observation info
+        playlist_length = len(playlist) if playlist else 0
         msg = ""
         if self.dw_player[0].player.time_pos is not None:  # check if video
             msg = f"Current media name: <b>{current_media_name}</b> (#{self.dw_player[0].player.playlist_pos + 1} / {playlist_length})<br>"
