@@ -31,31 +31,32 @@ os.environ["PATH"] = str(Path(__file__).parent / "misc") + os.pathsep + os.envir
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), ".")))
 
 import datetime
+import gzip
 import json
+import locale
 import logging
+import math
 import platform
 import re
+import shutil
+import subprocess
+import tempfile
+import time
+import urllib.request
+import zipfile
+from collections import deque
+from decimal import ROUND_DOWN
+from decimal import Decimal as dec
+
+import matplotlib
 import PIL.Image
 import PIL.ImageEnhance
 from PIL.ImageQt import Image
-import subprocess
-import locale
-import tempfile
-import math
-import time
-import urllib.request
-from decimal import Decimal as dec
-from decimal import ROUND_DOWN
-import gzip
-from collections import deque
-import matplotlib
-import zipfile
-import shutil
 
 matplotlib.use("QtAgg")
 
-from PySide6.QtCore import Qt, QPoint, Signal, QEvent, QDateTime, QUrl, QAbstractTableModel, QElapsedTimer, QSettings, QTimer
-from PySide6.QtGui import QIcon, QPixmap, QFont, QKeyEvent, QDesktopServices, QColor, QPainter, QPolygon, QAction
+from PySide6.QtCore import QAbstractTableModel, QDateTime, QElapsedTimer, QEvent, QPoint, QSettings, Qt, QUrl, Signal
+from PySide6.QtGui import QAction, QColor, QDesktopServices, QFont, QIcon, QKeyEvent, QPainter, QPixmap, QPolygon
 from PySide6.QtMultimedia import QSoundEffect
 from PySide6.QtWidgets import (
     QAbstractItemView,
@@ -73,7 +74,6 @@ from PySide6.QtWidgets import (
     QStyledItemDelegate,
     QTableWidgetItem,
 )
-
 
 from . import cmd_arguments
 
@@ -94,39 +94,39 @@ else:
         level=logging.INFO,
     )
 
-from . import utilities as util
-
-from . import dialog
-from . import gui_utilities
-from . import events_cursor
-from . import modifier_coding_map_creator
-from . import geometric_measurement
-from . import modifiers_coding_map
-from . import advanced_event_filtering
-from . import otx_parser
-from . import param_panel
-from . import plot_events
-from . import plot_spectrogram_rt
-from . import plot_waveform_rt
-from . import plot_events_rt
-from . import plugins
-from . import project_functions
-from . import select_observations
-from . import subjects_pad
-from . import version
-from . import event_operations
-from . import core_qrc
-from .core_ui import Ui_MainWindow
+from . import (
+    advanced_event_filtering,
+    config_file,
+    core_qrc,
+    dialog,
+    event_operations,
+    events_cursor,
+    geometric_measurement,
+    gui_utilities,
+    modifier_coding_map_creator,
+    modifiers_coding_map,
+    observation_operations,
+    otx_parser,
+    param_panel,
+    plot_events,
+    plot_events_rt,
+    plot_spectrogram_rt,
+    plot_waveform_rt,
+    plugins,
+    project,
+    project_functions,
+    select_observations,
+    select_subj_behav,
+    subjects_pad,
+    version,
+    video_operations,
+    write_event,
+)
 from . import config as cfg
-from . import video_operations
-from . import project
-from . import menu_options as menu_options
 from . import connections as connections
-from . import config_file
-from . import select_subj_behav
-from . import observation_operations
-from . import write_event
-
+from . import menu_options as menu_options
+from . import utilities as util
+from .core_ui import Ui_MainWindow
 
 logging.debug("test")
 
@@ -177,8 +177,8 @@ class TableModel(QAbstractTableModel):
         self.observation_type = observation_type
 
     def headerData(self, section: int, orientation: Qt.Orientation, role: int):
-        if role == Qt.DisplayRole:
-            if orientation == Qt.Horizontal:
+        if role == Qt.ItemDataRole.DisplayRole:
+            if orientation == Qt.Orientation.Horizontal:
                 return self.header[section]
             else:
                 return str(section + 1)
@@ -189,8 +189,8 @@ class TableModel(QAbstractTableModel):
     def columnCount(self, parent=None):
         return len(self._data[0]) if self.rowCount() else 0
 
-    def data(self, index, role=Qt.DisplayRole):
-        if role == Qt.DisplayRole:
+    def data(self, index, role=Qt.ItemDataRole.DisplayRole):
+        if role == Qt.ItemDataRole.DisplayRole:
             row = index.row()
             if 0 <= row < self.rowCount():
                 column = index.column()
@@ -348,7 +348,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         super(MainWindow, self).__init__(parent)
         self.setupUi(self)
 
-        self.pb_live_obs.setFocusPolicy(Qt.NoFocus)
+        self.pb_live_obs.setFocusPolicy(Qt.FocusPolicy.NoFocus)
 
         self.ffmpeg_bin = ffmpeg_bin
         # set icons
@@ -379,7 +379,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         self.lbLogoBoris.setPixmap(QPixmap(":/logo"))
         self.lbLogoBoris.setScaledContents(False)
-        self.lbLogoBoris.setAlignment(Qt.AlignCenter)
+        self.lbLogoBoris.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
         self.toolBar.setEnabled(True)
 
@@ -413,13 +413,13 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         # observation time interval
         self.lb_obs_time_interval = QLabel()
-        self.lb_obs_time_interval.setFrameStyle(QFrame.StyledPanel)
+        self.lb_obs_time_interval.setFrameStyle(QFrame.Shape.StyledPanel)
         self.lb_obs_time_interval.setMinimumWidth(160)
         self.statusbar.addPermanentWidget(self.lb_obs_time_interval)
 
         # time offset
         self.lbTimeOffset = QLabel()
-        self.lbTimeOffset.setFrameStyle(QFrame.StyledPanel)
+        self.lbTimeOffset.setFrameStyle(QFrame.Shape.StyledPanel)
         self.lbTimeOffset.setMinimumWidth(160)
         self.statusbar.addPermanentWidget(self.lbTimeOffset)
 
@@ -450,9 +450,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         for w in (self.dwEvents, self.dwEthogram, self.dwSubjects):
             if self.action_block_dockwidgets.isChecked():
                 w.setFloating(False)
-                w.setFeatures(QDockWidget.NoDockWidgetFeatures)
+                w.setFeatures(QDockWidget.DockWidgetFeature.NoDockWidgetFeatures)
             else:
-                w.setFeatures(QDockWidget.DockWidgetMovable | QDockWidget.DockWidgetFloatable)
+                w.setFeatures(QDockWidget.DockWidgetFeature.DockWidgetMovable | QDockWidget.DockWidgetFeature.DockWidgetFloatable)
 
     def advanced_event_filtering(self):
         """
@@ -524,7 +524,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     "Removing the path of media files and image directories from the project file is irreversible.<br>"
                     "Are you sure to continue?"
                 ),
-                [cfg.YES, cfg.NO],
+                (cfg.YES, cfg.NO),
             )
             == cfg.NO
         ):
@@ -542,13 +542,13 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             dialog.MessageDialog(
                 cfg.programName,
                 ("Removing the path of external data files is irreversible.<br>Are you sure to continue?"),
-                [cfg.YES, cfg.NO],
+                (cfg.YES, cfg.NO),
             )
             == cfg.NO
         ):
             return
 
-        if project_functions.remove_data_files_path(self.pj, self.projectFileName):
+        if project_functions.remove_data_files_path(self.pj):
             self.project_changed()
 
     def set_media_files_path_relative_to_project_dir(self):
@@ -560,7 +560,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             dialog.MessageDialog(
                 cfg.programName,
                 ("Are you sure to continue?"),
-                [cfg.YES, cfg.NO],
+                (cfg.YES, cfg.NO),
             )
             == cfg.NO
         ):
@@ -577,7 +577,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             dialog.MessageDialog(
                 cfg.programName,
                 ("Are you sure to continue?"),
-                [cfg.YES, cfg.NO],
+                (cfg.YES, cfg.NO),
             )
             == cfg.NO
         ):
@@ -697,7 +697,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 QMessageBox.warning(self, cfg.programName, "No subjects to show")
                 return
             self.subjects_pad = subjects_pad.SubjectsPad(self.pj, filtered_subjects)
-            self.subjects_pad.setWindowFlags(Qt.WindowStaysOnTopHint)
+            self.subjects_pad.setWindowFlags(Qt.WindowType.WindowStaysOnTopHint)
             self.subjects_pad.sendEventSignal.connect(self.signal_from_subjects_pad)
             self.subjects_pad.click_signal.connect(self.click_signal_from_subjects_pad)
             self.subjects_pad.close_signal.connect(self.close_signal_from_subjects_pad)
@@ -918,7 +918,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         w = dialog.Info_widget()
         w.lwi.setVisible(False)
         w.resize(350, 100)
-        w.setWindowFlags(Qt.WindowStaysOnTopHint)
+        w.setWindowFlags(Qt.WindowType.WindowStaysOnTopHint)
         w.setWindowTitle(cfg.programName)
         w.label.setText("Extracting WAV from media files...")
 
@@ -1000,7 +1000,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                             f"You choose to visualize the {plot_type} during this observation.<br>"
                             f"{plot_type} generation can take some time for long media, be patient"
                         ),
-                        [cfg.YES, cfg.NO],
+                        (cfg.YES, cfg.NO),
                     )
                     == cfg.NO
                 ):
@@ -1018,8 +1018,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
                 self.spectro = plot_spectrogram_rt.Plot_spectrogram_RT()
 
-                self.spectro.setWindowFlags(Qt.WindowStaysOnTopHint)
-                self.spectro.setWindowFlags(self.spectro.windowFlags() & ~Qt.WindowMinimizeButtonHint)
+                self.spectro.setWindowFlags(Qt.WindowType.WindowStaysOnTopHint)
+                self.spectro.setWindowFlags(self.spectro.windowFlags() & ~Qt.WindowType.WindowMinimizeButtonHint)
 
                 self.spectro.interval = self.spectrogram_time_interval
                 self.spectro.cursor_color = cfg.REALTIME_PLOT_CURSOR_COLOR
@@ -1039,8 +1039,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                         self,
                         cfg.programName,
                         f"Error in spectrogram generation: {r['error']}",
-                        QMessageBox.Ok | QMessageBox.Default,
-                        QMessageBox.NoButton,
+                        QMessageBox.StandardButton.Ok,
+                        QMessageBox.StandardButton.NoButton,
                     )
                     del self.spectro
                     return
@@ -1091,7 +1091,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                             "You choose to visualize the waveform during this observation.<br>"
                             "The waveform generation can take some time for long media, be patient"
                         ),
-                        [cfg.YES, cfg.NO],
+                        (cfg.YES, cfg.NO),
                     )
                     == cfg.NO
                 ):
@@ -1109,7 +1109,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
                 self.waveform = plot_waveform_rt.Plot_waveform_RT()
 
-                self.waveform.setWindowFlags(Qt.WindowStaysOnTopHint)
+                self.waveform.setWindowFlags(Qt.WindowType.WindowStaysOnTopHint)
                 self.waveform.setWindowFlags(self.waveform.windowFlags() & ~Qt.WindowMinimizeButtonHint)
 
                 self.waveform.interval = self.spectrogram_time_interval
@@ -1122,8 +1122,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                         self,
                         cfg.programName,
                         f"Error in waveform generation: {r['error']}",
-                        QMessageBox.Ok | QMessageBox.Default,
-                        QMessageBox.NoButton,
+                        QMessageBox.StandardButton.Ok,
+                        QMessageBox.StandardButton.NoButton,
                     )
                     del self.waveform
                     return
@@ -1146,7 +1146,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
                 self.plot_events = plot_events_rt.Plot_events_RT()
 
-                self.plot_events.setWindowFlags(Qt.WindowStaysOnTopHint)
+                self.plot_events.setWindowFlags(Qt.WindowType.WindowStaysOnTopHint)
                 self.plot_events.setWindowFlags(self.plot_events.windowFlags() & ~Qt.WindowMinimizeButtonHint)
 
                 self.plot_events.groupby = "behaviors"
@@ -1285,8 +1285,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 self,
                 cfg.programName,
                 "No project found",
-                QMessageBox.Ok | QMessageBox.Default,
-                QMessageBox.NoButton,
+                QMessageBox.StandardButton.Ok,
+                QMessageBox.StandardButton.NoButton,
             )
             return
 
@@ -1301,7 +1301,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     f"with the same name (<b>{behav_coding_map['name']}</b>).<br>"
                     "What do you want to do?"
                 ),
-                ["Replace the coding map", cfg.CANCEL],
+                ("Replace the coding map", cfg.CANCEL),
             )
             if response == cfg.CANCEL:
                 return
@@ -1658,7 +1658,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             time.sleep(0.3)  # required for correct frame number
 
             dw.frame_viewer.setPixmap(
-                util.pil2pixmap(dw.player.screenshot_raw()).scaled(dw.frame_viewer.size(), Qt.KeepAspectRatio, Qt.SmoothTransformation)
+                util.pil2pixmap(dw.player.screenshot_raw()).scaled(
+                    dw.frame_viewer.size(), Qt.AspectRatioMode.KeepAspectRatio, Qt.TransformationMode.SmoothTransformation
+                )
             )
 
         if self.playerType == cfg.IMAGES:
@@ -1667,8 +1669,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     None,
                     cfg.programName,
                     ("The picture directory has changed since the creation of observation."),
-                    QMessageBox.Ok | QMessageBox.Default,
-                    QMessageBox.NoButton,
+                    QMessageBox.StandardButton.Ok,
+                    QMessageBox.StandardButton.NoButton,
                 )
                 return
 
@@ -1806,7 +1808,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self,
             "Select a directory to save the frames",
             os.path.expanduser("~"),
-            options=QFileDialog.ShowDirsOnly,
+            options=QFileDialog.Option.ShowDirsOnly,
         )
         if not output_dir:
             return
@@ -2188,8 +2190,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             None,
             cfg.programName,
             ("This function is not yet implemented"),
-            QMessageBox.Ok | QMessageBox.Default,
-            QMessageBox.NoButton,
+            QMessageBox.StandardButton.Ok,
+            QMessageBox.StandardButton.NoButton,
         )
 
         return
@@ -2280,7 +2282,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.tv_events.setModel(model)
 
         # column width
-        self.tv_events.horizontalHeader().setSectionResizeMode(QHeaderView.Interactive)
+        self.tv_events.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Interactive)
 
     def load_tw_events(self, obs_id) -> None:
         """
@@ -2544,8 +2546,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 None,
                 cfg.programName,
                 ("This function is not available for observations with events that do not have timestamp"),
-                QMessageBox.Ok | QMessageBox.Default,
-                QMessageBox.NoButton,
+                QMessageBox.StandardButton.Ok,
+                QMessageBox.StandardButton.NoButton,
             )
             return
 
@@ -2557,7 +2559,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 self,
                 "Choose a directory to save the plots",
                 os.path.expanduser("~"),
-                options=QFileDialog.ShowDirsOnly,
+                options=QFileDialog.Option.ShowDirsOnly,
             )
 
             if not plot_directory:
@@ -2660,8 +2662,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 None,
                 cfg.programName,
                 ("The duration of one or more observation is not available"),
-                QMessageBox.Ok | QMessageBox.Default,
-                QMessageBox.NoButton,
+                QMessageBox.StandardButton.Ok,
+                QMessageBox.StandardButton.NoButton,
             )
             return
 
@@ -2673,8 +2675,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 None,
                 cfg.programName,
                 ("This function is not available for observations with events that do not have timestamp"),
-                QMessageBox.Ok | QMessageBox.Default,
-                QMessageBox.NoButton,
+                QMessageBox.StandardButton.Ok,
+                QMessageBox.StandardButton.NoButton,
             )
             return
 
@@ -2709,7 +2711,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 self,
                 "Choose a directory to save the plots",
                 os.path.expanduser("~"),
-                options=QFileDialog.ShowDirsOnly,
+                options=QFileDialog.Option.ShowDirsOnly,
             )
             if not plot_directory:
                 return
@@ -2777,7 +2779,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 dialog.MessageDialog(
                     cfg.programName,
                     "There is a current observation. What do you want to do?",
-                    ["Close observation", "Continue observation"],
+                    ("Close observation", "Continue observation"),
                 )
                 == "Close observation"
             ):
@@ -2789,7 +2791,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             response = dialog.MessageDialog(
                 cfg.programName,
                 "What to do about the current unsaved project?",
-                [cfg.SAVE, cfg.DISCARD, cfg.CANCEL],
+                (cfg.SAVE, cfg.DISCARD, cfg.CANCEL),
             )
 
             if response == cfg.SAVE:
@@ -2849,7 +2851,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                             "In this project all the behavior and subject keys are upper case.<br>"
                             "Do you want to convert them in lower case?"
                         ),
-                        [cfg.YES, cfg.NO],
+                        (cfg.YES, cfg.NO),
                     )
                     == cfg.YES
                 ):
@@ -2901,7 +2903,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 dialog.MessageDialog(
                     cfg.programName,
                     "There is a current observation. What do you want to do?",
-                    ["Close observation", "Continue observation"],
+                    ("Close observation", "Continue observation"),
                 )
                 == "Close observation"
             ):
@@ -2913,7 +2915,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             response = dialog.MessageDialog(
                 cfg.programName,
                 "What to do about the current unsaved project?",
-                [cfg.SAVE, cfg.DISCARD, cfg.CANCEL],
+                (cfg.SAVE, cfg.DISCARD, cfg.CANCEL),
             )
 
             if response == cfg.SAVE:
@@ -2964,7 +2966,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             response = dialog.MessageDialog(
                 cfg.programName,
                 "There is a current observation. What do you want to do?",
-                ["Close observation", "Continue observation"],
+                ("Close observation", "Continue observation"),
             )
             if response == "Close observation":
                 observation_operations.close_observation(self)
@@ -2975,7 +2977,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             response = dialog.MessageDialog(
                 cfg.programName,
                 "What to do about the current unsaved project?",
-                [cfg.SAVE, cfg.DISCARD, cfg.CANCEL],
+                (cfg.SAVE, cfg.DISCARD, cfg.CANCEL),
             )
             if response == cfg.SAVE:
                 if self.save_project_activated() == "not saved":
@@ -3019,7 +3021,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             response = dialog.MessageDialog(
                 cfg.programName,
                 "The current observation will be closed. Do you want to continue?",
-                [cfg.YES, cfg.NO],
+                (cfg.YES, cfg.NO),
             )
             if response == cfg.NO:
                 self.show_data_files()
@@ -3032,7 +3034,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 response = dialog.MessageDialog(
                     cfg.programName,
                     "What to do with the current unsaved project?",
-                    [cfg.SAVE, cfg.DISCARD, cfg.CANCEL],
+                    (cfg.SAVE, cfg.DISCARD, cfg.CANCEL),
                 )
 
                 if response == cfg.SAVE:
@@ -3233,7 +3235,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         del newProjectWindow
 
-    def save_project_json(self, project_file_name: str) -> int:
+    def save_project_json(self, project_file_name: str) -> int | None:
         """
         save project to JSON file
         convert Decimal type in float
@@ -3299,21 +3301,21 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 None,
                 cfg.programName,
                 "Permission denied to save the project file. Try another directory",
-                QMessageBox.Ok | QMessageBox.Default,
-                QMessageBox.NoButton,
+                QMessageBox.StandardButton.Ok,
+                QMessageBox.StandardButton.NoButton,
             )
             self.save_project_json_started = False
             return 1
 
         except OSError:
             _, value, _ = sys.exc_info()
-            QMessageBox.critical(None, cfg.programName, f"Error saving the project file: {value}", QMessageBox.Ok)
+            QMessageBox.critical(None, cfg.programName, f"Error saving the project file: {value}", QMessageBox.StandardButton.Ok)
             self.save_project_json_started = False
             return 4
 
         except Exception:
             _, value, _ = sys.exc_info()
-            QMessageBox.critical(None, cfg.programName, f"Error saving the project file: {value}", QMessageBox.Ok)
+            QMessageBox.critical(None, cfg.programName, f"Error saving the project file: {value}", QMessageBox.StandardButton.Ok)
             self.save_project_json_started = False
             return 2
 
@@ -3344,7 +3346,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                         dialog.MessageDialog(
                             cfg.programName,
                             f"The file {project_new_file_name} already exists.",
-                            [cfg.CANCEL, cfg.OVERWRITE],
+                            (cfg.CANCEL, cfg.OVERWRITE),
                         )
                         == cfg.CANCEL
                     ):
@@ -3360,7 +3362,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                         dialog.MessageDialog(
                             cfg.programName,
                             f"The file {project_new_file_name} already exists.",
-                            [cfg.CANCEL, cfg.OVERWRITE],
+                            (cfg.CANCEL, cfg.OVERWRITE),
                         )
                         == cfg.CANCEL
                     ):
@@ -3440,7 +3442,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                         dialog.MessageDialog(
                             cfg.programName,
                             f"The file {self.projectFileName} already exists.",
-                            [cfg.CANCEL, cfg.OVERWRITE],
+                            (cfg.CANCEL, cfg.OVERWRITE),
                         )
                         == cfg.CANCEL
                     ):
@@ -3459,7 +3461,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                         dialog.MessageDialog(
                             cfg.programName,
                             f"The file {self.projectFileName} already exists.",
-                            [cfg.CANCEL, cfg.OVERWRITE],
+                            (cfg.CANCEL, cfg.OVERWRITE),
                         )
                         == cfg.CANCEL
                     ):
@@ -3622,8 +3624,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 None,
                 cfg.programName,
                 ("This function is not available for observations with events that do not have timestamp"),
-                QMessageBox.Ok | QMessageBox.Default,
-                QMessageBox.NoButton,
+                QMessageBox.StandardButton.Ok,
+                QMessageBox.StandardButton.NoButton,
             )
             return
 
@@ -3656,7 +3658,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self,
             "Choose a directory to save subtitles",
             os.path.expanduser("~"),
-            options=QFileDialog.ShowDirsOnly,
+            options=QFileDialog.Option.ShowDirsOnly,
         )
         if not export_dir:
             return
@@ -3667,8 +3669,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 None,
                 cfg.programName,
                 f"Error creating subtitles: {msg}",
-                QMessageBox.Ok | QMessageBox.Default,
-                QMessageBox.NoButton,
+                QMessageBox.StandardButton.Ok,
+                QMessageBox.StandardButton.NoButton,
             )
 
     def next_frame(self) -> None:
@@ -3900,7 +3902,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 msg_box = QMessageBox(
                     QMessageBox.Critical, cfg.programName, f"The code <b>{code}</b> of behavior coding map does not exist in ethogram."
                 )
-                msg_box.setWindowFlags(msg_box.windowFlags() | Qt.WindowStaysOnTopHint)
+                msg_box.setWindowFlags(msg_box.windowFlags() | Qt.WindowType.WindowStaysOnTopHint)
                 msg_box.exec()
                 return
 

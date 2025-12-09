@@ -22,25 +22,22 @@ Copyright 2012-2025 Olivier Friard
 import gzip
 import json
 import logging
-import pandas as pd
-import numpy as np
-from pathlib import Path
 import sys
 from decimal import Decimal as dec
+from pathlib import Path
 from shutil import copyfile
-from typing import List, Tuple, Dict
+from typing import Dict, List, Tuple
 
+import numpy as np
+import pandas as pd
 import tablib
-from PySide6.QtWidgets import QMessageBox, QTableWidgetItem, QAbstractItemView
 from PySide6.QtCore import Qt
+from PySide6.QtWidgets import QAbstractItemView, QMessageBox, QTableWidgetItem
 
 from . import config as cfg
-from . import db_functions
-from . import dialog
-from . import observation_operations
+from . import db_functions, dialog, observation_operations, version
 from . import portion as I
 from . import utilities as util
-from . import version
 
 
 def check_observation_exhaustivity(
@@ -1805,7 +1802,7 @@ def explore_project(self) -> None:
     if results:
         self.results_dialog = dialog.View_explore_project_results()
         self.results_dialog.setWindowTitle("Explore project results")
-        self.results_dialog.setWindowFlags(Qt.WindowStaysOnTopHint)
+        self.results_dialog.setWindowFlags(Qt.WindowType.WindowStaysOnTopHint)
         self.results_dialog.double_click_signal.connect(double_click_explore_project)
         txt = f"<b>{len(results)}</b> events"
         txt2 = ""

@@ -42,8 +42,8 @@ class Ui_converters(object):
         __qtablewidgetitem2 = QTableWidgetItem()
         self.tw_converters.setHorizontalHeaderItem(2, __qtablewidgetitem2)
         self.tw_converters.setObjectName(u"tw_converters")
-        self.tw_converters.setEditTriggers(QAbstractItemView.NoEditTriggers)
-        self.tw_converters.setSelectionMode(QAbstractItemView.SingleSelection)
+        self.tw_converters.setEditTriggers(QAbstractItemView.EditTrigger.NoEditTriggers)
+        self.tw_converters.setSelectionMode(QAbstractItemView.SelectionMode.SingleSelection)
         self.tw_converters.setSelectionBehavior(QAbstractItemView.SelectRows)
         self.tw_converters.setSortingEnabled(True)
 
@@ -222,4 +222,3 @@ class Ui_converters(object):
         self.pb_cancel_widget.setText(QCoreApplication.translate("converters", u"Cancel", None))
         self.pbOK.setText(QCoreApplication.translate("converters", u"OK", None))
     # retranslateUi
-
