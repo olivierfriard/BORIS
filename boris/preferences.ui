@@ -9,8 +9,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>904</width>
-    <height>554</height>
+    <width>899</width>
+    <height>757</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -25,7 +25,7 @@
         <bool>true</bool>
        </property>
        <property name="currentIndex">
-        <number>1</number>
+        <number>4</number>
        </property>
        <widget class="QWidget" name="tab_project">
         <attribute name="title">
@@ -514,6 +514,30 @@
            </property>
            <layout class="QVBoxLayout" name="verticalLayout_8">
             <item>
+             <layout class="QHBoxLayout" name="horizontalLayout_24">
+              <item>
+               <widget class="QPushButton" name="pb_reset_spectro_values">
+                <property name="text">
+                 <string>Reset to default values</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <spacer name="horizontalSpacer_9">
+                <property name="orientation">
+                 <enum>Qt::Orientation::Horizontal</enum>
+                </property>
+                <property name="sizeHint" stdset="0">
+                 <size>
+                  <width>40</width>
+                  <height>20</height>
+                 </size>
+                </property>
+               </spacer>
+              </item>
+             </layout>
+            </item>
+            <item>
              <layout class="QHBoxLayout" name="horizontalLayout_7">
               <item>
                <widget class="QLabel" name="label_7">
@@ -706,9 +730,33 @@
              </layout>
             </item>
             <item>
+             <layout class="QHBoxLayout" name="horizontalLayout_25">
+              <item>
+               <widget class="QCheckBox" name="cb_use_vmin_vmax">
+                <property name="text">
+                 <string>Use vmin/vmax</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <spacer name="horizontalSpacer_10">
+                <property name="orientation">
+                 <enum>Qt::Orientation::Horizontal</enum>
+                </property>
+                <property name="sizeHint" stdset="0">
+                 <size>
+                  <width>40</width>
+                  <height>20</height>
+                 </size>
+                </property>
+               </spacer>
+              </item>
+             </layout>
+            </item>
+            <item>
              <layout class="QHBoxLayout" name="horizontalLayout_21">
               <item>
-               <widget class="QLabel" name="label_19">
+               <widget class="QLabel" name="label_vmin">
                 <property name="text">
                  <string>vmin</string>
                 </property>
@@ -728,7 +776,7 @@
                </widget>
               </item>
               <item>
-               <widget class="QLabel" name="label_21">
+               <widget class="QLabel" name="label_vmin_2">
                 <property name="text">
                  <string>dBFS</string>
                 </property>
@@ -752,7 +800,7 @@
             <item>
              <layout class="QHBoxLayout" name="horizontalLayout_22">
               <item>
-               <widget class="QLabel" name="label_20">
+               <widget class="QLabel" name="label_vmax">
                 <property name="text">
                  <string>vmax</string>
                 </property>
@@ -772,7 +820,7 @@
                </widget>
               </item>
               <item>
-               <widget class="QLabel" name="label_22">
+               <widget class="QLabel" name="label_vmax_2">
                 <property name="text">
                  <string>dBFS</string>
                 </property>

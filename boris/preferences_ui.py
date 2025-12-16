@@ -27,7 +27,7 @@ class Ui_prefDialog(object):
         if not prefDialog.objectName():
             prefDialog.setObjectName(u"prefDialog")
         prefDialog.setWindowModality(Qt.WindowModality.WindowModal)
-        prefDialog.resize(904, 554)
+        prefDialog.resize(899, 757)
         self.horizontalLayout_17 = QHBoxLayout(prefDialog)
         self.horizontalLayout_17.setObjectName(u"horizontalLayout_17")
         self.verticalLayout_2 = QVBoxLayout()
@@ -413,6 +413,20 @@ class Ui_prefDialog(object):
         self.groupBox.setObjectName(u"groupBox")
         self.verticalLayout_8 = QVBoxLayout(self.groupBox)
         self.verticalLayout_8.setObjectName(u"verticalLayout_8")
+        self.horizontalLayout_24 = QHBoxLayout()
+        self.horizontalLayout_24.setObjectName(u"horizontalLayout_24")
+        self.pb_reset_spectro_values = QPushButton(self.groupBox)
+        self.pb_reset_spectro_values.setObjectName(u"pb_reset_spectro_values")
+
+        self.horizontalLayout_24.addWidget(self.pb_reset_spectro_values)
+
+        self.horizontalSpacer_9 = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
+
+        self.horizontalLayout_24.addItem(self.horizontalSpacer_9)
+
+
+        self.verticalLayout_8.addLayout(self.horizontalLayout_24)
+
         self.horizontalLayout_7 = QHBoxLayout()
         self.horizontalLayout_7.setObjectName(u"horizontalLayout_7")
         self.label_7 = QLabel(self.groupBox)
@@ -521,12 +535,26 @@ class Ui_prefDialog(object):
 
         self.verticalLayout_8.addLayout(self.horizontalLayout_20)
 
+        self.horizontalLayout_25 = QHBoxLayout()
+        self.horizontalLayout_25.setObjectName(u"horizontalLayout_25")
+        self.cb_use_vmin_vmax = QCheckBox(self.groupBox)
+        self.cb_use_vmin_vmax.setObjectName(u"cb_use_vmin_vmax")
+
+        self.horizontalLayout_25.addWidget(self.cb_use_vmin_vmax)
+
+        self.horizontalSpacer_10 = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
+
+        self.horizontalLayout_25.addItem(self.horizontalSpacer_10)
+
+
+        self.verticalLayout_8.addLayout(self.horizontalLayout_25)
+
         self.horizontalLayout_21 = QHBoxLayout()
         self.horizontalLayout_21.setObjectName(u"horizontalLayout_21")
-        self.label_19 = QLabel(self.groupBox)
-        self.label_19.setObjectName(u"label_19")
+        self.label_vmin = QLabel(self.groupBox)
+        self.label_vmin.setObjectName(u"label_vmin")
 
-        self.horizontalLayout_21.addWidget(self.label_19)
+        self.horizontalLayout_21.addWidget(self.label_vmin)
 
         self.sb_vmin = QSpinBox(self.groupBox)
         self.sb_vmin.setObjectName(u"sb_vmin")
@@ -536,10 +564,10 @@ class Ui_prefDialog(object):
 
         self.horizontalLayout_21.addWidget(self.sb_vmin)
 
-        self.label_21 = QLabel(self.groupBox)
-        self.label_21.setObjectName(u"label_21")
+        self.label_vmin_2 = QLabel(self.groupBox)
+        self.label_vmin_2.setObjectName(u"label_vmin_2")
 
-        self.horizontalLayout_21.addWidget(self.label_21)
+        self.horizontalLayout_21.addWidget(self.label_vmin_2)
 
         self.horizontalSpacer_7 = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
 
@@ -550,10 +578,10 @@ class Ui_prefDialog(object):
 
         self.horizontalLayout_22 = QHBoxLayout()
         self.horizontalLayout_22.setObjectName(u"horizontalLayout_22")
-        self.label_20 = QLabel(self.groupBox)
-        self.label_20.setObjectName(u"label_20")
+        self.label_vmax = QLabel(self.groupBox)
+        self.label_vmax.setObjectName(u"label_vmax")
 
-        self.horizontalLayout_22.addWidget(self.label_20)
+        self.horizontalLayout_22.addWidget(self.label_vmax)
 
         self.sb_vmax = QSpinBox(self.groupBox)
         self.sb_vmax.setObjectName(u"sb_vmax")
@@ -563,10 +591,10 @@ class Ui_prefDialog(object):
 
         self.horizontalLayout_22.addWidget(self.sb_vmax)
 
-        self.label_22 = QLabel(self.groupBox)
-        self.label_22.setObjectName(u"label_22")
+        self.label_vmax_2 = QLabel(self.groupBox)
+        self.label_vmax_2.setObjectName(u"label_vmax_2")
 
-        self.horizontalLayout_22.addWidget(self.label_22)
+        self.horizontalLayout_22.addWidget(self.label_vmax_2)
 
         self.horizontalSpacer_8 = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
 
@@ -695,7 +723,7 @@ class Ui_prefDialog(object):
 
         self.retranslateUi(prefDialog)
 
-        self.tabWidget.setCurrentIndex(1)
+        self.tabWidget.setCurrentIndex(4)
 
 
         QMetaObject.connectSlotsByName(prefDialog)
@@ -739,6 +767,7 @@ class Ui_prefDialog(object):
         self.pbBrowseFFmpegCacheDir.setText(QCoreApplication.translate("prefDialog", u"...", None))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab_ffmpeg), QCoreApplication.translate("prefDialog", u"FFmpeg framework", None))
         self.groupBox.setTitle(QCoreApplication.translate("prefDialog", u"Spectrogram", None))
+        self.pb_reset_spectro_values.setText(QCoreApplication.translate("prefDialog", u"Reset to default values", None))
         self.label_7.setText(QCoreApplication.translate("prefDialog", u"Color map", None))
         self.label_12.setText(QCoreApplication.translate("prefDialog", u"Default time interval (s)", None))
         self.label_16.setText(QCoreApplication.translate("prefDialog", u"Window type", None))
@@ -753,10 +782,11 @@ class Ui_prefDialog(object):
         self.cb_NFFT.setItemText(3, QCoreApplication.translate("prefDialog", u"2048", None))
 
         self.label_18.setText(QCoreApplication.translate("prefDialog", u"noverlap", None))
-        self.label_19.setText(QCoreApplication.translate("prefDialog", u"vmin", None))
-        self.label_21.setText(QCoreApplication.translate("prefDialog", u"dBFS", None))
-        self.label_20.setText(QCoreApplication.translate("prefDialog", u"vmax", None))
-        self.label_22.setText(QCoreApplication.translate("prefDialog", u"dBFS", None))
+        self.cb_use_vmin_vmax.setText(QCoreApplication.translate("prefDialog", u"Use vmin/vmax", None))
+        self.label_vmin.setText(QCoreApplication.translate("prefDialog", u"vmin", None))
+        self.label_vmin_2.setText(QCoreApplication.translate("prefDialog", u"dBFS", None))
+        self.label_vmax.setText(QCoreApplication.translate("prefDialog", u"vmax", None))
+        self.label_vmax_2.setText(QCoreApplication.translate("prefDialog", u"dBFS", None))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab_spectro), QCoreApplication.translate("prefDialog", u"Spectrogram/Wave form", None))
         self.label_10.setText(QCoreApplication.translate("prefDialog", u"<html><head/><body><p>List of colors for behaviors. See <a href=\"https://matplotlib.org/api/colors_api.html\"><span style=\" text-decoration: underline; color:#0000ff;\">matplotlib colors</span></a></p></body></html>", None))
         self.pb_reset_behav_colors.setText(QCoreApplication.translate("prefDialog", u"Reset colors to default", None))

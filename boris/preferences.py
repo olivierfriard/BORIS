@@ -55,13 +55,37 @@ class Preferences(QDialog, Ui_prefDialog):
         self.pbOK.clicked.connect(self.accept)
         self.pbCancel.clicked.connect(self.reject)
 
+        self.pb_reset_spectro_values.clicked.connect(self.reset_spectro_values)
+        self.cb_use_vmin_vmax.toggled.connect(self.cb_vmin_vmax_changed)
+
         self.flag_refresh = False
 
         # Create a monospace QFont
-        monospace_font = QFont("Courier New")  # or "Monospace", "Consolas", "Liberation Mono", etc.
+        monospace_font = QFont("Courier New")
         monospace_font.setStyleHint(QFont.Monospace)
         monospace_font.setPointSize(12)
         self.pte_plugin_code.setFont(monospace_font)
+
+    def reset_spectro_values(self):
+        """
+        reset spectrogram values to default
+        """
+        self.cbSpectrogramColorMap.setCurrentIndex(cfg.SPECTROGRAM_COLOR_MAPS.index(cfg.SPECTROGRAM_DEFAULT_COLOR_MAP))
+        self.sb_time_interval.setValue(cfg.SPECTROGRAM_DEFAULT_TIME_INTERVAL)
+        self.cb_window_type.setCurrentText(cfg.SPECTROGRAM_DEFAULT_WINDOW_TYPE)
+        self.cb_NFFT.setCurrentText(cfg.SPECTROGRAM_DEFAULT_NFFT)
+        self.sb_noverlap.setValue(cfg.SPECTROGRAM_DEFAULT_NOVERLAP)
+        self.cb_use_vmin_vmax.setChecked(cfg.SPECTROGRAM_USE_VMIN_VMAX_DEFAULT)
+        self.cb_vmin_vmax_changed()
+        self.sb_vmin.setValue(cfg.SPECTROGRAM_DEFAULT_VMIN)
+        self.sb_vmax.setValue(cfg.SPECTROGRAM_DEFAULT_VMAX)
+
+    def cb_vmin_vmax_changed(self):
+        """
+        activate or de-activate vmin and vmax
+        """
+        for w in (self.sb_vmin, self.sb_vmax, self.label_vmin, self.label_vmin_2, self.label_vmax, self.label_vmax_2):
+            w.setEnabled(self.cb_use_vmin_vmax.isChecked())
 
     def browse_plugins_dir(self):
         """
@@ -99,7 +123,7 @@ class Preferences(QDialog, Ui_prefDialog):
             dialog.MessageDialog(
                 "BORIS",
                 ("Refresh will re-initialize all your preferences and close BORIS"),
-                [cfg.CANCEL, "Refresh preferences"],
+                (cfg.CANCEL, "Refresh preferences"),
             )
             == "Refresh preferences"
         ):
@@ -348,6 +372,11 @@ def preferences(self):
     preferencesWindow.cb_NFFT.setCurrentText(self.config_param.get(cfg.SPECTROGRAM_NFFT, cfg.SPECTROGRAM_DEFAULT_NFFT))
     # noverlap
     preferencesWindow.sb_noverlap.setValue(self.config_param.get(cfg.SPECTROGRAM_NOVERLAP, cfg.SPECTROGRAM_DEFAULT_NOVERLAP))
+    # use vmin/xmax
+    preferencesWindow.cb_use_vmin_vmax.setChecked(
+        self.config_param.get(cfg.SPECTROGRAM_USE_VMIN_VMAX, cfg.SPECTROGRAM_USE_VMIN_VMAX_DEFAULT)
+    )
+    preferencesWindow.cb_vmin_vmax_changed()
     # vmin
     preferencesWindow.sb_vmin.setValue(self.config_param.get(cfg.SPECTROGRAM_VMIN, cfg.SPECTROGRAM_DEFAULT_VMIN))
     # vmax
@@ -370,7 +399,7 @@ def preferences(self):
 
     while True:
         if preferencesWindow.exec():
-            if preferencesWindow.sb_vmin.value() >= preferencesWindow.sb_vmax.value():
+            if preferencesWindow.cb_use_vmin_vmax.isChecked() and preferencesWindow.sb_vmin.value() >= preferencesWindow.sb_vmax.value():
                 QMessageBox.warning(self, cfg.programName, "Spectrogram parameters: the vmin value must be lower than the vmax value.")
                 continue
 
@@ -484,6 +513,8 @@ def preferences(self):
             self.config_param[cfg.SPECTROGRAM_NFFT] = preferencesWindow.cb_NFFT.currentText()
             # noverlap
             self.config_param[cfg.SPECTROGRAM_NOVERLAP] = preferencesWindow.sb_noverlap.value()
+            # use vmin/vmax
+            self.config_param[cfg.SPECTROGRAM_USE_VMIN_VMAX] = preferencesWindow.cb_use_vmin_vmax.isChecked()
             # vmin
             self.config_param[cfg.SPECTROGRAM_VMIN] = preferencesWindow.sb_vmin.value()
             # vmax

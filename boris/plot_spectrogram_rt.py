@@ -183,7 +183,7 @@ class Plot_spectrogram_RT(QWidget):
 
         return {"media_length": self.media_length, "frame_rate": self.frame_rate}
 
-    def plot_spectro(self, current_time: float, force_plot: bool = False) -> tuple[float, bool]:
+    def plot_spectro(self, current_time: float | None, force_plot: bool = False) -> tuple[float, bool] | None:
         """
         plot sound spectrogram centered on the current time
 
@@ -192,6 +192,58 @@ class Plot_spectrogram_RT(QWidget):
             force_plot (bool): force plot even if media paused
         """
 
+        def spectrogram(self, x, window_type, nfft, noverlap, vmin, vmax) -> None:
+            window = matplotlib.mlab.window_hanning
+
+            if window_type == "hanning":
+                window = matplotlib.mlab.window_hanning
+
+            if window_type == "hamming":
+                window = signal.get_window(window_type, nfft)  # matplotlib.mlab.window_hamming
+
+            if window_type == "blackmanharris":
+                window = signal.get_window(window_type, nfft)
+
+            print(f"{self.frame_rate=} {vmin=} {vmax=} {window_type=} {nfft=} {noverlap=}")
+            self.ax.specgram(
+                x,
+                mode="psd",
+                # NFFT=nfft,
+                NFFT=nfft,
+                Fs=self.frame_rate,
+                noverlap=noverlap,
+                window=window,  # signal.get_window(window_type, nfft),
+                cmap=self.spectro_color_map,
+                vmin=vmin,
+                vmax=vmax,
+            )
+
+            """
+            self.ax.specgram(
+                x,
+                mode="psd",
+                NFFT=nfft,
+                Fs=self.frame_rate,
+                noverlap=noverlap,
+                window=signal.get_window(window_type, nfft),
+                # matplotlib.mlab.window_hanning
+                # if window_type == "hanning"
+                # else matplotlib.mlab.window_hamming
+                # if window_type == "hamming"
+                # else matplotlib.mlab.window_blackmanharris
+                # if window_type == "blackmanharris"
+                # else matplotlib.mlab.window_hanning,
+                cmap=self.spectro_color_map,
+                vmin=vmin,
+                vmax=vmax,
+                # mode="psd",
+                ## NFFT=1024,
+                # Fs=self.frame_rate,
+                ## noverlap=900,
+                # cmap=self.spectro_color_map,
+            )
+            """
+
         if not force_plot and current_time == self.time_mem:
             return
 
@@ -199,17 +251,24 @@ class Plot_spectrogram_RT(QWidget):
 
         self.ax.clear()
 
-        window_type = "blackmanharris"  # self.config_param.get(cfg.SPECTROGRAM_WINDOW_TYPE, cfg.SPECTROGRAM_DEFAULT_WINDOW_TYPE)
+        # window_type = "blackmanharris"  #
+        window_type = self.config_param.get(cfg.SPECTROGRAM_WINDOW_TYPE, cfg.SPECTROGRAM_DEFAULT_WINDOW_TYPE)
         nfft = int(self.config_param.get(cfg.SPECTROGRAM_NFFT, cfg.SPECTROGRAM_DEFAULT_NFFT))
         noverlap = self.config_param.get(cfg.SPECTROGRAM_NOVERLAP, cfg.SPECTROGRAM_DEFAULT_NOVERLAP)
-        vmin = self.config_param.get(cfg.SPECTROGRAM_VMIN, cfg.SPECTROGRAM_DEFAULT_VMIN)
-        vmax = self.config_param.get(cfg.SPECTROGRAM_VMAX, cfg.SPECTROGRAM_DEFAULT_VMAX)
+        if self.config_param.get(cfg.SPECTROGRAM_USE_VMIN_VMAX, cfg.SPECTROGRAM_USE_VMIN_VMAX_DEFAULT):
+            vmin = self.config_param.get(cfg.SPECTROGRAM_VMIN, cfg.SPECTROGRAM_DEFAULT_VMIN)
+            vmax = self.config_param.get(cfg.SPECTROGRAM_VMAX, cfg.SPECTROGRAM_DEFAULT_VMAX)
+        else:
+            vmin, vmax = None, None
 
         if current_time is None:
             return
 
         # start
         if current_time <= self.interval / 2:
+            spectrogram(self, self.sound_info[: int(self.interval * self.frame_rate)], window_type, nfft, noverlap, vmin, vmax)
+
+            """
             self.ax.specgram(
                 self.sound_info[: int(self.interval * self.frame_rate)],
                 mode="psd",
@@ -233,6 +292,7 @@ class Plot_spectrogram_RT(QWidget):
                 ## noverlap=900,
                 # cmap=self.spectro_color_map,
             )
+            """
 
             self.ax.set_xlim(current_time - self.interval / 2, current_time + self.interval / 2)
 
@@ -242,6 +302,8 @@ class Plot_spectrogram_RT(QWidget):
         elif current_time >= self.media_length - self.interval / 2:
             i = int(round(len(self.sound_info) - (self.interval * self.frame_rate), 0))
 
+            spectrogram(self, self.sound_info[i:], window_type, nfft, noverlap, vmin, vmax)
+            """
             self.ax.specgram(
                 self.sound_info[i:],
                 mode="psd",
@@ -259,12 +321,12 @@ class Plot_spectrogram_RT(QWidget):
                 cmap=self.spectro_color_map,
                 vmin=vmin,
                 vmax=vmax,
-                # mode="psd",
                 ## NFFT=1024,
                 # Fs=self.frame_rate,
                 ## noverlap=900,
                 # cmap=self.spectro_color_map,
             )
+            """
 
             lim1 = current_time - (self.media_length - self.interval / 2)
             lim2 = lim1 + self.interval
@@ -279,6 +341,21 @@ class Plot_spectrogram_RT(QWidget):
 
         # middle
         else:
+            spectrogram(
+                self,
+                self.sound_info[
+                    int(round((current_time - self.interval / 2) * self.frame_rate, 0)) : int(
+                        round((current_time + self.interval / 2) * self.frame_rate, 0)
+                    )
+                ],
+                window_type,
+                nfft,
+                noverlap,
+                vmin,
+                vmax,
+            )
+
+            """
             self.ax.specgram(
                 self.sound_info[
                     int(round((current_time - self.interval / 2) * self.frame_rate, 0)) : int(
@@ -306,6 +383,7 @@ class Plot_spectrogram_RT(QWidget):
                 ## noverlap=900,
                 # cmap=self.spectro_color_map,
             )
+            """
 
             self.ax.xaxis.set_major_locator(mticker.FixedLocator(self.ax.get_xticks().tolist()))
             self.ax.set_xticklabels([str(round(current_time + w - self.interval / 2, 1)) for w in self.ax.get_xticks()])
