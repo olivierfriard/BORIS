@@ -1,99 +1,147 @@
 """
 BORIS plugin
 
-Export to FERAL (getferal.ai)
+Export observations to FERAL (getferal.ai)
 """
 
-import pandas as pd
 import json
 from pathlib import Path
 
-from PySide6.QtWidgets import QFileDialog
-
-# dependencies for CategoryDialog
-from PySide6.QtWidgets import QListWidget, QListWidgetItem, QLabel, QPushButton, QVBoxLayout, QHBoxLayout, QDialog
+import pandas as pd
 from PySide6.QtCore import Qt
+from PySide6.QtWidgets import (
+    QDialog,
+    QFileDialog,
+    QHBoxLayout,
+    QLabel,
+    QListWidget,
+    QListWidgetItem,
+    QPushButton,
+    QVBoxLayout,
+)
 
-
-__version__ = "0.1.1"
-__version_date__ = "2025-11-28"
+__version__ = "0.3.1"
+__version_date__ = "2025-12-12"
 __plugin_name__ = "Export observations to FERAL"
 __author__ = "Olivier Friard - University of Torino - Italy"
 
 
+# ---------------------------
+# Dialog: choose behaviors
+# ---------------------------
+class BehaviorSelectDialog(QDialog):
+    """Select which BORIS behavior codes should become FERAL classes.
+
+    Class 0 is reserved for "other". Any behavior not selected is mapped to 0.
+    """
+
+    def __init__(self, behavior_codes, parent=None):
+        super().__init__(parent)
+
+        self.setWindowTitle("Select behaviors to export (0 is 'other')")
+        self.setModal(True)
+
+        main_layout = QVBoxLayout(self)
+
+        info = QLabel(
+            "Select behaviors to export.\n"
+            "Class 0 is reserved for 'other'.\n"
+            "Unselected behaviors are mapped to 0."
+        )
+        info.setWordWrap(True)
+        main_layout.addWidget(info)
+
+        self.list_behaviors = QListWidget()
+        self.list_behaviors.setSelectionMode(QListWidget.ExtendedSelection)
+
+        for code in sorted(behavior_codes):
+            item = QListWidgetItem(code)
+            item.setSelected(True)  # default: select all
+            self.list_behaviors.addItem(item)
+
+        main_layout.addWidget(self.list_behaviors)
+
+        buttons_layout = QHBoxLayout()
+        btn_all = QPushButton("Select all")
+        btn_none = QPushButton("Select none")
+        btn_ok = QPushButton("OK")
+        btn_cancel = QPushButton("Cancel")
+
+        btn_all.clicked.connect(self._select_all)
+        btn_none.clicked.connect(self._select_none)
+        btn_ok.clicked.connect(self.accept)
+        btn_cancel.clicked.connect(self.reject)
+
+        buttons_layout.addWidget(btn_all)
+        buttons_layout.addWidget(btn_none)
+        buttons_layout.addStretch()
+        buttons_layout.addWidget(btn_ok)
+        buttons_layout.addWidget(btn_cancel)
+
+        main_layout.addLayout(buttons_layout)
+
+    def _select_all(self):
+        for i in range(self.list_behaviors.count()):
+            self.list_behaviors.item(i).setSelected(True)
+
+    def _select_none(self):
+        for i in range(self.list_behaviors.count()):
+            self.list_behaviors.item(i).setSelected(False)
+
+    def selected_codes(self):
+        return [it.text() for it in self.list_behaviors.selectedItems()]
+
+
+# ---------------------------
+# Dialog: split videos
+# ---------------------------
 class CategoryDialog(QDialog):
     def __init__(self, items, parent=None):
         super().__init__(parent)
 
         self.setWindowTitle("Organize the videos in categories")
-
         self.setModal(True)
 
-        # Main layout
         main_layout = QVBoxLayout(self)
         lists_layout = QHBoxLayout()
 
-        # All videos
-        self.list_unclassified = self._create_list_widget()
-        self.label_unclassified = QLabel("All videos")
-        col0_layout = QVBoxLayout()
-        col0_layout.addWidget(self.label_unclassified)
-        col0_layout.addWidget(self.list_unclassified)
+        self.list_unclassified = self._make_list_widget()
+        self.list_train = self._make_list_widget()
+        self.list_val = self._make_list_widget()
+        self.list_test = self._make_list_widget()
+        self.list_inference = self._make_list_widget()
 
-        self.list_cat1 = self._create_list_widget()
-        self.label_cat1 = QLabel("train")
-        col1_layout = QVBoxLayout()
-        col1_layout.addWidget(self.label_cat1)
-        col1_layout.addWidget(self.list_cat1)
-
-        self.list_cat2 = self._create_list_widget()
-        self.label_cat2 = QLabel("val")
-        col2_layout = QVBoxLayout()
-        col2_layout.addWidget(self.label_cat2)
-        col2_layout.addWidget(self.list_cat2)
-
-        self.list_cat3 = self._create_list_widget()
-        self.label_cat3 = QLabel("test")
-        col3_layout = QVBoxLayout()
-        col3_layout.addWidget(self.label_cat3)
-        col3_layout.addWidget(self.list_cat3)
-
-        self.list_cat4 = self._create_list_widget()
-        self.label_cat4 = QLabel("inference")
-        col4_layout = QVBoxLayout()
-        col4_layout.addWidget(self.label_cat4)
-        col4_layout.addWidget(self.list_cat4)
-
-        # Add all columns to the horizontal layout
-        lists_layout.addLayout(col0_layout)
-        lists_layout.addLayout(col1_layout)
-        lists_layout.addLayout(col2_layout)
-        lists_layout.addLayout(col3_layout)
-        lists_layout.addLayout(col4_layout)
+        lists_layout.addLayout(self._make_column("All videos", self.list_unclassified))
+        lists_layout.addLayout(self._make_column("train", self.list_train))
+        lists_layout.addLayout(self._make_column("val", self.list_val))
+        lists_layout.addLayout(self._make_column("test", self.list_test))
+        lists_layout.addLayout(self._make_column("inference", self.list_inference))
 
         main_layout.addLayout(lists_layout)
 
         buttons_layout = QHBoxLayout()
-        self.btn_ok = QPushButton("OK")
-        self.btn_cancel = QPushButton("Cancel")
-
-        self.btn_ok.clicked.connect(self.accept)
-        self.btn_cancel.clicked.connect(self.reject)
+        btn_ok = QPushButton("OK")
+        btn_cancel = QPushButton("Cancel")
+        btn_ok.clicked.connect(self.accept)
+        btn_cancel.clicked.connect(self.reject)
 
         buttons_layout.addStretch()
-        buttons_layout.addWidget(self.btn_ok)
-        buttons_layout.addWidget(self.btn_cancel)
-
+        buttons_layout.addWidget(btn_ok)
+        buttons_layout.addWidget(btn_cancel)
         main_layout.addLayout(buttons_layout)
 
-        # Populate "Unclassified" with input items
         for text in items:
             QListWidgetItem(text, self.list_unclassified)
 
-    def _create_list_widget(self):
-        """
-        Create a QListWidget ready for drag & drop.
-        """
+    @staticmethod
+    def _make_column(title, widget):
+        col = QVBoxLayout()
+        col.addWidget(QLabel(title))
+        col.addWidget(widget)
+        return col
+
+    @staticmethod
+    def _make_list_widget():
         lw = QListWidget()
         lw.setSelectionMode(QListWidget.ExtendedSelection)
         lw.setDragEnabled(True)
@@ -103,123 +151,190 @@ class CategoryDialog(QDialog):
         lw.setDefaultDropAction(Qt.MoveAction)
         return lw
 
-    def get_categories(self):
-        """
-        Return the content of all categories as a dictionary of lists.
-        """
+    @staticmethod
+    def _collect(widget):
+        # "*" is used to mark videos with at least one event
+        return [widget.item(i).text().rstrip("*") for i in range(widget.count())]
 
-        def collect(widget):
-            return [widget.item(i).text().rstrip("*") for i in range(widget.count())]
-
+    def categories(self):
         return {
-            "unclassified": collect(self.list_unclassified),
-            "train": collect(self.list_cat1),
-            "val": collect(self.list_cat2),
-            "test": collect(self.list_cat3),
-            "inference": collect(self.list_cat4),
+            "unclassified": self._collect(self.list_unclassified),
+            "train": self._collect(self.list_train),
+            "val": self._collect(self.list_val),
+            "test": self._collect(self.list_test),
+            "inference": self._collect(self.list_inference),
         }
 
 
 def run(df: pd.DataFrame, project: dict):
-    """
-    Export observations to FERAL
+    """Export BORIS observations/events to a FERAL-compatible JSON.
+
     See https://www.getferal.ai/ > Label Preparation
     """
 
-    out: dict = {
+    def log(msg):
+        messages.append(str(msg))
+
+    def safe_float(d, key):
+        try:
+            return float(d[key])
+        except Exception:
+            return None
+
+    messages = []
+
+    out = {
         "is_multilabel": False,
-        "splits": {
-            "train": [],
-            "val": [],
-            "test": [],
-            "inference": [],
-        },
+        "splits": {"train": [], "val": [], "test": [], "inference": []},
     }
 
-    log: list = []
+    # ---- Behaviors (FERAL classes) ----
+    behavior_conf = project.get("behaviors_conf", {})
+    boris_codes = [behavior_conf[k].get("code") for k in behavior_conf]
+    boris_codes = [c for c in boris_codes if c]  # drop None/empty
 
-    # class names
-    class_names = {x: project["behaviors_conf"][x]["code"] for x in project["behaviors_conf"]}
+    # Reserve 0 for background. If BORIS has a behavior literally named "other",
+    # treat it as background and do not include as a class.
+    boris_codes_no_other = [c for c in boris_codes if c != "other"]
+
+    dlg = BehaviorSelectDialog(boris_codes_no_other)
+    if not dlg.exec():
+        return "Behavior selection canceled; export aborted."
+
+    selected = sorted(set(dlg.selected_codes()))
+    if not selected:
+        log("No behaviors selected: everything will be mapped to class 0 ('other').")
+
+    class_names = {"0": "other"}
+    for i, code in enumerate(selected, start=1):
+        class_names[str(i)] = code
+
     out["class_names"] = class_names
-    reversed_class_names = {project["behaviors_conf"][x]["code"]: int(x) for x in project["behaviors_conf"]}
-    log.append(f"{class_names=}")
+    behavior_to_idx = {code: i for i, code in enumerate(selected, start=1)}
 
-    observations: list = sorted([x for x in project["observations"]])
-    log.append(f"Selected observation: {observations}")
+    if selected:
+        log(f"Selected behaviors: {', '.join(selected)}")
+    log(f"Classes: {class_names}")
 
-    labels: dict = {}
-    video_list: list = []
-    for observation_id in observations:
-        log.append("---")
-        log.append(observation_id)
+    # ---- Iterate observations/videos ----
+    labels = {}
+    video_list = []
 
-        # check number of media file in player #1
-        if len(project["observations"][observation_id]["file"]["1"]) != 1:
-            log.append(f"The observation {observation_id} contains more than one video")
+    has_media_file_col = "Media file" in df.columns
+    has_subject_col = "Subject" in df.columns
+
+    observations = sorted(project.get("observations", {}).keys())
+    if not observations:
+        return "No observations found in project; nothing to export."
+
+    for obs_id in observations:
+        log("---")
+        log(obs_id)
+
+        obs = project["observations"][obs_id]
+        media_files = obs.get("file", {}).get("1", [])
+        if not media_files:
+            log(f"Observation {obs_id} has no video in player 1.")
             continue
 
-        # check number of coded subjects
-        if len(set([x[1] for x in project["observations"][observation_id]["events"]])) > 1:
-            log.append(f"The observation {observation_id} contains more than one subject")
-            continue
+        media_info = obs.get("media_info", {})
+        fps_dict = media_info.get("fps", {})
+        length_dict = media_info.get("length", {})
+        frames_dict = media_info.get("frames", {}) or {}
 
-        media_file_path: str = project["observations"][observation_id]["file"]["1"][0]
-        media_file_name = str(Path(media_file_path).name)
+        for media_path in media_files:
+            video_name = Path(media_path).name
 
-        # skip if no events
-        if not project["observations"][observation_id]["events"]:
-            video_list.append(media_file_name)
-            log.append(f"No events for observation {observation_id}")
-            continue
-        else:
-            video_list.append(media_file_name + "*")
+            if video_name in labels:
+                log(f"Duplicate video name '{video_name}' encountered; skipping (obs {obs_id}).")
+                continue
 
-        # extract FPS
-        FPS = project["observations"][observation_id]["media_info"]["fps"][media_file_path]
-        log.append(f"{media_file_name} {FPS=}")
-        # extract media duration
-        duration = project["observations"][observation_id]["media_info"]["length"][media_file_path]
-        log.append(f"{media_file_name} {duration=}")
+            # Filter events for this observation + this media file when possible
+            if has_media_file_col:
+                df_video = df[(df["Observation id"] == obs_id) & (df["Media file"] == media_path)]
+            else:
+                df_video = df[df["Observation id"] == obs_id]
+                log("Warning: df has no 'Media file' column; using all events from observation.")
 
-        number_of_frames = int(duration / (1 / FPS))
-        log.append(f"{number_of_frames=}")
+            # Enforce single-subject labeling when Subject column exists
+            if has_subject_col and not df_video.empty:
+                subjects = df_video["Subject"].dropna().unique().tolist()
+                if len(subjects) > 1:
+                    log(f"More than one subject in {video_name}: {subjects}. Skipping.")
+                    continue
 
-        labels[media_file_name] = [0] * number_of_frames
+            # Mark videos that contain at least one event with "*"
+            video_list.append(video_name + ("*" if not df_video.empty else ""))
 
-        for idx in range(number_of_frames):
-            t = idx * (1 / FPS)
-            behaviors = (
-                df[(df["Observation id"] == observation_id) & (df["Start (s)"] <= t) & (df["Stop (s)"] >= t)]["Behavior"].unique().tolist()
-            )
-            if len(behaviors) > 1:
-                log.append(f"The observation {observation_id} contains more than one behavior for frame {idx}")
-                del labels[media_file_name]
-                break
-            if behaviors:
-                behaviors_idx = reversed_class_names[behaviors[0]]
-                labels[media_file_name][idx] = behaviors_idx
+            fps = safe_float(fps_dict, media_path)
+            duration = safe_float(length_dict, media_path)
+            if fps is None:
+                log(f"Missing/invalid FPS for {video_name}. Skipping.")
+                continue
+            if duration is None:
+                log(f"Missing/invalid duration for {video_name}. Skipping.")
+                continue
+
+            if media_path in frames_dict:
+                n_frames = int(frames_dict[media_path])
+                log(f"{video_name}: fps={fps} duration={duration} frames={n_frames} (BORIS)")
+            else:
+                n_frames = int(round(duration * fps))
+                log(f"{video_name}: fps={fps} duration={duration} frames={n_frames} (rounded)")
+
+            if n_frames <= 0:
+                log(f"Non-positive frame count for {video_name}. Skipping.")
+                continue
+
+            frame_dt = 1.0 / fps
+            labels[video_name] = [0] * n_frames  # default: "other"
+
+            # Fill per-frame labels
+            for frame_idx in range(n_frames):
+                t = frame_idx * frame_dt
+                behaviors = (
+                    df_video[(df_video["Start (s)"] <= t) & (df_video["Stop (s)"] >= t)]["Behavior"]
+                    .unique()
+                    .tolist()
+                )
+
+                if len(behaviors) > 1:
+                    log(
+                        f"{video_name}: overlapping behaviors at frame {frame_idx} (t={t:.6f}s): "
+                        f"{behaviors}. Removing video (is_multilabel=False)."
+                    )
+                    del labels[video_name]
+                    break
+
+                if not behaviors:
+                    continue
+
+                labels[video_name][frame_idx] = behavior_to_idx.get(behaviors[0], 0)
 
     out["labels"] = labels
 
-    # splits
-    dlg = CategoryDialog(video_list)
+    # ---- Splits dialog ----
+    split_dlg = CategoryDialog(video_list)
+    if not split_dlg.exec():
+        log("Export canceled at split assignment stage.")
+        return "\n".join(messages)
 
-    if dlg.exec():  # Dialog accepted
-        result = dlg.get_categories()
-        del result["unclassified"]
-        out["splits"] = result
+    splits = split_dlg.categories()
+    splits.pop("unclassified", None)
+    out["splits"] = splits
 
-        filename, _ = QFileDialog.getSaveFileName(
-            None,
-            "Choose a file to save",
-            "",  # start directory
-            "JSON files (*.json);;All files (*.*)",
-        )
-        if filename:
-            with open(filename, "w") as f_out:
-                f_out.write(json.dumps(out, separators=(",", ": "), indent=1))
+    filename, _ = QFileDialog.getSaveFileName(
+        None,
+        "Choose a file to save",
+        "",
+        "JSON files (*.json);;All files (*.*)",
+    )
+    if not filename:
+        log("No output file selected; nothing written.")
+        return "\n".join(messages)
 
-    else:
-        log.append("splits section missing")
+    with open(filename, "w", encoding="utf-8") as f_out:
+        json.dump(out, f_out, indent=2)
 
-    return "\n".join(log)
+    log(f"Saved: {filename}")
+    return "\n".join(messages)
