@@ -199,50 +199,23 @@ class Plot_spectrogram_RT(QWidget):
                 window = matplotlib.mlab.window_hanning
 
             if window_type == "hamming":
-                window = signal.get_window(window_type, nfft)  # matplotlib.mlab.window_hamming
+                window = signal.get_window(window_type, nfft)  
 
             if window_type == "blackmanharris":
                 window = signal.get_window(window_type, nfft)
 
-            print(f"{self.frame_rate=} {vmin=} {vmax=} {window_type=} {nfft=} {noverlap=}")
-            self.ax.specgram(
-                x,
-                mode="psd",
-                # NFFT=nfft,
-                NFFT=nfft,
-                Fs=self.frame_rate,
-                noverlap=noverlap,
-                window=window,  # signal.get_window(window_type, nfft),
-                cmap=self.spectro_color_map,
-                vmin=vmin,
-                vmax=vmax,
-            )
-
-            """
+            # print(f"{self.frame_rate=} {vmin=} {vmax=} {window_type=} {nfft=} {noverlap=}")
             self.ax.specgram(
                 x,
                 mode="psd",
                 NFFT=nfft,
                 Fs=self.frame_rate,
                 noverlap=noverlap,
-                window=signal.get_window(window_type, nfft),
-                # matplotlib.mlab.window_hanning
-                # if window_type == "hanning"
-                # else matplotlib.mlab.window_hamming
-                # if window_type == "hamming"
-                # else matplotlib.mlab.window_blackmanharris
-                # if window_type == "blackmanharris"
-                # else matplotlib.mlab.window_hanning,
+                window=window,
                 cmap=self.spectro_color_map,
                 vmin=vmin,
                 vmax=vmax,
-                # mode="psd",
-                ## NFFT=1024,
-                # Fs=self.frame_rate,
-                ## noverlap=900,
-                # cmap=self.spectro_color_map,
             )
-            """
 
         if not force_plot and current_time == self.time_mem:
             return
@@ -268,32 +241,6 @@ class Plot_spectrogram_RT(QWidget):
         if current_time <= self.interval / 2:
             spectrogram(self, self.sound_info[: int(self.interval * self.frame_rate)], window_type, nfft, noverlap, vmin, vmax)
 
-            """
-            self.ax.specgram(
-                self.sound_info[: int(self.interval * self.frame_rate)],
-                mode="psd",
-                NFFT=nfft,
-                Fs=self.frame_rate,
-                noverlap=noverlap,
-                window=signal.get_window(window_type, nfft),
-                # matplotlib.mlab.window_hanning
-                # if window_type == "hanning"
-                # else matplotlib.mlab.window_hamming
-                # if window_type == "hamming"
-                # else matplotlib.mlab.window_blackmanharris
-                # if window_type == "blackmanharris"
-                # else matplotlib.mlab.window_hanning,
-                cmap=self.spectro_color_map,
-                vmin=vmin,
-                vmax=vmax,
-                # mode="psd",
-                ## NFFT=1024,
-                # Fs=self.frame_rate,
-                ## noverlap=900,
-                # cmap=self.spectro_color_map,
-            )
-            """
-
             self.ax.set_xlim(current_time - self.interval / 2, current_time + self.interval / 2)
 
             # cursor
@@ -303,30 +250,6 @@ class Plot_spectrogram_RT(QWidget):
             i = int(round(len(self.sound_info) - (self.interval * self.frame_rate), 0))
 
             spectrogram(self, self.sound_info[i:], window_type, nfft, noverlap, vmin, vmax)
-            """
-            self.ax.specgram(
-                self.sound_info[i:],
-                mode="psd",
-                NFFT=nfft,
-                Fs=self.frame_rate,
-                noverlap=noverlap,
-                window=signal.get_window(window_type, nfft),
-                # matplotlib.mlab.window_hanning
-                # if window_type == "hanning"
-                # else matplotlib.mlab.window_hamming
-                # if window_type == "hamming"
-                # else matplotlib.mlab.window_blackmanharris
-                # if window_type == "blackmanharris"
-                # else matplotlib.mlab.window_hanning,
-                cmap=self.spectro_color_map,
-                vmin=vmin,
-                vmax=vmax,
-                ## NFFT=1024,
-                # Fs=self.frame_rate,
-                ## noverlap=900,
-                # cmap=self.spectro_color_map,
-            )
-            """
 
             lim1 = current_time - (self.media_length - self.interval / 2)
             lim2 = lim1 + self.interval
@@ -355,36 +278,6 @@ class Plot_spectrogram_RT(QWidget):
                 vmax,
             )
 
-            """
-            self.ax.specgram(
-                self.sound_info[
-                    int(round((current_time - self.interval / 2) * self.frame_rate, 0)) : int(
-                        round((current_time + self.interval / 2) * self.frame_rate, 0)
-                    )
-                ],
-                mode="psd",
-                NFFT=nfft,
-                Fs=self.frame_rate,
-                noverlap=noverlap,
-                window=signal.get_window(window_type, nfft),
-                # matplotlib.mlab.window_hanning
-                # if window_type == "hanning"
-                # else matplotlib.mlab.window_hamming
-                # if window_type == "hamming"
-                # else matplotlib.mlab.window_blackmanharris
-                # if window_type == "blackmanharris"
-                # else matplotlib.mlab.window_hanning,
-                cmap=self.spectro_color_map,
-                vmin=vmin,
-                vmax=vmax,
-                # mode="psd",
-                ## NFFT=1024,
-                # Fs=self.frame_rate,
-                ## noverlap=900,
-                # cmap=self.spectro_color_map,
-            )
-            """
-
             self.ax.xaxis.set_major_locator(mticker.FixedLocator(self.ax.get_xticks().tolist()))
             self.ax.set_xticklabels([str(round(current_time + w - self.interval / 2, 1)) for w in self.ax.get_xticks()])
 
@@ -392,6 +285,5 @@ class Plot_spectrogram_RT(QWidget):
             self.ax.axvline(x=self.interval / 2, color=self.cursor_color, linestyle="-")
 
         self.ax.set_ylim(self.sb_freq_min.value(), self.sb_freq_max.value())
-        """self.figure.subplots_adjust(wspace=0, hspace=0)"""
 
         self.canvas.draw()
