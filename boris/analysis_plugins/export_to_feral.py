@@ -23,7 +23,7 @@ from PySide6.QtWidgets import (
 __version__ = "0.3.1"
 __version_date__ = "2025-12-12"
 __plugin_name__ = "Export observations to FERAL"
-__author__ = "Olivier Friard - University of Torino - Italy"
+__author__ = "Jacopo Razzauti - The Rockefeller University; Olivier Friard - University of Torino - Italy"
 
 
 # ---------------------------
