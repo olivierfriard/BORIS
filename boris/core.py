@@ -4064,17 +4064,18 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         Args:
             n_player (int): player
-            new_time (int): new time in ms
+            new_time (float): new time in ms
         """
+        new_time_dec = dec(new_time)
 
         if self.dw_player[n_player].player.playlist_count == 1:
             if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO][cfg.OFFSET][str(n_player + 1)]:
                 if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO][cfg.OFFSET][str(n_player + 1)] > 0:
-                    if new_time < self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO][cfg.OFFSET][str(n_player + 1)]:
+                    if new_time_dec < self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO][cfg.OFFSET][str(n_player + 1)]:
                         # hide video and mute audio if time < offset
                         self.media_player_enabled(n_player, enable=False)
                     else:
-                        if new_time - dec(
+                        if new_time_dec - dec(
                             self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO][cfg.OFFSET][str(n_player + 1)]
                         ) > sum(self.dw_player[n_player].media_durations):
                             # hide video and mute audio if required time > video time + offset
@@ -4083,26 +4084,27 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                             # show video and enable audio
                             self.media_player_enabled(n_player, enable=True)
                             self.seek_mediaplayer(
-                                new_time
+                                new_time_dec
                                 - dec(self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO][cfg.OFFSET][str(n_player + 1)]),
                                 player=n_player,
                             )
 
                 elif self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO][cfg.OFFSET][str(n_player + 1)] < 0:
-                    if new_time - dec(self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO][cfg.OFFSET][str(n_player + 1)]) > sum(
-                        self.dw_player[n_player].media_durations
-                    ):
+                    if new_time_dec - dec(
+                        self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO][cfg.OFFSET][str(n_player + 1)]
+                    ) > sum(self.dw_player[n_player].media_durations):
                         # hide video and mute audio if required time > video time + offset
                         self.media_player_enabled(n_player, enable=False)
                     else:
                         self.media_player_enabled(n_player, enable=True)
                         self.seek_mediaplayer(
-                            new_time - dec(self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO][cfg.OFFSET][str(n_player + 1)]),
+                            new_time_dec
+                            - dec(self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO][cfg.OFFSET][str(n_player + 1)]),
                             player=n_player,
                         )
 
             else:  # no offset
-                self.seek_mediaplayer(new_time, player=n_player)
+                self.seek_mediaplayer(new_time_dec, player=n_player)
 
         elif self.dw_player[n_player].player.playlist_count > 1:
             # check if new time is before the end of last video

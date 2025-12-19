@@ -20,8 +20,8 @@ from PySide6.QtWidgets import (
     QVBoxLayout,
 )
 
-__version__ = "0.3.1"
-__version_date__ = "2025-12-12"
+__version__ = "0.3.2"
+__version_date__ = "2025-12-19"
 __plugin_name__ = "Export observations to FERAL"
 __author__ = "Jacopo Razzauti - The Rockefeller University; Olivier Friard - University of Torino - Italy"
 
@@ -43,11 +43,7 @@ class BehaviorSelectDialog(QDialog):
 
         main_layout = QVBoxLayout(self)
 
-        info = QLabel(
-            "Select behaviors to export.\n"
-            "Class 0 is reserved for 'other'.\n"
-            "Unselected behaviors are mapped to 0."
-        )
+        info = QLabel("Select behaviors to export.\nClass 0 is reserved for 'other'.\nUnselected behaviors are mapped to 0.")
         info.setWordWrap(True)
         main_layout.addWidget(info)
 
@@ -220,7 +216,8 @@ def run(df: pd.DataFrame, project: dict):
     labels = {}
     video_list = []
 
-    has_media_file_col = "Media file" in df.columns
+    # df dataframe cannot have a "Media file" column
+    # has_media_file_col = "Media file" in df.columns
     has_subject_col = "Subject" in df.columns
 
     observations = sorted(project.get("observations", {}).keys())
@@ -249,12 +246,15 @@ def run(df: pd.DataFrame, project: dict):
                 log(f"Duplicate video name '{video_name}' encountered; skipping (obs {obs_id}).")
                 continue
 
+            # df dataframe cannot have a "Media file" column
             # Filter events for this observation + this media file when possible
-            if has_media_file_col:
-                df_video = df[(df["Observation id"] == obs_id) & (df["Media file"] == media_path)]
-            else:
-                df_video = df[df["Observation id"] == obs_id]
-                log("Warning: df has no 'Media file' column; using all events from observation.")
+            # if has_media_file_col:
+            #     df_video = df[(df["Observation id"] == obs_id) & (df["Media file"] == media_path)]
+            # else:
+            #     df_video = df[df["Observation id"] == obs_id]
+            #     log("Warning: df has no 'Media file' column; using all events from observation.")
+
+            df_video = df[df["Observation id"] == obs_id]
 
             # Enforce single-subject labeling when Subject column exists
             if has_subject_col and not df_video.empty:
@@ -292,11 +292,7 @@ def run(df: pd.DataFrame, project: dict):
             # Fill per-frame labels
             for frame_idx in range(n_frames):
                 t = frame_idx * frame_dt
-                behaviors = (
-                    df_video[(df_video["Start (s)"] <= t) & (df_video["Stop (s)"] >= t)]["Behavior"]
-                    .unique()
-                    .tolist()
-                )
+                behaviors = df_video[(df_video["Start (s)"] <= t) & (df_video["Stop (s)"] >= t)]["Behavior"].unique().tolist()
 
                 if len(behaviors) > 1:
                     log(

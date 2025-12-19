@@ -1,4 +1,17 @@
 
+**v. 9.7.15 2025-12-19**
+
+* added plugin to export events for FERAL (https://www.getferal.ai/)
+
+* improved spectrogram default parameters
+
+* fixed bug in sync_time function
+
+
+**v. 9.7.11 2025-12-03**
+
+* fixed bug #917
+
 
 **v. 9.7.10 2025-12-02**
 
