@@ -3,7 +3,7 @@
 <file alias="small_logo">icons/logo_eye.128px.png</file>
 <file alias="logo">icons/logo_boris.png</file>
 <file alias="boris_unito">icons/boris_unito.png</file>
-<file alias="dbios_unito">icons/dbios_unito.png</file>
+<file alias="dbios_unito">icons/logo_dbios.svg</file>
 <file alias="splash">icons/splash.png</file>
 
 <file alias="observations_list_dark">icons/fontawesome_free/list_dark.svg</file>
