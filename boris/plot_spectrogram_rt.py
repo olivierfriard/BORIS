@@ -1,7 +1,7 @@
 """
 BORIS
 Behavioral Observation Research Interactive Software
-Copyright 2012-2025 Olivier Friard
+Copyright 2012-2026 Olivier Friard
 
 
   This program is free software; you can redistribute it and/or modify
@@ -199,7 +199,7 @@ class Plot_spectrogram_RT(QWidget):
                 window = matplotlib.mlab.window_hanning
 
             if window_type == "hamming":
-                window = signal.get_window(window_type, nfft)  
+                window = signal.get_window(window_type, nfft)
 
             if window_type == "blackmanharris":
                 window = signal.get_window(window_type, nfft)
