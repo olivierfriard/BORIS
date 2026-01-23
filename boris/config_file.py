@@ -31,7 +31,7 @@ from . import config as cfg
 from . import dialog
 
 
-def read(self):
+def read(self) -> None:
     """
     read config file
     """
@@ -180,7 +180,7 @@ def read(self):
                                 "(An internet connection is required)\n"
                                 "You can change this option in the Preferences (File > Preferences)"
                             ),
-                            [cfg.YES, cfg.NO],
+                            (cfg.YES, cfg.NO),
                         )
                         == cfg.YES
                     )
@@ -244,7 +244,7 @@ def read(self):
                 dialog.MessageDialog(
                     cfg.programName,
                     ("The colors list contain colors that are very light.\nDo you want to reload the default colors list?"),
-                    [cfg.NO, cfg.YES],
+                    (cfg.NO, cfg.YES),
                 )
                 == cfg.YES
             ):
@@ -261,7 +261,7 @@ def read(self):
                 dialog.MessageDialog(
                     cfg.programName,
                     ("The colors list contain colors that are very light.\nDo you want to reload the default colors list?"),
-                    [cfg.NO, cfg.YES],
+                    (cfg.NO, cfg.YES),
                 )
                 == cfg.YES
             ):

@@ -80,7 +80,7 @@ def actionAbout_activated(self):
     programs_versions.extend(["\nGraphViz", gv_result if "graphviz" in gv_result else "not installed", "https://www.graphviz.org/"])
 
     about_dialog: QMessageBox = QMessageBox()
-    #about_dialog.setIconPixmap(QPixmap(":/boris_unito"))
+    # about_dialog.setIconPixmap(QPixmap(":/boris_unito"))
     about_dialog.setIconPixmap(QPixmap(":/dbios_unito"))
 
     about_dialog.setWindowTitle(f"About {cfg.programName}")

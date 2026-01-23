@@ -422,9 +422,9 @@ def check_project_integrity(
     r = check_coded_behaviors(pj)
     if r:
         out += f"The following behaviors are not defined in the ethogram: <b>{', '.join(r)}</b><br>"
-        flag_all_behaviors_defined = False
-    else:
-        flag_all_behaviors_defined = True
+    #    flag_all_behaviors_defined = False
+    # else:
+    #    flag_all_behaviors_defined = True
 
     # check for unpaired state events
     for obs_id in pj[cfg.OBSERVATIONS]:

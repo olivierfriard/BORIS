@@ -267,7 +267,7 @@ def connections(self):
     self.tv_events.doubleClicked.connect(self.tv_events_doubleClicked)
 
     # Actions for twEthogram context menu
-    self.twEthogram.setContextMenuPolicy(Qt.ActionsContextMenu)
+    self.twEthogram.setContextMenuPolicy(Qt.ContextMenuPolicy.ActionsContextMenu)
     self.twEthogram.horizontalHeader().sortIndicatorChanged.connect(self.twEthogram_sorted)
 
     self.actionViewBehavior.triggered.connect(self.view_behavior)
@@ -282,7 +282,7 @@ def connections(self):
     self.twEthogram.addAction(self.actionShowAllBehaviors)
 
     # Actions for twSubjects context menu
-    self.twSubjects.setContextMenuPolicy(Qt.ActionsContextMenu)
+    self.twSubjects.setContextMenuPolicy(Qt.ContextMenuPolicy.ActionsContextMenu)
     self.twSubjects.horizontalHeader().sortIndicatorChanged.connect(self.sort_twSubjects)
     self.actionFilterSubjects.triggered.connect(self.filter_subjects)
     self.twSubjects.addAction(self.actionFilterSubjects)
@@ -296,7 +296,7 @@ def connections(self):
     # tw_headers.addAction(self.actionConfigure_twEvents_columns)
 
     tv_headers = self.tv_events.horizontalHeader()
-    tv_headers.setContextMenuPolicy(Qt.ActionsContextMenu)
+    tv_headers.setContextMenuPolicy(Qt.ContextMenuPolicy.ActionsContextMenu)
     tv_headers.addAction(self.actionConfigure_tvevents_columns)
 
     # Actions for twEvents menu
@@ -339,7 +339,7 @@ def connections(self):
     # self.twEvents.addAction(self.actionDelete_selected_events)
 
     # Actions for tv_events menu
-    self.tv_events.setContextMenuPolicy(Qt.ActionsContextMenu)
+    self.tv_events.setContextMenuPolicy(Qt.ContextMenuPolicy.ActionsContextMenu)
 
     self.tv_events.addAction(self.actionAdd_event)
     self.tv_events.addAction(self.actionEdit_selected_events)
@@ -384,7 +384,7 @@ def connections(self):
     # Actions for twSubjects context menu
     self.actionDeselectCurrentSubject.triggered.connect(lambda: self.update_subject(""))
 
-    self.twSubjects.setContextMenuPolicy(Qt.ActionsContextMenu)
+    self.twSubjects.setContextMenuPolicy(Qt.ContextMenuPolicy.ActionsContextMenu)
     self.twSubjects.addAction(self.actionDeselectCurrentSubject)
 
     # subjects

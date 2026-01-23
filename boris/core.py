@@ -1624,7 +1624,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.currentSubject = subject
             self.lbFocalSubject.setText(f" Focal subject: <b>{self.currentSubject}</b>")
 
-    def getCurrentMediaByFrame(self, player: str, requiredFrame: int, fps: float):
+    def getCurrentMediaByFrame(self, player: str, requiredFrame: int, fps: float) -> tuple[str, int]:
         """
         Args:
             player (str): player
@@ -1635,7 +1635,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             currentMedia
             frameCurrentMedia
         """
-        currentMedia, frameCurrentMedia = "", 0
+        currentMedia: str = ""
+        frameCurrentMedia: int = 0
         frameMs = 1000 / fps
         for idx, media in enumerate(self.pj[cfg.OBSERVATIONS][self.observationId][cfg.FILE][player]):
             if requiredFrame * frameMs < sum(self.dw_player[int(player) - 1].media_durations[0 : idx + 1]):
@@ -1644,7 +1645,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 break
         return currentMedia, round(frameCurrentMedia)
 
-    def extract_frame(self, dw):
+    def extract_frame(self, dw) -> None:
         """
         for MEDIA obs: extract frame from video and visualize it in frame_viewer
         for IMAGES obs: load picture and visualize it in frame_viewer, extract EXIF Date/Time Original tag if available
@@ -1727,23 +1728,23 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         # show current states in subjects table
         self.show_current_states_in_subjects_table()
 
-    def frame_image_clicked(self, n_player, event):
+    def frame_image_clicked(self, n_player, event) -> None:
         geometric_measurement.image_clicked(self, n_player, event)
 
-    def timer_plot_data_out(self, w):
+    def timer_plot_data_out(self, w) -> None:
         """
         update plot in w (Plot_data class)
         triggered by timers in self.ext_data_timer_list
         """
         w.update_plot(self.getLaps())
 
-    def signal_from_widget(self, event):
+    def signal_from_widget(self, event) -> None:
         """
         receive signal from widget
         """
         self.keyPressEvent(event)
 
-    def reload_frame(self):
+    def reload_frame(self) -> None:
         """
         receive signal to reload frames from geometric measurements
         """
@@ -1759,7 +1760,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         geometric_measurement.redraw_measurements(self)
 
-    def save_picture_with_measurements(self, mode: str):
+    def save_picture_with_measurements(self, mode: str) -> None:
         """
         receive signal to save picture from geometric measurements
         """
@@ -1944,7 +1945,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
                         pixmap.save(str(Path(output_dir) / file_name.with_suffix(".jpg")), "JPG")
 
-    def resize_dw(self, dw_id):
+    def resize_dw(self, dw_id) -> None:
         """
         dockwidget was resized. Adapt overlay if any
         """
@@ -4921,21 +4922,21 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     self.update_project_zoom_pan_values()
 
         # frame-by-frame mode
-        if ek == 47 or (ek == Qt.Key_Left and modifier != cfg.CTRL_KEY):  # / one frame back
+        if ek == 47 or (ek == Qt.Key.Key_Left and modifier != cfg.CTRL_KEY):  # / one frame back
             self.previous_frame()
             return
 
-        if ek == 42 or (ek == Qt.Key_Right and modifier != cfg.CTRL_KEY):  # *  read next frame
+        if ek == 42 or (ek == Qt.Key.Key_Right and modifier != cfg.CTRL_KEY):  # *  read next frame
             self.next_frame()
             return
 
         if self.playerType in (cfg.MEDIA, cfg.IMAGES):
             # next media file (page up)
-            if ek == Qt.Key_PageUp:
+            if ek == Qt.Key.Key_PageUp:
                 self.next_media_file()
 
             # previous media file (page down)
-            if ek == Qt.Key_PageDown:
+            if ek == Qt.Key.Key_PageDown:
                 self.previous_media_file()
 
         if not self.pj[cfg.ETHOGRAM]:
@@ -4978,20 +4979,20 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             return
 
         if (
-            ((ek in range(33, 256)) and (ek not in [Qt.Key_Plus, Qt.Key_Minus]))
+            ((ek in range(33, 256)) and (ek not in [Qt.Key.Key_Plus, Qt.Key.Key_Minus]))
             or (ek in cfg.function_keys)
-            or (ek == Qt.Key_Enter and event.text())
+            or (ek == Qt.Key.Key_Enter and event.text())
         ):  # click from coding pad or subjects pad
             if ek in cfg.function_keys:
                 ek_unichr = cfg.function_keys[ek]
-            elif ek != Qt.Key_Enter:
+            elif ek != Qt.Key.Key_Enter:
                 ek_unichr = ek_text
-            elif ek == Qt.Key_Enter and event.text():  # click from coding pad or subjects pad
+            elif ek == Qt.Key.Key_Enter and event.text():  # click from coding pad or subjects pad
                 ek_unichr = ek_text
 
             logging.debug(f"{ek_unichr = }")
 
-            if ek == Qt.Key_Enter and event.text():  # click from coding pad or subjects pad
+            if ek == Qt.Key.Key_Enter and event.text():  # click from coding pad or subjects pad
                 ek_unichr = ""
 
                 if "#subject#" in event.text():
@@ -5033,7 +5034,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 r = dialog.MessageDialog(
                     cfg.programName,
                     "This key defines a behavior and a subject. Choose one",
-                    ["&Behavior", "&Subject", cfg.CANCEL],
+                    ("&Behavior", "&Subject", cfg.CANCEL),
                 )
                 if r == cfg.CANCEL:
                     return
@@ -5086,7 +5087,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                             "The focal subject is not defined. Do you want to continue?\n"
                             "Use Preferences menu option to modify this behaviour."
                         ),
-                        [cfg.YES, cfg.NO],
+                        (cfg.YES, cfg.NO),
                     )
 
                     if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE] == cfg.MEDIA and flagPlayerPlaying:
@@ -5258,7 +5259,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 dialog.MessageDialog(
                     cfg.programName,
                     f"<b>{self.find_dialog.findText.text()}</b> not found. Search from beginning?",
-                    [cfg.YES, cfg.NO],
+                    (cfg.YES, cfg.NO),
                 )
                 == cfg.YES
             ):
@@ -5279,15 +5280,15 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.find_replace_dialog.close()
             return
         if self.find_replace_dialog.combo_fields.currentIndex() == 0:  # choose a field
-            dialog.MessageDialog(cfg.programName, "Choose a field.", ["OK"])
+            dialog.MessageDialog(cfg.programName, "Choose a field.", (cfg.OK,))
             return
 
         if not self.find_replace_dialog.findText.text():
-            dialog.MessageDialog(cfg.programName, "There is nothing to find.", ["OK"])
+            dialog.MessageDialog(cfg.programName, "There is nothing to find.", (cfg.OK,))
             return
 
         if self.find_replace_dialog.cbFindInSelectedEvents.isChecked() and not len(self.find_replace_dialog.rowsToFind):
-            dialog.MessageDialog(cfg.programName, "There are no selected events", [cfg.OK])
+            dialog.MessageDialog(cfg.programName, "There are no selected events", (cfg.OK,))
             return
 
         fields_list: list = []
@@ -5295,7 +5296,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             # check if find and replace contain valid behavior codes
             for bh in (self.find_replace_dialog.findText.text(), self.find_replace_dialog.replaceText.text()):
                 if bh not in util.all_subjects(self.pj[cfg.SUBJECTS]):
-                    dialog.MessageDialog(cfg.programName, f"<b>{bh}</b> is not a valid subject name", [cfg.OK])
+                    dialog.MessageDialog(cfg.programName, f"<b>{bh}</b> is not a valid subject name", (cfg.OK,))
                     return
             fields_list.append(cfg.PJ_OBS_FIELDS[self.playerType][cfg.SUBJECT])
 
@@ -5303,7 +5304,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             # check if find and replace contain valid behavior codes
             for bh in (self.find_replace_dialog.findText.text(), self.find_replace_dialog.replaceText.text()):
                 if bh not in util.all_behaviors(self.pj[cfg.ETHOGRAM]):
-                    dialog.MessageDialog(cfg.programName, f"<b>{bh}</b> is not a valid behavior code", [cfg.OK])
+                    dialog.MessageDialog(cfg.programName, f"<b>{bh}</b> is not a valid behavior code", (cfg.OK,))
                     return
             fields_list.append(cfg.PJ_OBS_FIELDS[self.playerType][cfg.BEHAVIOR_CODE])
 
@@ -5401,7 +5402,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 self.find_replace_dialog.close()
 
         if msg == "FIND_REPLACE_ALL":
-            dialog.MessageDialog(cfg.programName, f"{number_replacement} substitution(s).", [cfg.OK])
+            dialog.MessageDialog(cfg.programName, f"{number_replacement} substitution(s).", (cfg.OK,))
             self.find_replace_dialog.close()
 
     def closeEvent(self, event):
@@ -5431,7 +5432,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 dialog.MessageDialog(
                     cfg.programName,
                     "BORIS is doing some job. What do you want to do?",
-                    ["Wait", "Quit BORIS"],
+                    ("Wait", "Quit BORIS"),
                 )
                 == "Wait"
             ):
@@ -5450,7 +5451,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             response = dialog.MessageDialog(
                 cfg.programName,
                 "What to do about the current unsaved project?",
-                [cfg.SAVE, cfg.DISCARD, cfg.CANCEL],
+                (cfg.SAVE, cfg.DISCARD, cfg.CANCEL),
             )
 
             if response == cfg.SAVE:
@@ -5777,8 +5778,8 @@ def main():
             None,
             cfg.programName,
             "FFmpeg is not available.<br>Go to http://www.ffmpeg.org to download it",
-            QMessageBox.Ok | QMessageBox.Default,
-            QMessageBox.NoButton,
+            QMessageBox.StandardButton.Ok | QMessageBox.StandardButton.Default,
+            QMessageBox.StandardButton.NoButton,
         )
         sys.exit(3)
 
@@ -5831,7 +5832,7 @@ def main():
         config_param: dict = {}
         ini_file_path = Path.home() / Path(".boris")
         if ini_file_path.is_file():
-            settings = QSettings(str(ini_file_path), QSettings.IniFormat)
+            settings = QSettings(str(ini_file_path), QSettings.Format.IniFormat)
             try:
                 config_param = settings.value("config")
             except Exception:
