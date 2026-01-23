@@ -351,5 +351,5 @@ def save(self, lastCheckForNewVersion=0):
     # recent projects
     logging.debug("Save recent projects")
 
-    settings = QSettings(str(pl.Path.home() / ".boris_recent_projects"), QSettings.IniFormat)
+    settings = QSettings(str(pl.Path.home() / ".boris_recent_projects"), QSettings.Format.IniFormat)
     settings.setValue("recent_projects", "|||".join(self.recent_projects))
