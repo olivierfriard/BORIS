@@ -21,12 +21,12 @@ Copyright 2012-2026 Olivier Friard
 
 """
 
-import sqlite3
 import logging
+import sqlite3
 from typing import Optional, Tuple
+
 from . import config as cfg
-from . import project_functions
-from . import event_operations
+from . import event_operations, project_functions
 
 
 def load_events_in_db(
@@ -39,6 +39,7 @@ def load_events_in_db(
     """
     populate a memory sqlite database with events from selected_observations,
     selected_subjects and selected_behaviors
+    include modifiers
 
     Args:
         pj (dict): project dictionary
@@ -58,16 +59,6 @@ def load_events_in_db(
         for x in pj[cfg.ETHOGRAM]
         if cfg.STATE in pj[cfg.ETHOGRAM][x][cfg.TYPE].upper() and pj[cfg.ETHOGRAM][x][cfg.BEHAVIOR_CODE] in selected_behaviors
     ]
-
-    # selected behaviors defined as point event
-    """
-    point_behaviors_codes = [
-        pj[cfg.ETHOGRAM][x][cfg.BEHAVIOR_CODE]
-        for x in pj[cfg.ETHOGRAM]
-        if cfg.POINT in pj[cfg.ETHOGRAM][x][cfg.TYPE].upper()
-        and pj[cfg.ETHOGRAM][x][cfg.BEHAVIOR_CODE] in selected_behaviors
-    ]
-    """
 
     db = sqlite3.connect(":memory:", isolation_level=None)
 

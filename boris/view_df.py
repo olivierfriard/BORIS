@@ -1,11 +1,35 @@
-from .view_df_ui import Ui_Form
-from PySide6.QtWidgets import QWidget, QFileDialog
-from PySide6.QtCore import Qt, QAbstractTableModel
+"""
+BORIS
+Behavioral Observation Research Interactive Software
+Copyright 2012-2026 Olivier Friard
+
+This file is part of BORIS.
+
+  BORIS is free software; you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation; either version 3 of the License, or
+  any later version.
+
+  BORIS is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+
+  You should have received a copy of the GNU General Public License
+  along with this program; if not see <http://www.gnu.org/licenses/>.
+
+"""
+
+from pathlib import Path
+
+from PySide6.QtCore import QAbstractTableModel, Qt
+from PySide6.QtWidgets import QFileDialog, QWidget
 
 from . import config as cfg
-from pathlib import Path
 from . import dialog
+from .view_df_ui import Ui_Form
 
+flag_pyreadr_loaded: bool = False
 try:
     import pyreadr
 

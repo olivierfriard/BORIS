@@ -3,21 +3,20 @@ BORIS
 Behavioral Observation Research Interactive Software
 Copyright 2012-2026 Olivier Friard
 
+This file is part of BORIS.
 
-  This program is free software; you can redistribute it and/or modify
+  BORIS is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
-  the Free Software Foundation; either version 2 of the License, or
-  (at your option) any later version.
+  the Free Software Foundation; either version 3 of the License, or
+  any later version.
 
-  This program is distributed in the hope that it will be useful,
+  BORIS is distributed in the hope that it will be useful,
   but WITHOUT ANY WARRANTY; without even the implied warranty of
   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
   GNU General Public License for more details.
 
   You should have received a copy of the GNU General Public License
-  along with this program; if not, write to the Free Software
-  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
-  MA 02110-1301, USA.
+  along with this program; if not see <http://www.gnu.org/licenses/>.
 
 """
 
@@ -37,7 +36,7 @@ from . import utilities as util
 def events_snapshots(self):
     """
     create snapshots corresponding to coded events
-    if observations are from media file and media files have video
+    Observations must be from media file and media files must have video
     """
 
     _, selected_observations = select_observations.select_observations2(
@@ -47,7 +46,7 @@ def events_snapshots(self):
         return
 
     # check if obs are MEDIA
-    live_images_obs_list = []
+    live_images_obs_list: list = []
     for obs_id in selected_observations:
         if self.pj[cfg.OBSERVATIONS][obs_id][cfg.TYPE] in [cfg.LIVE, cfg.IMAGES]:
             live_images_obs_list.append(obs_id)
@@ -113,7 +112,7 @@ def events_snapshots(self):
         self,
         "Choose a directory to extract events",
         os.path.expanduser("~"),
-        options=QFileDialog.ShowDirsOnly,
+        options=QFileDialog.Option.ShowDirsOnly,
     )
     if not export_dir:
         return
@@ -165,11 +164,11 @@ def events_snapshots(self):
                                     "The following media file does not have video.<br>"
                                     f"{self.pj[cfg.OBSERVATIONS][obs_id][cfg.FILE][nplayer][mediaFileIdx]}"
                                 ),
-                                [cfg.OK, "Abort"],
+                                (cfg.OK, cfg.ABORT),
                             )
                             if response == cfg.OK:
                                 continue
-                            if response == "Abort":
+                            if response == cfg.ABORT:
                                 return
 
                         # check FPS
@@ -194,11 +193,11 @@ def events_snapshots(self):
                                     "The FPS was not found for the following media file:<br>"
                                     f"{self.pj[cfg.OBSERVATIONS][obs_id][cfg.FILE][nplayer][mediaFileIdx]}"
                                 ),
-                                [cfg.OK, "Abort"],
+                                (cfg.OK, cfg.ABORT),
                             )
                             if response == cfg.OK:
                                 continue
-                            if response == "Abort":
+                            if response == cfg.ABORT:
                                 return
 
                         global_start = dec("0.000") if row["occurence"] < time_interval else round(row["occurence"] - time_interval, 3)
@@ -238,11 +237,11 @@ def events_snapshots(self):
                                             "At the moment it no possible to extract frames "
                                             "for this type of event.<br>"
                                         ),
-                                        [cfg.OK, "Abort"],
+                                        (cfg.OK, cfg.ABORT),
                                     )
                                     if response == cfg.OK:
                                         continue
-                                    if response == "Abort":
+                                    if response == cfg.ABORT:
                                         return
 
                                 # globalStop = round(rows[idx + 1]["occurence"] + time_interval, 3)
@@ -302,8 +301,8 @@ def events_snapshots(self):
 
 def extract_events(self):
     """
-    extract sub-sequences from media files corresponding to coded events with FFmpeg
-    in case of point event, from -n to +n seconds are extracted (n is asked to user)
+    extract with FFmpeg sub-sequences from media files corresponding to coded events
+    In case of point event, from -n to +n seconds are extracted (n is asked to user)
     """
 
     _, selected_observations = select_observations.select_observations2(
@@ -312,14 +311,14 @@ def extract_events(self):
     if not selected_observations:
         return
 
-    # check if obs are MEDIA
-    live_images_obs_list = []
+    # check if obs are from media files
+    live_images_obs_list: list = []
     for obs_id in selected_observations:
-        if self.pj[cfg.OBSERVATIONS][obs_id][cfg.TYPE] in [cfg.LIVE, cfg.IMAGES]:
+        if self.pj[cfg.OBSERVATIONS][obs_id][cfg.TYPE] in (cfg.LIVE, cfg.IMAGES):
             live_images_obs_list.append(obs_id)
 
     if live_images_obs_list:
-        out = "The following observations are live observations or observation from pictures and will be removed from analysis<br><br>"
+        out = "The following observations are live observations or observation from pictures and will be removed<br><br>"
         out += "<br>".join(live_images_obs_list)
         results = dialog.Results_dialog()
         results.setWindowTitle(cfg.programName)
@@ -345,7 +344,7 @@ def extract_events(self):
         selected_observations,
         start_coding=dec("NaN"),
         end_coding=dec("NaN"),
-        show_include_modifiers=False,
+        show_include_modifiers=True,
         show_exclude_non_coded_behaviors=False,
     )
     if parameters == {}:
@@ -377,7 +376,7 @@ def extract_events(self):
         self,
         "Choose a directory to extract events",
         os.path.expanduser("~"),
-        options=QFileDialog.ShowDirsOnly,
+        options=QFileDialog.Option.ShowDirsOnly,
     )
     if not export_dir:
         return
@@ -407,11 +406,12 @@ def extract_events(self):
             for subject in parameters[cfg.SELECTED_SUBJECTS]:
                 for behavior in parameters[cfg.SELECTED_BEHAVIORS]:
                     cursor.execute(
-                        "SELECT occurence FROM events WHERE observation = ? AND subject = ? AND code = ?",
+                        "SELECT occurence, modifiers FROM events WHERE observation = ? AND subject = ? AND code = ?",
                         (obs_id, subject, behavior),
                     )
-                    rows = [{"occurence": util.float2decimal(r["occurence"])} for r in cursor.fetchall()]
-
+                    rows = tuple(
+                        {"occurence": util.float2decimal(r["occurence"]), "modifiers": r[cfg.MODIFIERS]} for r in cursor.fetchall()
+                    )
                     behavior_state = project_functions.event_type(behavior, self.pj[cfg.ETHOGRAM])
                     if behavior_state in cfg.STATE_EVENT_TYPES and len(rows) % 2:  # unpaired events
                         continue
@@ -433,7 +433,7 @@ def extract_events(self):
                                     dialog.MessageDialog(
                                         cfg.programName,
                                         f"The media file {self.pj[cfg.OBSERVATIONS][obs_id][cfg.FILE][nplayer][mediaFileIdx]} does not have a video stream",
-                                        ["Continue", "Abort"],
+                                        ("Continue", "Abort"),
                                     )
                                     == "Abort"
                                 ):
@@ -461,9 +461,9 @@ def extract_events(self):
                                     dialog.MessageDialog(
                                         cfg.programName,
                                         f"The media file {self.pj[cfg.OBSERVATIONS][obs_id][cfg.FILE][nplayer][mediaFileIdx]} does not have an audio stream",
-                                        ["Continue", "Abort"],
+                                        ("Continue", cfg.ABORT),
                                     )
-                                    == "Abort"
+                                    == cfg.ABORT
                                 ):
                                     return
                                 else:
@@ -509,11 +509,11 @@ def extract_events(self):
                                             "The event extends on 2 successive video. "
                                             " At the moment it is not possible to extract this type of event.<br>"
                                         ),
-                                        [cfg.OK, "Abort"],
+                                        (cfg.OK, cfg.ABORT),
                                     )
                                     if response == cfg.OK:
                                         continue
-                                    if response == "Abort":
+                                    if response == cfg.ABORT:
                                         return
 
                                 globalStart = dec("0.000") if row["occurence"] < timeOffset else round(row["occurence"] - timeOffset, 3)
@@ -550,22 +550,27 @@ def extract_events(self):
                                 continue
 
                         new_file_name = pl.Path(export_dir) / pl.Path(
-                            (
-                                f"{util.safeFileName(obs_id).replace(' ', '-')}_"
-                                f"PLAYER{nplayer}_"
-                                f"{util.safeFileName(subject).replace(' ', '-')}_"
-                                f"{util.safeFileName(behavior)}_"
-                                f"{globalStart}-{globalStop}"
-                                f"{new_extension}"
+                            "".join(
+                                [
+                                    f"{util.safeFileName(obs_id).replace(' ', '-')}_",
+                                    f"PLAYER{nplayer}_",
+                                    f"{util.safeFileName(subject).replace(' ', '-')}_",
+                                    f"{util.safeFileName(behavior)}_",
+                                    f"{globalStart}-{globalStop}",
+                                    f"_{util.safeFileName(row[cfg.MODIFIERS].replace('|', '+')).replace(' ', '-')}"
+                                    if parameters[cfg.INCLUDE_MODIFIERS] and row[cfg.MODIFIERS]
+                                    else "",
+                                    f"{new_extension}",
+                                ]
                             )
-                        )  # .with_suffix(new_extension)
+                        )
 
                         if new_file_name.is_file():
                             if mem_command not in (cfg.OVERWRITE_ALL, cfg.SKIP_ALL):
                                 mem_command = dialog.MessageDialog(
                                     cfg.programName,
                                     f"The file <b>{new_file_name}</b> already exists.",
-                                    [cfg.OVERWRITE, cfg.OVERWRITE_ALL, cfg.SKIP, cfg.SKIP_ALL, cfg.CANCEL],
+                                    (cfg.OVERWRITE, cfg.OVERWRITE_ALL, cfg.SKIP, cfg.SKIP_ALL, cfg.CANCEL),
                                 )
                             if mem_command == cfg.CANCEL:
                                 return

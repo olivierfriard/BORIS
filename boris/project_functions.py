@@ -347,7 +347,7 @@ def check_state_events_obs(obsId: str, ethogram: dict, observation: dict, time_f
     return (False, out) if out else (True, "No problem detected")
 
 
-def check_state_events(pj: dict, observations_list: list) -> Tuple[bool, tuple]:
+def check_state_events(pj: dict, observations_list: list) -> tuple[bool, list]:
     """
     check if state events are paired in a list of observations
     use check_state_events_obs function
@@ -730,13 +730,13 @@ def create_subtitles(pj: dict, selected_observations: list, parameters: dict, ex
                 mem_command = dialog.MessageDialog(
                     cfg.programName,
                     f"The file {file_name} already exists.",
-                    [
+                    (
                         cfg.OVERWRITE,
                         cfg.OVERWRITE_ALL,
                         cfg.SKIP,
                         cfg.SKIP_ALL,
                         cfg.CANCEL,
-                    ],
+                    ),
                 )
                 if mem_command == cfg.CANCEL:
                     return False, ""
@@ -837,13 +837,13 @@ def create_subtitles(pj: dict, selected_observations: list, parameters: dict, ex
                         mem_command = dialog.MessageDialog(
                             cfg.programName,
                             f"The file {file_name} already exists.",
-                            [
+                            (
                                 cfg.OVERWRITE,
                                 cfg.OVERWRITE_ALL,
                                 cfg.SKIP,
                                 cfg.SKIP_ALL,
                                 cfg.CANCEL,
-                            ],
+                            ),
                         )
                         if mem_command == cfg.CANCEL:
                             return False, ""
@@ -1145,7 +1145,7 @@ def remove_media_files_path(pj: dict, project_file_name: str) -> bool:
                     f"{',<br>'.join(file_not_found)}"
                     "<br><br>Are you sure to continue?"
                 ),
-                [cfg.YES, cfg.NO],
+                (cfg.YES, cfg.NO),
             )
             == cfg.NO
         ):
@@ -1215,7 +1215,7 @@ def full_path(path: str, project_file_name: str) -> str:
             return ""
 
 
-def observed_interval(observation: dict) -> Tuple[dec, dec]:
+def observed_interval(observation: dict) -> tuple[dec, dec] | None:
     """
     Observed interval for observation
 
@@ -1580,7 +1580,7 @@ def open_project_json(project_file_name: str) -> tuple:
             copyfile(project_file_name, old_project_file_name)
             msg += f"\n\nThe old file project was saved as {old_project_file_name}"
         except Exception:
-            QMessageBox.critical(cfg.programName, f"Error saving old project to {old_project_file_name}")
+            QMessageBox.critical(None, cfg.programName, f"Error saving old project to {old_project_file_name}")
 
         pj[cfg.PROJECT_VERSION] = cfg.project_format_version
 

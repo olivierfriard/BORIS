@@ -3,26 +3,24 @@ BORIS
 Behavioral Observation Research Interactive Software
 Copyright 2012-2026 Olivier Friard
 
+This file is part of BORIS.
 
-  This program is free software; you can redistribute it and/or modify
+  BORIS is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
-  the Free Software Foundation; either version 2 of the License, or
-  (at your option) any later version.
+  the Free Software Foundation; either version 3 of the License, or
+  any later version.
 
-  This program is distributed in the hope that it will be useful,
+  BORIS is distributed in the hope that it will be useful,
   but WITHOUT ANY WARRANTY; without even the implied warranty of
   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
   GNU General Public License for more details.
 
   You should have received a copy of the GNU General Public License
-  along with this program; if not, write to the Free Software
-  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
-  MA 02110-1301, USA.
+  along with this program; if not see <http://www.gnu.org/licenses/>.
 
 """
 
 import logging
-from typing import Tuple
 
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QAbstractItemView
@@ -32,7 +30,7 @@ from . import gui_utilities, observations_list, project_functions
 from . import utilities as util
 
 
-def select_observations2(self, mode: str, windows_title: str = "") -> Tuple[str, list]:
+def select_observations2(self, mode: str, windows_title: str = "") -> tuple[str, list[str]]:
     """
     allow user to select observations
     mode: accepted values: OPEN, EDIT, SINGLE, MULTIPLE, SELECT1
@@ -149,37 +147,37 @@ def select_observations2(self, mode: str, windows_title: str = "") -> Tuple[str,
     obsList.mode = mode
 
     if mode == cfg.OPEN:
-        obsList.view.setSelectionMode(QAbstractItemView.SingleSelection)
+        obsList.view.setSelectionMode(QAbstractItemView.SelectionMode.SingleSelection)
         obsList.pbOpen.setVisible(True)
 
     if mode == cfg.VIEW:
-        obsList.view.setSelectionMode(QAbstractItemView.SingleSelection)
+        obsList.view.setSelectionMode(QAbstractItemView.SelectionMode.SingleSelection)
         obsList.pbView.setVisible(True)
 
     if mode == cfg.EDIT:
-        obsList.view.setSelectionMode(QAbstractItemView.SingleSelection)
+        obsList.view.setSelectionMode(QAbstractItemView.SelectionMode.SingleSelection)
         obsList.pbEdit.setVisible(True)
 
     if mode == cfg.SINGLE:
-        obsList.view.setSelectionMode(QAbstractItemView.SingleSelection)
+        obsList.view.setSelectionMode(QAbstractItemView.SelectionMode.SingleSelection)
         obsList.pbOpen.setVisible(True)
         obsList.pbView.setVisible(True)
         obsList.pbEdit.setVisible(True)
 
     if mode == cfg.MULTIPLE:
-        obsList.view.setSelectionMode(QAbstractItemView.MultiSelection)
+        obsList.view.setSelectionMode(QAbstractItemView.SelectionMode.MultiSelection)
         obsList.pbOk.setVisible(True)
         obsList.pbSelectAll.setVisible(True)
         obsList.pbUnSelectAll.setVisible(True)
 
     if mode == cfg.SELECT1:
-        obsList.view.setSelectionMode(QAbstractItemView.SingleSelection)
+        obsList.view.setSelectionMode(QAbstractItemView.SelectionMode.SingleSelection)
         obsList.pbOk.setVisible(True)
 
     # restore window geometry
     gui_utilities.restore_geometry(obsList, "observations list", (900, 600))
 
-    obsList.view.sortItems(0, Qt.AscendingOrder)
+    obsList.view.sortItems(0, Qt.SortOrder.AscendingOrder)
     for row in range(obsList.view.rowCount()):
         obsList.view.resizeRowToContents(row)
 
@@ -196,15 +194,16 @@ def select_observations2(self, mode: str, windows_title: str = "") -> Tuple[str,
                 if idx.column() == 0:  # first column
                     selected_observations.append(idx.data())
 
+    result_str: str = ""
     if result == 0:  # cancel
-        resultStr = ""
+        result_str = ""
     if result == 1:  # select
-        resultStr = "ok"
+        result_str = "ok"
     if result == 2:  # open
-        resultStr = cfg.OPEN
+        result_str = cfg.OPEN
     if result == 3:  # edit
-        resultStr = cfg.EDIT
+        result_str = cfg.EDIT
     if result == 4:  # view
-        resultStr = cfg.VIEW
+        result_str = cfg.VIEW
 
-    return resultStr, selected_observations
+    return result_str, selected_observations

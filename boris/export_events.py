@@ -24,21 +24,15 @@ import datetime as dt
 import logging
 import math
 import os
-import tablib
 import pathlib as pl
 from decimal import Decimal as dec
 
-from . import observation_operations
-from . import utilities as util
-from . import config as cfg
-from . import select_observations
-from . import export_observation
-from . import select_subj_behav
-from . import project_functions
-from . import dialog
-from . import db_functions
+import tablib
+from PySide6.QtWidgets import QApplication, QFileDialog, QInputDialog, QMessageBox
 
-from PySide6.QtWidgets import QApplication, QFileDialog, QMessageBox, QInputDialog
+from . import config as cfg
+from . import db_functions, dialog, export_observation, observation_operations, project_functions, select_observations, select_subj_behav
+from . import utilities as util
 
 
 def export_events_as_behavioral_sequences(self, separated_subjects=False, timed=False):
@@ -116,8 +110,8 @@ def export_events_as_behavioral_sequences(self, separated_subjects=False, timed=
             None,
             cfg.programName,
             f"Error while exporting events as behavioral sequences:<br>{msg}",
-            QMessageBox.Ok | QMessageBox.Default,
-            QMessageBox.NoButton,
+            QMessageBox.StandardButton.Ok | QMessageBox.StandardButton.Default,
+            QMessageBox.StandardButton.NoButton,
         )
 
 
@@ -148,8 +142,8 @@ def export_tabular_events(self, mode: str = "tabular") -> None:
                 None,
                 cfg.programName,
                 ("This function is not available for observations with events that do not have timestamp"),
-                QMessageBox.Ok | QMessageBox.Default,
-                QMessageBox.NoButton,
+                QMessageBox.StandardButton.Ok | QMessageBox.StandardButton.Default,
+                QMessageBox.StandardButton.NoButton,
             )
             return
 
@@ -217,17 +211,14 @@ def export_tabular_events(self, mode: str = "tabular") -> None:
                 self,
                 "Choose a directory to export events",
                 os.path.expanduser("~"),
-                options=QFileDialog.ShowDirsOnly,
+                options=QFileDialog.Option.ShowDirsOnly,
             )
             if not exportDir:
                 return
 
         if len(selected_observations) == 1:
-            file_dialog_options = QFileDialog.Options()
-            file_dialog_options |= QFileDialog.DontConfirmOverwrite
-
-            file_name, filter_ = QFileDialog().getSaveFileName(
-                self, "Export events", "", ";;".join(available_formats), options=file_dialog_options
+            file_name, filter_ = QFileDialog.getSaveFileName(
+                self, "Export events", "", ";;".join(available_formats), options=QFileDialog.Option.DontConfirmOverwrite
             )
             if not file_name:
                 return
@@ -238,14 +229,14 @@ def export_tabular_events(self, mode: str = "tabular") -> None:
                 # check if file with new extension already exists
                 if pl.Path(file_name).exists():
                     if (
-                        dialog.MessageDialog(cfg.programName, f"The file {file_name} already exists.", [cfg.CANCEL, cfg.OVERWRITE])
+                        dialog.MessageDialog(cfg.programName, f"The file {file_name} already exists.", (cfg.CANCEL, cfg.OVERWRITE))
                         == cfg.CANCEL
                     ):
                         return
 
     if mode == "jwatcher":
         exportDir = QFileDialog().getExistingDirectory(
-            self, "Choose a directory to export events", os.path.expanduser("~"), options=QFileDialog.ShowDirsOnly
+            self, "Choose a directory to export events", os.path.expanduser("~"), options=QFileDialog.Option.ShowDirsOnly
         )
         if not exportDir:
             return
@@ -263,7 +254,7 @@ def export_tabular_events(self, mode: str = "tabular") -> None:
                 mem_command = dialog.MessageDialog(
                     cfg.programName,
                     f"The file {file_name} already exists.",
-                    [cfg.OVERWRITE, cfg.OVERWRITE_ALL, cfg.SKIP, cfg.SKIP_ALL, cfg.CANCEL],
+                    (cfg.OVERWRITE, cfg.OVERWRITE_ALL, cfg.SKIP, cfg.SKIP_ALL, cfg.CANCEL),
                 )
                 if mem_command == cfg.CANCEL:
                     return
@@ -287,7 +278,13 @@ def export_tabular_events(self, mode: str = "tabular") -> None:
             )
 
         if not r and msg:
-            QMessageBox.critical(None, cfg.programName, msg, QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
+            QMessageBox.critical(
+                None,
+                cfg.programName,
+                msg,
+                QMessageBox.StandardButton.Ok | QMessageBox.StandardButton.Default,
+                QMessageBox.StandardButton.NoButton,
+            )
 
 
 def export_aggregated_events(self):
@@ -397,7 +394,7 @@ def export_aggregated_events(self):
     flag_group = True
     if len(selected_observations) > 1:
         flag_group = (
-            dialog.MessageDialog(cfg.programName, "Group events from selected observations in one file?", [cfg.YES, cfg.NO]) == cfg.YES
+            dialog.MessageDialog(cfg.programName, "Group events from selected observations in one file?", (cfg.YES, cfg.NO)) == cfg.YES
         )
 
     if flag_group:
@@ -415,11 +412,8 @@ def export_aggregated_events(self):
             cfg.RDS,
         )
 
-        file_dialog_options = QFileDialog.Options()
-        file_dialog_options |= QFileDialog.DontConfirmOverwrite
-
-        fileName, filter_ = QFileDialog().getSaveFileName(
-            self, "Export aggregated events", "", ";;".join(file_formats), options=file_dialog_options
+        fileName, filter_ = QFileDialog.getSaveFileName(
+            self, "Export aggregated events", "", ";;".join(file_formats), options=QFileDialog.Option.DontConfirmOverwrite
         )
 
         if not fileName:
@@ -430,7 +424,7 @@ def export_aggregated_events(self):
             # check if file with new extension already exists
             fileName = str(pl.Path(fileName)) + "." + outputFormat
             if pl.Path(fileName).exists():
-                if dialog.MessageDialog(cfg.programName, f"The file {fileName} already exists.", [cfg.CANCEL, cfg.OVERWRITE]) == cfg.CANCEL:
+                if dialog.MessageDialog(cfg.programName, f"The file {fileName} already exists.", (cfg.CANCEL, cfg.OVERWRITE)) == cfg.CANCEL:
                     return
 
     else:  # not grouping
@@ -453,7 +447,7 @@ def export_aggregated_events(self):
         outputFormat = cfg.FILE_NAME_SUFFIX[item]
 
         exportDir = QFileDialog().getExistingDirectory(
-            self, "Choose a directory to export events", os.path.expanduser("~"), options=QFileDialog.ShowDirsOnly
+            self, "Choose a directory to export events", os.path.expanduser("~"), options=QFileDialog.Option.ShowDirsOnly
         )
         if not exportDir:
             return
@@ -471,8 +465,8 @@ def export_aggregated_events(self):
                 None,
                 cfg.programName,
                 f"The file {fileName} can not be saved",
-                QMessageBox.Ok | QMessageBox.Default,
-                QMessageBox.NoButton,
+                QMessageBox.StandardButton.Ok | QMessageBox.StandardButton.Default,
+                QMessageBox.StandardButton.NoButton,
             )
 
         return
@@ -530,7 +524,7 @@ def export_aggregated_events(self):
                 mem_command = dialog.MessageDialog(
                     cfg.programName,
                     f"The file {fileName} already exists.",
-                    [cfg.OVERWRITE, cfg.OVERWRITE_ALL, cfg.SKIP, cfg.SKIP_ALL, cfg.CANCEL],
+                    (cfg.OVERWRITE, cfg.OVERWRITE_ALL, cfg.SKIP, cfg.SKIP_ALL, cfg.CANCEL),
                 )
                 if mem_command == cfg.CANCEL:
                     return
@@ -539,7 +533,13 @@ def export_aggregated_events(self):
 
             r, msg = export_observation.dataset_write(data_single_obs_sorted, fileName, outputFormat, dtype=fields_type(max_modifiers))
             if not r:
-                QMessageBox.warning(None, cfg.programName, msg, QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
+                QMessageBox.warning(
+                    None,
+                    cfg.programName,
+                    msg,
+                    QMessageBox.StandardButton.Ok | QMessageBox.StandardButton.Default,
+                    QMessageBox.StandardButton.NoButton,
+                )
 
         """
         # disabled after introduction of the force_number_modifiers parameter in export_aggregated_events function
@@ -635,7 +635,13 @@ def export_aggregated_events(self):
     if flag_group:
         r, msg = export_observation.dataset_write(data_grouped_obs_all, fileName, outputFormat, dtype=fields_type(max_modifiers))
         if not r:
-            QMessageBox.warning(None, cfg.programName, msg, QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
+            QMessageBox.warning(
+                None,
+                cfg.programName,
+                msg,
+                QMessageBox.StandardButton.Ok | QMessageBox.StandardButton.Default,
+                QMessageBox.StandardButton.NoButton,
+            )
 
 
 def export_events_as_textgrid(self) -> None:
@@ -667,8 +673,8 @@ def export_events_as_textgrid(self) -> None:
             None,
             cfg.programName,
             ("This function is not available for observations with events that do not have timestamp"),
-            QMessageBox.Ok | QMessageBox.Default,
-            QMessageBox.NoButton,
+            QMessageBox.StandardButton.Ok | QMessageBox.StandardButton.Default,
+            QMessageBox.StandardButton.NoButton,
         )
         return
 
@@ -697,7 +703,7 @@ def export_events_as_textgrid(self) -> None:
         return
 
     export_dir = QFileDialog.getExistingDirectory(
-        self, "Export events as Praat TextGrid", os.path.expanduser("~"), options=QFileDialog.ShowDirsOnly
+        self, "Export events as Praat TextGrid", os.path.expanduser("~"), options=QFileDialog.Option.ShowDirsOnly
     )
     if not export_dir:
         return
@@ -985,7 +991,7 @@ def export_events_as_textgrid(self) -> None:
             mem_command = dialog.MessageDialog(
                 cfg.programName,
                 f"The file <b>{pl.Path(export_dir) / util.safeFileName(obs_id)}.TextGrid</b> already exists.",
-                [cfg.OVERWRITE, cfg.OVERWRITE_ALL, cfg.SKIP, cfg.SKIP_ALL, cfg.CANCEL],
+                (cfg.OVERWRITE, cfg.OVERWRITE_ALL, cfg.SKIP, cfg.SKIP_ALL, cfg.CANCEL),
             )
             if mem_command == cfg.CANCEL:
                 return

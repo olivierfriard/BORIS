@@ -35,7 +35,7 @@ from . import utilities as util
 
 def choose_obs_subj_behav_category(
     self,
-    selected_observations: list,
+    selected_observations: list[str],
     start_coding: Optional[dec] = dec("NaN"),  #  Union[..., None]
     end_coding: Optional[dec] = dec("NaN"),
     start_interval: Optional[dec] = dec("NaN"),
@@ -246,8 +246,8 @@ def choose_obs_subj_behav_category(
                 None,
                 cfg.programName,
                 "The start time is after the end time",
-                QMessageBox.Ok | QMessageBox.Default,
-                QMessageBox.NoButton,
+                QMessageBox.StandardButton.Ok | QMessageBox.StandardButton.Default,
+                QMessageBox.StandardButton.NoButton,
             )
             return {cfg.SELECTED_SUBJECTS: [], cfg.SELECTED_BEHAVIORS: []}
 

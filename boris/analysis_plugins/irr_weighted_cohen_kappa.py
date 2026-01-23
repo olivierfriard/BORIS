@@ -4,9 +4,9 @@ BORIS plugin
 Inter Rater Reliability (IRR) Weighted Cohen's Kappa
 """
 
-import pandas as pd
-from typing import List, Tuple, Dict, Optional
+from typing import Dict, List, Optional, Tuple
 
+import pandas as pd
 from PySide6.QtWidgets import QInputDialog
 
 __version__ = "0.0.3"
