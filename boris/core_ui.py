@@ -912,7 +912,7 @@ class Ui_MainWindow(object):
         self.actionEdit_selected_events.setText(QCoreApplication.translate("MainWindow", u"Edit selected event(s)", None))
         self.actionShow_spectrogram.setText(QCoreApplication.translate("MainWindow", u"Show the sound spectrogram", None))
         self.actionExport_events_as_Praat_TextGrid.setText(QCoreApplication.translate("MainWindow", u"as Praat TextGrid", None))
-        self.actionExtract_events_from_media_files.setText(QCoreApplication.translate("MainWindow", u"Extract sequences from media files", None))
+        self.actionExtract_events_from_media_files.setText(QCoreApplication.translate("MainWindow", u"Extract clips from media files", None))
         self.action_geometric_measurements.setText(QCoreApplication.translate("MainWindow", u"Geometric measurement", None))
         self.actionFrame_forward.setText(QCoreApplication.translate("MainWindow", u"Frame forward", None))
         self.actionFrame_backward.setText(QCoreApplication.translate("MainWindow", u"frame backward", None))

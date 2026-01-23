@@ -33,7 +33,7 @@ from . import db_functions, dialog, project_functions, select_observations, sele
 from . import utilities as util
 
 
-def events_snapshots(self):
+def extract_media_snapshots(self):
     """
     create snapshots corresponding to coded events
     Observations must be from media file and media files must have video
@@ -78,7 +78,7 @@ def events_snapshots(self):
         selected_observations,
         start_coding=dec("NaN"),
         end_coding=dec("NaN"),
-        show_include_modifiers=False,
+        show_include_modifiers=True,
         show_exclude_non_coded_behaviors=False,
         n_observations=len(selected_observations),
     )
@@ -93,7 +93,15 @@ def events_snapshots(self):
         label_caption="Choose parameters",
         elements_list=[
             ("dsb", "Time interval around the events (in seconds)", 0.0, 86400, 1, 0, 3),
-            ("il", "Bitmap format", (("JPG - small size / low quality", ""), ("PNG - big size / high quality", ""))),
+            (
+                "il",
+                "Bitmap format",
+                (
+                    ("JPG - small size / low quality", ""),
+                    ("PNG - big size / high quality", ""),
+                    #    ("WEBP - small size / high quality", "")
+                ),
+            ),
         ],
         title="Extract frames",
     )
@@ -104,6 +112,8 @@ def events_snapshots(self):
         frame_bitmap_format = "jpg"
     elif "PNG" in ib.elements["Bitmap format"].currentText():
         frame_bitmap_format = "png"
+        # elif "WEBP" in ib.elements["Bitmap format"].currentText():
+        #    frame_bitmap_format = "webp"
     else:
         return
 
@@ -136,10 +146,13 @@ def events_snapshots(self):
             for subject in parameters[cfg.SELECTED_SUBJECTS]:
                 for behavior in parameters[cfg.SELECTED_BEHAVIORS]:
                     cursor.execute(
-                        "SELECT occurence FROM events WHERE observation = ? AND subject = ? AND code = ?",
+                        "SELECT occurence, modifiers FROM events WHERE observation = ? AND subject = ? AND code = ?",
                         (obs_id, subject, behavior),
                     )
-                    rows = [{"occurence": util.float2decimal(r["occurence"])} for r in cursor.fetchall()]
+
+                    rows = tuple(
+                        {"occurence": util.float2decimal(r["occurence"]), "modifiers": r[cfg.MODIFIERS]} for r in cursor.fetchall()
+                    )
 
                     behavior_state = project_functions.event_type(behavior, self.pj[cfg.ETHOGRAM])
 
@@ -278,17 +291,23 @@ def events_snapshots(self):
                             else:
                                 continue
 
-                        ffmpeg_command = (
-                            f'"{self.ffmpeg_bin}" '
-                            f"-ss {start:.3f} "
-                            f'-i "{media_path}" '
-                            f"-vframes {vframes} "
-                            f'"{export_dir}{os.sep}'
-                            f"{util.safeFileName(obs_id).replace(' ', '-')}"
-                            f"_PLAYER{nplayer}"
-                            f"_{util.safeFileName(subject).replace(' ', '-')}"
-                            f"_{util.safeFileName(behavior).replace(' ', '-')}"
-                            f'_{global_start:.3f}_%08d.{frame_bitmap_format}"'
+                        ffmpeg_command = "".join(
+                            [
+                                f'"{self.ffmpeg_bin}" ',
+                                f'-i "{media_path}" ',
+                                f"-ss {start:.3f} ",
+                                f"-vframes {vframes} ",
+                                f'"{export_dir}{os.sep}',
+                                f"{util.safeFileName(obs_id).replace(' ', '-')}",
+                                f"_PLAYER{nplayer}",
+                                f"_{util.safeFileName(subject).replace(' ', '-')}",
+                                f"_{util.safeFileName(behavior).replace(' ', '-')}",
+                                f"_{global_start:.3f}_%08d",
+                                f"_{util.safeFileName(row[cfg.MODIFIERS].replace('|', '+')).replace(' ', '-')}"
+                                if parameters[cfg.INCLUDE_MODIFIERS] and row[cfg.MODIFIERS]
+                                else "",
+                                f'.{frame_bitmap_format}"',
+                            ]
                         )
 
                         logging.debug(f"ffmpeg command: {ffmpeg_command}")
@@ -299,7 +318,7 @@ def events_snapshots(self):
     self.statusbar.showMessage(f"Frames extracted in {export_dir}", 0)
 
 
-def extract_events(self):
+def extract_media_clips(self):
     """
     extract with FFmpeg sub-sequences from media files corresponding to coded events
     In case of point event, from -n to +n seconds are extracted (n is asked to user)
@@ -392,7 +411,7 @@ def extract_events(self):
     self.statusBar().showMessage("Extracting sequences from media files")
     QApplication.processEvents()
 
-    ffmpeg_extract_command: str = '"{ffmpeg_bin}" -ss {start} -i "{input_}" -y -t {duration} {codecs} '
+    ffmpeg_extract_command: str = '"{ffmpeg_bin}"-i "{input_}" -ss {start} -y -t {duration} {codecs} '
     mem_command: str = ""
     for obs_id in selected_observations:
         for nplayer in self.pj[cfg.OBSERVATIONS][obs_id][cfg.FILE]:

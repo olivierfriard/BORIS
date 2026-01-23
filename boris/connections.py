@@ -22,35 +22,34 @@ Copyright 2012-2026 Olivier Friard
 from PySide6.QtCore import Qt, QTimer
 from PySide6.QtGui import QAction
 
-from . import config as cfg
 from . import (
     about,
     behav_coding_map_creator,
     behavior_binary_table,
     behaviors_coding_map,
     coding_pad,
+    cooccurence,
     event_operations,
     events_snapshots,
     export_events,
+    external_processes,
     geometric_measurement,
     image_overlay,
     import_observations,
     irr,
     latency,
-    cooccurence,
     media_file,
     observation_operations,
     preferences,
+    project_functions,
     project_import_export,
     synthetic_time_budget,
     time_budget_widget,
     transitions,
     video_equalizer,
     video_operations,
-    project_functions,
-    external_processes,
 )
-
+from . import config as cfg
 from . import state_events as state_events
 
 
@@ -151,8 +150,8 @@ def connections(self):
     self.actionExport_events_as_Praat_TextGrid.triggered.connect(lambda: export_events.export_events_as_textgrid(self))
     self.actionJWatcher.triggered.connect(lambda: export_events.export_tabular_events(self, "jwatcher"))
 
-    self.actionExtract_events_from_media_files.triggered.connect(lambda: events_snapshots.extract_events(self))
-    self.actionExtract_frames_from_media_files.triggered.connect(lambda: events_snapshots.events_snapshots(self))
+    self.actionExtract_events_from_media_files.triggered.connect(lambda: events_snapshots.extract_media_clips(self))
+    self.actionExtract_frames_from_media_files.triggered.connect(lambda: events_snapshots.extract_media_snapshots(self))
 
     self.actionCohen_s_kappa.triggered.connect(lambda: irr.irr_cohen_kappa(self))
     self.actionNeedleman_Wunsch.triggered.connect(lambda: irr.needleman_wunch(self))

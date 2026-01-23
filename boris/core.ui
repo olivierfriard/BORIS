@@ -1015,7 +1015,7 @@
   </action>
   <action name="actionExtract_events_from_media_files">
    <property name="text">
-    <string>Extract sequences from media files</string>
+    <string>Extract clips from media files</string>
    </property>
   </action>
   <action name="action_geometric_measurements">

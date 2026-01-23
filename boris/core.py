@@ -25,8 +25,6 @@ import os
 import sys
 from pathlib import Path
 
-# os.environ["PATH"] = os.path.dirname(__file__) + os.sep + "misc" + os.pathsep + os.environ["PATH"]
-
 os.environ["PATH"] = str(Path(__file__).parent / "misc") + os.pathsep + os.environ["PATH"]
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), ".")))
 
@@ -431,7 +429,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.tv_events.setItemDelegate(events_cursor.StyledItemDelegateTriangle(self.events_current_row))
 
         connections.connections(self)
-        self.config_param = cfg.INIT_PARAM
+        self.config_param = dict(cfg.INIT_PARAM)
         config_file.read(self)
         menu_options.update_menu(self)
 
@@ -5866,8 +5864,8 @@ def main():
                 None,
                 cfg.programName,
                 ("The mpv command is not available on the path"),
-                QMessageBox.Ok | QMessageBox.Default,
-                QMessageBox.NoButton,
+                QMessageBox.StandardButton.Ok | QMessageBox.StandardButton.Default,
+                QMessageBox.StandardButton.NoButton,
             )
             sys.exit()
 
@@ -5876,8 +5874,8 @@ def main():
                 None,
                 cfg.programName,
                 ("This version of BORIS for macOS is still EXPERIMENTAL and should be used at your own risk."),
-                QMessageBox.Ok | QMessageBox.Default,
-                QMessageBox.NoButton,
+                QMessageBox.StandardButton.Ok | QMessageBox.StandardButton.Default,
+                QMessageBox.StandardButton.NoButton,
             )
 
     window.show()
@@ -5890,8 +5888,8 @@ def main():
                 None,
                 cfg.programName,
                 (f"Error opening observation: <b>{observation_to_open}</b><br>{r.split(':')[1]}"),
-                QMessageBox.Ok | QMessageBox.Default,
-                QMessageBox.NoButton,
+                QMessageBox.StandardButton.Ok | QMessageBox.StandardButton.Default,
+                QMessageBox.StandardButton.NoButton,
             )
 
     if not options.nosplashscreen and (sys.platform != "darwin"):

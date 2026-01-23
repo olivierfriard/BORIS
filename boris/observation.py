@@ -22,33 +22,32 @@ This file is part of BORIS.
 
 import logging
 import os
-import pandas as pd
 import pathlib as pl
 
+import pandas as pd
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QColor
 from PySide6.QtWidgets import (
-    QDialog,
-    QVBoxLayout,
-    QHBoxLayout,
-    QLabel,
-    QComboBox,
-    QPushButton,
-    QMessageBox,
-    QSpacerItem,
-    QSizePolicy,
-    QFileDialog,
-    QTableWidgetItem,
     QApplication,
-    QMenu,
-    QListWidgetItem,
+    QComboBox,
+    QDialog,
+    QFileDialog,
+    QHBoxLayout,
     QHeaderView,
+    QLabel,
+    QListWidgetItem,
+    QMenu,
+    QMessageBox,
+    QPushButton,
+    QSizePolicy,
+    QSpacerItem,
+    QTableWidgetItem,
+    QVBoxLayout,
 )
 
 from . import config as cfg
-from . import dialog, plot_data_module, project_functions
+from . import dialog, gui_utilities, plot_data_module, project_functions
 from . import utilities as util
-from . import gui_utilities
 from .observation_ui import Ui_Form
 
 
@@ -1266,7 +1265,7 @@ class Observation(QDialog, Ui_Form):
                 file_path = str(pl.Path(file_path).relative_to(pl.Path(self.project_path).parent))
 
             self.mediaDurations[file_path] = float(media_info["duration"])
-        elif media_info["has_video"] is False and media_info["audio_duration"]:
+        elif media_info["has_video"] is False and media_info["audio_duration"] and media_info["audio_duration"] != "NA":
             self.mediaDurations[file_path] = float(media_info["audio_duration"])
         else:
             return (True, "Media duration not available")

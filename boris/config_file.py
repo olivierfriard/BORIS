@@ -21,14 +21,14 @@ This file is part of BORIS.
 Read and write the BORIS config file
 """
 
-import pathlib as pl
 import logging
+import pathlib as pl
 import time
+
+from PySide6.QtCore import QByteArray, QSettings
 
 from . import config as cfg
 from . import dialog
-
-from PySide6.QtCore import QByteArray, QSettings
 
 
 def read(self):
@@ -36,12 +36,12 @@ def read(self):
     read config file
     """
 
-    ini_fil_p_pe_p_path = pl.Path.home() / pl.Path(".boris")
+    ini_file_path = pl.Path.home() / pl.Path(".boris")
 
-    logging.debug(f"read config file: {ini_fil_p_pe_p_path}")
+    logging.debug(f"read config file: {ini_file_path}")
 
-    if ini_fil_p_pe_p_path.is_file():
-        settings = QSettings(str(ini_fil_p_pe_p_path), QSettings.IniFormat)
+    if ini_file_path.is_file():
+        settings = QSettings(str(ini_file_path), QSettings.Format.IniFormat)
 
         try:
             self.config_param = settings.value("config")
@@ -280,7 +280,7 @@ def read(self):
                         "You can change this option in the"
                         " Preferences (File > Preferences)"
                     ),
-                    [cfg.NO, cfg.YES],
+                    (cfg.NO, cfg.YES),
                 )
                 == cfg.YES
             )
@@ -289,18 +289,17 @@ def read(self):
 
     # recent projects
     logging.debug("read recent projects")
+    self.recent_projects: list = []
     recent_projects_file_path = pl.Path.home() / ".boris_recent_projects"
     if recent_projects_file_path.is_file():
-        settings = QSettings(str(recent_projects_file_path), QSettings.IniFormat)
+        settings = QSettings(str(recent_projects_file_path), QSettings.Format.IniFormat)
         try:
             self.recent_projects = settings.value("recent_projects").split("|||")
             while "" in self.recent_projects:
                 self.recent_projects.remove("")
             self.set_recent_projects_menu()
         except Exception:
-            self.recent_projects = []
-    else:
-        self.recent_projects = []
+            pass
 
 
 def save(self, lastCheckForNewVersion=0):
@@ -312,7 +311,7 @@ def save(self, lastCheckForNewVersion=0):
 
     logging.debug(f"save config file: {file_path}")
 
-    settings = QSettings(str(file_path), QSettings.IniFormat)
+    settings = QSettings(str(file_path), QSettings.Format.IniFormat)
 
     settings.setValue("config", self.config_param)
 
