@@ -21,23 +21,28 @@ This file is part of BORIS.
 """
 
 import datetime as dt
-from decimal import Decimal as dec
 import logging
 import math
 import pathlib as pl
 import platform
 import sys
 import traceback
+from decimal import Decimal as dec
 from typing import Union
 
-from PySide6.QtCore import Qt, Signal, qVersion, QRect, QTime, QDateTime, QSize
+from PySide6.QtCore import QDateTime, QRect, QSize, Qt, QTime, Signal, qVersion
+from PySide6.QtGui import QFont, QTextCursor
 from PySide6.QtWidgets import (
-    QApplication,
     QAbstractItemView,
+    QAbstractSpinBox,
+    QApplication,
     QCheckBox,
     QComboBox,
+    QDateTimeEdit,
     QDialog,
+    QDoubleSpinBox,
     QFileDialog,
+    QFrame,
     QHBoxLayout,
     QLabel,
     QLineEdit,
@@ -46,26 +51,21 @@ from PySide6.QtWidgets import (
     QMessageBox,
     QPlainTextEdit,
     QPushButton,
+    QRadioButton,
     QSizePolicy,
     QSpacerItem,
     QSpinBox,
-    QDoubleSpinBox,
+    QStackedWidget,
     QTableView,
     QTableWidget,
+    QTimeEdit,
     QVBoxLayout,
     QWidget,
-    QDateTimeEdit,
-    QTimeEdit,
-    QAbstractSpinBox,
-    QRadioButton,
-    QStackedWidget,
-    QFrame,
 )
-from PySide6.QtGui import QFont, QTextCursor
 
 from . import config as cfg
-from . import version
 from . import utilities as util
+from . import version
 
 
 def MessageDialog(title: str, text: str, buttons: tuple) -> str:
@@ -538,8 +538,8 @@ class Video_overlay_dialog(QDialog):
                 None,
                 cfg.programName,
                 "Select a file containing a PNG image",
-                QMessageBox.Ok | QMessageBox.Default,
-                QMessageBox.NoButton,
+                QMessageBox.StandardButton.Ok | QMessageBox.StandardButton.Default,
+                QMessageBox.StandardButton.NoButton,
             )
             return
 
@@ -548,8 +548,8 @@ class Video_overlay_dialog(QDialog):
                 None,
                 cfg.programName,
                 "The overlay position must be in x,y format",
-                QMessageBox.Ok | QMessageBox.Default,
-                QMessageBox.NoButton,
+                QMessageBox.StandardButton.Ok | QMessageBox.StandardButton.Default,
+                QMessageBox.StandardButton.NoButton,
             )
             return
         if self.le_overlay_position.text():
@@ -560,8 +560,8 @@ class Video_overlay_dialog(QDialog):
                     None,
                     cfg.programName,
                     "The overlay position must be in x,y format",
-                    QMessageBox.Ok | QMessageBox.Default,
-                    QMessageBox.NoButton,
+                    QMessageBox.StandardButton.Ok | QMessageBox.StandardButton.Default,
+                    QMessageBox.StandardButton.NoButton,
                 )
                 return
         self.accept()
@@ -590,18 +590,18 @@ class Input_dialog(QDialog):
 
         self.elements: dict = {}
         for element in elements_list:
-            if element[0] == "cb":  # checkbox
+            if element[0] == cfg.CHECKBOX:
                 self.elements[element[1]] = QCheckBox(element[1])
                 self.elements[element[1]].setChecked(element[2])
                 hbox.addWidget(self.elements[element[1]])
 
-            if element[0] == "le":  # line edit
+            if element[0] == cfg.LINE_EDIT:
                 lb = QLabel(element[1])
                 hbox.addWidget(lb)
                 self.elements[element[1]] = QLineEdit()
                 hbox.addWidget(self.elements[element[1]])
 
-            if element[0] == "sb":  # spinbox
+            if element[0] == cfg.SPINBOX:
                 # 1 - Label
                 # 2 - minimum value
                 # 3 - maximum value
@@ -616,7 +616,7 @@ class Input_dialog(QDialog):
                 self.elements[element[1]].setValue(element[5])
                 hbox.addWidget(self.elements[element[1]])
 
-            if element[0] == "dsb":  # doubleSpinbox
+            if element[0] == cfg.DOUBLE_SPINBOX:
                 # 1 - Label
                 # 2 - minimum value
                 # 3 - maximum value
@@ -633,7 +633,7 @@ class Input_dialog(QDialog):
                 self.elements[element[1]].setDecimals(element[6])
                 hbox.addWidget(self.elements[element[1]])
 
-            if element[0] == "il":  # items list
+            if element[0] == cfg.ITEMS_LIST:
                 # 1 - Label
                 # 2 - Values (tuple of tuple: 0 - value; 1 - "", "selected")
                 lb = QLabel(element[1])

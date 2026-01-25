@@ -26,7 +26,8 @@ import pathlib as pl
 import subprocess
 from decimal import Decimal as dec
 
-from PySide6.QtWidgets import QApplication, QFileDialog, QInputDialog, QMessageBox
+from PySide6.QtCore import QProcess
+from PySide6.QtWidgets import QApplication, QFileDialog
 
 from . import config as cfg
 from . import db_functions, dialog, project_functions, select_observations, select_subj_behav
@@ -92,9 +93,9 @@ def extract_media_snapshots(self):
     ib = dialog.Input_dialog(
         label_caption="Choose parameters",
         elements_list=[
-            ("dsb", "Time interval around the events (in seconds)", 0.0, 86400, 1, 0, 3),
+            (cfg.DOUBLE_SPINBOX, "Time interval around the events (in seconds)", 0.0, 86400, 1, 0, 3),
             (
-                "il",
+                cfg.ITEMS_LIST,
                 "Bitmap format",
                 (
                     ("JPG - small size / low quality", ""),
@@ -324,6 +325,9 @@ def extract_media_clips(self):
     In case of point event, from -n to +n seconds are extracted (n is asked to user)
     """
 
+    # def on_finished(self, exit_code, exit_status):
+    #    self.statusbar.showMessage("Media sequences extracted", 0)
+
     _, selected_observations = select_observations.select_observations2(
         self, cfg.MULTIPLE, windows_title="Select observations for extracting events"
     )
@@ -370,26 +374,46 @@ def extract_media_clips(self):
         return
 
     if not parameters[cfg.SELECTED_SUBJECTS] or not parameters[cfg.SELECTED_BEHAVIORS]:
-        QMessageBox.warning(None, cfg.programName, "Select subject(s) and behavior(s) to analyze")
         return
+
+    ib = dialog.Input_dialog(
+        label_caption="Choose parameters",
+        elements_list=[
+            (cfg.DOUBLE_SPINBOX, "Time interval around the events (in seconds)", 0.0, 86400, 1, 0, 3),
+            (
+                cfg.ITEMS_LIST,
+                "Tracks to extract",
+                (
+                    ("Video and audio", ""),
+                    ("Only video", ""),
+                    ("Only audio", ""),
+                ),
+            ),
+        ],
+        title="Extract clips",
+    )
+    if not ib.exec_():
+        return
+
+    timeOffset = util.float2decimal(ib.elements["Time interval around the events (in seconds)"].value())
+    items_to_extract = ib.elements["Tracks to extract"].currentText()
 
     # Ask for time interval around the event
-    while True:
-        text, ok = QInputDialog.getDouble(self, "Time interval around the events", "Time (in seconds):", 0.0, 0.0, 86400, 1)
-        if not ok:
-            return
-        try:
-            timeOffset = util.float2decimal(text)
-            break
-        except Exception:
-            QMessageBox.warning(self, cfg.programName, f"<b>{text}</b> is not recognized as time")
-
-    # ask for video / audio extraction
-    items_to_extract, ok = QInputDialog.getItem(
-        self, "Tracks to extract", "Tracks", ("Video and audio", "Only video", "Only audio"), 0, False
-    )
-    if not ok:
-        return
+    # while True:
+    #    text, ok = QInputDialog.getDouble(self, "Time interval around the events", "Time (in seconds):", 0.0, 0.0, 86400, 1)
+    #    if not ok:
+    #        return
+    #    try:
+    #        timeOffset = util.float2decimal(text)
+    #        break
+    #    except Exception:
+    #        QMessageBox.warning(self, cfg.programName, f"<b>{text}</b> is not recognized as time")
+    ## ask for video / audio extraction
+    # items_to_extract, ok = QInputDialog.getItem(
+    #    self, "Tracks to extract", "Tracks", ("Video and audio", "Only video", "Only audio"), 0, False
+    # )
+    # if not ok:
+    #    return
 
     export_dir = QFileDialog.getExistingDirectory(
         self,
@@ -411,7 +435,7 @@ def extract_media_clips(self):
     self.statusBar().showMessage("Extracting sequences from media files")
     QApplication.processEvents()
 
-    ffmpeg_extract_command: str = '"{ffmpeg_bin}"-i "{input_}" -ss {start} -y -t {duration} {codecs} '
+    ffmpeg_extract_command: str = '"{ffmpeg_bin}" -i "{input_}" -ss {start} -y -t {duration} {codecs} '
     mem_command: str = ""
     for obs_id in selected_observations:
         for nplayer in self.pj[cfg.OBSERVATIONS][obs_id][cfg.FILE]:
@@ -608,6 +632,13 @@ def extract_media_clips(self):
                         )
 
                         logging.debug(f'ffmpeg command: {ffmpeg_command} "{new_file_name}"')
+
+                        # run ffmpeg command non blocking UI
+                        # self.process = QProcess(self)
+                        # self.process.readyReadStandardOutput.connect(self.on_stdout)
+                        # self.process.readyReadStandardError.connect(self.on_stderr)
+                        # self.process.finished.connect(on_finished)
+                        # self.process.start(ffmpeg_command, [str(new_file_name)])
 
                         p = subprocess.Popen(
                             f'{ffmpeg_command} "{new_file_name}"',

@@ -494,6 +494,13 @@ FRAME_DEFAULT_CACHE_SIZE = 1
 
 EXCLUDED = "excluded"
 
+# codes for Input_dialog class
+CHECKBOX = "cb"
+LINE_EDIT = "le"
+SPINBOX = "sb"
+DOUBLE_SPINBOX = "dsb"
+ITEMS_LIST = "il"
+
 # modifiers
 MODIFIERS = "modifiers"
 SINGLE_SELECTION = 0
