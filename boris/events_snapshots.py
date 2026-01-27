@@ -475,9 +475,9 @@ def extract_media_clips(self):
                                     dialog.MessageDialog(
                                         cfg.programName,
                                         f"The media file {self.pj[cfg.OBSERVATIONS][obs_id][cfg.FILE][nplayer][mediaFileIdx]} does not have a video stream",
-                                        ("Continue", "Abort"),
+                                        ("Continue", cfg.ABORT),
                                     )
-                                    == "Abort"
+                                    == cfg.ABORT
                                 ):
                                     return
                                 else:

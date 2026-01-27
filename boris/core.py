@@ -1966,11 +1966,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                             answer = dialog.MessageDialog(
                                 cfg.programName,
                                 f"The file {Path(output_dir) / file_name.with_suffix('.jpg')} already exists.",
-                                (cfg.CANCEL, cfg.OVERWRITE, "Abort"),
+                                (cfg.CANCEL, cfg.OVERWRITE, cfg.ABORT),
                             )
                             if answer == cfg.CANCEL:
                                 continue
-                            if answer == "Abort":
+                            if answer == cfg.ABORT:
                                 return
 
                         pixmap.save(str(Path(output_dir) / file_name.with_suffix(".jpg")), "JPG")
@@ -3217,7 +3217,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                         "can unvalidate your previous observations.<br>"
                         "Remember to make a backup of your project."
                     ),
-                    [cfg.CANCEL, "Edit"],
+                    (cfg.CANCEL, "Edit"),
                 )
                 == cfg.CANCEL
             ):
@@ -4875,10 +4875,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         # play / pause with space bar
         if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE] == cfg.LIVE:
             # if ek in (Qt.Key_Space, Qt.Key_Enter, Qt.Key_Return):
-            if ek == Qt.Key_Space:
+            if ek == Qt.Key.Key_Space:
                 if self.liveObservationStarted:
                     if (
-                        dialog.MessageDialog(cfg.programName, "Are you sure to stop the current live observation?", [cfg.YES, cfg.NO])
+                        dialog.MessageDialog(cfg.programName, "Are you sure to stop the current live observation?", (cfg.YES, cfg.NO))
                         == cfg.YES
                     ):
                         self.start_live_observation()
@@ -4888,22 +4888,22 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE] == cfg.MEDIA:
             # speed down
-            if ek == Qt.Key_End:
+            if ek == Qt.Key.Key_End:
                 video_operations.video_slower_activated(self)
                 return
 
             # speed up
-            if ek == Qt.Key_Home:
+            if ek == Qt.Key.Key_Home:
                 video_operations.video_faster_activated(self)
                 return
 
             # speed normal
-            if ek == Qt.Key_Backspace:
+            if ek == Qt.Key.Key_Backspace:
                 video_operations.video_normalspeed_activated(self)
                 return
 
             # play / pause with space bar
-            if ek == Qt.Key_Space:
+            if ek == Qt.Key.Key_Space:
                 if flagPlayerPlaying:
                     self.pause_video()
                 else:
@@ -4911,12 +4911,12 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 return
 
             #  jump backward
-            if modifier != cfg.CTRL_KEY and ek == Qt.Key_Down:
+            if modifier != cfg.CTRL_KEY and ek == Qt.Key.Key_Down:
                 self.jumpBackward_activated()
                 return
 
             # jump forward
-            if modifier != cfg.CTRL_KEY and ek == Qt.Key_Up:
+            if modifier != cfg.CTRL_KEY and ek == Qt.Key.Key_Up:
                 self.jumpForward_activated()
                 return
 
@@ -4927,23 +4927,23 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     self.dw_player[self.current_player].player.video_pan_x = 0
                     self.dw_player[self.current_player].player.video_pan_y = 0
                 zoom_step = 0.1
-                if ek == Qt.Key_Plus:  # zoom in with minus key
+                if ek == Qt.Key.Key_Plus:  # zoom in with minus key
                     self.dw_player[self.current_player].player.video_zoom += zoom_step
-                if ek == Qt.Key_Minus:  # zoom out with plus key
+                if ek == Qt.Key.Key_Minus:  # zoom out with plus key
                     self.dw_player[self.current_player].player.video_zoom -= zoom_step
 
                 # video pan
                 pan_step = 0.05
-                if ek == Qt.Key_Left:
+                if ek == Qt.Key.Key_Left:
                     self.dw_player[self.current_player].player.video_pan_x -= pan_step
-                if ek == Qt.Key_Right:
+                if ek == Qt.Key.Key_Right:
                     self.dw_player[self.current_player].player.video_pan_x += pan_step
-                if ek == Qt.Key_Up:
+                if ek == Qt.Key.Key_Up:
                     self.dw_player[self.current_player].player.video_pan_y -= pan_step
-                if ek == Qt.Key_Down:
+                if ek == Qt.Key.Key_Down:
                     self.dw_player[self.current_player].player.video_pan_y += pan_step
 
-                if ek in (48, Qt.Key_Plus, Qt.Key_Minus, Qt.Key_Left, Qt.Key_Right, Qt.Key_Up, Qt.Key_Down):
+                if ek in (48, Qt.Key.Key_Plus, Qt.Key.Key_Minus, Qt.Key.Key_Left, Qt.Key.Key_Right, Qt.Key.Key_Up, Qt.Key.Key_Down):
                     self.update_project_zoom_pan_values()
 
         # frame-by-frame mode

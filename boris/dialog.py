@@ -24,13 +24,12 @@ import datetime as dt
 import logging
 import math
 import pathlib as pl
-import platform
 import sys
 import traceback
 from decimal import Decimal as dec
 from typing import Union
 
-from PySide6.QtCore import QDateTime, QRect, QSize, Qt, QTime, Signal, qVersion
+from PySide6.QtCore import QDateTime, QRect, QSize, Qt, QTime, Signal
 from PySide6.QtGui import QFont, QTextCursor
 from PySide6.QtWidgets import (
     QAbstractItemView,
@@ -65,7 +64,6 @@ from PySide6.QtWidgets import (
 
 from . import config as cfg
 from . import utilities as util
-from . import version
 
 
 def MessageDialog(title: str, text: str, buttons: tuple) -> str:
@@ -130,7 +128,7 @@ def global_error_message(exception_type, exception_value, traceback_object):
     errorbox = Results_dialog()
 
     errorbox.setWindowTitle("BORIS - An error occured")
-    errorbox.pbOK.setText("Abort")
+    errorbox.pbOK.setText(cfg.ABORT)
     errorbox.pbCancel.setVisible(True)
     errorbox.pbCancel.setText("Ignore and try to continue")
 
@@ -372,8 +370,8 @@ class get_time_widget(QWidget):
                     None,
                     cfg.programName,
                     f"The value of seconds ({self.le_seconds.text()}) is not a decimal number",
-                    QMessageBox.Ok | QMessageBox.Default,
-                    QMessageBox.NoButton,
+                    QMessageBox.StandardButton.Ok | QMessageBox.StandardButton.Default,
+                    QMessageBox.StandardButton.NoButton,
                 )
                 return dec("NaN")
 
@@ -463,8 +461,8 @@ class Ask_time(QDialog):
                 None,
                 cfg.programName,
                 "Select an option",
-                QMessageBox.Ok | QMessageBox.Default,
-                QMessageBox.NoButton,
+                QMessageBox.StandardButton.Ok | QMessageBox.StandardButton.Default,
+                QMessageBox.StandardButton.NoButton,
             )
             return
         # test time value
