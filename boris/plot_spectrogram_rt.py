@@ -3,45 +3,46 @@ BORIS
 Behavioral Observation Research Interactive Software
 Copyright 2012-2026 Olivier Friard
 
+This file is part of BORIS.
 
-  This program is free software; you can redistribute it and/or modify
+  BORIS is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
-  the Free Software Foundation; either version 2 of the License, or
-  (at your option) any later version.
+  the Free Software Foundation; either version 3 of the License, or
+  any later version.
 
-  This program is distributed in the hope that it will be useful,
+  BORIS is distributed in the hope that it will be useful,
   but WITHOUT ANY WARRANTY; without even the implied warranty of
   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
   GNU General Public License for more details.
 
   You should have received a copy of the GNU General Public License
-  along with this program; if not, write to the Free Software
-  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
-  MA 02110-1301, USA.
+  along with this program; if not see <http://www.gnu.org/licenses/>.
 
 """
 
 import wave
+
 import matplotlib
 
 matplotlib.use("QtAgg")
 
-import numpy as np
-from scipy import signal
-from . import config as cfg
 
-from PySide6.QtWidgets import (
-    QWidget,
-    QVBoxLayout,
-    QHBoxLayout,
-    QPushButton,
-    QLabel,
-    QSpinBox,
-)
-from PySide6.QtCore import Signal, QEvent, Qt
+import matplotlib.ticker as mticker
+import numpy as np
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.figure import Figure
-import matplotlib.ticker as mticker
+from PySide6.QtCore import QEvent, Qt, Signal
+from PySide6.QtWidgets import (
+    QHBoxLayout,
+    QLabel,
+    QPushButton,
+    QSpinBox,
+    QVBoxLayout,
+    QWidget,
+)
+from scipy import signal
+
+from . import config as cfg
 
 
 class Plot_spectrogram_RT(QWidget):
@@ -129,7 +130,6 @@ class Plot_spectrogram_RT(QWidget):
         try:
             wav = wave.open(wav_file, "r")
             frames = wav.readframes(-1)
-            # sound_info = np.fromstring(frames, dtype=np.int16)
             sound_info = np.frombuffer(frames, dtype=np.int16)
             frame_rate = wav.getframerate()
             wav.close()
@@ -193,6 +193,7 @@ class Plot_spectrogram_RT(QWidget):
         """
 
         def spectrogram(self, x, window_type, nfft, noverlap, vmin, vmax) -> None:
+            # default value
             window = matplotlib.mlab.window_hanning
 
             if window_type == "hanning":
@@ -282,6 +283,14 @@ class Plot_spectrogram_RT(QWidget):
 
             # cursor
             self.ax.axvline(x=self.interval / 2, color=self.cursor_color, linestyle="-")
+
+        # add minor ticks
+        # self.ax.xaxis.set_minor_locator(mticker.AutoMinorLocator(2))
+        # self.ax.tick_params(axis="x", which="minor", length=3)
+
+        t_max = self.ax.get_xlim()[1]
+        print(f"{t_max=}")
+        self.ax.set_xticks(np.arange(0, t_max, 0.5))
 
         self.ax.set_ylim(self.sb_freq_min.value(), self.sb_freq_max.value())
 

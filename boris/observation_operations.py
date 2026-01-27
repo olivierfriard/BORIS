@@ -19,50 +19,50 @@ Copyright 2012-2026 Olivier Friard
   MA 02110-1301, USA.
 """
 
-import logging
-from collections import deque
 import datetime as dt
-from decimal import Decimal as dec
 import json
-from math import log2, floor
+import logging
 import os
-from pathlib import Path
 import socket
 import subprocess
 import sys
 import tempfile
 import time
-from typing import List, Tuple, Optional
-
-
-from PySide6.QtWidgets import (
-    QMessageBox,
-    QFileDialog,
-    QDateTimeEdit,
-    QComboBox,
-    QTableWidgetItem,
-    QSlider,
-    QMainWindow,
-    QDockWidget,
-    QWidget,
-)
-from PySide6.QtCore import Qt, QDateTime, QTimer
-from PySide6.QtGui import QFont, QIcon, QTextCursor
+from collections import deque
+from decimal import Decimal as dec
+from math import floor, log2
+from pathlib import Path
+from typing import List, Optional, Tuple
 
 from PySide6 import QtTest
+from PySide6.QtCore import QDateTime, Qt, QTimer
+from PySide6.QtGui import QFont, QIcon, QTextCursor
+from PySide6.QtWidgets import (
+    QComboBox,
+    QDateTimeEdit,
+    QDockWidget,
+    QFileDialog,
+    QMainWindow,
+    QMessageBox,
+    QSlider,
+    QTableWidgetItem,
+    QWidget,
+)
 
-from . import menu_options
 from . import config as cfg
-from . import dialog
-from . import select_observations
-from . import project_functions
-from . import observation
+from . import (
+    dialog,
+    gui_utilities,
+    menu_options,
+    observation,
+    player_dock_widget,
+    plot_data_module,
+    project_functions,
+    select_observations,
+    state_events,
+    video_operations,
+)
 from . import utilities as util
-from . import plot_data_module
-from . import player_dock_widget
-from . import gui_utilities
-from . import video_operations
-from . import state_events
 
 
 def export_observations_list_clicked(self):
@@ -1344,8 +1344,8 @@ def initialize_new_media_observation(self) -> bool:
                 "Modify the media path to point an existing media file "
                 "to log events or copy media file in the BORIS project directory."
             ),
-            QMessageBox.Ok | QMessageBox.Default,
-            QMessageBox.NoButton,
+            QMessageBox.StandardButton.Ok | QMessageBox.StandardButton.Default,
+            QMessageBox.StandardButton.NoButton,
         )
         self.playerType = cfg.VIEWER_MEDIA
         return True
@@ -1855,7 +1855,6 @@ def initialize_new_media_observation(self) -> bool:
             # start timer for activating the main window
             self.main_window_activation_timer = QTimer()
             self.main_window_activation_timer.setInterval(500)
-            # self.main_window_activation_timer.timeout.connect(self.activateWindow)
             self.main_window_activation_timer.timeout.connect(self.activate_main_window)
             self.main_window_activation_timer.start()
 

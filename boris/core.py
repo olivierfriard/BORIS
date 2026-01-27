@@ -4155,14 +4155,13 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         called only in IPC mode
         """
         # check if eof reached
-        # print(f"{self.dw_player[0].player.playlist_pos=}")
-        # print(f"{self.dw_player[0].player.playlist_count=}")
         if self.dw_player[0].player.eof_reached and self.dw_player[0].player.core_idle:
             logging.debug("end of playlist reached")
             if self.dw_player[0].player.playlist_pos is not None and self.dw_player[0].player.playlist_count is not None:
                 if self.dw_player[0].player.playlist_pos == self.dw_player[0].player.playlist_count - 1:
                     self.pause_video()
-        self.activateWindow()
+        # disabled because not usable
+        # self.activateWindow()
 
     def mpv_timer_out(self, value: float | None = None, scroll_slider=True):
         """
@@ -5393,7 +5392,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 dialog.MessageDialog(
                     cfg.programName,
                     f"{self.find_replace_dialog.findText.text()} not found.\nRestart find/replace from the beginning?",
-                    [cfg.YES, cfg.NO],
+                    (cfg.YES, cfg.NO),
                 )
                 == cfg.YES
             ):
@@ -5728,14 +5727,6 @@ def main():
                 10000,
             )  # time out
 
-            # if (not options.nosplashscreen):
-            #     QMessageBox.warning(
-            #         None,
-            #         cfg.programName,
-            #         "FFmpeg is not available.<br>It will be downloaded from the BORIS GitHub repository",
-            #         QMessageBox.Ok | QMessageBox.Default,
-            #         QMessageBox.NoButton,
-            #     )
             logging.info("FFmpeg is not available. It will be downloaded from the BORIS GitHub repository")
 
             # download ffmpeg and ffprobe from https://github.com/boris-behav-obs/boris-behav-obs.github.io/releases/download/files/
@@ -5761,8 +5752,8 @@ def main():
                         None,
                         cfg.programName,
                         "The FFmpeg program can not be downloaded!\nCheck your connection.",
-                        QMessageBox.Ok | QMessageBox.Default,
-                        QMessageBox.NoButton,
+                        QMessageBox.StandardButton.Ok | QMessageBox.StandardButton.Default,
+                        QMessageBox.StandardButton.NoButton,
                     )
                     sys.exit(3)
 
