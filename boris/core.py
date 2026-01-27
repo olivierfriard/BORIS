@@ -237,7 +237,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     observationId: str = ""  # current observation id
     timeOffset: float = 0.0
     confirmSound: bool = False  # if True each keypress will be confirmed by a beep
-    spectrogramHeight: int = 80
+    spectro: dict = {}
     spectrogram_time_interval = cfg.SPECTROGRAM_DEFAULT_TIME_INTERVAL
     spectrogram_color_map = cfg.SPECTROGRAM_DEFAULT_COLOR_MAP
     alertNoFocalSubject: bool = False  # if True an alert will show up if no focal subject
@@ -966,12 +966,12 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             return
 
         if plot_type == cfg.SPECTROGRAM_PLOT:
-            if hasattr(self, "spectro"):
+            if self.spectro:  # dict not empty
                 if "display" in self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO]:
-                    for widget in self.spectro:
-                        widget.show()
+                    for player in self.spectro:
+                        self.spectro[player].show()
                 else:
-                    self.spectro.show()
+                    self.spectro[cfg.PLAYER1].show()
             else:
                 logging.debug("create spectrogram plot")
 
@@ -1031,23 +1031,22 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                         / Path(self.dw_player[0].player.playlist[self.dw_player[0].player.playlist_pos]["filename"] + ".wav").name
                     )
 
-                    self.spectro = plot_spectrogram_rt.Plot_spectrogram_RT()
-
-                    self.spectro.setWindowFlags(Qt.WindowType.WindowStaysOnTopHint)
-                    self.spectro.setWindowFlags(self.spectro.windowFlags() & ~Qt.WindowType.WindowMinimizeButtonHint)
-
-                    self.spectro.interval = self.spectrogram_time_interval
-                    self.spectro.cursor_color = cfg.REALTIME_PLOT_CURSOR_COLOR
-
-                    self.spectro.config_param = self.config_param
+                    self.spectro[cfg.PLAYER1] = plot_spectrogram_rt.Plot_spectrogram_RT()
+                    self.spectro[cfg.PLAYER1].setWindowFlags(Qt.WindowType.WindowStaysOnTopHint)
+                    self.spectro[cfg.PLAYER1].setWindowFlags(
+                        self.spectro[cfg.PLAYER1].windowFlags() & ~Qt.WindowType.WindowMinimizeButtonHint
+                    )
+                    self.spectro[cfg.PLAYER1].interval = self.spectrogram_time_interval
+                    self.spectro[cfg.PLAYER1].cursor_color = cfg.REALTIME_PLOT_CURSOR_COLOR
+                    self.spectro[cfg.PLAYER1].config_param = self.config_param
 
                     # color palette
                     try:
-                        self.spectro.spectro_color_map = pyplot.get_cmap(self.spectrogram_color_map)
+                        self.spectro[cfg.PLAYER1].spectro_color_map = pyplot.get_cmap(self.spectrogram_color_map)
                     except ValueError:
-                        self.spectro.spectro_color_map = pyplot.get_cmap("viridis")
+                        self.spectro[cfg.PLAYER1].spectro_color_map = pyplot.get_cmap("viridis")
 
-                    r = self.spectro.load_wav(str(wav_file_path))
+                    r = self.spectro[cfg.PLAYER1].load_wav(str(wav_file_path))
                     if "error" in r:
                         logging.warning(f"spectro_load_wav error: {r['error']}")
                         QMessageBox.warning(
@@ -1057,14 +1056,14 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                             QMessageBox.StandardButton.Ok,
                             QMessageBox.StandardButton.NoButton,
                         )
-                        del self.spectro
+                        del self.spectro[cfg.PLAYER1]
                         return
 
                 self.pj[cfg.OBSERVATIONS][self.observationId][cfg.VISUALIZE_SPECTROGRAM] = True
-                self.spectro.sendEvent.connect(self.signal_from_widget)
-                self.spectro.sb_freq_min.setValue(0)
-                self.spectro.sb_freq_max.setValue(int(self.spectro.frame_rate / 2))
-                self.spectro.show()
+                self.spectro[cfg.PLAYER1].sendEvent.connect(self.signal_from_widget)
+                self.spectro[cfg.PLAYER1].sb_freq_min.setValue(0)
+                self.spectro[cfg.PLAYER1].sb_freq_max.setValue(int(self.spectro[cfg.PLAYER1].frame_rate / 2))
+                self.spectro[cfg.PLAYER1].show()
 
                 self.plot_timer_out()
 
@@ -1251,18 +1250,30 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         # spectrogram
         if self.pj[cfg.OBSERVATIONS][self.observationId].get(cfg.VISUALIZE_SPECTROGRAM, False):
-            if not hasattr(self, "spectro"):
+            if not self.spectro:
                 return
 
-            if not self.spectro.visibleRegion().isEmpty():
-                if self.spectro.wav_file_path == wav_file_path:
-                    self.spectro.plot_spectro(current_media_time, window_title=f"Spectrogram of {self.mem_media_name}")
+            if not self.spectro[cfg.PLAYER1].visibleRegion().isEmpty():
+                if self.spectro[cfg.PLAYER1].wav_file_path == wav_file_path:
+                    self.spectro[cfg.PLAYER1].plot_spectro(current_media_time, window_title=f"Spectrogram of {self.mem_media_name}")
                 else:
-                    r = self.spectro.load_wav(wav_file_path)
+                    r = self.spectro[cfg.PLAYER1].load_wav(wav_file_path)
                     if "error" not in r:
-                        self.spectro.plot_spectro(current_media_time, window_title=f"Spectrogram of {self.mem_media_name}")
+                        self.spectro[cfg.PLAYER1].plot_spectro(current_media_time, window_title=f"Spectrogram of {self.mem_media_name}")
                     else:
-                        logging.warning("spectro_load_wav error: {}".format(r["error"]))
+                        logging.warning(f"spectro_load_wav error: {r['error']}")
+
+        if "display" in self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO]:
+            for player in self.spectro:
+                if not self.spectro[player].visibleRegion().isEmpty():
+                    if self.spectro[player].wav_file_path == wav_file_path:
+                        self.spectro[player].plot_spectro(current_media_time, window_title=f"Spectrogram of {self.mem_media_name}")
+                    else:
+                        r = self.spectro[player].load_wav(wav_file_path)
+                        if "error" not in r:
+                            self.spectro[player].plot_spectro(current_media_time, window_title=f"Spectrogram of {self.mem_media_name}")
+                        else:
+                            logging.warning(f"spectro_load_wav error: {r['error']}")
 
     def show_data_files(self):
         """
@@ -1528,8 +1539,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 self.seek_mediaplayer(dec(0))
                 # self.statusbar.showMessage("There is only one media file", 5000)
 
-            if hasattr(self, "spectro"):
-                self.spectro.memChunk = -1
+            if self.spectro:
+                if self.pj[cfg.OBSERVATIONS][self.observationId].get(cfg.VISUALIZE_SPECTROGRAM, False):
+                    self.spectro[cfg.PLAYER1].memChunk = -1
 
         if self.playerType == cfg.IMAGES:
             if len(self.pj[cfg.OBSERVATIONS][self.observationId].get(cfg.DIRECTORIES_LIST, [])) <= 1:
@@ -1576,8 +1588,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
             self.update_visualizations()
 
-            if hasattr(self, "spectro"):
-                self.spectro.memChunk = -1
+            if self.spectro:
+                if self.pj[cfg.OBSERVATIONS][self.observationId].get(cfg.VISUALIZE_SPECTROGRAM, False):
+                    self.spectro[cfg.PLAYER1].memChunk = -1
 
         if self.playerType == cfg.IMAGES:
             if len(self.pj[cfg.OBSERVATIONS][self.observationId].get(cfg.DIRECTORIES_LIST, [])) <= 1:
@@ -2379,12 +2392,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             except Exception:
                 logging.warning("Error closing subjects pad window")
 
-        if hasattr(self, "spectro"):
-            try:
-                self.spectro.close()
-                del self.spectro
-            except Exception:
-                logging.warning("Error closing spectrogram window")
+        for player in self.spectro:
+            self.spectro[player].close()
 
         if hasattr(self, "waveform"):
             try:

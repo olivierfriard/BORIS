@@ -216,9 +216,6 @@ def read(self) -> None:
             self.ffmpeg_cache_dir = ""
         logging.debug(f"ffmpeg_cache_dir: {self.ffmpeg_cache_dir}")
 
-        # spectrogram
-        self.spectrogramHeight = 80
-
         try:
             self.spectrogram_color_map = settings.value("spectrogram_color_map")
             if self.spectrogram_color_map is None:

@@ -26,7 +26,6 @@ import pathlib as pl
 import subprocess
 from decimal import Decimal as dec
 
-from PySide6.QtCore import QProcess
 from PySide6.QtWidgets import QApplication, QFileDialog
 
 from . import config as cfg
