@@ -58,9 +58,7 @@ class Ui_Form(object):
 
         self.horizontalLayout_2.addItem(self.horizontalSpacer)
 
-
         self.horizontalLayout_3.addLayout(self.horizontalLayout_2)
-
 
         self.verticalLayout.addLayout(self.horizontalLayout_3)
 
@@ -230,4 +228,3 @@ class Ui_Form(object):
         self.pbCancel.setText(QCoreApplication.translate("Form", u"Cancel", None))
         self.pbOK.setText(QCoreApplication.translate("Form", u"OK", None))
     # retranslateUi
-
