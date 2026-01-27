@@ -685,7 +685,6 @@ def new_observation(self, mode: str = cfg.NEW, obsId: str = "") -> None:
 
     if mode == cfg.EDIT:
         observationWindow.setWindowTitle(f'Edit observation "{obsId}"')
-        """mem_obs_id = obsId"""
         observationWindow.leObservationId.setText(obsId)
 
         # check date format for old versions of BORIS app
@@ -695,8 +694,6 @@ def new_observation(self, mode: str = cfg.NEW, obsId: str = "") -> None:
             logging.info("Old observation date/time format was converted")
         except ValueError:
             pass
-
-        # print(f"{self.pj[cfg.OBSERVATIONS][obsId]['date']=}")
 
         # test new date (with msec)
         if len(self.pj[cfg.OBSERVATIONS][obsId]["date"]) == len("yyyy-MM-ddThh:mm:ss.zzz"):
@@ -754,33 +751,42 @@ def new_observation(self, mode: str = cfg.NEW, obsId: str = "") -> None:
                         except Exception:
                             observationWindow.twVideo1.setItem(observationWindow.twVideo1.rowCount() - 1, 1, QTableWidgetItem("0.0"))
 
+                        # display
+                        combobox_display = QComboBox()
+                        combobox_display.addItems(cfg.DISPLAY_FROM_MEDIA)
+                        combobox_display.setCurrentText(
+                            self.pj[cfg.OBSERVATIONS][obsId][cfg.MEDIA_INFO].get("display", {}).get(player, "None")
+                        )
+                        observationWindow.twVideo1.setCellWidget(observationWindow.twVideo1.rowCount() - 1, 2, combobox_display)
+
+                        # media file path
                         item = QTableWidgetItem(mediaFile)
-                        item.setFlags(Qt.ItemIsEnabled | Qt.ItemIsSelectable)
-                        observationWindow.twVideo1.setItem(observationWindow.twVideo1.rowCount() - 1, 2, item)
+                        item.setFlags(Qt.ItemFlag.ItemIsEnabled | Qt.ItemFlag.ItemIsSelectable)
+                        observationWindow.twVideo1.setItem(observationWindow.twVideo1.rowCount() - 1, 3, item)
 
                         # duration and FPS
                         try:
                             item = QTableWidgetItem(
                                 util.seconds2time(self.pj[cfg.OBSERVATIONS][obsId][cfg.MEDIA_INFO][cfg.LENGTH][mediaFile])
                             )
-                            item.setFlags(Qt.ItemIsEnabled | Qt.ItemIsSelectable)
-                            observationWindow.twVideo1.setItem(observationWindow.twVideo1.rowCount() - 1, 3, item)
+                            item.setFlags(Qt.ItemFlag.ItemIsEnabled | Qt.ItemFlag.ItemIsSelectable)
+                            observationWindow.twVideo1.setItem(observationWindow.twVideo1.rowCount() - 1, 4, item)
 
                             item = QTableWidgetItem(f"{self.pj[cfg.OBSERVATIONS][obsId][cfg.MEDIA_INFO][cfg.FPS][mediaFile]:.2f}")
-                            item.setFlags(Qt.ItemIsEnabled | Qt.ItemIsSelectable)
-                            observationWindow.twVideo1.setItem(observationWindow.twVideo1.rowCount() - 1, 4, item)
+                            item.setFlags(Qt.ItemFlag.ItemIsEnabled | Qt.ItemFlag.ItemIsSelectable)
+                            observationWindow.twVideo1.setItem(observationWindow.twVideo1.rowCount() - 1, 5, item)
                         except Exception:
                             pass
 
                         # has_video has_audio
                         try:
                             item = QTableWidgetItem(str(self.pj[cfg.OBSERVATIONS][obsId][cfg.MEDIA_INFO][cfg.HAS_VIDEO][mediaFile]))
-                            item.setFlags(Qt.ItemIsEnabled | Qt.ItemIsSelectable)
-                            observationWindow.twVideo1.setItem(observationWindow.twVideo1.rowCount() - 1, 5, item)
+                            item.setFlags(Qt.ItemFlag.ItemIsEnabled | Qt.ItemFlag.ItemIsSelectable)
+                            observationWindow.twVideo1.setItem(observationWindow.twVideo1.rowCount() - 1, 6, item)
 
                             item = QTableWidgetItem(str(self.pj[cfg.OBSERVATIONS][obsId][cfg.MEDIA_INFO][cfg.HAS_AUDIO][mediaFile]))
-                            item.setFlags(Qt.ItemIsEnabled | Qt.ItemIsSelectable)
-                            observationWindow.twVideo1.setItem(observationWindow.twVideo1.rowCount() - 1, 6, item)
+                            item.setFlags(Qt.ItemFlag.ItemIsEnabled | Qt.ItemFlag.ItemIsSelectable)
+                            observationWindow.twVideo1.setItem(observationWindow.twVideo1.rowCount() - 1, 7, item)
                         except Exception:
                             pass
 
@@ -975,6 +981,7 @@ def new_observation(self, mode: str = cfg.NEW, obsId: str = "") -> None:
 
         # visualize spectrogram
         self.pj[cfg.OBSERVATIONS][new_obs_id][cfg.VISUALIZE_SPECTROGRAM] = observationWindow.cbVisualizeSpectrogram.isChecked()
+
         # visualize waveform
         self.pj[cfg.OBSERVATIONS][new_obs_id][cfg.VISUALIZE_WAVEFORM] = observationWindow.cb_visualize_waveform.isChecked()
         # use Creation date metadata tag as offset
@@ -1081,12 +1088,19 @@ def new_observation(self, mode: str = cfg.NEW, obsId: str = "") -> None:
 
             for row in range(observationWindow.twVideo1.rowCount()):
                 self.pj[cfg.OBSERVATIONS][new_obs_id][cfg.FILE][observationWindow.twVideo1.cellWidget(row, 0).currentText()].append(
-                    observationWindow.twVideo1.item(row, 2).text()
+                    observationWindow.twVideo1.item(row, 3).text()  # file path
                 )
                 # store offset for media player
                 self.pj[cfg.OBSERVATIONS][new_obs_id][cfg.MEDIA_INFO]["offset"][
                     observationWindow.twVideo1.cellWidget(row, 0).currentText()
                 ] = float(observationWindow.twVideo1.item(row, 1).text())
+
+                # store display for media (None / Spectrogram / Waveform)
+                if "display" not in self.pj[cfg.OBSERVATIONS][new_obs_id][cfg.MEDIA_INFO]:
+                    self.pj[cfg.OBSERVATIONS][new_obs_id][cfg.MEDIA_INFO]["display"] = {}
+                self.pj[cfg.OBSERVATIONS][new_obs_id][cfg.MEDIA_INFO]["display"][
+                    observationWindow.twVideo1.cellWidget(row, 0).currentText()
+                ] = observationWindow.twVideo1.cellWidget(row, 2).currentText()
 
         if rv == 1:  # save
             self.observationId = ""

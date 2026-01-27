@@ -49,6 +49,7 @@ from decimal import Decimal as dec
 import matplotlib
 import PIL.Image
 import PIL.ImageEnhance
+from matplotlib import pyplot
 from PIL.ImageQt import Image
 
 matplotlib.use("QtAgg")
@@ -1224,11 +1225,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
             if not self.waveform.visibleRegion().isEmpty():
                 if self.waveform.wav_file_path == wav_file_path:
-                    self.waveform.plot_waveform(current_media_time)
+                    self.waveform.plot_waveform(current_media_time, window_title=f"Waveform of {self.mem_media_name}")
                 else:
                     r = self.waveform.load_wav(wav_file_path)
                     if "error" not in r:
-                        self.waveform.plot_waveform(current_media_time)
+                        self.waveform.plot_waveform(current_media_time, window_title=f"Waveform of {self.mem_media_name}")
                     else:
                         logging.warning("waveform_load_wav error: {}".format(r["error"]))
 
@@ -1239,11 +1240,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
             if not self.spectro.visibleRegion().isEmpty():
                 if self.spectro.wav_file_path == wav_file_path:
-                    self.spectro.plot_spectro(current_media_time)
+                    self.spectro.plot_spectro(current_media_time, window_title=f"Spectrogram of {self.mem_media_name}")
                 else:
                     r = self.spectro.load_wav(wav_file_path)
                     if "error" not in r:
-                        self.spectro.plot_spectro(current_media_time)
+                        self.spectro.plot_spectro(current_media_time, window_title=f"Spectrogram of {self.mem_media_name}")
                     else:
                         logging.warning("spectro_load_wav error: {}".format(r["error"]))
 

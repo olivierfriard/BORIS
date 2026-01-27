@@ -205,6 +205,8 @@ DATA_PLOT_FIELDS = {
 }
 DATA_PLOT_STYLES = ["b-", "r-", "g-", "bo", "ro", "go"]
 
+DISPLAY_FROM_MEDIA = ["None", "Spectrogram", "Waveform", "Spectrogram and waveform"]
+
 
 FILE_PATH = "file_path"
 

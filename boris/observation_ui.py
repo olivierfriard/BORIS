@@ -3,7 +3,7 @@
 ################################################################################
 ## Form generated from reading UI file 'observation.ui'
 ##
-## Created by: Qt User Interface Compiler version 6.8.0
+## Created by: Qt User Interface Compiler version 6.10.0
 ##
 ## WARNING! All changes made in this file will be lost when recompiling UI file!
 ################################################################################
@@ -198,8 +198,8 @@ class Ui_Form(object):
         self.verticalLayout_3 = QVBoxLayout()
         self.verticalLayout_3.setObjectName(u"verticalLayout_3")
         self.twVideo1 = QTableWidget(self.tab_player_1)
-        if (self.twVideo1.columnCount() < 7):
-            self.twVideo1.setColumnCount(7)
+        if (self.twVideo1.columnCount() < 8):
+            self.twVideo1.setColumnCount(8)
         __qtablewidgetitem3 = QTableWidgetItem()
         self.twVideo1.setHorizontalHeaderItem(0, __qtablewidgetitem3)
         __qtablewidgetitem4 = QTableWidgetItem()
@@ -214,6 +214,8 @@ class Ui_Form(object):
         self.twVideo1.setHorizontalHeaderItem(5, __qtablewidgetitem8)
         __qtablewidgetitem9 = QTableWidgetItem()
         self.twVideo1.setHorizontalHeaderItem(6, __qtablewidgetitem9)
+        __qtablewidgetitem10 = QTableWidgetItem()
+        self.twVideo1.setHorizontalHeaderItem(7, __qtablewidgetitem10)
         self.twVideo1.setObjectName(u"twVideo1")
         self.twVideo1.setEditTriggers(QAbstractItemView.EditTrigger.AnyKeyPressed|QAbstractItemView.EditTrigger.DoubleClicked|QAbstractItemView.EditTrigger.EditKeyPressed)
         self.twVideo1.setAlternatingRowColors(True)
@@ -334,24 +336,24 @@ class Ui_Form(object):
         self.tw_data_files = QTableWidget(self.layoutWidget_4)
         if (self.tw_data_files.columnCount() < 9):
             self.tw_data_files.setColumnCount(9)
-        __qtablewidgetitem10 = QTableWidgetItem()
-        self.tw_data_files.setHorizontalHeaderItem(0, __qtablewidgetitem10)
         __qtablewidgetitem11 = QTableWidgetItem()
-        self.tw_data_files.setHorizontalHeaderItem(1, __qtablewidgetitem11)
+        self.tw_data_files.setHorizontalHeaderItem(0, __qtablewidgetitem11)
         __qtablewidgetitem12 = QTableWidgetItem()
-        self.tw_data_files.setHorizontalHeaderItem(2, __qtablewidgetitem12)
+        self.tw_data_files.setHorizontalHeaderItem(1, __qtablewidgetitem12)
         __qtablewidgetitem13 = QTableWidgetItem()
-        self.tw_data_files.setHorizontalHeaderItem(3, __qtablewidgetitem13)
+        self.tw_data_files.setHorizontalHeaderItem(2, __qtablewidgetitem13)
         __qtablewidgetitem14 = QTableWidgetItem()
-        self.tw_data_files.setHorizontalHeaderItem(4, __qtablewidgetitem14)
+        self.tw_data_files.setHorizontalHeaderItem(3, __qtablewidgetitem14)
         __qtablewidgetitem15 = QTableWidgetItem()
-        self.tw_data_files.setHorizontalHeaderItem(5, __qtablewidgetitem15)
+        self.tw_data_files.setHorizontalHeaderItem(4, __qtablewidgetitem15)
         __qtablewidgetitem16 = QTableWidgetItem()
-        self.tw_data_files.setHorizontalHeaderItem(6, __qtablewidgetitem16)
+        self.tw_data_files.setHorizontalHeaderItem(5, __qtablewidgetitem16)
         __qtablewidgetitem17 = QTableWidgetItem()
-        self.tw_data_files.setHorizontalHeaderItem(7, __qtablewidgetitem17)
+        self.tw_data_files.setHorizontalHeaderItem(6, __qtablewidgetitem17)
         __qtablewidgetitem18 = QTableWidgetItem()
-        self.tw_data_files.setHorizontalHeaderItem(8, __qtablewidgetitem18)
+        self.tw_data_files.setHorizontalHeaderItem(7, __qtablewidgetitem18)
+        __qtablewidgetitem19 = QTableWidgetItem()
+        self.tw_data_files.setHorizontalHeaderItem(8, __qtablewidgetitem19)
         self.tw_data_files.setObjectName(u"tw_data_files")
         self.tw_data_files.setSelectionMode(QAbstractItemView.SelectionMode.MultiSelection)
 
@@ -616,15 +618,17 @@ class Ui_Form(object):
         ___qtablewidgetitem4 = self.twVideo1.horizontalHeaderItem(1)
         ___qtablewidgetitem4.setText(QCoreApplication.translate("Form", u"Offset (seconds)", None));
         ___qtablewidgetitem5 = self.twVideo1.horizontalHeaderItem(2)
-        ___qtablewidgetitem5.setText(QCoreApplication.translate("Form", u"Path", None));
+        ___qtablewidgetitem5.setText(QCoreApplication.translate("Form", u"Display", None));
         ___qtablewidgetitem6 = self.twVideo1.horizontalHeaderItem(3)
-        ___qtablewidgetitem6.setText(QCoreApplication.translate("Form", u"Duration", None));
+        ___qtablewidgetitem6.setText(QCoreApplication.translate("Form", u"Path", None));
         ___qtablewidgetitem7 = self.twVideo1.horizontalHeaderItem(4)
-        ___qtablewidgetitem7.setText(QCoreApplication.translate("Form", u"FPS", None));
+        ___qtablewidgetitem7.setText(QCoreApplication.translate("Form", u"Duration", None));
         ___qtablewidgetitem8 = self.twVideo1.horizontalHeaderItem(5)
-        ___qtablewidgetitem8.setText(QCoreApplication.translate("Form", u"Video", None));
+        ___qtablewidgetitem8.setText(QCoreApplication.translate("Form", u"FPS", None));
         ___qtablewidgetitem9 = self.twVideo1.horizontalHeaderItem(6)
-        ___qtablewidgetitem9.setText(QCoreApplication.translate("Form", u"Audio", None));
+        ___qtablewidgetitem9.setText(QCoreApplication.translate("Form", u"Video", None));
+        ___qtablewidgetitem10 = self.twVideo1.horizontalHeaderItem(7)
+        ___qtablewidgetitem10.setText(QCoreApplication.translate("Form", u"Audio", None));
         self.pbAddVideo.setText(QCoreApplication.translate("Form", u"Add media", None))
         self.pbRemoveVideo.setText(QCoreApplication.translate("Form", u"Remove selected media", None))
         self.pb_use_media_file_name_as_obsid.setText(QCoreApplication.translate("Form", u"Use media file name as observation id", None))
@@ -636,24 +640,24 @@ class Ui_Form(object):
         self.cbCloseCurrentBehaviorsBetweenVideo.setText(QCoreApplication.translate("Form", u"Stop ongoing state events between successive media files", None))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab_player_1), QCoreApplication.translate("Form", u"Media files", None))
         self.label_7.setText(QCoreApplication.translate("Form", u"Data files to plot", None))
-        ___qtablewidgetitem10 = self.tw_data_files.horizontalHeaderItem(0)
-        ___qtablewidgetitem10.setText(QCoreApplication.translate("Form", u"Path", None));
-        ___qtablewidgetitem11 = self.tw_data_files.horizontalHeaderItem(1)
-        ___qtablewidgetitem11.setText(QCoreApplication.translate("Form", u"Columns to plot", None));
-        ___qtablewidgetitem12 = self.tw_data_files.horizontalHeaderItem(2)
-        ___qtablewidgetitem12.setText(QCoreApplication.translate("Form", u"Plot title", None));
-        ___qtablewidgetitem13 = self.tw_data_files.horizontalHeaderItem(3)
-        ___qtablewidgetitem13.setText(QCoreApplication.translate("Form", u"Variable name", None));
-        ___qtablewidgetitem14 = self.tw_data_files.horizontalHeaderItem(4)
-        ___qtablewidgetitem14.setText(QCoreApplication.translate("Form", u"Converters", None));
-        ___qtablewidgetitem15 = self.tw_data_files.horizontalHeaderItem(5)
-        ___qtablewidgetitem15.setText(QCoreApplication.translate("Form", u"Time interval (s)", None));
-        ___qtablewidgetitem16 = self.tw_data_files.horizontalHeaderItem(6)
-        ___qtablewidgetitem16.setText(QCoreApplication.translate("Form", u"Start position (s)", None));
-        ___qtablewidgetitem17 = self.tw_data_files.horizontalHeaderItem(7)
-        ___qtablewidgetitem17.setText(QCoreApplication.translate("Form", u"Substract first value", None));
-        ___qtablewidgetitem18 = self.tw_data_files.horizontalHeaderItem(8)
-        ___qtablewidgetitem18.setText(QCoreApplication.translate("Form", u"Color", None));
+        ___qtablewidgetitem11 = self.tw_data_files.horizontalHeaderItem(0)
+        ___qtablewidgetitem11.setText(QCoreApplication.translate("Form", u"Path", None));
+        ___qtablewidgetitem12 = self.tw_data_files.horizontalHeaderItem(1)
+        ___qtablewidgetitem12.setText(QCoreApplication.translate("Form", u"Columns to plot", None));
+        ___qtablewidgetitem13 = self.tw_data_files.horizontalHeaderItem(2)
+        ___qtablewidgetitem13.setText(QCoreApplication.translate("Form", u"Plot title", None));
+        ___qtablewidgetitem14 = self.tw_data_files.horizontalHeaderItem(3)
+        ___qtablewidgetitem14.setText(QCoreApplication.translate("Form", u"Variable name", None));
+        ___qtablewidgetitem15 = self.tw_data_files.horizontalHeaderItem(4)
+        ___qtablewidgetitem15.setText(QCoreApplication.translate("Form", u"Converters", None));
+        ___qtablewidgetitem16 = self.tw_data_files.horizontalHeaderItem(5)
+        ___qtablewidgetitem16.setText(QCoreApplication.translate("Form", u"Time interval (s)", None));
+        ___qtablewidgetitem17 = self.tw_data_files.horizontalHeaderItem(6)
+        ___qtablewidgetitem17.setText(QCoreApplication.translate("Form", u"Start position (s)", None));
+        ___qtablewidgetitem18 = self.tw_data_files.horizontalHeaderItem(7)
+        ___qtablewidgetitem18.setText(QCoreApplication.translate("Form", u"Substract first value", None));
+        ___qtablewidgetitem19 = self.tw_data_files.horizontalHeaderItem(8)
+        ___qtablewidgetitem19.setText(QCoreApplication.translate("Form", u"Color", None));
         self.pb_add_data_file.setText(QCoreApplication.translate("Form", u"Add data file", None))
         self.pb_remove_data_file.setText(QCoreApplication.translate("Form", u"Remove selected data file", None))
         self.pb_view_data_head.setText(QCoreApplication.translate("Form", u"View data from file", None))

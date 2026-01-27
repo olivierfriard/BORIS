@@ -86,6 +86,7 @@ class Plot_spectrogram_RT(QWidget):
                 focusPolicy=Qt.NoFocus,
             )
         )
+        hlayout1.addStretch()
         layout.addLayout(hlayout1)
 
         hlayout2 = QHBoxLayout()
@@ -98,6 +99,7 @@ class Plot_spectrogram_RT(QWidget):
         self.sb_freq_max.setSingleStep(100)
         hlayout2.addWidget(self.sb_freq_min)
         hlayout2.addWidget(self.sb_freq_max)
+        hlayout2.addStretch()
         layout.addLayout(hlayout2)
 
         self.setLayout(layout)
@@ -218,10 +220,12 @@ class Plot_spectrogram_RT(QWidget):
         # Sxx shape: (freq_bins, time_bins)
         return f, t, Sxx
 
-    def plot_spectro(self, current_time: float | None, force_plot: bool = False) -> tuple[float, bool] | None:
+    def plot_spectro(self, current_time: float | None, force_plot: bool = False, window_title: str = "") -> tuple[float, bool] | None:
         # (keep the beginning of your existing method: caching, retrieving config params, early returns)
         if not force_plot and current_time == self.time_mem:
             return
+        if window_title:
+            self.setWindowTitle(window_title)
         self.time_mem = current_time
         self.ax.clear()
 
@@ -311,10 +315,11 @@ class Plot_spectrogram_RT(QWidget):
 
         # TICKS: use data-driven ticks from t_abs
         # Major locator: at most N major ticks
-        self.ax.xaxis.set_major_locator(mticker.MaxNLocator(nbins=8, prune="both"))
+        # self.ax.xaxis.set_major_locator(mticker.MaxNLocator(nbins=8, prune="both"))
+        self.ax.xaxis.set_major_locator(mticker.MultipleLocator(0.5))
 
         # Minor ticks: 2 minor ticks between majors
-        self.ax.xaxis.set_minor_locator(mticker.AutoMinorLocator(4))
+        self.ax.xaxis.set_minor_locator(mticker.AutoMinorLocator(5))
         self.ax.tick_params(axis="x", which="minor", length=3)
 
         # Format x-axis labels to show one decimal second (or mm:ss if you prefer)

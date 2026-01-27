@@ -733,7 +733,7 @@ class Observation(QDialog, Ui_Form):
             file_path = file_name
 
         for col_idx, value in zip(
-            [
+            (
                 cfg.PLOT_DATA_FILEPATH_IDX,
                 cfg.PLOT_DATA_COLUMNS_IDX,
                 cfg.PLOT_DATA_PLOTTITLE_IDX,
@@ -741,12 +741,12 @@ class Observation(QDialog, Ui_Form):
                 cfg.PLOT_DATA_CONVERTERS_IDX,
                 cfg.PLOT_DATA_TIMEINTERVAL_IDX,
                 cfg.PLOT_DATA_TIMEOFFSET_IDX,
-            ],
-            [file_path, columns_to_plot, "", "", "", "60", "0"],
+            ),
+            (file_path, columns_to_plot, "", "", "", "60", "0"),
         ):
             item = QTableWidgetItem(value)
             if col_idx == cfg.PLOT_DATA_CONVERTERS_IDX:
-                item.setFlags(Qt.ItemIsEnabled)
+                item.setFlags(Qt.ItemFlag.ItemIsEnabled)
                 # item.setBackground(QColor(230, 230, 230))
                 item.setBackground(self.not_editable_column_color())
             self.tw_data_files.setItem(self.tw_data_files.rowCount() - 1, col_idx, item)
@@ -1044,7 +1044,7 @@ class Observation(QDialog, Ui_Form):
             media_file_not_found: list = []
             for row in range(self.twVideo1.rowCount()):
                 # check if media file exists
-                if not pl.Path(self.twVideo1.item(row, 2).text()).is_file():
+                if not pl.Path(self.twVideo1.item(row, 3).text()).is_file():  # duration
                     media_file_not_found.append(self.twVideo1.item(row, 2).text())
 
             # check player number
@@ -1055,7 +1055,7 @@ class Observation(QDialog, Ui_Form):
                 players_list.append(player_idx)
                 if player_idx not in players:
                     players[player_idx] = []
-                players[player_idx].append(util.time2seconds(self.twVideo1.item(row, 3).text()))
+                players[player_idx].append(util.time2seconds(self.twVideo1.item(row, 4).text()))
 
             # check if player #1 is used
             if not players_list or min(players_list) > 1:
@@ -1393,10 +1393,11 @@ class Observation(QDialog, Ui_Form):
         # add a row
         self.twVideo1.setRowCount(self.twVideo1.rowCount() + 1)
 
-        for col_idx, s in enumerate(
+        for col_idx, param in enumerate(
             (
                 None,
                 0,
+                None,  # display stectro/waveform...
                 file_name,
                 util.seconds2time(self.mediaDurations[file_name]),
                 f"{self.mediaFPS[file_name]:.2f}",
@@ -1408,10 +1409,15 @@ class Observation(QDialog, Ui_Form):
                 combobox = QComboBox()
                 combobox.addItems(cfg.ALL_PLAYERS)
                 self.twVideo1.setCellWidget(self.twVideo1.rowCount() - 1, col_idx, combobox)
+            elif col_idx == 2:  # combobox for playing spectro/waveform
+                # substract first value
+                combobox = QComboBox()
+                combobox.addItems(cfg.DISPLAY_FROM_MEDIA)
+                self.twVideo1.setCellWidget(self.twVideo1.rowCount() - 1, col_idx, combobox)
             else:
-                item = QTableWidgetItem(f"{s}")
+                item = QTableWidgetItem(f"{param}")
                 if col_idx != 1:  # only offset is editable by user
-                    item.setFlags(Qt.ItemIsEnabled | Qt.ItemIsSelectable)
+                    item.setFlags(Qt.ItemFlag.ItemIsEnabled | Qt.ItemFlag.ItemIsSelectable)
 
                 self.twVideo1.setItem(self.twVideo1.rowCount() - 1, col_idx, item)
 

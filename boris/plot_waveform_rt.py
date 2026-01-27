@@ -34,7 +34,7 @@ import numpy as np
 from matplotlib.backends.backend_qtagg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.figure import Figure
 from PySide6.QtCore import QEvent, Qt, Signal
-from PySide6.QtWidgets import QHBoxLayout, QLabel, QPushButton, QVBoxLayout, QWidget
+from PySide6.QtWidgets import QHBoxLayout, QLabel, QPushButton, QSizePolicy, QSpacerItem, QVBoxLayout, QWidget
 
 # matplotlib.pyplot.switch_backend("Qt5Agg")
 
@@ -80,6 +80,9 @@ class Plot_waveform_RT(QWidget):
                 focusPolicy=Qt.NoFocus,
             )
         )
+
+        hlayout1.addStretch()
+
         layout.addLayout(hlayout1)
 
         self.setLayout(layout)
@@ -159,7 +162,7 @@ class Plot_waveform_RT(QWidget):
         self.interval += 5 * action
         self.plot_waveform(current_time=self.time_mem, force_plot=True)
 
-    def plot_waveform(self, current_time: float | None, force_plot: bool = False) -> None:
+    def plot_waveform(self, current_time: float | None, force_plot: bool = False, window_title: str = "") -> None:
         """
         Optimized waveform plotting: plot sound waveform centered on the current time.
         Uses downsampling to limit plotted points and absolute seconds on x-axis.
@@ -167,6 +170,8 @@ class Plot_waveform_RT(QWidget):
         if not force_plot and current_time == self.time_mem:
             return
 
+        if window_title:
+            self.setWindowTitle(window_title)
         self.time_mem = current_time
         self.ax.clear()
 
@@ -233,9 +238,10 @@ class Plot_waveform_RT(QWidget):
             self.ax.axvline(x=current_time, color=self.cursor_color, linestyle="-")
 
         # Format x ticks: use at most 8 major ticks
-        self.ax.xaxis.set_major_locator(mticker.MaxNLocator(nbins=8, prune="both"))
+        # self.ax.xaxis.set_major_locator(mticker.MaxNLocator(nbins=8, prune="both"))
+        self.ax.xaxis.set_major_locator(mticker.MultipleLocator(0.5))
         # optional minor ticks
-        self.ax.xaxis.set_minor_locator(mticker.AutoMinorLocator(2))
+        self.ax.xaxis.set_minor_locator(mticker.AutoMinorLocator(5))
         self.ax.tick_params(axis="x", which="minor", length=3)
 
         # Optionally label y-axis off (waveform amplitude might be large ints)
