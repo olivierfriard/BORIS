@@ -274,19 +274,19 @@ class Observation(QDialog, Ui_Form):
 
         if self.cb_media_creation_date_as_offset.isChecked():
             for row in range(self.twVideo1.rowCount()):
-                if self.twVideo1.item(row, 2).text():  # media file path
+                if self.twVideo1.item(row, cfg.MEDIA_FILE_PATH_IDX).text():  # media file path
                     date_time_original = util.extract_video_creation_date(
-                        project_functions.full_path(self.twVideo1.item(row, 2).text(), self.project_path)
+                        project_functions.full_path(self.twVideo1.item(row, cfg.MEDIA_FILE_PATH_IDX).text(), self.project_path)
                     )
                     if date_time_original is None:
-                        date_time_file_name = util.extract_date_time_from_file_name(self.twVideo1.item(row, 2).text())
+                        date_time_file_name = util.extract_date_time_from_file_name(self.twVideo1.item(row, cfg.MEDIA_FILE_PATH_IDX).text())
                         if date_time_file_name is None:
-                            creation_date_not_found.append(self.twVideo1.item(row, 2).text())
+                            creation_date_not_found.append(self.twVideo1.item(row, cfg.MEDIA_FILE_PATH_IDX).text())
                         else:
-                            self.media_creation_time[self.twVideo1.item(row, 2).text()] = date_time_file_name
+                            self.media_creation_time[self.twVideo1.item(row, cfg.MEDIA_FILE_PATH_IDX).text()] = date_time_file_name
                             flag_filename_used = True
                     else:
-                        self.media_creation_time[self.twVideo1.item(row, 2).text()] = date_time_original
+                        self.media_creation_time[self.twVideo1.item(row, cfg.MEDIA_FILE_PATH_IDX).text()] = date_time_original
 
         if creation_date_not_found:
             QMessageBox.warning(
@@ -320,7 +320,7 @@ class Observation(QDialog, Ui_Form):
         first_media_file: str = ""
         for row in range(self.twVideo1.rowCount()):
             if int(self.twVideo1.cellWidget(row, 0).currentText()) == 1:
-                first_media_file = self.twVideo1.item(row, 2).text()
+                first_media_file = self.twVideo1.item(row, cfg.MEDIA_FILE_PATH_IDX).text()
                 break
         # check if player #1 is used
         if not first_media_file:
@@ -906,8 +906,8 @@ class Observation(QDialog, Ui_Form):
 
         media_not_found_list: list = []
         for row in range(self.twVideo1.rowCount()):
-            if not pl.Path(self.twVideo1.item(row, 2).text()).is_file():
-                media_not_found_list.append(self.twVideo1.item(row, 2).text())
+            if not pl.Path(self.twVideo1.item(row, cfg.MEDIA_FILE_PATH_IDX).text()).is_file():
+                media_not_found_list.append(self.twVideo1.item(row, cfg.MEDIA_FILE_PATH_IDX).text())
 
         """
         if media_list:
@@ -1044,8 +1044,8 @@ class Observation(QDialog, Ui_Form):
             media_file_not_found: list = []
             for row in range(self.twVideo1.rowCount()):
                 # check if media file exists
-                if not pl.Path(self.twVideo1.item(row, 3).text()).is_file():  # duration
-                    media_file_not_found.append(self.twVideo1.item(row, 2).text())
+                if not pl.Path(self.twVideo1.item(row, cfg.MEDIA_FILE_PATH_IDX).text()).is_file():  # duration
+                    media_file_not_found.append(self.twVideo1.item(row, cfg.MEDIA_FILE_PATH_IDX).text())
 
             # check player number
             players_list: list = []
@@ -1055,7 +1055,7 @@ class Observation(QDialog, Ui_Form):
                 players_list.append(player_idx)
                 if player_idx not in players:
                     players[player_idx] = []
-                players[player_idx].append(util.time2seconds(self.twVideo1.item(row, 4).text()))
+                players[player_idx].append(util.time2seconds(self.twVideo1.item(row, cfg.MEDIA_DURATION_IDX).text()))
 
             # check if player #1 is used
             if not players_list or min(players_list) > 1:
@@ -1113,13 +1113,13 @@ class Observation(QDialog, Ui_Form):
 
             # check offset for media files
             for row in range(self.twVideo1.rowCount()):
-                if not is_numeric(self.twVideo1.item(row, 1).text()):
+                if not is_numeric(self.twVideo1.item(row, cfg.PLAYER_OFFSET_IDX).text()):
                     QMessageBox.critical(
                         self,
                         cfg.programName,
                         (
                             "The offset value "
-                            f"<b>{self.twVideo1.item(row, 1).text()}</b>"
+                            f"<b>{self.twVideo1.item(row, cfg.PLAYER_OFFSET_IDX).text()}</b>"
                             " is not recognized as a numeric value.<br>"
                             "Use decimal number of seconds (e.g. -58.5 or 32)"
                         ),
@@ -1129,7 +1129,7 @@ class Observation(QDialog, Ui_Form):
             # check if offset set and only player #1 is used
             if len(set(players_list)) == 1:
                 for row in range(self.twVideo1.rowCount()):
-                    if float(self.twVideo1.item(row, 1).text()):
+                    if float(self.twVideo1.item(row, cfg.PLAYER_OFFSET_IDX).text()):
                         QMessageBox.critical(
                             self,
                             cfg.programName,

@@ -967,82 +967,98 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         if plot_type == cfg.SPECTROGRAM_PLOT:
             if hasattr(self, "spectro"):
-                self.spectro.show()
+                if "display" in self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO]:
+                    for widget in self.spectro:
+                        widget.show()
+                else:
+                    self.spectro.show()
             else:
                 logging.debug("create spectrogram plot")
 
-                # check if first media in player #1 has audio
-                for media in self.pj[cfg.OBSERVATIONS][self.observationId][cfg.FILE][cfg.PLAYER1]:
-                    # media_file_path = project_functions.full_path(media, self.projectFileName)
+                if "display" in self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO]:
+                    for player in self.pj[cfg.OBSERVATIONS][self.observationId][cfg.FILE]:
+                        if (
+                            "spectro"
+                            not in self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO].get("display", {}).get(player, "").lower()
+                        ):
+                            print(
+                                f"spectro not in {self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO].get("display", {}).get(player, "").lower()=}"
+                            )
+                            return
+                else:
+                    # check if first media in player #1 has audio
+                    for media in self.pj[cfg.OBSERVATIONS][self.observationId][cfg.FILE][cfg.PLAYER1]:
+                        if not project_functions.has_audio(self.pj[cfg.OBSERVATIONS][self.observationId], media):
+                            QMessageBox.critical(
+                                self,
+                                cfg.programName,
+                                f"The media file {media} does not have an audio track. Plotting the spectrogram will not be possible.",
+                            )
+                            return
+                        break
 
-                    if not project_functions.has_audio(self.pj[cfg.OBSERVATIONS][self.observationId], media):
-                        QMessageBox.critical(
+                    # remember if player paused
+                    if warning:
+                        if self.playerType == cfg.MEDIA:
+                            flag_paused = self.is_playing()
+
+                    self.pause_video()
+
+                    if (
+                        warning
+                        and dialog.MessageDialog(
+                            cfg.programName,
+                            (
+                                f"You choose to visualize the {plot_type} during this observation.<br>"
+                                f"{plot_type} generation can take some time for long media, be patient"
+                            ),
+                            (cfg.YES, cfg.NO),
+                        )
+                        == cfg.NO
+                    ):
+                        if self.playerType == cfg.MEDIA and not flag_paused:
+                            self.play_video()
+                        return
+
+                    self.generate_wav_file_from_media()
+
+                    tmp_dir = (
+                        self.ffmpeg_cache_dir if self.ffmpeg_cache_dir and os.path.isdir(self.ffmpeg_cache_dir) else tempfile.gettempdir()
+                    )
+
+                    wav_file_path = (
+                        Path(tmp_dir)
+                        / Path(self.dw_player[0].player.playlist[self.dw_player[0].player.playlist_pos]["filename"] + ".wav").name
+                    )
+
+                    self.spectro = plot_spectrogram_rt.Plot_spectrogram_RT()
+
+                    self.spectro.setWindowFlags(Qt.WindowType.WindowStaysOnTopHint)
+                    self.spectro.setWindowFlags(self.spectro.windowFlags() & ~Qt.WindowType.WindowMinimizeButtonHint)
+
+                    self.spectro.interval = self.spectrogram_time_interval
+                    self.spectro.cursor_color = cfg.REALTIME_PLOT_CURSOR_COLOR
+
+                    self.spectro.config_param = self.config_param
+
+                    # color palette
+                    try:
+                        self.spectro.spectro_color_map = pyplot.get_cmap(self.spectrogram_color_map)
+                    except ValueError:
+                        self.spectro.spectro_color_map = pyplot.get_cmap("viridis")
+
+                    r = self.spectro.load_wav(str(wav_file_path))
+                    if "error" in r:
+                        logging.warning(f"spectro_load_wav error: {r['error']}")
+                        QMessageBox.warning(
                             self,
                             cfg.programName,
-                            f"The media file {media} does not have an audio track. Plotting the spectrogram will not be possible.",
+                            f"Error in spectrogram generation: {r['error']}",
+                            QMessageBox.StandardButton.Ok,
+                            QMessageBox.StandardButton.NoButton,
                         )
+                        del self.spectro
                         return
-                    break
-
-                # remember if player paused
-                if warning:
-                    if self.playerType == cfg.MEDIA:
-                        flag_paused = self.is_playing()
-
-                self.pause_video()
-
-                if (
-                    warning
-                    and dialog.MessageDialog(
-                        cfg.programName,
-                        (
-                            f"You choose to visualize the {plot_type} during this observation.<br>"
-                            f"{plot_type} generation can take some time for long media, be patient"
-                        ),
-                        (cfg.YES, cfg.NO),
-                    )
-                    == cfg.NO
-                ):
-                    if self.playerType == cfg.MEDIA and not flag_paused:
-                        self.play_video()
-                    return
-
-                self.generate_wav_file_from_media()
-
-                tmp_dir = self.ffmpeg_cache_dir if self.ffmpeg_cache_dir and os.path.isdir(self.ffmpeg_cache_dir) else tempfile.gettempdir()
-
-                wav_file_path = (
-                    Path(tmp_dir) / Path(self.dw_player[0].player.playlist[self.dw_player[0].player.playlist_pos]["filename"] + ".wav").name
-                )
-
-                self.spectro = plot_spectrogram_rt.Plot_spectrogram_RT()
-
-                self.spectro.setWindowFlags(Qt.WindowType.WindowStaysOnTopHint)
-                self.spectro.setWindowFlags(self.spectro.windowFlags() & ~Qt.WindowType.WindowMinimizeButtonHint)
-
-                self.spectro.interval = self.spectrogram_time_interval
-                self.spectro.cursor_color = cfg.REALTIME_PLOT_CURSOR_COLOR
-
-                self.spectro.config_param = self.config_param
-
-                # color palette
-                try:
-                    self.spectro.spectro_color_map = matplotlib.pyplot.get_cmap(self.spectrogram_color_map)
-                except ValueError:
-                    self.spectro.spectro_color_map = matplotlib.pyplot.get_cmap("viridis")
-
-                r = self.spectro.load_wav(str(wav_file_path))
-                if "error" in r:
-                    logging.warning(f"spectro_load_wav error: {r['error']}")
-                    QMessageBox.warning(
-                        self,
-                        cfg.programName,
-                        f"Error in spectrogram generation: {r['error']}",
-                        QMessageBox.StandardButton.Ok,
-                        QMessageBox.StandardButton.NoButton,
-                    )
-                    del self.spectro
-                    return
 
                 self.pj[cfg.OBSERVATIONS][self.observationId][cfg.VISUALIZE_SPECTROGRAM] = True
                 self.spectro.sendEvent.connect(self.signal_from_widget)
