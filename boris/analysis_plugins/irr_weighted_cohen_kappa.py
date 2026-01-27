@@ -10,8 +10,8 @@ from typing import Optional
 import pandas as pd
 from PySide6.QtWidgets import QInputDialog
 
-__version__ = "0.0.3"
-__version_date__ = "2025-09-02"
+__version__ = "0.0.4"
+__version_date__ = "2026-01-27"
 __plugin_name__ = "Inter Rater Reliability - Weighted Cohen's Kappa"
 __author__ = "Olivier Friard - University of Torino - Italy"
 __description__ = """
