@@ -4,7 +4,8 @@ BORIS plugin
 Inter Rater Reliability (IRR) Weighted Cohen's Kappa
 """
 
-from typing import Dict, List, Optional, Tuple
+import math
+from typing import Optional
 
 import pandas as pd
 from PySide6.QtWidgets import QInputDialog
@@ -47,17 +48,22 @@ def run(df: pd.DataFrame):
     """
 
     def cohen_kappa_weighted_by_time(
-        obs1: List[Tuple[float, float, str]], obs2: List[Tuple[float, float, str]]
-    ) -> Tuple[float, float, float, Dict[Tuple[Optional[str], Optional[str]], float]]:
+        obs1: list[tuple[float, float, str]], obs2: list[tuple[float, float, str]]
+    ) -> tuple[
+        float,  # kappa (may be nan)
+        float,  # observed agreement
+        float,  # expected agreement
+        dict[tuple[Optional[str], Optional[str]], float],  # contingency (time-weighted)
+    ]:
         """
         Compute Cohen's Kappa weighted by time duration.
 
         Args:
-            obs1: List of (start_time, end_time, code) for observer 1
-            obs2: List of (start_time, end_time, code) for observer 2
+            obs1: list of (start_time, end_time, code) for observer 1
+            obs2: list of (start_time, end_time, code) for observer 2
 
         Returns:
-            kappa (float): Cohen's Kappa weighted by duration
+            kappa (float or nan): Cohen's Kappa weighted by duration
             po (float): Observed agreement proportion (weighted)
             pe (float): Expected agreement proportion by chance (weighted)
             contingency (dict): Contingency table {(code1, code2): total_duration}
@@ -70,14 +76,14 @@ def run(df: pd.DataFrame):
         elementary_intervals = [(time_points[i], time_points[i + 1]) for i in range(len(time_points) - 1)]
 
         # 3. # Attribute all active codes for each interval
-        def get_code(t: float, obs: List[Tuple[float, float, str]]) -> Optional[str]:
+        def get_code(t: float, obs: list[tuple[float, float, str]]) -> Optional[str]:
             active_codes = [seg[2] for seg in obs if seg[0] <= t < seg[1]]
             if not active_codes:
                 return None
             return "+".join(sorted(active_codes))
 
         # 4. Build weighted contingency table (durations instead of counts)
-        contingency: Dict[Tuple[Optional[str], Optional[str]], float] = {}
+        contingency: dict[tuple[str | None, str | None], float] = {}
         total_time = 0.0
 
         for start, end in elementary_intervals:
@@ -91,8 +97,8 @@ def run(df: pd.DataFrame):
         po = sum(duration for (c1, c2), duration in contingency.items() if c1 == c2) / total_time
 
         # Marginal distributions for each observer
-        codes1: Dict[Optional[str], float] = {}
-        codes2: Dict[Optional[str], float] = {}
+        codes1: dict[str | None, float] = {}
+        codes2: dict[str | None, float] = {}
         for (c1, c2), duration in contingency.items():
             codes1[c1] = codes1.get(c1, 0.0) + duration
             codes2[c2] = codes2.get(c2, 0.0) + duration
@@ -102,7 +108,10 @@ def run(df: pd.DataFrame):
         pe = sum((codes1.get(c, 0.0) / total_time) * (codes2.get(c, 0.0) / total_time) for c in all_codes)
 
         # 7. Kappa calculation
-        kappa = (po - pe) / (1 - pe) if (1 - pe) != 0 else 0.0
+        if (1 - pe) == 0:
+            kappa = math.nan
+        else:
+            kappa = (po - pe) / (1 - pe)
 
         return kappa, po, pe, contingency
 
