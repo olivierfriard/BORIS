@@ -183,115 +183,146 @@ class Plot_spectrogram_RT(QWidget):
 
         return {"media_length": self.media_length, "frame_rate": self.frame_rate}
 
+    def _compute_spectrogram(
+        self,
+        x: np.ndarray,
+        nfft: int,
+        noverlap: int,
+        window_type: str,
+    ) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
+        """
+        Compute spectrogram using scipy.signal.spectrogram and return
+        frequencies (f), times (t, relative to the chunk start), and Sxx (power).
+        """
+        # choose window
+        if window_type in ("hanning", "hann"):
+            window = "hann"
+        elif window_type == "hamming":
+            window = "hamming"
+        elif window_type == "blackmanharris":
+            window = "blackmanharris"
+        else:
+            window = "hann"
+
+        # scipy.signal.spectrogram: nperseg = NFFT, noverlap as provided
+        f, t, Sxx = signal.spectrogram(
+            x,
+            fs=self.frame_rate,
+            window=window,
+            nperseg=nfft,
+            noverlap=noverlap,
+            mode="psd",
+            scaling="density",
+            detrend=False,
+        )
+        # Sxx shape: (freq_bins, time_bins)
+        return f, t, Sxx
+
     def plot_spectro(self, current_time: float | None, force_plot: bool = False) -> tuple[float, bool] | None:
-        """
-        plot sound spectrogram centered on the current time
-
-        Args:
-            current_time (float): time for displaying spectrogram
-            force_plot (bool): force plot even if media paused
-        """
-
-        def spectrogram(self, x, window_type, nfft, noverlap, vmin, vmax) -> None:
-            # default value
-            window = matplotlib.mlab.window_hanning
-
-            if window_type == "hanning":
-                window = matplotlib.mlab.window_hanning
-
-            if window_type == "hamming":
-                window = signal.get_window(window_type, nfft)
-
-            if window_type == "blackmanharris":
-                window = signal.get_window(window_type, nfft)
-
-            # print(f"{self.frame_rate=} {vmin=} {vmax=} {window_type=} {nfft=} {noverlap=}")
-            self.ax.specgram(
-                x,
-                mode="psd",
-                NFFT=nfft,
-                Fs=self.frame_rate,
-                noverlap=noverlap,
-                window=window,
-                cmap=self.spectro_color_map,
-                vmin=vmin,
-                vmax=vmax,
-            )
-
+        # (keep the beginning of your existing method: caching, retrieving config params, early returns)
         if not force_plot and current_time == self.time_mem:
             return
-
         self.time_mem = current_time
-
         self.ax.clear()
 
         window_type = self.config_param.get(cfg.SPECTROGRAM_WINDOW_TYPE, cfg.SPECTROGRAM_DEFAULT_WINDOW_TYPE)
         nfft = int(self.config_param.get(cfg.SPECTROGRAM_NFFT, cfg.SPECTROGRAM_DEFAULT_NFFT))
-        noverlap = self.config_param.get(cfg.SPECTROGRAM_NOVERLAP, cfg.SPECTROGRAM_DEFAULT_NOVERLAP)
-        if self.config_param.get(cfg.SPECTROGRAM_USE_VMIN_VMAX, cfg.SPECTROGRAM_USE_VMIN_VMAX_DEFAULT):
-            vmin = self.config_param.get(cfg.SPECTROGRAM_VMIN, cfg.SPECTROGRAM_DEFAULT_VMIN)
-            vmax = self.config_param.get(cfg.SPECTROGRAM_VMAX, cfg.SPECTROGRAM_DEFAULT_VMAX)
-        else:
-            vmin, vmax = None, None
+        noverlap = int(self.config_param.get(cfg.SPECTROGRAM_NOVERLAP, cfg.SPECTROGRAM_DEFAULT_NOVERLAP))
+        use_vrange = self.config_param.get(cfg.SPECTROGRAM_USE_VMIN_VMAX, cfg.SPECTROGRAM_USE_VMIN_VMAX_DEFAULT)
+        vmin = self.config_param.get(cfg.SPECTROGRAM_VMIN, cfg.SPECTROGRAM_DEFAULT_VMIN) if use_vrange else None
+        vmax = self.config_param.get(cfg.SPECTROGRAM_VMAX, cfg.SPECTROGRAM_DEFAULT_VMAX) if use_vrange else None
 
         if current_time is None:
             return
 
-        # start
-        if current_time <= self.interval / 2:
-            spectrogram(self, self.sound_info[: int(self.interval * self.frame_rate)], window_type, nfft, noverlap, vmin, vmax)
+        # compute chunk start index and slice
+        half = self.interval / 2.0
+        start_time = max(0.0, current_time - half)
+        end_time = min(self.media_length, current_time + half)
 
-            self.ax.set_xlim(current_time - self.interval / 2, current_time + self.interval / 2)
+        # compute sample indices
+        i0 = int(round(start_time * self.frame_rate))
+        i1 = int(round(end_time * self.frame_rate))
+        chunk = self.sound_info[i0:i1]
 
-            # cursor
+        if chunk.size == 0:
+            return
+
+        # compute spectrogram
+        f, t_rel, Sxx = self._compute_spectrogram(chunk, nfft=nfft, noverlap=noverlap, window_type=window_type)
+
+        # convert t_rel (relative to chunk start) to absolute times
+        t_abs = t_rel + start_time
+
+        # mask frequency range if user set sb_freq_min/max
+        fmin = self.sb_freq_min.value()
+        fmax = self.sb_freq_max.value()
+        freq_mask = (f >= fmin) & (f <= fmax)
+        if not freq_mask.any():
+            # nothing to show in freq range
+            return
+
+        f_show = f[freq_mask]
+        Sxx_show = Sxx[freq_mask, :]
+
+        # convert power to dB for better dynamic range (optional)
+        # add a tiny epsilon to avoid log(0)
+        Sxx_db = 10.0 * np.log10(Sxx_show + 1e-20)
+
+        # plotting with pcolormesh: need 2D grid edges
+        # create extents using midpoints for pcolormesh edges
+        t_edges = np.concatenate(
+            [
+                t_abs - 0.5 * np.diff(np.concatenate(([t_abs[0] - (t_abs[1] - t_abs[0])], t_abs))).astype(float),
+                [t_abs[-1] + 0.5 * (t_abs[-1] - t_abs[-2] if len(t_abs) > 1 else 1.0)],
+            ]
+        )
+        f_edges = np.concatenate(
+            [
+                f_show - 0.5 * np.diff(np.concatenate(([f_show[0] - (f_show[1] - f_show[0])], f_show))).astype(float),
+                [f_show[-1] + 0.5 * (f_show[-1] - f_show[-2] if len(f_show) > 1 else 1.0)],
+            ]
+        )
+
+        # simpler way: use pcolormesh with meshgrid of t_abs and f_show:
+        T, F = np.meshgrid(t_abs, f_show)
+
+        pcm = self.ax.pcolormesh(
+            T,
+            F,
+            Sxx_db,
+            shading="auto",
+            cmap=self.spectro_color_map,
+            vmin=vmin,
+            vmax=vmax,
+        )
+
+        # set limits and cursor
+        self.ax.set_xlim(start_time, end_time)
+        self.ax.set_ylim(fmin, fmax)
+
+        # draw cursor at current_time (absolute)
+        # if the cursor is inside current plotting window
+        if start_time <= current_time <= end_time:
             self.ax.axvline(x=current_time, color=self.cursor_color, linestyle="-")
 
-        elif current_time >= self.media_length - self.interval / 2:
-            i = int(round(len(self.sound_info) - (self.interval * self.frame_rate), 0))
+        # colorbar optional (can be toggled)
+        # self.figure.colorbar(pcm, ax=self.ax, format="%+2.0f dB")
 
-            spectrogram(self, self.sound_info[i:], window_type, nfft, noverlap, vmin, vmax)
+        # TICKS: use data-driven ticks from t_abs
+        # Major locator: at most N major ticks
+        self.ax.xaxis.set_major_locator(mticker.MaxNLocator(nbins=8, prune="both"))
 
-            lim1 = current_time - (self.media_length - self.interval / 2)
-            lim2 = lim1 + self.interval
+        # Minor ticks: 2 minor ticks between majors
+        self.ax.xaxis.set_minor_locator(mticker.AutoMinorLocator(4))
+        self.ax.tick_params(axis="x", which="minor", length=3)
 
-            self.ax.set_xlim(lim1, lim2)
+        # Format x-axis labels to show one decimal second (or mm:ss if you prefer)
+        def fmt_seconds(x, pos):
+            # x is absolute time in seconds; show rounded seconds with one decimal
+            return f"{x:.1f}"
 
-            self.ax.xaxis.set_major_locator(mticker.FixedLocator(self.ax.get_xticks().tolist()))
-            self.ax.set_xticklabels([str(round(w + self.media_length - self.interval, 1)) for w in self.ax.get_xticks()])
+        self.ax.xaxis.set_major_formatter(mticker.FuncFormatter(fmt_seconds))
 
-            # cursor
-            self.ax.axvline(x=lim1 + self.interval / 2, color=self.cursor_color, linestyle="-")
-
-        # middle
-        else:
-            spectrogram(
-                self,
-                self.sound_info[
-                    int(round((current_time - self.interval / 2) * self.frame_rate, 0)) : int(
-                        round((current_time + self.interval / 2) * self.frame_rate, 0)
-                    )
-                ],
-                window_type,
-                nfft,
-                noverlap,
-                vmin,
-                vmax,
-            )
-
-            self.ax.xaxis.set_major_locator(mticker.FixedLocator(self.ax.get_xticks().tolist()))
-            self.ax.set_xticklabels([str(round(current_time + w - self.interval / 2, 1)) for w in self.ax.get_xticks()])
-
-            # cursor
-            self.ax.axvline(x=self.interval / 2, color=self.cursor_color, linestyle="-")
-
-        # add minor ticks
-        # self.ax.xaxis.set_minor_locator(mticker.AutoMinorLocator(2))
-        # self.ax.tick_params(axis="x", which="minor", length=3)
-
-        t_max = self.ax.get_xlim()[1]
-        print(f"{t_max=}")
-        self.ax.set_xticks(np.arange(0, t_max, 0.5))
-
-        self.ax.set_ylim(self.sb_freq_min.value(), self.sb_freq_max.value())
-
+        # draw canvas
         self.canvas.draw()

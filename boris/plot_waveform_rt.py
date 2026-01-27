@@ -22,17 +22,19 @@ Copyright 2012-2026 Olivier Friard
 """
 
 import wave
-from . import config as cfg
+
 import matplotlib
+
+from . import config as cfg
 
 matplotlib.use("QtAgg")
 
+import matplotlib.ticker as mticker
 import numpy as np
-from PySide6.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QPushButton, QLabel
-from PySide6.QtCore import Signal, QEvent, Qt
 from matplotlib.backends.backend_qtagg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.figure import Figure
-import matplotlib.ticker as mticker
+from PySide6.QtCore import QEvent, Qt, Signal
+from PySide6.QtWidgets import QHBoxLayout, QLabel, QPushButton, QVBoxLayout, QWidget
 
 # matplotlib.pyplot.switch_backend("Qt5Agg")
 
@@ -137,6 +139,7 @@ class Plot_waveform_RT(QWidget):
 
         self.media_length = len(self.sound_info) / self.frame_rate
         self.wav_file_path = wav_file_path
+        self.waveform_max = float(np.max(np.abs(self.sound_info)))
 
         return {"media_length": self.media_length, "frame_rate": self.frame_rate}
 
@@ -156,78 +159,86 @@ class Plot_waveform_RT(QWidget):
         self.interval += 5 * action
         self.plot_waveform(current_time=self.time_mem, force_plot=True)
 
-    def plot_waveform(self, current_time: float, force_plot: bool = False) -> None:
+    def plot_waveform(self, current_time: float | None, force_plot: bool = False) -> None:
         """
-        plot sound waveform centered on the current time
-
-        Args:
-            current_time (float): time for displaying waveform
-            force_plot (bool): force plot even if media paused
+        Optimized waveform plotting: plot sound waveform centered on the current time.
+        Uses downsampling to limit plotted points and absolute seconds on x-axis.
         """
-
         if not force_plot and current_time == self.time_mem:
             return
 
         self.time_mem = current_time
-
         self.ax.clear()
 
         if current_time is None:
             return
 
-        # start
-        if current_time <= self.interval / 2:
-            time_ = np.linspace(
-                0,
-                len(self.sound_info[: int((self.interval) * self.frame_rate)]) / self.frame_rate,
-                num=len(self.sound_info[: int((self.interval) * self.frame_rate)]),
-            )
-            self.ax.plot(time_, self.sound_info[: int((self.interval) * self.frame_rate)])
+        half = self.interval / 2.0
+        # compute absolute window (clamped)
+        start_time = max(0.0, current_time - half)
+        end_time = min(self.media_length, current_time + half)
 
-            self.ax.set_xlim(current_time - self.interval / 2, current_time + self.interval / 2)
+        # sample indices
+        i0 = int(round(start_time * self.frame_rate))
+        i1 = int(round(end_time * self.frame_rate))
+        # clip to array bounds
+        i0 = max(0, min(i0, len(self.sound_info)))
+        i1 = max(0, min(i1, len(self.sound_info)))
 
-            # cursor
+        chunk = self.sound_info[i0:i1]
+        if chunk.size == 0:
+            # nothing to plot
+            self.canvas.draw()
+            return
+
+        # Determine downsample factor so we draw at most max_points
+        max_points = 3000  # tweak: number of points to plot for speed/quality tradeoff
+        length = chunk.shape[0]
+        if length <= max_points:
+            # no downsampling needed
+            y = chunk.astype(float)
+            x = np.linspace(start_time, end_time, num=length)
+        else:
+            # block-aggregate: avoid fancy resampling for speed
+            # compute block size (ceil)
+            block = int(np.ceil(length / max_points))
+            # trim chunk so it divides evenly into blocks
+            trim = (block * max_points) - length
+            if trim > 0:
+                # pad on the right with zeros? better: trim the end a bit to make exact blocks
+                chunk_padlen = length - (length % block)
+                trimmed = chunk[:chunk_padlen]
+            else:
+                trimmed = chunk
+            # reshape and compute mean (or RMS) per block
+            reshaped = trimmed.reshape(-1, block)
+            # use mean to preserve waveform shape; if you prefer amplitude envelope use np.abs then mean
+            y = reshaped.mean(axis=1)
+            # create absolute times for block centers
+            # number of blocks:
+            n_blocks = y.shape[0]
+            # block centers times
+            x = np.linspace(start_time, start_time + (len(trimmed) / self.frame_rate), num=n_blocks)
+
+        # Plot (convert to float for matplotlib)
+        self.ax.plot(x, y, linewidth=0.6)
+
+        # set visible range and ticks (absolute time)
+        self.ax.set_xlim(start_time, end_time)
+
+        self.ax.set_ylim(-self.waveform_max, self.waveform_max)
+
+        # Cursor: absolute time
+        if start_time <= current_time <= end_time:
             self.ax.axvline(x=current_time, color=self.cursor_color, linestyle="-")
 
-        elif current_time >= self.media_length - self.interval / 2:
-            i = int(round(len(self.sound_info) - (self.interval * self.frame_rate), 0))
+        # Format x ticks: use at most 8 major ticks
+        self.ax.xaxis.set_major_locator(mticker.MaxNLocator(nbins=8, prune="both"))
+        # optional minor ticks
+        self.ax.xaxis.set_minor_locator(mticker.AutoMinorLocator(2))
+        self.ax.tick_params(axis="x", which="minor", length=3)
 
-            time_ = np.linspace(
-                0,
-                len(self.sound_info[i:]) / self.frame_rate,
-                num=len(self.sound_info[i:]),
-            )
-            self.ax.plot(time_, self.sound_info[i:])
-
-            lim1 = current_time - (self.media_length - self.interval / 2)
-            lim2 = lim1 + self.interval
-
-            self.ax.set_xlim(lim1, lim2)
-
-            self.ax.xaxis.set_major_locator(mticker.FixedLocator(self.ax.get_xticks().tolist()))
-            self.ax.set_xticklabels([str(round(w + self.media_length - self.interval, 1)) for w in self.ax.get_xticks()])
-
-            # cursor
-            self.ax.axvline(x=lim1 + self.interval / 2, color=self.cursor_color, linestyle="-")
-
-        # middle
-        else:
-            start = (current_time - self.interval / 2) * self.frame_rate
-            end = (current_time + self.interval / 2) * self.frame_rate
-
-            time_ = np.linspace(
-                0,
-                len(self.sound_info[int(round(start, 0)) : int(round(end, 0))]) / self.frame_rate,
-                num=len(self.sound_info[int(round(start, 0)) : int(round(end, 0))]),
-            )
-
-            self.ax.plot(time_, self.sound_info[int(round(start, 0)) : int(round(end, 0))])
-
-            self.ax.xaxis.set_major_locator(mticker.FixedLocator(self.ax.get_xticks().tolist()))
-            self.ax.set_xticklabels([str(round(current_time + w - self.interval / 2, 1)) for w in self.ax.get_xticks()])
-
-            # cursor
-            self.ax.axvline(x=self.interval / 2, color=self.cursor_color, linestyle="-")
-        """self.figure.subplots_adjust(wspace=0, hspace=0)"""
+        # Optionally label y-axis off (waveform amplitude might be large ints)
+        self.ax.set_ylabel("")  # or keep as is
 
         self.canvas.draw()
