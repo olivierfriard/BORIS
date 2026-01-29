@@ -976,15 +976,68 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 logging.debug("create spectrogram plot")
 
                 if "display" in self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO]:
+                    print(f"{self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO]=}")
+
                     for player in self.pj[cfg.OBSERVATIONS][self.observationId][cfg.FILE]:
                         if (
                             "spectro"
                             not in self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO].get("display", {}).get(player, "").lower()
                         ):
-                            print(
-                                f"spectro not in {self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO].get("display", {}).get(player, "").lower()=}"
+                            print(f"spectro not in {self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO]["display"]=}")
+                            continue
+
+                        # create spectro
+                        self.generate_wav_file_from_media()
+                        tmp_dir = (
+                            self.ffmpeg_cache_dir
+                            if self.ffmpeg_cache_dir and os.path.isdir(self.ffmpeg_cache_dir)
+                            else tempfile.gettempdir()
+                        )
+
+                        wav_file_path = (
+                            Path(tmp_dir)
+                            / Path(
+                                self.dw_player[int(player) - 1].player.playlist[self.dw_player[int(player) - 1].player.playlist_pos][
+                                    "filename"
+                                ]
+                                + ".wav"
+                            ).name
+                        )
+
+                        self.spectro[player] = plot_spectrogram_rt.Plot_spectrogram_RT()
+                        self.spectro[player].setWindowFlags(Qt.WindowType.WindowStaysOnTopHint)
+                        self.spectro[player].setWindowFlags(self.spectro[player].windowFlags() & ~Qt.WindowType.WindowMinimizeButtonHint)
+                        self.spectro[player].interval = self.spectrogram_time_interval
+                        self.spectro[player].cursor_color = cfg.REALTIME_PLOT_CURSOR_COLOR
+                        self.spectro[player].config_param = self.config_param
+
+                        # color palette
+                        try:
+                            self.spectro[player].spectro_color_map = pyplot.get_cmap(self.spectrogram_color_map)
+                        except ValueError:
+                            self.spectro[player].spectro_color_map = pyplot.get_cmap("viridis")
+
+                        r = self.spectro[player].load_wav(str(wav_file_path))
+                        if "error" in r:
+                            logging.warning(f"spectro_load_wav error: {r['error']}")
+                            QMessageBox.warning(
+                                self,
+                                cfg.programName,
+                                f"Error in spectrogram generation: {r['error']}",
+                                QMessageBox.StandardButton.Ok,
+                                QMessageBox.StandardButton.NoButton,
                             )
+                            del self.spectro[player]
                             return
+
+                    self.pj[cfg.OBSERVATIONS][self.observationId][cfg.VISUALIZE_SPECTROGRAM] = True
+                    self.spectro[player].sendEvent.connect(self.signal_from_widget)
+                    self.spectro[player].sb_freq_min.setValue(0)
+                    self.spectro[player].sb_freq_max.setValue(int(self.spectro[player].frame_rate / 2))
+                    self.spectro[player].show()
+
+                # no display
+
                 else:
                     # check if first media in player #1 has audio
                     for media in self.pj[cfg.OBSERVATIONS][self.observationId][cfg.FILE][cfg.PLAYER1]:
