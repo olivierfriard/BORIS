@@ -4,12 +4,11 @@ BORIS plugin
 Inter Rater Reliability (IRR) Unweighted Cohen's Kappa
 """
 
-import pandas as pd
 from typing import Dict, Tuple
 
-from sklearn.metrics import cohen_kappa_score
+import pandas as pd
 from PySide6.QtWidgets import QInputDialog
-
+from sklearn.metrics import cohen_kappa_score
 
 __version__ = "0.0.3"
 __version_date__ = "2025-09-02"
@@ -79,22 +78,30 @@ def run(df: pd.DataFrame) -> pd.DataFrame:
     ck_results: Dict[Tuple[str, str], str] = {}
     for idx1, obs_id1 in enumerate(unique_obs_list):
         obs1 = grouped[obs_id1]
+        print(f"{obs1=}")
 
         # Perfect agreement with itself
         ck_results[(obs_id1, obs_id1)] = "1.000"
 
         for obs_id2 in unique_obs_list[idx1 + 1 :]:
             obs2 = grouped[obs_id2]
+            print(f"{obs2=}")
 
             # get all the break points
             time_points = sorted(set([t for seg in obs1 for t in seg[:2]] + [t for seg in obs2 for t in seg[:2]]))
 
+            print(f"{time_points=}")
+
             # elementary intervals
             elementary_intervals = [(time_points[i], time_points[i + 1]) for i in range(len(time_points) - 1)]
 
-            obs1_codes = [get_code(t[0], obs1) for t in elementary_intervals]
+            print(f"{elementary_intervals=}")
 
+            obs1_codes = [get_code(t[0], obs1) for t in elementary_intervals]
             obs2_codes = [get_code(t[0], obs2) for t in elementary_intervals]
+
+            print(f"{obs1_codes=}")
+            print(f"{obs2_codes=}")
 
             # Cohen's Kappa
             kappa = cohen_kappa_score(obs1_codes, obs2_codes)

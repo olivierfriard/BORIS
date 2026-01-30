@@ -5,9 +5,8 @@ Inter Rater Reliability (IRR) Unweighted Cohen's Kappa with modifiers
 """
 
 import pandas as pd
-
-from sklearn.metrics import cohen_kappa_score
 from PySide6.QtWidgets import QInputDialog
+from sklearn.metrics import cohen_kappa_score
 
 __version__ = "0.0.3"
 __version_date__ = "2025-09-02"

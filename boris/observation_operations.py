@@ -753,6 +753,9 @@ def new_observation(self, mode: str = cfg.NEW, obsId: str = "") -> None:
 
                         # display
                         # IMPROVED SPECTRO / WAVEFORM
+                        observationWindow.twVideo1.setItem(
+                            observationWindow.twVideo1.rowCount() - 1, cfg.PLAYER_DISPLAY_IDX, QTableWidgetItem("Not implemented")
+                        )
                         """
                         combobox_display = QComboBox()
                         combobox_display.addItems(cfg.DISPLAY_FROM_MEDIA)
