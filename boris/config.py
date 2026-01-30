@@ -98,6 +98,7 @@ CONVERTERS = "converters"
 
 OFFSET = "offset"
 
+
 OBSERVATION_TIME_INTERVAL = "observation time interval"
 
 SUBJECT_NAME = "name"
@@ -257,6 +258,7 @@ ETHOGRAM_EDITABLE_FIELDS: tuple = ("key", "code", "description")
 PROJECT_BEHAVIORS_KEY_FIELD_IDX = 1
 PROJECT_BEHAVIORS_CODE_FIELD_IDX = 2
 
+# indices for twVideo1
 PLAYER_NUMBER_IDX = 0
 PLAYER_OFFSET_IDX = 1
 PLAYER_DISPLAY_IDX = 2
@@ -464,6 +466,7 @@ FPS = "fps"
 HAS_AUDIO = "hasAudio"
 HAS_VIDEO = "hasVideo"
 MEDIA_CREATION_TIME = "media_creation_time"
+MEDIA_INFO_OFFSET = "offset"
 
 STATE = "STATE"
 POINT = "POINT"

@@ -1370,7 +1370,7 @@ class Observation(QDialog, Ui_Form):
                             response = dialog.MessageDialog(
                                 cfg.programName,
                                 f"<b>{file_path}</b> {msg}",
-                                ["Continue", "Skip all non media files", cfg.CANCEL],
+                                ("Continue", "Skip all non media files", cfg.CANCEL),
                             )
                             if response == cfg.CANCEL:
                                 break
@@ -1379,7 +1379,7 @@ class Observation(QDialog, Ui_Form):
                     selected_obs_id = dialog.MessageDialog(
                         cfg.programName,
                         "Select the observation id",
-                        [dir_name, str(pl.Path(dir_name).name), cfg.CANCEL],
+                        (dir_name, str(pl.Path(dir_name).name), cfg.CANCEL),
                     )
                     if selected_obs_id != cfg.CANCEL:
                         self.leObservationId.setText(selected_obs_id)
@@ -1405,15 +1405,19 @@ class Observation(QDialog, Ui_Form):
                 self.mediaHasAudio[file_name],
             )
         ):
-            if col_idx == 0:  # player combobox
+            if col_idx == cfg.PLAYER_NUMBER_IDX:
                 combobox = QComboBox()
                 combobox.addItems(cfg.ALL_PLAYERS)
                 self.twVideo1.setCellWidget(self.twVideo1.rowCount() - 1, col_idx, combobox)
-            elif col_idx == 2:  # combobox for playing spectro/waveform
-                # substract first value
+            elif col_idx == cfg.PLAYER_DISPLAY_IDX:
+                # not yet implemented
+                self.twVideo1.setItem(self.twVideo1.rowCount() - 1, col_idx, QTableWidgetItem("Not implemented"))
+                """
+                # IMPROVED SPECTRO / WAVEFORM
                 combobox = QComboBox()
                 combobox.addItems(cfg.DISPLAY_FROM_MEDIA)
                 self.twVideo1.setCellWidget(self.twVideo1.rowCount() - 1, col_idx, combobox)
+                """
             else:
                 item = QTableWidgetItem(f"{param}")
                 if col_idx != 1:  # only offset is editable by user

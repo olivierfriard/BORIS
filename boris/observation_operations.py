@@ -20,10 +20,8 @@ Copyright 2012-2026 Olivier Friard
 """
 
 import datetime as dt
-import json
 import logging
 import os
-import socket
 import subprocess
 import sys
 import tempfile
@@ -32,7 +30,7 @@ from collections import deque
 from decimal import Decimal as dec
 from math import floor, log2
 from pathlib import Path
-from typing import List, Optional, Tuple
+from typing import Optional, Tuple
 
 from PySide6 import QtTest
 from PySide6.QtCore import QDateTime, Qt, QTimer
@@ -754,6 +752,8 @@ def new_observation(self, mode: str = cfg.NEW, obsId: str = "") -> None:
                             )
 
                         # display
+                        # IMPROVED SPECTRO / WAVEFORM
+                        """
                         combobox_display = QComboBox()
                         combobox_display.addItems(cfg.DISPLAY_FROM_MEDIA)
                         combobox_display.setCurrentText(
@@ -762,6 +762,7 @@ def new_observation(self, mode: str = cfg.NEW, obsId: str = "") -> None:
                         observationWindow.twVideo1.setCellWidget(
                             observationWindow.twVideo1.rowCount() - 1, cfg.PLAYER_DISPLAY_IDX, combobox_display
                         )
+                        """
 
                         # media file path
                         item = QTableWidgetItem(mediaFile)
@@ -1083,7 +1084,7 @@ def new_observation(self, mode: str = cfg.NEW, obsId: str = "") -> None:
             except Exception:
                 logging.warning("error with media_info information")
 
-            self.pj[cfg.OBSERVATIONS][new_obs_id][cfg.MEDIA_INFO]["offset"] = {}
+            self.pj[cfg.OBSERVATIONS][new_obs_id][cfg.MEDIA_INFO][cfg.MEDIA_INFO_OFFSET] = {}
 
             logging.debug(f"media_info: {self.pj[cfg.OBSERVATIONS][new_obs_id][cfg.MEDIA_INFO]}")
 
@@ -1095,16 +1096,19 @@ def new_observation(self, mode: str = cfg.NEW, obsId: str = "") -> None:
                     observationWindow.twVideo1.item(row, cfg.MEDIA_FILE_PATH_IDX).text()  # file path
                 )
                 # store offset for media player
-                self.pj[cfg.OBSERVATIONS][new_obs_id][cfg.MEDIA_INFO]["offset"][
+                self.pj[cfg.OBSERVATIONS][new_obs_id][cfg.MEDIA_INFO][cfg.MEDIA_INFO_OFFSET][
                     observationWindow.twVideo1.cellWidget(row, cfg.PLAYER_NUMBER_IDX).currentText()
                 ] = float(observationWindow.twVideo1.item(row, cfg.PLAYER_OFFSET_IDX).text())
 
                 # store display for media (None / Spectrogram / Waveform)
+                """
+                # IMPROVED SPECTRO / WAVEFORM
                 if "display" not in self.pj[cfg.OBSERVATIONS][new_obs_id][cfg.MEDIA_INFO]:
                     self.pj[cfg.OBSERVATIONS][new_obs_id][cfg.MEDIA_INFO]["display"] = {}
                 self.pj[cfg.OBSERVATIONS][new_obs_id][cfg.MEDIA_INFO]["display"][
                     observationWindow.twVideo1.cellWidget(row, cfg.PLAYER_NUMBER_IDX).currentText()
                 ] = observationWindow.twVideo1.cellWidget(row, cfg.PLAYER_DISPLAY_IDX).currentText()
+                """
 
         if rv == 1:  # save
             self.observationId = ""
@@ -2466,13 +2470,13 @@ def create_observations(self):
 
     elements_list.extend(
         [
-            ("cb", "Recurse the subdirectories", False),
-            ("cb", "Visualize spectrogram", False),
-            ("cb", "Visualize waveform", False),
-            ("cb", "Media creation date as offset", False),
-            ("cb", "Close behaviors between videos", False),
-            ("dsb", "Time offset (in seconds)", 0.0, 86400, 1, 0, 3),
-            ("dsb", "Media scan sampling duration (in seconds)", 0.0, 86400, 1, 0, 3),
+            (cfg.CHECKBOX, "Recurse the subdirectories", False),
+            (cfg.CHECKBOX, "Visualize spectrogram", False),
+            (cfg.CHECKBOX, "Visualize waveform", False),
+            (cfg.CHECKBOX, "Media creation date as offset", False),
+            (cfg.CHECKBOX, "Close behaviors between videos", False),
+            (cfg.DOUBLE_SPINBOX, "Time offset (in seconds)", 0.0, 86400, 1, 0, 3),
+            (cfg.DOUBLE_SPINBOX, "Media scan sampling duration (in seconds)", 0.0, 86400, 1, 0, 3),
         ]
     )
 
@@ -2542,12 +2546,12 @@ def create_observations(self):
                 "media_scan_sampling_duration": dec(str(round(dlg.elements["Media scan sampling duration (in seconds)"].value(), 3))),
                 "image_display_duration": 1,
                 "close_behaviors_between_videos": dlg.elements["Close behaviors between videos"].isChecked(),
-                "media_info": {
-                    "length": {media_file: r["duration"]},
-                    "fps": {media_file: r["duration"]},
-                    "hasVideo": {media_file: r["has_video"]},
-                    "hasAudio": {media_file: r["has_audio"]},
-                    "offset": {"1": 0.0},
+                cfg.MEDIA_INFO: {
+                    cfg.LENGTH: {media_file: r["duration"]},
+                    cfg.FPS: {media_file: r["duration"]},
+                    cfg.HAS_VIDEO: {media_file: r[cfg.HAS_VIDEO]},
+                    cfg.HAS_AUDIO: {media_file: r[cfg.HAS_AUDIO]},
+                    cfg.MEDIA_INFO_OFFSET: {"1": 0.0},
                 },
             }
             file_count += 1
