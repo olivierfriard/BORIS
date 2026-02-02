@@ -34,9 +34,7 @@ import numpy as np
 from matplotlib.backends.backend_qtagg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.figure import Figure
 from PySide6.QtCore import QEvent, Qt, Signal
-from PySide6.QtWidgets import QHBoxLayout, QLabel, QPushButton, QSizePolicy, QSpacerItem, QVBoxLayout, QWidget
-
-# matplotlib.pyplot.switch_backend("Qt5Agg")
+from PySide6.QtWidgets import QHBoxLayout, QLabel, QPushButton, QVBoxLayout, QWidget
 
 
 class Plot_waveform_RT(QWidget):
@@ -167,6 +165,9 @@ class Plot_waveform_RT(QWidget):
         Optimized waveform plotting: plot sound waveform centered on the current time.
         Uses downsampling to limit plotted points and absolute seconds on x-axis.
         """
+
+        print(f"waveform {current_time=}    {self.time_mem=}")
+
         if not force_plot and current_time == self.time_mem:
             return
 

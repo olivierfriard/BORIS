@@ -3763,19 +3763,25 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 self.extract_frame(self.dw_player[0])
 
         if self.playerType == cfg.MEDIA:
+            old_time = self.dw_player[0].player.time_pos
             for dw in self.dw_player:
-                # for _ in range(frame_step_size):
                 dw.player.frame_step()
-                # time.sleep(0.5)
-
-                if self.geometric_measurements_mode:
-                    self.extract_frame(dw)
-
-                self.plot_timer_out()
-                for idx in self.plot_data:
-                    self.timer_plot_data_out(self.plot_data[idx])
+            while (
+                not self.dw_player[0].player.eof_reached
+                and not self.dw_player[0].player.core_idle
+                and self.dw_player[0].player.time_pos == old_time
+            ):
+                time.sleep(0.001)
 
             self.mpv_timer_out()
+
+            if self.geometric_measurements_mode:
+                for dw in self.dw_player:
+                    self.extract_frame(dw)
+
+            self.plot_timer_out()
+            for idx in self.plot_data:
+                self.timer_plot_data_out(self.plot_data[idx])
 
         if self.geometric_measurements_mode:
             geometric_measurement.redraw_measurements(self)
@@ -3786,23 +3792,30 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         """
         show previous frame
         """
+
+        logging.debug("previous frame")
+
         if self.playerType == cfg.IMAGES:
             if self.image_idx:
                 self.image_idx -= 1
                 self.extract_frame(self.dw_player[0])
 
         if self.playerType == cfg.MEDIA:
+            old_time = self.dw_player[0].player.time_pos
             for dw in self.dw_player:
                 dw.player.frame_back_step()
-
-                if self.geometric_measurements_mode:
-                    self.extract_frame(dw)
-
-                self.plot_timer_out()
-                for idx in self.plot_data:
-                    self.timer_plot_data_out(self.plot_data[idx])
+            while self.dw_player[0].player.time_pos > 0 and self.dw_player[0].player.time_pos == old_time:
+                time.sleep(0.001)
 
             self.mpv_timer_out()
+
+            if self.geometric_measurements_mode:
+                for dw in self.dw_player:
+                    self.extract_frame(dw)
+
+            self.plot_timer_out()
+            for idx in self.plot_data:
+                self.timer_plot_data_out(self.plot_data[idx])
 
         if self.geometric_measurements_mode:
             geometric_measurement.redraw_measurements(self)
@@ -4253,8 +4266,12 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             return
 
         cumulative_time_pos = self.getLaps()
+
+        print(f"{cumulative_time_pos=}")
         # get frame index
         frame_idx = self.get_frame_index()
+
+        print(f"{frame_idx=}")
         # frame_idx = 0
 
         if value is None:  # ipc mpv
