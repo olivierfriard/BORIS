@@ -1478,7 +1478,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         QMessageBox.information(self, cfg.programName, f"BORIS was updated to v. {last_version}. Restart the program to apply the changes.")
 
-    def seek_mediaplayer(self, new_time: dec, player=0) -> int:
+    def seek_mediaplayer(self, new_time: dec, player: int = 0) -> int | None:
         """
         change media position in player
 
@@ -1504,7 +1504,18 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 if new_time < self.dw_player[player].player.duration:
                     new_time_float = round(float(new_time), 3)
 
+                    if player == 0:
+                        old_time = self.dw_player[player].player.time_pos
                     self.dw_player[player].player.seek(new_time_float, "absolute+exact")
+                    if player == 0:
+                        while (
+                            self.dw_player[player].player.time_pos > 0
+                            and not self.dw_player[player].player.eof_reached
+                            and not self.dw_player[player].player.core_idle
+                            and self.dw_player[player].player.time_pos == old_time
+                        ):
+                            time.sleep(0.001)
+
                     self.mpv_timer_out()
 
                     if player == 0 and not self.user_move_slider:

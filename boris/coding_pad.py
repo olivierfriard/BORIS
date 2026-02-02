@@ -214,7 +214,7 @@ class CodingPad(QWidget):
         """
         send event (if keypress) to main window
         """
-        if event.type() == QEvent.KeyPress:
+        if event.type() == QEvent.Type.KeyPress:
             self.sendEventSignal.emit(event)
             return True
         else:
