@@ -162,11 +162,9 @@ class Plot_waveform_RT(QWidget):
 
     def plot_waveform(self, current_time: float | None, force_plot: bool = False, window_title: str = "") -> None:
         """
-        Optimized waveform plotting: plot sound waveform centered on the current time.
+        Plot waveformg: plot sound waveform centered on the current time.
         Uses downsampling to limit plotted points and absolute seconds on x-axis.
         """
-
-        print(f"waveform {current_time=}    {self.time_mem=}")
 
         if not force_plot and current_time == self.time_mem:
             return

@@ -24,7 +24,7 @@ import json
 import logging
 import re
 
-from PySide6.QtCore import Qt, QDateTime
+from PySide6.QtCore import QDateTime, Qt
 from PySide6.QtGui import QColor
 from PySide6.QtWidgets import (
     QAbstractItemView,
@@ -48,10 +48,9 @@ from PySide6.QtWidgets import (
     QVBoxLayout,
 )
 
-from . import add_modifier
+from . import add_modifier, converters, dialog, exclusion_matrix, project_import_export
 from . import config as cfg
 from . import utilities as util
-from . import converters, dialog, exclusion_matrix, project_import_export
 from .project_ui import Ui_dlgProject
 
 
@@ -170,7 +169,6 @@ class BehavioralCategories(QDialog):
                 rc = self.lw.rowCount()
                 self.lw.setRowCount(rc + len(behavioral_categories_in_ethogram.difference(set(behavioral_categories))))
                 for idx, category in enumerate(sorted(list(behavioral_categories_in_ethogram.difference(set(behavioral_categories))))):
-                    print(category)
                     # name
                     item = QTableWidgetItem()
                     item.setText(category)
@@ -898,7 +896,6 @@ class projectDialog(QDialog, Ui_dlgProject):
         if self.twBehaviors.item(row, cfg.behavioursFields[cfg.COLOR]).text():
             current_color = QColor(self.twBehaviors.item(row, cfg.behavioursFields[cfg.COLOR]).text())
             if current_color.isValid():
-                print(f"{current_color=}")
                 col_diag.setCurrentColor(current_color)
 
         if col_diag.exec():

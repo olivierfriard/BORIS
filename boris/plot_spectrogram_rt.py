@@ -221,7 +221,9 @@ class Plot_spectrogram_RT(QWidget):
         return f, t, Sxx
 
     def plot_spectro(self, current_time: float | None, force_plot: bool = False, window_title: str = "") -> tuple[float, bool] | None:
-        print(f"spectro {current_time=}   {self.time_mem=}")
+        """
+        Plot spectrogram
+        """
 
         if not force_plot and current_time == self.time_mem:
             return

@@ -20,8 +20,9 @@ This file is part of BORIS.
 
 """
 
+from PySide6.QtCore import QEvent, Signal
 from PySide6.QtWidgets import QDialog
-from PySide6.QtCore import Signal, QEvent
+
 from .video_equalizer_ui import Ui_Equalizer
 
 
@@ -101,8 +102,6 @@ class Video_equalizer(QDialog, Ui_Equalizer):
         """
         if self.cb_player.currentIndex() not in self.equalizer:
             return
-
-        print(type(self.sender().value()))
 
         self.equalizer[self.cb_player.currentIndex()][self.sender().objectName()] = round(self.sender().value())
         self.sendEventSignal.emit(self.cb_player.currentIndex(), self.sender().objectName(), round(self.sender().value()))

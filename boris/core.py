@@ -3755,7 +3755,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         """
         show next frame
         """
-        # frame_step_size = self.config_param.get(cfg.FRAME_STEP_SIZE, cfg.FRAME_STEP_SIZE_DEFAULT_VALUE)
 
         if self.playerType == cfg.IMAGES:
             if self.image_idx < len(self.images_list) - 1:
@@ -4267,12 +4266,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         cumulative_time_pos = self.getLaps()
 
-        print(f"{cumulative_time_pos=}")
         # get frame index
         frame_idx = self.get_frame_index()
-
-        print(f"{frame_idx=}")
-        # frame_idx = 0
 
         if value is None:  # ipc mpv
             current_media_time_pos = self.dw_player[0].player.time_pos
@@ -4456,19 +4451,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
                     self.lb_player_status.setText("End of playlist reached")
 
-                    """
-                    cmd = [round(dec(x / 1000), 3) for x in self.dw_player[0].cumul_media_durations]
-                    print(f"{cmd=}")
-                    """
-
                     min_ = self.dw_player[0].cumul_media_durations_sec[self.dw_player[0].player.playlist_pos]
-                    """max_ =  self.dw_player[0].cumul_media_durations_sec[self.dw_player[0].player.playlist_pos + 1]"""
-
-                    # print(f"{min_=} ")
 
                     events = [event for event in self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS] if min_ <= event[0]]
-
-                    # print(f"{events=}")
 
                     time_to_stop = self.dw_player[0].cumul_media_durations_sec[-1]
 

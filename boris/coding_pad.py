@@ -19,9 +19,9 @@ Copyright 2012-2026 Olivier Friard
   MA 02110-1301, USA.
 """
 
-from PySide6.QtCore import Qt, Signal, QEvent, QRect
+from PySide6.QtCore import QEvent, QRect, Qt, Signal
 from PySide6.QtGui import QFont
-from PySide6.QtWidgets import QWidget, QPushButton, QHBoxLayout, QGridLayout, QComboBox, QMessageBox
+from PySide6.QtWidgets import QComboBox, QGridLayout, QHBoxLayout, QMessageBox, QPushButton, QWidget
 
 from . import config as cfg
 from . import utilities as util
@@ -208,7 +208,6 @@ class CodingPad(QWidget):
         """
         Button clicked
         """
-        print(f"{behavior_code=}")
         self.click_signal.emit(behavior_code)
 
     def eventFilter(self, receiver, event) -> bool:
