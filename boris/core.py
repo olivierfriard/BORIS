@@ -1509,7 +1509,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     self.dw_player[player].player.seek(new_time_float, "absolute+exact")
                     if player == 0:
                         while (
-                            self.dw_player[player].player.time_pos > 0
+                            self.dw_player[player].player.time_pos is not None
+                            and self.dw_player[player].player.time_pos > 0
                             and not self.dw_player[player].player.eof_reached
                             and not self.dw_player[player].player.core_idle
                             and self.dw_player[player].player.time_pos == old_time
@@ -1519,9 +1520,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     self.mpv_timer_out()
 
                     if player == 0 and not self.user_move_slider:
-                        self.video_slider.setValue(
-                            round(self.dw_player[0].player.time_pos / self.dw_player[0].player.duration * (cfg.SLIDER_MAXIMUM - 1))
-                        )
+                        time_ = self.dw_player[0].player.time_pos
+                        duration_ = self.dw_player[0].player.duration
+                        if time_ is not None and duration_ is not None:
+                            self.video_slider.setValue(round(time_ / duration_ * (cfg.SLIDER_MAXIMUM - 1)))
                     return 0
                 else:
                     return 1
@@ -3777,7 +3779,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             for dw in self.dw_player:
                 dw.player.frame_step()
             while (
-                not self.dw_player[0].player.eof_reached
+                self.dw_player[0].player.time_pos is not None
+                and not self.dw_player[0].player.eof_reached
                 and not self.dw_player[0].player.core_idle
                 and self.dw_player[0].player.time_pos == old_time
             ):
@@ -3814,7 +3817,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             old_time = self.dw_player[0].player.time_pos
             for dw in self.dw_player:
                 dw.player.frame_back_step()
-            while self.dw_player[0].player.time_pos > 0 and self.dw_player[0].player.time_pos == old_time:
+            while (
+                self.dw_player[0].player.time_pos is not None
+                and self.dw_player[0].player.time_pos > 0
+                and self.dw_player[0].player.time_pos == old_time
+            ):
                 time.sleep(0.001)
 
             self.mpv_timer_out()
