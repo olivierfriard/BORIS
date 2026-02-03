@@ -7,8 +7,8 @@ default:
 build:
     rm -rf *.egg-info build dist
     # update version in pyproject.toml
-    uv version $(grep '__version__' boris/version.py | awk -F'"' '{print $2}')
-    git commit -am "new wheel" || true
+    uv version $(grep '^__version__' boris/version.py | awk -F'"' '{print $2}')
+    git commit -am "new wheel v.$(grep '^__version__' boris/version.py | awk -F'"' '{print $2}')" || true
     git push
     uv build
 
