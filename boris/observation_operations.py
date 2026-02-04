@@ -1103,14 +1103,12 @@ def new_observation(self, mode: str = cfg.NEW, obsId: str = "") -> None:
                 ] = float(observationWindow.twVideo1.item(row, cfg.PLAYER_OFFSET_IDX).text())
 
                 # store display for media (None / Spectrogram / Waveform)
-                """
                 # IMPROVED SPECTRO / WAVEFORM
                 if "display" not in self.pj[cfg.OBSERVATIONS][new_obs_id][cfg.MEDIA_INFO]:
                     self.pj[cfg.OBSERVATIONS][new_obs_id][cfg.MEDIA_INFO]["display"] = {}
                 self.pj[cfg.OBSERVATIONS][new_obs_id][cfg.MEDIA_INFO]["display"][
                     observationWindow.twVideo1.cellWidget(row, cfg.PLAYER_NUMBER_IDX).currentText()
                 ] = observationWindow.twVideo1.cellWidget(row, cfg.PLAYER_DISPLAY_IDX).currentText()
-                """
 
         if rv == 1:  # save
             self.observationId = ""
@@ -2027,32 +2025,34 @@ def initialize_new_media_observation(self) -> bool:
     video_operations.display_zoom_level(self)
 
     # spectrogram
-    if (
-        cfg.VISUALIZE_SPECTROGRAM in self.pj[cfg.OBSERVATIONS][self.observationId]
-        and self.pj[cfg.OBSERVATIONS][self.observationId][cfg.VISUALIZE_SPECTROGRAM]
-    ):
+    if self.pj[cfg.OBSERVATIONS][self.observationId].get(cfg.VISUALIZE_SPECTROGRAM, False) or self.pj[cfg.OBSERVATIONS][self.observationId][
+        cfg.MEDIA_INFO
+    ].get("display", {}):
+        # cfg.VISUALIZE_SPECTROGRAM in self.pj[cfg.OBSERVATIONS][self.observationId]
+        # and self.pj[cfg.OBSERVATIONS][self.observationId][cfg.VISUALIZE_SPECTROGRAM]
+        # ):
         tmp_dir = self.ffmpeg_cache_dir if self.ffmpeg_cache_dir and os.path.isdir(self.ffmpeg_cache_dir) else tempfile.gettempdir()
 
         wav_file_path = (
             Path(tmp_dir) / Path(self.dw_player[0].player.playlist[self.dw_player[0].player.playlist_pos]["filename"] + ".wav").name
         )
 
+        # TO DO: test if it is necessary
         if not wav_file_path.is_file():
             self.generate_wav_file_from_media()
 
         self.show_plot_widget("spectrogram", warning=False)
 
     # waveform
-    if (
-        cfg.VISUALIZE_WAVEFORM in self.pj[cfg.OBSERVATIONS][self.observationId]
-        and self.pj[cfg.OBSERVATIONS][self.observationId][cfg.VISUALIZE_WAVEFORM]
-    ):
+    if self.pj[cfg.OBSERVATIONS][self.observationId].get(cfg.VISUALIZE_WAVEFORM, False) or self.pj[cfg.OBSERVATIONS][self.observationId][
+        cfg.MEDIA_INFO
+    ].get("display", {}):
         tmp_dir = self.ffmpeg_cache_dir if self.ffmpeg_cache_dir and os.path.isdir(self.ffmpeg_cache_dir) else tempfile.gettempdir()
 
         wav_file_path = (
             Path(tmp_dir) / Path(self.dw_player[0].player.playlist[self.dw_player[0].player.playlist_pos]["filename"] + ".wav").name
         )
-
+        # TO DO: test if it is necessary
         if not wav_file_path.is_file():
             self.generate_wav_file_from_media()
 

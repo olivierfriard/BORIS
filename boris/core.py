@@ -238,6 +238,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     timeOffset: float = 0.0
     confirmSound: bool = False  # if True each keypress will be confirmed by a beep
     spectro: dict = {}
+    waveform: dict = {}
     spectrogram_time_interval = cfg.SPECTROGRAM_DEFAULT_TIME_INTERVAL
     spectrogram_color_map = cfg.SPECTROGRAM_DEFAULT_COLOR_MAP
     alertNoFocalSubject: bool = False  # if True an alert will show up if no focal subject
@@ -904,9 +905,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 ]
                 self.subjects_pad.compose()
 
-    def generate_wav_file_from_media(self):
+    def generate_wav_file_from_media(self, player: int = cfg.PLAYER1) -> None:
         """
-        extract wav from all media files loaded in player #1
+        extract wav from all media files loaded in player
+        default to player #1 for back compatibility
         """
 
         logging.debug("function: create wav file from media")
@@ -921,9 +923,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         w.setWindowTitle(cfg.programName)
         w.label.setText("Extracting WAV from media files...")
 
-        for media in self.pj[cfg.OBSERVATIONS][self.observationId][cfg.FILE][cfg.PLAYER1]:
+        for media in self.pj[cfg.OBSERVATIONS][self.observationId][cfg.FILE][player]:
             media_file_path = project_functions.full_path(media, self.projectFileName)
-            if os.path.isfile(media_file_path):
+            if Path(media_file_path).is_file():
                 w.show()
                 QApplication.processEvents()
 
@@ -940,7 +942,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             else:
                 QMessageBox.warning(self, cfg.programName, f"<b>{media_file_path}</b> file not found")
 
-    def show_plot_widget(self, plot_type: str, warning: bool = False):
+    def show_plot_widget(self, plot_type: str, warning: bool = False) -> None:
         """
         show plot widgets (spectrogram, waveform, plot events)
         if plot does not exist it is created
@@ -967,7 +969,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         if plot_type == cfg.SPECTROGRAM_PLOT:
             if self.spectro:  # dict not empty
-                if "display" in self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO]:
+                if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO].get("display", {}):
                     for player in self.spectro:
                         self.spectro[player].show()
                 else:
@@ -975,19 +977,16 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             else:
                 logging.debug("create spectrogram plot")
 
-                if "display" in self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO]:
-                    print(f"{self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO]=}")
-
+                if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO].get("display", {}):
                     for player in self.pj[cfg.OBSERVATIONS][self.observationId][cfg.FILE]:
                         if (
                             "spectro"
                             not in self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO].get("display", {}).get(player, "").lower()
                         ):
-                            print(f"spectro not in {self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO]["display"]=}")
                             continue
 
                         # create spectro
-                        self.generate_wav_file_from_media()
+                        self.generate_wav_file_from_media(player)
                         tmp_dir = (
                             self.ffmpeg_cache_dir
                             if self.ffmpeg_cache_dir and os.path.isdir(self.ffmpeg_cache_dir)
@@ -1003,6 +1002,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                                 + ".wav"
                             ).name
                         )
+                        print(f"{player=} {wav_file_path=}")
 
                         self.spectro[player] = plot_spectrogram_rt.Plot_spectrogram_RT()
                         self.spectro[player].setWindowFlags(Qt.WindowType.WindowStaysOnTopHint)
@@ -1030,14 +1030,13 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                             del self.spectro[player]
                             return
 
-                    self.pj[cfg.OBSERVATIONS][self.observationId][cfg.VISUALIZE_SPECTROGRAM] = True
-                    self.spectro[player].sendEvent.connect(self.signal_from_widget)
-                    self.spectro[player].sb_freq_min.setValue(0)
-                    self.spectro[player].sb_freq_max.setValue(int(self.spectro[player].frame_rate / 2))
-                    self.spectro[player].show()
+                        self.pj[cfg.OBSERVATIONS][self.observationId][cfg.VISUALIZE_SPECTROGRAM] = True
+                        self.spectro[player].sendEvent.connect(self.signal_from_widget)
+                        self.spectro[player].sb_freq_min.setValue(0)
+                        self.spectro[player].sb_freq_max.setValue(int(self.spectro[player].frame_rate / 2))
+                        self.spectro[player].show()
 
                 # no display
-
                 else:
                     # check if first media in player #1 has audio
                     for media in self.pj[cfg.OBSERVATIONS][self.observationId][cfg.FILE][cfg.PLAYER1]:
@@ -1112,11 +1111,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                         del self.spectro[cfg.PLAYER1]
                         return
 
-                self.pj[cfg.OBSERVATIONS][self.observationId][cfg.VISUALIZE_SPECTROGRAM] = True
-                self.spectro[cfg.PLAYER1].sendEvent.connect(self.signal_from_widget)
-                self.spectro[cfg.PLAYER1].sb_freq_min.setValue(0)
-                self.spectro[cfg.PLAYER1].sb_freq_max.setValue(int(self.spectro[cfg.PLAYER1].frame_rate / 2))
-                self.spectro[cfg.PLAYER1].show()
+                    self.pj[cfg.OBSERVATIONS][self.observationId][cfg.VISUALIZE_SPECTROGRAM] = True
+                    self.spectro[cfg.PLAYER1].sendEvent.connect(self.signal_from_widget)
+                    self.spectro[cfg.PLAYER1].sb_freq_min.setValue(0)
+                    self.spectro[cfg.PLAYER1].sb_freq_max.setValue(int(self.spectro[cfg.PLAYER1].frame_rate / 2))
+                    self.spectro[cfg.PLAYER1].show()
 
                 self.plot_timer_out()
 
@@ -1125,85 +1124,141 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                         self.play_video()
 
         if plot_type == cfg.WAVEFORM_PLOT:
-            if hasattr(self, "waveform"):
-                self.waveform.show()
+            if self.waveform:
+                if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO].get("display", {}):
+                    for player in self.spectro:
+                        self.waveform[player].show()
+                else:
+                    self.waveform[cfg.PLAYER1].show()
+
             else:
                 logging.debug("Create waveform plot")
 
-                # check if first media in player #1 has audio
-                for media in self.pj[cfg.OBSERVATIONS][self.observationId][cfg.FILE][cfg.PLAYER1]:
-                    # media_file_path = project_functions.full_path(media, self.projectFileName)
+                if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO].get("display", {}):
+                    for player in self.pj[cfg.OBSERVATIONS][self.observationId][cfg.FILE]:
+                        if (
+                            "waveform"
+                            not in self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO].get("display", {}).get(player, "").lower()
+                        ):
+                            continue
 
-                    if not project_functions.has_audio(self.pj[cfg.OBSERVATIONS][self.observationId], media):
-                        QMessageBox.critical(
+                        # create waveform
+                        self.generate_wav_file_from_media(player)
+                        tmp_dir = (
+                            self.ffmpeg_cache_dir
+                            if self.ffmpeg_cache_dir and os.path.isdir(self.ffmpeg_cache_dir)
+                            else tempfile.gettempdir()
+                        )
+
+                        wav_file_path = (
+                            Path(tmp_dir)
+                            / Path(
+                                self.dw_player[int(player) - 1].player.playlist[self.dw_player[int(player) - 1].player.playlist_pos][
+                                    "filename"
+                                ]
+                                + ".wav"
+                            ).name
+                        )
+                        self.waveform[player] = plot_waveform_rt.Plot_waveform_RT()
+                        self.waveform[player].setWindowFlags(Qt.WindowType.WindowStaysOnTopHint)
+                        self.waveform[player].setWindowFlags(self.waveform[player].windowFlags() & ~Qt.WindowMinimizeButtonHint)
+                        self.waveform[player].interval = self.spectrogram_time_interval
+                        self.waveform[player].cursor_color = cfg.REALTIME_PLOT_CURSOR_COLOR
+
+                        r = self.waveform[player].load_wav(str(wav_file_path))
+                        if "error" in r:
+                            logging.warning(f"waveform_load_wav error: {r['error']}")
+                            QMessageBox.warning(
+                                self,
+                                cfg.programName,
+                                f"Error in waveform generation: {r['error']}",
+                                QMessageBox.StandardButton.Ok,
+                                QMessageBox.StandardButton.NoButton,
+                            )
+                            del self.waveform[player]
+                            return
+
+                        self.pj[cfg.OBSERVATIONS][self.observationId][cfg.VISUALIZE_WAVEFORM] = True
+                        self.waveform[player].sendEvent.connect(self.signal_from_widget)
+                        self.waveform[player].show()
+
+                # NO DISPLAY
+                else:
+                    # check if first media in player #1 has audio
+                    for media in self.pj[cfg.OBSERVATIONS][self.observationId][cfg.FILE][cfg.PLAYER1]:
+                        # media_file_path = project_functions.full_path(media, self.projectFileName)
+
+                        if not project_functions.has_audio(self.pj[cfg.OBSERVATIONS][self.observationId], media):
+                            QMessageBox.critical(
+                                self,
+                                cfg.programName,
+                                f"The media file {media} does not have an audio track. Plotting the waveform will not be possible.",
+                            )
+                            return
+                        break
+
+                    # remember if player paused
+                    if warning:
+                        if self.playerType == cfg.MEDIA:
+                            flag_paused = self.is_playing()
+
+                    self.pause_video()
+
+                    if (
+                        warning
+                        and dialog.MessageDialog(
+                            cfg.programName,
+                            (
+                                "You choose to visualize the waveform during this observation.<br>"
+                                "The waveform generation can take some time for long media, be patient"
+                            ),
+                            (cfg.YES, cfg.NO),
+                        )
+                        == cfg.NO
+                    ):
+                        if self.playerType == cfg.MEDIA and not flag_paused:
+                            self.play_video()
+                        return
+
+                    self.generate_wav_file_from_media()
+
+                    tmp_dir = (
+                        self.ffmpeg_cache_dir if self.ffmpeg_cache_dir and os.path.isdir(self.ffmpeg_cache_dir) else tempfile.gettempdir()
+                    )
+
+                    wav_file_path = (
+                        Path(tmp_dir)
+                        / Path(self.dw_player[0].player.playlist[self.dw_player[0].player.playlist_pos]["filename"] + ".wav").name
+                    )
+
+                    self.waveform[cfg.PLAYER1] = plot_waveform_rt.Plot_waveform_RT()
+                    self.waveform[cfg.PLAYER1].setWindowFlags(Qt.WindowType.WindowStaysOnTopHint)
+                    self.waveform[cfg.PLAYER1].setWindowFlags(self.waveform[cfg.PLAYER1].windowFlags() & ~Qt.WindowMinimizeButtonHint)
+                    self.waveform[cfg.PLAYER1].interval = self.spectrogram_time_interval
+                    self.waveform[cfg.PLAYER1].cursor_color = cfg.REALTIME_PLOT_CURSOR_COLOR
+
+                    r = self.waveform[cfg.PLAYER1].load_wav(str(wav_file_path))
+                    if "error" in r:
+                        logging.warning(f"waveform_load_wav error: {r['error']}")
+                        QMessageBox.warning(
                             self,
                             cfg.programName,
-                            f"The media file {media} does not have an audio track. Plotting the waveform will not be possible.",
+                            f"Error in waveform generation: {r['error']}",
+                            QMessageBox.StandardButton.Ok,
+                            QMessageBox.StandardButton.NoButton,
                         )
+                        del self.waveform[cfg.PLAYER1]
                         return
-                    break
 
-                # remember if player paused
-                if warning:
-                    if self.playerType == cfg.MEDIA:
-                        flag_paused = self.is_playing()
+                    self.pj[cfg.OBSERVATIONS][self.observationId][cfg.VISUALIZE_WAVEFORM] = True
+                    self.waveform[cfg.PLAYER1].sendEvent.connect(self.signal_from_widget)
+                    self.waveform[cfg.PLAYER1].show()
 
-                self.pause_video()
+                    self.plot_timer.start()
 
-                if (
-                    warning
-                    and dialog.MessageDialog(
-                        cfg.programName,
-                        (
-                            "You choose to visualize the waveform during this observation.<br>"
-                            "The waveform generation can take some time for long media, be patient"
-                        ),
-                        (cfg.YES, cfg.NO),
-                    )
-                    == cfg.NO
-                ):
-                    if self.playerType == cfg.MEDIA and not flag_paused:
-                        self.play_video()
-                    return
-
-                self.generate_wav_file_from_media()
-
-                tmp_dir = self.ffmpeg_cache_dir if self.ffmpeg_cache_dir and os.path.isdir(self.ffmpeg_cache_dir) else tempfile.gettempdir()
-
-                wav_file_path = (
-                    Path(tmp_dir) / Path(self.dw_player[0].player.playlist[self.dw_player[0].player.playlist_pos]["filename"] + ".wav").name
-                )
-
-                self.waveform = plot_waveform_rt.Plot_waveform_RT()
-
-                self.waveform.setWindowFlags(Qt.WindowType.WindowStaysOnTopHint)
-                self.waveform.setWindowFlags(self.waveform.windowFlags() & ~Qt.WindowMinimizeButtonHint)
-
-                self.waveform.interval = self.spectrogram_time_interval
-                self.waveform.cursor_color = cfg.REALTIME_PLOT_CURSOR_COLOR
-
-                r = self.waveform.load_wav(str(wav_file_path))
-                if "error" in r:
-                    logging.warning(f"waveform_load_wav error: {r['error']}")
-                    QMessageBox.warning(
-                        self,
-                        cfg.programName,
-                        f"Error in waveform generation: {r['error']}",
-                        QMessageBox.StandardButton.Ok,
-                        QMessageBox.StandardButton.NoButton,
-                    )
-                    del self.waveform
-                    return
-
-                self.pj[cfg.OBSERVATIONS][self.observationId][cfg.VISUALIZE_WAVEFORM] = True
-                self.waveform.sendEvent.connect(self.signal_from_widget)
-                self.waveform.show()
-
-                self.plot_timer.start()
-
-                if warning:
-                    if self.playerType == cfg.MEDIA and not flag_paused:
-                        self.play_video()
+                    if warning:
+                        if self.playerType == cfg.MEDIA and not flag_paused:
+                            self.play_video()
 
         if plot_type == cfg.EVENTS_PLOT:
             if hasattr(self, "plot_events"):
@@ -1270,6 +1325,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         timer for plotting visualizations: spectrogram, waveform, plot events
         """
 
+        # logging.debug("plot_timer _out function")
+
         self.update_realtime_plot()
 
         if self.playerType != cfg.MEDIA:
@@ -1279,34 +1336,81 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         tmp_dir = self.ffmpeg_cache_dir if self.ffmpeg_cache_dir and os.path.isdir(self.ffmpeg_cache_dir) else tempfile.gettempdir()
 
-        try:
-            wav_file_path = str(
-                Path(tmp_dir) / Path(self.dw_player[0].player.playlist[self.dw_player[0].player.playlist_pos]["filename"] + ".wav").name
-            )
-        except Exception:
-            return
-
-        # waveform
-        if self.pj[cfg.OBSERVATIONS][self.observationId].get(cfg.VISUALIZE_WAVEFORM, False):
-            if not hasattr(self, "waveform"):
+        # unique waveform
+        if self.pj[cfg.OBSERVATIONS][self.observationId].get(cfg.VISUALIZE_WAVEFORM, False) and not self.pj[cfg.OBSERVATIONS][
+            self.observationId
+        ][cfg.MEDIA_INFO].get("display", {}):
+            if not self.waveform:
                 return
 
-            if not self.waveform.visibleRegion().isEmpty():
-                if self.waveform.wav_file_path == wav_file_path:
-                    self.waveform.plot_waveform(current_media_time, window_title=f"Waveform of {self.mem_media_name}")
-                else:
-                    r = self.waveform.load_wav(wav_file_path)
-                    if "error" not in r:
-                        self.waveform.plot_waveform(current_media_time, window_title=f"Waveform of {self.mem_media_name}")
-                    else:
-                        logging.warning("waveform_load_wav error: {}".format(r["error"]))
+            if not self.waveform[cfg.PLAYER1].visibleRegion().isEmpty():
+                try:
+                    wav_file_path = str(
+                        Path(tmp_dir)
+                        / Path(self.dw_player[0].player.playlist[self.dw_player[0].player.playlist_pos]["filename"] + ".wav").name
+                    )
+                except Exception:
+                    return
 
-        # spectrogram
-        if self.pj[cfg.OBSERVATIONS][self.observationId].get(cfg.VISUALIZE_SPECTROGRAM, False):
+                if self.waveform[cfg.PLAYER1].wav_file_path == wav_file_path:
+                    self.waveform[cfg.PLAYER1].plot_waveform(current_media_time, window_title=f"Waveform of {self.mem_media_name}")
+                else:
+                    r = self.waveform[cfg.PLAYER1].load_wav(wav_file_path)
+                    if "error" not in r:
+                        self.waveform[cfg.PLAYER1].plot_waveform(current_media_time, window_title=f"Waveform of {self.mem_media_name}")
+                    else:
+                        logging.warning(f"waveform_load_wav error: {r['error']}")
+
+        # multiple waveform
+        if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO].get("display", {}):
+            for player in self.waveform:
+                if not self.waveform[player].visibleRegion().isEmpty():
+                    try:
+                        wav_file_path = str(
+                            Path(tmp_dir)
+                            / Path(
+                                self.dw_player[int(player) - 1].player.playlist[self.dw_player[int(player) - 1].player.playlist_pos][
+                                    "filename"
+                                ]
+                                + ".wav"
+                            ).name
+                        )
+                    except Exception as e:
+                        logging.warning(e)
+                        continue
+
+                    # if self.waveform[player].wav_file_path == wav_file_path:
+                    #    self.waveform[player].plot_waveform(current_media_time, window_title=f"Spectrogram of {self.mem_media_name}")
+                    # else:
+                    #    r = self.waveform[player].load_wav(wav_file_path)
+                    #    if "error" not in r:
+                    #        self.waveform[player].plot_waveform(current_media_time, window_title=f"Spectrogram of {self.mem_media_name}")
+                    #    else:
+                    #        logging.warning(f"spectro_load_wav error: {r['error']}")
+
+                    if self.waveform[player].wav_file_path != wav_file_path:
+                        r = self.waveform[player].load_wav(wav_file_path)
+                        if "error" in r:
+                            logging.warning(f"spectro_load_wav error: {r['error']}")
+                            continue
+                    self.waveform[player].plot_waveform(current_media_time, window_title=f"Spectrogram of {self.mem_media_name}")
+
+        # unique spectrogram
+        if self.pj[cfg.OBSERVATIONS][self.observationId].get(cfg.VISUALIZE_SPECTROGRAM, False) and not self.pj[cfg.OBSERVATIONS][
+            self.observationId
+        ][cfg.MEDIA_INFO].get("display", {}):
             if not self.spectro:
                 return
 
             if not self.spectro[cfg.PLAYER1].visibleRegion().isEmpty():
+                try:
+                    wav_file_path = str(
+                        Path(tmp_dir)
+                        / Path(self.dw_player[0].player.playlist[self.dw_player[0].player.playlist_pos]["filename"] + ".wav").name
+                    )
+                except Exception:
+                    return
+
                 if self.spectro[cfg.PLAYER1].wav_file_path == wav_file_path:
                     self.spectro[cfg.PLAYER1].plot_spectro(current_media_time, window_title=f"Spectrogram of {self.mem_media_name}")
                 else:
@@ -1316,9 +1420,24 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     else:
                         logging.warning(f"spectro_load_wav error: {r['error']}")
 
-        if "display" in self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO]:
+        # multiple spectrogram
+        if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO].get("display", {}):
             for player in self.spectro:
                 if not self.spectro[player].visibleRegion().isEmpty():
+                    try:
+                        wav_file_path = str(
+                            Path(tmp_dir)
+                            / Path(
+                                self.dw_player[int(player) - 1].player.playlist[self.dw_player[int(player) - 1].player.playlist_pos][
+                                    "filename"
+                                ]
+                                + ".wav"
+                            ).name
+                        )
+                    except Exception as e:
+                        logging.warning(e)
+                        continue
+
                     if self.spectro[player].wav_file_path == wav_file_path:
                         self.spectro[player].plot_spectro(current_media_time, window_title=f"Spectrogram of {self.mem_media_name}")
                     else:
@@ -2461,12 +2580,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         for player in self.spectro:
             self.spectro[player].close()
 
-        if hasattr(self, "waveform"):
-            try:
-                self.waveform.close()
-                del self.waveform
-            except Exception:
-                logging.warning("Error closing waveform window")
+        for player in self.waveform:
+            self.waveform[player].close()
 
         if hasattr(self, "plot_events"):
             try:
@@ -4054,10 +4169,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             slider_position = self.video_slider.value() / (cfg.SLIDER_MAXIMUM - 1)
             if self.dw_player[0].player.duration is None:
                 return
-            print(f"{slider_position=}")
 
             d = self.dw_player[0].player.duration
-            print(f"{d=}")
             if d is None:
                 return
             video_position = slider_position * d
@@ -4123,11 +4236,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             else:
                 self.events_current_row = -1
 
-        # print(f"{self.events_current_row=}")
-
         self.tv_events.setItemDelegate(events_cursor.StyledItemDelegateTriangle(self.events_current_row))
-
-        # print(f"{self.twEvents.item(self.events_current_row, 0)=}")
 
         # if self.twEvents.item(self.events_current_row, 0):
         #    self.twEvents.scrollToItem(
@@ -5305,8 +5414,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.find_dialog.lb_message.setText('<font color="red">Nothing to search!</font>')
             return
 
-        # print(f"{fields_list=}")
-
         # search in twevents
 
         # for event_idx in range(self.twEvents.rowCount()):
@@ -5770,13 +5877,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         start_coding, end_coding, _ = observation_operations.coding_time(self.pj[cfg.OBSERVATIONS], selected_observations)
 
-        print(f"{start_coding=}")
-        print(f"{end_coding=}")
-
         start_interval, end_interval = observation_operations.time_intervals_range(self.pj[cfg.OBSERVATIONS], selected_observations)
-
-        print(f"{start_interval=}")
-        print(f"{end_interval=}")
 
         parameters: dict = select_subj_behav.choose_obs_subj_behav_category(
             self,
@@ -5792,8 +5893,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         )
         if parameters == {}:
             return [], {}
-
-        print(f"{parameters=}")
 
         if not parameters[cfg.SELECTED_SUBJECTS] or not parameters[cfg.SELECTED_BEHAVIORS]:
             QMessageBox.warning(None, cfg.programName, "Select subject(s) and behavior(s) to analyze")
