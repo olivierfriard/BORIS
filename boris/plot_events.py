@@ -28,7 +28,6 @@ import matplotlib
 matplotlib.use("QtAgg")
 
 import matplotlib.dates
-
 import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib.dates import (
@@ -36,7 +35,7 @@ from matplotlib.dates import (
 )
 
 from . import config as cfg
-from . import db_functions, project_functions, observation_operations
+from . import db_functions, observation_operations, project_functions
 from . import utilities as util
 
 # matplotlib.pyplot.switch_backend("Qt5Agg")
@@ -375,6 +374,10 @@ def create_events_plot(
     start_time = parameters[cfg.START_TIME]
     end_time = parameters[cfg.END_TIME]
 
+    # print(f"{interval=}")
+    # print(f"{start_time=}")
+    # print(f"{end_time=}")
+
     ok, msg, db_connector = db_functions.load_aggregated_events_in_db(self.pj, selected_subjects, selected_observations, selected_behaviors)
 
     if not ok:
@@ -433,6 +436,7 @@ def create_events_plot(
 
         # time
         obs_length = observation_operations.observation_total_length(self.pj[cfg.OBSERVATIONS][obs_id])
+        print(f"{obs_length=}")
         if obs_length == -1:  # media length not available
             interval = cfg.TIME_EVENTS
 
@@ -457,9 +461,12 @@ def create_events_plot(
             except Exception:
                 max_time = float(obs_length)
 
+        print(f"{interval=}")
         if interval == cfg.TIME_ARBITRARY_INTERVAL:
             min_time = float(start_time)
             max_time = float(end_time)
+            print(f"{min_time=}")
+            print(f"{max_time=}")
 
         # adjust start if start < init
         cursor.execute(
@@ -612,14 +619,18 @@ def create_events_plot(
                     left=matplotlib.dates.date2num(epoch_date + dt.timedelta(seconds=min_time)),
                     right=matplotlib.dates.date2num(epoch_date + dt.timedelta(seconds=max_time)),
                 )
-
-            axs[ax_idx].grid(color="g", linestyle=":")
-            if self.timeFormat == cfg.HHMMSS:
                 axs[ax_idx].xaxis_date()
                 axs[ax_idx].xaxis.set_major_formatter(DateFormatter("%H:%M:%S"))
                 axs[ax_idx].set_xlabel("Time (HH:MM:SS)", fontdict={"fontsize": 12})
+
             if self.timeFormat == cfg.S:
+                axs[ax_idx].set_xlim(
+                    left=min_time,
+                    right=max_time,
+                )
                 axs[ax_idx].set_xlabel("Time (s)", fontdict={"fontsize": 12})
+
+            axs[ax_idx].grid(color="g", linestyle=":")
 
             axs[ax_idx].invert_yaxis()
 
