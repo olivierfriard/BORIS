@@ -26,7 +26,7 @@ class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
         if not MainWindow.objectName():
             MainWindow.setObjectName(u"MainWindow")
-        MainWindow.resize(1509, 813)
+        MainWindow.resize(3163, 775)
         MainWindow.setDockOptions(QMainWindow.DockOption.AllowNestedDocks|QMainWindow.DockOption.AllowTabbedDocks|QMainWindow.DockOption.AnimatedDocks)
         MainWindow.setUnifiedTitleAndToolBarOnMac(False)
         self.actionDocumentation = QAction(MainWindow)
@@ -141,8 +141,6 @@ class Ui_MainWindow(object):
         self.actionAggregatedEventsTabularFormat.setObjectName(u"actionAggregatedEventsTabularFormat")
         self.actionOpen_observation = QAction(MainWindow)
         self.actionOpen_observation.setObjectName(u"actionOpen_observation")
-        self.actionAaaa = QAction(MainWindow)
-        self.actionAaaa.setObjectName(u"actionAaaa")
         self.menuCreate_subtitles_2 = QAction(MainWindow)
         self.menuCreate_subtitles_2.setObjectName(u"menuCreate_subtitles_2")
         self.actionUser_guide = QAction(MainWindow)
@@ -491,7 +489,7 @@ class Ui_MainWindow(object):
         MainWindow.setCentralWidget(self.centralwidget)
         self.menubar = QMenuBar(MainWindow)
         self.menubar.setObjectName(u"menubar")
-        self.menubar.setGeometry(QRect(0, 0, 1509, 20))
+        self.menubar.setGeometry(QRect(0, 0, 3163, 25))
         self.menuHelp = QMenu(self.menubar)
         self.menuHelp.setObjectName(u"menuHelp")
         self.menuFile = QMenu(self.menubar)
@@ -798,7 +796,6 @@ class Ui_MainWindow(object):
         self.toolBar.addAction(self.actionFrame_by_frame)
         self.toolBar.addAction(self.actionFrame_backward)
         self.toolBar.addAction(self.actionFrame_forward)
-        self.toolBar.addAction(self.actionCloseObs)
         self.toolBar.addAction(self.actionPlot_events_in_real_time)
         self.toolBar.addAction(self.actionCurrent_Time_Budget)
         self.toolBar.addAction(self.actionPlot_current_observation)
@@ -807,6 +804,8 @@ class Ui_MainWindow(object):
         self.toolBar.addAction(self.actionFind_in_current_obs)
         self.toolBar.addAction(self.actionExplore_project)
         self.toolBar.addAction(self.actionPreferences)
+        self.toolBar.addAction(self.actionEdit_current_observation)
+        self.toolBar.addAction(self.actionCloseObs)
 
         self.retranslateUi(MainWindow)
 
@@ -900,7 +899,6 @@ class Ui_MainWindow(object):
 #if QT_CONFIG(shortcut)
         self.actionOpen_observation.setShortcut(QCoreApplication.translate("MainWindow", u"Ctrl+O", None))
 #endif // QT_CONFIG(shortcut)
-        self.actionAaaa.setText(QCoreApplication.translate("MainWindow", u"aaaa", None))
         self.menuCreate_subtitles_2.setText(QCoreApplication.translate("MainWindow", u"Create subtitles", None))
         self.actionUser_guide.setText(QCoreApplication.translate("MainWindow", u"User guide", None))
         self.actionEdit_observation_2.setText(QCoreApplication.translate("MainWindow", u"Edit observation", None))

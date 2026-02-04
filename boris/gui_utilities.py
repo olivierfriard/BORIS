@@ -19,11 +19,12 @@ Copyright 2012-2026 Olivier Friard
   MA 02110-1301, USA.
 """
 
-import pathlib as pl
 import logging
+import pathlib as pl
+
 from PySide6.QtCore import QSettings
-from PySide6.QtWidgets import QWidget, QApplication
 from PySide6.QtGui import QIcon
+from PySide6.QtWidgets import QApplication, QWidget
 
 
 def theme_mode() -> str:
@@ -116,6 +117,8 @@ def set_icons(self, theme_mode: str) -> None:
     self.action_geometric_measurements.setIcon(QIcon(f":/measurement_{theme_mode}"))
     self.actionFind_in_current_obs.setIcon(QIcon(f":/find_{theme_mode}"))
     self.actionExplore_project.setIcon(QIcon(f":/explore_{theme_mode}"))
+
+    self.actionEdit_current_observation.setIcon(QIcon(f":/edit_observation_{theme_mode}"))
 
 
 def resize_center(app, window, width: int, height: int) -> None:

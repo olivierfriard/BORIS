@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1509</width>
-    <height>813</height>
+    <width>3163</width>
+    <height>775</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -165,8 +165,8 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>1509</width>
-     <height>20</height>
+     <width>3163</width>
+     <height>25</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuHelp">
@@ -453,7 +453,6 @@
    <addaction name="actionFrame_by_frame"/>
    <addaction name="actionFrame_backward"/>
    <addaction name="actionFrame_forward"/>
-   <addaction name="actionCloseObs"/>
    <addaction name="actionPlot_events_in_real_time"/>
    <addaction name="actionCurrent_Time_Budget"/>
    <addaction name="actionPlot_current_observation"/>
@@ -462,6 +461,8 @@
    <addaction name="actionFind_in_current_obs"/>
    <addaction name="actionExplore_project"/>
    <addaction name="actionPreferences"/>
+   <addaction name="actionEdit_current_observation"/>
+   <addaction name="actionCloseObs"/>
   </widget>
   <widget class="QDockWidget" name="dwEthogram">
    <property name="floating">
@@ -834,7 +835,7 @@
   </action>
   <action name="actionEdit_current_observation">
    <property name="enabled">
-    <bool>false</bool>
+    <bool>true</bool>
    </property>
    <property name="text">
     <string>Edit current observation</string>
@@ -963,11 +964,6 @@
    </property>
    <property name="shortcut">
     <string>Ctrl+O</string>
-   </property>
-  </action>
-  <action name="actionAaaa">
-   <property name="text">
-    <string>aaaa</string>
    </property>
   </action>
   <action name="menuCreate_subtitles_2">
