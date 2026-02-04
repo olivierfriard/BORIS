@@ -1,3 +1,10 @@
+**v. 9.8.4 2026-02-04**
+
+* improved BORIS for MacOS
+
+* fixed bug on spectrogram/waveform visualization in frame-by-frame mode
+
+
 
 **v. 9.7.15 2025-12-19**
 
@@ -2623,6 +2630,3 @@ do not more return error if the code or subject in the edited event do not more 
 * add obs extension when project saved without extention when *.obs filter is active
 * edit project: check replace audio check box if necessary
 * edit project: check second video check box if necessary
-
-
-
