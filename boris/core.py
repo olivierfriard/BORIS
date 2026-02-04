@@ -1117,11 +1117,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     self.spectro[cfg.PLAYER1].sb_freq_max.setValue(int(self.spectro[cfg.PLAYER1].frame_rate / 2))
                     self.spectro[cfg.PLAYER1].show()
 
-                self.plot_timer_out()
+                    self.plot_timer_out()
 
-                if warning:
-                    if self.playerType == cfg.MEDIA and not flag_paused:
-                        self.play_video()
+                    if warning:
+                        if self.playerType == cfg.MEDIA and not flag_paused:
+                            self.play_video()
 
         if plot_type == cfg.WAVEFORM_PLOT:
             if self.waveform:
