@@ -1747,7 +1747,7 @@ def explore_project(self) -> None:
     search various elements (subjects, behaviors, modifiers, comments) in all observations
     """
 
-    def double_click_explore_project(obs_id, event_idx):
+    def double_click_explore_project(obs_id: str, event_idx: int) -> None:
         """
         manage double-click on tablewidget of explore project results
         """
@@ -1755,14 +1755,12 @@ def explore_project(self) -> None:
 
         self.tv_events.selectRow(event_idx - 1)
         index = self.tv_events.model().index(event_idx - 1, 0)
-        self.tv_events.scrollTo(index, QAbstractItemView.EnsureVisible)
-        # self.twEvents.scrollToItem(self.twEvents.item(event_idx - 1, 0))
+        self.tv_events.scrollTo(index, QAbstractItemView.ScrollHint.EnsureVisible)
 
-    elements_list = ("Subject", "Behavior", "Modifier", "Comment")
-    elements = []
-    for element in elements_list:
-        elements.append(("le", element))
-    elements.append(("cb", "Case sensitive", False))
+    elements_list: tuple = ("Subject", "Behavior", "Modifier", "Comment")
+
+    elements: list = [(cfg.LINE_EDIT, element) for element in elements_list]
+    elements.append((cfg.CHECKBOX, "Case sensitive", False))
 
     explore_dlg = dialog.Input_dialog(
         label_caption="Search in all observations",
@@ -1800,10 +1798,10 @@ def explore_project(self) -> None:
                 results.append((obs_id, event_idx + 1))
 
     if results:
-        self.results_dialog = dialog.View_explore_project_results()
-        self.results_dialog.setWindowTitle("Explore project results")
-        self.results_dialog.setWindowFlags(Qt.WindowType.WindowStaysOnTopHint)
-        self.results_dialog.double_click_signal.connect(double_click_explore_project)
+        self.results_objects.append(dialog.View_explore_project_results())
+        self.results_objects[-1].setWindowTitle("Explore project results")
+        self.results_objects[-1].setWindowFlags(Qt.WindowType.WindowStaysOnTopHint)
+        self.results_objects[-1].double_click_signal.connect(double_click_explore_project)
         txt = f"<b>{len(results)}</b> events"
         txt2 = ""
         for element in elements_list:
@@ -1811,17 +1809,17 @@ def explore_project(self) -> None:
                 txt2 += f"<b>{explore_dlg.elements[element].text()}</b> in {element}<br>"
         if txt2:
             txt += " for<br>"
-        self.results_dialog.lb.setText(txt + txt2)
-        self.results_dialog.tw.setColumnCount(2)
-        self.results_dialog.tw.setRowCount(len(results))
-        self.results_dialog.tw.setHorizontalHeaderLabels(["Observation id", "row index"])
+        self.results_objects[-1].lb.setText(txt + txt2)
+        self.results_objects[-1].tw.setColumnCount(2)
+        self.results_objects[-1].tw.setRowCount(len(results))
+        self.results_objects[-1].tw.setHorizontalHeaderLabels(["Observation id", "row index"])
 
         for row, result in enumerate(results):
             for i in range(0, 2):
-                self.results_dialog.tw.setItem(row, i, QTableWidgetItem(str(result[i])))
-                self.results_dialog.tw.item(row, i).setFlags(Qt.ItemIsSelectable | Qt.ItemIsEnabled)
+                self.results_objects[-1].tw.setItem(row, i, QTableWidgetItem(str(result[i])))
+                self.results_objects[-1].tw.item(row, i).setFlags(Qt.ItemFlag.ItemIsSelectable | Qt.ItemFlag.ItemIsEnabled)
 
-        self.results_dialog.show()
+        self.results_objects[-1].show()
 
     else:
         QMessageBox.information(self, cfg.programName, "No events found")

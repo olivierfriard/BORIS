@@ -254,6 +254,8 @@ def edit_observation(self, edit_current_observation: bool = False) -> None:
     edit observation
     """
 
+    logging.debug("edit_observation function")
+
     mem_observationId: str | None = None
     # check if current observation must be closed to open a new one
     if self.observationId:

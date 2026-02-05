@@ -217,6 +217,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     geometric_measurements_mode = False  # geometric measurement mode active?
 
     state_behaviors_codes: tuple = tuple()
+    results_objects: list = []
 
     time_observer_signal = Signal(float)
     mpv_eof_reached_signal = Signal(float)
@@ -2623,6 +2624,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             if self.bcm_dict[idx] is not None:
                 self.bcm_dict[idx].close()
             self.bcm_dict[idx] = None
+
+        while self.results_objects:
+            x = self.results_objects.pop()
+            x.close()
+            del x
 
         logging.debug("function: close_tool_windows finished")
 
