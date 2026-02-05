@@ -249,13 +249,15 @@ def load_observation(self, obs_id: str, mode: str = cfg.OBS_START) -> str:
     return ""
 
 
-def edit_observation(self):
+def edit_observation(self, edit_current_observation: bool = False) -> None:
     """
     edit observation
     """
 
+    mem_observationId: str | None = None
     # check if current observation must be closed to open a new one
     if self.observationId:
+        mem_observationId = self.observationId
         # hide data plot
         self.hide_data_files()
         if (
@@ -268,7 +270,10 @@ def edit_observation(self):
         else:
             close_observation(self)
 
-    _, selected_observations = select_observations.select_observations2(self, cfg.EDIT, windows_title="Edit observation")
+    if edit_current_observation and mem_observationId is not None:
+        selected_observations = [mem_observationId]
+    else:
+        _, selected_observations = select_observations.select_observations2(self, cfg.EDIT, windows_title="Edit observation")
 
     if selected_observations:
         new_observation(self, mode=cfg.EDIT, obsId=selected_observations[0])
