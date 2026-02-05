@@ -258,6 +258,10 @@ def connections(self):
 
     self.actionFind_in_current_obs.triggered.connect(lambda: event_operations.find_events(self))
 
+    self.actionEdit_current_observation.triggered.connect(
+        lambda: observation_operations.edit_observation(self, edit_current_observation=True)
+    )
+
     # table Widget double click
     # self.twEvents.itemDoubleClicked.connect(self.twEvents_doubleClicked)
     self.twEthogram.itemDoubleClicked.connect(self.twEthogram_doubleClicked)
