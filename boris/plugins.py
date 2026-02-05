@@ -283,8 +283,8 @@ def run_plugin(self, plugin_name):
             self,
             cfg.programName,
             "No observations found. Open a project first",
-            QMessageBox.Ok | QMessageBox.Default,
-            QMessageBox.NoButton,
+            QMessageBox.StandardButton.Ok | QMessageBox.StandardButton.Default,
+            QMessageBox.StandardButton.NoButton,
         )
         return
 
@@ -444,14 +444,14 @@ def run_plugin(self, plugin_name):
     self.plugin_visu: list = []
     for result in plugin_results:
         if isinstance(result, str):
-            self.plugin_visu.append(dialog.Results_dialog())
-            self.plugin_visu[-1].setWindowTitle(plugin_name)
-            self.plugin_visu[-1].ptText.clear()
-            self.plugin_visu[-1].ptText.appendPlainText(result)
-            self.plugin_visu[-1].show()
+            self.results_objects.append(dialog.Results_dialog())
+            self.results_objects[-1].setWindowTitle(plugin_name)
+            self.results_objects[-1].ptText.clear()
+            self.results_objects[-1].ptText.appendPlainText(result)
+            self.results_objects[-1].show()
         elif isinstance(result, pd.DataFrame):
-            self.plugin_visu.append(view_df.View_df(plugin_name, f"{plugin_version} ({plugin_version_date})", result))
-            self.plugin_visu[-1].show()
+            self.results_objects.append(view_df.View_df(plugin_name, f"{plugin_version} ({plugin_version_date})", result))
+            self.results_objects[-1].show()
         else:
             # result is not str nor dataframe
             QMessageBox.critical(
@@ -462,6 +462,6 @@ def run_plugin(self, plugin_name):
                     "Plugins must return str and/or Pandas Dataframes.\n"
                     "Check the plugin code."
                 ),
-                QMessageBox.Ok | QMessageBox.Default,
-                QMessageBox.NoButton,
+                QMessageBox.StandardButton.Ok | QMessageBox.StandardButton.Default,
+                QMessageBox.StandardButton.NoButton,
             )
