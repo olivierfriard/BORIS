@@ -23,17 +23,17 @@ This file is part of BORIS.
 import logging
 import pathlib as pl
 
+from PySide6.QtGui import QFont, QTextCursor, QTextOption
 from PySide6.QtWidgets import QFileDialog, QMessageBox
-from PySide6.QtGui import QFont, QTextOption, QTextCursor
 
 from . import config as cfg
 from . import (
     dialog,
+    observation_operations,
     project_functions,
     select_observations,
     select_subj_behav,
     time_budget_functions,
-    observation_operations,
 )
 
 
@@ -104,7 +104,7 @@ def synthetic_time_budget(self) -> None:
 
     ok, msg, data_report = time_budget_functions.synthetic_time_budget(self.pj, selected_observations, synth_tb_param)
 
-    results = dialog.Results_dialog()
+    results = dialog.Results_widget()
     results.setWindowTitle("Synthetic time budget")
     if not ok:
         results.ptText.clear()
