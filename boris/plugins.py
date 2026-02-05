@@ -444,12 +444,14 @@ def run_plugin(self, plugin_name):
     self.plugin_visu: list = []
     for result in plugin_results:
         if isinstance(result, str):
+            self.remove_closed_results_objects()
             self.results_objects.append(dialog.Results_dialog())
             self.results_objects[-1].setWindowTitle(plugin_name)
             self.results_objects[-1].ptText.clear()
             self.results_objects[-1].ptText.appendPlainText(result)
             self.results_objects[-1].show()
         elif isinstance(result, pd.DataFrame):
+            self.remove_closed_results_objects()
             self.results_objects.append(view_df.View_df(plugin_name, f"{plugin_version} ({plugin_version_date})", result))
             self.results_objects[-1].show()
         else:

@@ -611,8 +611,8 @@ def time_budget(self, mode: str, mode2: str = "list"):
                 excl_behaviors_total_time[element["subject"]] += element["duration"] if not isinstance(element["duration"], str) else 0
 
         # widget for results visualization
+        self.remove_closed_results_objects()
         self.results_objects.append(timeBudgetResults(self.pj, self.config_param))
-
         # add min and max time
         self.results_objects[-1].time_interval = parameters[cfg.TIME_INTERVAL]
         self.results_objects[-1].min_time = min_time

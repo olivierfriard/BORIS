@@ -19,20 +19,19 @@ Copyright 2012-2026 Olivier Friard
   MA 02110-1301, USA.
 """
 
-import sys
-import subprocess
 import platform
+import subprocess
+import sys
+
+import matplotlib
 import numpy as np
 import pandas as pd
-import matplotlib
-
-from . import version
-from . import config as cfg
-from . import utilities as util
-
-
 from PySide6.QtGui import QPixmap
 from PySide6.QtWidgets import QMessageBox
+
+from . import config as cfg
+from . import utilities as util
+from . import version
 
 
 def actionAbout_activated(self):

@@ -23,20 +23,17 @@ Module for analyzing the co-occurence of behaviors
 
 """
 
-from . import config as cfg
-from . import select_subj_behav
-from . import dialog
-from . import utilities as util
-from . import select_observations
-
-from . import project_functions, observation_operations
-
-from PySide6.QtWidgets import QMessageBox
-from PySide6.QtGui import QFont, QTextOption
-from . import portion as I
 import itertools
 import logging
 from decimal import Decimal as dec
+
+from PySide6.QtGui import QFont, QTextOption
+from PySide6.QtWidgets import QMessageBox
+
+from . import config as cfg
+from . import dialog, observation_operations, project_functions, select_observations, select_subj_behav
+from . import portion as I
+from . import utilities as util
 
 
 def get_cooccurence(self):
@@ -240,11 +237,12 @@ def get_cooccurence(self):
             duration = f"<b>{cooccurence_results[subject][combination]}</b>" if cooccurence_results[subject][combination] else "0"
             out += f"<b>{'</b> and <b>'.join(combination)}</b>: {duration} s<br>"
 
-    self.results = dialog.Results_dialog()
-    self.results.setWindowTitle("Behaviors co-occurence")
-    self.results.ptText.setFont(QFont("Courier", 12))
-    self.results.ptText.setWordWrapMode(QTextOption.NoWrap)
-    self.results.ptText.setReadOnly(True)
-    self.results.ptText.clear()
-    self.results.ptText.appendHtml(out)
-    self.results.show()
+    self.remove_closed_results_objects()
+    self.results_objects.append(dialog.Results_widget())
+    self.results_objects[-1].setWindowTitle("Behaviors co-occurence")
+    self.results_objects[-1].ptText.setFont(QFont("Courier", 12))
+    self.results_objects[-1].ptText.setWordWrapMode(QTextOption.WrapMode.NoWrap)
+    self.results_objects[-1].ptText.setReadOnly(True)
+    self.results_objects[-1].ptText.clear()
+    self.results_objects[-1].ptText.appendHtml(out)
+    self.results_objects[-1].show()

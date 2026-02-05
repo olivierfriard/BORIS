@@ -498,11 +498,12 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             media_file_available=ib.elements["Test media file accessibility"].isChecked(),
         )
         if msg:
-            self.results = dialog.Results_dialog()
-            self.results.setWindowTitle("Check project integrity")
-            self.results.ptText.clear()
-            self.results.ptText.appendHtml(f"Some issues were found in the project<br><br>{msg}")
-            self.results.show()
+            self.remove_closed_results_objects()
+            self.results_objects.append(dialog.Results_widget())
+            self.results_objects[-1].setWindowTitle("Check project integrity")
+            self.results_objects[-1].ptText.clear()
+            self.results_objects[-1].ptText.appendHtml(f"Some issues were found in the project<br><br>{msg}")
+            self.results_objects[-1].show()
         else:
             QMessageBox.information(self, cfg.programName, "The current project has no issues")
 
@@ -2541,10 +2542,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             pass
 
         try:
-            del self.tb
-        except Exception:
-            pass
-        try:
             for x in self.ext_data_timer_list:
                 x.stop()
         except Exception:
@@ -2626,9 +2623,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.bcm_dict[idx] = None
 
         while self.results_objects:
-            x = self.results_objects.pop()
-            x.close()
-            del x
+            w = self.results_objects.pop()
+            w.close()
+            w.deleteLater()
 
         logging.debug("function: close_tool_windows finished")
 
@@ -3096,11 +3093,12 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     media_file_available=True,
                 )
                 if msg:
-                    self.results = dialog.Results_dialog()
-                    self.results.setWindowTitle("Project integrity results")
-                    self.results.ptText.clear()
-                    self.results.ptText.appendHtml(f"Some issues were found in the project<br><br>{msg}")
-                    self.results.show()
+                    self.remove_closed_results_objects()
+                    self.results_objects.append(dialog.Results_widget())
+                    self.results_objects[-1].setWindowTitle("Project integrity results")
+                    self.results_objects[-1].ptText.clear()
+                    self.results_objects[-1].ptText.appendHtml(f"Some issues were found in the project<br><br>{msg}")
+                    self.results_objects[-1].show()
 
             self.load_project(project_path, project_changed, pj)
             del pj
@@ -3148,11 +3146,12 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             return
         pj, error_list = otx_parser.otx_to_boris(file_name)
         if error_list or "fatal" in pj:
-            self.results = dialog.Results_dialog()
-            self.results.setWindowTitle("Import project from Noldus the Observer XT")
-            self.results.ptText.clear()
-            self.results.ptText.appendHtml("<br>".join(error_list))
-            self.results.show()
+            self.remove_closed_results_objects()
+            self.results_objects.append(dialog.Results_widget())
+            self.results_objects[-1].setWindowTitle("Import project from Noldus the Observer XT")
+            self.results_objects[-1].ptText.clear()
+            self.results_objects[-1].ptText.appendHtml("<br>".join(error_list))
+            self.results_objects[-1].show()
 
         if "fatal" in pj:
             return
@@ -5906,6 +5905,20 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         logging.debug(f"{parameters=}")
         return selected_observations, parameters
+
+    def remove_closed_results_objects(self):
+        """
+        eliminate closed objects from list
+        remove them from memory
+        """
+        logging.debug("remove_closed_results_objects function")
+        logging.debug(f"{self.results_objects}=")
+        for w in self.results_objects[:]:
+            if not w.isVisible():
+                self.results_objects.remove(w)
+                w.close()
+                w.deleteLater()
+        logging.debug(f"{self.results_objects}=")
 
 
 def main():

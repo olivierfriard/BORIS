@@ -622,7 +622,7 @@ def needleman_wunch(self):
         out2 += f"{selected_observations[r]}\t"
         out2 += "\t".join([f"{x:8.6f}" for x in nws_results[r, :]]) + "\n"
 
-    # self.results = dialog.Results_dialog()
+    self.remove_closed_results_objects()
     self.results_objects.append(dialog.Results_widget())
     self.results_objects[-1].setWindowTitle(f"{cfg.programName} - Needleman-Wunsch similarity")
     self.results_objects[-1].ptText.setReadOnly(True)

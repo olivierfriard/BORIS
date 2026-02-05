@@ -1798,6 +1798,7 @@ def explore_project(self) -> None:
                 results.append((obs_id, event_idx + 1))
 
     if results:
+        self.remove_closed_results_objects()
         self.results_objects.append(dialog.View_explore_project_results())
         self.results_objects[-1].setWindowTitle("Explore project results")
         self.results_objects[-1].setWindowFlags(Qt.WindowType.WindowStaysOnTopHint)

@@ -946,6 +946,8 @@ class Results_widget(QWidget):
     def __init__(self):
         super().__init__()
 
+        # self.setAttribute(Qt.WidgetAttribute.WA_DeleteOnClose)
+
         self.dataset = False
 
         self.setWindowTitle("")
