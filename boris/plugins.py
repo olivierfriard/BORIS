@@ -445,7 +445,7 @@ def run_plugin(self, plugin_name):
     for result in plugin_results:
         if isinstance(result, str):
             self.remove_closed_results_objects()
-            self.results_objects.append(dialog.Results_dialog())
+            self.results_objects.append(dialog.Results_widget())
             self.results_objects[-1].setWindowTitle(plugin_name)
             self.results_objects[-1].ptText.clear()
             self.results_objects[-1].ptText.appendPlainText(result)

@@ -6056,11 +6056,12 @@ def main():
                 media_file_available=True,
             )
             if msg:
-                results = dialog.Results_dialog()
-                results.setWindowTitle("Project integrity results")
-                results.ptText.clear()
-                results.ptText.appendHtml(f"Some issues were found in the project<br><br>{msg}")
-                results.show()
+                window.remove_closed_results_objects()
+                window.results_objects.append(dialog.Results_widget())
+                window.results_objects[-1].setWindowTitle("Project integrity results")
+                window.results_objects[-1].ptText.clear()
+                window.results_objects[-1].ptText.appendHtml(f"Some issues were found in the project<br><br>{msg}")
+                window.results_objects[-1].show()
 
     # check mpv IPC mode
     window.MPV_IPC_MODE = False

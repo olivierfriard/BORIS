@@ -3,33 +3,30 @@ BORIS
 Behavioral Observation Research Interactive Software
 Copyright 2012-2026 Olivier Friard
 
-  This program is free software; you can redistribute it and/or modify
-  it under the terms of the GNU General Public License as published by
-  the Free Software Foundation; either version 2 of the License, or
-  (at your option) any later version.
+This file is part of BORIS.
 
-  This program is distributed in the hope that it will be useful,
+  BORIS is free software; you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation; either version 3 of the License, or
+  any later version.
+
+  BORIS is distributed in the hope that it will be useful,
   but WITHOUT ANY WARRANTY; without even the implied warranty of
   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
   GNU General Public License for more details.
 
   You should have received a copy of the GNU General Public License
-  along with this program; if not, write to the Free Software
-  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
-  MA 02110-1301, USA.
-
-
-Module for analyzing the latency of behaviors after another behavior(s) (marker)
+  along with this program; if not see <http://www.gnu.org/licenses/>.
 
 """
 
-from . import config as cfg
-from . import select_subj_behav
-from . import dialog
-from . import select_observations
-from . import project_functions, observation_operations
+
+# Module for analyzing the latency of behaviors after another behavior(s) (marker)
 
 from PySide6.QtWidgets import QMessageBox
+
+from . import config as cfg
+from . import dialog, observation_operations, project_functions, select_observations, select_subj_behav
 
 
 def get_latency(self):
@@ -237,8 +234,9 @@ def get_latency(self):
 
         out += "<br><br>"
 
-    self.results = dialog.Results_dialog()
-    self.results.setWindowTitle("Latency")
-    self.results.ptText.clear()
-    self.results.ptText.appendHtml(out)
-    self.results.show()
+    self.remove_closed_results_objects()
+    self.results_objects.append(dialog.Results_widget())
+    self.results_objects[-1].setWindowTitle("Latency")
+    self.results_objects[-1].ptText.clear()
+    self.results_objects[-1].ptText.appendHtml(out)
+    self.results_objects[-1].show()

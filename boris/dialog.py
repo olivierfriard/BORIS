@@ -937,6 +937,25 @@ class Results_dialog(QDialog):
 
         self.resize(800, 640)
 
+    def save_results(self):
+        """
+        save content of self.ptText
+        """
+
+        if not self.dataset:
+            file_name, _ = QFileDialog().getSaveFileName(self, "Save results", "", "Text files (*.txt *.tsv);;All files (*)")
+
+            if not file_name:
+                return
+            try:
+                with open(file_name, "w") as f:
+                    f.write(self.ptText.toPlainText())
+            except Exception:
+                QMessageBox.critical(self, cfg.programName, f"The file {file_name} can not be saved")
+
+        else:
+            self.done(cfg.SAVE_DATASET)
+
 
 class Results_widget(QWidget):
     """
@@ -966,10 +985,6 @@ class Results_widget(QWidget):
 
         self.pbSave = QPushButton("Save results", clicked=self.save_results)
         hbox2.addWidget(self.pbSave)
-
-        # self.pbCancel = QPushButton(cfg.CANCEL, clicked=self.reject)
-        # hbox2.addWidget(self.pbCancel)
-        # self.pbCancel.setVisible(False)
 
         self.pbOK = QPushButton(cfg.OK, clicked=self.close)
         hbox2.addWidget(self.pbOK)
