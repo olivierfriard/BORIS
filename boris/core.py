@@ -953,6 +953,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             plot_type (str): type of plot (cfg.SPECTROGRAM_PLOT, cfg.WAVEFORM_PLOT, cfg.EVENTS_PLOT)
             warning (bool): Display message if True
         """
+        print(f"{plot_type=}")  # remove before release
 
         if plot_type not in (cfg.WAVEFORM_PLOT, cfg.SPECTROGRAM_PLOT, cfg.EVENTS_PLOT):
             logging.critical(f"Error on plot type: {plot_type}")
@@ -1126,6 +1127,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                             self.play_video()
 
         if plot_type == cfg.WAVEFORM_PLOT:
+            print(f"{self.waveform=}")  # remove before release
+
             if self.waveform:
                 if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO].get("display", {}):
                     for player in self.spectro:
@@ -1135,14 +1138,27 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
             else:
                 logging.debug("Create waveform plot")
-
                 if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO].get("display", {}):
+                    print(f"{self.pj[cfg.OBSERVATIONS][self.observationId][cfg.FILE]=}")  # remove before release
                     for player in self.pj[cfg.OBSERVATIONS][self.observationId][cfg.FILE]:
+                        if not self.pj[cfg.OBSERVATIONS][self.observationId][cfg.FILE][player]:
+                            continue
                         if (
-                            "waveform"
+                            cfg.WAVEFORM_PLOT.lower()
                             not in self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO].get("display", {}).get(player, "").lower()
                         ):
-                            continue
+                            # add waveform to display
+                            plot_list = (
+                                self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO].get("display", {}).get(player, "").split(",")
+                            )
+                            print(f"{plot_list=}")  # remove before release
+                            if cfg.NOTHING in plot_list:
+                                plot_list.remove(cfg.NOTHING)
+                            plot_list.append(cfg.WAVEFORM_PLOT)
+                            self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO]["display"][player] = ",".join(sorted(plot_list))
+                            print(
+                                f"{self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO]['display'][player]=}"
+                            )  # remove before release
 
                         # create waveform
                         self.generate_wav_file_from_media(player)

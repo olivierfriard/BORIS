@@ -2017,38 +2017,16 @@ def initialize_new_media_observation(self) -> bool:
     video_operations.display_zoom_level(self)
 
     # spectrogram
-    if self.pj[cfg.OBSERVATIONS][self.observationId].get(cfg.VISUALIZE_SPECTROGRAM, False) or self.pj[cfg.OBSERVATIONS][self.observationId][
-        cfg.MEDIA_INFO
-    ].get("display", {}):
-        # cfg.VISUALIZE_SPECTROGRAM in self.pj[cfg.OBSERVATIONS][self.observationId]
-        # and self.pj[cfg.OBSERVATIONS][self.observationId][cfg.VISUALIZE_SPECTROGRAM]
-        # ):
-        tmp_dir = self.ffmpeg_cache_dir if self.ffmpeg_cache_dir and os.path.isdir(self.ffmpeg_cache_dir) else tempfile.gettempdir()
-
-        wav_file_path = (
-            Path(tmp_dir) / Path(self.dw_player[0].player.playlist[self.dw_player[0].player.playlist_pos]["filename"] + ".wav").name
-        )
-
-        # TO DO: test if it is necessary
-        if not wav_file_path.is_file():
-            self.generate_wav_file_from_media()
-
-        self.show_plot_widget("spectrogram", warning=False)
+    if self.pj[cfg.OBSERVATIONS][self.observationId].get(cfg.VISUALIZE_SPECTROGRAM, False) or cfg.SPECTROGRAM_PLOT in [
+        x.lower() for x in self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO].get("display", {}).values()
+    ]:
+        self.show_plot_widget(cfg.SPECTROGRAM_PLOT, warning=False)
 
     # waveform
-    if self.pj[cfg.OBSERVATIONS][self.observationId].get(cfg.VISUALIZE_WAVEFORM, False) or self.pj[cfg.OBSERVATIONS][self.observationId][
-        cfg.MEDIA_INFO
-    ].get("display", {}):
-        tmp_dir = self.ffmpeg_cache_dir if self.ffmpeg_cache_dir and os.path.isdir(self.ffmpeg_cache_dir) else tempfile.gettempdir()
-
-        wav_file_path = (
-            Path(tmp_dir) / Path(self.dw_player[0].player.playlist[self.dw_player[0].player.playlist_pos]["filename"] + ".wav").name
-        )
-        # TO DO: test if it is necessary
-        if not wav_file_path.is_file():
-            self.generate_wav_file_from_media()
-
-        self.show_plot_widget("waveform", warning=False)
+    if self.pj[cfg.OBSERVATIONS][self.observationId].get(cfg.VISUALIZE_WAVEFORM, False) or cfg.WAVEFORM_PLOT in [
+        x.lower() for x in self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO].get("display", {}).values()
+    ]:
+        self.show_plot_widget(cfg.WAVEFORM_PLOT, warning=False)
 
     # external data plot
     if cfg.PLOT_DATA in self.pj[cfg.OBSERVATIONS][self.observationId] and self.pj[cfg.OBSERVATIONS][self.observationId][cfg.PLOT_DATA]:
