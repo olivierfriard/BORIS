@@ -2526,20 +2526,23 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         return
 
-    def close_tool_windows(self):
+    def close_observation_tools(self):
         """
-        close tool windows:
-            spectrogram
-            measurements
-            coding pad
-            video_equalizer
+        close observation tools objects
         """
+        logging.debug("function: close_observation_tools")
 
-        logging.debug("function: close_tool_windows")
-        try:
-            del self.iw
-        except Exception:
-            pass
+        for widget in self.spectro.values():
+            widget.setParent(None)
+            widget.close()
+            widget.deleteLater()
+        self.spectro.clear()
+
+        for widget in self.waveform.values():
+            widget.setParent(None)
+            widget.close()
+            widget.deleteLater()
+        self.waveform.clear()
 
         try:
             for x in self.ext_data_timer_list:
@@ -2588,12 +2591,45 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             except Exception:
                 logging.warning("Error closing plot events window")
 
+        if hasattr(self, "video_equalizer_wgt"):
+            try:
+                self.video_equalizer_wgt.close()
+                del self.video_equalizer_wgt
+            except Exception:
+                logging.warning("Error closing video equalizer window")
+
+        # delete behavior coding map
+        for idx in self.bcm_dict:
+            if self.bcm_dict[idx] is not None:
+                self.bcm_dict[idx].close()
+            self.bcm_dict[idx] = None
+
         if hasattr(self, "results"):
             try:
                 self.results.close()
                 del self.results
             except Exception:
                 logging.warning("Error closing results window")
+
+        logging.debug("end function: close_observation_tools")
+
+    def close_tool_windows(self):
+        """
+        close tool windows:
+            spectrogram
+            measurements
+            coding pad
+            video_equalizer
+        """
+
+        logging.debug("function: close_tool_windows")
+
+        self.close_observation_tools()
+
+        try:
+            del self.iw
+        except Exception:
+            pass
 
         if hasattr(self, "mapCreatorWindow"):
             try:
@@ -2602,25 +2638,12 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             except Exception:
                 logging.warning("Error closing map creator window")
 
-        if hasattr(self, "video_equalizer_wgt"):
-            try:
-                self.video_equalizer_wgt.close()
-                del self.video_equalizer_wgt
-            except Exception:
-                logging.warning("Error closing video equalizer window")
-
         if hasattr(self, "view_dataframe"):
             try:
                 self.view_dataframe.close()
                 del self.view_dataframe
             except Exception:
                 logging.warning("Error closing the plugin results window")
-
-        # delete behavior coding map
-        for idx in self.bcm_dict:
-            if self.bcm_dict[idx] is not None:
-                self.bcm_dict[idx].close()
-            self.bcm_dict[idx] = None
 
         while self.results_objects:
             w = self.results_objects.pop()

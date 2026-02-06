@@ -44,7 +44,6 @@ from PySide6.QtWidgets import (
     QMessageBox,
     QSlider,
     QTableWidgetItem,
-    QWidget,
 )
 
 from . import config as cfg
@@ -61,6 +60,135 @@ from . import (
     video_operations,
 )
 from . import utilities as util
+
+
+def close_observation(self):
+    """
+    close current observation
+    """
+
+    logging.info(f"Close observation (player type: {self.playerType})")
+
+    # check observation state events
+
+    flag_ok, msg = project_functions.check_state_events_obs(
+        self.observationId,
+        self.pj[cfg.ETHOGRAM],
+        self.pj[cfg.OBSERVATIONS][self.observationId],
+        time_format=cfg.HHMMSS,
+    )
+
+    if not flag_ok:
+        out = f"The current observation has state event(s) that are not PAIRED:<br><br>{msg}"
+        results = dialog.Results_dialog_exit_code()
+        results.setWindowTitle(f"{cfg.programName} - Check selected observations")
+        results.ptText.setReadOnly(True)
+        results.ptText.appendHtml(out)
+
+        results.pb1.setText("Close observation")
+        results.pb2.setText("Return to observation")
+        if self.playerType == cfg.IMAGES:
+            results.pb3.setVisible(False)
+        else:
+            results.pb3.setText("Fix unpaired state events")
+
+        r = results.exec()
+        if r == 2:  # Return to observation
+            return
+        if r == 3:  # Fix unpaired state events
+            state_events.fix_unpaired_events(self, silent_mode=True)
+
+    self.saved_state = self.saveState()
+
+    if self.playerType == cfg.MEDIA:
+        self.media_scan_sampling_mem = []
+        logging.info("Stop plot timer")
+        self.plot_timer.stop()
+
+        if self.MPV_IPC_MODE:
+            self.main_window_activation_timer.stop()
+
+        for i, player in enumerate(self.dw_player):
+            if (
+                str(i + 1) in self.pj[cfg.OBSERVATIONS][self.observationId][cfg.FILE]
+                and self.pj[cfg.OBSERVATIONS][self.observationId][cfg.FILE][str(i + 1)]
+            ):
+                logging.info(f"Stop player #{i + 1}")
+                player.player.stop()
+
+                if self.MPV_IPC_MODE:
+                    try:
+                        player.player.process.terminate()
+                        try:
+                            player.player.process.wait(timeout=3)  # wait up to 3s
+                        except subprocess.TimeoutExpired:
+                            player.player.process.kill()  # force if still alive
+                    except Exception as e:
+                        logging.warning(f"Error stopping MPV process #{i}: {e}")
+
+        self.verticalLayout_3.removeWidget(self.video_slider)
+
+        if self.video_slider is not None:
+            self.video_slider.setVisible(False)
+            self.video_slider.deleteLater()
+            self.video_slider = None
+
+    if self.playerType == cfg.LIVE:
+        self.liveTimer.stop()
+        self.pb_live_obs.setEnabled(False)
+        self.w_live.setVisible(False)
+        self.liveObservationStarted = False
+        self.liveStartTime = None
+
+    if cfg.PLOT_DATA in self.pj[cfg.OBSERVATIONS][self.observationId] and self.pj[cfg.OBSERVATIONS][self.observationId][cfg.PLOT_DATA]:
+        for x in self.ext_data_timer_list:
+            x.stop()
+        for pd in self.plot_data:
+            self.plot_data[pd].close_plot()
+
+    logging.info("close tool window")
+
+    self.close_observation_tools()
+
+    self.observationId = ""
+
+    # delete undo queue
+    self.undo_queue = deque()
+    self.undo_description = deque()
+
+    if self.playerType in (cfg.MEDIA, cfg.IMAGES):
+        for dw in self.dw_player:
+            logging.info("remove dock widget")
+            dw.player.log_handler = None
+            self.removeDockWidget(dw)
+
+            del dw
+
+    self.statusbar.showMessage("", 0)
+
+    self.dwEvents.setVisible(False)
+
+    self.w_obs_info.setVisible(False)
+
+    self.lb_current_media_time.clear()
+    self.lb_player_status.clear()
+    self.lb_video_info.clear()
+    self.lb_zoom_level.clear()
+
+    self.currentSubject = ""
+    self.lbFocalSubject.setText(cfg.NO_FOCAL_SUBJECT)
+
+    # clear current state(s) column in subjects table
+    for i in range(self.twSubjects.rowCount()):
+        self.twSubjects.item(i, len(cfg.subjectsFields)).setText("")
+
+    for w in (self.lbTimeOffset, self.lb_obs_time_interval):
+        w.clear()
+    self.play_rate, self.playerType = 1, ""
+
+    menu_options.update_menu(self)
+
+    logging.info(f"Observation {self.playerType} closed")
 
 
 def export_observations_list_clicked(self):
@@ -1142,149 +1270,6 @@ def new_observation(self, mode: str = cfg.NEW, obsId: str = "") -> None:
 
             self.load_tw_events(self.observationId)
             menu_options.update_menu(self)
-
-
-def close_observation(self):
-    """
-    close current observation
-    """
-
-    logging.info(f"Close observation (player type: {self.playerType})")
-
-    # check observation state events
-
-    flag_ok, msg = project_functions.check_state_events_obs(
-        self.observationId,
-        self.pj[cfg.ETHOGRAM],
-        self.pj[cfg.OBSERVATIONS][self.observationId],
-        time_format=cfg.HHMMSS,
-    )
-
-    if not flag_ok:
-        out = f"The current observation has state event(s) that are not PAIRED:<br><br>{msg}"
-        results = dialog.Results_dialog_exit_code()
-        results.setWindowTitle(f"{cfg.programName} - Check selected observations")
-        results.ptText.setReadOnly(True)
-        results.ptText.appendHtml(out)
-
-        results.pb1.setText("Close observation")
-        results.pb2.setText("Return to observation")
-        if self.playerType == cfg.IMAGES:
-            results.pb3.setVisible(False)
-        else:
-            results.pb3.setText("Fix unpaired state events")
-
-        r = results.exec()
-        if r == 2:  # Return to observation
-            return
-        if r == 3:  # Fix unpaired state events
-            state_events.fix_unpaired_events(self, silent_mode=True)
-
-    self.saved_state = self.saveState()
-
-    if self.playerType == cfg.MEDIA:
-        self.media_scan_sampling_mem = []
-        logging.info("Stop plot timer")
-        self.plot_timer.stop()
-
-        if self.MPV_IPC_MODE:
-            self.main_window_activation_timer.stop()
-
-        for i, player in enumerate(self.dw_player):
-            if (
-                str(i + 1) in self.pj[cfg.OBSERVATIONS][self.observationId][cfg.FILE]
-                and self.pj[cfg.OBSERVATIONS][self.observationId][cfg.FILE][str(i + 1)]
-            ):
-                logging.info(f"Stop player #{i + 1}")
-                player.player.stop()
-
-                if self.MPV_IPC_MODE:
-                    try:
-                        player.player.process.terminate()
-                        try:
-                            player.player.process.wait(timeout=3)  # wait up to 3s
-                        except subprocess.TimeoutExpired:
-                            player.player.process.kill()  # force if still alive
-                    except Exception as e:
-                        logging.warning(f"Error stopping MPV process #{i}: {e}")
-
-        self.verticalLayout_3.removeWidget(self.video_slider)
-
-        if self.video_slider is not None:
-            self.video_slider.setVisible(False)
-            self.video_slider.deleteLater()
-            self.video_slider = None
-
-    if self.playerType == cfg.LIVE:
-        self.liveTimer.stop()
-        self.pb_live_obs.setEnabled(False)
-        self.w_live.setVisible(False)
-        self.liveObservationStarted = False
-        self.liveStartTime = None
-
-    if cfg.PLOT_DATA in self.pj[cfg.OBSERVATIONS][self.observationId] and self.pj[cfg.OBSERVATIONS][self.observationId][cfg.PLOT_DATA]:
-        for x in self.ext_data_timer_list:
-            x.stop()
-        for pd in self.plot_data:
-            self.plot_data[pd].close_plot()
-
-    logging.info("close tool window")
-
-    self.close_tool_windows()
-
-    self.observationId = ""
-
-    # delete undo queue
-    self.undo_queue = deque()
-    self.undo_description = deque()
-
-    if self.playerType in (cfg.MEDIA, cfg.IMAGES):
-        """
-        for idx, _ in enumerate(self.dw_player):
-            #del self.dw_player[idx].stack
-            self.removeDockWidget(self.dw_player[idx])
-            sip.delete(self.dw_player[idx])
-            self.dw_player[idx] = None
-        """
-
-        for dw in self.dw_player:
-            logging.info("remove dock widget")
-            dw.player.log_handler = None
-            self.removeDockWidget(dw)
-
-            del dw
-            # sip.delete(dw)
-            # dw = None
-
-    # self.dw_player = []
-
-    self.statusbar.showMessage("", 0)
-
-    self.dwEvents.setVisible(False)
-
-    self.w_obs_info.setVisible(False)
-
-    # self.twEvents.setRowCount(0)
-
-    self.lb_current_media_time.clear()
-    self.lb_player_status.clear()
-    self.lb_video_info.clear()
-    self.lb_zoom_level.clear()
-
-    self.currentSubject = ""
-    self.lbFocalSubject.setText(cfg.NO_FOCAL_SUBJECT)
-
-    # clear current state(s) column in subjects table
-    for i in range(self.twSubjects.rowCount()):
-        self.twSubjects.item(i, len(cfg.subjectsFields)).setText("")
-
-    for w in (self.lbTimeOffset, self.lb_obs_time_interval):
-        w.clear()
-    self.play_rate, self.playerType = 1, ""
-
-    menu_options.update_menu(self)
-
-    logging.info(f"Observation {self.playerType} closed")
 
 
 def check_creation_date(self) -> Tuple[int, dict]:
