@@ -27,7 +27,9 @@ import os
 import pathlib as pl
 from decimal import Decimal as dec
 
+import shiboken6
 import tablib
+from PySide6.QtCore import QObject, Qt, QThread, Signal
 from PySide6.QtWidgets import QApplication, QFileDialog, QInputDialog, QMessageBox
 
 from . import config as cfg
@@ -644,6 +646,350 @@ def export_aggregated_events(self):
             )
 
 
+class ExportTextGridWorker(QObject):
+    log = Signal(str)  # messaggi di log (HTML) da mostrare nel ptText
+    finished = Signal(int, str)  # file_count, export_dir
+    error = Signal(str)  # errori generali non gestiti
+
+    def __init__(self, pj, selected_observations, parameters, export_dir, parent=None):
+        super().__init__(parent)
+        self.pj = pj
+        self.selected_observations = selected_observations
+        self.parameters = parameters
+        self.export_dir = export_dir
+
+    def run(self):
+        """
+        export events using a separated thread
+        """
+        try:
+            mem_command: str = ""
+
+            # header/template come nel tuo codice
+            interval_subject_header = (
+                "    item [{subject_index}]:\n"
+                '        class = "IntervalTier"\n'
+                '        name = "{subject}"\n'
+                "        xmin = 0.0\n"
+                "        xmax = {intervalsMax}\n"
+                "        intervals: size = {intervalsSize}\n"
+            )
+
+            interval_template = (
+                '        intervals [{count}]:\n            xmin = {xmin}\n            xmax = {xmax}\n            text = "{name}"\n'
+            )
+
+            point_subject_header = (
+                "    item [{subject_index}]:\n"
+                '        class = "TextTier"\n'
+                '        name = "{subject}"\n'
+                "        xmin = {intervalsMin}\n"
+                "        xmax = {intervalsMax}\n"
+                "        points: size = {intervalsSize}\n"
+            )
+
+            point_template = '        points [{count}]:\n            number = {number}\n            mark = "{mark}"\n'
+
+            # carica gli eventi aggregati
+            ok, msg, db_connector = db_functions.load_aggregated_events_in_db(
+                self.pj,
+                self.parameters[cfg.SELECTED_SUBJECTS],
+                self.selected_observations,
+                self.parameters[cfg.SELECTED_BEHAVIORS],
+            )
+
+            if db_connector is None:
+                logging.critical("Error when loading aggregated events in DB")
+                self.error.emit("Error when loading aggregated events in DB")
+                self.finished.emit(0, self.export_dir)
+                return
+
+            cursor = db_connector.cursor()
+
+            file_count: int = 0
+
+            for obs_id in self.selected_observations:
+                if self.parameters["time"] == cfg.TIME_EVENTS:
+                    start_coding, end_coding, coding_duration = observation_operations.coding_time(self.pj[cfg.OBSERVATIONS], [obs_id])
+                    if start_coding is None and end_coding is None:  # no events
+                        self.log.emit(f"The observation <b>{obs_id}</b> does not have events.")
+                        continue
+
+                    if math.isnan(start_coding) or math.isnan(end_coding):  # obs with no timestamp
+                        self.log.emit(f"The observation <b>{obs_id}</b> does not have timestamp.")
+                        continue
+
+                    min_time = float(start_coding)
+                    max_time = float(end_coding)
+
+                elif self.parameters["time"] == cfg.TIME_FULL_OBS:
+                    if self.pj[cfg.OBSERVATIONS][obs_id][cfg.TYPE] == cfg.MEDIA:
+                        max_media_duration, _ = observation_operations.media_duration(self.pj[cfg.OBSERVATIONS], [obs_id])
+                        min_time = float(0)
+                        max_time = float(max_media_duration)
+                        coding_duration = max_media_duration
+
+                    elif self.pj[cfg.OBSERVATIONS][obs_id][cfg.TYPE] in (
+                        cfg.LIVE,
+                        cfg.IMAGES,
+                    ):
+                        start_coding, end_coding, coding_duration = observation_operations.coding_time(self.pj[cfg.OBSERVATIONS], [obs_id])
+                        if start_coding is None and end_coding is None:  # no events
+                            self.log.emit(f"The observation <b>{obs_id}</b> does not have events.")
+                            continue
+                        if math.isnan(start_coding) or math.isnan(end_coding):  # obs with no timestamp
+                            self.log.emit(f"The observation <b>{obs_id}</b> does not have timestamp.")
+                            continue
+
+                        min_time = float(start_coding)
+                        max_time = float(end_coding)
+
+                    else:
+                        self.log.emit(f"Unknown type of observation <b>{obs_id}</b>, skip.")
+                        continue
+
+                elif self.parameters["time"] == cfg.TIME_ARBITRARY_INTERVAL:
+                    min_time = float(self.parameters[cfg.START_TIME])
+                    max_time = float(self.parameters[cfg.END_TIME])
+
+                elif self.parameters["time"] == cfg.TIME_OBS_INTERVAL:
+                    max_media_duration, _ = observation_operations.media_duration(self.pj[cfg.OBSERVATIONS], [obs_id])
+                    obs_interval = self.pj[cfg.OBSERVATIONS][obs_id].get(cfg.OBSERVATION_TIME_INTERVAL, [0, 0])
+                    offset = float(self.pj[cfg.OBSERVATIONS][obs_id][cfg.TIME_OFFSET])
+                    min_time = float(obs_interval[0]) + offset
+                    # Use max media duration for max time if no interval is defined (=0)
+                    max_time = float(obs_interval[1]) + offset if obs_interval[1] != 0 else float(max_media_duration)
+
+                else:
+                    self.log.emit(f"Time parameter unknown for <b>{obs_id}</b>.")
+                    continue
+
+                cursor.execute(
+                    "DELETE FROM aggregated_events WHERE observation = ? AND (start < ? AND stop < ?) OR (start > ? AND stop > ?)",
+                    (
+                        obs_id,
+                        min_time,
+                        min_time,
+                        max_time,
+                        max_time,
+                    ),
+                )
+                cursor.execute(
+                    "UPDATE aggregated_events SET start = ? WHERE observation = ? AND start < ? AND stop BETWEEN ? AND ?",
+                    (
+                        min_time,
+                        obs_id,
+                        min_time,
+                        min_time,
+                        max_time,
+                    ),
+                )
+                cursor.execute(
+                    "UPDATE aggregated_events SET stop = ? WHERE observation = ? AND stop > ? AND start BETWEEN ? AND ?",
+                    (
+                        max_time,
+                        obs_id,
+                        max_time,
+                        min_time,
+                        max_time,
+                    ),
+                )
+                cursor.execute(
+                    "UPDATE aggregated_events SET start = ?, stop = ? WHERE observation = ? AND start < ? AND stop > ?",
+                    (
+                        min_time,
+                        max_time,
+                        obs_id,
+                        min_time,
+                        max_time,
+                    ),
+                )
+
+                next_obs: bool = False
+
+                cursor.execute(
+                    (
+                        "SELECT COUNT(*) FROM (SELECT * FROM aggregated_events "
+                        f"WHERE observation = ? AND subject IN ({','.join(['?'] * len(self.parameters[cfg.SELECTED_SUBJECTS]))}) GROUP BY subject, behavior) "
+                    ),
+                    [obs_id] + self.parameters[cfg.SELECTED_SUBJECTS],
+                )
+
+                subjects_num = int(cursor.fetchone()[0])
+                subjects_max = max_time
+
+                out = (
+                    'File type = "ooTextFile"\n'
+                    'Object class = "TextGrid"\n'
+                    "\n"
+                    f"xmin = 0.0\n"
+                    f"xmax = {subjects_max}\n"
+                    "tiers? <exists>\n"
+                    f"size = {subjects_num}\n"
+                    "item []:\n"
+                )
+
+                subject_index: int = 0
+                for subject in self.parameters[cfg.SELECTED_SUBJECTS]:
+                    if subject not in [
+                        x[cfg.EVENT_SUBJECT_FIELD_IDX] if x[cfg.EVENT_SUBJECT_FIELD_IDX] else cfg.NO_FOCAL_SUBJECT
+                        for x in self.pj[cfg.OBSERVATIONS][obs_id][cfg.EVENTS]
+                    ]:
+                        continue
+
+                    intervalsMin = min_time
+                    intervalsMax = max_time
+
+                    # STATE events
+                    cursor.execute(
+                        (
+                            "SELECT start, stop, behavior FROM aggregated_events "
+                            "WHERE observation = ? AND subject = ? AND type = 'STATE' ORDER BY start"
+                        ),
+                        (obs_id, subject),
+                    )
+
+                    rows = [
+                        {
+                            "start": util.float2decimal(r["start"]),
+                            "stop": util.float2decimal(r["stop"]),
+                            "code": r["behavior"],
+                        }
+                        for r in cursor.fetchall()
+                    ]
+                    if rows:
+                        out += interval_subject_header
+
+                        count = 0
+
+                        # se il primo evento non parte da 0, aggiungi null
+                        if rows[0]["start"] > 0:
+                            count += 1
+                            out += interval_template.format(
+                                count=count,
+                                name="null",
+                                xmin=0.0,
+                                xmax=rows[0]["start"],
+                            )
+
+                        for idx, row in enumerate(rows):
+                            # overlapping
+                            if (idx + 1 < len(rows)) and (row["stop"] > rows[idx + 1]["start"]):
+                                self.log.emit(
+                                    (
+                                        f"The events overlap for subject <b>{subject}</b> in the observation <b>{obs_id}</b>. "
+                                        "It is not possible to create the Praat TextGrid file."
+                                    )
+                                )
+                                next_obs = True
+                                break
+
+                            count += 1
+
+                            if (idx + 1 < len(rows)) and (rows[idx + 1]["start"] - dec("0.001") <= row["stop"] < rows[idx + 1]["start"]):
+                                xmax = rows[idx + 1]["start"]
+                            else:
+                                xmax = row["stop"]
+
+                            out += interval_template.format(
+                                count=count,
+                                name=row["code"],
+                                xmin=row["start"],
+                                xmax=xmax,
+                            )
+
+                            # intervalli null
+                            if (idx + 1 < len(rows)) and (row["stop"] < rows[idx + 1]["start"] - dec("0.001")):
+                                count += 1
+                                out += interval_template.format(
+                                    count=count,
+                                    name="null",
+                                    xmin=row["stop"],
+                                    xmax=rows[idx + 1]["start"],
+                                )
+
+                        if next_obs:
+                            break
+
+                        # ultimo evento non arriva a max_time
+                        if rows[-1]["stop"] < max_time:
+                            count += 1
+                            out += interval_template.format(
+                                count=count,
+                                name="null",
+                                xmin=rows[-1]["stop"],
+                                xmax=max_time,
+                            )  # numero di items per size
+
+                        subject_index += 1
+                        out = out.format(
+                            subject_index=subject_index,
+                            subject=subject,
+                            intervalsSize=count,
+                            intervalsMin=intervalsMin,
+                            intervalsMax=intervalsMax,
+                        )
+
+                    # POINT events
+                    cursor.execute(
+                        (
+                            "SELECT start, behavior FROM aggregated_events "
+                            "WHERE observation = ? AND subject = ? AND type = 'POINT' ORDER BY start"
+                        ),
+                        (obs_id, subject),
+                    )
+
+                    rows = [
+                        {
+                            "start": util.float2decimal(r["start"]),
+                            "code": r["behavior"],
+                        }
+                        for r in cursor.fetchall()
+                    ]
+                    if not rows:
+                        continue
+
+                    out += point_subject_header
+
+                    count = 0
+                    for idx, row in enumerate(rows):
+                        count += 1
+                        out += point_template.format(
+                            count=count,
+                            mark=row["code"],
+                            number=row["start"],
+                        )
+
+                    subject_index += 1
+                    out = out.format(
+                        subject_index=subject_index,
+                        subject=subject,
+                        intervalsSize=count,
+                        intervalsMin=intervalsMin,
+                        intervalsMax=intervalsMax,
+                    )
+
+                if next_obs:
+                    continue
+
+                out_path = pl.Path(self.export_dir) / f"{util.safeFileName(obs_id)}.TextGrid"
+
+                try:
+                    with open(out_path, "w", encoding="utf-8") as f:
+                        f.write(out)
+                    file_count += 1
+                    # self.log.emit(f"File {out_path} created.")
+                except Exception as e:
+                    self.log.emit(f"The file {out_path} cannot be created: {e!r}")
+
+            self.finished.emit(file_count, self.export_dir)
+
+        except Exception as e:
+            logging.exception("Unhandled exception in ExportTextGridWorker")
+            self.error.emit(str(e))
+            self.finished.emit(0, self.export_dir)
+
+
 def export_events_as_textgrid(self) -> None:
     """
     * select observations
@@ -652,7 +998,6 @@ def export_events_as_textgrid(self) -> None:
     """
 
     _, selected_observations = select_observations.select_observations2(self, mode=cfg.MULTIPLE, windows_title="")
-
     if not selected_observations:
         return
 
@@ -679,7 +1024,6 @@ def export_events_as_textgrid(self) -> None:
         return
 
     start_coding, end_coding, _ = observation_operations.coding_time(self.pj[cfg.OBSERVATIONS], selected_observations)
-
     start_interval, end_interval = observation_operations.time_intervals_range(self.pj[cfg.OBSERVATIONS], selected_observations)
 
     parameters = select_subj_behav.choose_obs_subj_behav_category(
@@ -703,310 +1047,49 @@ def export_events_as_textgrid(self) -> None:
         return
 
     export_dir = QFileDialog.getExistingDirectory(
-        self, "Export events as Praat TextGrid", os.path.expanduser("~"), options=QFileDialog.Option.ShowDirsOnly
+        self,
+        "Export events as Praat TextGrid",
+        os.path.expanduser("~"),
+        options=QFileDialog.Option.ShowDirsOnly,
     )
     if not export_dir:
         return
 
-    mem_command: str = ""
-
-    # see https://www.fon.hum.uva.nl/praat/manual/TextGrid_file_formats.html
-
-    interval_subject_header = (
-        "    item [{subject_index}]:\n"
-        '        class = "IntervalTier"\n'
-        '        name = "{subject}"\n'
-        "        xmin = 0.0\n"
-        "        xmax = {intervalsMax}\n"
-        "        intervals: size = {intervalsSize}\n"
-    )
-
-    interval_template = '        intervals [{count}]:\n            xmin = {xmin}\n            xmax = {xmax}\n            text = "{name}"\n'
-
-    point_subject_header = (
-        "    item [{subject_index}]:\n"
-        '        class = "TextTier"\n'
-        '        name = "{subject}"\n'
-        "        xmin = {intervalsMin}\n"
-        "        xmax = {intervalsMax}\n"
-        "        points: size = {intervalsSize}\n"
-    )
-
-    point_template = '        points [{count}]:\n            number = {number}\n            mark = "{mark}"\n'
-
     # widget for results
-    self.results = dialog.Results_dialog()
-    self.results.setWindowTitle(f"{cfg.programName} - Export events as Praat TextGrid")
-    self.results.show()
+    self.remove_closed_results_objects()
+    self.results_objects.append(dialog.Results_widget())
+    results_widget = self.results_objects[-1]
+    results_widget.setWindowTitle(f"{cfg.programName} - Export events as Praat TextGrid")
+    results_widget.show()
 
-    ok, msg, db_connector = db_functions.load_aggregated_events_in_db(
-        self.pj, parameters[cfg.SELECTED_SUBJECTS], selected_observations, parameters[cfg.SELECTED_BEHAVIORS]
+    thread = QThread(self)
+    # results_widget.destroyed.connect(thread.quit)
+    worker = ExportTextGridWorker(
+        pj=self.pj,
+        selected_observations=selected_observations,
+        parameters=parameters,
+        export_dir=export_dir,
     )
 
-    if db_connector is None:
-        logging.critical("Error when loading aggregated events in DB")
-        return
+    worker.moveToThread(thread)
+    thread.started.connect(worker.run)
+    worker.log.connect(results_widget.ptText.appendHtml)
 
-    cursor = db_connector.cursor()
+    def on_worker_error(msg: str):
+        QMessageBox.critical(self, cfg.programName, msg)
 
-    file_count: int = 0
+    worker.error.connect(on_worker_error)
 
-    for obs_id in selected_observations:
-        if parameters["time"] == cfg.TIME_EVENTS:
-            start_coding, end_coding, coding_duration = observation_operations.coding_time(self.pj[cfg.OBSERVATIONS], [obs_id])
-            if start_coding is None and end_coding is None:  # no events
-                self.results.ptText.appendHtml(f"The observation <b>{obs_id}</b> does not have events.")
-                QApplication.processEvents()
-                continue
+    def on_worker_finished(file_count: int, export_dir: str):
+        results_widget.ptText.appendHtml(f"Done. {file_count} file(s) were created in {export_dir}.")
 
-            if math.isnan(start_coding) or math.isnan(end_coding):  # obs with no timestamp
-                self.results.ptText.appendHtml(f"The observation <b>{obs_id}</b> does not have timestamp.")
-                QApplication.processEvents()
-                continue
+    worker.finished.connect(on_worker_finished, Qt.QueuedConnection)
+    worker.finished.connect(thread.quit)
+    worker.finished.connect(worker.deleteLater)
+    thread.finished.connect(thread.deleteLater)
 
-            min_time = float(start_coding)
-            max_time = float(end_coding)
+    # tieni riferimenti se vuoi evitare che vengano GC-ati
+    self._export_textgrid_thread = thread
+    self._export_textgrid_worker = worker
 
-        if parameters["time"] == cfg.TIME_FULL_OBS:
-            if self.pj[cfg.OBSERVATIONS][obs_id][cfg.TYPE] == cfg.MEDIA:
-                max_media_duration, _ = observation_operations.media_duration(self.pj[cfg.OBSERVATIONS], [obs_id])
-                min_time = float(0)
-                max_time = float(max_media_duration)
-                coding_duration = max_media_duration
-
-            if self.pj[cfg.OBSERVATIONS][obs_id][cfg.TYPE] in (cfg.LIVE, cfg.IMAGES):
-                start_coding, end_coding, coding_duration = observation_operations.coding_time(self.pj[cfg.OBSERVATIONS], [obs_id])
-                if start_coding is None and end_coding is None:  # no events
-                    self.results.ptText.appendHtml(f"The observation <b>{obs_id}</b> does not have events.")
-                    QApplication.processEvents()
-                    continue
-                if math.isnan(start_coding) or math.isnan(end_coding):  # obs with no timestamp
-                    self.results.ptText.appendHtml(f"The observation <b>{obs_id}</b> does not have timestamp.")
-                    QApplication.processEvents()
-                    continue
-
-                min_time = float(start_coding)
-                max_time = float(end_coding)
-
-        if parameters["time"] == cfg.TIME_ARBITRARY_INTERVAL:
-            min_time = float(parameters[cfg.START_TIME])
-            max_time = float(parameters[cfg.END_TIME])
-
-        if parameters["time"] == cfg.TIME_OBS_INTERVAL:
-            max_media_duration, _ = observation_operations.media_duration(self.pj[cfg.OBSERVATIONS], [obs_id])
-            obs_interval = self.pj[cfg.OBSERVATIONS][obs_id].get(cfg.OBSERVATION_TIME_INTERVAL, [0, 0])
-            offset = float(self.pj[cfg.OBSERVATIONS][obs_id][cfg.TIME_OFFSET])
-            min_time = float(obs_interval[0]) + offset
-            # Use max media duration for max time if no interval is defined (=0)
-            max_time = float(obs_interval[1]) + offset if obs_interval[1] != 0 else float(max_media_duration)
-
-        # delete events outside time interval
-
-        cursor.execute(
-            "DELETE FROM aggregated_events WHERE observation = ? AND (start < ? AND stop < ?) OR (start > ? AND stop > ?)",
-            (
-                obs_id,
-                min_time,
-                min_time,
-                max_time,
-                max_time,
-            ),
-        )
-        cursor.execute(
-            "UPDATE aggregated_events SET start = ? WHERE observation = ? AND start < ? AND stop BETWEEN ? AND ?",
-            (
-                min_time,
-                obs_id,
-                min_time,
-                min_time,
-                max_time,
-            ),
-        )
-        cursor.execute(
-            "UPDATE aggregated_events SET stop = ? WHERE observation = ? AND stop > ? AND start BETWEEN ? AND ?",
-            (
-                max_time,
-                obs_id,
-                max_time,
-                min_time,
-                max_time,
-            ),
-        )
-        cursor.execute(
-            "UPDATE aggregated_events SET start = ?, stop = ? WHERE observation = ? AND start < ? AND stop > ?",
-            (
-                min_time,
-                max_time,
-                obs_id,
-                min_time,
-                max_time,
-            ),
-        )
-
-        next_obs: bool = False
-
-        # number of items for size parameter
-        cursor.execute(
-            (
-                "SELECT COUNT(*) FROM (SELECT * FROM aggregated_events "
-                f"WHERE observation = ? AND subject IN ({','.join(['?'] * len(parameters[cfg.SELECTED_SUBJECTS]))}) GROUP BY subject, behavior) "
-            ),
-            [obs_id] + parameters[cfg.SELECTED_SUBJECTS],
-        )
-
-        subjects_num = int(cursor.fetchone()[0])
-        subjects_max = max_time
-
-        out = (
-            'File type = "ooTextFile"\n'
-            'Object class = "TextGrid"\n'
-            "\n"
-            f"xmin = 0.0\n"
-            f"xmax = {subjects_max}\n"
-            "tiers? <exists>\n"
-            f"size = {subjects_num}\n"
-            "item []:\n"
-        )
-
-        subject_index: int = 0
-        for subject in parameters[cfg.SELECTED_SUBJECTS]:
-            if subject not in [
-                x[cfg.EVENT_SUBJECT_FIELD_IDX] if x[cfg.EVENT_SUBJECT_FIELD_IDX] else cfg.NO_FOCAL_SUBJECT
-                for x in self.pj[cfg.OBSERVATIONS][obs_id][cfg.EVENTS]
-            ]:
-                continue
-
-            intervalsMin = min_time
-            intervalsMax = max_time
-
-            # STATE events
-            cursor.execute(
-                (
-                    "SELECT start, stop, behavior FROM aggregated_events "
-                    "WHERE observation = ? AND subject = ? AND type = 'STATE' ORDER BY start"
-                ),
-                (obs_id, subject),
-            )
-
-            rows = [
-                {"start": util.float2decimal(r["start"]), "stop": util.float2decimal(r["stop"]), "code": r["behavior"]}
-                for r in cursor.fetchall()
-            ]
-            if rows:
-                out += interval_subject_header
-
-                count = 0
-
-                # check if 1st behavior starts at the beginning
-                if rows[0]["start"] > 0:
-                    count += 1
-                    out += interval_template.format(count=count, name="null", xmin=0.0, xmax=rows[0]["start"])
-
-                for idx, row in enumerate(rows):
-                    # check if events are overlapping
-                    if (idx + 1 < len(rows)) and (row["stop"] > rows[idx + 1]["start"]):
-                        self.results.ptText.appendHtml(
-                            (
-                                f"The events overlap for subject <b>{subject}</b> in the observation <b>{obs_id}</b>. "
-                                "It is not possible to create the Praat TextGrid file."
-                            )
-                        )
-                        QApplication.processEvents()
-
-                        next_obs = True
-                        break
-
-                    count += 1
-
-                    if (idx + 1 < len(rows)) and (rows[idx + 1]["start"] - dec("0.001") <= row["stop"] < rows[idx + 1]["start"]):
-                        xmax = rows[idx + 1]["start"]
-                    else:
-                        xmax = row["stop"]
-
-                    out += interval_template.format(count=count, name=row["code"], xmin=row["start"], xmax=xmax)
-
-                    # check if no behavior
-                    if (idx + 1 < len(rows)) and (row["stop"] < rows[idx + 1]["start"] - dec("0.001")):
-                        count += 1
-                        out += interval_template.format(
-                            count=count,
-                            name="null",
-                            xmin=row["stop"],
-                            xmax=rows[idx + 1]["start"],
-                        )
-
-                if next_obs:
-                    break
-
-                # check if last event ends at the end of media file
-                if rows[-1]["stop"] < max_time:
-                    count += 1
-                    out += interval_template.format(count=count, name="null", xmin=rows[-1]["stop"], xmax=max_time)
-
-                # add info
-                subject_index += 1
-                out = out.format(
-                    subject_index=subject_index,
-                    subject=subject,
-                    intervalsSize=count,
-                    intervalsMin=intervalsMin,
-                    intervalsMax=intervalsMax,
-                )
-
-            # POINT events
-            cursor.execute(
-                ("SELECT start, behavior FROM aggregated_events WHERE observation = ? AND subject = ? AND type = 'POINT' ORDER BY start"),
-                (obs_id, subject),
-            )
-
-            rows = [{"start": util.float2decimal(r["start"]), "code": r["behavior"]} for r in cursor.fetchall()]
-            if not rows:
-                continue
-
-            out += point_subject_header
-
-            count = 0
-
-            for idx, row in enumerate(rows):
-                count += 1
-                out += point_template.format(count=count, mark=row["code"], number=row["start"])
-
-            # add info
-            subject_index += 1
-            out = out.format(
-                subject_index=subject_index,
-                subject=subject,
-                intervalsSize=count,
-                intervalsMin=intervalsMin,
-                intervalsMax=intervalsMax,
-            )
-
-        if next_obs:
-            continue
-
-        # check if file already exists
-        if mem_command != cfg.OVERWRITE_ALL and pl.Path(f"{pl.Path(export_dir) / util.safeFileName(obs_id)}.TextGrid").is_file():
-            if mem_command == cfg.SKIP_ALL:
-                continue
-            mem_command = dialog.MessageDialog(
-                cfg.programName,
-                f"The file <b>{pl.Path(export_dir) / util.safeFileName(obs_id)}.TextGrid</b> already exists.",
-                (cfg.OVERWRITE, cfg.OVERWRITE_ALL, cfg.SKIP, cfg.SKIP_ALL, cfg.CANCEL),
-            )
-            if mem_command == cfg.CANCEL:
-                return
-            if mem_command in (cfg.SKIP, cfg.SKIP_ALL):
-                continue
-
-        try:
-            with open(f"{pl.Path(export_dir) / util.safeFileName(obs_id)}.TextGrid", "w") as f:
-                f.write(out)
-            file_count += 1
-            self.results.ptText.appendHtml(f"File {pl.Path(export_dir) / util.safeFileName(obs_id)}.TextGrid was created.")
-            QApplication.processEvents()
-        except Exception:
-            self.results.ptText.appendHtml(f"The file {pl.Path(export_dir) / util.safeFileName(obs_id)}.TextGrid can not be created.")
-            QApplication.processEvents()
-
-    self.results.ptText.appendHtml(f"Done.  {file_count} file(s) were created in {export_dir}.")
-    QApplication.processEvents()
+    thread.start()

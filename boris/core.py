@@ -3651,11 +3651,12 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 media_file_available=True,
             )
             if msg:
-                self.results = dialog.Results_dialog()
-                self.results.setWindowTitle("Project integrity results")
-                self.results.ptText.clear()
-                self.results.ptText.appendHtml(f"Some issues were found in the project<br><br>{msg}")
-                self.results.show()
+                self.remove_closed_results_objects()
+                self.results_objects.append(dialog.Results_dialog())
+                self.results_objects[-1].setWindowTitle("Project integrity results")
+                self.results_objects[-1].ptText.clear()
+                self.results_objects[-1].ptText.appendHtml(f"Some issues were found in the project<br><br>{msg}")
+                self.results_objects[-1].show()
 
     def save_project_activated(self):
         """

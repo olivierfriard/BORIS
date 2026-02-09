@@ -119,7 +119,7 @@ def check_observation_exhaustivity(
     return round(exhausivity_percent, 1)
 
 
-def check_observation_exhaustivity_pictures(obs) -> float:
+def check_observation_exhaustivity_pictures(obs) -> float | str:
     """
     check exhaustivity of coding for observations from pictures
     """
@@ -861,7 +861,7 @@ def create_subtitles(pj: dict, selected_observations: list, parameters: dict, ex
     return flag_ok, msg
 
 
-def export_observations_list(pj: dict, selected_observations: list, file_name: str, output_format: str) -> bool:
+def export_observations_list(pj: dict, selected_observations: list, file_name: str, output_format: str) -> tuple[int, str]:
     """
     create file with a list of selected observations
 
@@ -872,7 +872,7 @@ def export_observations_list(pj: dict, selected_observations: list, file_name: s
         output_format (str): format output
 
     Returns:
-        bool: True of OK else False
+        bool: True if OK else False
     """
 
     data = tablib.Dataset()
@@ -881,14 +881,18 @@ def export_observations_list(pj: dict, selected_observations: list, file_name: s
         "Date",
         "Description",
         "Subjects",
+        "Observation duration (s)",
+        "Observation exhaustivity %",
         "Media files/Live observation",
     ]
 
-    indep_var_header = []
+    indep_var_header: list = []
     if cfg.INDEPENDENT_VARIABLES in pj:
         for idx in util.sorted_keys(pj[cfg.INDEPENDENT_VARIABLES]):
             indep_var_header.append(pj[cfg.INDEPENDENT_VARIABLES][idx]["label"])
     data.headers.extend(indep_var_header)
+
+    state_events_list = util.state_behavior_codes(pj[cfg.ETHOGRAM])
 
     for obs_id in selected_observations:
         subjects_list = sorted(list(set([x[cfg.EVENT_SUBJECT_FIELD_IDX] for x in pj[cfg.OBSERVATIONS][obs_id][cfg.EVENTS]])))
@@ -897,17 +901,17 @@ def export_observations_list(pj: dict, selected_observations: list, file_name: s
             subjects_list.remove("")
         subjects = ", ".join(subjects_list)
 
+        media_files: list = []
         if pj[cfg.OBSERVATIONS][obs_id][cfg.TYPE] == cfg.LIVE:
             media_files = ["Live observation"]
         elif pj[cfg.OBSERVATIONS][obs_id][cfg.TYPE] == cfg.MEDIA:
-            media_files = []
             if pj[cfg.OBSERVATIONS][obs_id][cfg.FILE]:
                 for player in sorted(pj[cfg.OBSERVATIONS][obs_id][cfg.FILE].keys()):
                     for media in pj[cfg.OBSERVATIONS][obs_id][cfg.FILE][player]:
                         media_files.append(f"#{player}: {media}")
 
         # independent variables
-        indep_var = []
+        indep_var: list = []
         if cfg.INDEPENDENT_VARIABLES in pj[cfg.OBSERVATIONS][obs_id]:
             for var_label in indep_var_header:
                 if var_label in pj[cfg.OBSERVATIONS][obs_id][cfg.INDEPENDENT_VARIABLES]:
@@ -915,12 +919,24 @@ def export_observations_list(pj: dict, selected_observations: list, file_name: s
                 else:
                     indep_var.append("")
 
+        # observed time interval
+        interval = observed_interval(pj[cfg.OBSERVATIONS][obs_id])
+        observed_interval_str = str(round(interval[1] - interval[0], 3))
+
+        # check exhaustivity of observation
+        if pj[cfg.OBSERVATIONS][obs_id][cfg.TYPE] in (cfg.MEDIA, cfg.LIVE):
+            exhaustivity = check_observation_exhaustivity(pj[cfg.OBSERVATIONS][obs_id][cfg.EVENTS], state_events_list)
+        elif pj[cfg.OBSERVATIONS][obs_id][cfg.TYPE] == cfg.IMAGES:
+            exhaustivity = check_observation_exhaustivity_pictures(pj[cfg.OBSERVATIONS][obs_id])
+
         data.append(
             [
                 obs_id,
                 pj[cfg.OBSERVATIONS][obs_id]["date"],
                 pj[cfg.OBSERVATIONS][obs_id]["description"],
                 subjects,
+                observed_interval_str,
+                str(exhaustivity),
                 ", ".join(media_files),
             ]
             + indep_var
@@ -930,16 +946,16 @@ def export_observations_list(pj: dict, selected_observations: list, file_name: s
         try:
             with open(file_name, "wb") as f:
                 f.write(str.encode(data.export(output_format)))
-        except Exception:
-            return False
-    if output_format in [cfg.ODS_EXT, cfg.XLS_EXT, cfg.XLSX_EXT]:
+        except Exception as e:
+            return 1, e
+    if output_format in (cfg.ODS_EXT, cfg.XLS_EXT, cfg.XLSX_EXT):
         try:
             with open(file_name, "wb") as f:
                 f.write(data.export(output_format))
-        except Exception:
-            return False
+        except Exception as e:
+            return 2, e
 
-    return True
+    return 0, ""
 
 
 def set_media_paths_relative_to_project_dir(pj: dict, project_file_name: str) -> bool:
@@ -1800,7 +1816,7 @@ def explore_project(self) -> None:
     if results:
         self.remove_closed_results_objects()
         self.results_objects.append(dialog.View_explore_project_results())
-        self.results_objects[-1].setWindowTitle("Explore project results")
+        self.results_objects[-1].setWindowTitle(f"BORIS - Explore project results")
         self.results_objects[-1].setWindowFlags(Qt.WindowType.WindowStaysOnTopHint)
         self.results_objects[-1].double_click_signal.connect(double_click_explore_project)
         txt = f"<b>{len(results)}</b> events"

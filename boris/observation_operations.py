@@ -200,14 +200,14 @@ def export_observations_list_clicked(self):
     if not resultStr or not selected_observations:
         return
 
-    file_formats = [
+    file_formats = (
         cfg.TSV,
         cfg.CSV,
         cfg.ODS,
         cfg.XLSX,
         cfg.XLS,
         cfg.HTML,
-    ]
+    )
 
     file_name, filter_ = QFileDialog().getSaveFileName(self, "Export list of selected observations", "", ";;".join(file_formats))
 
@@ -219,11 +219,12 @@ def export_observations_list_clicked(self):
         file_name = str(Path(file_name)) + "." + output_format
         # check if file name with extension already exists
         if Path(file_name).is_file():
-            if dialog.MessageDialog(cfg.programName, f"The file {file_name} already exists.", [cfg.CANCEL, cfg.OVERWRITE]) == cfg.CANCEL:
+            if dialog.MessageDialog(cfg.programName, f"The file {file_name} already exists.", (cfg.CANCEL, cfg.OVERWRITE)) == cfg.CANCEL:
                 return
 
-    if not project_functions.export_observations_list(self.pj, selected_observations, file_name, output_format):
-        QMessageBox.warning(self, cfg.programName, "File not created due to an error")
+    r, msg = project_functions.export_observations_list(self.pj, selected_observations, file_name, output_format)
+    if r:
+        QMessageBox.warning(self, cfg.programName, f"File not created due to an error: {msg}")
 
 
 def observations_list(self):
