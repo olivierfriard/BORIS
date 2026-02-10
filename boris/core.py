@@ -953,8 +953,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             plot_type (str): type of plot (cfg.SPECTROGRAM_PLOT, cfg.WAVEFORM_PLOT, cfg.EVENTS_PLOT)
             warning (bool): Display message if True
         """
-        print(f"{plot_type=}")  # remove before release
-
         if plot_type not in (cfg.WAVEFORM_PLOT, cfg.SPECTROGRAM_PLOT, cfg.EVENTS_PLOT):
             logging.critical(f"Error on plot type: {plot_type}")
             return
@@ -972,7 +970,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         if plot_type == cfg.SPECTROGRAM_PLOT:
             if self.spectro:  # dict not empty
-                if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO].get("display", {}):
+                if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO].get(cfg.PLAYER_PLOT_DISPLAY, {}):
                     for player in self.spectro:
                         self.spectro[player].show()
                 else:
@@ -980,11 +978,14 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             else:
                 logging.debug("create spectrogram plot")
 
-                if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO].get("display", {}):
+                if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO].get(cfg.PLAYER_PLOT_DISPLAY, {}):
                     for player in self.pj[cfg.OBSERVATIONS][self.observationId][cfg.FILE]:
                         if (
                             "spectro"
-                            not in self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO].get("display", {}).get(player, "").lower()
+                            not in self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO]
+                            .get(cfg.PLAYER_PLOT_DISPLAY, {})
+                            .get(player, "")
+                            .lower()
                         ):
                             continue
 
@@ -1127,10 +1128,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                             self.play_video()
 
         if plot_type == cfg.WAVEFORM_PLOT:
-            print(f"{self.waveform=}")  # remove before release
-
             if self.waveform:
-                if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO].get("display", {}):
+                if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO].get(cfg.PLAYER_PLOT_DISPLAY, {}):
                     for player in self.spectro:
                         self.waveform[player].show()
                 else:
@@ -1138,27 +1137,30 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
             else:
                 logging.debug("Create waveform plot")
-                if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO].get("display", {}):
-                    print(f"{self.pj[cfg.OBSERVATIONS][self.observationId][cfg.FILE]=}")  # remove before release
+                if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO].get(cfg.PLAYER_PLOT_DISPLAY, {}):
                     for player in self.pj[cfg.OBSERVATIONS][self.observationId][cfg.FILE]:
                         if not self.pj[cfg.OBSERVATIONS][self.observationId][cfg.FILE][player]:
                             continue
                         if (
                             cfg.WAVEFORM_PLOT.lower()
-                            not in self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO].get("display", {}).get(player, "").lower()
+                            not in self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO]
+                            .get(cfg.PLAYER_PLOT_DISPLAY, {})
+                            .get(player, "")
+                            .lower()
                         ):
                             # add waveform to display
                             plot_list = (
-                                self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO].get("display", {}).get(player, "").split(",")
+                                self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO]
+                                .get(cfg.PLAYER_PLOT_DISPLAY, {})
+                                .get(player, "")
+                                .split(",")
                             )
-                            print(f"{plot_list=}")  # remove before release
                             if cfg.NOTHING in plot_list:
                                 plot_list.remove(cfg.NOTHING)
                             plot_list.append(cfg.WAVEFORM_PLOT)
-                            self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO]["display"][player] = ",".join(sorted(plot_list))
-                            print(
-                                f"{self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO]['display'][player]=}"
-                            )  # remove before release
+                            self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO][cfg.PLAYER_PLOT_DISPLAY][player] = ",".join(
+                                sorted(plot_list)
+                            )
 
                         # create waveform
                         self.generate_wav_file_from_media(player)
@@ -1357,7 +1359,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         # unique waveform
         if self.pj[cfg.OBSERVATIONS][self.observationId].get(cfg.VISUALIZE_WAVEFORM, False) and not self.pj[cfg.OBSERVATIONS][
             self.observationId
-        ][cfg.MEDIA_INFO].get("display", {}):
+        ][cfg.MEDIA_INFO].get(cfg.PLAYER_PLOT_DISPLAY, {}):
             if not self.waveform:
                 return
 
@@ -1380,7 +1382,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                         logging.warning(f"waveform_load_wav error: {r['error']}")
 
         # multiple waveform
-        if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO].get("display", {}):
+        if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO].get(cfg.PLAYER_PLOT_DISPLAY, {}):
             for player in self.waveform:
                 if not self.waveform[player].visibleRegion().isEmpty():
                     try:
@@ -1416,7 +1418,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         # unique spectrogram
         if self.pj[cfg.OBSERVATIONS][self.observationId].get(cfg.VISUALIZE_SPECTROGRAM, False) and not self.pj[cfg.OBSERVATIONS][
             self.observationId
-        ][cfg.MEDIA_INFO].get("display", {}):
+        ][cfg.MEDIA_INFO].get(cfg.PLAYER_PLOT_DISPLAY, {}):
             if not self.spectro:
                 return
 
@@ -1439,7 +1441,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                         logging.warning(f"spectro_load_wav error: {r['error']}")
 
         # multiple spectrogram
-        if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO].get("display", {}):
+        if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO].get(cfg.PLAYER_PLOT_DISPLAY, {}):
             for player in self.spectro:
                 if not self.spectro[player].visibleRegion().isEmpty():
                     try:

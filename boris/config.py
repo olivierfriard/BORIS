@@ -207,6 +207,7 @@ DATA_PLOT_FIELDS = {
 DATA_PLOT_STYLES = ["b-", "r-", "g-", "bo", "ro", "go"]
 
 # plot type
+PLAYER_PLOT_DISPLAY = "display"
 WAVEFORM_PLOT = "waveform"
 SPECTROGRAM_PLOT = "spectrogram"
 EVENTS_PLOT = "plot_events"

@@ -20,16 +20,16 @@ This file is part of BORIS.
 
 """
 
+import logging
 import os
 import tempfile
 from pathlib import Path
-import logging
 
-from PySide6.QtWidgets import QFileDialog, QMessageBox, QInputDialog
 from PySide6.QtCore import (
-    Qt,
     QProcess,
+    Qt,
 )
+from PySide6.QtWidgets import QFileDialog, QInputDialog, QMessageBox
 
 from . import config as cfg
 from . import dialog
@@ -135,7 +135,7 @@ def ffmpeg_process(self, action: str):
                 dialog.MessageDialog(
                     cfg.programName,
                     "All the selected video files will be re-encoded / resized with these parameters",
-                    [cfg.OK, cfg.CANCEL],
+                    (cfg.OK, cfg.CANCEL),
                 )
                 == cfg.CANCEL
             ):
