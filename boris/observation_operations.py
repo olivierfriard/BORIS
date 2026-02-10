@@ -2523,7 +2523,7 @@ def create_observations(self):
                 cfg.DESCRIPTION: "",
                 cfg.TIME_OFFSET: dec(str(round(dlg.elements["Time offset (in seconds)"].value(), 3))),
                 cfg.EVENTS: [],
-                "observation time interval": [0, 0],
+                cfg.OBSERVATION_TIME_INTERVAL: [0, 0],
                 cfg.INDEPENDENT_VARIABLES: {},
                 cfg.VISUALIZE_SPECTROGRAM: dlg.elements["Visualize spectrogram"].isChecked(),
                 cfg.VISUALIZE_WAVEFORM: dlg.elements["Visualize waveform"].isChecked(),
