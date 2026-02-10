@@ -900,7 +900,7 @@ class FindReplaceEvents(QWidget):
 
 class Results_dialog(QDialog):
     """
-    widget for visualizing text output in HTML
+    Dialog for visualizing text output in HTML
     """
 
     def __init__(self):
@@ -930,6 +930,63 @@ class Results_dialog(QDialog):
         self.pbCancel.setVisible(False)
 
         self.pbOK = QPushButton(cfg.OK, clicked=self.accept)
+        hbox2.addWidget(self.pbOK)
+
+        hbox.addLayout(hbox2)
+        self.setLayout(hbox)
+
+        self.resize(800, 640)
+
+    def save_results(self):
+        """
+        save content of self.ptText
+        """
+
+        if not self.dataset:
+            file_name, _ = QFileDialog().getSaveFileName(self, "Save results", "", "Text files (*.txt *.tsv);;All files (*)")
+
+            if not file_name:
+                return
+            try:
+                with open(file_name, "w") as f:
+                    f.write(self.ptText.toPlainText())
+            except Exception:
+                QMessageBox.critical(self, cfg.programName, f"The file {file_name} can not be saved")
+
+        else:
+            self.done(cfg.SAVE_DATASET)
+
+
+class Results_widget(QWidget):
+    """
+    widget for visualizing text output in HTML
+    """
+
+    def __init__(self):
+        super().__init__()
+
+        # self.setAttribute(Qt.WidgetAttribute.WA_DeleteOnClose)
+
+        self.dataset = False
+
+        self.setWindowTitle("")
+
+        hbox = QVBoxLayout()
+
+        self.lb = QLabel("")
+        hbox.addWidget(self.lb)
+
+        self.ptText = QPlainTextEdit()
+        self.ptText.setReadOnly(True)
+        hbox.addWidget(self.ptText)
+
+        hbox2 = QHBoxLayout()
+        hbox2.addItem(QSpacerItem(241, 20, QSizePolicy.Expanding, QSizePolicy.Minimum))
+
+        self.pbSave = QPushButton("Save results", clicked=self.save_results)
+        hbox2.addWidget(self.pbSave)
+
+        self.pbOK = QPushButton(cfg.OK, clicked=self.close)
         hbox2.addWidget(self.pbOK)
 
         hbox.addLayout(hbox2)

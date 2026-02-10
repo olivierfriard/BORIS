@@ -23,10 +23,11 @@ This file is part of BORIS.
 import logging
 import os
 import pathlib as pl
+import time
 from decimal import Decimal as dec
 from io import StringIO
+
 import pandas as pd
-import time
 
 try:
     import pyreadr
@@ -39,6 +40,7 @@ except ModuleNotFoundError:
 import tablib
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import (
+    QApplication,
     QFileDialog,
     QHBoxLayout,
     QInputDialog,
@@ -52,7 +54,6 @@ from PySide6.QtWidgets import (
     QTableWidgetItem,
     QVBoxLayout,
     QWidget,
-    QApplication,
 )
 
 from . import config as cfg
@@ -610,41 +611,44 @@ def time_budget(self, mode: str, mode2: str = "list"):
                 excl_behaviors_total_time[element["subject"]] += element["duration"] if not isinstance(element["duration"], str) else 0
 
         # widget for results visualization
-        self.tb = timeBudgetResults(self.pj, self.config_param)
-
+        self.remove_closed_results_objects()
+        self.results_objects.append(timeBudgetResults(self.pj, self.config_param))
         # add min and max time
-        self.tb.time_interval = parameters[cfg.TIME_INTERVAL]
-        self.tb.min_time = min_time
-        self.tb.max_time = max_time
+        self.results_objects[-1].time_interval = parameters[cfg.TIME_INTERVAL]
+        self.results_objects[-1].min_time = min_time
+        self.results_objects[-1].max_time = max_time
 
         # observations list
-        self.tb.label.setText("Selected observations")
+        self.results_objects[-1].label.setText("Selected observations")
         for obs_id in selected_observations:
-            # self.tb.lw.addItem(f"{obs_id}  {self.pj[OBSERVATIONS][obs_id]['date']}  {self.pj[OBSERVATIONS][obs_id]['description']}")
-            self.tb.lw.addItem(obs_id)
+            self.results_objects[-1].lw.addItem(obs_id)
 
         # media length
         if len(selected_observations) > 1:
             if total_observation_time:
                 if self.timeFormat == cfg.HHMMSS:
-                    self.tb.lbTotalObservedTime.setText(f"Total observation length: {util.seconds2time(total_observation_time)}")
+                    self.results_objects[-1].lbTotalObservedTime.setText(
+                        f"Total observation length: {util.seconds2time(total_observation_time)}"
+                    )
                 if self.timeFormat == cfg.S:
-                    self.tb.lbTotalObservedTime.setText(f"Total observation length: {float(total_observation_time):0.3f}")
+                    self.results_objects[-1].lbTotalObservedTime.setText(f"Total observation length: {float(total_observation_time):0.3f}")
             else:
-                self.tb.lbTotalObservedTime.setText("Total observation length: not available")
+                self.results_objects[-1].lbTotalObservedTime.setText("Total observation length: not available")
         else:
             if self.timeFormat == cfg.HHMMSS:
-                self.tb.lbTotalObservedTime.setText(f"Analysis from {util.seconds2time(min_time)} to {util.seconds2time(max_time)}")
+                self.results_objects[-1].lbTotalObservedTime.setText(
+                    f"Analysis from {util.seconds2time(min_time)} to {util.seconds2time(max_time)}"
+                )
             if self.timeFormat == cfg.S:
-                self.tb.lbTotalObservedTime.setText(f"Analysis from {float(min_time):0.3f} to {float(max_time):0.3f} s")
+                self.results_objects[-1].lbTotalObservedTime.setText(f"Analysis from {float(min_time):0.3f} to {float(max_time):0.3f} s")
 
         # behaviors excluded from total time
         if parameters[cfg.EXCLUDED_BEHAVIORS]:
-            self.tb.excluded_behaviors_list.setText(
+            self.results_objects[-1].excluded_behaviors_list.setText(
                 "Behaviors excluded from total time: " + (", ".join(parameters[cfg.EXCLUDED_BEHAVIORS]))
             )
         else:
-            self.tb.excluded_behaviors_list.setVisible(False)
+            self.results_objects[-1].excluded_behaviors_list.setVisible(False)
 
         self.statusbar.showMessage(f"Time budget generated in {round(time.time() - t0, 3)} s", 5000)
         logging.debug("Time budget generated")
@@ -674,11 +678,11 @@ def time_budget(self, mode: str, mode2: str = "list"):
                 "inter_duration_stdev",
             ]
 
-            self.tb.twTB.setColumnCount(len(tb_fields))
-            self.tb.twTB.setHorizontalHeaderLabels(tb_fields)
+            self.results_objects[-1].twTB.setColumnCount(len(tb_fields))
+            self.results_objects[-1].twTB.setHorizontalHeaderLabels(tb_fields)
 
             for row in out:
-                self.tb.twTB.setRowCount(self.tb.twTB.rowCount() + 1)
+                self.results_objects[-1].twTB.setRowCount(self.results_objects[-1].twTB.rowCount() + 1)
                 column = 0
                 for field in fields:
                     if isinstance(row[field], float):
@@ -687,7 +691,7 @@ def time_budget(self, mode: str, mode2: str = "list"):
                         item = QTableWidgetItem(str(row[field]).replace(" ()", ""))
                     # no modif allowed
                     item.setFlags(Qt.ItemIsEnabled)
-                    self.tb.twTB.setItem(self.tb.twTB.rowCount() - 1, column, item)
+                    self.results_objects[-1].twTB.setItem(self.results_objects[-1].twTB.rowCount() - 1, column, item)
                     column += 1
 
                 # % of total time
@@ -704,23 +708,23 @@ def time_budget(self, mode: str, mode2: str = "list"):
                     item = QTableWidgetItem("-")
 
                 item.setFlags(Qt.ItemIsEnabled)
-                self.tb.twTB.setItem(self.tb.twTB.rowCount() - 1, column, item)
+                self.results_objects[-1].twTB.setItem(self.results_objects[-1].twTB.rowCount() - 1, column, item)
 
         if mode == "by_category":
             tb_fields = ["Subject", "Category", "Total number", "Total duration (s)"]
             fields = ["number", "duration"]
 
-            self.tb.twTB.setColumnCount(len(tb_fields))
-            self.tb.twTB.setHorizontalHeaderLabels(tb_fields)
+            self.results_objects[-1].twTB.setColumnCount(len(tb_fields))
+            self.results_objects[-1].twTB.setHorizontalHeaderLabels(tb_fields)
 
             for subject in categories:
                 for category in categories[subject]:
-                    self.tb.twTB.setRowCount(self.tb.twTB.rowCount() + 1)
+                    self.results_objects[-1].twTB.setRowCount(self.results_objects[-1].twTB.rowCount() + 1)
 
                     column = 0
                     item = QTableWidgetItem(subject)
                     item.setFlags(Qt.ItemIsEnabled)
-                    self.tb.twTB.setItem(self.tb.twTB.rowCount() - 1, column, item)
+                    self.results_objects[-1].twTB.setItem(self.results_objects[-1].twTB.rowCount() - 1, column, item)
 
                     column = 1
                     if category == "":
@@ -728,7 +732,7 @@ def time_budget(self, mode: str, mode2: str = "list"):
                     else:
                         item = QTableWidgetItem(category)
                     item.setFlags(Qt.ItemIsEnabled)
-                    self.tb.twTB.setItem(self.tb.twTB.rowCount() - 1, column, item)
+                    self.results_objects[-1].twTB.setItem(self.results_objects[-1].twTB.rowCount() - 1, column, item)
 
                     for field in fields:
                         column += 1
@@ -742,13 +746,13 @@ def time_budget(self, mode: str, mode2: str = "list"):
                             item = QTableWidgetItem(str(categories[subject][category][field]))
                         item.setFlags(Qt.ItemIsEnabled)
                         item.setTextAlignment(Qt.AlignRight | Qt.AlignVCenter)
-                        self.tb.twTB.setItem(self.tb.twTB.rowCount() - 1, column, item)
+                        self.results_objects[-1].twTB.setItem(self.results_objects[-1].twTB.rowCount() - 1, column, item)
 
-        self.tb.twTB.resizeColumnsToContents()
+        self.results_objects[-1].twTB.resizeColumnsToContents()
 
-        gui_utilities.restore_geometry(self.tb, "time budget", (800, 600))
+        gui_utilities.restore_geometry(self.results_objects[-1], "time budget", (800, 600))
 
-        self.tb.show()
+        self.results_objects[-1].show()
 
     if not flagGroup and len(selected_observations) > 1:
         output_format, ok = QInputDialog.getItem(

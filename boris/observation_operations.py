@@ -44,7 +44,6 @@ from PySide6.QtWidgets import (
     QMessageBox,
     QSlider,
     QTableWidgetItem,
-    QWidget,
 )
 
 from . import config as cfg
@@ -63,6 +62,135 @@ from . import (
 from . import utilities as util
 
 
+def close_observation(self):
+    """
+    close current observation
+    """
+
+    logging.info(f"Close observation (player type: {self.playerType})")
+
+    # check observation state events
+
+    flag_ok, msg = project_functions.check_state_events_obs(
+        self.observationId,
+        self.pj[cfg.ETHOGRAM],
+        self.pj[cfg.OBSERVATIONS][self.observationId],
+        time_format=cfg.HHMMSS,
+    )
+
+    if not flag_ok:
+        out = f"The current observation has state event(s) that are not PAIRED:<br><br>{msg}"
+        results = dialog.Results_dialog_exit_code()
+        results.setWindowTitle(f"{cfg.programName} - Check selected observations")
+        results.ptText.setReadOnly(True)
+        results.ptText.appendHtml(out)
+
+        results.pb1.setText("Close observation")
+        results.pb2.setText("Return to observation")
+        if self.playerType == cfg.IMAGES:
+            results.pb3.setVisible(False)
+        else:
+            results.pb3.setText("Fix unpaired state events")
+
+        r = results.exec()
+        if r == 2:  # Return to observation
+            return
+        if r == 3:  # Fix unpaired state events
+            state_events.fix_unpaired_events(self, silent_mode=True)
+
+    self.saved_state = self.saveState()
+
+    if self.playerType == cfg.MEDIA:
+        self.media_scan_sampling_mem = []
+        logging.info("Stop plot timer")
+        self.plot_timer.stop()
+
+        if self.MPV_IPC_MODE:
+            self.main_window_activation_timer.stop()
+
+        for i, player in enumerate(self.dw_player):
+            if (
+                str(i + 1) in self.pj[cfg.OBSERVATIONS][self.observationId][cfg.FILE]
+                and self.pj[cfg.OBSERVATIONS][self.observationId][cfg.FILE][str(i + 1)]
+            ):
+                logging.info(f"Stop player #{i + 1}")
+                player.player.stop()
+
+                if self.MPV_IPC_MODE:
+                    try:
+                        player.player.process.terminate()
+                        try:
+                            player.player.process.wait(timeout=3)  # wait up to 3s
+                        except subprocess.TimeoutExpired:
+                            player.player.process.kill()  # force if still alive
+                    except Exception as e:
+                        logging.warning(f"Error stopping MPV process #{i}: {e}")
+
+        self.verticalLayout_3.removeWidget(self.video_slider)
+
+        if self.video_slider is not None:
+            self.video_slider.setVisible(False)
+            self.video_slider.deleteLater()
+            self.video_slider = None
+
+    if self.playerType == cfg.LIVE:
+        self.liveTimer.stop()
+        self.pb_live_obs.setEnabled(False)
+        self.w_live.setVisible(False)
+        self.liveObservationStarted = False
+        self.liveStartTime = None
+
+    if cfg.PLOT_DATA in self.pj[cfg.OBSERVATIONS][self.observationId] and self.pj[cfg.OBSERVATIONS][self.observationId][cfg.PLOT_DATA]:
+        for x in self.ext_data_timer_list:
+            x.stop()
+        for pd in self.plot_data:
+            self.plot_data[pd].close_plot()
+
+    logging.info("close tool window")
+
+    self.close_observation_tools()
+
+    self.observationId = ""
+
+    # delete undo queue
+    self.undo_queue = deque()
+    self.undo_description = deque()
+
+    if self.playerType in (cfg.MEDIA, cfg.IMAGES):
+        for dw in self.dw_player:
+            logging.info("remove dock widget")
+            dw.player.log_handler = None
+            self.removeDockWidget(dw)
+
+            del dw
+
+    self.statusbar.showMessage("", 0)
+
+    self.dwEvents.setVisible(False)
+
+    self.w_obs_info.setVisible(False)
+
+    self.lb_current_media_time.clear()
+    self.lb_player_status.clear()
+    self.lb_video_info.clear()
+    self.lb_zoom_level.clear()
+
+    self.currentSubject = ""
+    self.lbFocalSubject.setText(cfg.NO_FOCAL_SUBJECT)
+
+    # clear current state(s) column in subjects table
+    for i in range(self.twSubjects.rowCount()):
+        self.twSubjects.item(i, len(cfg.subjectsFields)).setText("")
+
+    for w in (self.lbTimeOffset, self.lb_obs_time_interval):
+        w.clear()
+    self.play_rate, self.playerType = 1, ""
+
+    menu_options.update_menu(self)
+
+    logging.info(f"Observation {self.playerType} closed")
+
+
 def export_observations_list_clicked(self):
     """
     export the list of observations
@@ -72,14 +200,14 @@ def export_observations_list_clicked(self):
     if not resultStr or not selected_observations:
         return
 
-    file_formats = [
+    file_formats = (
         cfg.TSV,
         cfg.CSV,
         cfg.ODS,
         cfg.XLSX,
         cfg.XLS,
         cfg.HTML,
-    ]
+    )
 
     file_name, filter_ = QFileDialog().getSaveFileName(self, "Export list of selected observations", "", ";;".join(file_formats))
 
@@ -91,11 +219,12 @@ def export_observations_list_clicked(self):
         file_name = str(Path(file_name)) + "." + output_format
         # check if file name with extension already exists
         if Path(file_name).is_file():
-            if dialog.MessageDialog(cfg.programName, f"The file {file_name} already exists.", [cfg.CANCEL, cfg.OVERWRITE]) == cfg.CANCEL:
+            if dialog.MessageDialog(cfg.programName, f"The file {file_name} already exists.", (cfg.CANCEL, cfg.OVERWRITE)) == cfg.CANCEL:
                 return
 
-    if not project_functions.export_observations_list(self.pj, selected_observations, file_name, output_format):
-        QMessageBox.warning(self, cfg.programName, "File not created due to an error")
+    r, msg = project_functions.export_observations_list(self.pj, selected_observations, file_name, output_format)
+    if r:
+        QMessageBox.warning(self, cfg.programName, f"File not created due to an error: {msg}")
 
 
 def observations_list(self):
@@ -253,6 +382,8 @@ def edit_observation(self, edit_current_observation: bool = False) -> None:
     """
     edit observation
     """
+
+    logging.debug("edit_observation function")
 
     mem_observationId: str | None = None
     # check if current observation must be closed to open a new one
@@ -589,15 +720,15 @@ def new_observation(self, mode: str = cfg.NEW, obsId: str = "") -> None:
         None
 
     """
+    logging.debug("new_observation function")
+
     # check if current observation must be closed to create a new one
     if mode == cfg.NEW and self.observationId:
-        # hide data plot
         self.hide_data_files()
         if (
             dialog.MessageDialog(cfg.programName, "The current observation will be closed. Do you want to continue?", (cfg.YES, cfg.NO))
             == cfg.NO
         ):
-            # show data plot
             self.show_data_files()
             return
         else:
@@ -684,7 +815,7 @@ def new_observation(self, mode: str = cfg.NEW, obsId: str = "") -> None:
         # observationWindow.obs_time_offset.set_format_hhmmss()
         observationWindow.obs_time_offset.rb_time.setChecked(True)
 
-    observationWindow.obs_time_offset.set_time(0)
+    observationWindow.obs_time_offset.set_time(dec(0))
 
     if mode == cfg.EDIT:
         observationWindow.setWindowTitle(f'Edit observation "{obsId}"')
@@ -758,19 +889,18 @@ def new_observation(self, mode: str = cfg.NEW, obsId: str = "") -> None:
 
                         # display
                         # IMPROVED SPECTRO / WAVEFORM
-                        observationWindow.twVideo1.setItem(
-                            observationWindow.twVideo1.rowCount() - 1, cfg.PLAYER_DISPLAY_IDX, QTableWidgetItem("Not implemented")
-                        )
-                        """
+                        # observationWindow.twVideo1.setItem(
+                        #    observationWindow.twVideo1.rowCount() - 1, cfg.PLAYER_DISPLAY_IDX, QTableWidgetItem("Not implemented")
+                        # )
+
                         combobox_display = QComboBox()
                         combobox_display.addItems(cfg.DISPLAY_FROM_MEDIA)
                         combobox_display.setCurrentText(
-                            self.pj[cfg.OBSERVATIONS][obsId][cfg.MEDIA_INFO].get("display", {}).get(player, "None")
+                            self.pj[cfg.OBSERVATIONS][obsId][cfg.MEDIA_INFO].get(cfg.PLAYER_PLOT_DISPLAY, {}).get(player, "None")
                         )
                         observationWindow.twVideo1.setCellWidget(
                             observationWindow.twVideo1.rowCount() - 1, cfg.PLAYER_DISPLAY_IDX, combobox_display
                         )
-                        """
 
                         # media file path
                         item = QTableWidgetItem(mediaFile)
@@ -915,11 +1045,13 @@ def new_observation(self, mode: str = cfg.NEW, obsId: str = "") -> None:
             observationWindow.cbCloseCurrentBehaviorsBetweenVideo.setChecked(
                 self.pj[cfg.OBSERVATIONS][obsId][cfg.CLOSE_BEHAVIORS_BETWEEN_VIDEOS]
             )
-
+    print("1")
     rv = observationWindow.exec()
 
     # save geometry
     gui_utilities.save_geometry(observationWindow, "new observation")
+
+    print("2")  # remove before release
 
     if rv:
         self.project_changed()
@@ -1109,14 +1241,12 @@ def new_observation(self, mode: str = cfg.NEW, obsId: str = "") -> None:
                 ] = float(observationWindow.twVideo1.item(row, cfg.PLAYER_OFFSET_IDX).text())
 
                 # store display for media (None / Spectrogram / Waveform)
-                """
                 # IMPROVED SPECTRO / WAVEFORM
-                if "display" not in self.pj[cfg.OBSERVATIONS][new_obs_id][cfg.MEDIA_INFO]:
-                    self.pj[cfg.OBSERVATIONS][new_obs_id][cfg.MEDIA_INFO]["display"] = {}
-                self.pj[cfg.OBSERVATIONS][new_obs_id][cfg.MEDIA_INFO]["display"][
+                if cfg.PLAYER_PLOT_DISPLAY not in self.pj[cfg.OBSERVATIONS][new_obs_id][cfg.MEDIA_INFO]:
+                    self.pj[cfg.OBSERVATIONS][new_obs_id][cfg.MEDIA_INFO][cfg.PLAYER_PLOT_DISPLAY] = {}
+                self.pj[cfg.OBSERVATIONS][new_obs_id][cfg.MEDIA_INFO][cfg.PLAYER_PLOT_DISPLAY][
                     observationWindow.twVideo1.cellWidget(row, cfg.PLAYER_NUMBER_IDX).currentText()
                 ] = observationWindow.twVideo1.cellWidget(row, cfg.PLAYER_DISPLAY_IDX).currentText()
-                """
 
         if rv == 1:  # save
             self.observationId = ""
@@ -1143,149 +1273,6 @@ def new_observation(self, mode: str = cfg.NEW, obsId: str = "") -> None:
 
             self.load_tw_events(self.observationId)
             menu_options.update_menu(self)
-
-
-def close_observation(self):
-    """
-    close current observation
-    """
-
-    logging.info(f"Close observation (player type: {self.playerType})")
-
-    # check observation state events
-
-    flag_ok, msg = project_functions.check_state_events_obs(
-        self.observationId,
-        self.pj[cfg.ETHOGRAM],
-        self.pj[cfg.OBSERVATIONS][self.observationId],
-        time_format=cfg.HHMMSS,
-    )
-
-    if not flag_ok:
-        out = f"The current observation has state event(s) that are not PAIRED:<br><br>{msg}"
-        results = dialog.Results_dialog_exit_code()
-        results.setWindowTitle(f"{cfg.programName} - Check selected observations")
-        results.ptText.setReadOnly(True)
-        results.ptText.appendHtml(out)
-
-        results.pb1.setText("Close observation")
-        results.pb2.setText("Return to observation")
-        if self.playerType == cfg.IMAGES:
-            results.pb3.setVisible(False)
-        else:
-            results.pb3.setText("Fix unpaired state events")
-
-        r = results.exec()
-        if r == 2:  # Return to observation
-            return
-        if r == 3:  # Fix unpaired state events
-            state_events.fix_unpaired_events(self, silent_mode=True)
-
-    self.saved_state = self.saveState()
-
-    if self.playerType == cfg.MEDIA:
-        self.media_scan_sampling_mem = []
-        logging.info("Stop plot timer")
-        self.plot_timer.stop()
-
-        if self.MPV_IPC_MODE:
-            self.main_window_activation_timer.stop()
-
-        for i, player in enumerate(self.dw_player):
-            if (
-                str(i + 1) in self.pj[cfg.OBSERVATIONS][self.observationId][cfg.FILE]
-                and self.pj[cfg.OBSERVATIONS][self.observationId][cfg.FILE][str(i + 1)]
-            ):
-                logging.info(f"Stop player #{i + 1}")
-                player.player.stop()
-
-                if self.MPV_IPC_MODE:
-                    try:
-                        player.player.process.terminate()
-                        try:
-                            player.player.process.wait(timeout=3)  # wait up to 3s
-                        except subprocess.TimeoutExpired:
-                            player.player.process.kill()  # force if still alive
-                    except Exception as e:
-                        logging.warning(f"Error stopping MPV process #{i}: {e}")
-
-        self.verticalLayout_3.removeWidget(self.video_slider)
-
-        if self.video_slider is not None:
-            self.video_slider.setVisible(False)
-            self.video_slider.deleteLater()
-            self.video_slider = None
-
-    if self.playerType == cfg.LIVE:
-        self.liveTimer.stop()
-        self.pb_live_obs.setEnabled(False)
-        self.w_live.setVisible(False)
-        self.liveObservationStarted = False
-        self.liveStartTime = None
-
-    if cfg.PLOT_DATA in self.pj[cfg.OBSERVATIONS][self.observationId] and self.pj[cfg.OBSERVATIONS][self.observationId][cfg.PLOT_DATA]:
-        for x in self.ext_data_timer_list:
-            x.stop()
-        for pd in self.plot_data:
-            self.plot_data[pd].close_plot()
-
-    logging.info("close tool window")
-
-    self.close_tool_windows()
-
-    self.observationId = ""
-
-    # delete undo queue
-    self.undo_queue = deque()
-    self.undo_description = deque()
-
-    if self.playerType in (cfg.MEDIA, cfg.IMAGES):
-        """
-        for idx, _ in enumerate(self.dw_player):
-            #del self.dw_player[idx].stack
-            self.removeDockWidget(self.dw_player[idx])
-            sip.delete(self.dw_player[idx])
-            self.dw_player[idx] = None
-        """
-
-        for dw in self.dw_player:
-            logging.info("remove dock widget")
-            dw.player.log_handler = None
-            self.removeDockWidget(dw)
-
-            del dw
-            # sip.delete(dw)
-            # dw = None
-
-    # self.dw_player = []
-
-    self.statusbar.showMessage("", 0)
-
-    self.dwEvents.setVisible(False)
-
-    self.w_obs_info.setVisible(False)
-
-    # self.twEvents.setRowCount(0)
-
-    self.lb_current_media_time.clear()
-    self.lb_player_status.clear()
-    self.lb_video_info.clear()
-    self.lb_zoom_level.clear()
-
-    self.currentSubject = ""
-    self.lbFocalSubject.setText(cfg.NO_FOCAL_SUBJECT)
-
-    # clear current state(s) column in subjects table
-    for i in range(self.twSubjects.rowCount()):
-        self.twSubjects.item(i, len(cfg.subjectsFields)).setText("")
-
-    for w in (self.lbTimeOffset, self.lb_obs_time_interval):
-        w.clear()
-    self.play_rate, self.playerType = 1, ""
-
-    menu_options.update_menu(self)
-
-    logging.info(f"Observation {self.playerType} closed")
 
 
 def check_creation_date(self) -> Tuple[int, dict]:
@@ -1394,15 +1381,15 @@ def initialize_new_media_observation(self) -> bool:
     self.lb_zoom_level.setFont(font)
 
     # initialize video slider
-    self.video_slider = QSlider(Qt.Horizontal, self)
-    self.video_slider.setFocusPolicy(Qt.NoFocus)
+    self.video_slider = QSlider(Qt.Orientation.Horizontal, self)
+    self.video_slider.setFocusPolicy(Qt.FocusPolicy.NoFocus)
     self.video_slider.setMaximum(cfg.SLIDER_MAXIMUM)
     self.video_slider.sliderMoved.connect(self.video_slider_sliderMoved)
     self.video_slider.sliderReleased.connect(self.video_slider_sliderReleased)
     self.verticalLayout_3.addWidget(self.video_slider)
 
     # add all media files to media lists
-    self.setDockOptions(QMainWindow.AnimatedDocks | QMainWindow.AllowNestedDocks)
+    self.setDockOptions(QMainWindow.DockOption.AnimatedDocks | QMainWindow.DockOption.AllowNestedDocks)
     self.dw_player = []
 
     # check if media creation time used as offset
@@ -1846,10 +1833,10 @@ def initialize_new_media_observation(self) -> bool:
 
         self.dw_player[-1].setFloating(False)
         self.dw_player[-1].setVisible(False)
-        self.dw_player[-1].setFeatures(QDockWidget.DockWidgetFloatable | QDockWidget.DockWidgetMovable)
+        self.dw_player[-1].setFeatures(QDockWidget.DockWidgetFeature.DockWidgetFloatable | QDockWidget.DockWidgetFeature.DockWidgetMovable)
 
         # place 4 players at the top of the main window and 4 at the bottom
-        self.addDockWidget(Qt.TopDockWidgetArea if i < 4 else Qt.BottomDockWidgetArea, self.dw_player[-1])
+        self.addDockWidget(Qt.DockWidgetArea.TopDockWidgetArea if i < 4 else Qt.DockWidgetArea.BottomDockWidgetArea, self.dw_player[-1])
 
         self.dw_player[i].setVisible(True)
 
@@ -2033,36 +2020,16 @@ def initialize_new_media_observation(self) -> bool:
     video_operations.display_zoom_level(self)
 
     # spectrogram
-    if (
-        cfg.VISUALIZE_SPECTROGRAM in self.pj[cfg.OBSERVATIONS][self.observationId]
-        and self.pj[cfg.OBSERVATIONS][self.observationId][cfg.VISUALIZE_SPECTROGRAM]
-    ):
-        tmp_dir = self.ffmpeg_cache_dir if self.ffmpeg_cache_dir and os.path.isdir(self.ffmpeg_cache_dir) else tempfile.gettempdir()
-
-        wav_file_path = (
-            Path(tmp_dir) / Path(self.dw_player[0].player.playlist[self.dw_player[0].player.playlist_pos]["filename"] + ".wav").name
-        )
-
-        if not wav_file_path.is_file():
-            self.generate_wav_file_from_media()
-
-        self.show_plot_widget("spectrogram", warning=False)
+    if self.pj[cfg.OBSERVATIONS][self.observationId].get(cfg.VISUALIZE_SPECTROGRAM, False) or cfg.SPECTROGRAM_PLOT in [
+        x.lower() for x in self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO].get(cfg.PLAYER_PLOT_DISPLAY, {}).values()
+    ]:
+        self.show_plot_widget(cfg.SPECTROGRAM_PLOT, warning=False)
 
     # waveform
-    if (
-        cfg.VISUALIZE_WAVEFORM in self.pj[cfg.OBSERVATIONS][self.observationId]
-        and self.pj[cfg.OBSERVATIONS][self.observationId][cfg.VISUALIZE_WAVEFORM]
-    ):
-        tmp_dir = self.ffmpeg_cache_dir if self.ffmpeg_cache_dir and os.path.isdir(self.ffmpeg_cache_dir) else tempfile.gettempdir()
-
-        wav_file_path = (
-            Path(tmp_dir) / Path(self.dw_player[0].player.playlist[self.dw_player[0].player.playlist_pos]["filename"] + ".wav").name
-        )
-
-        if not wav_file_path.is_file():
-            self.generate_wav_file_from_media()
-
-        self.show_plot_widget("waveform", warning=False)
+    if self.pj[cfg.OBSERVATIONS][self.observationId].get(cfg.VISUALIZE_WAVEFORM, False) or cfg.WAVEFORM_PLOT in [
+        x.lower() for x in self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO].get(cfg.PLAYER_PLOT_DISPLAY, {}).values()
+    ]:
+        self.show_plot_widget(cfg.WAVEFORM_PLOT, warning=False)
 
     # external data plot
     if cfg.PLOT_DATA in self.pj[cfg.OBSERVATIONS][self.observationId] and self.pj[cfg.OBSERVATIONS][self.observationId][cfg.PLOT_DATA]:
@@ -2114,7 +2081,7 @@ def initialize_new_media_observation(self) -> bool:
                     # return False
 
                 if data_ok:
-                    w1.setWindowFlags(Qt.WindowStaysOnTopHint)
+                    w1.setWindowFlags(Qt.WindowType.WindowStaysOnTopHint)
                     w1.sendEvent.connect(self.signal_from_widget)  # keypress event
 
                     w1.show()
@@ -2300,8 +2267,8 @@ def initialize_new_images_observation(self):
                 "It will not be possible to log events.<br>"
                 "Modify the directoriy path(s) to point existing directory "
             ),
-            QMessageBox.Ok | QMessageBox.Default,
-            QMessageBox.NoButton,
+            QMessageBox.StandardButton.Ok | QMessageBox.StandardButton.Default,
+            QMessageBox.StandardButton.NoButton,
         )
         self.playerType = cfg.VIEWER_IMAGES
         return
@@ -2322,8 +2289,8 @@ def initialize_new_images_observation(self):
                 "It will not be possible to log events.<br>"
                 "Modify the directoriy path(s) to point existing directory "
             ),
-            QMessageBox.Ok | QMessageBox.Default,
-            QMessageBox.NoButton,
+            QMessageBox.StandardButton.Ok | QMessageBox.StandardButton.Default,
+            QMessageBox.StandardButton.NoButton,
         )
         self.playerType = cfg.VIEWER_IMAGES
         return
@@ -2352,12 +2319,12 @@ def initialize_new_images_observation(self):
     self.image_idx = 0
     self.image_time_ref = None
 
-    self.setDockOptions(QMainWindow.AnimatedDocks | QMainWindow.AllowNestedDocks)
+    self.setDockOptions(QMainWindow.DockOption.AnimatedDocks | QMainWindow.DockOption.AllowNestedDocks)
     self.dw_player = []
     i = 0
     self.dw_player.append(player_dock_widget.DW_player(i, self))
-    self.addDockWidget(Qt.TopDockWidgetArea, self.dw_player[i])
-    self.dw_player[i].setFeatures(QDockWidget.DockWidgetFloatable | QDockWidget.DockWidgetMovable)
+    self.addDockWidget(Qt.DockWidgetArea.TopDockWidgetArea, self.dw_player[i])
+    self.dw_player[i].setFeatures(QDockWidget.DockWidgetFeature.DockWidgetFloatable | QDockWidget.DockWidgetFeature.DockWidgetMovable)
 
     self.dw_player[i].setVisible(True)
 
@@ -2506,7 +2473,8 @@ def create_observations(self):
     for file in files_list:
         if not file.is_file():
             continue
-        r = util.accurate_media_analysis(ffmpeg_bin=self.ffmpeg_bin, file_name=file)
+        r = util.accurate_media_analysis(ffmpeg_bin=self.ffmpeg_bin, file_name=str(file))
+        print(r)  # remove before release
         if "error" not in r:
             if not r.get("frames_number", 0):
                 continue
@@ -2539,29 +2507,40 @@ def create_observations(self):
                 )
                 return
 
+            # check display for player: waveform, spectro or None
+            player_display: list = []
+            if dlg.elements["Visualize spectrogram"].isChecked():
+                player_display.append(cfg.SPECTROGRAM_PLOT)
+            if dlg.elements["Visualize waveform"].isChecked():
+                player_display.append(cfg.WAVEFORM_PLOT)
+            if not player_display:
+                player_display.append("None")
+
             self.pj[cfg.OBSERVATIONS][media_file] = {
-                "file": {"1": [media_file], "2": [], "3": [], "4": [], "5": [], "6": [], "7": [], "8": []},
-                "type": "MEDIA",
+                cfg.FILE: {"1": [media_file], "2": [], "3": [], "4": [], "5": [], "6": [], "7": [], "8": []},
+                "type": cfg.MEDIA,
                 "date": dt.datetime.now().replace(microsecond=0).isoformat(),
-                "description": "",
-                "time offset": dec(str(round(dlg.elements["Time offset (in seconds)"].value(), 3))),
-                "events": [],
-                "observation time interval": [0, 0],
-                "independent_variables": {},
-                "visualize_spectrogram": dlg.elements["Visualize spectrogram"].isChecked(),
-                "visualize_waveform": dlg.elements["Visualize waveform"].isChecked(),
-                "media_creation_date_as_offset": dlg.elements["Media creation date as offset"].isChecked(),
-                "media_scan_sampling_duration": dec(str(round(dlg.elements["Media scan sampling duration (in seconds)"].value(), 3))),
-                "image_display_duration": 1,
-                "close_behaviors_between_videos": dlg.elements["Close behaviors between videos"].isChecked(),
+                cfg.DESCRIPTION: "",
+                cfg.TIME_OFFSET: dec(str(round(dlg.elements["Time offset (in seconds)"].value(), 3))),
+                cfg.EVENTS: [],
+                cfg.OBSERVATION_TIME_INTERVAL: [0, 0],
+                cfg.INDEPENDENT_VARIABLES: {},
+                cfg.VISUALIZE_SPECTROGRAM: dlg.elements["Visualize spectrogram"].isChecked(),
+                cfg.VISUALIZE_WAVEFORM: dlg.elements["Visualize waveform"].isChecked(),
+                cfg.MEDIA_CREATION_DATE_AS_OFFSET: dlg.elements["Media creation date as offset"].isChecked(),
+                cfg.MEDIA_SCAN_SAMPLING_DURATION: round(dlg.elements["Media scan sampling duration (in seconds)"].value(), 3),
+                cfg.IMAGE_DISPLAY_DURATION: 1,
+                cfg.CLOSE_BEHAVIORS_BETWEEN_VIDEOS: dlg.elements["Close behaviors between videos"].isChecked(),
                 cfg.MEDIA_INFO: {
                     cfg.LENGTH: {media_file: r["duration"]},
-                    cfg.FPS: {media_file: r["duration"]},
-                    cfg.HAS_VIDEO: {media_file: r[cfg.HAS_VIDEO]},
-                    cfg.HAS_AUDIO: {media_file: r[cfg.HAS_AUDIO]},
+                    cfg.FPS: {media_file: r["fps"]},
+                    cfg.HAS_VIDEO: {media_file: r["has_video"]},
+                    cfg.HAS_AUDIO: {media_file: r["has_audio"]},
                     cfg.MEDIA_INFO_OFFSET: {"1": 0.0},
+                    cfg.PLAYER_PLOT_DISPLAY: {"1": ",".join(player_display)},
                 },
             }
+
             file_count += 1
             self.project_changed()
 

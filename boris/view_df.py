@@ -66,6 +66,9 @@ class DataFrameModel(QAbstractTableModel):
 class View_df(QWidget, Ui_Form):
     def __init__(self, plugin_name: str, plugin_version: str, df, parent=None):
         super().__init__()
+
+        # self.setAttribute(Qt.WidgetAttribute.WA_DeleteOnClose)
+
         self.plugin_name = plugin_name
         self.df = df
 

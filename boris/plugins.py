@@ -3,37 +3,36 @@ BORIS
 Behavioral Observation Research Interactive Software
 Copyright 2012-2026 Olivier Friard
 
-  This program is free software; you can redistribute it and/or modify
-  it under the terms of the GNU General Public License as published by
-  the Free Software Foundation; either version 2 of the License, or
-  (at your option) any later version.
+This file is part of BORIS.
 
-  This program is distributed in the hope that it will be useful,
+  BORIS is free software; you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation; either version 3 of the License, or
+  any later version.
+
+  BORIS is distributed in the hope that it will be useful,
   but WITHOUT ANY WARRANTY; without even the implied warranty of
   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
   GNU General Public License for more details.
 
   You should have received a copy of the GNU General Public License
-  along with this program; if not, write to the Free Software
-  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
-  MA 02110-1301, USA.
+  along with this program; if not see <http://www.gnu.org/licenses/>.
+
 """
 
+import copy
 import importlib
+import inspect
 import logging
+from pathlib import Path
+
 import numpy as np
 import pandas as pd
-from pathlib import Path
-import copy
-import inspect
-
 from PySide6.QtGui import QAction
 from PySide6.QtWidgets import QMessageBox
 
 from . import config as cfg
-from . import project_functions
-from . import dialog
-from . import view_df
+from . import dialog, project_functions, view_df
 
 
 def add_plugins_to_menu(self):
@@ -284,8 +283,8 @@ def run_plugin(self, plugin_name):
             self,
             cfg.programName,
             "No observations found. Open a project first",
-            QMessageBox.Ok | QMessageBox.Default,
-            QMessageBox.NoButton,
+            QMessageBox.StandardButton.Ok | QMessageBox.StandardButton.Default,
+            QMessageBox.StandardButton.NoButton,
         )
         return
 
@@ -376,8 +375,8 @@ def run_plugin(self, plugin_name):
         try:
             from rpy2 import robjects
             from rpy2.robjects import pandas2ri
-            from rpy2.robjects.packages import SignatureTranslatedAnonymousPackage
             from rpy2.robjects.conversion import localconverter
+            from rpy2.robjects.packages import SignatureTranslatedAnonymousPackage
         except Exception:
             QMessageBox.critical(self, cfg.programName, "The rpy2 Python module is not installed. R plugins cannot be used")
             return
@@ -445,14 +444,16 @@ def run_plugin(self, plugin_name):
     self.plugin_visu: list = []
     for result in plugin_results:
         if isinstance(result, str):
-            self.plugin_visu.append(dialog.Results_dialog())
-            self.plugin_visu[-1].setWindowTitle(plugin_name)
-            self.plugin_visu[-1].ptText.clear()
-            self.plugin_visu[-1].ptText.appendPlainText(result)
-            self.plugin_visu[-1].show()
+            self.remove_closed_results_objects()
+            self.results_objects.append(dialog.Results_widget())
+            self.results_objects[-1].setWindowTitle(plugin_name)
+            self.results_objects[-1].ptText.clear()
+            self.results_objects[-1].ptText.appendPlainText(result)
+            self.results_objects[-1].show()
         elif isinstance(result, pd.DataFrame):
-            self.plugin_visu.append(view_df.View_df(plugin_name, f"{plugin_version} ({plugin_version_date})", result))
-            self.plugin_visu[-1].show()
+            self.remove_closed_results_objects()
+            self.results_objects.append(view_df.View_df(plugin_name, f"{plugin_version} ({plugin_version_date})", result))
+            self.results_objects[-1].show()
         else:
             # result is not str nor dataframe
             QMessageBox.critical(
@@ -463,6 +464,6 @@ def run_plugin(self, plugin_name):
                     "Plugins must return str and/or Pandas Dataframes.\n"
                     "Check the plugin code."
                 ),
-                QMessageBox.Ok | QMessageBox.Default,
-                QMessageBox.NoButton,
+                QMessageBox.StandardButton.Ok | QMessageBox.StandardButton.Default,
+                QMessageBox.StandardButton.NoButton,
             )

@@ -121,6 +121,7 @@ def update_menu(self):
     for action in (
         self.actionAdd_event,
         self.actionClose_observation,
+        self.actionEdit_current_observation,
         self.actionDelete_all_events,
         self.actionSelect_observations,
         self.actionDelete_selected_events,

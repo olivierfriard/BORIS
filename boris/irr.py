@@ -28,10 +28,8 @@ import numpy as np
 from PySide6.QtWidgets import QInputDialog, QMessageBox
 
 from . import config as cfg
-from . import db_functions, dialog, project_functions, select_subj_behav
+from . import db_functions, dialog, observation_operations, project_functions, select_observations, select_subj_behav
 from . import utilities as util
-from . import select_observations
-from . import observation_operations
 
 
 def subj_behav_modif(cursor, obsid: str, subject: str, time: dec, interval, include_modifiers: bool) -> list:
@@ -624,11 +622,12 @@ def needleman_wunch(self):
         out2 += f"{selected_observations[r]}\t"
         out2 += "\t".join([f"{x:8.6f}" for x in nws_results[r, :]]) + "\n"
 
-    self.results = dialog.Results_dialog()
-    self.results.setWindowTitle(f"{cfg.programName} - Needleman-Wunsch similarity")
-    self.results.ptText.setReadOnly(True)
+    self.remove_closed_results_objects()
+    self.results_objects.append(dialog.Results_widget())
+    self.results_objects[-1].setWindowTitle(f"{cfg.programName} - Needleman-Wunsch similarity")
+    self.results_objects[-1].ptText.setReadOnly(True)
     if len(selected_observations) == 2:
-        self.results.ptText.appendPlainText(out)
+        self.results_objects[-1].ptText.appendPlainText(out)
     else:
-        self.results.ptText.appendPlainText(out2)
-    self.results.show()
+        self.results_objects[-1].ptText.appendPlainText(out2)
+    self.results_objects[-1].show()

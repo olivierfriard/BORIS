@@ -206,7 +206,14 @@ DATA_PLOT_FIELDS = {
 }
 DATA_PLOT_STYLES = ["b-", "r-", "g-", "bo", "ro", "go"]
 
-DISPLAY_FROM_MEDIA = ["None", "Spectrogram", "Waveform", "Spectrogram and waveform"]
+# plot type
+PLAYER_PLOT_DISPLAY = "display"
+WAVEFORM_PLOT = "waveform"
+SPECTROGRAM_PLOT = "spectrogram"
+EVENTS_PLOT = "plot_events"
+NOTHING = "Nothing"
+
+DISPLAY_FROM_MEDIA = [NOTHING, SPECTROGRAM_PLOT, WAVEFORM_PLOT, f"{SPECTROGRAM_PLOT},{WAVEFORM_PLOT}"]
 
 
 FILE_PATH = "file_path"
@@ -485,10 +492,6 @@ MEDIA_CREATION_DATE_AS_OFFSET = "media_creation_date_as_offset"
 MEDIA_SCAN_SAMPLING_DURATION = "media_scan_sampling_duration"
 IMAGE_DISPLAY_DURATION = "image_display_duration"
 
-# plot type
-WAVEFORM_PLOT = "waveform"
-SPECTROGRAM_PLOT = "spectrogram"
-EVENTS_PLOT = "plot_events"
 
 PLAYING = "playing"
 PAUSED = "paused"

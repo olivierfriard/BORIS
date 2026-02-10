@@ -88,6 +88,10 @@
 <file alias="preferences_dark">icons/fontawesome_free/gears_dark.svg</file>
 <file alias="preferences_light">icons/fontawesome_free/gears_light.svg</file>
 
+<file alias="edit_observation_dark">icons/fontawesome_free/pen-to-square_dark.svg</file>
+<file alias="edit_observation_light">icons/fontawesome_free/pen-to-square_light.svg</file>
+
+
 <file alias="beep">sounds/beep.wav</file>
 <file alias="key_sound">sounds/key_sound.wav</file>
 </qresource>

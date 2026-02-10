@@ -23,9 +23,7 @@ This file is part of BORIS.
 from PySide6.QtWidgets import QFileDialog
 
 from . import config as cfg
-from . import utilities as util
-from . import dialog
-from . import project_functions
+from . import dialog, project_functions
 from . import utilities as util
 
 
@@ -109,7 +107,8 @@ def get_info(self) -> None:
         for file_path in file_paths:
             tot_output += media_analysis_str(self.ffmpeg_bin, file_path)
 
-    self.results = dialog.Results_dialog()
-    self.results.setWindowTitle(f"{cfg.programName} - Media file information")
-    self.results.ptText.appendHtml(tot_output)
-    self.results.show()
+    self.remove_closed_results_objects()
+    self.results_objects.append(dialog.Results_widget())
+    self.results_objects[-1].setWindowTitle(f"{cfg.programName} - Media file information")
+    self.results_objects[-1].ptText.appendHtml(tot_output)
+    self.results_objects[-1].show()

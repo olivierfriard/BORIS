@@ -1411,13 +1411,13 @@ class Observation(QDialog, Ui_Form):
                 self.twVideo1.setCellWidget(self.twVideo1.rowCount() - 1, col_idx, combobox)
             elif col_idx == cfg.PLAYER_DISPLAY_IDX:
                 # not yet implemented
-                self.twVideo1.setItem(self.twVideo1.rowCount() - 1, col_idx, QTableWidgetItem("Not implemented"))
-                """
+                # self.twVideo1.setItem(self.twVideo1.rowCount() - 1, col_idx, QTableWidgetItem("Not implemented"))
+
                 # IMPROVED SPECTRO / WAVEFORM
                 combobox = QComboBox()
                 combobox.addItems(cfg.DISPLAY_FROM_MEDIA)
                 self.twVideo1.setCellWidget(self.twVideo1.rowCount() - 1, col_idx, combobox)
-                """
+
             else:
                 item = QTableWidgetItem(f"{param}")
                 if col_idx != 1:  # only offset is editable by user

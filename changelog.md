@@ -1,3 +1,7 @@
+**v. 9.8.5 2026-02-04**
+
+* fixed bug in plot events function: time interval defined by user was not applied when time is displayed in seconds
+
 **v. 9.8.4 2026-02-04**
 
 * improved BORIS for MacOS
