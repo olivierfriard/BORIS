@@ -4963,6 +4963,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     if self.is_playing():
                         flag_player_playing = True
                         self.pause_video()
+                    else:
+                        flag_player_playing = False
 
             self.codingMapWindow = modifiers_coding_map.ModifiersCodingMapWindow(
                 self.pj[cfg.CODING_MAP][self.pj[cfg.ETHOGRAM][behavior_idx]["coding map"]]
