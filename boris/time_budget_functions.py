@@ -3,43 +3,43 @@ BORIS
 Behavioral Observation Research Interactive Software
 Copyright 2012-2026 Olivier Friard
 
-  This program is free software; you can redistribute it and/or modify
-  it under the terms of the GNU General Public License as published by
-  the Free Software Foundation; either version 2 of the License, or
-  (at your option) any later version.
+This file is part of BORIS.
 
-  This program is distributed in the hope that it will be useful,
+  BORIS is free software; you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation; either version 3 of the License, or
+  any later version.
+
+  BORIS is distributed in the hope that it will be useful,
   but WITHOUT ANY WARRANTY; without even the implied warranty of
   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
   GNU General Public License for more details.
 
   You should have received a copy of the GNU General Public License
-  along with this program; if not, write to the Free Software
-  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
-  MA 02110-1301, USA.
+  along with this program; if not see <http://www.gnu.org/licenses/>.
+
 """
 
+import itertools
+import logging
 import math
+import re
 import statistics
 from decimal import Decimal as dec
 from typing import Tuple
+
 import tablib
-import logging
-import itertools
-import re
 
 from . import config as cfg
-from . import db_functions
+from . import db_functions, observation_operations, project_functions
 from . import portion as I
-from . import project_functions
-from . import observation_operations
 
 
 def default_value(ethogram: dict, behavior_code: str, param):
     """
     return value for duration in case of point event
     """
-    default_value_ = 0.0
+    default_value_: float = 0.0
     behavior_type = project_functions.event_type(behavior_code, ethogram)
 
     if behavior_type in cfg.POINT_EVENT_TYPES and param in (
@@ -102,8 +102,8 @@ class StdevFunc:
     """
 
     def __init__(self):
-        self.M = 0.0
-        self.S = 0.0
+        self.M: float = 0.0
+        self.S: float = 0.0
         self.k = 1
 
     def step(self, value):

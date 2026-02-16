@@ -3,29 +3,27 @@ BORIS
 Behavioral Observation Research Interactive Software
 Copyright 2012-2026 Olivier Friard
 
-  This program is free software; you can redistribute it and/or modify
-  it under the terms of the GNU General Public License as published by
-  the Free Software Foundation; either version 2 of the License, or
-  (at your option) any later version.
+This file is part of BORIS.
 
-  This program is distributed in the hope that it will be useful,
+  BORIS is free software; you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation; either version 3 of the License, or
+  any later version.
+
+  BORIS is distributed in the hope that it will be useful,
   but WITHOUT ANY WARRANTY; without even the implied warranty of
   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
   GNU General Public License for more details.
 
   You should have received a copy of the GNU General Public License
-  along with this program; if not, write to the Free Software
-  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
-  MA 02110-1301, USA.
-
-Module containing functions for state events
+  along with this program; if not see <http://www.gnu.org/licenses/>.
 
 """
 
 import time
 from decimal import Decimal as dec
 
-from PySide6.QtWidgets import QMessageBox, QAbstractItemView
+from PySide6.QtWidgets import QAbstractItemView, QMessageBox
 
 from . import config as cfg
 from . import dialog, project_functions, select_observations
@@ -57,8 +55,8 @@ def check_state_events(self, mode: str = "all") -> None:
                 self,
                 cfg.programName,
                 "The project does not contain any observation",
-                QMessageBox.Ok | QMessageBox.Default,
-                QMessageBox.NoButton,
+                QMessageBox.StandardButton.Ok | QMessageBox.StandardButton.Default,
+                QMessageBox.StandardButton.NoButton,
             )
             return
 
@@ -96,8 +94,8 @@ def fix_unpaired_events(self, silent_mode: bool = False):
                 None,
                 cfg.programName,
                 "All state events are already paired",
-                QMessageBox.Ok | QMessageBox.Default,
-                QMessageBox.NoButton,
+                QMessageBox.StandardButton.Ok | QMessageBox.StandardButton.Default,
+                QMessageBox.StandardButton.NoButton,
             )
             return
 
@@ -192,6 +190,6 @@ def fix_unpaired_events(self, silent_mode: bool = False):
                 None,
                 cfg.programName,
                 "All state events are already paired",
-                QMessageBox.Ok | QMessageBox.Default,
-                QMessageBox.NoButton,
+                QMessageBox.StandardButton.Ok | QMessageBox.StandardButton.Default,
+                QMessageBox.StandardButton.NoButton,
             )

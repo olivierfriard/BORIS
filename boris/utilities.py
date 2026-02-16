@@ -3,52 +3,53 @@ BORIS
 Behavioral Observation Research Interactive Software
 Copyright 2012-2026 Olivier Friard
 
-  This program is free software; you can redistribute it and/or modify
-  it under the terms of the GNU General Public License as published by
-  the Free Software Foundation; either version 2 of the License, or
-  (at your option) any later version.
+This file is part of BORIS.
 
-  This program is distributed in the hope that it will be useful,
+  BORIS is free software; you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation; either version 3 of the License, or
+  any later version.
+
+  BORIS is distributed in the hope that it will be useful,
   but WITHOUT ANY WARRANTY; without even the implied warranty of
   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
   GNU General Public License for more details.
 
   You should have received a copy of the GNU General Public License
-  along with this program; if not, write to the Free Software
-  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
-  MA 02110-1301, USA.
+  along with this program; if not see <http://www.gnu.org/licenses/>.
+
 """
 
-from decimal import Decimal as dec
-from decimal import getcontext, ROUND_DOWN
-from hachoir.metadata import extractMetadata
-from hachoir.parser import createParser
-from shutil import copyfile, which
-from typing import Union, Tuple
 import csv
 import datetime
 import datetime as dt
-import exifread
 import json
 import logging
 import math
-import numpy as np
 import os
-from pathlib import Path
-from PIL.ImageQt import Image
 import platform
 import re
 import shutil
+import socket
 import subprocess
 import sys
 import urllib.parse
 import urllib.request
 import wave
-import socket
+from decimal import ROUND_DOWN, getcontext
+from decimal import Decimal as dec
+from pathlib import Path
+from shutil import copyfile, which
+from typing import Tuple, Union
 
+import exifread
+import numpy as np
+from hachoir.metadata import extractMetadata
+from hachoir.parser import createParser
+from PIL.ImageQt import Image
 from PySide6 import __version__ as pyside6_version
-from PySide6.QtGui import QPixmap, QImage
 from PySide6.QtCore import qVersion
+from PySide6.QtGui import QImage, QPixmap
 
 from . import config as cfg
 from . import version
