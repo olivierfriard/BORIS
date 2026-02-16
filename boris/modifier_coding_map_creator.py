@@ -26,45 +26,45 @@ This file is part of BORIS.
 import binascii
 import io
 import json
-from pathlib import Path
 import re
-import gui_utilities
+from pathlib import Path
 
+import gui_utilities
 from PySide6.QtCore import (
-    Qt,
-    Signal,
-    QPoint,
-    QByteArray,
     QBuffer,
+    QByteArray,
     QIODevice,
     QLineF,
+    QPoint,
+    Qt,
+    Signal,
 )
-from PySide6.QtGui import QColor, QBrush, QMouseEvent, QPixmap, QIcon, QPen, QPolygon, QPolygonF, QAction
+from PySide6.QtGui import QAction, QBrush, QColor, QIcon, QMouseEvent, QPen, QPixmap, QPolygon, QPolygonF
 from PySide6.QtWidgets import (
-    QGraphicsPolygonItem,
-    QGraphicsEllipseItem,
-    QGraphicsPixmapItem,
-    QGraphicsLineItem,
-    QMainWindow,
-    QGraphicsView,
-    QPushButton,
-    QLabel,
-    QHBoxLayout,
-    QLineEdit,
-    QSlider,
-    QGraphicsScene,
-    QWidget,
-    QColorDialog,
-    QVBoxLayout,
-    QMessageBox,
-    QInputDialog,
-    QFileDialog,
     QApplication,
-    QListWidget,
-    QSplitter,
-    QSpacerItem,
-    QSizePolicy,
+    QColorDialog,
+    QFileDialog,
     QFrame,
+    QGraphicsEllipseItem,
+    QGraphicsLineItem,
+    QGraphicsPixmapItem,
+    QGraphicsPolygonItem,
+    QGraphicsScene,
+    QGraphicsView,
+    QHBoxLayout,
+    QInputDialog,
+    QLabel,
+    QLineEdit,
+    QListWidget,
+    QMainWindow,
+    QMessageBox,
+    QPushButton,
+    QSizePolicy,
+    QSlider,
+    QSpacerItem,
+    QSplitter,
+    QVBoxLayout,
+    QWidget,
 )
 
 from . import config as cfg
