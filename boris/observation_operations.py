@@ -867,72 +867,72 @@ def new_observation(self, mode: str = cfg.NEW, obsId: str = "") -> None:
 
             observationWindow.twVideo1.setRowCount(0)
             for player in self.pj[cfg.OBSERVATIONS][obsId][cfg.FILE]:
-                if player in self.pj[cfg.OBSERVATIONS][obsId][cfg.FILE] and self.pj[cfg.OBSERVATIONS][obsId][cfg.FILE][player]:
-                    for mediaFile in self.pj[cfg.OBSERVATIONS][obsId][cfg.FILE][player]:
-                        observationWindow.twVideo1.setRowCount(observationWindow.twVideo1.rowCount() + 1)
+                # if player in self.pj[cfg.OBSERVATIONS][obsId][cfg.FILE] and self.pj[cfg.OBSERVATIONS][obsId][cfg.FILE][player]:
+                for mediaFile in self.pj[cfg.OBSERVATIONS][obsId][cfg.FILE].get(player, []):
+                    observationWindow.twVideo1.setRowCount(observationWindow.twVideo1.rowCount() + 1)
 
-                        combobox = QComboBox()
-                        combobox.addItems(cfg.ALL_PLAYERS)
-                        combobox.setCurrentIndex(int(player) - 1)
-                        observationWindow.twVideo1.setCellWidget(observationWindow.twVideo1.rowCount() - 1, 0, combobox)
+                    combobox = QComboBox()
+                    combobox.addItems(cfg.ALL_PLAYERS)
+                    combobox.setCurrentIndex(int(player) - 1)
+                    observationWindow.twVideo1.setCellWidget(observationWindow.twVideo1.rowCount() - 1, 0, combobox)
 
-                        # set media file offset
-                        try:
-                            observationWindow.twVideo1.setItem(
-                                observationWindow.twVideo1.rowCount() - 1,
-                                cfg.PLAYER_OFFSET_IDX,
-                                QTableWidgetItem(str(self.pj[cfg.OBSERVATIONS][obsId][cfg.MEDIA_INFO]["offset"][player])),
-                            )
-                        except Exception:
-                            observationWindow.twVideo1.setItem(
-                                observationWindow.twVideo1.rowCount() - 1, cfg.PLAYER_OFFSET_IDX, QTableWidgetItem("0.0")
-                            )
-
-                        # display
-                        # IMPROVED SPECTRO / WAVEFORM
-                        # observationWindow.twVideo1.setItem(
-                        #    observationWindow.twVideo1.rowCount() - 1, cfg.PLAYER_DISPLAY_IDX, QTableWidgetItem("Not implemented")
-                        # )
-
-                        combobox_display = QComboBox()
-                        combobox_display.addItems(cfg.DISPLAY_FROM_MEDIA)
-                        combobox_display.setCurrentText(
-                            self.pj[cfg.OBSERVATIONS][obsId][cfg.MEDIA_INFO].get(cfg.PLAYER_PLOT_DISPLAY, {}).get(player, "None")
+                    # set media file offset
+                    try:
+                        observationWindow.twVideo1.setItem(
+                            observationWindow.twVideo1.rowCount() - 1,
+                            cfg.PLAYER_OFFSET_IDX,
+                            QTableWidgetItem(str(self.pj[cfg.OBSERVATIONS][obsId][cfg.MEDIA_INFO]["offset"][player])),
                         )
-                        observationWindow.twVideo1.setCellWidget(
-                            observationWindow.twVideo1.rowCount() - 1, cfg.PLAYER_DISPLAY_IDX, combobox_display
+                    except Exception:
+                        observationWindow.twVideo1.setItem(
+                            observationWindow.twVideo1.rowCount() - 1, cfg.PLAYER_OFFSET_IDX, QTableWidgetItem("0.0")
                         )
 
-                        # media file path
-                        item = QTableWidgetItem(mediaFile)
+                    # display
+                    # IMPROVED SPECTRO / WAVEFORM
+                    # observationWindow.twVideo1.setItem(
+                    #    observationWindow.twVideo1.rowCount() - 1, cfg.PLAYER_DISPLAY_IDX, QTableWidgetItem("Not implemented")
+                    # )
+
+                    combobox_display = QComboBox()
+                    combobox_display.addItems(cfg.DISPLAY_FROM_MEDIA)
+
+                    combobox_display.setCurrentText(
+                        # self.pj[cfg.OBSERVATIONS][obsId][cfg.MEDIA_INFO].get(cfg.PLAYER_PLOT_DISPLAY, {}).get(player, "None")
+                        self.pj[cfg.OBSERVATIONS][obsId][cfg.MEDIA_INFO].get(cfg.PLAYER_PLOT_DISPLAY, {}).get(mediaFile, "Nothing")
+                    )
+                    observationWindow.twVideo1.setCellWidget(
+                        observationWindow.twVideo1.rowCount() - 1, cfg.PLAYER_DISPLAY_IDX, combobox_display
+                    )
+
+                    # media file path
+                    item = QTableWidgetItem(mediaFile)
+                    item.setFlags(Qt.ItemFlag.ItemIsEnabled | Qt.ItemFlag.ItemIsSelectable)
+                    observationWindow.twVideo1.setItem(observationWindow.twVideo1.rowCount() - 1, cfg.MEDIA_FILE_PATH_IDX, item)
+
+                    # duration and FPS
+                    try:
+                        item = QTableWidgetItem(util.seconds2time(self.pj[cfg.OBSERVATIONS][obsId][cfg.MEDIA_INFO][cfg.LENGTH][mediaFile]))
                         item.setFlags(Qt.ItemFlag.ItemIsEnabled | Qt.ItemFlag.ItemIsSelectable)
-                        observationWindow.twVideo1.setItem(observationWindow.twVideo1.rowCount() - 1, cfg.MEDIA_FILE_PATH_IDX, item)
+                        observationWindow.twVideo1.setItem(observationWindow.twVideo1.rowCount() - 1, cfg.MEDIA_DURATION_IDX, item)
 
-                        # duration and FPS
-                        try:
-                            item = QTableWidgetItem(
-                                util.seconds2time(self.pj[cfg.OBSERVATIONS][obsId][cfg.MEDIA_INFO][cfg.LENGTH][mediaFile])
-                            )
-                            item.setFlags(Qt.ItemFlag.ItemIsEnabled | Qt.ItemFlag.ItemIsSelectable)
-                            observationWindow.twVideo1.setItem(observationWindow.twVideo1.rowCount() - 1, cfg.MEDIA_DURATION_IDX, item)
+                        item = QTableWidgetItem(f"{self.pj[cfg.OBSERVATIONS][obsId][cfg.MEDIA_INFO][cfg.FPS][mediaFile]:.2f}")
+                        item.setFlags(Qt.ItemFlag.ItemIsEnabled | Qt.ItemFlag.ItemIsSelectable)
+                        observationWindow.twVideo1.setItem(observationWindow.twVideo1.rowCount() - 1, cfg.MEDIA_FPS_IDX, item)
+                    except Exception:
+                        pass
 
-                            item = QTableWidgetItem(f"{self.pj[cfg.OBSERVATIONS][obsId][cfg.MEDIA_INFO][cfg.FPS][mediaFile]:.2f}")
-                            item.setFlags(Qt.ItemFlag.ItemIsEnabled | Qt.ItemFlag.ItemIsSelectable)
-                            observationWindow.twVideo1.setItem(observationWindow.twVideo1.rowCount() - 1, cfg.MEDIA_FPS_IDX, item)
-                        except Exception:
-                            pass
+                    # has_video has_audio
+                    try:
+                        item = QTableWidgetItem(str(self.pj[cfg.OBSERVATIONS][obsId][cfg.MEDIA_INFO][cfg.HAS_VIDEO][mediaFile]))
+                        item.setFlags(Qt.ItemFlag.ItemIsEnabled | Qt.ItemFlag.ItemIsSelectable)
+                        observationWindow.twVideo1.setItem(observationWindow.twVideo1.rowCount() - 1, cfg.HAS_VIDEO_IDX, item)
 
-                        # has_video has_audio
-                        try:
-                            item = QTableWidgetItem(str(self.pj[cfg.OBSERVATIONS][obsId][cfg.MEDIA_INFO][cfg.HAS_VIDEO][mediaFile]))
-                            item.setFlags(Qt.ItemFlag.ItemIsEnabled | Qt.ItemFlag.ItemIsSelectable)
-                            observationWindow.twVideo1.setItem(observationWindow.twVideo1.rowCount() - 1, cfg.HAS_VIDEO_IDX, item)
-
-                            item = QTableWidgetItem(str(self.pj[cfg.OBSERVATIONS][obsId][cfg.MEDIA_INFO][cfg.HAS_AUDIO][mediaFile]))
-                            item.setFlags(Qt.ItemFlag.ItemIsEnabled | Qt.ItemFlag.ItemIsSelectable)
-                            observationWindow.twVideo1.setItem(observationWindow.twVideo1.rowCount() - 1, cfg.HAS_AUDIO_IDX, item)
-                        except Exception:
-                            pass
+                        item = QTableWidgetItem(str(self.pj[cfg.OBSERVATIONS][obsId][cfg.MEDIA_INFO][cfg.HAS_AUDIO][mediaFile]))
+                        item.setFlags(Qt.ItemFlag.ItemIsEnabled | Qt.ItemFlag.ItemIsSelectable)
+                        observationWindow.twVideo1.setItem(observationWindow.twVideo1.rowCount() - 1, cfg.HAS_AUDIO_IDX, item)
+                    except Exception:
+                        pass
 
             observationWindow.cbCloseCurrentBehaviorsBetweenVideo.setEnabled(observationWindow.twVideo1.rowCount() > 0)
             # spectrogram
@@ -1245,8 +1245,10 @@ def new_observation(self, mode: str = cfg.NEW, obsId: str = "") -> None:
                 # IMPROVED SPECTRO / WAVEFORM
                 if cfg.PLAYER_PLOT_DISPLAY not in self.pj[cfg.OBSERVATIONS][new_obs_id][cfg.MEDIA_INFO]:
                     self.pj[cfg.OBSERVATIONS][new_obs_id][cfg.MEDIA_INFO][cfg.PLAYER_PLOT_DISPLAY] = {}
+
                 self.pj[cfg.OBSERVATIONS][new_obs_id][cfg.MEDIA_INFO][cfg.PLAYER_PLOT_DISPLAY][
-                    observationWindow.twVideo1.cellWidget(row, cfg.PLAYER_NUMBER_IDX).currentText()
+                    # observationWindow.twVideo1.cellWidget(row, cfg.PLAYER_NUMBER_IDX).currentText()
+                    observationWindow.twVideo1.item(row, cfg.MEDIA_FILE_PATH_IDX).text()
                 ] = observationWindow.twVideo1.cellWidget(row, cfg.PLAYER_DISPLAY_IDX).currentText()
 
         if rv == 1:  # save
@@ -2020,7 +2022,15 @@ def initialize_new_media_observation(self) -> bool:
     video_operations.display_play_rate(self)
     video_operations.display_zoom_level(self)
 
+    # current_media_path_, current_playlist_index = self.current_media_path(player=0)
     # spectrogram
+
+    print(
+        f"{[
+        x.lower() for x in self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO].get(cfg.PLAYER_PLOT_DISPLAY, {}).values()
+    ]=}"
+    )
+
     if self.pj[cfg.OBSERVATIONS][self.observationId].get(cfg.VISUALIZE_SPECTROGRAM, False) or cfg.SPECTROGRAM_PLOT in [
         x.lower() for x in self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO].get(cfg.PLAYER_PLOT_DISPLAY, {}).values()
     ]:
@@ -2515,7 +2525,7 @@ def create_observations(self):
             if dlg.elements["Visualize waveform"].isChecked():
                 player_display.append(cfg.WAVEFORM_PLOT)
             if not player_display:
-                player_display.append("None")
+                player_display.append("Nothing")
 
             self.pj[cfg.OBSERVATIONS][media_file] = {
                 cfg.FILE: {"1": [media_file], "2": [], "3": [], "4": [], "5": [], "6": [], "7": [], "8": []},
@@ -2538,7 +2548,7 @@ def create_observations(self):
                     cfg.HAS_VIDEO: {media_file: r["has_video"]},
                     cfg.HAS_AUDIO: {media_file: r["has_audio"]},
                     cfg.MEDIA_INFO_OFFSET: {"1": 0.0},
-                    cfg.PLAYER_PLOT_DISPLAY: {"1": ",".join(player_display)},
+                    cfg.PLAYER_PLOT_DISPLAY: {media_file: ",".join(player_display)},
                 },
             }
 
