@@ -57,6 +57,7 @@ from . import (
     player_dock_widget,
     plot_data_module,
     plot_spectrogram_rt,
+    plot_waveform_rt,
     project_functions,
     select_observations,
     state_events,
@@ -2033,17 +2034,17 @@ def initialize_new_media_observation(self) -> bool:
     )  # remove before release
 
     for media, display_type in self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO].get(cfg.PLAYER_PLOT_DISPLAY, {}).items():
-        if cfg.SPECTROGRAM_PLOT in display_type or cfg.WAVEFORM in display_type:
+        if cfg.SPECTROGRAM_PLOT in display_type or cfg.WAVEFORM_PLOT in display_type:
             wav_file_path = self.generate_wav_file_from_media_file(media)
 
             print(f"{wav_file_path=}")  # remove before release
 
-        if cfg.SPECTROGRAM_PLOT in display_type:
             media_full_path = project_functions.full_path(
                 media,
                 self.projectFileName,
             )
 
+        if cfg.SPECTROGRAM_PLOT in display_type:
             self.spectro[media_full_path] = plot_spectrogram_rt.Plot_spectrogram_RT()
             self.spectro[media_full_path].setWindowFlags(Qt.WindowType.WindowStaysOnTopHint)
             self.spectro[media_full_path].setWindowFlags(
@@ -2076,6 +2077,32 @@ def initialize_new_media_observation(self) -> bool:
             self.spectro[media_full_path].sendEvent.connect(self.signal_from_widget)
             self.spectro[media_full_path].sb_freq_min.setValue(0)
             self.spectro[media_full_path].sb_freq_max.setValue(int(self.spectro[media_full_path].frame_rate / 2))
+
+        if cfg.WAVEFORM_PLOT in display_type:
+            self.waveform[media_full_path] = plot_waveform_rt.Plot_waveform_RT()
+            self.waveform[media_full_path].setWindowFlags(Qt.WindowType.WindowStaysOnTopHint)
+            self.waveform[media_full_path].setWindowFlags(
+                self.waveform[media_full_path].windowFlags() & ~Qt.WindowType.WindowMinimizeButtonHint
+            )
+            self.waveform[media_full_path].interval = self.spectrogram_time_interval
+            self.waveform[media_full_path].cursor_color = cfg.REALTIME_PLOT_CURSOR_COLOR
+
+            r = self.waveform[media_full_path].load_wav(wav_file_path)
+            if "error" in r:
+                logging.warning(f"waveform: load wav error: {r['error']}")
+                QMessageBox.warning(
+                    self,
+                    cfg.programName,
+                    f"Error in waveform generation: {r['error']}",
+                    QMessageBox.StandardButton.Ok,
+                    QMessageBox.StandardButton.NoButton,
+                )
+                del self.waveform[media_full_path]
+                return
+
+            self.pj[cfg.OBSERVATIONS][self.observationId][cfg.VISUALIZE_WAVEFORM] = True
+            self.waveform[media_full_path].sendEvent.connect(self.signal_from_widget)
+            self.waveform[media_full_path].show()
 
     self.show_plot_widget(cfg.SPECTROGRAM_PLOT)
 

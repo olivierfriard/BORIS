@@ -1476,9 +1476,23 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         # multiple waveform
         if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO].get(cfg.PLAYER_PLOT_DISPLAY, {}):
-            for player in self.pj[cfg.OBSERVATIONS][self.observationId][cfg.FILE]:
-                if not self.pj[cfg.OBSERVATIONS][self.observationId][cfg.FILE][player]:
+            current_media_path_list = {}
+            for player, media_list in self.pj[cfg.OBSERVATIONS][self.observationId][cfg.FILE].items():
+                if not media_list:
                     continue
+                _, current_media_path_ = self.current_media_path(int(player) - 1)
+                current_media_path_list[current_media_path_] = player
+            for media in self.waveform:
+                if media in current_media_path_list:
+                    self.waveform[media].plot_waveform(
+                        self.dw_player[int(current_media_path_list[media]) - 1].player.time_pos,
+                        window_title=f"Waveform of {Path(media).name}",
+                    )
+                    self.waveform[media].show()
+                else:
+                    self.waveform[media].hide()
+
+                """
                 for media in self.pj[cfg.OBSERVATIONS][self.observationId][cfg.FILE][player]:
                     if media in self.waveform:
                         print(f"plot timer out waveform  {media=}")  # remove before release
@@ -1504,6 +1518,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                                     continue
                             print(f"plot waveform for {media=}")  # remove before release
                             self.waveform[media].plot_waveform(current_media_time, window_title=f"Spectrogram of {media}")
+                """
 
         # unique spectrogram
         if self.pj[cfg.OBSERVATIONS][self.observationId].get(cfg.VISUALIZE_SPECTROGRAM, False) and not self.pj[cfg.OBSERVATIONS][
@@ -1532,14 +1547,21 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         # multiple spectrogram
         if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO].get(cfg.PLAYER_PLOT_DISPLAY, {}):
+            current_media_path_list = {}
             for player, media_list in self.pj[cfg.OBSERVATIONS][self.observationId][cfg.FILE].items():
                 if not media_list:
                     continue
                 _, current_media_path_ = self.current_media_path(int(player) - 1)
-                print(f"{current_media_path_=}")
-                if current_media_path_ in self.spectro:
-                    self.spectro[current_media_path_].plot_spectro(current_media_time, window_title=f"Spectrogram of {media}")
-                    self.spectro[current_media_path_].show()
+                current_media_path_list[current_media_path_] = player
+            for media in self.spectro:
+                if media in current_media_path_list:
+                    self.spectro[media].plot_spectro(
+                        self.dw_player[int(current_media_path_list[media]) - 1].player.time_pos,
+                        window_title=f"Spectrogram of {Path(media).name}",
+                    )
+                    self.spectro[media].show()
+                else:
+                    self.spectro[media].show()
 
                 """
                 if not self.pj[cfg.OBSERVATIONS][self.observationId][cfg.FILE][player]:
