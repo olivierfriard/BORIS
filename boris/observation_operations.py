@@ -33,6 +33,7 @@ from math import floor, log2
 from pathlib import Path
 from typing import Optional, Tuple
 
+from matplotlib import pyplot
 from PySide6 import QtTest
 from PySide6.QtCore import QDateTime, Qt, QTimer
 from PySide6.QtGui import QFont, QIcon, QTextCursor
@@ -55,6 +56,7 @@ from . import (
     observation,
     player_dock_widget,
     plot_data_module,
+    plot_spectrogram_rt,
     project_functions,
     select_observations,
     state_events,
@@ -898,8 +900,7 @@ def new_observation(self, mode: str = cfg.NEW, obsId: str = "") -> None:
                     combobox_display.addItems(cfg.DISPLAY_FROM_MEDIA)
 
                     combobox_display.setCurrentText(
-                        # self.pj[cfg.OBSERVATIONS][obsId][cfg.MEDIA_INFO].get(cfg.PLAYER_PLOT_DISPLAY, {}).get(player, "None")
-                        self.pj[cfg.OBSERVATIONS][obsId][cfg.MEDIA_INFO].get(cfg.PLAYER_PLOT_DISPLAY, {}).get(mediaFile, "Nothing")
+                        self.pj[cfg.OBSERVATIONS][obsId][cfg.MEDIA_INFO].get(cfg.PLAYER_PLOT_DISPLAY, {}).get(mediaFile, cfg.NOTHING)
                     )
                     observationWindow.twVideo1.setCellWidget(
                         observationWindow.twVideo1.rowCount() - 1, cfg.PLAYER_DISPLAY_IDX, combobox_display
@@ -2029,18 +2030,72 @@ def initialize_new_media_observation(self) -> bool:
         f"{[
         x.lower() for x in self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO].get(cfg.PLAYER_PLOT_DISPLAY, {}).values()
     ]=}"
-    )
+    )  # remove before release
 
+    for media, display_type in self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO].get(cfg.PLAYER_PLOT_DISPLAY, {}).items():
+        if cfg.SPECTROGRAM_PLOT in display_type or cfg.WAVEFORM in display_type:
+            wav_file_path = self.generate_wav_file_from_media_file(media)
+
+            print(f"{wav_file_path=}")  # remove before release
+
+        if cfg.SPECTROGRAM_PLOT in display_type:
+            media_full_path = project_functions.full_path(
+                media,
+                self.projectFileName,
+            )
+
+            self.spectro[media_full_path] = plot_spectrogram_rt.Plot_spectrogram_RT()
+            self.spectro[media_full_path].setWindowFlags(Qt.WindowType.WindowStaysOnTopHint)
+            self.spectro[media_full_path].setWindowFlags(
+                self.spectro[media_full_path].windowFlags() & ~Qt.WindowType.WindowMinimizeButtonHint
+            )
+            self.spectro[media_full_path].interval = self.spectrogram_time_interval
+            self.spectro[media_full_path].cursor_color = cfg.REALTIME_PLOT_CURSOR_COLOR
+            self.spectro[media_full_path].config_param = self.config_param
+
+            # color palette
+            try:
+                self.spectro[media_full_path].spectro_color_map = pyplot.get_cmap(self.spectrogram_color_map)
+            except ValueError:
+                self.spectro[media_full_path].spectro_color_map = pyplot.get_cmap("viridis")
+
+            r = self.spectro[media_full_path].load_wav(wav_file_path)
+            if "error" in r:
+                logging.warning(f"spectro_load_wav error: {r['error']}")
+                QMessageBox.warning(
+                    self,
+                    cfg.programName,
+                    f"Error in spectrogram generation: {r['error']}",
+                    QMessageBox.StandardButton.Ok,
+                    QMessageBox.StandardButton.NoButton,
+                )
+                del self.spectro[media_full_path]
+                return
+
+            self.pj[cfg.OBSERVATIONS][self.observationId][cfg.VISUALIZE_SPECTROGRAM] = True
+            self.spectro[media_full_path].sendEvent.connect(self.signal_from_widget)
+            self.spectro[media_full_path].sb_freq_min.setValue(0)
+            self.spectro[media_full_path].sb_freq_max.setValue(int(self.spectro[media_full_path].frame_rate / 2))
+
+    self.show_plot_widget(cfg.SPECTROGRAM_PLOT)
+
+    """
     if self.pj[cfg.OBSERVATIONS][self.observationId].get(cfg.VISUALIZE_SPECTROGRAM, False) or cfg.SPECTROGRAM_PLOT in [
         x.lower() for x in self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO].get(cfg.PLAYER_PLOT_DISPLAY, {}).values()
     ]:
         self.show_plot_widget(cfg.SPECTROGRAM_PLOT, warning=False)
+        print(f"{self.spectro=}")  # remove before release
 
     # waveform
     if self.pj[cfg.OBSERVATIONS][self.observationId].get(cfg.VISUALIZE_WAVEFORM, False) or cfg.WAVEFORM_PLOT in [
         x.lower() for x in self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO].get(cfg.PLAYER_PLOT_DISPLAY, {}).values()
     ]:
         self.show_plot_widget(cfg.WAVEFORM_PLOT, warning=False)
+        print(f"{self.waveform=}")  # remove before release
+    """
+
+    print(f"{self.spectro=}")  # remove before release
+    print(f"{self.waveform=}")  # remove before release
 
     # external data plot
     if cfg.PLOT_DATA in self.pj[cfg.OBSERVATIONS][self.observationId] and self.pj[cfg.OBSERVATIONS][self.observationId][cfg.PLOT_DATA]:
