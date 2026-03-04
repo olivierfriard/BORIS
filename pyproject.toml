@@ -25,6 +25,7 @@ dependencies = [
     "hachoir==3.3.0",
     "scipy==1.16.1",
     "scikit-learn==1.7.1",
+    "pyqtgraph>=0.14.0",
 ]
 
 [project.optional-dependencies]

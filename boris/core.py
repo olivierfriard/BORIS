@@ -1013,7 +1013,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 if not media_list:
                     continue
                 _, current_media_path_ = self.current_media_path(int(player) - 1)
-                print(f"show plot widget XXXXXXXXXXX {current_media_path_=}")
+                print(f"show plot widget XXXXXXXXXXX {current_media_path_=}")  # remove before release
                 for media in media_list:
                     media_full_path = project_functions.full_path(
                         media,
@@ -1021,11 +1021,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     )
                     if media_full_path == current_media_path_:
                         if media_full_path in self.spectro:
-                            print(f"show specro for {media_full_path=}\n")  # remove before release
+                            print(f"show spectro for {media_full_path=}\n")  # remove before release
                             self.spectro[media_full_path].show()
                     else:
                         if media_full_path in self.spectro:
-                            print(f"hide specro for {media_full_path=}\n")  # remove before release
+                            print(f"hide spectro for {media_full_path=}\n")  # remove before release
                             self.spectro[media_full_path].hide()
 
             """
@@ -1209,6 +1209,27 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             """
 
         if plot_type == cfg.WAVEFORM_PLOT:
+            for player, media_list in self.pj[cfg.OBSERVATIONS][self.observationId][cfg.FILE].items():
+                if not media_list:
+                    continue
+                _, current_media_path_ = self.current_media_path(int(player) - 1)
+                print(f"show plot widget XXXXXXXXXXX {current_media_path_=}")  # remove before release
+                for media in media_list:
+                    media_full_path = project_functions.full_path(
+                        media,
+                        self.projectFileName,
+                    )
+                    if media_full_path == current_media_path_:
+                        if media_full_path in self.waveform:
+                            print(f"show waveform for {media_full_path=}\n")  # remove before release
+                            self.spectro[media_full_path].show()
+                    else:
+                        if media_full_path in self.waveform:
+                            print(f"hide waveform for {media_full_path=}\n")  # remove before release
+                            self.spectro[media_full_path].hide()
+
+        """
+        if plot_type == cfg.WAVEFORM_PLOT:
             if self.waveform:
                 if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO].get(cfg.PLAYER_PLOT_DISPLAY, {}):
                     for media in self.waveform:
@@ -1234,20 +1255,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                         ):
                             continue
                             # add waveform to display
-                            """
-                            plot_list = (
-                                self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO]
-                                .get(cfg.PLAYER_PLOT_DISPLAY, {})
-                                .get(player, "")
-                                .split(",")
-                            )
-                            if cfg.NOTHING in plot_list:
-                                plot_list.remove(cfg.NOTHING)
-                            plot_list.append(cfg.WAVEFORM_PLOT)
-                            self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO][cfg.PLAYER_PLOT_DISPLAY][player] = ",".join(
-                                sorted(plot_list)
-                            )
-                            """
 
                         # create waveform
                         self.generate_wav_file_from_media(player)
@@ -1372,6 +1379,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     if warning:
                         if self.playerType == cfg.MEDIA and not flag_paused:
                             self.play_video()
+        """
 
         if plot_type == cfg.EVENTS_PLOT:
             if hasattr(self, "plot_events"):
@@ -1492,34 +1500,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 else:
                     self.waveform[media].hide()
 
-                """
-                for media in self.pj[cfg.OBSERVATIONS][self.observationId][cfg.FILE][player]:
-                    if media in self.waveform:
-                        print(f"plot timer out waveform  {media=}")  # remove before release
-                        if not self.waveform[media].visibleRegion().isEmpty():
-                            try:
-                                wav_file_path = str(
-                                    Path(tmp_dir)
-                                    / Path(
-                                        self.dw_player[int(player) - 1].player.playlist[
-                                            self.dw_player[int(player) - 1].player.playlist_pos
-                                        ]["filename"]
-                                        + ".wav"
-                                    ).name
-                                )
-                            except Exception as e:
-                                logging.warning(e)
-                                continue
-
-                            if self.waveform[media].wav_file_path != wav_file_path:
-                                r = self.waveform[media].load_wav(wav_file_path)
-                                if "error" in r:
-                                    logging.warning(f"spectro_load_wav error: {r['error']}")
-                                    continue
-                            print(f"plot waveform for {media=}")  # remove before release
-                            self.waveform[media].plot_waveform(current_media_time, window_title=f"Spectrogram of {media}")
-                """
-
         # unique spectrogram
         if self.pj[cfg.OBSERVATIONS][self.observationId].get(cfg.VISUALIZE_SPECTROGRAM, False) and not self.pj[cfg.OBSERVATIONS][
             self.observationId
@@ -1553,6 +1533,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     continue
                 _, current_media_path_ = self.current_media_path(int(player) - 1)
                 current_media_path_list[current_media_path_] = player
+
+            print(f"{current_media_path_list=}")  # remove before release
+
             for media in self.spectro:
                 if media in current_media_path_list:
                     self.spectro[media].plot_spectro(
@@ -1561,37 +1544,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     )
                     self.spectro[media].show()
                 else:
-                    self.spectro[media].show()
-
-                """
-                if not self.pj[cfg.OBSERVATIONS][self.observationId][cfg.FILE][player]:
-                    continue
-                for media in self.pj[cfg.OBSERVATIONS][self.observationId][cfg.FILE][player]:
-                    if media in self.spectro:
-                        print(f"plot timer out spectro {media=}")  # remove before release
-                        if not self.spectro[media].visibleRegion().isEmpty():
-                            try:
-                                wav_file_path = str(
-                                    Path(tmp_dir)
-                                    / Path(
-                                        self.dw_player[int(player) - 1].player.playlist[
-                                            self.dw_player[int(player) - 1].player.playlist_pos
-                                        ]["filename"]
-                                        + ".wav"
-                                    ).name
-                                )
-                            except Exception as e:
-                                logging.warning(e)
-                                continue
-
-                            if self.spectro[media].wav_file_path != wav_file_path:
-                                r = self.spectro[media].load_wav(wav_file_path)
-                                if "error" in r:
-                                    logging.warning(f"spectro_load_wav error: {r['error']}")
-                                    continue
-                            print(f"plot spectro for {media=}")  # remove before release
-                            self.spectro[media].plot_spectro(current_media_time, window_title=f"Spectrogram of {media}")
-                """
+                    self.spectro[media].hide()
 
     def show_data_files(self):
         """
@@ -1870,10 +1823,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 self.seek_mediaplayer(dec(0))
                 # self.statusbar.showMessage("There is only one media file", 5000)
 
-            if self.spectro:
-                if self.pj[cfg.OBSERVATIONS][self.observationId].get(cfg.VISUALIZE_SPECTROGRAM, False):
-                    self.spectro[cfg.PLAYER1].memChunk = -1
-
         if self.playerType == cfg.IMAGES:
             if len(self.pj[cfg.OBSERVATIONS][self.observationId].get(cfg.DIRECTORIES_LIST, [])) <= 1:
                 return
@@ -1918,10 +1867,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     self.statusbar.showMessage("There is only one media file", 5000)
 
             self.update_visualizations()
-
-            if self.spectro:
-                if self.pj[cfg.OBSERVATIONS][self.observationId].get(cfg.VISUALIZE_SPECTROGRAM, False):
-                    self.spectro[cfg.PLAYER1].memChunk = -1
 
         if self.playerType == cfg.IMAGES:
             if len(self.pj[cfg.OBSERVATIONS][self.observationId].get(cfg.DIRECTORIES_LIST, [])) <= 1:

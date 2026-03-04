@@ -2037,12 +2037,14 @@ def initialize_new_media_observation(self) -> bool:
         if cfg.SPECTROGRAM_PLOT in display_type or cfg.WAVEFORM_PLOT in display_type:
             wav_file_path = self.generate_wav_file_from_media_file(media)
 
-            print(f"{wav_file_path=}")  # remove before release
+            print(f"{media=}   {wav_file_path=}")  # remove before release
 
             media_full_path = project_functions.full_path(
                 media,
                 self.projectFileName,
             )
+
+            print(f"{media_full_path=}")
 
         if cfg.SPECTROGRAM_PLOT in display_type:
             self.spectro[media_full_path] = plot_spectrogram_rt.Plot_spectrogram_RT()
@@ -2102,7 +2104,7 @@ def initialize_new_media_observation(self) -> bool:
 
             self.pj[cfg.OBSERVATIONS][self.observationId][cfg.VISUALIZE_WAVEFORM] = True
             self.waveform[media_full_path].sendEvent.connect(self.signal_from_widget)
-            self.waveform[media_full_path].show()
+            # self.waveform[media_full_path].show()
 
     self.show_plot_widget(cfg.SPECTROGRAM_PLOT)
 
