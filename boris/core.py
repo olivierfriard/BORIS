@@ -109,7 +109,6 @@ from . import (
     param_panel,
     plot_events,
     plot_events_rt,
-    plot_spectrogram_rt,
     plot_waveform_rt,
     plugins,
     project,
@@ -124,6 +123,9 @@ from . import (
 from . import config as cfg
 from . import connections as connections
 from . import menu_options as menu_options
+from . import (
+    plot_spectrogram_rt as plot_spectrogram_rt,
+)
 from . import utilities as util
 from .core_ui import Ui_MainWindow
 

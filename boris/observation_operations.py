@@ -56,12 +56,14 @@ from . import (
     observation,
     player_dock_widget,
     plot_data_module,
-    plot_spectrogram_rt,
     plot_waveform_rt,
     project_functions,
     select_observations,
     state_events,
     video_operations,
+)
+from . import (
+    plot_spectrogram_rt as plot_spectrogram_rt,
 )
 from . import utilities as util
 
