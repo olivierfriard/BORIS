@@ -271,7 +271,7 @@ class ModifiersMapCreatorWindow(QMainWindow):
 
         self.selectedPolygonAreaCode = modifier_name
 
-        self.selectedPolygon.setPen(QPen(QColor(255, 0, 0, 255), 2, Qt.SolidLine, Qt.RoundCap, Qt.RoundJoin))
+        self.selectedPolygon.setPen(QPen(QColor(255, 0, 0, 255), 2, Qt.PenStyle.SolidLine, Qt.PenStyle.RoundCap, Qt.PenStyle.RoundJoin))
 
         self.leAreaCode.setText(modifier_name)
         for widget in (self.lb, self.leAreaCode, self.btSaveArea, self.btDeleteArea, self.btColor, self.slAlpha):
@@ -318,8 +318,8 @@ class ModifiersMapCreatorWindow(QMainWindow):
         area color button clicked
         """
         cd = QColorDialog()
-        cd.setWindowFlags(Qt.WindowStaysOnTopHint)
-        cd.setOptions(QColorDialog.ShowAlphaChannel | QColorDialog.DontUseNativeDialog)
+        cd.setWindowFlags(Qt.WindowType.WindowStaysOnTopHint)
+        cd.setOptions(QColorDialog.ColorDialogOption.ShowAlphaChannel | QColorDialog.ColorDialogOption.DontUseNativeDialog)
 
         if cd.exec():
             self.areaColor = cd.currentColor()
@@ -339,7 +339,7 @@ class ModifiersMapCreatorWindow(QMainWindow):
             response = dialog.MessageDialog(
                 "BORIS - Modifiers map creator",
                 "What to do about the current unsaved modifiers coding map?",
-                [cfg.SAVE, cfg.DISCARD, cfg.CANCEL],
+                (cfg.SAVE, cfg.DISCARD, cfg.CANCEL),
             )
 
             if response == cfg.SAVE:
