@@ -306,18 +306,6 @@ class Plot_spectrogram_RT(QWidget):
         # We'll display with rows=freq, cols=time, and setRect accordingly.
         self.img.setImage(Sxx_db.T, levels=levels, autoLevels=False)
 
-        """
-        t0 = float(t_abs[0])
-        t1 = float(t_abs[-1])
-        f0 = float(f_show[0])
-        f1 = float(f_show[-1])
-        # Ensure positive width/height
-        w = max(1e-9, t1 - t0)
-        h = max(1e-9, f1 - f0)
-        self.img.setRect(pg.QtCore.QRectF(t0, f0, w, h))
-
-        """
-
         t0 = float(t_abs[0])
         t1 = float(t_abs[-1])
         f0 = float(f_show[0])
