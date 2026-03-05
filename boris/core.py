@@ -1757,7 +1757,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
     def signal_from_widget(self, event) -> None:
         """
-        receive signal from widget
+        The keypress event is received from widget and reemitted
         """
         self.keyPressEvent(event)
 

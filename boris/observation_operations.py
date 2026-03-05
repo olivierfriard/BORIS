@@ -872,10 +872,8 @@ def new_observation(self, mode: str = cfg.NEW, obsId: str = "") -> None:
 
             observationWindow.twVideo1.setRowCount(0)
             for player in self.pj[cfg.OBSERVATIONS][obsId][cfg.FILE]:
-                # if player in self.pj[cfg.OBSERVATIONS][obsId][cfg.FILE] and self.pj[cfg.OBSERVATIONS][obsId][cfg.FILE][player]:
                 for mediaFile in self.pj[cfg.OBSERVATIONS][obsId][cfg.FILE].get(player, []):
                     observationWindow.twVideo1.setRowCount(observationWindow.twVideo1.rowCount() + 1)
-
                     combobox = QComboBox()
                     combobox.addItems(cfg.ALL_PLAYERS)
                     combobox.setCurrentIndex(int(player) - 1)
@@ -901,6 +899,20 @@ def new_observation(self, mode: str = cfg.NEW, obsId: str = "") -> None:
 
                     combobox_display = QComboBox()
                     combobox_display.addItems(cfg.DISPLAY_FROM_MEDIA)
+
+                    # adapt spectro and waveform new visualization TODO: move in open project?
+                    if cfg.PLAYER_PLOT_DISPLAY not in self.pj[cfg.OBSERVATIONS][obsId][cfg.MEDIA_INFO]:
+                        self.pj[cfg.OBSERVATIONS][obsId][cfg.MEDIA_INFO][cfg.PLAYER_PLOT_DISPLAY] = {}
+                        visualizations: list = []
+                        if self.pj[cfg.OBSERVATIONS][obsId].get(cfg.VISUALIZE_SPECTROGRAM, False):
+                            visualizations.append(cfg.SPECTROGRAM_PLOT)
+                        if self.pj[cfg.OBSERVATIONS][obsId].get(cfg.VISUALIZE_WAVEFORM, False):
+                            visualizations.append(cfg.WAVEFORM_PLOT)
+                        visualizations_str: str = cfg.NOTHING
+                        if visualizations:
+                            visualizations_str = ",".join(visualizations)
+                        for media in self.pj[cfg.OBSERVATIONS][obsId][cfg.FILE].get(cfg.PLAYER1, []):
+                            self.pj[cfg.OBSERVATIONS][obsId][cfg.MEDIA_INFO][cfg.PLAYER_PLOT_DISPLAY][media] = visualizations_str
 
                     combobox_display.setCurrentText(
                         self.pj[cfg.OBSERVATIONS][obsId][cfg.MEDIA_INFO].get(cfg.PLAYER_PLOT_DISPLAY, {}).get(mediaFile, cfg.NOTHING)
@@ -1050,13 +1062,10 @@ def new_observation(self, mode: str = cfg.NEW, obsId: str = "") -> None:
             observationWindow.cbCloseCurrentBehaviorsBetweenVideo.setChecked(
                 self.pj[cfg.OBSERVATIONS][obsId][cfg.CLOSE_BEHAVIORS_BETWEEN_VIDEOS]
             )
-    print("1")
     rv = observationWindow.exec()
 
     # save geometry
     gui_utilities.save_geometry(observationWindow, "new observation")
-
-    print("2")  # remove before release
 
     if rv:
         self.project_changed()
@@ -2026,8 +2035,19 @@ def initialize_new_media_observation(self) -> bool:
     video_operations.display_play_rate(self)
     video_operations.display_zoom_level(self)
 
-    # current_media_path_, current_playlist_index = self.current_media_path(player=0)
-    # spectrogram
+    # adapt spectro and waveform new visualization TODO: move in open project?
+    if cfg.PLAYER_PLOT_DISPLAY not in self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO]:
+        self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO][cfg.PLAYER_PLOT_DISPLAY] = {}
+        visualizations: list = []
+        if self.pj[cfg.OBSERVATIONS][self.observationId].get(cfg.VISUALIZE_SPECTROGRAM, False):
+            visualizations.append(cfg.SPECTROGRAM_PLOT)
+        if self.pj[cfg.OBSERVATIONS][self.observationId].get(cfg.VISUALIZE_WAVEFORM, False):
+            visualizations.append(cfg.WAVEFORM_PLOT)
+        visualizations_str: str = cfg.NOTHING
+        if visualizations:
+            visualizations_str = ",".join(visualizations)
+        for media in self.pj[cfg.OBSERVATIONS][self.observationId][cfg.FILE].get(cfg.PLAYER1, []):
+            self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO][cfg.PLAYER_PLOT_DISPLAY][media] = visualizations_str
 
     print(
         f"{[
@@ -2046,7 +2066,7 @@ def initialize_new_media_observation(self) -> bool:
                 self.projectFileName,
             )
 
-            print(f"{media_full_path=}")
+            print(f"{media_full_path=}")  # remove before release
 
         if cfg.SPECTROGRAM_PLOT in display_type:
             self.spectro[media_full_path] = plot_spectrogram_rt.Plot_spectrogram_RT()
@@ -2108,28 +2128,10 @@ def initialize_new_media_observation(self) -> bool:
 
             self.pj[cfg.OBSERVATIONS][self.observationId][cfg.VISUALIZE_WAVEFORM] = True
             self.waveform[media_full_path].sendEvent.connect(self.signal_from_widget)
-            self.waveform[media_full_path].show()
             self.actionShow_the_sound_waveform.setChecked(True)
 
     self.show_plot_widget(cfg.SPECTROGRAM_PLOT)
-
-    """
-    if self.pj[cfg.OBSERVATIONS][self.observationId].get(cfg.VISUALIZE_SPECTROGRAM, False) or cfg.SPECTROGRAM_PLOT in [
-        x.lower() for x in self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO].get(cfg.PLAYER_PLOT_DISPLAY, {}).values()
-    ]:
-        self.show_plot_widget(cfg.SPECTROGRAM_PLOT, warning=False)
-        print(f"{self.spectro=}")  # remove before release
-
-    # waveform
-    if self.pj[cfg.OBSERVATIONS][self.observationId].get(cfg.VISUALIZE_WAVEFORM, False) or cfg.WAVEFORM_PLOT in [
-        x.lower() for x in self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO].get(cfg.PLAYER_PLOT_DISPLAY, {}).values()
-    ]:
-        self.show_plot_widget(cfg.WAVEFORM_PLOT, warning=False)
-        print(f"{self.waveform=}")  # remove before release
-    """
-
-    print(f"{self.spectro=}")  # remove before release
-    print(f"{self.waveform=}")  # remove before release
+    self.show_plot_widget(cfg.WAVEFORM_PLOT)
 
     # external data plot
     if cfg.PLOT_DATA in self.pj[cfg.OBSERVATIONS][self.observationId] and self.pj[cfg.OBSERVATIONS][self.observationId][cfg.PLOT_DATA]:
