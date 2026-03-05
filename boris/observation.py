@@ -217,8 +217,9 @@ class Observation(QDialog, Ui_Form):
         self.pb_use_media_file_name_as_obsid.clicked.connect(self.use_media_file_name_as_obsid)
         self.pb_use_img_dir_as_obsid.clicked.connect(self.use_img_dir_as_obsid)
 
-        self.cbVisualizeSpectrogram.clicked.connect(self.extract_wav)
-        self.cb_visualize_waveform.clicked.connect(self.extract_wav)
+        # TODO: remove code
+        # self.cbVisualizeSpectrogram.clicked.connect(self.extract_wav)
+        # self.cb_visualize_waveform.clicked.connect(self.extract_wav)
 
         self.cb_observation_time_interval.clicked.connect(self.limit_time_interval)
 
@@ -1284,8 +1285,8 @@ class Observation(QDialog, Ui_Form):
         update the media options
         """
         for w in (
-            self.cbVisualizeSpectrogram,
-            self.cb_visualize_waveform,
+            # self.cbVisualizeSpectrogram,
+            # self.cb_visualize_waveform,
             self.cb_observation_time_interval,
             self.cb_media_creation_date_as_offset,
         ):

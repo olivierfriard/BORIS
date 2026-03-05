@@ -952,10 +952,10 @@ def new_observation(self, mode: str = cfg.NEW, obsId: str = "") -> None:
 
             observationWindow.cbCloseCurrentBehaviorsBetweenVideo.setEnabled(observationWindow.twVideo1.rowCount() > 0)
             # spectrogram
-            observationWindow.cbVisualizeSpectrogram.setEnabled(True)
+            # observationWindow.cbVisualizeSpectrogram.setEnabled(True)
             observationWindow.cbVisualizeSpectrogram.setChecked(self.pj[cfg.OBSERVATIONS][obsId].get(cfg.VISUALIZE_SPECTROGRAM, False))
             # waveform
-            observationWindow.cb_visualize_waveform.setEnabled(True)
+            # observationWindow.cb_visualize_waveform.setEnabled(True)
             observationWindow.cb_visualize_waveform.setChecked(self.pj[cfg.OBSERVATIONS][obsId].get(cfg.VISUALIZE_WAVEFORM, False))
             # use Creation date metadata tag as offset
             observationWindow.cb_media_creation_date_as_offset.setEnabled(True)
