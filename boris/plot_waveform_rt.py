@@ -34,6 +34,7 @@ import numpy as np
 from matplotlib.backends.backend_qtagg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.figure import Figure
 from PySide6.QtCore import QEvent, Qt, Signal
+from PySide6.QtGui import QCloseEvent, QColor
 from PySide6.QtWidgets import QHBoxLayout, QLabel, QPushButton, QVBoxLayout, QWidget
 
 
@@ -44,6 +45,8 @@ class Plot_waveform_RT(QWidget):
     def __init__(self):
         super().__init__()
         self.setWindowTitle("Waveform")
+
+        self.hidden: bool = False
 
         self.interval = 60  # interval of visualization (in seconds)
         self.time_mem = -1
@@ -86,6 +89,12 @@ class Plot_waveform_RT(QWidget):
         self.setLayout(layout)
 
         self.installEventFilter(self)
+
+    def closeEvent(self, event: QCloseEvent):
+        self.hidden = True
+        print(f"{self.hidden=}")  # remove before release
+        # Accept close
+        event.accept()
 
     def eventFilter(self, receiver, event):
         """

@@ -166,7 +166,7 @@
      <x>0</x>
      <y>0</y>
      <width>3163</width>
-     <height>20</height>
+     <height>25</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuHelp">
@@ -1000,6 +1000,9 @@
    </property>
   </action>
   <action name="actionShow_spectrogram">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
    <property name="text">
     <string>Show the sound spectrogram</string>
    </property>
@@ -1395,6 +1398,9 @@
    </property>
   </action>
   <action name="actionShow_the_sound_waveform">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
    <property name="text">
     <string>Show the sound waveform</string>
    </property>

@@ -24,7 +24,7 @@ import wave
 import numpy as np
 import pyqtgraph as pg
 from PySide6.QtCore import QEvent, Qt, Signal
-from PySide6.QtGui import QColor
+from PySide6.QtGui import QCloseEvent, QColor
 from PySide6.QtWidgets import (
     QHBoxLayout,
     QLabel,
@@ -49,6 +49,8 @@ class Plot_spectrogram_RT(QWidget):
         # Optional: avoid OpenGL glitches with other GPU widgets (e.g. mpv vo=gpu)
         pg.setConfigOptions(useOpenGL=False)
 
+        self.hidden: bool = False
+
         self.interval = 10  # interval of visualization (in seconds)
         self.time_mem = -1
 
@@ -59,8 +61,7 @@ class Plot_spectrogram_RT(QWidget):
         self.plot.setLabel("bottom", "Time", units="s")
         self.plot.setLabel("left", "Frequency", units="Hz")
         self.plot.showGrid(x=True, y=True, alpha=0.2)
-        self.plot.setMouseEnabled(x=False, y=False)  # BORIS style: no accidental pan/zoom
-
+        self.plot.setMouseEnabled(x=False, y=False)
         self.img = pg.ImageItem()
         self.plot.addItem(self.img)
 
@@ -122,10 +123,15 @@ class Plot_spectrogram_RT(QWidget):
         # cache last levels to keep visualization stable
         self._fixed_levels = None  # (lo, hi)
 
+    def closeEvent(self, event: QCloseEvent):
+        self.hidden = True
+        # Accept close
+        event.accept()
+
     @staticmethod
     def _qcolor(color) -> QColor:
         """
-        Accepts BORIS config cursor color formats:
+        Accepts config cursor color formats:
         - QColor
         - "#RRGGBB"
         - (r,g,b) or (r,g,b,a)
@@ -143,14 +149,18 @@ class Plot_spectrogram_RT(QWidget):
         return QColor("red")
 
     def eventFilter(self, receiver, event):
-        """send event (if keypress) to main window"""
+        """
+        send event (if keypress) to main window
+        """
         if event.type() == QEvent.KeyPress:
             self.sendEvent.emit(event)
             return True
         return False
 
     def get_wav_info(self, wav_file: str) -> tuple[np.ndarray, int]:
-        """read wav file and extract information"""
+        """
+        read wav file and extract information
+        """
         try:
             wav = wave.open(wav_file, "r")
             frames = wav.readframes(-1)
@@ -162,18 +172,24 @@ class Plot_spectrogram_RT(QWidget):
             return np.array([]), 0
 
     def time_interval_changed(self, action: int):
-        """change the time interval for plotting spectrogram"""
+        """
+        change the time interval for plotting spectrogram
+        """
         if action == -1 and self.interval <= 5:
             return
         self.interval += 5 * action
         self.plot_spectro(current_time=self.time_mem, force_plot=True)
 
     def frequency_interval_changed(self):
-        """change the frequency interval for plotting spectrogram"""
+        """
+        change the frequency interval for plotting spectrogram
+        """
         self.plot_spectro(current_time=self.time_mem, force_plot=True)
 
     def load_wav(self, wav_file_path: str) -> dict:
-        """load wav file in numpy array"""
+        """
+        load wav file in numpy array
+        """
         try:
             self.sound_info, self.frame_rate = self.get_wav_info(wav_file_path)
             if not self.frame_rate:

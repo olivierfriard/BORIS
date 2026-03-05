@@ -2082,6 +2082,8 @@ def initialize_new_media_observation(self) -> bool:
             self.spectro[media_full_path].sb_freq_min.setValue(0)
             self.spectro[media_full_path].sb_freq_max.setValue(int(self.spectro[media_full_path].frame_rate / 2))
 
+            self.actionShow_spectrogram.setChecked(True)
+
         if cfg.WAVEFORM_PLOT in display_type:
             self.waveform[media_full_path] = plot_waveform_rt.Plot_waveform_RT()
             self.waveform[media_full_path].setWindowFlags(Qt.WindowType.WindowStaysOnTopHint)
@@ -2106,7 +2108,8 @@ def initialize_new_media_observation(self) -> bool:
 
             self.pj[cfg.OBSERVATIONS][self.observationId][cfg.VISUALIZE_WAVEFORM] = True
             self.waveform[media_full_path].sendEvent.connect(self.signal_from_widget)
-            # self.waveform[media_full_path].show()
+            self.waveform[media_full_path].show()
+            self.actionShow_the_sound_waveform.setChecked(True)
 
     self.show_plot_widget(cfg.SPECTROGRAM_PLOT)
 

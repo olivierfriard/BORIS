@@ -179,8 +179,8 @@ def connections(self):
     self.action_create_modifiers_coding_map.triggered.connect(self.modifiers_coding_map_creator)
     self.action_create_behaviors_coding_map.triggered.connect(lambda: behav_coding_map_creator.behaviors_coding_map_creator(self))
 
-    self.actionShow_spectrogram.triggered.connect(lambda: self.show_plot_widget(cfg.SPECTROGRAM_PLOT, warning=True))
-    self.actionShow_the_sound_waveform.triggered.connect(lambda: self.show_plot_widget(cfg.WAVEFORM_PLOT, warning=True))
+    self.actionShow_spectrogram.triggered.connect(lambda: self.show_plot_widget_action_triggered(cfg.SPECTROGRAM_PLOT, warning=True))
+    self.actionShow_the_sound_waveform.triggered.connect(lambda: self.show_plot_widget_action_triggered(cfg.WAVEFORM_PLOT, warning=True))
     self.actionPlot_events_in_real_time.triggered.connect(lambda: self.show_plot_widget(cfg.EVENTS_PLOT, warning=False))
 
     self.actionShow_data_files.triggered.connect(self.show_data_files)
