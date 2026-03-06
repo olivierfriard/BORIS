@@ -1499,7 +1499,7 @@ def open_project_json(project_file_name: str) -> tuple:
         pj[cfg.BEHAVIORAL_CATEGORIES_CONF] = dict()
         projectChanged = True
 
-    # add category key if not found
+    # add behavioral category key if not found
     for idx in pj[cfg.ETHOGRAM]:
         if cfg.BEHAVIOR_CATEGORY not in pj[cfg.ETHOGRAM][idx]:
             pj[cfg.ETHOGRAM][idx][cfg.BEHAVIOR_CATEGORY] = ""
@@ -1599,6 +1599,23 @@ def open_project_json(project_file_name: str) -> tuple:
             QMessageBox.critical(None, cfg.programName, f"Error saving old project to {old_project_file_name}")
 
         pj[cfg.PROJECT_VERSION] = cfg.project_format_version
+
+    # check new display parameters for spectrogram and waveform
+    for obs_id in pj[cfg.OBSERVATIONS]:
+        if cfg.PLAYER_PLOT_DISPLAY not in pj[cfg.OBSERVATIONS][obs_id][cfg.MEDIA_INFO]:
+            pj[cfg.OBSERVATIONS][obs_id][cfg.MEDIA_INFO][cfg.PLAYER_PLOT_DISPLAY] = {}
+            visualizations: list = []
+            if pj[cfg.OBSERVATIONS][obs_id].get(cfg.VISUALIZE_SPECTROGRAM, False):
+                visualizations.append(cfg.SPECTROGRAM_PLOT)
+            if pj[cfg.OBSERVATIONS][obs_id].get(cfg.VISUALIZE_WAVEFORM, False):
+                visualizations.append(cfg.WAVEFORM_PLOT)
+            visualizations_str: str = cfg.NOTHING
+            if visualizations:
+                visualizations_str = ",".join(visualizations)
+            for media in pj[cfg.OBSERVATIONS][obs_id][cfg.FILE].get(cfg.PLAYER1, []):
+                pj[cfg.OBSERVATIONS][obs_id][cfg.MEDIA_INFO][cfg.PLAYER_PLOT_DISPLAY][media] = visualizations_str
+                projectChanged = True
+                print(f"{projectChanged=}")  # remove before release
 
     # sort events by time asc
     for obs_id in pj[cfg.OBSERVATIONS]:

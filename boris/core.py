@@ -49,7 +49,6 @@ from decimal import Decimal as dec
 import matplotlib
 import PIL.Image
 import PIL.ImageEnhance
-from matplotlib import pyplot
 from PIL.ImageQt import Image
 
 matplotlib.use("QtAgg")
@@ -109,7 +108,6 @@ from . import (
     param_panel,
     plot_events,
     plot_events_rt,
-    plot_waveform_rt,
     plugins,
     project,
     project_functions,

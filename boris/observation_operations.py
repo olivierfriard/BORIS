@@ -900,20 +900,6 @@ def new_observation(self, mode: str = cfg.NEW, obsId: str = "") -> None:
                     combobox_display = QComboBox()
                     combobox_display.addItems(cfg.DISPLAY_FROM_MEDIA)
 
-                    # adapt spectro and waveform new visualization TODO: move in open project?
-                    if cfg.PLAYER_PLOT_DISPLAY not in self.pj[cfg.OBSERVATIONS][obsId][cfg.MEDIA_INFO]:
-                        self.pj[cfg.OBSERVATIONS][obsId][cfg.MEDIA_INFO][cfg.PLAYER_PLOT_DISPLAY] = {}
-                        visualizations: list = []
-                        if self.pj[cfg.OBSERVATIONS][obsId].get(cfg.VISUALIZE_SPECTROGRAM, False):
-                            visualizations.append(cfg.SPECTROGRAM_PLOT)
-                        if self.pj[cfg.OBSERVATIONS][obsId].get(cfg.VISUALIZE_WAVEFORM, False):
-                            visualizations.append(cfg.WAVEFORM_PLOT)
-                        visualizations_str: str = cfg.NOTHING
-                        if visualizations:
-                            visualizations_str = ",".join(visualizations)
-                        for media in self.pj[cfg.OBSERVATIONS][obsId][cfg.FILE].get(cfg.PLAYER1, []):
-                            self.pj[cfg.OBSERVATIONS][obsId][cfg.MEDIA_INFO][cfg.PLAYER_PLOT_DISPLAY][media] = visualizations_str
-
                     combobox_display.setCurrentText(
                         self.pj[cfg.OBSERVATIONS][obsId][cfg.MEDIA_INFO].get(cfg.PLAYER_PLOT_DISPLAY, {}).get(mediaFile, cfg.NOTHING)
                     )
@@ -2034,26 +2020,6 @@ def initialize_new_media_observation(self) -> bool:
 
     video_operations.display_play_rate(self)
     video_operations.display_zoom_level(self)
-
-    # adapt spectro and waveform new visualization TODO: move in open project?
-    if cfg.PLAYER_PLOT_DISPLAY not in self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO]:
-        self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO][cfg.PLAYER_PLOT_DISPLAY] = {}
-        visualizations: list = []
-        if self.pj[cfg.OBSERVATIONS][self.observationId].get(cfg.VISUALIZE_SPECTROGRAM, False):
-            visualizations.append(cfg.SPECTROGRAM_PLOT)
-        if self.pj[cfg.OBSERVATIONS][self.observationId].get(cfg.VISUALIZE_WAVEFORM, False):
-            visualizations.append(cfg.WAVEFORM_PLOT)
-        visualizations_str: str = cfg.NOTHING
-        if visualizations:
-            visualizations_str = ",".join(visualizations)
-        for media in self.pj[cfg.OBSERVATIONS][self.observationId][cfg.FILE].get(cfg.PLAYER1, []):
-            self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO][cfg.PLAYER_PLOT_DISPLAY][media] = visualizations_str
-
-    print(
-        f"{[
-        x.lower() for x in self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO].get(cfg.PLAYER_PLOT_DISPLAY, {}).values()
-    ]=}"
-    )  # remove before release
 
     for media, display_type in self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO].get(cfg.PLAYER_PLOT_DISPLAY, {}).items():
         if cfg.SPECTROGRAM_PLOT in display_type or cfg.WAVEFORM_PLOT in display_type:
