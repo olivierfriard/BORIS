@@ -1615,7 +1615,6 @@ def open_project_json(project_file_name: str) -> tuple:
             for media in pj[cfg.OBSERVATIONS][obs_id][cfg.FILE].get(cfg.PLAYER1, []):
                 pj[cfg.OBSERVATIONS][obs_id][cfg.MEDIA_INFO][cfg.PLAYER_PLOT_DISPLAY][media] = visualizations_str
                 projectChanged = True
-                print(f"{projectChanged=}")  # remove before release
 
     # sort events by time asc
     for obs_id in pj[cfg.OBSERVATIONS]:

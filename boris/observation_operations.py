@@ -2025,14 +2025,10 @@ def initialize_new_media_observation(self) -> bool:
         if cfg.SPECTROGRAM_PLOT in display_type or cfg.WAVEFORM_PLOT in display_type:
             wav_file_path = self.generate_wav_file_from_media_file(media)
 
-            print(f"{media=}   {wav_file_path=}")  # remove before release
-
             media_full_path = project_functions.full_path(
                 media,
                 self.projectFileName,
             )
-
-            print(f"{media_full_path=}")  # remove before release
 
         if cfg.SPECTROGRAM_PLOT in display_type:
             self.spectro[media_full_path] = plot_spectrogram_rt.Plot_spectrogram_RT()
@@ -2542,7 +2538,6 @@ def create_observations(self):
         if not file.is_file():
             continue
         r = util.accurate_media_analysis(ffmpeg_bin=self.ffmpeg_bin, file_name=str(file))
-        print(r)  # remove before release
         if "error" not in r:
             if not r.get("frames_number", 0):
                 continue
@@ -2551,21 +2546,6 @@ def create_observations(self):
                 media_file = str(file.relative_to(Path(self.projectFileName).parent))
             else:
                 media_file = str(file)
-
-            # else:
-            #    try:
-            #        media_file = str(file.relative_to(Path(self.projectFileName).parent))
-            #    except ValueError:
-            #        QMessageBox.critical(
-            #            self,
-            #            cfg.programName,
-            #            (
-            #                f"the media file <b>{file}</b> can not be relative to the project directory "
-            #                f"(<b>{Path(self.projectFileName).parent}</b>)"
-            #                "<br><br>Aborting the creation of observations"
-            #            ),
-            #        )
-            #        return
 
             if media_file in self.pj[cfg.OBSERVATIONS]:
                 QMessageBox.critical(
