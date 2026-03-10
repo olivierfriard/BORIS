@@ -1602,6 +1602,8 @@ def open_project_json(project_file_name: str) -> tuple:
 
     # check new display parameters for spectrogram and waveform
     for obs_id in pj[cfg.OBSERVATIONS]:
+        if pj[cfg.OBSERVATIONS][obs_id][cfg.TYPE] != cfg.MEDIA:
+            continue
         if cfg.PLAYER_PLOT_DISPLAY not in pj[cfg.OBSERVATIONS][obs_id][cfg.MEDIA_INFO]:
             pj[cfg.OBSERVATIONS][obs_id][cfg.MEDIA_INFO][cfg.PLAYER_PLOT_DISPLAY] = {}
             visualizations: list = []
