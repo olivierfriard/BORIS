@@ -25,7 +25,7 @@ import logging
 import re
 
 from PySide6.QtCore import QDateTime, Qt
-from PySide6.QtGui import QColor
+from PySide6.QtGui import QColor, QKeySequence
 from PySide6.QtWidgets import (
     QAbstractItemView,
     QApplication,
@@ -48,7 +48,7 @@ from PySide6.QtWidgets import (
     QVBoxLayout,
 )
 
-from . import add_modifier, converters, dialog, exclusion_matrix, project_import_export
+from . import add_modifier, behavior_shortcut, converters, dialog, exclusion_matrix, project_import_export
 from . import config as cfg
 from . import utilities as util
 from .project_ui import Ui_dlgProject
@@ -808,6 +808,7 @@ class projectDialog(QDialog, Ui_dlgProject):
     def twBehaviors_cellDoubleClicked(self, row: int, column: int) -> None:
         """
         manage double-click on ethogram table:
+        * key for behavior shortcuts
         * color
         * behavioral category
         * modifiers
@@ -818,6 +819,19 @@ class projectDialog(QDialog, Ui_dlgProject):
             row (int): row double-clicked
             column (int): column double-clicked
         """
+        # key
+        if column == cfg.behavioursFields[cfg.BEHAVIOR_KEY]:
+            shortcut, accepted = behavior_shortcut.ShortcutDialog.getShortcut(
+                parent=self, title="Configure behavior shortcut", initial_sequence=""
+            )
+
+            if accepted:
+                shortcut_text = shortcut.toString(QKeySequence.SequenceFormat.PortableText)
+                print(f"{shortcut_text=}")  # remove before release
+                item = QTableWidgetItem(shortcut_text)
+                # item.setFlags(Qt.ItemIsEnabled)
+                # item.setBackground(self.not_editable_column_color())
+                self.twBehaviors.setItem(row, cfg.behavioursFields[cfg.BEHAVIOR_KEY], item)
 
         # excluded column
         if column == cfg.behavioursFields[cfg.EXCLUDED]:
@@ -1288,7 +1302,12 @@ class projectDialog(QDialog, Ui_dlgProject):
         check ethogram
         """
 
-        keys, codes = [], []
+        def is_valid_shortcut(text: str) -> bool:
+            seq = QKeySequence.fromString(text, QKeySequence.SequenceFormat.PortableText)
+            return not seq.isEmpty()
+
+        keys: list = []
+        codes: list = []
         self.lbObservationsState.setText("")
 
         for r in range(self.twBehaviors.rowCount()):
@@ -1296,8 +1315,11 @@ class projectDialog(QDialog, Ui_dlgProject):
             if self.twBehaviors.item(r, cfg.PROJECT_BEHAVIORS_KEY_FIELD_IDX):
                 key = self.twBehaviors.item(r, cfg.PROJECT_BEHAVIORS_KEY_FIELD_IDX).text()
                 # check key length
-                if key.upper() not in list(cfg.function_keys.values()) and len(key) > 1:
-                    self.lbObservationsState.setText('<font color="red">Key length &gt; 1</font>')
+                # if key.upper() not in list(cfg.function_keys.values()) and len(key) > 1:
+                #    self.lbObservationsState.setText('<font color="red">Key length &gt; 1</font>')
+                #    return
+                if not is_valid_shortcut(key):
+                    self.lbObservationsState.setText('<font color="red">Invalid shortcut</font>')
                     return
 
                 keys.append(key)

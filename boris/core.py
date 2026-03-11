@@ -54,7 +54,7 @@ from PIL.ImageQt import Image
 matplotlib.use("QtAgg")
 
 from PySide6.QtCore import QAbstractTableModel, QDateTime, QElapsedTimer, QEvent, QPoint, QSettings, Qt, QUrl, Signal
-from PySide6.QtGui import QAction, QColor, QDesktopServices, QFont, QIcon, QKeyEvent, QPainter, QPixmap, QPolygon
+from PySide6.QtGui import QAction, QColor, QDesktopServices, QFont, QIcon, QKeyEvent, QKeySequence, QPainter, QPixmap, QPolygon
 from PySide6.QtMultimedia import QSoundEffect
 from PySide6.QtWidgets import (
     QAbstractItemView,
@@ -4838,40 +4838,40 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         ESC: 16777216
         """
 
-        # get modifiers
-        modifiers = QApplication.keyboardModifiers()
-        modifier = ""
+        if not self.observationId:
+            return
 
-        if modifiers & Qt.ShiftModifier:
-            modifier += "Shift"
+        print(f"{event=}")  # remove before release
 
-        if modifiers & Qt.ControlModifier:
-            modifier += "Ctrl"
+        # key = event.key()
+        ek = event.key()
+        ek_text = event.text()
+        key = Qt.Key(ek)
 
-        if modifiers & (Qt.AltModifier):
-            modifier += "Alt"
+        # ignore pure modifier presses
+        if key in (
+            Qt.Key_Control,
+            Qt.Key_Shift,
+            Qt.Key_Alt,
+            Qt.Key_Meta,
+            Qt.Key_Tab,
+            Qt.Key_AltGr,
+        ):
+            return False
 
-        if modifiers & (Qt.MetaModifier):
-            modifier += "Meta"
+        seq = QKeySequence(event.modifiers() | key)
 
-        ek, ek_text = event.key(), event.text()
-
-        logging.debug(f"text #{ek_text}#  event key: {ek} Modifier: {modifier}")
-
-        # undo (CTRL + Z)
-        if ek == 90 and modifier == cfg.CTRL_KEY:
+        if seq == QKeySequence("Ctrl+Z"):
+            print("Ctrl+Z from keypress")
             event_operations.undo_event_operation(self)
             return
 
-        if ek in (
-            Qt.Key_Tab,
-            Qt.Key_Shift,
-            Qt.Key_Control,
-            Qt.Key_Meta,
-            Qt.Key_Alt,
-            Qt.Key_AltGr,
-        ):
-            return
+        shortcut = QKeySequence("Ctrl+W")
+        print(f"{seq == shortcut =}")  # remove before release
+
+        return
+
+        logging.debug(f"text #{ek_text}#  event key: {ek} Modifier: {modifier}")
 
         if self.playerType in cfg.VIEWERS:
             if event.key() == Qt.Key_CapsLock:
@@ -4881,9 +4881,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 cfg.programName,
                 ("The current observation is opened in VIEW mode.\nIt is not allowed to log events in this mode."),
             )
-            return
-
-        if not self.observationId:
             return
 
         # beep
