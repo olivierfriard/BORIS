@@ -102,6 +102,11 @@ def fix_unpaired_events(self, silent_mode: bool = False):
         w = dialog.Ask_time(0)
         w.setWindowTitle("Fix UNPAIRED state events")
         w.label.setText("Fix UNPAIRED events at time:")
+        if self.timeFormat == cfg.S:
+            w.time_widget.rb_seconds.setChecked(True)
+            w.time_widget.le_seconds.setFocus()
+        if self.timeFormat == cfg.HHMMSS:
+            w.time_widget.rb_time.setChecked(True)
 
         if not w.exec_():
             return

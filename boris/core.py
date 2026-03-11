@@ -1493,6 +1493,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         jt = dialog.Ask_time(0)
         jt.setWindowTitle("Jump to specific time")
         jt.label.setText("Set the time")
+        if self.timeFormat == cfg.S:
+            jt.time_widget.rb_seconds.setChecked(True)
+            jt.time_widget.le_seconds.setFocus()
+        if self.timeFormat == cfg.HHMMSS:
+            jt.time_widget.rb_time.setChecked(True)
 
         if jt.exec():
             new_time = jt.time_widget.get_time()

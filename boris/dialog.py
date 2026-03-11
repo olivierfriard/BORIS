@@ -217,7 +217,7 @@ class get_time_widget(QWidget):
 
         self.stackedWidget = QStackedWidget(self.widget)
         self.stackedWidget.setObjectName("stackedWidget")
-        self.stackedWidget.setFrameShape(QFrame.NoFrame)
+        self.stackedWidget.setFrameShape(QFrame.Shape.NoFrame)
         self.seconds = QWidget()
         self.seconds.setObjectName("seconds")
         self.widget1 = QWidget(self.seconds)

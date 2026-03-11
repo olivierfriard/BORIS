@@ -891,6 +891,9 @@
    <property name="text">
     <string>Jump to specific time</string>
    </property>
+   <property name="shortcut">
+    <string>Ctrl+T</string>
+   </property>
   </action>
   <action name="actionJumpBackward">
    <property name="text">

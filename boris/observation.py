@@ -457,6 +457,7 @@ class Observation(QDialog, Ui_Form):
             time_interval_dialog = dialog.Ask_time(0)
             if self.time_format == cfg.S:
                 time_interval_dialog.time_widget.rb_seconds.setChecked(True)
+                time_interval_dialog.time_widget.le_seconds.setFocus()
             if self.time_format == cfg.HHMMSS:
                 time_interval_dialog.time_widget.rb_time.setChecked(True)
             time_interval_dialog.time_widget.set_time(0)
