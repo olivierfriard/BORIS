@@ -1315,8 +1315,9 @@ class projectDialog(QDialog, Ui_dlgProject):
                 self.twBehaviors.removeRow(row_mem[codeToDelete])
 
     def is_valid_shortcut(self, text: str) -> bool:
+        if not text:
+            return True
         seq = QKeySequence.fromString(text, QKeySequence.SequenceFormat.PortableText)
-        print(seq)
         if seq[0] == Qt.Key.Key_unknown:
             return False
         return not seq.isEmpty()
