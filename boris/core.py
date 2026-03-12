@@ -632,9 +632,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         """
         handle click received from coding pad
         """
-        # add Key_Enter (return from keypad) as modifier to indicate to the keypress function that this event is coming from coding pad
-        q = QKeyEvent(QEvent.Type.KeyPress, Qt.Key.Key_Enter, Qt.KeyboardModifier.NoModifier, text=behavior_code)
-
+        # return Key_unknown and no modifier to indicate to the keypress function that this event is coming from coding pad
+        q = QKeyEvent(QEvent.Type.KeyPress, Qt.Key.Key_unknown, Qt.KeyboardModifier.NoModifier, text=behavior_code)
         self.keyPressEvent(q)
 
     def close_signal_from_coding_pad(self, geometry, preferences):
@@ -644,11 +643,12 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.config_param[cfg.CODING_PAD_GEOMETRY] = geometry
         self.config_param[cfg.CODING_PAD_CONFIG] = preferences
 
-    def click_signal_from_subjects_pad(self, subject):
+    def click_signal_from_subjects_pad(self, subject_name: str):
         """
         handle click received from subjects pad
         """
-        q = QKeyEvent(QEvent.Type.KeyPress, Qt.Key.Key_Enter, Qt.KeyboardModifier.NoModifier, text="#subject#" + subject)
+        # send Key_unknown and ShiftModifier to indicate to the keypress function that this event is coming from subject pad
+        q = QKeyEvent(QEvent.Type.KeyPress, Qt.Key.Key_unknown, Qt.KeyboardModifier.ShiftModifier, text=subject_name)
         self.keyPressEvent(q)
 
     def signal_from_subjects_pad(self, event):
@@ -4974,7 +4974,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 Qt.KeyboardModifier.ControlModifier,
                 Qt.KeyboardModifier.ControlModifier | Qt.KeyboardModifier.KeypadModifier,
             ):
-                print(f"{seq=}")  # remove before release
                 # video zoom
                 if ek == Qt.Key.Key_0:  # no zoom Ctrl + 0
                     self.dw_player[self.current_player].player.video_zoom = 0
@@ -5063,16 +5062,19 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             return
 
         # click from coding pad or subjects pad
-        if ek == Qt.Key.Key_Enter and event.text():
-            print("Keypad")
-            if "#subject#" in event.text():
+        if ek == Qt.Key.Key_unknown:  # and event.text():
+            print("Keypad")  # remove before release
+            # check if sent from subject pad
+            if event.modifiers() == Qt.KeyboardModifier.ShiftModifier:
+                print("BEHAVIOR FROM SUBJECT PAD")  # remove before release
                 for idx in self.pj[cfg.SUBJECTS]:
-                    if self.pj[cfg.SUBJECTS][idx][cfg.SUBJECT_NAME] == event.text().replace("#subject#", ""):
+                    if self.pj[cfg.SUBJECTS][idx][cfg.SUBJECT_NAME] == event.text():
                         self.update_subject(self.pj[cfg.SUBJECTS][idx][cfg.SUBJECT_NAME])
                         return
 
-            else:  # behavior
-                print("BEHAVIOR FROM CODING PAD")
+            # sent from coding pad
+            elif event.modifiers() == Qt.KeyboardModifier.NoModifier:
+                print("BEHAVIOR FROM CODING PAD")  # remove before release
                 for idx in self.pj[cfg.ETHOGRAM]:
                     if self.pj[cfg.ETHOGRAM][idx][cfg.BEHAVIOR_CODE] == event.text():
                         event = self.full_event(idx)
@@ -5089,7 +5091,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                             write_event.write_event(self, event, time_)
                         else:
                             write_event.write_event(self, event, memLaps)
-
                         return
 
         ethogram_shortcuts = {

@@ -393,6 +393,7 @@ class projectDialog(QDialog, Ui_dlgProject):
         self.pb_export_subjects.clicked.connect(lambda: project_import_export.export_subjects(self))
 
         self.twSubjects.cellChanged[int, int].connect(self.twSubjects_cellChanged)
+        self.twSubjects.cellDoubleClicked[int, int].connect(self.twSubjects_cellDoubleClicked)
 
         # independent variables tab
         self.pbAddVariable.clicked.connect(self.pbAddVariable_clicked)
@@ -804,6 +805,22 @@ class projectDialog(QDialog, Ui_dlgProject):
                     if self.twBehaviors.item(row, cfg.behavioursFields[cfg.BEHAVIOR_CATEGORY]):
                         if self.twBehaviors.item(row, cfg.behavioursFields[cfg.BEHAVIOR_CATEGORY]).text() == bc.renamed[0]:
                             self.twBehaviors.item(row, cfg.behavioursFields[cfg.BEHAVIOR_CATEGORY]).setText(bc.renamed[1])
+
+    def twSubjects_cellDoubleClicked(self, row: int, column: int) -> None:
+        """
+        manage double-click on subjects table:
+        * key for subject shortcuts
+        """
+        if column == cfg.subjectsFields.index(cfg.SUBJECT_KEY):
+            shortcut, accepted = behavior_shortcut.ShortcutDialog.getShortcut(
+                parent=self, title="Configure subject shortcut", initial_sequence=""
+            )
+
+            if accepted:
+                shortcut_text = shortcut.toString(QKeySequence.SequenceFormat.PortableText)
+                print(f"{shortcut_text=}")  # remove before release
+                item = QTableWidgetItem(shortcut_text)
+                self.twSubjects.setItem(row, cfg.subjectsFields.index(cfg.SUBJECT_KEY), item)
 
     def twBehaviors_cellDoubleClicked(self, row: int, column: int) -> None:
         """
@@ -1290,21 +1307,24 @@ class projectDialog(QDialog, Ui_dlgProject):
                 response = dialog.MessageDialog(
                     cfg.programName,
                     f"The code <b>{codeToDelete}</b> is used in observations!",
-                    ["Remove", cfg.CANCEL],
+                    ("Remove", cfg.CANCEL),
                 )
                 if response == "Remove":
                     self.twBehaviors.removeRow(row_mem[codeToDelete])
             else:  # remove without asking
                 self.twBehaviors.removeRow(row_mem[codeToDelete])
 
+    def is_valid_shortcut(self, text: str) -> bool:
+        seq = QKeySequence.fromString(text, QKeySequence.SequenceFormat.PortableText)
+        print(seq)
+        if seq[0] == Qt.Key.Key_unknown:
+            return False
+        return not seq.isEmpty()
+
     def twBehaviors_cellChanged(self, row, column):
         """
         check ethogram
         """
-
-        def is_valid_shortcut(text: str) -> bool:
-            seq = QKeySequence.fromString(text, QKeySequence.SequenceFormat.PortableText)
-            return not seq.isEmpty()
 
         keys: list = []
         codes: list = []
@@ -1314,12 +1334,9 @@ class projectDialog(QDialog, Ui_dlgProject):
             # check key
             if self.twBehaviors.item(r, cfg.PROJECT_BEHAVIORS_KEY_FIELD_IDX):
                 key = self.twBehaviors.item(r, cfg.PROJECT_BEHAVIORS_KEY_FIELD_IDX).text()
-                # check key length
-                # if key.upper() not in list(cfg.function_keys.values()) and len(key) > 1:
-                #    self.lbObservationsState.setText('<font color="red">Key length &gt; 1</font>')
-                #    return
-                if not is_valid_shortcut(key):
-                    self.lbObservationsState.setText('<font color="red">Invalid shortcut</font>')
+                # check if key has valid shortcut
+                if not self.is_valid_shortcut(key):
+                    self.lbObservationsState.setText(f'<font color="red">Invalid shortcut at row {r + 1}</font>')
                     return
 
                 keys.append(key)
@@ -1554,7 +1571,7 @@ class projectDialog(QDialog, Ui_dlgProject):
                 response = dialog.MessageDialog(
                     cfg.programName,
                     f"The subject <b>{nameToDelete}</b> is used in observations!",
-                    ["Force removing of all subjects", cfg.REMOVE, cfg.CANCEL],
+                    ("Force removing of all subjects", cfg.REMOVE, cfg.CANCEL),
                 )
                 if response == "Force removing of all subjects":
                     flag_force = True
@@ -1573,42 +1590,23 @@ class projectDialog(QDialog, Ui_dlgProject):
         """
 
         subjects: list = []
-        """keys: list = []"""
         self.lbSubjectsState.setText("")
 
         for r in range(self.twSubjects.rowCount()):
-            # check key
-            if self.twSubjects.item(r, 0):
-                # check key length
-                if (
-                    self.twSubjects.item(r, 0).text().upper() not in list(cfg.function_keys.values())
-                    and len(self.twSubjects.item(r, 0).text()) > 1
-                ):
-                    self.lbSubjectsState.setText(
-                        (
-                            f'<font color="red">Error on key {self.twSubjects.item(r, 0).text()} for subject!</font>'
-                            "The key is too long (keys must be of one character"
-                            " except for function keys _F1, F2..._)"
-                        )
-                    )
+            # check if key has valid shortcut
+            if self.twSubjects.item(r, cfg.subjectsFields.index(cfg.SUBJECT_KEY)):
+                key = self.twSubjects.item(r, cfg.subjectsFields.index(cfg.SUBJECT_KEY)).text()
+                if not self.is_valid_shortcut(key):
+                    self.lbSubjectsState.setText(f'<font color="red">Invalid shortcut at row # {r + 1}</font>')
                     return
 
-                # control of duplicated key removed 2024-01-29
-                """
-                if self.twSubjects.item(r, 0).text() in keys:
-                    self.lbSubjectsState.setText(f'<font color="red">Key duplicated at row # {r + 1}</font>')
-                else:
-                    if self.twSubjects.item(r, 0).text():
-                        keys.append(self.twSubjects.item(r, 0).text())
-                """
-
             # check subject
-            if self.twSubjects.item(r, 1):
-                if self.twSubjects.item(r, 1).text() in subjects:
+            if self.twSubjects.item(r, cfg.subjectsFields.index(cfg.SUBJECT_NAME)):
+                if self.twSubjects.item(r, cfg.subjectsFields.index(cfg.SUBJECT_NAME)).text() in subjects:
                     self.lbSubjectsState.setText(f'<font color="red">Subject duplicated at row # {r + 1}</font>')
                 else:
                     if self.twSubjects.item(r, 1).text():
-                        subjects.append(self.twSubjects.item(r, 1).text())
+                        subjects.append(self.twSubjects.item(r, cfg.subjectsFields.index(cfg.SUBJECT_NAME)).text())
 
     def twVariables_cellClicked(self, row, column):
         """
