@@ -4854,23 +4854,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         print(f"\n\n{event=}")  # remove before release
 
-        # modifiers = QApplication.keyboardModifiers()
-        # print(f"{modifiers=}")  # remove before release
-
-        modifier = ""
-
-        if event.modifiers() & Qt.ShiftModifier:
-            modifier += "Shift"
-
-        if event.modifiers() & Qt.ControlModifier:
-            modifier += "Ctrl"
-
-        if event.modifiers() & (Qt.AltModifier):
-            modifier += "Alt"
-
-        if event.modifiers() & (Qt.MetaModifier):
-            modifier += "Meta"
-
         ek = event.key()
         ek_text = event.text()
         key = Qt.Key(ek)
@@ -4958,13 +4941,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 return
 
             #  jump backward
-            # if modifier != cfg.CTRL_KEY and ek == Qt.Key.Key_Down:
             if seq == QKeySequence("Down"):
                 self.jumpBackward_activated()
                 return
 
             # jump forward
-            # if modifier != cfg.CTRL_KEY and ek == Qt.Key.Key_Up:
             if seq == QKeySequence("Up"):
                 self.jumpForward_activated()
                 return
@@ -5009,25 +4990,21 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         # frame-by-frame mode
         # previous frame
-        # if ek == 47 or (ek == Qt.Key.Key_Left and modifier != cfg.CTRL_KEY):  # / one frame back
         if seq == QKeySequence("Left"):
             self.previous_frame()
             return
 
         # next frame
-        # if ek == 42 or (ek == Qt.Key.Key_Right and modifier != cfg.CTRL_KEY):  # *  read next frame
         if seq == QKeySequence("Right"):
             self.next_frame()
             return
 
         if self.playerType in (cfg.MEDIA, cfg.IMAGES):
             # next media file (page up)
-            # if ek == Qt.Key.Key_PageUp:
             if seq == QKeySequence("Up"):
                 self.next_media_file()
 
             # previous media file (page down)
-            # if ek == Qt.Key.Key_PageDown:
             if seq == QKeySequence("Down"):
                 self.previous_media_file()
 
@@ -5062,7 +5039,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             return
 
         # click from coding pad or subjects pad
-        if ek == Qt.Key.Key_unknown:  # and event.text():
+        if ek == Qt.Key.Key_unknown:
             print("Keypad")  # remove before release
             # check if sent from subject pad
             if event.modifiers() == Qt.KeyboardModifier.ShiftModifier:
