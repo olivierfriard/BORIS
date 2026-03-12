@@ -794,7 +794,7 @@ class projectDialog(QDialog, Ui_dlgProject):
                                         "that is no more in the behavioral categories list.<br><br>"
                                         "Remove the behavior from category?"
                                     ),
-                                    [cfg.YES, cfg.CANCEL],
+                                    (cfg.YES, cfg.CANCEL),
                                 )
                                 == cfg.YES
                             ):

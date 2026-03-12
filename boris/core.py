@@ -628,11 +628,12 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             results.ptText.appendHtml(txt)
             results.exec_()
 
-    def click_signal_from_coding_pad(self, behaviorCode):
+    def click_signal_from_coding_pad(self, behavior_code: str) -> None:
         """
         handle click received from coding pad
         """
-        q = QKeyEvent(QEvent.Type.KeyPress, Qt.Key.Key_Enter, Qt.KeyboardModifier.NoModifier, text=behaviorCode)
+        # add Key_Enter (return from keypad) as modifier to indicate to the keypress function that this event is coming from coding pad
+        q = QKeyEvent(QEvent.Type.KeyPress, Qt.Key.Key_Enter, Qt.KeyboardModifier.NoModifier, text=behavior_code)
 
         self.keyPressEvent(q)
 
@@ -4550,9 +4551,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 for x in self.pj[cfg.OBSERVATIONS][obs_id][cfg.EVENTS]
             )
 
-    def choose_behavior(self, obs_key) -> None | str:
+    def choose_behavior(self, idx_list: list) -> None | str:
         """
-        fill listwidget with all behaviors coded by key
+        fill listwidget with all behaviors
 
         Returns:
             index of selected behaviour
@@ -4561,18 +4562,19 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         # check if key duplicated
         items: list = []
         code_idx: dict = {}
-        for idx in self.pj[cfg.ETHOGRAM]:
-            if self.pj[cfg.ETHOGRAM][idx]["key"] == obs_key:
-                code_descr = self.pj[cfg.ETHOGRAM][idx][cfg.BEHAVIOR_CODE]
-                if self.pj[cfg.ETHOGRAM][idx][cfg.DESCRIPTION]:
-                    code_descr += " - " + self.pj[cfg.ETHOGRAM][idx][cfg.DESCRIPTION]
-                items.append(code_descr)
-                code_idx[code_descr] = idx
+        shortcut: str = ""
+        for idx in idx_list:
+            code_descr = self.pj[cfg.ETHOGRAM][idx][cfg.BEHAVIOR_CODE]
+            shortcut = self.pj[cfg.ETHOGRAM][idx][cfg.BEHAVIOR_KEY]
+            if self.pj[cfg.ETHOGRAM][idx][cfg.DESCRIPTION]:
+                code_descr += " - " + self.pj[cfg.ETHOGRAM][idx][cfg.DESCRIPTION]
+            items.append(code_descr)
+            code_idx[code_descr] = idx
 
         items.sort()
 
         dbc = dialog.Duplicate_items(
-            f"The <b>{obs_key}</b> key codes many behaviors.<br>Choose one:",
+            f"The <b>{shortcut}</b> key codes many behaviors.<br>Choose one:",
             items,
         )
         if dbc.exec_():
@@ -4582,9 +4584,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             else:
                 return None
 
-    def choose_subject(self, subject_key) -> None | str:
+    def choose_subject(self, idx_list: list) -> None | str:
         """
-        fill listwidget with all subjects coded by key
+        fill listwidget with all subjects
 
         Returns:
             index of selected subject
@@ -4593,18 +4595,27 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         # check if key duplicated
         items: list = []
         subject_idx: dict = {}
-        for idx in self.pj[cfg.SUBJECTS]:
-            if self.pj[cfg.SUBJECTS][idx]["key"] == subject_key:
-                subject_descr = self.pj[cfg.SUBJECTS][idx][cfg.SUBJECT_NAME]
-                if self.pj[cfg.SUBJECTS][idx][cfg.DESCRIPTION]:
-                    subject_descr += " - " + self.pj[cfg.SUBJECTS][idx][cfg.DESCRIPTION]
-                items.append(subject_descr)
-                subject_idx[subject_descr] = idx
+        shortcut: str = ""
+        for idx in idx_list:
+            subject_descr = self.pj[cfg.SUBJECTS][idx][cfg.SUBJECT_NAME]
+            shortcut = self.pj[cfg.SUBJECTS][idx][cfg.SUBJECT_KEY]
+            if self.pj[cfg.SUBJECTS][idx][cfg.DESCRIPTION]:
+                subject_descr += " - " + self.pj[cfg.SUBJECTS][idx][cfg.DESCRIPTION]
+            items.append(subject_descr)
+            subject_idx[subject_descr] = idx
+
+        # for idx in self.pj[cfg.SUBJECTS]:
+        #    if self.pj[cfg.SUBJECTS][idx]["key"] == subject_key:
+        #        subject_descr = self.pj[cfg.SUBJECTS][idx][cfg.SUBJECT_NAME]
+        #        if self.pj[cfg.SUBJECTS][idx][cfg.DESCRIPTION]:
+        #            subject_descr += " - " + self.pj[cfg.SUBJECTS][idx][cfg.DESCRIPTION]
+        #        items.append(subject_descr)
+        #        subject_idx[subject_descr] = idx
 
         items.sort()
 
         dbc = dialog.Duplicate_items(
-            f"The <b>{subject_key}</b> key codes many subjects.<br>Choose one:",
+            f"The <b>{shortcut}</b> key codes many subjects.<br>Choose one:",
             items,
         )
         if dbc.exec_():
@@ -4830,7 +4841,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.project_changed()
         video_operations.display_zoom_level(self)
 
-    def keyPressEvent(self, event) -> None:
+    def keyPressEvent(self, event) -> bool | None:
         """
         http://qt-project.org/doc/qt-5.0/qtcore/qt.html#Key-enum
         https://github.com/pyqt/python-qt5/blob/master/PySide6/qml/builtins.qmltypes
@@ -4841,22 +4852,43 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         if not self.observationId:
             return
 
-        print(f"{event=}")  # remove before release
+        print(f"\n\n{event=}")  # remove before release
 
-        # key = event.key()
+        # modifiers = QApplication.keyboardModifiers()
+        # print(f"{modifiers=}")  # remove before release
+
+        modifier = ""
+
+        if event.modifiers() & Qt.ShiftModifier:
+            modifier += "Shift"
+
+        if event.modifiers() & Qt.ControlModifier:
+            modifier += "Ctrl"
+
+        if event.modifiers() & (Qt.AltModifier):
+            modifier += "Alt"
+
+        if event.modifiers() & (Qt.MetaModifier):
+            modifier += "Meta"
+
         ek = event.key()
         ek_text = event.text()
         key = Qt.Key(ek)
 
+        print(
+            f"{key=}   {ek=}   {ek_text=}   {event.modifiers()=}    {event.modifiers() ==Qt.KeyboardModifier.NoModifier =}"
+        )  # remove before release
+
         # ignore pure modifier presses
         if key in (
-            Qt.Key_Control,
-            Qt.Key_Shift,
-            Qt.Key_Alt,
-            Qt.Key_Meta,
-            Qt.Key_Tab,
-            Qt.Key_AltGr,
+            Qt.Key.Key_Control,
+            Qt.Key.Key_Shift,
+            Qt.Key.Key_Alt,
+            Qt.Key.Key_Meta,
+            Qt.Key.Key_Tab,
+            Qt.Key.Key_AltGr,
         ):
+            print("pure modifier")
             return False
 
         seq = QKeySequence(event.modifiers() | key)
@@ -4866,15 +4898,13 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             event_operations.undo_event_operation(self)
             return
 
-        shortcut = QKeySequence("Ctrl+W")
-        print(f"{seq == shortcut =}")  # remove before release
+        # shortcut = QKeySequence("a")
+        # print(f"{seq == shortcut =}")  # remove before release
 
-        return
-
-        logging.debug(f"text #{ek_text}#  event key: {ek} Modifier: {modifier}")
+        logging.debug(f"key: {key}    event text: #{ek_text=}#    event key: {ek}   Modifier: {event.modifiers()}")
 
         if self.playerType in cfg.VIEWERS:
-            if event.key() == Qt.Key_CapsLock:
+            if ek == Qt.Key.Key_CapsLock:
                 return
             QMessageBox.critical(
                 self,
@@ -4928,18 +4958,25 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 return
 
             #  jump backward
-            if modifier != cfg.CTRL_KEY and ek == Qt.Key.Key_Down:
+            # if modifier != cfg.CTRL_KEY and ek == Qt.Key.Key_Down:
+            if seq == QKeySequence("Down"):
                 self.jumpBackward_activated()
                 return
 
             # jump forward
-            if modifier != cfg.CTRL_KEY and ek == Qt.Key.Key_Up:
+            # if modifier != cfg.CTRL_KEY and ek == Qt.Key.Key_Up:
+            if seq == QKeySequence("Up"):
                 self.jumpForward_activated()
                 return
 
-            if modifier == cfg.CTRL_KEY:
+            # check if Ctrl or (Ctrl and KeypadModifier)
+            if event.modifiers() in (
+                Qt.KeyboardModifier.ControlModifier,
+                Qt.KeyboardModifier.ControlModifier | Qt.KeyboardModifier.KeypadModifier,
+            ):
+                print(f"{seq=}")  # remove before release
                 # video zoom
-                if ek == 48:  # no zoom Ctrl + 0
+                if ek == Qt.Key.Key_0:  # no zoom Ctrl + 0
                     self.dw_player[self.current_player].player.video_zoom = 0
                     self.dw_player[self.current_player].player.video_pan_x = 0
                     self.dw_player[self.current_player].player.video_pan_y = 0
@@ -4960,39 +4997,44 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 if ek == Qt.Key.Key_Down:
                     self.dw_player[self.current_player].player.video_pan_y += pan_step
 
-                if ek in (48, Qt.Key.Key_Plus, Qt.Key.Key_Minus, Qt.Key.Key_Left, Qt.Key.Key_Right, Qt.Key.Key_Up, Qt.Key.Key_Down):
+                if ek in (
+                    Qt.Key.Key_0,
+                    Qt.Key.Key_Plus,
+                    Qt.Key.Key_Minus,
+                    Qt.Key.Key_Left,
+                    Qt.Key.Key_Right,
+                    Qt.Key.Key_Up,
+                    Qt.Key.Key_Down,
+                ):
                     self.update_project_zoom_pan_values()
 
         # frame-by-frame mode
-        if ek == 47 or (ek == Qt.Key.Key_Left and modifier != cfg.CTRL_KEY):  # / one frame back
+        # previous frame
+        # if ek == 47 or (ek == Qt.Key.Key_Left and modifier != cfg.CTRL_KEY):  # / one frame back
+        if seq == QKeySequence("Left"):
             self.previous_frame()
             return
 
-        if ek == 42 or (ek == Qt.Key.Key_Right and modifier != cfg.CTRL_KEY):  # *  read next frame
+        # next frame
+        # if ek == 42 or (ek == Qt.Key.Key_Right and modifier != cfg.CTRL_KEY):  # *  read next frame
+        if seq == QKeySequence("Right"):
             self.next_frame()
             return
 
         if self.playerType in (cfg.MEDIA, cfg.IMAGES):
             # next media file (page up)
-            if ek == Qt.Key.Key_PageUp:
+            # if ek == Qt.Key.Key_PageUp:
+            if seq == QKeySequence("Up"):
                 self.next_media_file()
 
             # previous media file (page down)
-            if ek == Qt.Key.Key_PageDown:
+            # if ek == Qt.Key.Key_PageDown:
+            if seq == QKeySequence("Down"):
                 self.previous_media_file()
 
         if not self.pj[cfg.ETHOGRAM]:
             QMessageBox.warning(self, cfg.programName, "The ethogram is not configured")
             return
-
-        """ to be removed 2024-01-29
-        obs_key = None
-
-        # check if key is function key
-        if ek in cfg.function_keys:
-            if cfg.function_keys[ek] in [self.pj[cfg.ETHOGRAM][x]["key"] for x in self.pj[cfg.ETHOGRAM]]:
-                obs_key = cfg.function_keys[ek]
-        """
 
         # get time
         memLaps = None
@@ -5020,147 +5062,147 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         if memLaps is None:
             return
 
-        if (
-            ((ek in range(33, 256)) and (ek not in [Qt.Key.Key_Plus, Qt.Key.Key_Minus]))
-            or (ek in cfg.function_keys)
-            or (ek == Qt.Key.Key_Enter and event.text())
-        ):  # click from coding pad or subjects pad
-            if ek in cfg.function_keys:
-                ek_unichr = cfg.function_keys[ek]
-            elif ek != Qt.Key.Key_Enter:
-                ek_unichr = ek_text
-            elif ek == Qt.Key.Key_Enter and event.text():  # click from coding pad or subjects pad
-                ek_unichr = ek_text
+        # click from coding pad or subjects pad
+        if ek == Qt.Key.Key_Enter and event.text():
+            print("Keypad")
+            if "#subject#" in event.text():
+                for idx in self.pj[cfg.SUBJECTS]:
+                    if self.pj[cfg.SUBJECTS][idx][cfg.SUBJECT_NAME] == event.text().replace("#subject#", ""):
+                        self.update_subject(self.pj[cfg.SUBJECTS][idx][cfg.SUBJECT_NAME])
+                        return
 
-            logging.debug(f"{ek_unichr = }")
+            else:  # behavior
+                print("BEHAVIOR FROM CODING PAD")
+                for idx in self.pj[cfg.ETHOGRAM]:
+                    if self.pj[cfg.ETHOGRAM][idx][cfg.BEHAVIOR_CODE] == event.text():
+                        event = self.full_event(idx)
 
-            if ek == Qt.Key.Key_Enter and event.text():  # click from coding pad or subjects pad
-                ek_unichr = ""
+                        if self.playerType == cfg.IMAGES:
+                            event[cfg.IMAGE_PATH] = self.images_list[self.image_idx]
+                            event[cfg.IMAGE_INDEX] = self.image_idx + 1
 
-                if "#subject#" in event.text():
-                    for idx in self.pj[cfg.SUBJECTS]:
-                        if self.pj[cfg.SUBJECTS][idx][cfg.SUBJECT_NAME] == event.text().replace("#subject#", ""):
-                            self.update_subject(self.pj[cfg.SUBJECTS][idx][cfg.SUBJECT_NAME])
-                            return
+                        if self.playerType == cfg.MEDIA:
+                            event[cfg.FRAME_INDEX] = self.get_frame_index()
 
-                else:  # behavior
-                    for idx in self.pj[cfg.ETHOGRAM]:
-                        if self.pj[cfg.ETHOGRAM][idx][cfg.BEHAVIOR_CODE] == event.text():
-                            event = self.full_event(idx)
+                        if self.pj[cfg.OBSERVATIONS][self.observationId].get(cfg.MEDIA_CREATION_DATE_AS_OFFSET, False):
+                            time_, _ = self.get_obs_time()
+                            write_event.write_event(self, event, time_)
+                        else:
+                            write_event.write_event(self, event, memLaps)
 
-                            if self.playerType == cfg.IMAGES:
-                                event[cfg.IMAGE_PATH] = self.images_list[self.image_idx]
-                                event[cfg.IMAGE_INDEX] = self.image_idx + 1
+                        return
 
-                            if self.playerType == cfg.MEDIA:
-                                event[cfg.FRAME_INDEX] = self.get_frame_index()
+        ethogram_shortcuts = {
+            QKeySequence(self.pj[cfg.ETHOGRAM][idx][cfg.BEHAVIOR_KEY]): [
+                x
+                for x in self.pj[cfg.ETHOGRAM]
+                if self.pj[cfg.ETHOGRAM][x][cfg.BEHAVIOR_KEY] == self.pj[cfg.ETHOGRAM][idx][cfg.BEHAVIOR_KEY]
+            ]
+            for idx in self.pj[cfg.ETHOGRAM]
+        }
 
-                            if self.pj[cfg.OBSERVATIONS][self.observationId].get(cfg.MEDIA_CREATION_DATE_AS_OFFSET, False):
-                                time_, _ = self.get_obs_time()
-                                write_event.write_event(self, event, time_)
-                            else:
-                                write_event.write_event(self, event, memLaps)
+        subjects_shortcuts = {
+            QKeySequence(self.pj[cfg.SUBJECTS][idx][cfg.SUBJECT_KEY]): [
+                x for x in self.pj[cfg.SUBJECTS] if self.pj[cfg.SUBJECTS][x][cfg.SUBJECT_KEY] == self.pj[cfg.SUBJECTS][idx][cfg.SUBJECT_KEY]
+            ]
+            for idx in self.pj[cfg.SUBJECTS]
+        }
 
-                            return
+        # print(f"{seq in ethogram_shortcuts=}")  # remove before releaseif seq in ethogram_shortcuts
 
-            # count key occurence in subjects
-            subject_matching_idx = [idx for idx in self.pj[cfg.SUBJECTS] if ek_unichr == self.pj[cfg.SUBJECTS][idx]["key"]]
+        subject_idx = None
+        behavior_idx = None
 
-            ethogram_matching_idx = [idx for idx in self.pj[cfg.ETHOGRAM] if self.pj[cfg.ETHOGRAM][idx]["key"] == ek_unichr]
+        # select between behavior and subject
+        if seq in ethogram_shortcuts and seq in subjects_shortcuts:
+            r = dialog.MessageDialog(
+                cfg.programName,
+                "This shortcut key defines a behavior and a subject. Choose one",
+                ("&Behavior", "&Subject", cfg.CANCEL),
+            )
+            if r == cfg.CANCEL:
+                return
 
-            subject_idx = None
-            behavior_idx = None
+            if r == "&Subject":
+                ethogram_matching_idx = []
 
-            # select between behavior and subject
-            if subject_matching_idx and ethogram_matching_idx:
-                r = dialog.MessageDialog(
-                    cfg.programName,
-                    "This key defines a behavior and a subject. Choose one",
-                    ("&Behavior", "&Subject", cfg.CANCEL),
-                )
-                if r == cfg.CANCEL:
+            if r == "&Behavior":
+                subject_matching_idx = []
+
+        # check if behavior
+        if seq in ethogram_shortcuts:
+            # check how many codes with shortcut
+            if len(ethogram_shortcuts[seq]) == 1:
+                behavior_idx = ethogram_shortcuts[seq][0]
+            else:
+                if self.playerType == cfg.MEDIA:
+                    if self.is_playing():
+                        flagPlayerPlaying = True
+                        self.pause_video()
+                behavior_idx = self.choose_behavior(ethogram_shortcuts[seq])
+                if behavior_idx is None:
                     return
 
-                if r == "&Subject":
-                    ethogram_matching_idx = []
-
-                if r == "&Behavior":
-                    subject_matching_idx = []
-
-            if ethogram_matching_idx:
-                if len(ethogram_matching_idx) == 1:
-                    behavior_idx = ethogram_matching_idx[0]
-                else:
-                    if self.playerType == cfg.MEDIA:
-                        if self.is_playing():
-                            flagPlayerPlaying = True
-                            self.pause_video()
-                    behavior_idx = self.choose_behavior(ek_unichr)
-                    if behavior_idx is None:
-                        return
-
-            if subject_matching_idx:
-                if len(subject_matching_idx) == 1:
-                    subject_idx = subject_matching_idx[0]
-                else:
-                    if self.playerType == cfg.MEDIA:
-                        if self.is_playing():
-                            flagPlayerPlaying = True
-                            self.pause_video()
-                    subject_idx = self.choose_subject(ek_unichr)
-                    if subject_idx is None:
-                        return
-
-            if self.playerType == cfg.MEDIA and flagPlayerPlaying:
-                self.play_video()
-
-            if behavior_idx is not None:
-                # check if focal subject is defined
-                if not self.currentSubject and self.alertNoFocalSubject:
-                    if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE] == cfg.MEDIA:
-                        if self.playerType == cfg.MEDIA:
-                            if self.is_playing():
-                                flagPlayerPlaying = True
-                                self.pause_video()
-
-                    response = dialog.MessageDialog(
-                        cfg.programName,
-                        (
-                            "The focal subject is not defined. Do you want to continue?\n"
-                            "Use Preferences menu option to modify this behaviour."
-                        ),
-                        (cfg.YES, cfg.NO),
-                    )
-
-                    if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE] == cfg.MEDIA and flagPlayerPlaying:
-                        self.play_video()
-
-                    if response == cfg.NO:
-                        return
-
-                event = self.full_event(behavior_idx)
-
-                if self.playerType == cfg.IMAGES:
-                    event[cfg.IMAGE_PATH] = self.images_list[self.image_idx]
-                    event[cfg.IMAGE_INDEX] = self.image_idx + 1
-
-                if self.playerType == cfg.MEDIA:
-                    event[cfg.FRAME_INDEX] = self.get_frame_index()
-
-                if self.pj[cfg.OBSERVATIONS][self.observationId].get(cfg.MEDIA_CREATION_DATE_AS_OFFSET, False):
-                    time_, _ = self.get_obs_time()
-                    write_event.write_event(self, event, time_)
-                else:
-                    write_event.write_event(self, event, memLaps)
-
-                # write_event.write_event(self, event, memLaps)
-
-            elif subject_idx is not None:
-                self.update_subject(self.pj[cfg.SUBJECTS][subject_idx][cfg.SUBJECT_NAME])
-
+        # check if subject
+        if seq in subjects_shortcuts:
+            if len(subjects_shortcuts[seq]) == 1:
+                subject_idx = subjects_shortcuts[seq][0]
             else:
-                logging.debug(f"Key not assigned ({ek_unichr})")
-                self.statusbar.showMessage(f"Key not assigned ({ek_unichr})", 5000)
+                if self.playerType == cfg.MEDIA:
+                    if self.is_playing():
+                        flagPlayerPlaying = True
+                        self.pause_video()
+                subject_idx = self.choose_subject(subjects_shortcuts[seq])
+                if subject_idx is None:
+                    return
+
+        if self.playerType == cfg.MEDIA and flagPlayerPlaying:
+            self.play_video()
+
+        if behavior_idx is not None:
+            # check if focal subject is defined
+            if not self.currentSubject and self.alertNoFocalSubject:
+                if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE] == cfg.MEDIA:
+                    if self.playerType == cfg.MEDIA:
+                        if self.is_playing():
+                            flagPlayerPlaying = True
+                            self.pause_video()
+
+                response = dialog.MessageDialog(
+                    cfg.programName,
+                    ("The focal subject is not defined. Do you want to continue?\nUse Preferences menu option to modify this behaviour."),
+                    (cfg.YES, cfg.NO),
+                )
+
+                if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE] == cfg.MEDIA and flagPlayerPlaying:
+                    self.play_video()
+
+                if response == cfg.NO:
+                    return
+
+            event = self.full_event(behavior_idx)
+
+            if self.playerType == cfg.IMAGES:
+                event[cfg.IMAGE_PATH] = self.images_list[self.image_idx]
+                event[cfg.IMAGE_INDEX] = self.image_idx + 1
+
+            if self.playerType == cfg.MEDIA:
+                event[cfg.FRAME_INDEX] = self.get_frame_index()
+
+            if self.pj[cfg.OBSERVATIONS][self.observationId].get(cfg.MEDIA_CREATION_DATE_AS_OFFSET, False):
+                time_, _ = self.get_obs_time()
+                write_event.write_event(self, event, time_)
+            else:
+                write_event.write_event(self, event, memLaps)
+
+            # write_event.write_event(self, event, memLaps)
+
+        elif subject_idx is not None:
+            self.update_subject(self.pj[cfg.SUBJECTS][subject_idx][cfg.SUBJECT_NAME])
+
+        else:
+            logging.debug(f"Key not assigned ({seq.toString(QKeySequence.SequenceFormat.PortableText)})")
+            self.statusbar.showMessage(f"Key not assigned ({seq.toString(QKeySequence.SequenceFormat.PortableText)})", 5000)
 
     def tv_events_doubleClicked(self):
         """
