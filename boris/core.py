@@ -5069,7 +5069,19 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                             write_event.write_event(self, event, memLaps)
                         return
 
+        # add single key shortcuts
         ethogram_shortcuts = {
+            self.pj[cfg.ETHOGRAM][idx][cfg.BEHAVIOR_KEY]: [
+                x
+                for x in self.pj[cfg.ETHOGRAM]
+                if self.pj[cfg.ETHOGRAM][x][cfg.BEHAVIOR_KEY] == self.pj[cfg.ETHOGRAM][idx][cfg.BEHAVIOR_KEY]
+            ]
+            for idx in self.pj[cfg.ETHOGRAM]
+            if len(self.pj[cfg.ETHOGRAM][idx][cfg.BEHAVIOR_KEY]) == 1
+        }
+
+        # add key with modifier(s) shortcuts
+        ethogram_shortcuts |= {
             QKeySequence(self.pj[cfg.ETHOGRAM][idx][cfg.BEHAVIOR_KEY]): [
                 x
                 for x in self.pj[cfg.ETHOGRAM]
@@ -5079,6 +5091,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             if len(self.pj[cfg.ETHOGRAM][idx][cfg.BEHAVIOR_KEY]) > 1
         }
 
+        print(f"{ethogram_shortcuts=}")  # remove before release
+
         subjects_shortcuts = {
             QKeySequence(self.pj[cfg.SUBJECTS][idx][cfg.SUBJECT_KEY]): [
                 x for x in self.pj[cfg.SUBJECTS] if self.pj[cfg.SUBJECTS][x][cfg.SUBJECT_KEY] == self.pj[cfg.SUBJECTS][idx][cfg.SUBJECT_KEY]
@@ -5086,18 +5100,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             for idx in self.pj[cfg.SUBJECTS]
         }
 
-        if event.modifiers() == Qt.KeyboardModifier.NoModifier:
-            ethogram_shortcuts |= {
-                self.pj[cfg.ETHOGRAM][idx][cfg.BEHAVIOR_KEY]: [
-                    x
-                    for x in self.pj[cfg.ETHOGRAM]
-                    if self.pj[cfg.ETHOGRAM][x][cfg.BEHAVIOR_KEY] == self.pj[cfg.ETHOGRAM][idx][cfg.BEHAVIOR_KEY]
-                ]
-                for idx in self.pj[cfg.ETHOGRAM]
-                if len(self.pj[cfg.ETHOGRAM][idx][cfg.BEHAVIOR_KEY]) == 1
-            }
 
-        print(f"{ethogram_shortcuts=}")  # remove before release
+
 
         subject_idx = None
         behavior_idx = None
