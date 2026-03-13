@@ -4841,12 +4841,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.project_changed()
         video_operations.display_zoom_level(self)
 
-    def keyPressEvent(self, event) -> bool | None:
+    def keyPressEvent(self, event):
         """
-        http://qt-project.org/doc/qt-5.0/qtcore/qt.html#Key-enum
-        https://github.com/pyqt/python-qt5/blob/master/PySide6/qml/builtins.qmltypes
-
-        ESC: 16777216
+        manage keypress
         """
 
         if not self.observationId:
@@ -4856,6 +4853,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         ek = event.key()
         ek_text = event.text()
+        event_text = event.text()
         key = Qt.Key(ek)
 
         print(
@@ -4988,18 +4986,18 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 ):
                     self.update_project_zoom_pan_values()
 
-        # frame-by-frame mode
-        # previous frame
-        if seq == QKeySequence("Left"):
-            self.previous_frame()
-            return
-
-        # next frame
-        if seq == QKeySequence("Right"):
-            self.next_frame()
-            return
-
         if self.playerType in (cfg.MEDIA, cfg.IMAGES):
+            # frame-by-frame mode
+            # previous frame
+            if seq == QKeySequence("Left"):
+                self.previous_frame()
+                return
+
+            # next frame
+            if seq == QKeySequence("Right"):
+                self.next_frame()
+                return
+
             # next media file (page up)
             if seq == QKeySequence("Up"):
                 self.next_media_file()
@@ -5009,7 +5007,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 self.previous_media_file()
 
         if not self.pj[cfg.ETHOGRAM]:
-            QMessageBox.warning(self, cfg.programName, "The ethogram is not configured")
+            # QMessageBox.warning(self, cfg.programName, "The ethogram is not configured")
+            self.statusbar.showMessage("The ethogram is not configured", 5000)
             return
 
         # get time
@@ -5077,6 +5076,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 if self.pj[cfg.ETHOGRAM][x][cfg.BEHAVIOR_KEY] == self.pj[cfg.ETHOGRAM][idx][cfg.BEHAVIOR_KEY]
             ]
             for idx in self.pj[cfg.ETHOGRAM]
+            if len(self.pj[cfg.ETHOGRAM][idx][cfg.BEHAVIOR_KEY]) > 1
         }
 
         subjects_shortcuts = {
@@ -5086,7 +5086,18 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             for idx in self.pj[cfg.SUBJECTS]
         }
 
-        # print(f"{seq in ethogram_shortcuts=}")  # remove before releaseif seq in ethogram_shortcuts
+        if event.modifiers() == Qt.KeyboardModifier.NoModifier:
+            ethogram_shortcuts |= {
+                self.pj[cfg.ETHOGRAM][idx][cfg.BEHAVIOR_KEY]: [
+                    x
+                    for x in self.pj[cfg.ETHOGRAM]
+                    if self.pj[cfg.ETHOGRAM][x][cfg.BEHAVIOR_KEY] == self.pj[cfg.ETHOGRAM][idx][cfg.BEHAVIOR_KEY]
+                ]
+                for idx in self.pj[cfg.ETHOGRAM]
+                if len(self.pj[cfg.ETHOGRAM][idx][cfg.BEHAVIOR_KEY]) == 1
+            }
+
+        print(f"{ethogram_shortcuts=}")  # remove before release
 
         subject_idx = None
         behavior_idx = None
@@ -5102,13 +5113,14 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 return
 
             if r == "&Subject":
-                ethogram_matching_idx = []
+                ethogram_shortcuts = {}
 
             if r == "&Behavior":
-                subject_matching_idx = []
+                subjects_shortcuts = {}
 
         # check if behavior
-        if seq in ethogram_shortcuts:
+        # key with modifier
+        if (seq in ethogram_shortcuts):
             # check how many codes with shortcut
             if len(ethogram_shortcuts[seq]) == 1:
                 behavior_idx = ethogram_shortcuts[seq][0]
@@ -5120,6 +5132,21 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 behavior_idx = self.choose_behavior(ethogram_shortcuts[seq])
                 if behavior_idx is None:
                     return
+
+        # single key shortcuts
+        if (event_text in ethogram_shortcuts):
+            # check how many codes with shortcut
+            if len(ethogram_shortcuts[event_text]) == 1:
+                behavior_idx = ethogram_shortcuts[event_text][0]
+            else:
+                if self.playerType == cfg.MEDIA:
+                    if self.is_playing():
+                        flagPlayerPlaying = True
+                        self.pause_video()
+                behavior_idx = self.choose_behavior(ethogram_shortcuts[event_text])
+                if behavior_idx is None:
+                    return
+
 
         # check if subject
         if seq in subjects_shortcuts:
