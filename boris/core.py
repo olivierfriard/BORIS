@@ -2051,8 +2051,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         receive signal from dock widget when player clicked.
         """
 
-        print(f"player clicked")  # remove before release
-
         def get_pan_for_zoom_in_clicked_coordinates(player, videoframe, zoom, pan_x, pan_y, new_zoom):
             """
             returns the pan (pan_x, pan_y) necessary to zoom in or zoom out in the clicked coordinates
@@ -4904,7 +4902,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         # play / pause with space bar
         if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE] == cfg.LIVE:
-            # if ek in (Qt.Key_Space, Qt.Key_Enter, Qt.Key_Return):
             if ek == Qt.Key.Key_Space:
                 if self.liveObservationStarted:
                     if (
@@ -4961,9 +4958,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     self.dw_player[self.current_player].player.video_pan_x = 0
                     self.dw_player[self.current_player].player.video_pan_y = 0
                 zoom_step = 0.1
-                if ek == Qt.Key.Key_Plus:  # zoom in with minus key
+                if ek == Qt.Key.Key_Plus or ek == Qt.Key.Key_PageUp:  # zoom in with minus key or PageUp key for Windows
                     self.dw_player[self.current_player].player.video_zoom += zoom_step
-                if ek == Qt.Key.Key_Minus:  # zoom out with plus key
+                if ek == Qt.Key.Key_Minus or ek == Qt.Key.Key_PageDown:  # zoom out with plus key or PageDown key for Windows
                     self.dw_player[self.current_player].player.video_zoom -= zoom_step
 
                 # video pan
