@@ -2051,6 +2051,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         receive signal from dock widget when player clicked.
         """
 
+        print(f"player clicked")  # remove before release
+
         def get_pan_for_zoom_in_clicked_coordinates(player, videoframe, zoom, pan_x, pan_y, new_zoom):
             """
             returns the pan (pan_x, pan_y) necessary to zoom in or zoom out in the clicked coordinates
