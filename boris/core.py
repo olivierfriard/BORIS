@@ -3509,7 +3509,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         return ""
 
-    def liveTimer_out(self):
+    def live_timer_out(self):
         """
         timer for live observation
         """
@@ -3526,7 +3526,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             # check if current time outside of interval
             if current_time >= self.pj[cfg.OBSERVATIONS][self.observationId].get(cfg.OBSERVATION_TIME_INTERVAL, [None, None])[1]:
                 self.beep("beep")
-                self.liveTimer.stop()
+                self.live_timer.stop()
                 self.liveObservationStarted = False
                 # set current time to end of observation interval
                 current_time = dec(self.pj[cfg.OBSERVATIONS][self.observationId].get(cfg.OBSERVATION_TIME_INTERVAL, [None, None])[1])
@@ -3558,7 +3558,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         if self.pj[cfg.OBSERVATIONS][self.observationId].get(cfg.SCAN_SAMPLING_TIME, 0):
             if int(current_time) % self.pj[cfg.OBSERVATIONS][self.observationId][cfg.SCAN_SAMPLING_TIME] == 0:
                 self.beep("beep")
-                self.liveTimer.stop()
+                self.live_timer.stop()
                 self.pb_live_obs.setText("Live observation stopped (scan sampling)")
 
     def start_live_observation(self):
@@ -3568,14 +3568,14 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         if "scan sampling" in self.pb_live_obs.text():
             self.pb_live_obs.setText("Stop live observation")
-            self.liveTimer.start(50)
+            self.live_timer.start(50)
             return
 
         if self.liveObservationStarted:
             # stop live obs
             self.pb_live_obs.setText("Start live observation")
 
-            self.liveTimer.stop()
+            self.live_timer.stop()
 
             self.liveStartTime = None
 
@@ -3605,7 +3605,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             # set to now
             self.liveStartTime.start()
             # start timer
-            self.liveTimer.start(50)
+            self.live_timer.start(50)
 
         self.liveObservationStarted = not self.liveObservationStarted
 
@@ -4849,8 +4849,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         if not self.observationId:
             return
 
-        print(f"\n\n{event=}")  # remove before release
-
         ek = event.key()
         ek_text = event.text()
         event_text = event.text()
@@ -4871,6 +4869,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         ):
             print("pure modifier")
             return False
+
+        print(f"\n\n{event=}")  # remove before release
 
         seq = QKeySequence(event.modifiers() | key)
 
@@ -5069,7 +5069,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                             write_event.write_event(self, event, memLaps)
                         return
 
-        # add single key shortcuts
+        # add single key shortcuts for behaviors
         ethogram_shortcuts = {
             self.pj[cfg.ETHOGRAM][idx][cfg.BEHAVIOR_KEY]: [
                 x
@@ -5080,7 +5080,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             if len(self.pj[cfg.ETHOGRAM][idx][cfg.BEHAVIOR_KEY]) == 1
         }
 
-        # add key with modifier(s) shortcuts
+        # add key with modifier(s) shortcuts for behaviors
         ethogram_shortcuts |= {
             QKeySequence(self.pj[cfg.ETHOGRAM][idx][cfg.BEHAVIOR_KEY]): [
                 x
@@ -5093,15 +5093,23 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         print(f"{ethogram_shortcuts=}")  # remove before release
 
+        # add single key shortcuts for subjects
         subjects_shortcuts = {
+            self.pj[cfg.SUBJECTS][idx][cfg.SUBJECT_KEY]: [
+                x for x in self.pj[cfg.SUBJECTS] if self.pj[cfg.SUBJECTS][x][cfg.SUBJECT_KEY] == self.pj[cfg.SUBJECTS][idx][cfg.SUBJECT_KEY]
+            ]
+            for idx in self.pj[cfg.SUBJECTS]
+            if len(self.pj[cfg.ETHOGRAM][idx][cfg.SUBJECT_KEY]) == 1
+        }
+
+        # add key with modifier(s) shortcuts for subjects
+        subjects_shortcuts |= {
             QKeySequence(self.pj[cfg.SUBJECTS][idx][cfg.SUBJECT_KEY]): [
                 x for x in self.pj[cfg.SUBJECTS] if self.pj[cfg.SUBJECTS][x][cfg.SUBJECT_KEY] == self.pj[cfg.SUBJECTS][idx][cfg.SUBJECT_KEY]
             ]
             for idx in self.pj[cfg.SUBJECTS]
+            if len(self.pj[cfg.ETHOGRAM][idx][cfg.SUBJECT_KEY]) == 1
         }
-
-
-
 
         subject_idx = None
         behavior_idx = None
@@ -5124,7 +5132,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         # check if behavior
         # key with modifier
-        if (seq in ethogram_shortcuts):
+        if seq in ethogram_shortcuts:
             # check how many codes with shortcut
             if len(ethogram_shortcuts[seq]) == 1:
                 behavior_idx = ethogram_shortcuts[seq][0]
@@ -5138,7 +5146,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     return
 
         # single key shortcuts
-        if (event_text in ethogram_shortcuts):
+        if event_text in ethogram_shortcuts:
             # check how many codes with shortcut
             if len(ethogram_shortcuts[event_text]) == 1:
                 behavior_idx = ethogram_shortcuts[event_text][0]
@@ -5150,7 +5158,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 behavior_idx = self.choose_behavior(ethogram_shortcuts[event_text])
                 if behavior_idx is None:
                     return
-
 
         # check if subject
         if seq in subjects_shortcuts:

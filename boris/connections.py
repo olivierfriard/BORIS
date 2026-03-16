@@ -400,8 +400,8 @@ def connections(self):
     self.plot_timer.timeout.connect(self.plot_timer_out)
 
     # timer for timing the live observation
-    self.liveTimer = QTimer(self)
-    self.liveTimer.timeout.connect(self.liveTimer_out)
+    self.live_timer = QTimer(self)
+    self.live_timer.timeout.connect(self.live_timer_out)
 
     # timer for automatic backup
     self.automaticBackupTimer = QTimer(self)

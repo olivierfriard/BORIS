@@ -140,7 +140,7 @@ def close_observation(self):
             self.video_slider = None
 
     if self.playerType == cfg.LIVE:
-        self.liveTimer.stop()
+        self.live_timer.stop()
         self.pb_live_obs.setEnabled(False)
         self.w_live.setVisible(False)
         self.liveObservationStarted = False
@@ -2301,7 +2301,7 @@ def initialize_new_live_observation(self):
     self.lbCurrentStates.setText("")
 
     self.liveStartTime = None
-    self.liveTimer.stop()
+    self.live_timer.stop()
 
     self.load_tw_events(self.observationId)
 
