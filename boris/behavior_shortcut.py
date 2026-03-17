@@ -1,3 +1,25 @@
+"""
+BORIS
+Behavioral Observation Research Interactive Software
+Copyright 2012-2026 Olivier Friard
+
+This file is part of BORIS.
+
+  BORIS is free software; you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation; either version 3 of the License, or
+  any later version.
+
+  BORIS is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+
+  You should have received a copy of the GNU General Public License
+  along with this program; if not see <http://www.gnu.org/licenses/>.
+
+"""
+
 from PySide6.QtCore import Signal
 from PySide6.QtGui import QKeySequence
 from PySide6.QtWidgets import (
@@ -14,23 +36,23 @@ from PySide6.QtWidgets import (
 
 class ShortcutDialog(QDialog):
     """
-    Dialog per acquisire/modificare uno shortcut.
+    Dialog for shortcut setting.
     """
 
     shortcutChanged = Signal(QKeySequence)
 
-    def __init__(self, parent=None, title="Imposta scorciatoia", initial_sequence=None):
+    def __init__(self, parent=None, title="Set shortcut", initial_sequence=None):
         super().__init__(parent)
 
         self.setWindowTitle(title)
 
-        self._title_label = QLabel("Scegli una scorciatoia:", self)
+        self._title_label = QLabel("Choose a shortcut:", self)
         self._editor = QKeySequenceEdit(self)
         self._editor.setMaximumSequenceLength(1)
 
-        self._info_label = QLabel("Shortcut corrente: nessuno", self)
+        self._info_label = QLabel("Current shortcut: None", self)
 
-        self._clear_btn = QPushButton("Pulisci", self)
+        self._clear_btn = QPushButton("Clean", self)
 
         self._buttons = QDialogButtonBox(QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel, self)
 
@@ -77,11 +99,22 @@ class ShortcutDialog(QDialog):
         self.shortcutChanged.emit(empty)
 
     def _on_shortcut_changed(self, sequence: QKeySequence):
-        text = sequence.toString(QKeySequence.SequenceFormat.NativeText)
-        self._info_label.setText(f"Shortcut corrente: {text or 'nessuno'}")
+        print(f"{sequence=}")  # remove before release
+        if sequence.count() > 0:
+            print(f"{sequence[0].key()=}")  # remove before release
+
+        print(f"{sequence.toString(QKeySequence.SequenceFormat.PortableText)=}")  # remove before release
+
+        # if len(sequence.toString(QKeySequence.SequenceFormat.PortableText)) == 1:
+        #    text = sequence.toString(QKeySequence.SequenceFormat.PortableText).lower()
+        # else:
+        text = sequence.toString(QKeySequence.SequenceFormat.PortableText)
+
+        print(f"{text=}")  # remove before release
+        self._info_label.setText(f"Current shortcut: {text or 'None'}")
 
     @staticmethod
-    def getShortcut(parent=None, title="Imposta scorciatoia", initial_sequence=None):
+    def getShortcut(parent=None, title="Set shortcut", initial_sequence=None):
         dialog = ShortcutDialog(
             parent=parent,
             title=title,
@@ -94,12 +127,12 @@ class ShortcutDialog(QDialog):
 if __name__ == "__main__":
     app = QApplication([])
 
-    shortcut, accepted = ShortcutDialog.getShortcut(title="Configura shortcut", initial_sequence="Ctrl+A")
+    shortcut, accepted = ShortcutDialog.getShortcut(title="Configure shortcut", initial_sequence="")
 
     if accepted:
-        print("Shortcut scelto:", shortcut.toString(QKeySequence.SequenceFormat.NativeText))
+        print("Shortcut:", shortcut.toString(QKeySequence.SequenceFormat.NativeText))
         print("Portable:", shortcut.toString(QKeySequence.SequenceFormat.PortableText))
     else:
-        print("Operazione annullata")
+        print("Cancelled operation")
 
-    app.exec()
+    # app.exec()

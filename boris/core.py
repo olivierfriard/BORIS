@@ -2065,8 +2065,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             dh = videoframe.size().height()
 
             # click coordinates in dialog reference frame
-            dx = player.mouse_pos["x"]
-            dy = player.mouse_pos["y"]
+            dx = self.dw_player[player_id].mouse_pos["x"]
+            dy = self.dw_player[player_id].mouse_pos["y"]
 
             # convert to float for operations
             vw = float(vw)
