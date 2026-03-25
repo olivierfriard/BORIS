@@ -48,7 +48,7 @@ from PySide6.QtWidgets import (
     QVBoxLayout,
 )
 
-from . import add_modifier, behavior_shortcut, converters, dialog, exclusion_matrix, project_import_export
+from . import add_modifier, behavior_shortcut_qevent as behavior_shortcut, converters, dialog, exclusion_matrix, project_import_export
 from . import config as cfg
 from . import utilities as util
 from .project_ui import Ui_dlgProject
@@ -812,8 +812,12 @@ class projectDialog(QDialog, Ui_dlgProject):
         * key for subject shortcuts
         """
         if column == cfg.subjectsFields.index(cfg.SUBJECT_KEY):
+            initial_sequence = ""
+            if self.twSubjects.item(row, cfg.subjectsFields.index(cfg.SUBJECT_KEY)):
+                initial_sequence = self.twSubjects.item(row, cfg.subjectsFields.index(cfg.SUBJECT_KEY)).text()
+
             shortcut, accepted = behavior_shortcut.ShortcutDialog.getShortcut(
-                parent=self, title="Configure subject shortcut", initial_sequence=""
+                parent=self, title="Configure subject shortcut", initial_sequence=initial_sequence
             )
 
             if accepted:
@@ -838,8 +842,12 @@ class projectDialog(QDialog, Ui_dlgProject):
         """
         # key
         if column == cfg.behavioursFields[cfg.BEHAVIOR_KEY]:
+            initial_sequence = ""
+            if self.twBehaviors.item(row, cfg.behavioursFields[cfg.BEHAVIOR_KEY]):
+                initial_sequence = self.twBehaviors.item(row, cfg.behavioursFields[cfg.BEHAVIOR_KEY]).text()
+
             shortcut, accepted = behavior_shortcut.ShortcutDialog.getShortcut(
-                parent=self, title="Configure behavior shortcut", initial_sequence=""
+                parent=self, title="Configure behavior shortcut", initial_sequence=initial_sequence
             )
 
             if accepted:
