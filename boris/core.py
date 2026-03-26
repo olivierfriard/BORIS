@@ -4873,6 +4873,15 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         print(f"\n\n{event=}")  # remove before release
 
         seq = QKeySequence(event.modifiers() | key)
+        has_non_shift_modifier = bool(
+            event.modifiers()
+            & (
+                Qt.KeyboardModifier.ControlModifier
+                | Qt.KeyboardModifier.AltModifier
+                | Qt.KeyboardModifier.MetaModifier
+            )
+        )
+        text_shortcut = event_text if event_text and len(event_text) == 1 and not has_non_shift_modifier else ""
 
         if seq == QKeySequence("Ctrl+Z"):
             print("Ctrl+Z from keypress")
@@ -5069,7 +5078,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                         return
 
         # add single key shortcuts for behaviors
-        ethogram_shortcuts = {
+        ethogram_text_shortcuts = {
             self.pj[cfg.ETHOGRAM][idx][cfg.BEHAVIOR_KEY]: [
                 x
                 for x in self.pj[cfg.ETHOGRAM]
@@ -5080,7 +5089,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         }
 
         # add key with modifier(s) shortcuts for behaviors
-        ethogram_shortcuts |= {
+        ethogram_sequence_shortcuts = {
             QKeySequence(self.pj[cfg.ETHOGRAM][idx][cfg.BEHAVIOR_KEY]): [
                 x
                 for x in self.pj[cfg.ETHOGRAM]
@@ -5090,31 +5099,32 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             if len(self.pj[cfg.ETHOGRAM][idx][cfg.BEHAVIOR_KEY]) > 1
         }
 
-        print(f"{ethogram_shortcuts=}")  # remove before release
+        print(f"{ethogram_text_shortcuts=}")  # remove before release
+        print(f"{ethogram_sequence_shortcuts=}")  # remove before release
 
         # add single key shortcuts for subjects
-        subjects_shortcuts = {
+        subjects_text_shortcuts = {
             self.pj[cfg.SUBJECTS][idx][cfg.SUBJECT_KEY]: [
                 x for x in self.pj[cfg.SUBJECTS] if self.pj[cfg.SUBJECTS][x][cfg.SUBJECT_KEY] == self.pj[cfg.SUBJECTS][idx][cfg.SUBJECT_KEY]
             ]
             for idx in self.pj[cfg.SUBJECTS]
-            if len(self.pj[cfg.ETHOGRAM][idx][cfg.SUBJECT_KEY]) == 1
+            if len(self.pj[cfg.SUBJECTS][idx][cfg.SUBJECT_KEY]) == 1
         }
 
         # add key with modifier(s) shortcuts for subjects
-        subjects_shortcuts |= {
+        subjects_sequence_shortcuts = {
             QKeySequence(self.pj[cfg.SUBJECTS][idx][cfg.SUBJECT_KEY]): [
                 x for x in self.pj[cfg.SUBJECTS] if self.pj[cfg.SUBJECTS][x][cfg.SUBJECT_KEY] == self.pj[cfg.SUBJECTS][idx][cfg.SUBJECT_KEY]
             ]
             for idx in self.pj[cfg.SUBJECTS]
-            if len(self.pj[cfg.ETHOGRAM][idx][cfg.SUBJECT_KEY]) == 1
+            if len(self.pj[cfg.SUBJECTS][idx][cfg.SUBJECT_KEY]) > 1
         }
 
         subject_idx = None
         behavior_idx = None
 
         # select between behavior and subject
-        if seq in ethogram_shortcuts and seq in subjects_shortcuts:
+        if seq in ethogram_sequence_shortcuts and seq in subjects_sequence_shortcuts:
             r = dialog.MessageDialog(
                 cfg.programName,
                 "This shortcut key defines a behavior and a subject. Choose one",
@@ -5124,50 +5134,79 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 return
 
             if r == "&Subject":
-                ethogram_shortcuts = {}
+                ethogram_sequence_shortcuts = {}
+                ethogram_text_shortcuts = {}
 
             if r == "&Behavior":
-                subjects_shortcuts = {}
+                subjects_sequence_shortcuts = {}
+                subjects_text_shortcuts = {}
+
+        if text_shortcut and text_shortcut in ethogram_text_shortcuts and text_shortcut in subjects_text_shortcuts:
+            r = dialog.MessageDialog(
+                cfg.programName,
+                "This shortcut key defines a behavior and a subject. Choose one",
+                ("&Behavior", "&Subject", cfg.CANCEL),
+            )
+            if r == cfg.CANCEL:
+                return
+
+            if r == "&Subject":
+                ethogram_text_shortcuts = {}
+
+            if r == "&Behavior":
+                subjects_text_shortcuts = {}
 
         # check if behavior
         # key with modifier
-        if seq in ethogram_shortcuts:
+        if seq in ethogram_sequence_shortcuts:
             # check how many codes with shortcut
-            if len(ethogram_shortcuts[seq]) == 1:
-                behavior_idx = ethogram_shortcuts[seq][0]
+            if len(ethogram_sequence_shortcuts[seq]) == 1:
+                behavior_idx = ethogram_sequence_shortcuts[seq][0]
             else:
                 if self.playerType == cfg.MEDIA:
                     if self.is_playing():
                         flagPlayerPlaying = True
                         self.pause_video()
-                behavior_idx = self.choose_behavior(ethogram_shortcuts[seq])
+                behavior_idx = self.choose_behavior(ethogram_sequence_shortcuts[seq])
                 if behavior_idx is None:
                     return
 
         # single key shortcuts
-        if event_text in ethogram_shortcuts:
+        if text_shortcut in ethogram_text_shortcuts:
             # check how many codes with shortcut
-            if len(ethogram_shortcuts[event_text]) == 1:
-                behavior_idx = ethogram_shortcuts[event_text][0]
+            if len(ethogram_text_shortcuts[text_shortcut]) == 1:
+                behavior_idx = ethogram_text_shortcuts[text_shortcut][0]
             else:
                 if self.playerType == cfg.MEDIA:
                     if self.is_playing():
                         flagPlayerPlaying = True
                         self.pause_video()
-                behavior_idx = self.choose_behavior(ethogram_shortcuts[event_text])
+                behavior_idx = self.choose_behavior(ethogram_text_shortcuts[text_shortcut])
                 if behavior_idx is None:
                     return
 
         # check if subject
-        if seq in subjects_shortcuts:
-            if len(subjects_shortcuts[seq]) == 1:
-                subject_idx = subjects_shortcuts[seq][0]
+        if seq in subjects_sequence_shortcuts:
+            if len(subjects_sequence_shortcuts[seq]) == 1:
+                subject_idx = subjects_sequence_shortcuts[seq][0]
             else:
                 if self.playerType == cfg.MEDIA:
                     if self.is_playing():
                         flagPlayerPlaying = True
                         self.pause_video()
-                subject_idx = self.choose_subject(subjects_shortcuts[seq])
+                subject_idx = self.choose_subject(subjects_sequence_shortcuts[seq])
+                if subject_idx is None:
+                    return
+
+        if text_shortcut in subjects_text_shortcuts:
+            if len(subjects_text_shortcuts[text_shortcut]) == 1:
+                subject_idx = subjects_text_shortcuts[text_shortcut][0]
+            else:
+                if self.playerType == cfg.MEDIA:
+                    if self.is_playing():
+                        flagPlayerPlaying = True
+                        self.pause_video()
+                subject_idx = self.choose_subject(subjects_text_shortcuts[text_shortcut])
                 if subject_idx is None:
                     return
 
