@@ -1,6 +1,7 @@
 *.py[oc]
 __pycache__/
 .DS_Store
+boris/misc
 *.egg-info
 build
 dist
