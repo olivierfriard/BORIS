@@ -99,18 +99,12 @@ class ShortcutDialog(QDialog):
         self.shortcutChanged.emit(empty)
 
     def _on_shortcut_changed(self, sequence: QKeySequence):
-        print(f"{sequence=}")  # remove before release
-        if sequence.count() > 0:
-            print(f"{sequence[0].key()=}")  # remove before release
-
-        print(f"{sequence.toString(QKeySequence.SequenceFormat.PortableText)=}")  # remove before release
 
         # if len(sequence.toString(QKeySequence.SequenceFormat.PortableText)) == 1:
         #    text = sequence.toString(QKeySequence.SequenceFormat.PortableText).lower()
         # else:
         text = sequence.toString(QKeySequence.SequenceFormat.PortableText)
 
-        print(f"{text=}")  # remove before release
         self._info_label.setText(f"Current shortcut: {text or 'None'}")
 
     @staticmethod

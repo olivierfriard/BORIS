@@ -48,7 +48,8 @@ from PySide6.QtWidgets import (
     QVBoxLayout,
 )
 
-from . import add_modifier, behavior_shortcut_qevent as behavior_shortcut, converters, dialog, exclusion_matrix, project_import_export
+from . import add_modifier, converters, dialog, exclusion_matrix, project_import_export
+from . import behavior_shortcut_qevent as behavior_shortcut
 from . import config as cfg
 from . import utilities as util
 from .project_ui import Ui_dlgProject
@@ -822,7 +823,6 @@ class projectDialog(QDialog, Ui_dlgProject):
 
             if accepted:
                 shortcut_text = shortcut.toString(QKeySequence.SequenceFormat.PortableText)
-                print(f"{shortcut_text=}")  # remove before release
                 item = QTableWidgetItem(shortcut_text)
                 self.twSubjects.setItem(row, cfg.subjectsFields.index(cfg.SUBJECT_KEY), item)
 
@@ -852,7 +852,6 @@ class projectDialog(QDialog, Ui_dlgProject):
 
             if accepted:
                 shortcut_text = shortcut.toString(QKeySequence.SequenceFormat.PortableText)
-                print(f"{shortcut_text=}")  # remove before release
                 item = QTableWidgetItem(shortcut_text)
                 # item.setFlags(Qt.ItemIsEnabled)
                 # item.setBackground(self.not_editable_column_color())

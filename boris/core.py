@@ -4854,9 +4854,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         event_text = event.text()
         key = Qt.Key(ek)
 
-        print(
-            f"{key=}   {ek=}   {ek_text=}   {event.modifiers()=}    {event.modifiers() ==Qt.KeyboardModifier.NoModifier =}"
-        )  # remove before release
+        # print(
+        #    f"{key=}   {ek=}   {ek_text=}   {event.modifiers()=}    {event.modifiers() ==Qt.KeyboardModifier.NoModifier =}"
+        # )
 
         # ignore pure modifier presses
         if key in (
@@ -4867,19 +4867,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             Qt.Key.Key_Tab,
             Qt.Key.Key_AltGr,
         ):
-            print("pure modifier")
             return False
-
-        print(f"\n\n{event=}")  # remove before release
 
         seq = QKeySequence(event.modifiers() | key)
         has_non_shift_modifier = bool(
-            event.modifiers()
-            & (
-                Qt.KeyboardModifier.ControlModifier
-                | Qt.KeyboardModifier.AltModifier
-                | Qt.KeyboardModifier.MetaModifier
-            )
+            event.modifiers() & (Qt.KeyboardModifier.ControlModifier | Qt.KeyboardModifier.AltModifier | Qt.KeyboardModifier.MetaModifier)
         )
         text_shortcut = event_text if event_text and len(event_text) == 1 and not has_non_shift_modifier else ""
 
@@ -4887,9 +4879,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             print("Ctrl+Z from keypress")
             event_operations.undo_event_operation(self)
             return
-
-        # shortcut = QKeySequence("a")
-        # print(f"{seq == shortcut =}")  # remove before release
 
         logging.debug(f"key: {key}    event text: #{ek_text=}#    event key: {ek}   Modifier: {event.modifiers()}")
 
@@ -5047,10 +5036,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         # click from coding pad or subjects pad
         if ek == Qt.Key.Key_unknown:
-            print("Keypad")  # remove before release
             # check if sent from subject pad
             if event.modifiers() == Qt.KeyboardModifier.ShiftModifier:
-                print("BEHAVIOR FROM SUBJECT PAD")  # remove before release
                 for idx in self.pj[cfg.SUBJECTS]:
                     if self.pj[cfg.SUBJECTS][idx][cfg.SUBJECT_NAME] == event.text():
                         self.update_subject(self.pj[cfg.SUBJECTS][idx][cfg.SUBJECT_NAME])
@@ -5058,7 +5045,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
             # sent from coding pad
             elif event.modifiers() == Qt.KeyboardModifier.NoModifier:
-                print("BEHAVIOR FROM CODING PAD")  # remove before release
                 for idx in self.pj[cfg.ETHOGRAM]:
                     if self.pj[cfg.ETHOGRAM][idx][cfg.BEHAVIOR_CODE] == event.text():
                         event = self.full_event(idx)
@@ -5098,9 +5084,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             for idx in self.pj[cfg.ETHOGRAM]
             if len(self.pj[cfg.ETHOGRAM][idx][cfg.BEHAVIOR_KEY]) > 1
         }
-
-        print(f"{ethogram_text_shortcuts=}")  # remove before release
-        print(f"{ethogram_sequence_shortcuts=}")  # remove before release
 
         # add single key shortcuts for subjects
         subjects_text_shortcuts = {

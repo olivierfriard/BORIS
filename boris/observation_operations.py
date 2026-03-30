@@ -1433,7 +1433,6 @@ def initialize_new_media_observation(self) -> bool:
 
                 @p0.player.on_key_press("MBTN_LEFT")
                 def mbtn_left0():
-                    print(f"player: mouse button left")  # remove before release
                     self.video_click_signal.emit(0, "MBTN_LEFT")
 
                 @p0.player.on_key_press("MBTN_RIGHT")
