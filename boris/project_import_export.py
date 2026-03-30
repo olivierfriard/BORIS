@@ -20,21 +20,20 @@ This file is part of BORIS.
 
 """
 
-import logging
-import urllib
 import json
+import logging
 import pathlib as pl
+import pickle
+import urllib
+
 import pandas as pd
 import tablib
-import pickle
-
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QFont
 from PySide6.QtWidgets import QApplication, QFileDialog, QListWidgetItem, QMessageBox, QTableWidgetItem
 
-
 from . import config as cfg
-from . import dialog, param_panel, project_functions, export_observation
+from . import dialog, export_observation, param_panel, project_functions
 from . import utilities as util
 
 
@@ -91,7 +90,7 @@ def export_ethogram(self) -> None:
         pj[cfg.ETHOGRAM] = dict(r)
 
         # behavioral categories
-        pj[cfg.BEHAVIORAL_CATEGORIES] = list(self.pj[cfg.BEHAVIORAL_CATEGORIES])
+        pj[cfg.BEHAVIORAL_CATEGORIES] = list(self.pj.get(cfg.BEHAVIORAL_CATEGORIES, []))
         pj[cfg.BEHAVIORAL_CATEGORIES_CONF] = dict(self.pj.get(cfg.BEHAVIORAL_CATEGORIES_CONF, {}))
 
         # project file indentation
@@ -104,8 +103,8 @@ def export_ethogram(self) -> None:
                 None,
                 cfg.programName,
                 "Error during file saving.",
-                QMessageBox.Ok | QMessageBox.Default,
-                QMessageBox.NoButton,
+                QMessageBox.StandardButton.Ok | QMessageBox.StandardButton.Default,
+                QMessageBox.StandardButton.NoButton,
             )
 
     else:
@@ -152,7 +151,13 @@ def export_ethogram(self) -> None:
 
         ok, msg = export_observation.dataset_write(ethogram_data, file_name, output_format)
         if not ok:
-            QMessageBox.critical(None, cfg.programName, msg, QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
+            QMessageBox.critical(
+                None,
+                cfg.programName,
+                msg,
+                QMessageBox.StandardButton.Ok | QMessageBox.StandardButton.Default,
+                QMessageBox.StandardButton.NoButton,
+            )
 
 
 def export_subjects(self) -> None:
@@ -199,7 +204,13 @@ def export_subjects(self) -> None:
 
     ok, msg = export_observation.dataset_write(subjects_data, file_name, outputFormat)
     if not ok:
-        QMessageBox.critical(None, cfg.programName, msg, QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
+        QMessageBox.critical(
+            None,
+            cfg.programName,
+            msg,
+            QMessageBox.StandardButton.Ok | QMessageBox.StandardButton.Default,
+            QMessageBox.StandardButton.NoButton,
+        )
 
 
 def select_behaviors(

@@ -1488,7 +1488,13 @@ def open_project_json(project_file_name: str) -> tuple:
             pj[cfg.PROJECT_VERSION] = cfg.project_format_version
             projectChanged = True
 
-    # check if behavioral categories are stored as a list
+    # check if BEHAVIORAL_CATEGORIES is present
+    if cfg.BEHAVIORAL_CATEGORIES not in pj:
+        pj[cfg.BEHAVIORAL_CATEGORIES] = []
+        logging.info("Behavioral categories section was added to project")
+        projectChanged = True
+
+    # check if behavioral categories config are stored as a list
     if cfg.BEHAVIORAL_CATEGORIES_CONF in pj:
         if isinstance(pj[cfg.BEHAVIORAL_CATEGORIES_CONF], list):
             # convert to dict
@@ -1497,6 +1503,7 @@ def open_project_json(project_file_name: str) -> tuple:
             projectChanged = True
     else:
         pj[cfg.BEHAVIORAL_CATEGORIES_CONF] = dict()
+        logging.info("Behavioral categories config section was added to project")
         projectChanged = True
 
     # add behavioral category key if not found
