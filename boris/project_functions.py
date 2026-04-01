@@ -1383,7 +1383,7 @@ def open_project_json(project_file_name: str) -> tuple:
 
     try:
         pj = json.loads(file_content)
-    except json.decoder.JSONDecodeError:
+    except json.JSONDecodeError:
         return (
             project_file_name,
             projectChanged,
