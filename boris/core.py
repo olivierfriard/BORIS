@@ -4875,8 +4875,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         )
         text_shortcut = event_text if event_text and len(event_text) == 1 and not has_non_shift_modifier else ""
 
+        # manage Undo
         if seq == QKeySequence("Ctrl+Z"):
-            print("Ctrl+Z from keypress")
             event_operations.undo_event_operation(self)
             return
 
@@ -4995,13 +4995,20 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 self.next_frame()
                 return
 
+            """
+            print(f"{seq=}")  # remove before release
+            print(f"{seq==QKeySequence(Qt.Key.Key_PageUp)=}")  # remove before release
+            """
+
             # next media file (page up)
-            if seq == QKeySequence("Up"):
+            if seq == QKeySequence(Qt.Key.Key_PageUp):
                 self.next_media_file()
+                return
 
             # previous media file (page down)
-            if seq == QKeySequence("Down"):
+            if seq == QKeySequence(Qt.Key.Key_PageDown):
                 self.previous_media_file()
+                return
 
         if not self.pj[cfg.ETHOGRAM]:
             # QMessageBox.warning(self, cfg.programName, "The ethogram is not configured")
