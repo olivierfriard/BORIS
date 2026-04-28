@@ -1519,6 +1519,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             #    self.seek_mediaplayer(dec(0))
             #    return
 
+            if self.MPV_IPC_MODE:
+                if self.dw_player[0].player.playlist_pos is None:
+                    return
+
             # check if media not first media
             if self.dw_player[0].player.playlist_pos > 0:
                 self.dw_player[0].player.playlist_prev()
@@ -1561,6 +1565,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         if self.playerType == cfg.MEDIA:
             if len(self.pj[cfg.OBSERVATIONS][self.observationId][cfg.FILE][cfg.PLAYER1]) == 1:
                 return
+
+            if self.MPV_IPC_MODE:
+                if self.dw_player[0].player.playlist_pos is None:
+                    return
 
             # check if media not last media
             if self.dw_player[0].player.playlist_pos < self.dw_player[0].player.playlist_count - 1:
