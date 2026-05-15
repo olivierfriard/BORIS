@@ -332,12 +332,15 @@ def run_plugin(self, plugin_name):
         # check arguments required by the run function of the plugin
         dataframe_required = False
         project_required = False
+        parameters_required = False
         # for param in inspect.signature(plugin_module.run).parameters.values():
         for name, annotation in inspect.getfullargspec(plugin_module.run).annotations.items():
             if name == "df" and annotation is pd.DataFrame:
                 dataframe_required = True
             if name == "project" and annotation is dict:
                 project_required = True
+            if name == "parameters" and annotation is dict:
+                parameters_required = True
 
         # create arguments for the plugin run function
         plugin_kwargs: dict = {}
@@ -367,6 +370,9 @@ def run_plugin(self, plugin_name):
                     del pj_copy[cfg.OBSERVATIONS][obs_id]
 
             plugin_kwargs["project"] = pj_copy
+
+        if parameters_required:
+            plugin_kwargs["parameters"] = parameters
 
         plugin_results = plugin_module.run(**plugin_kwargs)
 
@@ -446,12 +452,7 @@ def run_plugin(self, plugin_name):
         result_title = plugin_name
         result_payload = result
 
-        if (
-            isinstance(result, tuple)
-            and len(result) == 2
-            and isinstance(result[0], str)
-            and isinstance(result[1], (str, pd.DataFrame))
-        ):
+        if isinstance(result, tuple) and len(result) == 2 and isinstance(result[0], str) and isinstance(result[1], (str, pd.DataFrame)):
             result_title, result_payload = result
 
         if isinstance(result_payload, str):
