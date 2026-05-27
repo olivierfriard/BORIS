@@ -34,7 +34,7 @@ r = ["rpy2>=3.6.1"]
 
 [project.urls]
 Homepage = "http://www.boris.unito.it"
-Documentation = "https://boris.readthedocs.io/en/latest/"
+Documentation = "https://www.boris.unito.it/user_guide/"
 Change_log = "https://github.com/olivierfriard/BORIS/wiki/BORIS-change-log-v.8"
 Source_code = "https://github.com/olivierfriard/BORIS"
 Issues = "https://github.com/olivierfriard/BORIS/issues"
