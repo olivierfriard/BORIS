@@ -33,7 +33,7 @@ from . import plugins
 
 from .preferences_ui import Ui_prefDialog
 
-from PySide6.QtWidgets import QDialog, QFileDialog, QListWidgetItem, QMessageBox
+from PySide6.QtWidgets import QApplication, QDialog, QFileDialog, QListWidgetItem, QMessageBox
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QFont
 
@@ -44,6 +44,8 @@ class Preferences(QDialog, Ui_prefDialog):
         self.setupUi(self)
 
         # plugins
+        self.pb_browse_official_plugins_dir.clicked.connect(self.browse_official_plugins_dir)
+        self.pb_download_official_plugins.clicked.connect(self.download_official_plugins)
         self.pb_browse_plugins_dir.clicked.connect(self.browse_plugins_dir)
 
         self.pbBrowseFFmpegCacheDir.clicked.connect(self.browseFFmpegCacheDir)
@@ -65,6 +67,133 @@ class Preferences(QDialog, Ui_prefDialog):
         monospace_font.setStyleHint(QFont.Monospace)
         monospace_font.setPointSize(12)
         self.pte_plugin_code.setFont(monospace_font)
+
+    def populate_python_plugins_list(
+        self,
+        list_widget,
+        plugin_files: list[Path],
+        excluded_plugins: set | None = None,
+        skip_plugin_names: set | None = None,
+    ) -> set[str]:
+        """
+        populate a list widget with Python plugins
+        """
+        excluded_plugins = excluded_plugins or set()
+        skip_plugin_names = skip_plugin_names or set()
+        plugin_names: set[str] = set()
+
+        list_widget.clear()
+        for file_ in plugin_files:
+            plugin_name = plugins.get_plugin_name(file_)
+            if plugin_name is None or plugin_name in skip_plugin_names:
+                continue
+
+            item = QListWidgetItem(plugin_name)
+            item.setFlags(item.flags() | Qt.ItemIsUserCheckable)
+            if plugin_name in excluded_plugins:
+                item.setCheckState(Qt.Unchecked)
+            else:
+                item.setCheckState(Qt.Checked)
+            item.setData(100, str(file_))
+            list_widget.addItem(item)
+            plugin_names.add(plugin_name)
+
+        return plugin_names
+
+    def official_plugin_names(self) -> set[str]:
+        """
+        return the names currently displayed in the official plugins list
+        """
+        return {self.lv_all_plugins.item(i).text() for i in range(self.lv_all_plugins.count())}
+
+    def browse_official_plugins_dir(self):
+        """
+        get the official BORIS plugins repository directory
+        """
+        directory = QFileDialog.getExistingDirectory(
+            None,
+            "Select the official BORIS plugins repository directory",
+            self.le_official_plugins_dir.text(),
+        )
+        if not directory:
+            return
+
+        self.le_official_plugins_dir.setText(directory)
+        config_param = {cfg.OFFICIAL_PLUGINS_DIR: directory}
+        self.populate_python_plugins_list(self.lv_all_plugins, plugins.get_official_plugin_files(config_param))
+
+        if plugins.get_external_plugins_dir(config_param) is None:
+            QMessageBox.warning(
+                self,
+                cfg.programName,
+                f"No official plugin found in {directory}.\n\nBORIS will use the bundled analysis plugins as fallback.",
+            )
+
+        if self.le_personal_plugins_dir.text():
+            self.populate_python_plugins_list(
+                self.lw_personal_plugins,
+                plugins.get_python_plugin_files(self.le_personal_plugins_dir.text()),
+                skip_plugin_names=self.official_plugin_names(),
+            )
+
+    def download_official_plugins(self):
+        """
+        download or update the official BORIS plugins repository
+        """
+        target_dir = (
+            Path(self.le_official_plugins_dir.text()).expanduser()
+            if self.le_official_plugins_dir.text()
+            else plugins.get_default_external_plugins_dir()
+        )
+
+        if target_dir.resolve() == plugins.get_builtin_plugins_dir().resolve():
+            QMessageBox.warning(
+                self,
+                cfg.programName,
+                "The bundled analysis plugins directory cannot be updated.\n\nSelect an external directory for official plugins.",
+            )
+            return
+
+        if target_dir.exists() and any(target_dir.iterdir()):
+            answer = QMessageBox.question(
+                self,
+                cfg.programName,
+                (
+                    f"Download/update official BORIS plugins in:\n{target_dir}\n\n"
+                    "Existing files in this directory will be replaced. The .git directory, if present, will be kept.\n\n"
+                    "Continue?"
+                ),
+                QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+                QMessageBox.StandardButton.No,
+            )
+            if answer != QMessageBox.StandardButton.Yes:
+                return
+
+        QApplication.setOverrideCursor(Qt.CursorShape.WaitCursor)
+        download_error = None
+        try:
+            plugin_dir = plugins.download_official_plugins_repository(target_dir)
+        except Exception as exc:
+            download_error = exc
+        finally:
+            QApplication.restoreOverrideCursor()
+
+        if download_error is not None:
+            QMessageBox.critical(self, cfg.programName, f"Error downloading official BORIS plugins:\n\n{download_error}")
+            return
+
+        self.le_official_plugins_dir.setText(str(target_dir))
+        config_param = {cfg.OFFICIAL_PLUGINS_DIR: str(target_dir)}
+        self.populate_python_plugins_list(self.lv_all_plugins, plugins.get_official_plugin_files(config_param))
+
+        if self.le_personal_plugins_dir.text():
+            self.populate_python_plugins_list(
+                self.lw_personal_plugins,
+                plugins.get_python_plugin_files(self.le_personal_plugins_dir.text()),
+                skip_plugin_names=self.official_plugin_names(),
+            )
+
+        QMessageBox.information(self, cfg.programName, f"Official BORIS plugins updated from:\n{plugin_dir}")
 
     def reset_spectro_values(self):
         """
@@ -96,21 +225,11 @@ class Preferences(QDialog, Ui_prefDialog):
             return
 
         self.le_personal_plugins_dir.setText(directory)
-        self.lw_personal_plugins.clear()
-        for file_ in Path(directory).glob("*.py"):
-            if file_.name.startswith("_"):
-                continue
-            plugin_name = plugins.get_plugin_name(file_)
-            if plugin_name is None:
-                continue
-            # check if personal plugin name is in BORIS plugins (case sensitive)
-            if plugin_name in [self.lv_all_plugins.item(i).text() for i in range(self.lv_all_plugins.count())]:
-                continue
-            item = QListWidgetItem(plugin_name)
-            item.setFlags(item.flags() | Qt.ItemIsUserCheckable)
-            item.setCheckState(Qt.Checked)
-            item.setData(100, str(file_))
-            self.lw_personal_plugins.addItem(item)
+        self.populate_python_plugins_list(
+            self.lw_personal_plugins,
+            plugins.get_python_plugin_files(directory),
+            skip_plugin_names=self.official_plugin_names(),
+        )
 
         if self.lw_personal_plugins.count() == 0:
             QMessageBox.warning(self, cfg.programName, f"No plugin found in {directory}")
@@ -170,10 +289,9 @@ def preferences(self):
         display information about the clicked plugin
         """
 
-        if item.text() not in self.config_param[cfg.ANALYSIS_PLUGINS]:
-            return
-
         plugin_path = item.data(100)
+        if not plugin_path:
+            return
 
         # Python plugins
         if Path(plugin_path).suffix == ".py":
@@ -270,49 +388,30 @@ def preferences(self):
     # check integrity
     preferencesWindow.cb_check_integrity_at_opening.setChecked(self.config_param.get(cfg.CHECK_PROJECT_INTEGRITY, True))
 
-    # BORIS plugins
+    # Official BORIS plugins
     preferencesWindow.lv_all_plugins.itemClicked.connect(show_plugin_info)
 
-    preferencesWindow.lv_all_plugins.clear()
-
-    for file_ in (Path(__file__).parent / "analysis_plugins").glob("*.py"):
-        if file_.name.startswith("_"):
-            continue
-        plugin_name = plugins.get_plugin_name(file_)
-        if plugin_name is not None:
-            item = QListWidgetItem(plugin_name)
-            item.setFlags(item.flags() | Qt.ItemIsUserCheckable)
-            if plugin_name in self.config_param.get(cfg.EXCLUDED_PLUGINS, set()):
-                item.setCheckState(Qt.Unchecked)
-            else:
-                item.setCheckState(Qt.Checked)
-            item.setData(100, str(file_))
-            preferencesWindow.lv_all_plugins.addItem(item)
+    external_plugins_dir = plugins.get_external_plugins_dir(self.config_param)
+    configured_plugins_dir = self.config_param.get(cfg.OFFICIAL_PLUGINS_DIR, "")
+    preferencesWindow.le_official_plugins_dir.setText(configured_plugins_dir or (str(external_plugins_dir) if external_plugins_dir else ""))
+    preferencesWindow.populate_python_plugins_list(
+        preferencesWindow.lv_all_plugins,
+        plugins.get_official_plugin_files(self.config_param),
+        self.config_param.get(cfg.EXCLUDED_PLUGINS, set()),
+    )
 
     # personal plugins
     preferencesWindow.le_personal_plugins_dir.setText(self.config_param.get(cfg.PERSONAL_PLUGINS_DIR, ""))
     preferencesWindow.lw_personal_plugins.itemClicked.connect(show_plugin_info)
 
-    preferencesWindow.lw_personal_plugins.clear()
     if self.config_param.get(cfg.PERSONAL_PLUGINS_DIR, ""):
         # Python plugins
-        for file_ in Path(self.config_param[cfg.PERSONAL_PLUGINS_DIR]).glob("*.py"):
-            if file_.name.startswith("_"):
-                continue
-            plugin_name = plugins.get_plugin_name(file_)
-            if plugin_name is None:
-                continue
-            # check if personal plugin name is in BORIS plugins (case sensitive)
-            if plugin_name in [preferencesWindow.lv_all_plugins.item(i).text() for i in range(preferencesWindow.lv_all_plugins.count())]:
-                continue
-            item = QListWidgetItem(plugin_name)
-            item.setFlags(item.flags() | Qt.ItemIsUserCheckable)
-            if plugin_name in self.config_param.get(cfg.EXCLUDED_PLUGINS, set()):
-                item.setCheckState(Qt.Unchecked)
-            else:
-                item.setCheckState(Qt.Checked)
-            item.setData(100, str(file_))
-            preferencesWindow.lw_personal_plugins.addItem(item)
+        preferencesWindow.populate_python_plugins_list(
+            preferencesWindow.lw_personal_plugins,
+            plugins.get_python_plugin_files(self.config_param[cfg.PERSONAL_PLUGINS_DIR]),
+            self.config_param.get(cfg.EXCLUDED_PLUGINS, set()),
+            preferencesWindow.official_plugin_names(),
+        )
 
         # R plugins
         for file_ in Path(self.config_param[cfg.PERSONAL_PLUGINS_DIR]).glob("*.R"):
@@ -320,7 +419,7 @@ def preferences(self):
             if plugin_name is None:
                 continue
             # check if personal plugin name is in BORIS plugins (case sensitive)
-            if plugin_name in [preferencesWindow.lv_all_plugins.item(i).text() for i in range(preferencesWindow.lv_all_plugins.count())]:
+            if plugin_name in preferencesWindow.official_plugin_names():
                 continue
             item = QListWidgetItem(plugin_name)
             item.setFlags(item.flags() | Qt.ItemIsUserCheckable)
@@ -469,7 +568,8 @@ def preferences(self):
             # check project integrity
             self.config_param[cfg.CHECK_PROJECT_INTEGRITY] = preferencesWindow.cb_check_integrity_at_opening.isChecked()
 
-            # update BORIS analysis plugins
+            # update official BORIS analysis plugins
+            self.config_param[cfg.OFFICIAL_PLUGINS_DIR] = preferencesWindow.le_official_plugins_dir.text()
             self.config_param[cfg.ANALYSIS_PLUGINS] = {}
             self.config_param[cfg.EXCLUDED_PLUGINS] = set()
             for i in range(preferencesWindow.lv_all_plugins.count()):

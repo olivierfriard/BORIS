@@ -359,9 +359,34 @@
              <item>
               <widget class="QLabel" name="label_13">
                <property name="text">
-                <string>BORIS plugins</string>
+                <string>Official BORIS plugins</string>
                </property>
               </widget>
+             </item>
+             <item>
+              <layout class="QHBoxLayout" name="horizontalLayout_official_plugins">
+               <item>
+                <widget class="QLineEdit" name="le_official_plugins_dir">
+                 <property name="readOnly">
+                  <bool>true</bool>
+                 </property>
+                </widget>
+               </item>
+               <item>
+                <widget class="QPushButton" name="pb_browse_official_plugins_dir">
+                 <property name="text">
+                  <string>Browse</string>
+                 </property>
+                </widget>
+               </item>
+               <item>
+                <widget class="QPushButton" name="pb_download_official_plugins">
+                 <property name="text">
+                  <string>Download/Update</string>
+                 </property>
+                </widget>
+               </item>
+              </layout>
              </item>
              <item>
               <widget class="QListWidget" name="lv_all_plugins"/>

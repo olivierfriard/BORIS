@@ -24,6 +24,11 @@ import copy
 import importlib
 import inspect
 import logging
+import os
+import shutil
+import tempfile
+import urllib.request
+import zipfile
 from pathlib import Path
 
 import numpy as np
@@ -39,13 +44,41 @@ def add_plugins_to_menu(self):
     """
     add plugins to the plugins menu
     """
-    for plugin_name in self.config_param.get(cfg.ANALYSIS_PLUGINS, {}):
+    def add_plugin_action(plugin_name):
         logging.debug(f"adding plugin '{plugin_name}' to menu")
         # Create an action for each submenu option
         action = QAction(self, triggered=lambda checked=False, name=plugin_name: run_plugin(self, name))
         action.setText(plugin_name)
 
         self.menu_plugins.addAction(action)
+
+    def is_relative_to(path: Path, parent: Path) -> bool:
+        try:
+            path.resolve().relative_to(parent.resolve())
+        except ValueError:
+            return False
+        return True
+
+    personal_plugins_dir = self.config_param.get(cfg.PERSONAL_PLUGINS_DIR, "")
+    personal_plugins_path = Path(personal_plugins_dir).expanduser() if personal_plugins_dir else None
+
+    official_plugin_names: list[str] = []
+    personal_plugin_names: list[str] = []
+    for plugin_name, plugin_path in self.config_param.get(cfg.ANALYSIS_PLUGINS, {}).items():
+        plugin_path = Path(plugin_path).expanduser()
+        if personal_plugins_path is not None and is_relative_to(plugin_path, personal_plugins_path):
+            personal_plugin_names.append(plugin_name)
+        else:
+            official_plugin_names.append(plugin_name)
+
+    for plugin_name in official_plugin_names:
+        add_plugin_action(plugin_name)
+
+    if official_plugin_names and personal_plugin_names:
+        self.menu_plugins.addSeparator()
+
+    for plugin_name in personal_plugin_names:
+        add_plugin_action(plugin_name)
 
 
 def get_plugin_name(plugin_path: str) -> str | None:
@@ -104,6 +137,236 @@ def get_r_plugin_description(plugin_path: str) -> str | None:
     return plugin_description
 
 
+def get_python_plugin_files(plugin_dir: str | Path) -> list[Path]:
+    """
+    Return Python plugin files found directly in plugin_dir.
+    """
+    plugin_dir = Path(plugin_dir).expanduser()
+    if not plugin_dir.is_dir():
+        return []
+    return sorted(file_ for file_ in plugin_dir.glob("*.py") if not file_.name.startswith("_"))
+
+
+def get_builtin_plugins_dir() -> Path:
+    """
+    Return the legacy plugins directory bundled with BORIS.
+    """
+    return Path(__file__).parent / "analysis_plugins"
+
+
+def get_default_external_plugins_dir() -> Path:
+    """
+    Return the default directory for the official external plugins repository.
+    """
+    return Path.home() / cfg.OFFICIAL_PLUGINS_REPO_NAME
+
+
+def _plugin_source_dir_candidates(root_dir: str | Path) -> list[Path]:
+    """
+    Return possible plugin directories for a cloned/downloaded plugins repository.
+    """
+    root_dir = Path(root_dir).expanduser()
+    candidates = [
+        root_dir,
+        root_dir / "plugins",
+        root_dir / "analysis_plugins",
+        root_dir / "boris" / "analysis_plugins",
+    ]
+
+    seen: set[Path] = set()
+    unique_candidates: list[Path] = []
+    for candidate in candidates:
+        resolved = candidate.resolve() if candidate.exists() else candidate
+        if resolved in seen:
+            continue
+        seen.add(resolved)
+        unique_candidates.append(candidate)
+    return unique_candidates
+
+
+def _contains_python_plugins(plugin_dir: str | Path) -> bool:
+    """
+    Check if plugin_dir contains at least one valid Python plugin.
+    """
+    for file_ in get_python_plugin_files(plugin_dir):
+        try:
+            if get_plugin_name(file_) is not None:
+                return True
+        except Exception as exc:
+            logging.warning(f"Unable to read plugin name from {file_}: {exc}")
+    return False
+
+
+def get_plugin_dir_from_repository(root_dir: str | Path) -> Path | None:
+    """
+    Return the directory that contains plugins inside a cloned/downloaded plugins repository.
+    """
+    for candidate in _plugin_source_dir_candidates(root_dir):
+        if _contains_python_plugins(candidate):
+            return candidate
+    return None
+
+
+def _official_plugins_root_candidates(config_param: dict | None = None) -> list[Path]:
+    """
+    Return candidate root directories for the official external plugins repository.
+    """
+    config_param = config_param or {}
+    candidates: list[Path] = []
+
+    configured_dir = config_param.get(cfg.OFFICIAL_PLUGINS_DIR, "")
+    if configured_dir:
+        candidates.append(Path(configured_dir).expanduser())
+
+    env_dir = os.environ.get(cfg.OFFICIAL_PLUGINS_ENV_VAR, "")
+    if env_dir:
+        candidates.append(Path(env_dir).expanduser())
+
+    # Development-friendly layout: BORIS and BORIS_plugins cloned side by side.
+    try:
+        candidates.append(Path(__file__).resolve().parents[2] / cfg.OFFICIAL_PLUGINS_REPO_NAME)
+    except IndexError:
+        pass
+
+    candidates.append(get_default_external_plugins_dir())
+
+    seen: set[Path] = set()
+    unique_candidates: list[Path] = []
+    for candidate in candidates:
+        resolved = candidate.resolve() if candidate.exists() else candidate
+        if resolved in seen:
+            continue
+        seen.add(resolved)
+        unique_candidates.append(candidate)
+    return unique_candidates
+
+
+def get_external_plugins_dir(config_param: dict | None = None) -> Path | None:
+    """
+    Return the official external plugins directory, if available.
+    """
+    for root_dir in _official_plugins_root_candidates(config_param):
+        plugin_dir = get_plugin_dir_from_repository(root_dir)
+        if plugin_dir is not None:
+            return plugin_dir
+    return None
+
+
+def get_official_plugins_dir(config_param: dict | None = None, include_fallback: bool = True) -> Path | None:
+    """
+    Return the official plugins directory, falling back to bundled plugins when requested.
+    """
+    external_plugins_dir = get_external_plugins_dir(config_param)
+    if external_plugins_dir is not None:
+        return external_plugins_dir
+
+    if include_fallback:
+        return get_builtin_plugins_dir()
+
+    return None
+
+
+def get_official_plugin_files(config_param: dict | None = None) -> list[Path]:
+    """
+    Return the Python plugins loaded as official BORIS plugins.
+    """
+    official_plugins_dir = get_official_plugins_dir(config_param)
+    if official_plugins_dir is None:
+        return []
+    return get_python_plugin_files(official_plugins_dir)
+
+
+def _safe_extract_zip(zip_path: Path, destination: Path) -> None:
+    """
+    Extract a zip file without allowing paths outside destination.
+    """
+    destination = destination.resolve()
+    with zipfile.ZipFile(zip_path) as zip_file:
+        for member in zip_file.infolist():
+            member_path = (destination / member.filename).resolve()
+            if not member_path.is_relative_to(destination):
+                raise RuntimeError(f"Unsafe path in plugin archive: {member.filename}")
+        zip_file.extractall(destination)
+
+
+def _copy_repository_contents(source_dir: Path, target_dir: Path) -> None:
+    """
+    Replace target_dir contents with source_dir contents, preserving .git if present.
+    """
+    target_dir.parent.mkdir(parents=True, exist_ok=True)
+    target_dir.mkdir(exist_ok=True)
+
+    with tempfile.TemporaryDirectory(dir=target_dir.parent) as backup_dir_str:
+        backup_dir = Path(backup_dir_str)
+        moved_children: list[tuple[Path, Path]] = []
+
+        for child in target_dir.iterdir():
+            if child.name == ".git":
+                continue
+            backup_child = backup_dir / child.name
+            shutil.move(str(child), str(backup_child))
+            moved_children.append((backup_child, child))
+
+        try:
+            for child in source_dir.iterdir():
+                if child.name == ".git":
+                    continue
+
+                destination = target_dir / child.name
+                if child.is_dir() and not child.is_symlink():
+                    shutil.copytree(child, destination, symlinks=True)
+                else:
+                    shutil.copy2(child, destination, follow_symlinks=False)
+        except Exception:
+            for child in target_dir.iterdir():
+                if child.name == ".git":
+                    continue
+                if child.is_dir() and not child.is_symlink():
+                    shutil.rmtree(child)
+                else:
+                    child.unlink()
+
+            for backup_child, original_child in moved_children:
+                shutil.move(str(backup_child), str(original_child))
+            raise
+
+
+def download_official_plugins_repository(
+    target_dir: str | Path,
+    archive_url: str = cfg.OFFICIAL_PLUGINS_ARCHIVE_URL,
+) -> Path:
+    """
+    Download or update the official plugins repository from a GitHub zip archive.
+    """
+    target_dir = Path(target_dir).expanduser()
+
+    with tempfile.TemporaryDirectory() as temp_dir_str:
+        temp_dir = Path(temp_dir_str)
+        zip_path = temp_dir / f"{cfg.OFFICIAL_PLUGINS_REPO_NAME}.zip"
+        extract_dir = temp_dir / "extracted"
+        extract_dir.mkdir()
+
+        request = urllib.request.Request(archive_url, headers={"User-Agent": f"{cfg.programName}/plugins"})
+        with urllib.request.urlopen(request, timeout=60) as response, open(zip_path, "wb") as zip_file:
+            shutil.copyfileobj(response, zip_file)
+
+        _safe_extract_zip(zip_path, extract_dir)
+
+        extracted_children = [child for child in extract_dir.iterdir()]
+        source_dir = extracted_children[0] if len(extracted_children) == 1 and extracted_children[0].is_dir() else extract_dir
+
+        if get_plugin_dir_from_repository(source_dir) is None:
+            raise RuntimeError(f"No official plugin found in archive downloaded from {archive_url}")
+
+        _copy_repository_contents(source_dir, target_dir)
+
+    plugin_dir = get_plugin_dir_from_repository(target_dir)
+    if plugin_dir is None:
+        raise RuntimeError(f"No official plugin found in {target_dir}")
+
+    return plugin_dir
+
+
 def load_plugins(self):
     """
     load selected plugins in config_param
@@ -111,56 +374,22 @@ def load_plugins(self):
 
     logging.debug("Loading plugins")
 
-    def msg():
+    def msg(plugin_name, file_):
+        message = (
+            f"A plugin with the same name is already loaded ({self.config_param[cfg.ANALYSIS_PLUGINS][plugin_name]}).\n\n"
+            f"The plugin from {file_} is not loaded."
+        )
         QMessageBox.warning(
             self,
             cfg.programName,
-            f"A plugin with the same name is already loaded ({self.config_param[cfg.ANALYSIS_PLUGINS][plugin_name]}).\n\nThe plugin from {file_} is not loaded.",
-            QMessageBox.Ok | QMessageBox.Default,
-            QMessageBox.NoButton,
+            message,
+            QMessageBox.StandardButton.Ok | QMessageBox.StandardButton.Default,
+            QMessageBox.StandardButton.NoButton,
         )
 
-    self.menu_plugins.clear()
-    self.config_param[cfg.ANALYSIS_PLUGINS] = {}
-
-    # load BORIS plugins
-    for file_ in sorted((Path(__file__).parent / "analysis_plugins").glob("*.py")):
-        if file_.name.startswith("_"):
-            continue
-
-        logging.debug(f"Loading plugin: {Path(file_).stem}")
-
-        # test module
-        module_name = Path(file_).stem
-        spec = importlib.util.spec_from_file_location(module_name, file_)
-        plugin_module = importlib.util.module_from_spec(spec)
-        spec.loader.exec_module(plugin_module)
-        attributes_list = dir(plugin_module)
-
-        if "__plugin_name__" in attributes_list:
-            plugin_name = plugin_module.__plugin_name__
-        else:
-            continue
-
-        if "run" not in attributes_list:
-            continue
-
-        # plugin_name = get_plugin_name(file_)
-        if plugin_name is not None and plugin_name not in self.config_param.get(cfg.EXCLUDED_PLUGINS, set()):
-            # check if plugin with same name already loaded
-            if plugin_name in self.config_param[cfg.ANALYSIS_PLUGINS]:
-                msg()
-                continue
-
-            self.config_param[cfg.ANALYSIS_PLUGINS][plugin_name] = str(file_)
-
-    # load personal plugins
-    if self.config_param.get(cfg.PERSONAL_PLUGINS_DIR, ""):
-        for file_ in sorted(Path(self.config_param.get(cfg.PERSONAL_PLUGINS_DIR, "")).glob("*.py")):
-            if file_.name.startswith("_"):
-                continue
-
-            logging.debug(f"Loading personal plugin: {Path(file_).stem}")
+    def load_python_plugins(plugin_files: list[Path], source: str):
+        for file_ in plugin_files:
+            logging.debug(f"Loading {source} plugin: {Path(file_).stem}")
 
             # test module
             module_name = Path(file_).stem
@@ -181,10 +410,22 @@ def load_plugins(self):
             if plugin_name is not None and plugin_name not in self.config_param.get(cfg.EXCLUDED_PLUGINS, set()):
                 # check if plugin with same name already loaded
                 if plugin_name in self.config_param[cfg.ANALYSIS_PLUGINS]:
-                    msg()
+                    msg(plugin_name, file_)
                     continue
 
                 self.config_param[cfg.ANALYSIS_PLUGINS][plugin_name] = str(file_)
+
+    self.menu_plugins.clear()
+    self.config_param[cfg.ANALYSIS_PLUGINS] = {}
+
+    # load official BORIS plugins from the external repository, with bundled plugins as fallback
+    official_plugins_dir = get_official_plugins_dir(self.config_param)
+    logging.debug(f"Loading official BORIS plugins from {official_plugins_dir}")
+    load_python_plugins(get_official_plugin_files(self.config_param), "official BORIS")
+
+    # load personal plugins
+    if self.config_param.get(cfg.PERSONAL_PLUGINS_DIR, ""):
+        load_python_plugins(get_python_plugin_files(self.config_param.get(cfg.PERSONAL_PLUGINS_DIR, "")), "personal")
 
     # load personal R plugins
     if self.config_param.get(cfg.PERSONAL_PLUGINS_DIR, ""):
@@ -195,7 +436,7 @@ def load_plugins(self):
             if plugin_name is not None and plugin_name not in self.config_param.get(cfg.EXCLUDED_PLUGINS, set()):
                 # check if plugin with same name already loaded
                 if plugin_name in self.config_param[cfg.ANALYSIS_PLUGINS]:
-                    msg()
+                    msg(plugin_name, file_)
                     continue
 
                 self.config_param[cfg.ANALYSIS_PLUGINS][plugin_name] = str(file_)
