@@ -7,9 +7,11 @@ Export events to Praat TextGrid using one tier per subject/behavior.
 from pathlib import Path
 
 import pandas as pd
-from PySide6.QtWidgets import QFileDialog
 
-from boris import config as cfg
+try:
+    from PySide6.QtWidgets import QFileDialog
+except ImportError:
+    QFileDialog = None
 
 __version__ = "0.1.0"
 __version_date__ = "2026-05-14"
@@ -33,8 +35,30 @@ REQUIRED_COLUMNS = {
     "Stop (s)",
 }
 
+NO_FOCAL_SUBJECT = "No focal subject"
+POINT_EVENT_TYPES = ("Point event", "Point event with coding map")
 
-def run(df: pd.DataFrame, project: dict = None, parameters: dict = None) -> str:
+OBSERVATIONS = "observations"
+OBSERVATION_TIME_INTERVAL = "observation time interval"
+EVENTS = "events"
+FILE = "file"
+LENGTH = "length"
+MEDIA = "MEDIA"
+MEDIA_INFO = "media_file_info"
+TIME_OFFSET = "time offset"
+TYPE = "type"
+
+END_TIME = "end time"
+START_TIME = "start time"
+TIME = "time"
+TIME_ARBITRARY_INTERVAL = "time interval"
+TIME_FULL_OBS = "full obs"
+TIME_OBS_INTERVAL = "interval of observation"
+
+EVENT_TIME_FIELD_IDX = 0
+
+
+def run(df: pd.DataFrame, project: dict | None = None, parameters: dict | None = None) -> str:
     """
     Export the selected events to Praat TextGrid.
     """
@@ -48,6 +72,9 @@ def run(df: pd.DataFrame, project: dict = None, parameters: dict = None) -> str:
         return "No observations found; nothing to export."
 
     if len(observation_ids) == 1:
+        if QFileDialog is None:
+            return "PySide6 is not available; call export_textgrids with an output directory."
+
         obs_id = observation_ids[0]
         default_file_name = f"{safe_file_name(obs_id)}.TextGrid"
         file_name, _ = QFileDialog.getSaveFileName(
@@ -66,6 +93,9 @@ def run(df: pd.DataFrame, project: dict = None, parameters: dict = None) -> str:
         xmin, xmax = observation_bounds(df, obs_id, project, parameters)
         path.write_text(build_textgrid(df, obs_id, xmin=xmin, xmax=xmax), encoding="utf-8")
         return f"Saved: {path}"
+
+    if QFileDialog is None:
+        return "PySide6 is not available; call export_textgrids with an output directory."
 
     export_dir = QFileDialog.getExistingDirectory(None, "Export events as Praat TextGrid")
     if not export_dir:
@@ -108,7 +138,7 @@ def build_textgrid(df: pd.DataFrame, observation_id: str, xmin: float = 0.0, xma
 
     obs_df = df[df["Observation id"] == observation_id].copy()
     obs_df = obs_df.dropna(subset=["Behavior", "Behavior type", "Start (s)", "Stop (s)"])
-    obs_df["Subject"] = obs_df["Subject"].fillna(cfg.NO_FOCAL_SUBJECT)
+    obs_df["Subject"] = obs_df["Subject"].fillna(NO_FOCAL_SUBJECT)
 
     if xmax is None:
         xmax = dataframe_observation_xmax(obs_df)
@@ -155,7 +185,7 @@ def build_tiers(df: pd.DataFrame, xmin: float, xmax: float) -> list[dict]:
         sort=False,
     ):
         tier_name = make_tier_name(subject, behavior)
-        if behavior_type in cfg.POINT_EVENT_TYPES:
+        if behavior_type in POINT_EVENT_TYPES:
             points = [
                 {"time": float(row["Start (s)"]), "mark": str(behavior)}
                 for row in group.to_dict("records")
@@ -275,7 +305,9 @@ def add_null_intervals(intervals: list[dict], xmin: float, xmax: float) -> list[
     return filled
 
 
-def observation_bounds(df: pd.DataFrame, observation_id: str, project: dict = None, parameters: dict = None) -> tuple[float, float]:
+def observation_bounds(
+    df: pd.DataFrame, observation_id: str, project: dict | None = None, parameters: dict | None = None
+) -> tuple[float, float]:
     """
     Determine the TextGrid time domain for one observation.
     """
@@ -284,14 +316,14 @@ def observation_bounds(df: pd.DataFrame, observation_id: str, project: dict = No
     fallback_xmax = dataframe_observation_xmax(obs_df)
 
     if parameters:
-        time_mode = parameters.get(cfg.TIME)
-        if time_mode == cfg.TIME_ARBITRARY_INTERVAL:
-            return float(parameters.get(cfg.START_TIME, 0.0)), float(parameters.get(cfg.END_TIME, fallback_xmax))
+        time_mode = parameters.get(TIME)
+        if time_mode == TIME_ARBITRARY_INTERVAL:
+            return float(parameters.get(START_TIME, 0.0)), float(parameters.get(END_TIME, fallback_xmax))
 
-        if project and time_mode == cfg.TIME_OBS_INTERVAL:
-            observation = project.get(cfg.OBSERVATIONS, {}).get(observation_id, {})
-            interval = observation.get(cfg.OBSERVATION_TIME_INTERVAL, [0, 0])
-            offset = float(observation.get(cfg.TIME_OFFSET, 0) or 0)
+        if project and time_mode == TIME_OBS_INTERVAL:
+            observation = project.get(OBSERVATIONS, {}).get(observation_id, {})
+            interval = observation.get(OBSERVATION_TIME_INTERVAL, [0, 0])
+            offset = float(observation.get(TIME_OFFSET, 0) or 0)
             xmin = float(interval[0] or 0) + offset
             if len(interval) > 1 and interval[1]:
                 xmax = float(interval[1]) + offset
@@ -299,8 +331,8 @@ def observation_bounds(df: pd.DataFrame, observation_id: str, project: dict = No
                 xmax = observation_total_length(observation)
             return xmin, max(xmax, fallback_xmax, xmin)
 
-        if project and time_mode == cfg.TIME_FULL_OBS:
-            observation = project.get(cfg.OBSERVATIONS, {}).get(observation_id, {})
+        if project and time_mode == TIME_FULL_OBS:
+            observation = project.get(OBSERVATIONS, {}).get(observation_id, {})
             return 0.0, max(observation_total_length(observation), fallback_xmax)
 
     return 0.0, fallback_xmax
@@ -320,11 +352,11 @@ def observation_total_length(observation: dict) -> float:
     Return the best available observation length from the BORIS project dict.
     """
 
-    obs_type = observation.get(cfg.TYPE)
-    if obs_type == cfg.MEDIA:
+    obs_type = observation.get(TYPE)
+    if obs_type == MEDIA:
         totals: list[float] = []
-        lengths = observation.get(cfg.MEDIA_INFO, {}).get(cfg.LENGTH, {})
-        for media_files in observation.get(cfg.FILE, {}).values():
+        lengths = observation.get(MEDIA_INFO, {}).get(LENGTH, {})
+        for media_files in observation.get(FILE, {}).values():
             total = 0.0
             found_length = False
             for media_file in media_files:
@@ -337,9 +369,9 @@ def observation_total_length(observation: dict) -> float:
             return max(totals)
 
     event_times = []
-    for event in observation.get(cfg.EVENTS, []):
+    for event in observation.get(EVENTS, []):
         try:
-            event_times.append(float(event[cfg.EVENT_TIME_FIELD_IDX]))
+            event_times.append(float(event[EVENT_TIME_FIELD_IDX]))
         except Exception:
             continue
 
@@ -347,8 +379,8 @@ def observation_total_length(observation: dict) -> float:
 
 
 def selected_observation_ids(df: pd.DataFrame, project: dict = None) -> list[str]:
-    if project and project.get(cfg.OBSERVATIONS):
-        return list(project[cfg.OBSERVATIONS].keys())
+    if project and project.get(OBSERVATIONS):
+        return list(project[OBSERVATIONS].keys())
     if df.empty or "Observation id" not in df.columns:
         return []
     return sorted(str(obs_id) for obs_id in df["Observation id"].dropna().unique())
@@ -366,9 +398,9 @@ def unique_textgrid_path(export_dir: Path, observation_id: str, used_paths: set[
 
 
 def make_tier_name(subject: object, behavior: object) -> str:
-    subject_text = str(subject).strip() or cfg.NO_FOCAL_SUBJECT
+    subject_text = str(subject).strip() or NO_FOCAL_SUBJECT
     behavior_text = str(behavior).strip()
-    return f"{subject_text} {behavior_text}"
+    return f"{subject_text}_{behavior_text}"
 
 
 def praat_escape(value: object) -> str:

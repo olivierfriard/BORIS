@@ -30,6 +30,7 @@ import tempfile
 import urllib.request
 import zipfile
 from pathlib import Path
+from typing import get_args, get_origin
 
 import numpy as np
 import pandas as pd
@@ -44,6 +45,7 @@ def add_plugins_to_menu(self):
     """
     add plugins to the plugins menu
     """
+
     def add_plugin_action(plugin_name):
         logging.debug(f"adding plugin '{plugin_name}' to menu")
         # Create an action for each submenu option
@@ -95,6 +97,22 @@ def get_plugin_name(plugin_path: str) -> str | None:
     return plugin_name
 
 
+def get_plugin_version(plugin_path: str) -> str | None:
+    """
+    get version of a Python plugin
+    """
+    plugin_version: str | None = None
+    with open(plugin_path, "r") as f_in:
+        for line in f_in:
+            if line.startswith("__version__"):
+                if "=" in line:
+                    plugin_version = line.split("=", 1)[1].strip().replace('"', "").replace("'", "")
+                else:
+                    plugin_version = None
+                break
+    return plugin_version
+
+
 def get_r_plugin_name(plugin_path: str) -> str | None:
     """
     get name of a R plugin
@@ -114,6 +132,27 @@ def get_r_plugin_name(plugin_path: str) -> str | None:
                     plugin_name = None
                     break
     return plugin_name
+
+
+def get_r_plugin_version(plugin_path: str) -> str | None:
+    """
+    get version of a R plugin
+    """
+    plugin_version: str | None = None
+    with open(plugin_path, "r") as f_in:
+        for line in f_in:
+            line_without_spaces = line.replace(" ", "")
+            if line_without_spaces.startswith("version=") or line_without_spaces.startswith("version<-"):
+                if "=" in line:
+                    plugin_version = line.split("=", 1)[1].strip().replace('"', "").replace("'", "")
+                    break
+                elif "<-" in line:
+                    plugin_version = line.split("<-", 1)[1].strip().replace('"', "").replace("'", "")
+                    break
+                else:
+                    plugin_version = None
+                    break
+    return plugin_version
 
 
 def get_r_plugin_description(plugin_path: str) -> str | None:
@@ -514,6 +553,38 @@ def plugin_df_filter(df: pd.DataFrame, observations_list: list = [], parameters:
     return df
 
 
+def annotation_includes_type(annotation, expected_type: type) -> bool:
+    """
+    Return True if an annotation is expected_type or a union/generic containing it.
+    """
+    if annotation is expected_type:
+        return True
+
+    if isinstance(annotation, str):
+        normalized = annotation.replace(" ", "")
+        expected_name = expected_type.__name__
+        qualified_expected_name = f"{expected_type.__module__}.{expected_name}"
+        annotation_parts = [
+            part.removesuffix("]").split("[", 1)[0]
+            for part in normalized.replace("Optional[", "").replace("Union[", "").replace(",", "|").split("|")
+        ]
+        return (
+            normalized == expected_name
+            or normalized == qualified_expected_name
+            or normalized.startswith(f"{expected_name}[")
+            or normalized.startswith(f"{qualified_expected_name}[")
+            or any(
+                part == expected_name or part == qualified_expected_name or part.endswith(f".{expected_name}") for part in annotation_parts
+            )
+        )
+
+    origin = get_origin(annotation)
+    if origin is expected_type:
+        return True
+
+    return any(annotation_includes_type(arg, expected_type) for arg in get_args(annotation) if arg is not type(None))
+
+
 def run_plugin(self, plugin_name):
     """
     run plugin
@@ -571,16 +642,16 @@ def run_plugin(self, plugin_name):
         )
 
         # check arguments required by the run function of the plugin
-        dataframe_required = False
-        project_required = False
-        parameters_required = False
+        dataframe_required: bool = False
+        project_required: bool = False
+        parameters_required: bool = False
         # for param in inspect.signature(plugin_module.run).parameters.values():
         for name, annotation in inspect.getfullargspec(plugin_module.run).annotations.items():
-            if name == "df" and annotation is pd.DataFrame:
+            if name == "df" and annotation_includes_type(annotation, pd.DataFrame):
                 dataframe_required = True
-            if name == "project" and annotation is dict:
+            if name == "project" and annotation_includes_type(annotation, dict):
                 project_required = True
-            if name == "parameters" and annotation is dict:
+            if name == "parameters" and annotation_includes_type(annotation, dict):
                 parameters_required = True
 
         # create arguments for the plugin run function

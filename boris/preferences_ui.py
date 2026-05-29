@@ -329,6 +329,11 @@ class Ui_prefDialog(object):
 
         self.horizontalLayout_16.addWidget(self.pb_browse_plugins_dir)
 
+        self.pb_clear_plugins_dir = QPushButton(self.layoutWidget)
+        self.pb_clear_plugins_dir.setObjectName(u"pb_clear_plugins_dir")
+
+        self.horizontalLayout_16.addWidget(self.pb_clear_plugins_dir)
+
 
         self.verticalLayout_11.addLayout(self.horizontalLayout_16)
 
@@ -782,6 +787,8 @@ class Ui_prefDialog(object):
         self.pb_download_official_plugins.setText(QCoreApplication.translate("prefDialog", u"Download/Update", None))
         self.label_15.setText(QCoreApplication.translate("prefDialog", u"Personal plugins", None))
         self.pb_browse_plugins_dir.setText(QCoreApplication.translate("prefDialog", u"Browse", None))
+        self.pb_clear_plugins_dir.setToolTip(QCoreApplication.translate("prefDialog", u"Clear the personal plugins path without deleting files", None))
+        self.pb_clear_plugins_dir.setText(QCoreApplication.translate("prefDialog", u"Clear", None))
         self.label_14.setText(QCoreApplication.translate("prefDialog", u"Plugin info", None))
         self.label_23.setText(QCoreApplication.translate("prefDialog", u"Plugin code", None))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab_analysis_plugins), QCoreApplication.translate("prefDialog", u"Analysis plugins", None))

@@ -1,3 +1,4 @@
+import ast
 from pathlib import Path
 import sys
 
@@ -7,6 +8,17 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 
 from boris import config
 from boris.analysis_plugins import export_to_praat_textgrid as plugin
+
+
+def test_plugin_does_not_import_boris_config():
+    tree = ast.parse(Path(plugin.__file__).read_text(encoding="utf-8"))
+    for node in ast.walk(tree):
+        if isinstance(node, ast.ImportFrom) and node.module == "boris":
+            assert all(alias.name != "config" for alias in node.names)
+        if isinstance(node, ast.ImportFrom) and node.module == "boris.config":
+            raise AssertionError("Plugin must not import boris.config")
+        if isinstance(node, ast.Import):
+            assert all(alias.name != "boris.config" for alias in node.names)
 
 
 def _df(rows):

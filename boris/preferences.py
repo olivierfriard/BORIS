@@ -38,6 +38,10 @@ from PySide6.QtCore import Qt
 from PySide6.QtGui import QFont
 
 
+PLUGIN_PATH_ROLE = 100
+PLUGIN_NAME_ROLE = 101
+
+
 class Preferences(QDialog, Ui_prefDialog):
     def __init__(self, parent=None):
         super().__init__()
@@ -47,6 +51,7 @@ class Preferences(QDialog, Ui_prefDialog):
         self.pb_browse_official_plugins_dir.clicked.connect(self.browse_official_plugins_dir)
         self.pb_download_official_plugins.clicked.connect(self.download_official_plugins)
         self.pb_browse_plugins_dir.clicked.connect(self.browse_plugins_dir)
+        self.pb_clear_plugins_dir.clicked.connect(self.clear_plugins_dir)
 
         self.pbBrowseFFmpegCacheDir.clicked.connect(self.browseFFmpegCacheDir)
 
@@ -68,6 +73,18 @@ class Preferences(QDialog, Ui_prefDialog):
         monospace_font.setPointSize(12)
         self.pte_plugin_code.setFont(monospace_font)
 
+    def plugin_item_text(self, plugin_name: str, plugin_version: str | None = None) -> str:
+        """
+        return the displayed plugin name with version, when available
+        """
+        return f"{plugin_name} (v. {plugin_version})" if plugin_version else plugin_name
+
+    def plugin_item_name(self, item: QListWidgetItem) -> str:
+        """
+        return the plugin name stored in a list item
+        """
+        return item.data(PLUGIN_NAME_ROLE) or item.text()
+
     def populate_python_plugins_list(
         self,
         list_widget,
@@ -88,13 +105,15 @@ class Preferences(QDialog, Ui_prefDialog):
             if plugin_name is None or plugin_name in skip_plugin_names:
                 continue
 
-            item = QListWidgetItem(plugin_name)
+            plugin_version = plugins.get_plugin_version(file_)
+            item = QListWidgetItem(self.plugin_item_text(plugin_name, plugin_version))
             item.setFlags(item.flags() | Qt.ItemIsUserCheckable)
             if plugin_name in excluded_plugins:
                 item.setCheckState(Qt.Unchecked)
             else:
                 item.setCheckState(Qt.Checked)
-            item.setData(100, str(file_))
+            item.setData(PLUGIN_PATH_ROLE, str(file_))
+            item.setData(PLUGIN_NAME_ROLE, plugin_name)
             list_widget.addItem(item)
             plugin_names.add(plugin_name)
 
@@ -104,7 +123,7 @@ class Preferences(QDialog, Ui_prefDialog):
         """
         return the names currently displayed in the official plugins list
         """
-        return {self.lv_all_plugins.item(i).text() for i in range(self.lv_all_plugins.count())}
+        return {self.plugin_item_name(self.lv_all_plugins.item(i)) for i in range(self.lv_all_plugins.count())}
 
     def browse_official_plugins_dir(self):
         """
@@ -234,6 +253,15 @@ class Preferences(QDialog, Ui_prefDialog):
         if self.lw_personal_plugins.count() == 0:
             QMessageBox.warning(self, cfg.programName, f"No plugin found in {directory}")
 
+    def clear_plugins_dir(self):
+        """
+        clear the personal plugins directory path without deleting files
+        """
+        self.le_personal_plugins_dir.clear()
+        self.lw_personal_plugins.clear()
+        self.pte_plugin_description.clear()
+        self.pte_plugin_code.clear()
+
     def refresh_preferences(self):
         """
         allow user to delete the config file (.boris)
@@ -289,7 +317,7 @@ def preferences(self):
         display information about the clicked plugin
         """
 
-        plugin_path = item.data(100)
+        plugin_path = item.data(PLUGIN_PATH_ROLE)
         if not plugin_path:
             return
 
@@ -325,11 +353,18 @@ def preferences(self):
 
         # R plugins
         if Path(plugin_path).suffix == ".R":
+            plugin_name = item.data(PLUGIN_NAME_ROLE) or plugins.get_r_plugin_name(plugin_path)
+            plugin_version = plugins.get_r_plugin_version(plugin_path)
             plugin_description = plugins.get_r_plugin_description(plugin_path)
+            out: list = []
+            out.append((plugin_name + "\n") if plugin_name else "No plugin name provided")
+            out.append(f"Version: {plugin_version}\n" if plugin_version else "No version provided")
             if plugin_description is not None:
-                preferencesWindow.pte_plugin_description.setPlainText("\n".join(plugin_description.split("\\n")))
+                out.append("Description:\n")
+                out.append("\n".join(plugin_description.split("\\n")))
             else:
-                preferencesWindow.pte_plugin_description.setPlainText("No description provided")
+                out.append("No description provided")
+            preferencesWindow.pte_plugin_description.setPlainText("\n".join(out))
 
         # display plugin code
         try:
@@ -421,13 +456,15 @@ def preferences(self):
             # check if personal plugin name is in BORIS plugins (case sensitive)
             if plugin_name in preferencesWindow.official_plugin_names():
                 continue
-            item = QListWidgetItem(plugin_name)
+            plugin_version = plugins.get_r_plugin_version(file_)
+            item = QListWidgetItem(preferencesWindow.plugin_item_text(plugin_name, plugin_version))
             item.setFlags(item.flags() | Qt.ItemIsUserCheckable)
             if plugin_name in self.config_param.get(cfg.EXCLUDED_PLUGINS, set()):
                 item.setCheckState(Qt.Unchecked)
             else:
                 item.setCheckState(Qt.Checked)
-            item.setData(100, str(file_))
+            item.setData(PLUGIN_PATH_ROLE, str(file_))
+            item.setData(PLUGIN_NAME_ROLE, plugin_name)
             preferencesWindow.lw_personal_plugins.addItem(item)
 
     # PROJET FILE INDENTATION
@@ -573,22 +610,22 @@ def preferences(self):
             self.config_param[cfg.ANALYSIS_PLUGINS] = {}
             self.config_param[cfg.EXCLUDED_PLUGINS] = set()
             for i in range(preferencesWindow.lv_all_plugins.count()):
-                if preferencesWindow.lv_all_plugins.item(i).checkState() == Qt.Checked:
-                    self.config_param[cfg.ANALYSIS_PLUGINS][preferencesWindow.lv_all_plugins.item(i).text()] = (
-                        preferencesWindow.lv_all_plugins.item(i).data(100)
-                    )
+                item = preferencesWindow.lv_all_plugins.item(i)
+                plugin_name = preferencesWindow.plugin_item_name(item)
+                if item.checkState() == Qt.Checked:
+                    self.config_param[cfg.ANALYSIS_PLUGINS][plugin_name] = item.data(PLUGIN_PATH_ROLE)
                 else:
-                    self.config_param[cfg.EXCLUDED_PLUGINS].add(preferencesWindow.lv_all_plugins.item(i).text())
+                    self.config_param[cfg.EXCLUDED_PLUGINS].add(plugin_name)
 
             # update personal plugins
             self.config_param[cfg.PERSONAL_PLUGINS_DIR] = preferencesWindow.le_personal_plugins_dir.text()
             for i in range(preferencesWindow.lw_personal_plugins.count()):
-                if preferencesWindow.lw_personal_plugins.item(i).checkState() == Qt.Checked:
-                    self.config_param[cfg.ANALYSIS_PLUGINS][preferencesWindow.lw_personal_plugins.item(i).text()] = (
-                        preferencesWindow.lw_personal_plugins.item(i).data(100)
-                    )
+                item = preferencesWindow.lw_personal_plugins.item(i)
+                plugin_name = preferencesWindow.plugin_item_name(item)
+                if item.checkState() == Qt.Checked:
+                    self.config_param[cfg.ANALYSIS_PLUGINS][plugin_name] = item.data(PLUGIN_PATH_ROLE)
                 else:
-                    self.config_param[cfg.EXCLUDED_PLUGINS].add(preferencesWindow.lw_personal_plugins.item(i).text())
+                    self.config_param[cfg.EXCLUDED_PLUGINS].add(plugin_name)
 
             plugins.load_plugins(self)
             plugins.add_plugins_to_menu(self)

@@ -414,6 +414,16 @@
                  </property>
                 </widget>
                </item>
+               <item>
+                <widget class="QPushButton" name="pb_clear_plugins_dir">
+                 <property name="toolTip">
+                  <string>Clear the personal plugins path without deleting files</string>
+                 </property>
+                 <property name="text">
+                  <string>Clear</string>
+                 </property>
+                </widget>
+               </item>
               </layout>
              </item>
              <item>
