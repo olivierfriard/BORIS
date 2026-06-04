@@ -1218,7 +1218,7 @@ def time2seconds(time_: str) -> dec:
 
 def seconds2time(sec: dec | None) -> str:
     """
-    convert seconds to hh:mm:ss.sss format
+    convert seconds to hh:mm:ss.sss duration format
 
     Args:
         sec (Decimal): time in seconds
@@ -1228,27 +1228,22 @@ def seconds2time(sec: dec | None) -> str:
     if sec is None:
         return cfg.NA
 
-    if math.isnan(sec):
+    try:
+        sec_dec = dec(str(sec))
+    except (ArithmeticError, TypeError, ValueError):
         return cfg.NA
 
-    # if sec > one day treat as date
-    if sec > cfg.DATE_CUTOFF:
-        t = dt.datetime.fromtimestamp(float(sec))
-        return f"{t:%Y-%m-%d %H:%M:%S}.{t.microsecond / 1000:03.0f}"
+    if not sec_dec.is_finite():
+        return cfg.NA
 
-    neg_sign = "-" * (sec < 0)
-    abs_sec = abs(sec)
+    neg_sign = "-" if sec_dec < 0 else ""
+    total_ms = int((abs(sec_dec) * dec("1000")).to_integral_value())
 
-    hours = 0
+    hours, remainder_ms = divmod(total_ms, 3_600_000)
+    minutes, remainder_ms = divmod(remainder_ms, 60_000)
+    seconds, milliseconds = divmod(remainder_ms, 1_000)
 
-    minutes = int(abs_sec / 60)
-    if minutes >= 60:
-        hours = int(minutes / 60)
-        minutes = minutes % 60
-
-    ssecs = f"{abs_sec - hours * 3600 - minutes * 60:06.3f}"
-
-    return f"{neg_sign}{hours:02}:{minutes:02}:{ssecs}"
+    return f"{neg_sign}{hours:02}:{minutes:02}:{seconds:02}.{milliseconds:03}"
 
 
 def safeFileName(s: str) -> str:

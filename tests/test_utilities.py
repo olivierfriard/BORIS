@@ -502,6 +502,12 @@ class Test_seconds2time(object):
     def test_gt_86400(self):
         assert utilities.seconds2time(Decimal(86400.999)) == "24:00:00.999"
 
+    def test_above_date_cutoff_is_duration(self):
+        assert utilities.seconds2time(Decimal("604801.123")) == "168:00:01.123"
+
+    def test_very_large_duration(self):
+        assert utilities.seconds2time(Decimal("1000000000000.123")) == "277777777:46:40.123"
+
     def test_10(self):
         assert utilities.seconds2time(Decimal(10.0)) == "00:00:10.000"
 

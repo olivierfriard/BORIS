@@ -33,12 +33,41 @@ import numpy as np
 from matplotlib.dates import (
     DateFormatter,
 )
+from matplotlib.ticker import FuncFormatter
 
 from . import config as cfg
 from . import db_functions, observation_operations, project_functions
 from . import utilities as util
 
 # matplotlib.pyplot.switch_backend("Qt5Agg")
+
+
+def _can_use_date_axis(epoch_date: dt.datetime, min_time: float, max_time: float) -> bool:
+    """
+    Check if the HH:MM:SS axis can be represented by matplotlib dates.
+    """
+    try:
+        epoch_date + dt.timedelta(seconds=float(min_time))
+        epoch_date + dt.timedelta(seconds=float(max_time))
+    except (OverflowError, ValueError):
+        return False
+    return True
+
+
+def _plot_time(seconds: float, epoch_date: dt.datetime, use_date_axis: bool) -> float:
+    """
+    Return the x value used by matplotlib for an event time.
+    """
+    if use_date_axis:
+        return matplotlib.dates.date2num(epoch_date + dt.timedelta(seconds=float(seconds)))
+    return float(seconds)
+
+
+def _hhmmss_axis_formatter(value: float, _position: int) -> str:
+    """
+    Format a numeric seconds axis as HH:MM:SS.
+    """
+    return util.seconds2time(value).split(".")[0]
 
 
 def default_value(ethogram, behavior, parameter):
@@ -468,6 +497,10 @@ def create_events_plot(
             print(f"{min_time=}")
             print(f"{max_time=}")
 
+        use_date_axis = self.timeFormat == cfg.HHMMSS and _can_use_date_axis(
+            epoch_date, min_time, max_time + cfg.POINT_EVENT_PLOT_DURATION
+        )
+
         # adjust start if start < init
         cursor.execute(
             "UPDATE aggregated_events SET start = ? WHERE  start < ? AND stop BETWEEN ? AND ?",
@@ -548,9 +581,11 @@ def create_events_plot(
                     bars[behavior_modifiers_str].append((row["start"], row["stop"]))
 
                     if self.timeFormat == cfg.HHMMSS:
-                        start_date = matplotlib.dates.date2num(epoch_date + dt.timedelta(seconds=row["start"]))
-                        end_date = matplotlib.dates.date2num(
-                            epoch_date + dt.timedelta(seconds=row["stop"] + cfg.POINT_EVENT_PLOT_DURATION * (row["stop"] == row["start"]))
+                        start_date = _plot_time(row["start"], epoch_date, use_date_axis)
+                        end_date = _plot_time(
+                            row["stop"] + cfg.POINT_EVENT_PLOT_DURATION * (row["stop"] == row["start"]),
+                            epoch_date,
+                            use_date_axis,
                         )
                     if self.timeFormat == cfg.S:
                         start_date = row["start"]
@@ -616,11 +651,14 @@ def create_events_plot(
 
             if self.timeFormat == cfg.HHMMSS:
                 axs[ax_idx].set_xlim(
-                    left=matplotlib.dates.date2num(epoch_date + dt.timedelta(seconds=min_time)),
-                    right=matplotlib.dates.date2num(epoch_date + dt.timedelta(seconds=max_time)),
+                    left=_plot_time(min_time, epoch_date, use_date_axis),
+                    right=_plot_time(max_time, epoch_date, use_date_axis),
                 )
-                axs[ax_idx].xaxis_date()
-                axs[ax_idx].xaxis.set_major_formatter(DateFormatter("%H:%M:%S"))
+                if use_date_axis:
+                    axs[ax_idx].xaxis_date()
+                    axs[ax_idx].xaxis.set_major_formatter(DateFormatter("%H:%M:%S"))
+                else:
+                    axs[ax_idx].xaxis.set_major_formatter(FuncFormatter(_hhmmss_axis_formatter))
                 axs[ax_idx].set_xlabel("Time (HH:MM:SS)", fontdict={"fontsize": 12})
 
             if self.timeFormat == cfg.S:
@@ -634,7 +672,7 @@ def create_events_plot(
 
             axs[ax_idx].invert_yaxis()
 
-        if self.timeFormat == cfg.HHMMSS:
+        if self.timeFormat == cfg.HHMMSS and use_date_axis:
             fig.autofmt_xdate()
 
         plt.tight_layout()

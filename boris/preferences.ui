@@ -379,6 +379,27 @@
                  </property>
                 </widget>
                </item>
+              </layout>
+             </item>
+             <item>
+              <layout class="QHBoxLayout" name="horizontalLayout_official_plugins_release">
+               <item>
+                <widget class="QLabel" name="label_official_plugins_release">
+                 <property name="text">
+                  <string>Release</string>
+                 </property>
+                </widget>
+               </item>
+               <item>
+                <widget class="QComboBox" name="cb_official_plugins_release"/>
+               </item>
+               <item>
+                <widget class="QPushButton" name="pb_refresh_official_plugins_releases">
+                 <property name="text">
+                  <string>Load releases</string>
+                 </property>
+                </widget>
+               </item>
                <item>
                 <widget class="QPushButton" name="pb_download_official_plugins">
                  <property name="text">

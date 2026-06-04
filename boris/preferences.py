@@ -22,21 +22,16 @@ This file is part of BORIS.
 
 import logging
 import os
-from pathlib import Path
 import sys
-from . import dialog
-from . import gui_utilities
-from . import menu_options
-from . import config as cfg
-from . import config_file
-from . import plugins
+from pathlib import Path
 
-from .preferences_ui import Ui_prefDialog
-
-from PySide6.QtWidgets import QApplication, QDialog, QFileDialog, QListWidgetItem, QMessageBox
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QFont
+from PySide6.QtWidgets import QApplication, QDialog, QFileDialog, QListWidgetItem, QMessageBox
 
+from . import config as cfg
+from . import config_file, dialog, gui_utilities, menu_options, plugins
+from .preferences_ui import Ui_prefDialog
 
 PLUGIN_PATH_ROLE = 100
 PLUGIN_NAME_ROLE = 101
@@ -49,6 +44,7 @@ class Preferences(QDialog, Ui_prefDialog):
 
         # plugins
         self.pb_browse_official_plugins_dir.clicked.connect(self.browse_official_plugins_dir)
+        self.pb_refresh_official_plugins_releases.clicked.connect(self.refresh_official_plugins_releases)
         self.pb_download_official_plugins.clicked.connect(self.download_official_plugins)
         self.pb_browse_plugins_dir.clicked.connect(self.browse_plugins_dir)
         self.pb_clear_plugins_dir.clicked.connect(self.clear_plugins_dir)
@@ -72,6 +68,14 @@ class Preferences(QDialog, Ui_prefDialog):
         monospace_font.setStyleHint(QFont.Monospace)
         monospace_font.setPointSize(12)
         self.pte_plugin_code.setFont(monospace_font)
+        self.reset_official_plugins_release_combo()
+
+    def reset_official_plugins_release_combo(self):
+        """
+        reset the official plugins release selector to the default branch
+        """
+        self.cb_official_plugins_release.clear()
+        self.cb_official_plugins_release.addItem(f"{cfg.OFFICIAL_PLUGINS_REPO_BRANCH} branch", cfg.OFFICIAL_PLUGINS_ARCHIVE_URL)
 
     def plugin_item_text(self, plugin_name: str, plugin_version: str | None = None) -> str:
         """
@@ -155,6 +159,37 @@ class Preferences(QDialog, Ui_prefDialog):
                 skip_plugin_names=self.official_plugin_names(),
             )
 
+    def refresh_official_plugins_releases(self):
+        """
+        fetch the official BORIS plugins releases list from GitHub
+        """
+        current_archive_url = self.cb_official_plugins_release.currentData()
+
+        QApplication.setOverrideCursor(Qt.CursorShape.WaitCursor)
+        release_error = None
+        try:
+            releases = plugins.list_official_plugins_releases()
+        except Exception as exc:
+            releases = []
+            release_error = exc
+        finally:
+            QApplication.restoreOverrideCursor()
+
+        if release_error is not None:
+            QMessageBox.critical(self, cfg.programName, f"Error loading official BORIS plugins releases:\n\n{release_error}")
+            return
+
+        self.reset_official_plugins_release_combo()
+        for release in releases:
+            self.cb_official_plugins_release.addItem(release["text"], release["archive_url"])
+
+        index = self.cb_official_plugins_release.findData(current_archive_url)
+        if index >= 0:
+            self.cb_official_plugins_release.setCurrentIndex(index)
+
+        if not releases:
+            QMessageBox.information(self, cfg.programName, "No official BORIS plugins release found.")
+
     def download_official_plugins(self):
         """
         download or update the official BORIS plugins repository
@@ -173,13 +208,17 @@ class Preferences(QDialog, Ui_prefDialog):
             )
             return
 
+        archive_url = self.cb_official_plugins_release.currentData() or cfg.OFFICIAL_PLUGINS_ARCHIVE_URL
+        archive_text = self.cb_official_plugins_release.currentText() or f"{cfg.OFFICIAL_PLUGINS_REPO_BRANCH} branch"
+
         if target_dir.exists() and any(target_dir.iterdir()):
             answer = QMessageBox.question(
                 self,
                 cfg.programName,
                 (
                     f"Download/update official BORIS plugins in:\n{target_dir}\n\n"
-                    "Existing files in this directory will be replaced. The .git directory, if present, will be kept.\n\n"
+                    f"Source: {archive_text}\n\n"
+                    "Existing files in this directory will be replaced.\n\n"
                     "Continue?"
                 ),
                 QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
@@ -191,7 +230,7 @@ class Preferences(QDialog, Ui_prefDialog):
         QApplication.setOverrideCursor(Qt.CursorShape.WaitCursor)
         download_error = None
         try:
-            plugin_dir = plugins.download_official_plugins_repository(target_dir)
+            plugin_dir = plugins.download_official_plugins_repository(target_dir, archive_url)
         except Exception as exc:
             download_error = exc
         finally:
@@ -212,7 +251,7 @@ class Preferences(QDialog, Ui_prefDialog):
                 skip_plugin_names=self.official_plugin_names(),
             )
 
-        QMessageBox.information(self, cfg.programName, f"Official BORIS plugins updated from:\n{plugin_dir}")
+        QMessageBox.information(self, cfg.programName, f"Official BORIS plugins updated from {archive_text}:\n{plugin_dir}")
 
     def reset_spectro_values(self):
         """

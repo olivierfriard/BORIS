@@ -23,6 +23,7 @@ This file is part of BORIS.
 import copy
 import importlib
 import inspect
+import json
 import logging
 import os
 import shutil
@@ -313,6 +314,62 @@ def get_official_plugin_files(config_param: dict | None = None) -> list[Path]:
     if official_plugins_dir is None:
         return []
     return get_python_plugin_files(official_plugins_dir)
+
+
+def _official_plugins_release_text(release: dict) -> str:
+    """
+    Return the release label shown in Preferences.
+    """
+    tag_name = release["tag_name"]
+    release_name = release.get("name") or tag_name
+    text = tag_name if release_name == tag_name else f"{release_name} ({tag_name})"
+
+    published_at = release.get("published_at", "")
+    if published_at:
+        text = f"{text} - {published_at[:10]}"
+
+    if release.get("prerelease"):
+        text = f"{text} [pre-release]"
+
+    return text
+
+
+def list_official_plugins_releases() -> list[dict[str, str]]:
+    """
+    Return published releases for the official plugins repository.
+    """
+    request = urllib.request.Request(
+        f"{cfg.OFFICIAL_PLUGINS_RELEASES_API_URL}?per_page=100",
+        headers={
+            "Accept": "application/vnd.github+json",
+            "User-Agent": f"{cfg.programName}/plugins",
+        },
+    )
+    with urllib.request.urlopen(request, timeout=30) as response:
+        releases = json.load(response)
+
+    if not isinstance(releases, list):
+        raise RuntimeError("Unexpected response from GitHub releases API")
+
+    official_releases: list[dict[str, str]] = []
+    for release in releases:
+        if not isinstance(release, dict) or release.get("draft"):
+            continue
+
+        tag_name = release.get("tag_name")
+        archive_url = release.get("zipball_url")
+        if not tag_name or not archive_url:
+            continue
+
+        official_releases.append(
+            {
+                "tag_name": tag_name,
+                "archive_url": archive_url,
+                "text": _official_plugins_release_text(release),
+            }
+        )
+
+    return official_releases
 
 
 def _safe_extract_zip(zip_path: Path, destination: Path) -> None:
