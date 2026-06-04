@@ -69,13 +69,45 @@ class Preferences(QDialog, Ui_prefDialog):
         monospace_font.setPointSize(12)
         self.pte_plugin_code.setFont(monospace_font)
         self.reset_official_plugins_release_combo()
+        self.installed_official_plugins_source = plugins.official_plugins_branch_source()
 
     def reset_official_plugins_release_combo(self):
         """
         reset the official plugins release selector to the default branch
         """
         self.cb_official_plugins_release.clear()
-        self.cb_official_plugins_release.addItem(f"{cfg.OFFICIAL_PLUGINS_REPO_BRANCH} branch", cfg.OFFICIAL_PLUGINS_ARCHIVE_URL)
+        source = plugins.official_plugins_branch_source()
+        self.cb_official_plugins_release.addItem(source["text"], source)
+
+    def official_plugins_source_index(self, source: dict) -> int:
+        """
+        return the index of the official plugins source in the release selector
+        """
+        archive_url = source.get("archive_url", "")
+        for index in range(self.cb_official_plugins_release.count()):
+            item_source = plugins.normalize_official_plugins_source(self.cb_official_plugins_release.itemData(index))
+            if item_source.get("archive_url") == archive_url:
+                return index
+        return -1
+
+    def set_official_plugins_source(self, source: dict | None):
+        """
+        select and remember the official plugins source.
+        """
+        source = plugins.normalize_official_plugins_source(source)
+        index = self.official_plugins_source_index(source)
+        if index < 0:
+            self.cb_official_plugins_release.addItem(source["text"], source)
+            index = self.cb_official_plugins_release.count() - 1
+
+        self.cb_official_plugins_release.setCurrentIndex(index)
+        self.installed_official_plugins_source = source
+
+    def current_official_plugins_source(self) -> dict[str, str]:
+        """
+        return the source selected for the next official plugins download.
+        """
+        return plugins.normalize_official_plugins_source(self.cb_official_plugins_release.currentData())
 
     def plugin_item_text(self, plugin_name: str, plugin_version: str | None = None) -> str:
         """
@@ -163,7 +195,7 @@ class Preferences(QDialog, Ui_prefDialog):
         """
         fetch the official BORIS plugins releases list from GitHub
         """
-        current_archive_url = self.cb_official_plugins_release.currentData()
+        current_source = self.current_official_plugins_source()
 
         QApplication.setOverrideCursor(Qt.CursorShape.WaitCursor)
         release_error = None
@@ -181,11 +213,13 @@ class Preferences(QDialog, Ui_prefDialog):
 
         self.reset_official_plugins_release_combo()
         for release in releases:
-            self.cb_official_plugins_release.addItem(release["text"], release["archive_url"])
+            self.cb_official_plugins_release.addItem(release["text"], release)
 
-        index = self.cb_official_plugins_release.findData(current_archive_url)
-        if index >= 0:
-            self.cb_official_plugins_release.setCurrentIndex(index)
+        index = self.official_plugins_source_index(current_source)
+        if index < 0:
+            self.cb_official_plugins_release.addItem(current_source["text"], current_source)
+            index = self.cb_official_plugins_release.count() - 1
+        self.cb_official_plugins_release.setCurrentIndex(index)
 
         if not releases:
             QMessageBox.information(self, cfg.programName, "No official BORIS plugins release found.")
@@ -208,8 +242,9 @@ class Preferences(QDialog, Ui_prefDialog):
             )
             return
 
-        archive_url = self.cb_official_plugins_release.currentData() or cfg.OFFICIAL_PLUGINS_ARCHIVE_URL
-        archive_text = self.cb_official_plugins_release.currentText() or f"{cfg.OFFICIAL_PLUGINS_REPO_BRANCH} branch"
+        source = self.current_official_plugins_source()
+        archive_url = source["archive_url"]
+        archive_text = source["text"]
 
         if target_dir.exists() and any(target_dir.iterdir()):
             answer = QMessageBox.question(
@@ -240,6 +275,7 @@ class Preferences(QDialog, Ui_prefDialog):
             QMessageBox.critical(self, cfg.programName, f"Error downloading official BORIS plugins:\n\n{download_error}")
             return
 
+        self.installed_official_plugins_source = source
         self.le_official_plugins_dir.setText(str(target_dir))
         config_param = {cfg.OFFICIAL_PLUGINS_DIR: str(target_dir)}
         self.populate_python_plugins_list(self.lv_all_plugins, plugins.get_official_plugin_files(config_param))
@@ -468,6 +504,7 @@ def preferences(self):
     external_plugins_dir = plugins.get_external_plugins_dir(self.config_param)
     configured_plugins_dir = self.config_param.get(cfg.OFFICIAL_PLUGINS_DIR, "")
     preferencesWindow.le_official_plugins_dir.setText(configured_plugins_dir or (str(external_plugins_dir) if external_plugins_dir else ""))
+    preferencesWindow.set_official_plugins_source(self.config_param.get(cfg.OFFICIAL_PLUGINS_SOURCE))
     preferencesWindow.populate_python_plugins_list(
         preferencesWindow.lv_all_plugins,
         plugins.get_official_plugin_files(self.config_param),
@@ -646,6 +683,7 @@ def preferences(self):
 
             # update official BORIS analysis plugins
             self.config_param[cfg.OFFICIAL_PLUGINS_DIR] = preferencesWindow.le_official_plugins_dir.text()
+            self.config_param[cfg.OFFICIAL_PLUGINS_SOURCE] = preferencesWindow.installed_official_plugins_source
             self.config_param[cfg.ANALYSIS_PLUGINS] = {}
             self.config_param[cfg.EXCLUDED_PLUGINS] = set()
             for i in range(preferencesWindow.lv_all_plugins.count()):

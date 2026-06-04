@@ -316,6 +316,66 @@ def get_official_plugin_files(config_param: dict | None = None) -> list[Path]:
     return get_python_plugin_files(official_plugins_dir)
 
 
+def official_plugins_branch_source() -> dict[str, str]:
+    """
+    Return metadata for the official plugins main branch source.
+    """
+    return {
+        "type": cfg.OFFICIAL_PLUGINS_SOURCE_BRANCH,
+        "branch": cfg.OFFICIAL_PLUGINS_REPO_BRANCH,
+        "archive_url": cfg.OFFICIAL_PLUGINS_ARCHIVE_URL,
+        "text": f"{cfg.OFFICIAL_PLUGINS_REPO_BRANCH} branch",
+    }
+
+
+def official_plugins_source_from_release(release: dict) -> dict[str, str]:
+    """
+    Return metadata for an official plugins release source.
+    """
+    return {
+        "type": cfg.OFFICIAL_PLUGINS_SOURCE_RELEASE,
+        "tag_name": release["tag_name"],
+        "archive_url": release["zipball_url"],
+        "text": _official_plugins_release_text(release),
+    }
+
+
+def normalize_official_plugins_source(source: dict | None) -> dict[str, str]:
+    """
+    Return a complete official plugins source dict.
+    """
+    if not isinstance(source, dict):
+        return official_plugins_branch_source()
+
+    archive_url = source.get("archive_url") or ""
+    if not archive_url:
+        return official_plugins_branch_source()
+
+    source_type = source.get("type")
+    if not source_type:
+        source_type = cfg.OFFICIAL_PLUGINS_SOURCE_RELEASE if source.get("tag_name") else cfg.OFFICIAL_PLUGINS_SOURCE_BRANCH
+
+    text = source.get("text")
+    if not text:
+        if source_type == cfg.OFFICIAL_PLUGINS_SOURCE_RELEASE and source.get("tag_name"):
+            text = source["tag_name"]
+        elif source_type == cfg.OFFICIAL_PLUGINS_SOURCE_BRANCH:
+            text = f"{source.get('branch', cfg.OFFICIAL_PLUGINS_REPO_BRANCH)} branch"
+        else:
+            text = archive_url
+
+    normalized_source = {
+        "type": source_type,
+        "archive_url": archive_url,
+        "text": text,
+    }
+    if source_type == cfg.OFFICIAL_PLUGINS_SOURCE_RELEASE and source.get("tag_name"):
+        normalized_source["tag_name"] = source["tag_name"]
+    if source_type == cfg.OFFICIAL_PLUGINS_SOURCE_BRANCH:
+        normalized_source["branch"] = source.get("branch", cfg.OFFICIAL_PLUGINS_REPO_BRANCH)
+    return normalized_source
+
+
 def _official_plugins_release_text(release: dict) -> str:
     """
     Return the release label shown in Preferences.
@@ -361,13 +421,7 @@ def list_official_plugins_releases() -> list[dict[str, str]]:
         if not tag_name or not archive_url:
             continue
 
-        official_releases.append(
-            {
-                "tag_name": tag_name,
-                "archive_url": archive_url,
-                "text": _official_plugins_release_text(release),
-            }
-        )
+        official_releases.append(official_plugins_source_from_release(release))
 
     return official_releases
 
