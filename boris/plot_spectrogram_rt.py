@@ -22,6 +22,7 @@ This file is part of BORIS.
 import wave
 
 import numpy as np
+import parselmouth
 import pyqtgraph as pg
 from PySide6.QtCore import QEvent, Qt, Signal
 from PySide6.QtGui import QCloseEvent, QColor
@@ -33,9 +34,34 @@ from PySide6.QtWidgets import (
     QVBoxLayout,
     QWidget,
 )
-from scipy import signal
 
 from . import config as cfg
+
+
+def _spectral_window_shape(window_type: str) -> parselmouth.SpectralAnalysisWindowShape:
+    """
+    Translate BORIS spectrogram preferences to Praat/Parselmouth window shapes.
+    """
+    window_type = window_type.lower()
+    if window_type in ("hanning", "hann"):
+        return parselmouth.SpectralAnalysisWindowShape.HANNING
+    if window_type == "hamming":
+        return parselmouth.SpectralAnalysisWindowShape.HAMMING
+    return parselmouth.SpectralAnalysisWindowShape.HANNING
+
+
+def _spectrogram_parameters(nfft: int, noverlap: int, frame_rate: float) -> tuple[float, float, float]:
+    """
+    Convert the existing NFFT/noverlap settings to Praat spectrogram parameters.
+    """
+    nfft = max(2, int(nfft))
+    noverlap = min(max(0, int(noverlap)), nfft - 1)
+    frame_rate = float(frame_rate)
+
+    window_length = nfft / frame_rate
+    time_step = (nfft - noverlap) / frame_rate
+    frequency_step = frame_rate / nfft
+    return window_length, time_step, frequency_step
 
 
 class Plot_spectrogram_RT(QWidget):
@@ -116,9 +142,11 @@ class Plot_spectrogram_RT(QWidget):
 
         # runtime state
         self.sound_info = np.array([], dtype=np.int16)
+        self.sound = None
         self.frame_rate = 0
         self.media_length = 0.0
         self.wav_file_path = ""
+        self.config_param = {}
 
         # cache last levels to keep visualization stable
         self._fixed_levels = None  # (lo, hi)
@@ -191,14 +219,21 @@ class Plot_spectrogram_RT(QWidget):
         load wav file in numpy array
         """
         try:
-            self.sound_info, self.frame_rate = self.get_wav_info(wav_file_path)
-            if not self.frame_rate:
-                return {"error": f"unknown format for file {wav_file_path}"}
+            sound = parselmouth.Sound(wav_file_path)
+            self.sound = sound.convert_to_mono() if sound.n_channels > 1 else sound
+            self.sound_info = np.asarray(self.sound.values[0], dtype=np.float64)
+            self.frame_rate = int(round(float(self.sound.sampling_frequency)))
         except FileNotFoundError:
             return {"error": f"File not found: {wav_file_path}"}
+        except Exception:
+            self.sound = None
+            self.sound_info = np.array([])
+            self.frame_rate = 0
+            return {"error": f"unknown format for file {wav_file_path}"}
 
-        self.media_length = len(self.sound_info) / self.frame_rate
+        self.media_length = float(self.sound.duration)
         self.wav_file_path = wav_file_path
+        self._fixed_levels = None
 
         # reasonable defaults for frequency boxes
         if self.sb_freq_max.value() == 0:
@@ -208,35 +243,40 @@ class Plot_spectrogram_RT(QWidget):
 
     def _compute_spectrogram(
         self,
-        x: np.ndarray,
+        start_time: float,
+        end_time: float,
         nfft: int,
         noverlap: int,
         window_type: str,
+        maximum_frequency: float,
     ) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
         """
-        Compute spectrogram using scipy.signal.spectrogram and return
-        frequencies (f), times (t, relative to the chunk start), and Sxx (power).
+        Compute a Praat spectrogram and return frequencies, times relative to
+        start_time, and power values shaped as (freq_bins, time_bins).
         """
-        if window_type in ("hanning", "hann"):
-            window = "hann"
-        elif window_type == "hamming":
-            window = "hamming"
-        elif window_type == "blackmanharris":
-            window = "blackmanharris"
-        else:
-            window = "hann"
+        if self.sound is None:
+            return np.array([]), np.array([]), np.array([[]])
+        if end_time <= start_time:
+            return np.array([]), np.array([]), np.array([[]])
 
-        f, t, Sxx = signal.spectrogram(
-            x,
-            fs=self.frame_rate,
-            window=window,
-            nperseg=nfft,
-            noverlap=noverlap,
-            mode="psd",
-            scaling="density",
-            detrend=False,
+        window_length, time_step, frequency_step = _spectrogram_parameters(nfft, noverlap, self.frame_rate)
+        try:
+            sound_part = self.sound.extract_part(from_time=start_time, to_time=end_time, preserve_times=False)
+            spectrogram = sound_part.to_spectrogram(
+                window_length=window_length,
+                maximum_frequency=maximum_frequency,
+                time_step=time_step,
+                frequency_step=frequency_step,
+                window_shape=_spectral_window_shape(window_type),
+            )
+        except Exception:
+            return np.array([]), np.array([]), np.array([[]])
+
+        return (
+            np.asarray(spectrogram.ys(), dtype=np.float64),
+            np.asarray(spectrogram.xs(), dtype=np.float64),
+            np.asarray(spectrogram.values, dtype=np.float64),
         )
-        return f, t, Sxx  # Sxx: (freq_bins, time_bins)
 
     def plot_spectro(
         self,
@@ -255,7 +295,7 @@ class Plot_spectrogram_RT(QWidget):
 
         if current_time is None:
             return
-        if self.frame_rate <= 0 or self.sound_info.size == 0:
+        if self.frame_rate <= 0 or self.sound is None or self.sound_info.size == 0:
             return
 
         window_type = self.config_param.get(cfg.SPECTROGRAM_WINDOW_TYPE, cfg.SPECTROGRAM_DEFAULT_WINDOW_TYPE)
@@ -271,25 +311,28 @@ class Plot_spectrogram_RT(QWidget):
         start_time = max(0.0, float(current_time) - half)
         end_time = min(self.media_length, float(current_time) + half)
 
-        i0 = int(round(start_time * self.frame_rate))
-        i1 = int(round(end_time * self.frame_rate))
-        chunk = self.sound_info[i0:i1]
-        if chunk.size == 0:
-            return
-
-        # spectrogram on chunk
-        f, t_rel, Sxx = self._compute_spectrogram(chunk, nfft=nfft, noverlap=noverlap, window_type=window_type)
-        if t_rel.size == 0 or f.size == 0:
-            return
-
-        # absolute time axis
-        t_abs = t_rel + start_time
-
         # frequency mask from UI
         fmin = self.sb_freq_min.value()
         fmax = self.sb_freq_max.value()
         if fmax <= fmin:
             return
+
+        maximum_frequency = min(float(fmax), self.frame_rate / 2.0)
+
+        # spectrogram on chunk
+        f, t_rel, Sxx = self._compute_spectrogram(
+            start_time,
+            end_time,
+            nfft=nfft,
+            noverlap=noverlap,
+            window_type=window_type,
+            maximum_frequency=maximum_frequency,
+        )
+        if t_rel.size == 0 or f.size == 0 or Sxx.size == 0:
+            return
+
+        # absolute time axis
+        t_abs = t_rel + start_time
 
         freq_mask = (f >= fmin) & (f <= fmax)
         if not freq_mask.any():
