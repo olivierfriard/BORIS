@@ -24,6 +24,7 @@ import wave
 import numpy as np
 import parselmouth
 import pyqtgraph as pg
+from matplotlib import pyplot
 from PySide6.QtCore import QEvent, Qt, Signal
 from PySide6.QtGui import QCloseEvent, QColor
 from PySide6.QtWidgets import (
@@ -37,31 +38,52 @@ from PySide6.QtWidgets import (
 
 from . import config as cfg
 
-
-def _spectral_window_shape(window_type: str) -> parselmouth.SpectralAnalysisWindowShape:
-    """
-    Translate BORIS spectrogram preferences to Praat/Parselmouth window shapes.
-    """
-    window_type = window_type.lower()
-    if window_type in ("hanning", "hann"):
-        return parselmouth.SpectralAnalysisWindowShape.HANNING
-    if window_type == "hamming":
-        return parselmouth.SpectralAnalysisWindowShape.HAMMING
-    return parselmouth.SpectralAnalysisWindowShape.HANNING
+SPECTROGRAM_DYNAMIC_RANGE_DB = 70.0
+PRAAT_LIKE_COLOR_MAP = "afmhot"
 
 
-def _spectrogram_parameters(nfft: int, noverlap: int, frame_rate: float) -> tuple[float, float, float]:
+def _praat_spectrogram_parameters() -> tuple[float, float, float, parselmouth.SpectralAnalysisWindowShape]:
     """
-    Convert the existing NFFT/noverlap settings to Praat spectrogram parameters.
+    Return Praat's standard spectrogram parameters.
     """
-    nfft = max(2, int(nfft))
-    noverlap = min(max(0, int(noverlap)), nfft - 1)
-    frame_rate = float(frame_rate)
+    return 0.005, 0.002, 20.0, parselmouth.SpectralAnalysisWindowShape.GAUSSIAN
 
-    window_length = nfft / frame_rate
-    time_step = (nfft - noverlap) / frame_rate
-    frequency_step = frame_rate / nfft
-    return window_length, time_step, frequency_step
+
+def _spectrogram_levels(spectrogram_db: np.ndarray, fixed_levels: tuple[float, float] | None = None) -> tuple[float, float]:
+    """
+    Return Praat/Parselmouth-style display levels for a spectrogram in dB.
+    """
+    if fixed_levels is not None:
+        return fixed_levels
+
+    max_db = float(np.nanmax(spectrogram_db))
+    if not np.isfinite(max_db):
+        return (-SPECTROGRAM_DYNAMIC_RANGE_DB, 0.0)
+    return (max_db - SPECTROGRAM_DYNAMIC_RANGE_DB, max_db)
+
+
+def _lookup_table_from_colormap(color_map, n_colors: int = 256) -> np.ndarray:
+    """
+    Build a PyQtGraph lookup table from a Matplotlib or PyQtGraph colormap name/object.
+    """
+    if hasattr(color_map, "getLookupTable"):
+        return color_map.getLookupTable(0.0, 1.0, n_colors)
+
+    if hasattr(color_map, "__call__"):
+        rgba = color_map(np.linspace(0.0, 1.0, n_colors))
+    else:
+        rgba = pyplot.get_cmap(str(color_map))(np.linspace(0.0, 1.0, n_colors))
+
+    return np.asarray(rgba[:, :3] * 255, dtype=np.ubyte)
+
+
+def _apply_pre_emphasis(sound: parselmouth.Sound, enabled: bool) -> parselmouth.Sound:
+    """
+    Apply Praat pre-emphasis to a sound chunk when requested.
+    """
+    if enabled:
+        sound.pre_emphasize()
+    return sound
 
 
 class Plot_spectrogram_RT(QWidget):
@@ -81,6 +103,7 @@ class Plot_spectrogram_RT(QWidget):
         self.time_mem = -1
 
         self.cursor_color = cfg.REALTIME_PLOT_CURSOR_COLOR
+        self.spectro_color_map = pyplot.get_cmap(PRAAT_LIKE_COLOR_MAP)
 
         # ---- PyQtGraph widgets/items ----
         self.plot = pg.PlotWidget()
@@ -95,9 +118,7 @@ class Plot_spectrogram_RT(QWidget):
         self.playhead = pg.InfiniteLine(pos=0, angle=90, movable=False, pen=pg.mkPen(self._qcolor(self.cursor_color)))
         self.plot.addItem(self.playhead)
 
-        # Colormap (viridis-like)
-        cmap = pg.colormap.get("viridis")
-        self.img.setLookupTable(cmap.getLookupTable(0.0, 1.0, 256))
+        self._apply_color_map()
 
         # Layout
         layout = QVBoxLayout()
@@ -214,6 +235,16 @@ class Plot_spectrogram_RT(QWidget):
         """
         self.plot_spectro(current_time=self.time_mem, force_plot=True)
 
+    def _apply_color_map(self):
+        """
+        Apply the currently configured color map to the PyQtGraph image item.
+        """
+        try:
+            lookup_table = _lookup_table_from_colormap(self.spectro_color_map)
+        except Exception:
+            lookup_table = _lookup_table_from_colormap(PRAAT_LIKE_COLOR_MAP)
+        self.img.setLookupTable(lookup_table)
+
     def load_wav(self, wav_file_path: str) -> dict:
         """
         load wav file in numpy array
@@ -245,9 +276,6 @@ class Plot_spectrogram_RT(QWidget):
         self,
         start_time: float,
         end_time: float,
-        nfft: int,
-        noverlap: int,
-        window_type: str,
         maximum_frequency: float,
     ) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
         """
@@ -259,15 +287,19 @@ class Plot_spectrogram_RT(QWidget):
         if end_time <= start_time:
             return np.array([]), np.array([]), np.array([[]])
 
-        window_length, time_step, frequency_step = _spectrogram_parameters(nfft, noverlap, self.frame_rate)
+        window_length, time_step, frequency_step, window_shape = _praat_spectrogram_parameters()
         try:
             sound_part = self.sound.extract_part(from_time=start_time, to_time=end_time, preserve_times=False)
+            sound_part = _apply_pre_emphasis(
+                sound_part,
+                self.config_param.get(cfg.SPECTROGRAM_PRE_EMPHASIZE, cfg.SPECTROGRAM_PRE_EMPHASIZE_DEFAULT),
+            )
             spectrogram = sound_part.to_spectrogram(
                 window_length=window_length,
                 maximum_frequency=maximum_frequency,
                 time_step=time_step,
                 frequency_step=frequency_step,
-                window_shape=_spectral_window_shape(window_type),
+                window_shape=window_shape,
             )
         except Exception:
             return np.array([]), np.array([]), np.array([[]])
@@ -297,10 +329,7 @@ class Plot_spectrogram_RT(QWidget):
             return
         if self.frame_rate <= 0 or self.sound is None or self.sound_info.size == 0:
             return
-
-        window_type = self.config_param.get(cfg.SPECTROGRAM_WINDOW_TYPE, cfg.SPECTROGRAM_DEFAULT_WINDOW_TYPE)
-        nfft = int(self.config_param.get(cfg.SPECTROGRAM_NFFT, cfg.SPECTROGRAM_DEFAULT_NFFT))
-        noverlap = int(self.config_param.get(cfg.SPECTROGRAM_NOVERLAP, cfg.SPECTROGRAM_DEFAULT_NOVERLAP))
+        self._apply_color_map()
 
         use_vrange = self.config_param.get(cfg.SPECTROGRAM_USE_VMIN_VMAX, cfg.SPECTROGRAM_USE_VMIN_VMAX_DEFAULT)
         vmin = self.config_param.get(cfg.SPECTROGRAM_VMIN, cfg.SPECTROGRAM_DEFAULT_VMIN) if use_vrange else None
@@ -323,9 +352,6 @@ class Plot_spectrogram_RT(QWidget):
         f, t_rel, Sxx = self._compute_spectrogram(
             start_time,
             end_time,
-            nfft=nfft,
-            noverlap=noverlap,
-            window_type=window_type,
             maximum_frequency=maximum_frequency,
         )
         if t_rel.size == 0 or f.size == 0 or Sxx.size == 0:
@@ -350,15 +376,7 @@ class Plot_spectrogram_RT(QWidget):
             levels = (float(vmin), float(vmax))
             self._fixed_levels = levels
         else:
-            # keep a stable mapping: compute once, then reuse
-            if self._fixed_levels is None:
-                lo, hi = np.percentile(Sxx_db, [5, 99.5])
-                if not np.isfinite(lo) or not np.isfinite(hi) or hi <= lo:
-                    lo, hi = float(np.nanmin(Sxx_db)), float(np.nanmax(Sxx_db))
-                    if hi <= lo:
-                        hi = lo + 1.0
-                self._fixed_levels = (float(lo), float(hi))
-            levels = self._fixed_levels
+            levels = _spectrogram_levels(Sxx_db)
 
         # --- image mapping in real coordinates (sec, Hz) ---
         # pg.ImageItem expects array shaped (x, y) visually, but here we control rect so it’s fine.
