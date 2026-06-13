@@ -68,6 +68,40 @@ from . import (
 from . import utilities as util
 
 
+def _shutdown_mpv_player(player, player_number: int, ipc_mode: bool) -> None:
+    try:
+        player.stop()
+    except Exception as exc:
+        logging.warning(f"Error stopping MPV player #{player_number}: {exc}")
+
+    if ipc_mode:
+        process = getattr(player, "process", None)
+        if process is None:
+            return
+
+        try:
+            process.terminate()
+            try:
+                process.wait(timeout=3)
+            except subprocess.TimeoutExpired:
+                process.kill()
+        except Exception as exc:
+            logging.warning(f"Error stopping MPV process #{player_number}: {exc}")
+        return
+
+    if hasattr(player, "_log_handler"):
+        player._log_handler = None
+
+    terminate = getattr(player, "terminate", None)
+    if terminate is None:
+        return
+
+    try:
+        terminate()
+    except Exception as exc:
+        logging.warning(f"Error terminating MPV player #{player_number}: {exc}")
+
+
 def close_observation(self):
     """
     close current observation
@@ -114,23 +148,12 @@ def close_observation(self):
         if self.MPV_IPC_MODE:
             self.main_window_activation_timer.stop()
 
-        for i, player in enumerate(self.dw_player):
-            if (
-                str(i + 1) in self.pj[cfg.OBSERVATIONS][self.observationId][cfg.FILE]
-                and self.pj[cfg.OBSERVATIONS][self.observationId][cfg.FILE][str(i + 1)]
-            ):
-                logging.info(f"Stop player #{i + 1}")
-                player.player.stop()
-
-                if self.MPV_IPC_MODE:
-                    try:
-                        player.player.process.terminate()
-                        try:
-                            player.player.process.wait(timeout=3)  # wait up to 3s
-                        except subprocess.TimeoutExpired:
-                            player.player.process.kill()  # force if still alive
-                    except Exception as e:
-                        logging.warning(f"Error stopping MPV process #{i}: {e}")
+        observation_files = self.pj[cfg.OBSERVATIONS][self.observationId][cfg.FILE]
+        for i, player_dock in enumerate(self.dw_player):
+            player_number = str(i + 1)
+            if player_number in observation_files and observation_files[player_number]:
+                logging.info(f"Stop player #{player_number}")
+                _shutdown_mpv_player(player_dock.player, i + 1, self.MPV_IPC_MODE)
 
         self.verticalLayout_3.removeWidget(self.video_slider)
 
@@ -165,10 +188,9 @@ def close_observation(self):
     if self.playerType in (cfg.MEDIA, cfg.IMAGES):
         for dw in self.dw_player:
             logging.info("remove dock widget")
-            dw.player.log_handler = None
             self.removeDockWidget(dw)
-
-            del dw
+            dw.deleteLater()
+        self.dw_player = []
 
     self.statusbar.showMessage("", 0)
 
