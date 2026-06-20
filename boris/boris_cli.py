@@ -25,14 +25,14 @@ import argparse
 import sys
 import re
 import pathlib
-import utilities
-import project_functions
-from config import *
-import db_functions
-import export_observation
-import irr
-import plot_events
-import version
+from boris import utilities
+from boris import project_functions
+from boris.config import *
+from boris import db_functions
+from boris import export_observation
+from boris import irr
+from boris import plot_events
+from boris import version
 
 __version__ = version.__version__
 __version_date__ = version.__version_date__
