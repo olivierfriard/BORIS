@@ -3,7 +3,7 @@ import sys
 
 import pandas as pd
 
-PERSONAL_PLUGINS_DIR = Path("/home/olivier/gdrive_sync/src/python/pyobserver/personal_plugins")
+PERSONAL_PLUGINS_DIR = Path("/home/olivier/projects/BORIS_plugins")
 
 sys.path.insert(0, str(PERSONAL_PLUGINS_DIR))
 import behavior_by_frame as plugin
