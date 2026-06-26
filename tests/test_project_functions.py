@@ -29,6 +29,50 @@ class Test_behavior_category(object):
         assert project_functions.behavior_category(pj[config.ETHOGRAM]) == {"p": "", "s": "", "q": "", "r": "", "m": ""}
 
 
+class Test_project2dataframe(object):
+    def test_media_source_duration_and_fps_follow_concatenated_media(self):
+        pj = {
+            config.INDEPENDENT_VARIABLES: {},
+            config.ETHOGRAM: {
+                "0": {
+                    "type": config.POINT_EVENT,
+                    "key": "p",
+                    "code": "P",
+                    "description": "",
+                    "color": "",
+                    "category": "",
+                    "modifiers": {},
+                }
+            },
+            config.OBSERVATIONS: {
+                "obs1": {
+                    "date": "2026-06-26T10:00:00",
+                    "description": "",
+                    "type": config.MEDIA,
+                    config.FILE: {config.PLAYER1: ["video1.mp4", "video2.mp4"]},
+                    config.MEDIA_INFO: {
+                        config.LENGTH: {"video1.mp4": 1.0, "video2.mp4": 2.0},
+                        config.FPS: {"video1.mp4": 25.0, "video2.mp4": 50.0},
+                    },
+                    config.INDEPENDENT_VARIABLES: {},
+                    config.EVENTS: [
+                        [0.5, "S1", "P", "", "", 0],
+                        [1.0, "S1", "P", "", "", 0],
+                        [1.2, "S1", "P", "", "", 0],
+                        [3.0, "S1", "P", "", "", 0],
+                    ],
+                }
+            },
+        }
+
+        message, df = project_functions.project2dataframe(pj, ["obs1"])
+
+        assert message == ""
+        assert df["Source"].tolist() == ["video1.mp4", "video2.mp4", "video2.mp4", "video2.mp4"]
+        assert df["Media duration (s)"].tolist() == [1.0, 2.0, 2.0, 2.0]
+        assert df["FPS (frame/s)"].tolist() == [25.0, 50.0, 50.0, 50.0]
+
+
 class Test_check_coded_behaviors(object):
     def test_1(self):
         pj = json.loads(open("files/test.boris").read())
