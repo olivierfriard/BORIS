@@ -5,6 +5,7 @@ import sys
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
+from boris import config as cfg
 from boris import plugins
 
 
@@ -87,6 +88,55 @@ class TestOfficialPluginsReleases:
                 "text": "v1.3.0-beta - 2026-06-02 [pre-release]",
             },
         ]
+
+
+class TestOfficialPluginDirectories:
+    def test_official_plugins_dir_does_not_fallback_to_bundled_plugins(self, monkeypatch, tmp_path):
+        monkeypatch.setattr(plugins, "_official_plugins_root_candidates", lambda config_param=None: [tmp_path / "missing"])
+
+        assert plugins.get_official_plugins_dir({}) is None
+        assert plugins.get_official_plugin_files({}) == []
+
+    def test_official_plugins_dir_does_not_autodiscover_default_repository(self, monkeypatch, tmp_path):
+        plugins_dir = tmp_path / "BORIS_plugins" / "plugins"
+        plugins_dir.mkdir(parents=True)
+        plugin_file = plugins_dir / "example.py"
+        plugin_file.write_text(
+            '__plugin_name__ = "Example official plugin"\n'
+            '__version__ = "1.0"\n'
+            "def run():\n"
+            "    return None\n",
+            encoding="utf-8",
+        )
+        monkeypatch.setattr(plugins.Path, "home", lambda: tmp_path)
+
+        assert plugins.get_official_plugins_dir({}) is None
+        assert plugins.get_official_plugin_files({}) == []
+
+    def test_empty_configured_official_plugins_directory_has_no_plugins_yet(self, tmp_path):
+        empty_dir = tmp_path / "empty_plugins_target"
+        empty_dir.mkdir()
+        config_param = {cfg.OFFICIAL_PLUGINS_DIR: str(empty_dir)}
+
+        assert plugins.get_official_plugins_dir(config_param) is None
+        assert plugins.get_official_plugin_files(config_param) == []
+
+    def test_official_plugins_dir_uses_external_repository_plugins_directory(self, tmp_path):
+        plugins_dir = tmp_path / "BORIS_plugins" / "plugins"
+        plugins_dir.mkdir(parents=True)
+        plugin_file = plugins_dir / "example.py"
+        plugin_file.write_text(
+            '__plugin_name__ = "Example official plugin"\n'
+            '__version__ = "1.0"\n'
+            "def run():\n"
+            "    return None\n",
+            encoding="utf-8",
+        )
+
+        config_param = {cfg.OFFICIAL_PLUGINS_DIR: str(tmp_path / "BORIS_plugins")}
+
+        assert plugins.get_official_plugins_dir(config_param) == plugins_dir
+        assert plugins.get_official_plugin_files(config_param) == [plugin_file]
 
 
 class TestPluginBorisVersionRequirement:

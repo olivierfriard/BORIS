@@ -177,13 +177,6 @@ class Preferences(QDialog, Ui_prefDialog):
         config_param = {cfg.OFFICIAL_PLUGINS_DIR: directory}
         self.populate_python_plugins_list(self.lv_all_plugins, plugins.get_official_plugin_files(config_param))
 
-        if plugins.get_external_plugins_dir(config_param) is None:
-            QMessageBox.warning(
-                self,
-                cfg.programName,
-                f"No official plugin found in {directory}.\n\nBORIS will use the bundled analysis plugins as fallback.",
-            )
-
         if self.le_personal_plugins_dir.text():
             self.populate_python_plugins_list(
                 self.lw_personal_plugins,
@@ -233,14 +226,6 @@ class Preferences(QDialog, Ui_prefDialog):
             if self.le_official_plugins_dir.text()
             else plugins.get_default_external_plugins_dir()
         )
-
-        if target_dir.resolve() == plugins.get_builtin_plugins_dir().resolve():
-            QMessageBox.warning(
-                self,
-                cfg.programName,
-                "The bundled analysis plugins directory cannot be updated.\n\nSelect an external directory for official plugins.",
-            )
-            return
 
         source = self.current_official_plugins_source()
         archive_url = source["archive_url"]
@@ -501,9 +486,8 @@ def preferences(self):
     # Official BORIS plugins
     preferencesWindow.lv_all_plugins.itemClicked.connect(show_plugin_info)
 
-    external_plugins_dir = plugins.get_external_plugins_dir(self.config_param)
     configured_plugins_dir = self.config_param.get(cfg.OFFICIAL_PLUGINS_DIR, "")
-    preferencesWindow.le_official_plugins_dir.setText(configured_plugins_dir or (str(external_plugins_dir) if external_plugins_dir else ""))
+    preferencesWindow.le_official_plugins_dir.setText(configured_plugins_dir)
     preferencesWindow.set_official_plugins_source(self.config_param.get(cfg.OFFICIAL_PLUGINS_SOURCE))
     preferencesWindow.populate_python_plugins_list(
         preferencesWindow.lv_all_plugins,

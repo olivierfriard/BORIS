@@ -25,7 +25,6 @@ import importlib
 import inspect
 import json
 import logging
-import os
 import re
 import shutil
 import tempfile
@@ -255,13 +254,6 @@ def get_python_plugin_files(plugin_dir: str | Path) -> list[Path]:
     return sorted(file_ for file_ in plugin_dir.glob("*.py") if not file_.name.startswith("_"))
 
 
-def get_builtin_plugins_dir() -> Path:
-    """
-    Return the legacy plugins directory bundled with BORIS.
-    """
-    return Path(__file__).parent / "analysis_plugins"
-
-
 def get_default_external_plugins_dir() -> Path:
     """
     Return the default directory for the official external plugins repository.
@@ -317,7 +309,7 @@ def get_plugin_dir_from_repository(root_dir: str | Path) -> Path | None:
 
 def _official_plugins_root_candidates(config_param: dict | None = None) -> list[Path]:
     """
-    Return candidate root directories for the official external plugins repository.
+    Return configured root directories for the official external plugins repository.
     """
     config_param = config_param or {}
     candidates: list[Path] = []
@@ -325,18 +317,6 @@ def _official_plugins_root_candidates(config_param: dict | None = None) -> list[
     configured_dir = config_param.get(cfg.OFFICIAL_PLUGINS_DIR, "")
     if configured_dir:
         candidates.append(Path(configured_dir).expanduser())
-
-    env_dir = os.environ.get(cfg.OFFICIAL_PLUGINS_ENV_VAR, "")
-    if env_dir:
-        candidates.append(Path(env_dir).expanduser())
-
-    # Development-friendly layout: BORIS and BORIS_plugins cloned side by side.
-    try:
-        candidates.append(Path(__file__).resolve().parents[2] / cfg.OFFICIAL_PLUGINS_REPO_NAME)
-    except IndexError:
-        pass
-
-    candidates.append(get_default_external_plugins_dir())
 
     seen: set[Path] = set()
     unique_candidates: list[Path] = []
@@ -360,18 +340,11 @@ def get_external_plugins_dir(config_param: dict | None = None) -> Path | None:
     return None
 
 
-def get_official_plugins_dir(config_param: dict | None = None, include_fallback: bool = True) -> Path | None:
+def get_official_plugins_dir(config_param: dict | None = None) -> Path | None:
     """
-    Return the official plugins directory, falling back to bundled plugins when requested.
+    Return the official plugins directory from the external BORIS_plugins repository.
     """
-    external_plugins_dir = get_external_plugins_dir(config_param)
-    if external_plugins_dir is not None:
-        return external_plugins_dir
-
-    if include_fallback:
-        return get_builtin_plugins_dir()
-
-    return None
+    return get_external_plugins_dir(config_param)
 
 
 def get_official_plugin_files(config_param: dict | None = None) -> list[Path]:
@@ -636,7 +609,7 @@ def load_plugins(self):
     self.menu_plugins.clear()
     self.config_param[cfg.ANALYSIS_PLUGINS] = {}
 
-    # load official BORIS plugins from the external repository, with bundled plugins as fallback
+    # load official BORIS plugins from the external repository
     official_plugins_dir = get_official_plugins_dir(self.config_param)
     logging.debug(f"Loading official BORIS plugins from {official_plugins_dir}")
     load_python_plugins(get_official_plugin_files(self.config_param), "official BORIS")
