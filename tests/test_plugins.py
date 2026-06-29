@@ -1,5 +1,9 @@
 import io
 import json
+from pathlib import Path
+import sys
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from boris import plugins
 
@@ -83,3 +87,27 @@ class TestOfficialPluginsReleases:
                 "text": "v1.3.0-beta - 2026-06-02 [pre-release]",
             },
         ]
+
+
+class TestPluginBorisVersionRequirement:
+    def test_requirement_accepts_current_or_newer_version(self):
+        assert plugins.boris_version_satisfies_requirement("9.12.0", ">=9.12")
+        assert plugins.boris_version_satisfies_requirement("9.12.1", ">=9.12")
+
+    def test_requirement_rejects_older_version(self):
+        assert not plugins.boris_version_satisfies_requirement("9.11.9", ">=9.12")
+
+    def test_requirement_without_operator_defaults_to_minimum_version(self):
+        assert plugins.boris_version_satisfies_requirement("9.12.0", "9.12")
+        assert not plugins.boris_version_satisfies_requirement("9.11.9", "9.12")
+
+    def test_requirement_supports_exact_and_upper_bound_comparisons(self):
+        assert plugins.boris_version_satisfies_requirement("9.12.0", "==9.12")
+        assert plugins.boris_version_satisfies_requirement("9.11.9", "<9.12")
+        assert not plugins.boris_version_satisfies_requirement("9.12.0", "<9.12")
+
+    def test_requirement_supports_v_prefixed_versions(self):
+        assert plugins.boris_version_satisfies_requirement("v9.12.0", ">=v9.12")
+
+    def test_requirement_rejects_malformed_required_version(self):
+        assert not plugins.boris_version_satisfies_requirement("9.12.0", ">=current")

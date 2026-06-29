@@ -26,6 +26,7 @@ import inspect
 import json
 import logging
 import os
+import re
 import shutil
 import tempfile
 import urllib.request
@@ -39,7 +40,7 @@ from PySide6.QtGui import QAction
 from PySide6.QtWidgets import QMessageBox
 
 from . import config as cfg
-from . import dialog, project_functions, view_df
+from . import dialog, project_functions, version, view_df
 
 
 def add_plugins_to_menu(self):
@@ -112,6 +113,73 @@ def get_plugin_version(plugin_path: str) -> str | None:
                     plugin_version = None
                 break
     return plugin_version
+
+
+def version_parts(version_str: str) -> tuple[int, ...]:
+    """
+    Return the numeric parts of a version string.
+    """
+
+    parts: list[int] = []
+    for part in str(version_str).strip().lstrip("vV").split("."):
+        match = re.match(r"^(\d+)", part)
+        if match is None:
+            break
+        parts.append(int(match.group(1)))
+    return tuple(parts)
+
+
+def compare_versions(version_a: str, version_b: str) -> int:
+    """
+    Compare two version strings by their numeric parts.
+    """
+
+    parts_a = version_parts(version_a)
+    parts_b = version_parts(version_b)
+    size = max(len(parts_a), len(parts_b))
+    parts_a = parts_a + (0,) * (size - len(parts_a))
+    parts_b = parts_b + (0,) * (size - len(parts_b))
+    return (parts_a > parts_b) - (parts_a < parts_b)
+
+
+def boris_version_satisfies_requirement(current_version: str, requirement: str | None) -> bool:
+    """
+    Return True if current_version satisfies a plugin BORIS version requirement.
+    """
+
+    if not requirement:
+        return True
+
+    requirement = str(requirement).strip()
+    operators = (">=", "<=", "==", "!=", ">", "<", "=")
+    operator = ">="
+    required_version = requirement
+
+    for candidate in operators:
+        if requirement.startswith(candidate):
+            operator = candidate
+            required_version = requirement[len(candidate) :].strip()
+            break
+
+    if not version_parts(current_version) or not version_parts(required_version):
+        return False
+
+    comparison = compare_versions(current_version, required_version)
+
+    if operator == ">=":
+        return comparison >= 0
+    if operator == ">":
+        return comparison > 0
+    if operator == "<=":
+        return comparison <= 0
+    if operator == "<":
+        return comparison < 0
+    if operator in ("==", "="):
+        return comparison == 0
+    if operator == "!=":
+        return comparison != 0
+
+    return False
 
 
 def get_r_plugin_name(plugin_path: str) -> str | None:
@@ -728,10 +796,7 @@ def run_plugin(self, plugin_name):
 
     logging.debug(f"run plugin from {plugin_path}")
 
-    # select observations to analyze
-    selected_observations, parameters = self.obs_param()
-    if not selected_observations:
-        return
+    plugin_module = None
 
     # Python plugin
     if Path(plugin_path).suffix == ".py":
@@ -745,6 +810,26 @@ def run_plugin(self, plugin_name):
 
         spec.loader.exec_module(plugin_module)
 
+        required_boris_version = getattr(plugin_module, "__require_boris_version__", None)
+        if required_boris_version and not boris_version_satisfies_requirement(version.__version__, required_boris_version):
+            plugin_display_name = getattr(plugin_module, "__plugin_name__", plugin_name)
+            QMessageBox.critical(
+                self,
+                cfg.programName,
+                (
+                    f"The plugin '{plugin_display_name}' requires BORIS {required_boris_version}.\n\n"
+                    f"Current BORIS version: {version.__version__}."
+                ),
+            )
+            return
+
+    # select observations to analyze
+    selected_observations, parameters = self.obs_param()
+    if not selected_observations:
+        return
+
+    # Python plugin
+    if Path(plugin_path).suffix == ".py":
         plugin_version = plugin_module.__version__
         plugin_version_date = plugin_module.__version_date__
 

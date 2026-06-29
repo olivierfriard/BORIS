@@ -1783,6 +1783,34 @@ def has_audio(observation: dict, media_file_path: str) -> bool:
     return False
 
 
+def event_source_info(observation: dict, event_time) -> tuple[object, object, object]:
+    """
+    Return source, media duration, and FPS for an event timestamp.
+    """
+
+    if observation[cfg.TYPE] == cfg.MEDIA:
+        try:
+            media_file = observation_operations.event2media_file_name(observation, dec(str(event_time)))
+        except Exception:
+            media_file = None
+
+        if media_file is None:
+            return "Not found", np.nan, np.nan
+
+        media_info = observation.get(cfg.MEDIA_INFO, {})
+        media_duration = media_info.get(cfg.LENGTH, {}).get(media_file, np.nan)
+        fps = media_info.get(cfg.FPS, {}).get(media_file, np.nan)
+        return media_file, media_duration, fps
+
+    if observation[cfg.TYPE] == cfg.LIVE:
+        return "Live observation", np.nan, np.nan
+
+    if observation[cfg.TYPE] == cfg.IMAGES:
+        return ";".join(observation.get(cfg.DIRECTORIES_LIST, [])), np.nan, np.nan
+
+    return "", np.nan, np.nan
+
+
 def explore_project(self) -> None:
     """
     search various elements (subjects, behaviors, modifiers, comments) in all observations
@@ -1871,27 +1899,15 @@ def project2dataframe(pj: dict, observations_list: list = []) -> Tuple[str, pd.D
     """
     returns a pandas dataframe containing observations data
     """
-    # print(pj.keys())
-
-    # print(pj["independent_variables"])
-
-    # indep_var = [pj["independent_variables"][idx]["label"] for idx in pj["independent_variables"]]
 
     indep_variables = dict(
         [(pj[cfg.INDEPENDENT_VARIABLES][idx]["label"], pj[cfg.INDEPENDENT_VARIABLES][idx]["type"]) for idx in pj[cfg.INDEPENDENT_VARIABLES]]
     )
 
-    # print()
-    # print(f"{indep_variables=}")
-
-    # n_max_set_modifiers = max([len(pj["behaviors_conf"][behavior_id]["modifiers"]) for behavior_id in pj["behaviors_conf"]])
-
     # behavioral_categories
     behavioral_category = dict(
         [(pj[cfg.ETHOGRAM][x][cfg.BEHAVIOR_CODE], pj[cfg.ETHOGRAM][x][cfg.BEHAVIOR_CATEGORY]) for x in pj[cfg.ETHOGRAM]]
     )
-
-    # print(f"{pj["behaviors_conf"]=}")
 
     # check all modifiers
     all_modifier_sets: list = []
@@ -1911,9 +1927,6 @@ def project2dataframe(pj: dict, observations_list: list = []) -> Tuple[str, pd.D
         if modifier_names:
             all_modifier_sets.extend(modifier_names)
 
-    # print()
-    # print(f"{all_modifier_sets=}")
-
     # create df
 
     data = {
@@ -1923,11 +1936,11 @@ def project2dataframe(pj: dict, observations_list: list = []) -> Tuple[str, pd.D
         "Observation type": [],
         "Observation interval start": [],
         "Observation interval stop": [],
-        # "Source": [],
+        "Source": [],
         # "Time offset (s)": [],
         # "Coding duration": [],
-        # "Media duration (s)": [],
-        # "FPS (frame/s)": [],
+        "Media duration (s)": [],
+        "FPS (frame/s)": [],
     }
 
     for indep_var in indep_variables:
@@ -1966,11 +1979,11 @@ def project2dataframe(pj: dict, observations_list: list = []) -> Tuple[str, pd.D
         "Observation type": "string",
         "Observation interval start": "float64",
         "Observation interval stop": "float64",
-        # "Source": "string",
+        "Source": "string",
         # "Time offset (s)": "string",
         # "Coding duration": "float64",
-        # "Media duration (s)": "string",
-        # "FPS (frame/s)": "float64",
+        "Media duration (s)": "float64",
+        "FPS (frame/s)": "float64",
     }
 
     # TODO: set correct type in base of the var type
@@ -2019,11 +2032,12 @@ def project2dataframe(pj: dict, observations_list: list = []) -> Tuple[str, pd.D
             data["Observation interval start"].append(pj[cfg.OBSERVATIONS][obs_id].get(cfg.OBSERVATION_TIME_INTERVAL, [None, None])[0])
             data["Observation interval stop"].append(pj[cfg.OBSERVATIONS][obs_id].get(cfg.OBSERVATION_TIME_INTERVAL, [None, None])[1])
 
-            # data["Source"].append("")
+            source, media_duration, fps = event_source_info(pj[cfg.OBSERVATIONS][obs_id], event[0])
+            data["Source"].append(source)
             # data["Time offset (s)"].append(pj["observations"][obs_id]["time offset"])
             # data["Coding duration"].append("")
-            # data["Media duration (s)"].append("")
-            # data["FPS (frame/s)"].append("")
+            data["Media duration (s)"].append(media_duration)
+            data["FPS (frame/s)"].append(fps)
 
             for indep_var in indep_variables:
                 data[f"independent variable '{indep_var}'"].append(
