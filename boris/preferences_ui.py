@@ -580,6 +580,20 @@ class Ui_prefDialog(object):
 
         self.verticalLayout_8.addLayout(self.horizontalLayout_20)
 
+        self.horizontalLayout_26 = QHBoxLayout()
+        self.horizontalLayout_26.setObjectName(u"horizontalLayout_26")
+        self.cb_pre_emphasize = QCheckBox(self.groupBox)
+        self.cb_pre_emphasize.setObjectName(u"cb_pre_emphasize")
+
+        self.horizontalLayout_26.addWidget(self.cb_pre_emphasize)
+
+        self.horizontalSpacer_11 = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
+
+        self.horizontalLayout_26.addItem(self.horizontalSpacer_11)
+
+
+        self.verticalLayout_8.addLayout(self.horizontalLayout_26)
+
         self.horizontalLayout_25 = QHBoxLayout()
         self.horizontalLayout_25.setObjectName(u"horizontalLayout_25")
         self.cb_use_vmin_vmax = QCheckBox(self.groupBox)
@@ -833,6 +847,7 @@ class Ui_prefDialog(object):
         self.cb_NFFT.setItemText(3, QCoreApplication.translate("prefDialog", u"2048", None))
 
         self.label_18.setText(QCoreApplication.translate("prefDialog", u"noverlap", None))
+        self.cb_pre_emphasize.setText(QCoreApplication.translate("prefDialog", u"Pre-emphasize audio", None))
         self.cb_use_vmin_vmax.setText(QCoreApplication.translate("prefDialog", u"Use vmin/vmax", None))
         self.label_vmin.setText(QCoreApplication.translate("prefDialog", u"vmin", None))
         self.label_vmin_2.setText(QCoreApplication.translate("prefDialog", u"dBFS", None))

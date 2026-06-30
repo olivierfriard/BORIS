@@ -283,6 +283,7 @@ class Preferences(QDialog, Ui_prefDialog):
         self.cb_window_type.setCurrentText(cfg.SPECTROGRAM_DEFAULT_WINDOW_TYPE)
         self.cb_NFFT.setCurrentText(cfg.SPECTROGRAM_DEFAULT_NFFT)
         self.sb_noverlap.setValue(cfg.SPECTROGRAM_DEFAULT_NOVERLAP)
+        self.cb_pre_emphasize.setChecked(cfg.SPECTROGRAM_PRE_EMPHASIZE_DEFAULT)
         self.cb_use_vmin_vmax.setChecked(cfg.SPECTROGRAM_USE_VMIN_VMAX_DEFAULT)
         self.cb_vmin_vmax_changed()
         self.sb_vmin.setValue(cfg.SPECTROGRAM_DEFAULT_VMIN)
@@ -568,6 +569,10 @@ def preferences(self):
     preferencesWindow.cb_NFFT.setCurrentText(self.config_param.get(cfg.SPECTROGRAM_NFFT, cfg.SPECTROGRAM_DEFAULT_NFFT))
     # noverlap
     preferencesWindow.sb_noverlap.setValue(self.config_param.get(cfg.SPECTROGRAM_NOVERLAP, cfg.SPECTROGRAM_DEFAULT_NOVERLAP))
+    # pre-emphasize
+    preferencesWindow.cb_pre_emphasize.setChecked(
+        self.config_param.get(cfg.SPECTROGRAM_PRE_EMPHASIZE, cfg.SPECTROGRAM_PRE_EMPHASIZE_DEFAULT)
+    )
     # use vmin/xmax
     preferencesWindow.cb_use_vmin_vmax.setChecked(
         self.config_param.get(cfg.SPECTROGRAM_USE_VMIN_VMAX, cfg.SPECTROGRAM_USE_VMIN_VMAX_DEFAULT)
@@ -711,6 +716,8 @@ def preferences(self):
             self.config_param[cfg.SPECTROGRAM_NFFT] = preferencesWindow.cb_NFFT.currentText()
             # noverlap
             self.config_param[cfg.SPECTROGRAM_NOVERLAP] = preferencesWindow.sb_noverlap.value()
+            # pre-emphasize
+            self.config_param[cfg.SPECTROGRAM_PRE_EMPHASIZE] = preferencesWindow.cb_pre_emphasize.isChecked()
             # use vmin/vmax
             self.config_param[cfg.SPECTROGRAM_USE_VMIN_VMAX] = preferencesWindow.cb_use_vmin_vmax.isChecked()
             # vmin

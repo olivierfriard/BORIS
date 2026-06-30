@@ -26,6 +26,7 @@ dependencies = [
     "scipy==1.16.1",
     "scikit-learn==1.7.1",
     "pyqtgraph>=0.14.0",
+    "praat-parselmouth>=0.4.7",
 ]
 
 [project.optional-dependencies]
