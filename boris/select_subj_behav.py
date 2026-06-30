@@ -211,9 +211,9 @@ def choose_obs_subj_behav_category(
             ):
                 paramPanelWindow.item = QListWidgetItem(behavior)
                 if behavior in observedBehaviors:
-                    paramPanelWindow.item.setCheckState(Qt.Checked)
+                    paramPanelWindow.item.setCheckState(Qt.CheckState.Checked)
                 else:
-                    paramPanelWindow.item.setCheckState(Qt.Unchecked)
+                    paramPanelWindow.item.setCheckState(Qt.CheckState.Unchecked)
 
                 if category != "###no category###":
                     paramPanelWindow.item.setData(33, "behavior")

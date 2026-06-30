@@ -826,9 +826,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 ):
                     paramPanelWindow.item = QListWidgetItem(behavior)
                     if behavior in filtered_behaviors:
-                        paramPanelWindow.item.setCheckState(Qt.Checked)
+                        paramPanelWindow.item.setCheckState(Qt.CheckState.Checked)
                     else:
-                        paramPanelWindow.item.setCheckState(Qt.Unchecked)
+                        paramPanelWindow.item.setCheckState(Qt.CheckState.Unchecked)
 
                     if category != "###no category###":
                         paramPanelWindow.item.setData(33, "behavior")
@@ -887,9 +887,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         for subject in [self.pj[cfg.SUBJECTS][x][cfg.SUBJECT_NAME] for x in util.sorted_keys(self.pj[cfg.SUBJECTS])]:
             paramPanelWindow.item = QListWidgetItem(subject)
             if subject in filtered_subjects:
-                paramPanelWindow.item.setCheckState(Qt.Checked)
+                paramPanelWindow.item.setCheckState(Qt.CheckState.Checked)
             else:
-                paramPanelWindow.item.setCheckState(Qt.Unchecked)
+                paramPanelWindow.item.setCheckState(Qt.CheckState.Unchecked)
 
             paramPanelWindow.lwBehaviors.addItem(paramPanelWindow.item)
 
@@ -3762,12 +3762,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             old_time = self.dw_player[0].player.time_pos
             for dw in self.dw_player:
                 dw.player.frame_back_step()
-            while (
-                self.dw_player[0].player.time_pos is not None
-                and self.dw_player[0].player.time_pos > 0
-                and self.dw_player[0].player.time_pos == old_time
-            ):
+
+            player_time_pos = self.dw_player[0].player.time_pos
+            while player_time_pos is not None and player_time_pos > 0 and player_time_pos == old_time:
                 time.sleep(0.001)
+                player_time_pos = self.dw_player[0].player.time_pos
 
             self.mpv_timer_out()
 

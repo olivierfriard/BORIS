@@ -100,12 +100,12 @@ class ModifiersList(QDialog):
                 for modifier in self.modifiers_dict[idx]["values"]:
                     item = QListWidgetItem(modifier)
                     if self.modifiers_dict[idx]["type"] == cfg.MULTI_SELECTION:
-                        item.setCheckState(Qt.Unchecked)
+                        item.setCheckState(Qt.CheckState.Unchecked)
 
                         # previously selected
                         try:
                             if currentModifierList != [""] and re.sub(r" \(.\)", "", modifier) in currentModifierList[int(idx)].split(","):
-                                item.setCheckState(Qt.Checked)
+                                item.setCheckState(Qt.CheckState.Checked)
                         except Exception:  # for old projects due to a fixed bug
                             pass
 
@@ -187,10 +187,10 @@ class ModifiersList(QDialog):
                             # modifiers have no associated code: the modifier starting with hit key will be selected
                             if ek not in (Qt.Key_Down, Qt.Key_Up):
                                 if ek == Qt.Key_Space and f"({cfg.MULTI_SELECTION})" in widget.objectName():  # checking using SPACE bar
-                                    if widget.item(widget.currentRow()).checkState() == Qt.Checked:
-                                        widget.item(widget.currentRow()).setCheckState(Qt.Unchecked)
+                                    if widget.item(widget.currentRow()).checkState() == Qt.CheckState.Checked:
+                                        widget.item(widget.currentRow()).setCheckState(Qt.CheckState.Unchecked)
                                     else:
-                                        widget.item(widget.currentRow()).setCheckState(Qt.Checked)
+                                        widget.item(widget.currentRow()).setCheckState(Qt.CheckState.Checked)
 
                                 else:
                                     for index in range(widget.count()):
@@ -226,10 +226,10 @@ class ModifiersList(QDialog):
                                         return True
 
                                 if f"({cfg.MULTI_SELECTION})" in widget.objectName():
-                                    if widget.item(index).checkState() == Qt.Checked:
-                                        widget.item(index).setCheckState(Qt.Unchecked)
+                                    if widget.item(index).checkState() == Qt.CheckState.Checked:
+                                        widget.item(index).setCheckState(Qt.CheckState.Unchecked)
                                     else:
-                                        widget.item(index).setCheckState(Qt.Checked)
+                                        widget.item(index).setCheckState(Qt.CheckState.Checked)
 
                         if ek < 1114112 and f"({ek_text})" in widget.item(index).text():
                             if f"({cfg.SINGLE_SELECTION})" in widget.objectName():
@@ -244,10 +244,10 @@ class ModifiersList(QDialog):
                                     return True
 
                             if f"({cfg.MULTI_SELECTION})" in widget.objectName():
-                                if widget.item(index).checkState() == Qt.Checked:
-                                    widget.item(index).setCheckState(Qt.Unchecked)
+                                if widget.item(index).checkState() == Qt.CheckState.Checked:
+                                    widget.item(index).setCheckState(Qt.CheckState.Unchecked)
                                 else:
-                                    widget.item(index).setCheckState(Qt.Checked)
+                                    widget.item(index).setCheckState(Qt.CheckState.Checked)
 
             return True
         else:
@@ -269,7 +269,7 @@ class ModifiersList(QDialog):
 
             if self.modifiers_dict[idx]["type"] == cfg.MULTI_SELECTION:
                 for j in range(self.modifiers_dict[idx]["widget"].count()):
-                    if self.modifiers_dict[idx]["widget"].item(j).checkState() == Qt.Checked:
+                    if self.modifiers_dict[idx]["widget"].item(j).checkState() == Qt.CheckState.Checked:
                         self.modifiers_dict[idx]["selected"].append(
                             re.sub(
                                 r" \(.*\)",

@@ -284,7 +284,7 @@ def select_behaviors(
                 ]
             ):
                 paramPanelWindow.item = QListWidgetItem(behavior)
-                paramPanelWindow.item.setCheckState(Qt.Unchecked)
+                paramPanelWindow.item.setCheckState(Qt.CheckState.Unchecked)
 
                 if category != "###no category###":
                     paramPanelWindow.item.setData(33, "behavior")

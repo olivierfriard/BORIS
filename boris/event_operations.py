@@ -21,26 +21,21 @@ Copyright 2012-2026 Olivier Friard
 
 """
 
-import logging
 import copy
+import logging
 import time
+from decimal import ROUND_DOWN, InvalidOperation
 from decimal import Decimal as dec
-from decimal import InvalidOperation
-from decimal import ROUND_DOWN
 from typing import Union
 
+from PySide6.QtCore import Qt, QTime
+from PySide6.QtGui import QClipboard
+from PySide6.QtWidgets import QAbstractItemView, QApplication, QInputDialog, QLineEdit, QMessageBox
 
 from . import config as cfg
+from . import dialog, select_modifiers, select_subj_behav, write_event
 from . import utilities as util
-from . import dialog
-from . import select_subj_behav
-from . import select_modifiers
-from . import write_event
 from .edit_event import DlgEditEvent, EditSelectedEvents
-
-from PySide6.QtWidgets import QMessageBox, QInputDialog, QLineEdit, QAbstractItemView, QApplication
-from PySide6.QtCore import QTime, Qt
-from PySide6.QtGui import QClipboard
 
 
 def add_event(self):
@@ -581,6 +576,7 @@ def edit_selected_events(self):
                 else:
                     current_modifier = ""
 
+                modifier_str = ""
                 if event["modifiers"]:
                     modifiers_selector = select_modifiers.ModifiersList(behavior_codes[0], eval(str(event["modifiers"])), current_modifier)
 

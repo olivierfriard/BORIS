@@ -20,11 +20,11 @@ This file is part of BORIS.
 
 """
 
-import socket
 import json
+import logging
+import socket
 import subprocess
 
-import logging
 import config as cfg
 
 logger = logging.getLogger(__name__)
@@ -126,6 +126,14 @@ class IPC_MPV:
     @pause.setter
     def pause(self, value):
         return self.send_command({"command": ["set_property", "pause", value]})
+
+    @property
+    def mute(self):
+        return self.send_command({"command": ["get_property", "mute"]})
+
+    @mute.setter
+    def mute(self, value):
+        return self.send_command({"command": ["set_property", "mute", value]})
 
     @property
     def estimated_frame_number(self):

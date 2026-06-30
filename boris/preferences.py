@@ -145,9 +145,9 @@ class Preferences(QDialog, Ui_prefDialog):
             item = QListWidgetItem(self.plugin_item_text(plugin_name, plugin_version))
             item.setFlags(item.flags() | Qt.ItemIsUserCheckable)
             if plugin_name in excluded_plugins:
-                item.setCheckState(Qt.Unchecked)
+                item.setCheckState(Qt.CheckState.Unchecked)
             else:
-                item.setCheckState(Qt.Checked)
+                item.setCheckState(Qt.CheckState.Checked)
             item.setData(PLUGIN_PATH_ROLE, str(file_))
             item.setData(PLUGIN_NAME_ROLE, plugin_name)
             list_widget.addItem(item)
@@ -520,9 +520,9 @@ def preferences(self):
             item = QListWidgetItem(preferencesWindow.plugin_item_text(plugin_name, plugin_version))
             item.setFlags(item.flags() | Qt.ItemIsUserCheckable)
             if plugin_name in self.config_param.get(cfg.EXCLUDED_PLUGINS, set()):
-                item.setCheckState(Qt.Unchecked)
+                item.setCheckState(Qt.CheckState.Unchecked)
             else:
-                item.setCheckState(Qt.Checked)
+                item.setCheckState(Qt.CheckState.Checked)
             item.setData(PLUGIN_PATH_ROLE, str(file_))
             item.setData(PLUGIN_NAME_ROLE, plugin_name)
             preferencesWindow.lw_personal_plugins.addItem(item)
@@ -673,7 +673,7 @@ def preferences(self):
             for i in range(preferencesWindow.lv_all_plugins.count()):
                 item = preferencesWindow.lv_all_plugins.item(i)
                 plugin_name = preferencesWindow.plugin_item_name(item)
-                if item.checkState() == Qt.Checked:
+                if item.checkState() == Qt.CheckState.Checked:
                     self.config_param[cfg.ANALYSIS_PLUGINS][plugin_name] = item.data(PLUGIN_PATH_ROLE)
                 else:
                     self.config_param[cfg.EXCLUDED_PLUGINS].add(plugin_name)
@@ -683,7 +683,7 @@ def preferences(self):
             for i in range(preferencesWindow.lw_personal_plugins.count()):
                 item = preferencesWindow.lw_personal_plugins.item(i)
                 plugin_name = preferencesWindow.plugin_item_name(item)
-                if item.checkState() == Qt.Checked:
+                if item.checkState() == Qt.CheckState.Checked:
                     self.config_param[cfg.ANALYSIS_PLUGINS][plugin_name] = item.data(PLUGIN_PATH_ROLE)
                 else:
                     self.config_param[cfg.EXCLUDED_PLUGINS].add(plugin_name)
