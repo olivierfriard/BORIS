@@ -269,8 +269,8 @@ def irr_cohen_kappa(self):
             None,
             cfg.programName,
             ("This function is not available for observations with events that do not have timestamp"),
-            QMessageBox.Ok | QMessageBox.Default,
-            QMessageBox.NoButton,
+            QMessageBox.StandardButton.Ok | QMessageBox.StandardButton.Default,
+            QMessageBox.StandardButton.NoButton,
         )
         return
 
@@ -559,8 +559,8 @@ def needleman_wunch(self):
             None,
             cfg.programName,
             ("This function is not available for observations with events that do not have timestamp"),
-            QMessageBox.Ok | QMessageBox.Default,
-            QMessageBox.NoButton,
+            QMessageBox.StandardButton.Ok | QMessageBox.StandardButton.Default,
+            QMessageBox.StandardButton.NoButton,
         )
         return
 

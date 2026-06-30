@@ -50,8 +50,8 @@ def get_cooccurence(self):
             "https://github.com/olivierfriard/BORIS/issues</a><br>"
             "Thank you for your collaboration!"
         ),
-        QMessageBox.Ok | QMessageBox.Default,
-        QMessageBox.NoButton,
+        QMessageBox.StandardButton.Ok | QMessageBox.StandardButton.Default,
+        QMessageBox.StandardButton.NoButton,
     )
 
     def interval_len(interval: I) -> dec:
@@ -88,8 +88,8 @@ def get_cooccurence(self):
             None,
             cfg.programName,
             ("This function is not available for observations with events that do not have timestamp"),
-            QMessageBox.Ok | QMessageBox.Default,
-            QMessageBox.NoButton,
+            QMessageBox.StandardButton.Ok | QMessageBox.StandardButton.Default,
+            QMessageBox.StandardButton.NoButton,
         )
         return
 

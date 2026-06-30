@@ -925,7 +925,7 @@ class Observation(QDialog, Ui_Form):
                     "You cannot select the <b>Use the media creation date/time option</b>."
                 )
             )
-            dlg.ptText.moveCursor(QTextCursor.Start)
+            dlg.ptText.moveCursor(QTextCursor.MoveOperation.Start)
             ret = dlg.exec_()
         """
 
@@ -955,7 +955,7 @@ class Observation(QDialog, Ui_Form):
                     "Use the media file date/time instead?"
                 )
             )
-            dlg.ptText.moveCursor(QTextCursor.Start)
+            dlg.ptText.moveCursor(QTextCursor.MoveOperation.Start)
             ret = dlg.exec_()
 
             if ret == 1:  #  use file creation time

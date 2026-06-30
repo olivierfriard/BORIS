@@ -104,23 +104,26 @@ def synthetic_time_budget(self) -> None:
 
     ok, msg, data_report = time_budget_functions.synthetic_time_budget(self.pj, selected_observations, synth_tb_param)
 
-    results = dialog.Results_widget()
+    # self.results = dialog.Results_widget()
+    results = dialog.Results_dialog()
     results.setWindowTitle("Synthetic time budget")
     if not ok:
         results.ptText.clear()
         results.ptText.setReadOnly(True)
         results.ptText.appendHtml(msg.replace("\n", "<br>"))
-        results.exec_()
+        results.show()
         return
 
     results.dataset = True
     font = QFont("Courier", 12)
     results.ptText.setFont(font)
-    results.ptText.setWordWrapMode(QTextOption.NoWrap)
+    results.ptText.setWordWrapMode(QTextOption.WrapMode.NoWrap)
     results.ptText.setReadOnly(True)
     results.ptText.appendPlainText(data_report.export("cli", tablefmt="grid"))  # other available format: github
-    results.ptText.moveCursor(QTextCursor.Start)
+    results.ptText.moveCursor(QTextCursor.MoveOperation.Start)
     results.resize(960, 640)
+
+    # self.results.show()
 
     if results.exec_() == cfg.SAVE_DATASET:
         file_formats = [
@@ -193,8 +196,8 @@ def synthetic_binned_time_budget(self) -> None:
             None,
             cfg.programName,
             ("This function is not available for observations with events that do not have timestamp"),
-            QMessageBox.Ok | QMessageBox.Default,
-            QMessageBox.NoButton,
+            QMessageBox.StandardButton.Ok | QMessageBox.StandardButton.Default,
+            QMessageBox.StandardButton.NoButton,
         )
         return
 
@@ -246,10 +249,10 @@ def synthetic_binned_time_budget(self) -> None:
     results.setWindowTitle("Synthetic time budget by time bin")
     font = QFont("Courier", 12)
     results.ptText.setFont(font)
-    results.ptText.setWordWrapMode(QTextOption.NoWrap)
+    results.ptText.setWordWrapMode(QTextOption.WrapMode.NoWrap)
     results.ptText.setReadOnly(True)
     results.ptText.appendPlainText(data_report.export("cli", tablefmt="grid"))  # other available format: github
-    results.ptText.moveCursor(QTextCursor.Start)
+    results.ptText.moveCursor(QTextCursor.MoveOperation.Start)
     results.resize(960, 640)
 
     if results.exec_() == cfg.SAVE_DATASET:

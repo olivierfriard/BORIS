@@ -35,7 +35,7 @@ from typing import get_args, get_origin
 
 import numpy as np
 import pandas as pd
-from PySide6.QtGui import QAction
+from PySide6.QtGui import QAction, QFont, QTextOption
 from PySide6.QtWidgets import QMessageBox
 
 from . import config as cfg
@@ -47,13 +47,13 @@ def add_plugins_to_menu(self):
     add plugins to the plugins menu
     """
 
-    def add_plugin_action(plugin_name):
+    def add_plugin_action(plugin_name, menu):
         logging.debug(f"adding plugin '{plugin_name}' to menu")
         # Create an action for each submenu option
         action = QAction(self, triggered=lambda checked=False, name=plugin_name: run_plugin(self, name))
         action.setText(plugin_name)
 
-        self.menu_plugins.addAction(action)
+        menu.addAction(action)
 
     def is_relative_to(path: Path, parent: Path) -> bool:
         try:
@@ -74,14 +74,15 @@ def add_plugins_to_menu(self):
         else:
             official_plugin_names.append(plugin_name)
 
-    for plugin_name in official_plugin_names:
-        add_plugin_action(plugin_name)
+    if official_plugin_names:
+        official_submenu = self.menu_plugins.addMenu("Official plugins")
+        for plugin_name in official_plugin_names:
+            add_plugin_action(plugin_name, official_submenu)
 
-    if official_plugin_names and personal_plugin_names:
-        self.menu_plugins.addSeparator()
-
-    for plugin_name in personal_plugin_names:
-        add_plugin_action(plugin_name)
+    if personal_plugin_names:
+        personal_submenu = self.menu_plugins.addMenu("Personal plugins")
+        for plugin_name in personal_plugin_names:
+            add_plugin_action(plugin_name, personal_submenu)
 
 
 def get_plugin_name(plugin_path: str) -> str | None:
@@ -940,6 +941,8 @@ def run_plugin(self, plugin_name):
             self.remove_closed_results_objects()
             self.results_objects.append(dialog.Results_widget())
             self.results_objects[-1].setWindowTitle(result_title)
+            self.results_objects[-1].ptText.setFont(QFont("Courier", 12))
+            self.results_objects[-1].ptText.setWordWrapMode(QTextOption.WrapMode.NoWrap)
             self.results_objects[-1].ptText.clear()
             self.results_objects[-1].ptText.appendPlainText(result_payload)
             self.results_objects[-1].show()

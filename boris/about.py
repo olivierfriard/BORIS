@@ -84,9 +84,9 @@ def actionAbout_activated(self):
     about_dialog.setIconPixmap(QPixmap(":/dbios_unito"))
 
     about_dialog.setWindowTitle(f"About {cfg.programName}")
-    about_dialog.setStandardButtons(QMessageBox.Ok)
-    about_dialog.setDefaultButton(QMessageBox.Ok)
-    about_dialog.setEscapeButton(QMessageBox.Ok)
+    about_dialog.setStandardButtons(QMessageBox.StandardButton.Ok)
+    about_dialog.setDefaultButton(QMessageBox.StandardButton.Ok)
+    about_dialog.setEscapeButton(QMessageBox.StandardButton.Ok)
 
     about_dialog.setInformativeText(
         (

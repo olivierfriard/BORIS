@@ -345,8 +345,8 @@ def event_filtering(self):
             None,
             cfg.programName,
             ("This function is not available for observations with events that do not have a timestamp"),
-            QMessageBox.Ok | QMessageBox.Default,
-            QMessageBox.NoButton,
+            QMessageBox.StandardButton.Ok | QMessageBox.StandardButton.Default,
+            QMessageBox.StandardButton.NoButton,
         )
         return
 

@@ -1328,7 +1328,7 @@ def check_creation_date(self) -> Tuple[int, dict]:
                 "Use the media file date/time instead?"
             )
         )
-        dlg.ptText.moveCursor(QTextCursor.Start)
+        dlg.ptText.moveCursor(QTextCursor.MoveOperation.Start)
         ret = dlg.exec_()
 
         if ret == 1:  #  use file creation time

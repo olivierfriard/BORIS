@@ -728,8 +728,8 @@ def image_clicked(self, n_player: int, event) -> None:
                     None,
                     cfg.programName,
                     "Check reference and pixel values! Values must be numeric.",
-                    QMessageBox.Ok | QMessageBox.Default,
-                    QMessageBox.NoButton,
+                    QMessageBox.StandardButton.Ok | QMessageBox.StandardButton.Default,
+                    QMessageBox.StandardButton.NoButton,
                 )
 
             length = util.polyline_length(self.measurement_w.mem_video)
@@ -740,8 +740,8 @@ def image_clicked(self, n_player: int, event) -> None:
                     None,
                     cfg.programName,
                     "Check reference and pixel values! Values must be numeric.",
-                    QMessageBox.Ok | QMessageBox.Default,
-                    QMessageBox.NoButton,
+                    QMessageBox.StandardButton.Ok | QMessageBox.StandardButton.Default,
+                    QMessageBox.StandardButton.NoButton,
                 )
 
             append_results(
@@ -802,8 +802,8 @@ def image_clicked(self, n_player: int, event) -> None:
                     None,
                     cfg.programName,
                     "Check reference and pixel values! Values must be numeric.",
-                    QMessageBox.Ok | QMessageBox.Default,
-                    QMessageBox.NoButton,
+                    QMessageBox.StandardButton.Ok | QMessageBox.StandardButton.Default,
+                    QMessageBox.StandardButton.NoButton,
                 )
 
             append_results(

@@ -50,7 +50,7 @@ def pb_code_help_clicked(self):
 
     # msg.setInformativeText("This is additional information")
 
-    msg.setStandardButtons(QMessageBox.Ok)
+    msg.setStandardButtons(QMessageBox.StandardButton.Ok)
     msg.exec_()
 
 

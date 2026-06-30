@@ -577,8 +577,8 @@ class projectDialog(QDialog, Ui_dlgProject):
                 None,
                 cfg.programName,
                 "The ethogram is empty",
-                QMessageBox.Ok | QMessageBox.Default,
-                QMessageBox.NoButton,
+                QMessageBox.StandardButton.Ok | QMessageBox.StandardButton.Default,
+                QMessageBox.StandardButton.NoButton,
             )
             return
 
@@ -1145,8 +1145,8 @@ class projectDialog(QDialog, Ui_dlgProject):
                 None,
                 cfg.programName,
                 "The ethogram is empty",
-                QMessageBox.Ok | QMessageBox.Default,
-                QMessageBox.NoButton,
+                QMessageBox.StandardButton.Ok | QMessageBox.StandardButton.Default,
+                QMessageBox.StandardButton.NoButton,
             )
             return
 
@@ -1156,8 +1156,8 @@ class projectDialog(QDialog, Ui_dlgProject):
                     None,
                     cfg.programName,
                     f"A behavior code is empty at row {row + 1}",
-                    QMessageBox.Ok | QMessageBox.Default,
-                    QMessageBox.NoButton,
+                    QMessageBox.StandardButton.Ok | QMessageBox.StandardButton.Default,
+                    QMessageBox.StandardButton.NoButton,
                 )
                 return
 
@@ -1203,8 +1203,8 @@ class projectDialog(QDialog, Ui_dlgProject):
                 None,
                 cfg.programName,
                 "No state events were defined in ethogram",
-                QMessageBox.Ok | QMessageBox.Default,
-                QMessageBox.NoButton,
+                QMessageBox.StandardButton.Ok | QMessageBox.StandardButton.Default,
+                QMessageBox.StandardButton.NoButton,
             )
             return
 
@@ -1280,8 +1280,8 @@ class projectDialog(QDialog, Ui_dlgProject):
                 None,
                 cfg.programName,
                 "The ethogram is empty",
-                QMessageBox.Ok | QMessageBox.Default,
-                QMessageBox.NoButton,
+                QMessageBox.StandardButton.Ok | QMessageBox.StandardButton.Default,
+                QMessageBox.StandardButton.NoButton,
             )
             return
 
@@ -1367,8 +1367,8 @@ class projectDialog(QDialog, Ui_dlgProject):
                 None,
                 cfg.programName,
                 "The ethogram is empty",
-                QMessageBox.Ok | QMessageBox.Default,
-                QMessageBox.NoButton,
+                QMessageBox.StandardButton.Ok | QMessageBox.StandardButton.Default,
+                QMessageBox.StandardButton.NoButton,
             )
             return
 
@@ -1403,8 +1403,8 @@ class projectDialog(QDialog, Ui_dlgProject):
                 None,
                 cfg.programName,
                 "The ethogram is empty",
-                QMessageBox.Ok | QMessageBox.Default,
-                QMessageBox.NoButton,
+                QMessageBox.StandardButton.Ok | QMessageBox.StandardButton.Default,
+                QMessageBox.StandardButton.NoButton,
             )
             return
 

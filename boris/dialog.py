@@ -138,7 +138,7 @@ def global_error_message(exception_type, exception_value, traceback_object):
     errorbox.ptText.clear()
     errorbox.ptText.appendPlainText(text)
 
-    errorbox.ptText.moveCursor(QTextCursor.Start)
+    errorbox.ptText.moveCursor(QTextCursor.MoveOperation.Start)
 
     ret = errorbox.exec_()
 

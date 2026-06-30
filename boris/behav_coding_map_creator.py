@@ -1084,7 +1084,7 @@ def behaviors_coding_map_creator(self):
 
     if not self.project:
         QMessageBox.warning(
-            self, cfg.programName, "Create or open a project first", QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton
+            self, cfg.programName, "Create or open a project first", QMessageBox.StandardButton.Ok | QMessageBox.StandardButton.Default, QMessageBox.StandardButton.NoButton
         )
         return
 

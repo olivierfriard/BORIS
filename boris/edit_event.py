@@ -220,8 +220,8 @@ class EditSelectedEvents(QDialog):
                 None,
                 cfg.programName,
                 "You must select a field to be edited",
-                QMessageBox.Ok | QMessageBox.Default,
-                QMessageBox.NoButton,
+                QMessageBox.StandardButton.Ok | QMessageBox.StandardButton.Default,
+                QMessageBox.StandardButton.NoButton,
             )
             return
         """
@@ -231,8 +231,8 @@ class EditSelectedEvents(QDialog):
                 None,
                 cfg.programName,
                 "You must select a new value from the list",
-                QMessageBox.Ok | QMessageBox.Default,
-                QMessageBox.NoButton,
+                QMessageBox.StandardButton.Ok | QMessageBox.StandardButton.Default,
+                QMessageBox.StandardButton.NoButton,
             )
             return
 

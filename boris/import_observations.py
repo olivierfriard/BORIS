@@ -45,8 +45,8 @@ def load_observations_from_boris_project(self, project_file_path: str):
             None,
             cfg.programName,
             "This project is already open",
-            QMessageBox.Ok | QMessageBox.Default,
-            QMessageBox.NoButton,
+            QMessageBox.StandardButton.Ok | QMessageBox.StandardButton.Default,
+            QMessageBox.StandardButton.NoButton,
         )
         return
 
@@ -162,8 +162,8 @@ def load_observations_from_spreadsheet(self, project_file_path: str):
             None,
             cfg.programName,
             ("The type of file was not recognized. Must be Microsoft-Excel XLSX format or OpenDocument ODS"),
-            QMessageBox.Ok | QMessageBox.Default,
-            QMessageBox.NoButton,
+            QMessageBox.StandardButton.Ok | QMessageBox.StandardButton.Default,
+            QMessageBox.StandardButton.NoButton,
         )
         return
 
@@ -185,8 +185,8 @@ def load_observations_from_spreadsheet(self, project_file_path: str):
                     f"{'<br>'.join(['<b>' + x + '</b>' for x in expected_labels])}<br>"
                     "<br>The order is not mandatory."
                 ),
-                QMessageBox.Ok | QMessageBox.Default,
-                QMessageBox.NoButton,
+                QMessageBox.StandardButton.Ok | QMessageBox.StandardButton.Default,
+                QMessageBox.StandardButton.NoButton,
             )
             return 1
     event: dict = {}
@@ -225,8 +225,8 @@ def import_observations(self):
                 None,
                 cfg.programName,
                 ("Please open or create a new observation before importing from a spreadsheet file"),
-                QMessageBox.Ok,
-                QMessageBox.NoButton,
+                QMessageBox.StandardButton.Ok,
+                QMessageBox.StandardButton.NoButton,
             )
             return
 
@@ -237,6 +237,6 @@ def import_observations(self):
             None,
             cfg.programName,
             ("The type of file was not recognized. Must be a BORIS project or a Microsoft-Excel XLSX format or OpenDocument ODS"),
-            QMessageBox.Ok | QMessageBox.Default,
-            QMessageBox.NoButton,
+            QMessageBox.StandardButton.Ok | QMessageBox.StandardButton.Default,
+            QMessageBox.StandardButton.NoButton,
         )
