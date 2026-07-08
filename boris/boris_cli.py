@@ -37,8 +37,8 @@ if str(package_dir) not in sys.path:
 
 from boris import version
 from boris.config import (
-    BEHAVIORS_PLOT_COLORS,
     BEHAVIOR_CODE,
+    BEHAVIORS_PLOT_COLORS,
     ETHOGRAM,
     EVENTS,
     HHMMSS,
@@ -106,6 +106,7 @@ commands_usage = {
     ),
 }
 
+
 def build_parser():
     parser = argparse.ArgumentParser(description="BORIS CLI")
     parser.add_argument("-v", "--version", action="store_true", dest="version", help="BORIS version")
@@ -123,7 +124,7 @@ def main(argv=None):
     pj, observations_id_list = {}, {}
 
     if args.version:
-        print("version {}".format(__version__))
+        print(f"version {__version__}")
         sys.exit()
 
     if args.command:
@@ -137,12 +138,11 @@ def main(argv=None):
             print()
             sys.exit()
 
-    from boris import project_functions
-    from boris import utilities
+    from boris import project_functions, utilities
 
     if args.project_file:
         if not args.command:
-            print("Project path: {}".format(args.project_file))
+            print(f"Project path: {args.project_file}")
 
         project_path, project_changed, pj, msg = project_functions.open_project_json(args.project_file)
         if "error" in pj:
@@ -153,52 +153,39 @@ def main(argv=None):
 
     if args.observation_id:
         observations_id_list = args.observation_id
-        """
-        if not args.command:
-            print("\nObservations:")
-            for observation_id in observations_id_list:
-                if observation_id in pj[OBSERVATIONS]:
-                    print("Id: {}".format(observation_id))
-                else:
-                    print("{}: NOT FOUND in project".format(observation_id))
-            print()
-        """
 
     if args.project_info:
         if not args.command:
             if pj:
-                print("Project name: {}".format(pj[PROJECT_NAME]))
-                print("Project date: {}".format(pj[PROJECT_DATE]))
-                print("Project description: {}".format(pj[PROJECT_DESCRIPTION]))
+                print(f"Project name: {pj[PROJECT_NAME]}")
+                print(f"Project date: {pj[PROJECT_DATE]}")
+                print(f"Project description: {pj[PROJECT_DESCRIPTION]}")
                 print()
 
                 if not observations_id_list:
                     print("Ethogram\n========")
-                    print("Number of behaviors in ethogram: {}".format(len(pj[ETHOGRAM])))
+                    print(f"Number of behaviors in ethogram: {len(pj[ETHOGRAM])}")
                     for idx in utilities.sorted_keys(pj[ETHOGRAM]):
                         print(
-                            "Code: {}\tDescription: {}\tType: {}".format(
-                                pj[ETHOGRAM][idx][BEHAVIOR_CODE], pj[ETHOGRAM][idx]["description"], pj[ETHOGRAM][idx][TYPE]
-                            )
+                            f"Code: {pj[ETHOGRAM][idx][BEHAVIOR_CODE]}\tDescription: {pj[ETHOGRAM][idx]['description']}\tType: {pj[ETHOGRAM][idx][TYPE]}"
                         )
-                    """print("Behaviors: {}".format(",".join([pj[ETHOGRAM][k]["code"] for k in utilities.sorted_keys(pj[ETHOGRAM])])))"""
                     print()
 
                     print("Subjects\n========")
-                    print("Number of subjects: {}".format(len(pj[SUBJECTS])))
+                    print(f"Number of subjects: {len(pj[SUBJECTS])}")
                     for idx in utilities.sorted_keys(pj[SUBJECTS]):
-                        print("Name: {}\tDescription: {}".format(pj[SUBJECTS][idx]["name"], pj[SUBJECTS][idx]["description"]))
+                        print(f"Name: {pj[SUBJECTS][idx]['name']}\tDescription: {pj[SUBJECTS][idx]['description']}")
                     print()
 
                     print("Observations\n============")
-                    print("Number of observations: {}".format(len(pj[OBSERVATIONS])))
+                    print(f"Number of observations: {len(pj[OBSERVATIONS])}")
                     print("List of observations:")
                     for observation_id in sorted(pj[OBSERVATIONS].keys()):
-                        print("Id: {}\tDate: {}".format(observation_id, pj[OBSERVATIONS][observation_id]["date"]))
+                        print(f"Id: {observation_id}\tDate: {pj[OBSERVATIONS][observation_id]['date']}")
 
                 else:
                     for observation_id in observations_id_list:
-                        print("Observation id: {}".format(observation_id))
+                        print(f"Observation id: {observation_id}")
                         if pj[OBSERVATIONS][observation_id][EVENTS]:
                             for event in pj[OBSERVATIONS][observation_id][EVENTS]:
                                 print("\t".join([str(x) for x in event]))
@@ -210,7 +197,7 @@ def main(argv=None):
             sys.exit()
 
     if args.command:
-        print("Command: {}\n".format(" ".join(args.command)))
+        print(f"Command: {' '.join(args.command)}\n")
 
         if not pj:
             print("No project")
@@ -223,7 +210,7 @@ def main(argv=None):
 
             for observation_id in observations_id_list:
                 ret, msg = project_functions.check_state_events_obs(observation_id, pj[ETHOGRAM], pj[OBSERVATIONS][observation_id], HHMMSS)
-                print("{}: {}".format(observation_id, cleanhtml(msg)))
+                print(f"{observation_id}: {cleanhtml(msg)}")
             sys.exit()
 
         if "export_events" in args.command:
@@ -255,8 +242,7 @@ def main(argv=None):
             sys.exit()
 
         if "irr" in args.command:
-            from boris import db_functions
-            from boris import irr
+            from boris import db_functions, irr
 
             if len(observations_id_list) != 2:
                 print("select 2 observations")
@@ -283,7 +269,7 @@ def main(argv=None):
 
             K, out = irr.cohen_kappa(cursor, observations_id_list[0], observations_id_list[1], interval, subjects, include_modifiers)
 
-            print(("Cohen's Kappa - Index of Inter-Rater Reliability\n\nInterval time: {interval:.3f} s\n").format(interval=interval))
+            print((f"Cohen's Kappa - Index of Inter-Rater Reliability\n\nInterval time: {interval:.3f} s\n"))
 
             print(out)
             sys.exit()
@@ -300,7 +286,7 @@ def main(argv=None):
             if len(args.command) > 1:
                 export_dir = args.command[1]
                 if not pathlib.Path(export_dir).is_dir():
-                    print("{} is not a valid directory".format(export_dir))
+                    print(f"{export_dir} is not a valid directory")
                     sys.exit()
 
             ok, msg = project_functions.create_subtitles(
@@ -335,7 +321,7 @@ def main(argv=None):
             if len(args.command) > 1:
                 export_dir = args.command[1]
                 if not pathlib.Path(export_dir).is_dir():
-                    print("{} is not a valid directory".format(export_dir))
+                    print(f"{export_dir} is not a valid directory")
                     sys.exit()
 
             include_modifiers = True
@@ -368,7 +354,7 @@ def main(argv=None):
             )
             sys.exit()
 
-        print("Command {} not found!".format(args.command[0]))
+        print(f"Command {args.command[0]} not found!")
 
     print()
 
