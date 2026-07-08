@@ -21,18 +21,39 @@ Copyright 2012-2026 Olivier Friard
   MA 02110-1301, USA.
 """
 
+# ruff: noqa: E402
+
 import argparse
-import sys
-import re
 import pathlib
-from boris import utilities
-from boris import project_functions
-from boris.config import *
+import re
+import sys
+
+if __package__ in (None, ""):
+    # Allow running this file directly from the source checkout.
+    sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent.parent))
+
 from boris import db_functions
 from boris import export_observation
 from boris import irr
 from boris import plot_events
+from boris import project_functions
+from boris import utilities
 from boris import version
+from boris.config import (
+    BEHAVIORS_PLOT_COLORS,
+    BEHAVIOR_CODE,
+    ETHOGRAM,
+    EVENTS,
+    HHMMSS,
+    NO_FOCAL_SUBJECT,
+    OBSERVATIONS,
+    PROJECT_DATE,
+    PROJECT_DESCRIPTION,
+    PROJECT_NAME,
+    SUBJECTS,
+    TIME_FULL_OBS,
+    TYPE,
+)
 
 __version__ = version.__version__
 __version_date__ = version.__version_date__
