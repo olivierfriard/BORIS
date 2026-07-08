@@ -21,6 +21,10 @@ This file is part of BORIS.
 
 """
 
-from .core import main
-
 name = "BORIS"
+
+
+def main():
+    from .core import main as core_main
+
+    return core_main()

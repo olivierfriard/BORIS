@@ -1,3 +1,7 @@
+[build-system]
+requires = ["setuptools>=40.8.0"]
+build-backend = "setuptools.build_meta"
+
 [project]
 name = "boris-behav-obs"
 version = "9.12.3"
@@ -41,6 +45,7 @@ Issues = "https://github.com/olivierfriard/BORIS/issues"
 
 [project.scripts]
 boris-behav-obs = "boris.core:main"
+"boris_cli.py" = "boris.boris_cli:main"
 
 
 [[tool.uv.index]]
@@ -65,4 +70,3 @@ exclude = ["*_ui.py", "mpv*"]
 dev = [
     "pytest>=8.3.5",
 ]
-
