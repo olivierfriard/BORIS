@@ -1,9 +1,14 @@
 import io
 import json
+from decimal import Decimal
 from pathlib import Path
 import sys
 
+import numpy as np
+import pandas as pd
+
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "boris"))
 
 from boris import config as cfg
 from boris import plugins
@@ -88,6 +93,35 @@ class TestOfficialPluginsReleases:
                 "text": "v1.3.0-beta - 2026-06-02 [pre-release]",
             },
         ]
+
+
+class TestPluginDataframeFilter:
+    def test_user_defined_time_interval_accepts_decimal_bounds(self):
+        df = pd.DataFrame(
+            [
+                {
+                    "Observation id": "obs1",
+                    "Subject": "focal",
+                    "Behavior": "open-mouth",
+                    "Start (s)": 0.0,
+                    "Stop (s)": 0.5,
+                    "Duration (s)": 0.5,
+                }
+            ]
+        )
+        parameters = {
+            "selected subjects": ["focal"],
+            "selected behaviors": ["open-mouth"],
+            "time": cfg.TIME_ARBITRARY_INTERVAL,
+            "start time": Decimal("0.1"),
+            "end time": Decimal("0.4"),
+        }
+
+        filtered = plugins.plugin_df_filter(df, observations_list=["obs1"], parameters=parameters)
+
+        assert filtered["Start (s)"].tolist() == [0.1]
+        assert filtered["Stop (s)"].tolist() == [0.4]
+        assert np.allclose(filtered["Duration (s)"], [0.3])
 
 
 class TestOfficialPluginDirectories:

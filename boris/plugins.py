@@ -678,8 +678,8 @@ def plugin_df_filter(df: pd.DataFrame, observations_list: list = [], parameters:
         else:
             # filter selected time interval
             if parameters["start time"] is not None and parameters["end time"] is not None:
-                MIN_TIME = parameters["start time"]
-                MAX_TIME = parameters["end time"]
+                MIN_TIME = float(parameters["start time"])
+                MAX_TIME = float(parameters["end time"])
 
                 # keep events between start time and end_time
                 df_interval = df[
