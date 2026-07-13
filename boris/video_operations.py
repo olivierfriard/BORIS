@@ -57,7 +57,10 @@ def snapshot(self):
                 str(i + 1) in self.pj[cfg.OBSERVATIONS][self.observationId][cfg.FILE]
                 and self.pj[cfg.OBSERVATIONS][self.observationId][cfg.FILE][str(i + 1)]
             ):
-                p = pl.Path(self.dw_player[0].player.playlist[self.dw_player[0].player.playlist_pos]["filename"])
+                playlist = self.dw_player[0].player.playlist
+                if playlist is None:
+                    return
+                p = pl.Path(playlist[self.dw_player[0].player.playlist_pos]["filename"])
 
                 snapshot_file_path = str(p.parent / f"{p.stem}_{player.player.time_pos:0.3f}.png")
 
