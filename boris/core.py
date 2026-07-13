@@ -2073,8 +2073,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             dh = videoframe.size().height()
 
             # click coordinates in dialog reference frame
-            dx = self.dw_player[player_id].mouse_pos["x"]
-            dy = self.dw_player[player_id].mouse_pos["y"]
+            dx = self.dw_player[player_id].player.mouse_pos["x"]
+            dy = self.dw_player[player_id].player.mouse_pos["y"]
+
+            print(f"{dx=} {dy=}") # remove before release
 
             # convert to float for operations
             vw = float(vw)
@@ -4364,13 +4366,16 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         # update observation info
         playlist_length = len(playlist) if playlist else 0
         msg = ""
-        if self.dw_player[0].player.time_pos is not None:  # check if video
-            msg = f"Current media name: <b>{current_media_name}</b> (#{self.dw_player[0].player.playlist_pos + 1} / {playlist_length})<br>"
 
-            msg += (
-                f"Media position: <b>{util.convertTime(self.timeFormat, current_media_time_pos)}</b> / "
-                f"{util.convertTime(self.timeFormat, current_media_duration)} frame: <b>{frame_idx}</b>"
-            )
+        if self.dw_player[0].player.time_pos is not None:  # check if video
+            playlist_pos = self.dw_player[0].player.playlist_pos
+            if playlist_pos is not None:
+                msg = f"Current media name: <b>{current_media_name}</b> (#{playlist_pos + 1} / {playlist_length})<br>"
+
+                msg += (
+                    f"Media position: <b>{util.convertTime(self.timeFormat, current_media_time_pos)}</b> / "
+                    f"{util.convertTime(self.timeFormat, current_media_duration)} frame: <b>{frame_idx}</b>"
+                )
 
             # with time offset
             if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TIME_OFFSET]:
