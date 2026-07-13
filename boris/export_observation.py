@@ -805,8 +805,14 @@ def export_aggregated_events(pj: dict, parameters: dict, obsId: str, force_numbe
                             if observation[cfg.FILE][player]:
                                 for media_file in observation[cfg.FILE][player]:
                                     media_file_lst.append(media_file)
-                                    fps_lst.append(f"{observation[cfg.MEDIA_INFO][cfg.FPS].get(media_file, cfg.NA):.3f}")
-                                    media_durations_lst.append(f"{observation[cfg.MEDIA_INFO][cfg.LENGTH].get(media_file, cfg.NA):.3f}")
+                                    if media_file in observation[cfg.MEDIA_INFO][cfg.FPS]:
+                                        fps_lst.append(f"{observation[cfg.MEDIA_INFO][cfg.FPS][media_file]:.3f}")
+                                    else:
+                                        fps_lst.append(cfg.NA)
+                                    if media_file in observation[cfg.MEDIA_INFO][cfg.LENGTH]:
+                                        media_durations_lst.append(f"{observation[cfg.MEDIA_INFO][cfg.LENGTH].get(media_file, cfg.NA):.3f}")
+                                    else:
+                                        media_durations_lst.append(cfg.NA)
                                 if player > "1":
                                     media_file_str += "|"
                                     fps_str += "|"

@@ -700,7 +700,12 @@ def get_current_states_modifiers_by_subject(
         return current_states
 
     # check if time contains NA
-    if [x for x in events if x[cfg.EVENT_TIME_FIELD_IDX].is_nan()]:
+    #if [x for x in events if x[cfg.EVENT_TIME_FIELD_IDX].is_nan()]:
+    if any(
+            isinstance(x[cfg.EVENT_TIME_FIELD_IDX], float)
+            and math.isnan(x[cfg.EVENT_TIME_FIELD_IDX])
+            for x in events
+        ):
         check_index = cfg.PJ_OBS_FIELDS[cfg.IMAGES][cfg.IMAGE_INDEX]
     else:
         check_index = cfg.EVENT_TIME_FIELD_IDX

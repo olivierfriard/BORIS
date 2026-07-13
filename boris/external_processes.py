@@ -58,17 +58,11 @@ def ffmpeg_process(self, action: str):
             )
         )
 
-        # self.processes_widget.lwi.clear()
-        std_out = self.processes[idx - 1][0].readAllStandardOutput().data().decode("utf-8")
+        raw_output = self.processes[idx - 1][0].readAllStandardOutput().data()
+        std_out = raw_output.decode("utf-8", errors="backslashreplace")
         if std_out:
             self.processes_widget.lwi.addItems((f"{Path(self.processes[idx - 1][1][2]).name}:   {std_out}",))
 
-        """
-        std_err = self.processes[idx - 1][0].readAllStandardError().data().decode("utf-8")
-        if std_err:
-            self.processes_widget.lwi.addItems((f"{pl.Path(self.processes[idx - 1][1][2]).name}: ERROR: {std_err}",))
-            self.flag_ffmpeg_error = True
-        """
 
         self.processes_widget.lwi.scrollToBottom()
 
