@@ -45,9 +45,8 @@ from PySide6.QtWidgets import (
 )
 
 from . import config as cfg
-from . import db_functions, dialog, observation_operations
+from . import db_functions, dialog, observation_operations, project_functions, select_observations, select_subj_behav
 from . import portion as Interval
-from . import project_functions, select_observations, select_subj_behav
 from . import utilities as util
 
 
@@ -318,8 +317,8 @@ class Advanced_event_filtering_dialog(QDialog):
                 if filter_ in (cfg.ODS, cfg.XLSX, cfg.XLS):
                     f.write(tablib_dataset.export(output_format))
 
-        except Exception:
-            QMessageBox.critical(self, cfg.programName, f"The file {file_name} can not be saved")
+        except Exception as e:
+            QMessageBox.critical(self, cfg.programName, f"The file {file_name} can not be saved: {e}")
 
 
 def event_filtering(self):

@@ -47,14 +47,8 @@ def export_project_as_pickle_object(pj: dict) -> None:
     try:
         with open(file_name, "wb") as f_out:
             pickle.dump(pj, f_out)
-    except Exception:
-        QMessageBox.critical(
-            None,
-            cfg.programName,
-            "Error during file saving.",
-            QMessageBox.StandardButton.Ok | QMessageBox.StandardButton.Default,
-            QMessageBox.StandardButton.NoButton,
-        )
+    except Exception as e:
+        QMessageBox.critical(None, cfg.programName, f"Error during file saving: {e}", QMessageBox.StandardButton.Ok)
 
 
 def export_ethogram(self) -> None:

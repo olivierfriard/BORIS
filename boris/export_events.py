@@ -591,13 +591,19 @@ def export_aggregated_events(self):
 
             if not flag_group:
                 fileName = f"{pl.Path(exportDir) / util.safeFileName(obs_id)}.{outputFormat}"
-                with open(fileName, "wb") as f:
-                    f.write(str.encode(out))
+                try:
+                    with open(fileName, "wb") as f:
+                        f.write(str.encode(out))
+                except Exception as e:
+                    QMessageBox.critical(self, cfg.programName, f"The file {fileName} can not be saved: {e}")
                 out = ""
 
         if flag_group:
-            with open(fileName, "wb") as f:
-                f.write(str.encode(out))
+            try:
+                with open(fileName, "wb") as f:
+                    f.write(str.encode(out))
+            except Exception as e:
+                QMessageBox.critical(self, cfg.programName, f"The file {fileName} can not be saved: {e}")
         return
 
     if outputFormat == cfg.SDIS_EXT:  # SDIS format

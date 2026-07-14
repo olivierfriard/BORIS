@@ -1373,8 +1373,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         try:
             with open(temp_zip.name, "wb") as f_out:
                 f_out.write(zip_content)
-        except Exception:
-            QMessageBox.critical(self, cfg.programName, "A problem occurred during saving the new version of BORIS.")
+        except Exception as e:
+            QMessageBox.critical(self, cfg.programName, f"A problem occurred during saving the new version of BORIS.: {e}")
             return
 
         # extract to temp dir

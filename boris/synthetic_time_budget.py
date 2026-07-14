@@ -153,12 +153,14 @@ def synthetic_time_budget(self) -> None:
                     == cfg.CANCEL
                 ):
                     return
-
-        with open(file_name, "wb") as f:
-            if filter_ in (cfg.TSV, cfg.CSV, cfg.HTML, cfg.TEXT_FILE):
-                f.write(str.encode(data_report.export(output_format)))
-            if filter_ in (cfg.ODS, cfg.XLSX, cfg.XLS):
-                f.write(data_report.export(output_format))
+        try:
+            with open(file_name, "wb") as f:
+                if filter_ in (cfg.TSV, cfg.CSV, cfg.HTML, cfg.TEXT_FILE):
+                    f.write(str.encode(data_report.export(output_format)))
+                if filter_ in (cfg.ODS, cfg.XLSX, cfg.XLS):
+                    f.write(data_report.export(output_format))
+        except Exception as e:
+            QMessageBox.critical(None, cfg.programName, f"Error during file saving: {e}", QMessageBox.StandardButton.Ok)
 
 
 def synthetic_binned_time_budget(self) -> None:

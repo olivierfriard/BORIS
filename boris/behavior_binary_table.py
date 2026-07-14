@@ -26,14 +26,9 @@ from decimal import Decimal as dec
 import tablib
 from PySide6.QtWidgets import QFileDialog, QInputDialog, QMessageBox
 
-from . import observation_operations
-
-from . import dialog
-from . import project_functions
-from . import select_observations
-from . import utilities as util
 from . import config as cfg
-from . import select_subj_behav
+from . import dialog, observation_operations, project_functions, select_observations, select_subj_behav
+from . import utilities as util
 
 
 def create_behavior_binary_table(pj: dict, selected_observations: list, parameters_obs: dict, time_interval: float) -> dict:
@@ -289,17 +284,24 @@ def behavior_binary_table(self):
                 mem_command = dialog.MessageDialog(
                     cfg.programName,
                     f"The file {file_name_with_subject} already exists.",
-                    [cfg.OVERWRITE, cfg.OVERWRITE_ALL, "Skip", "Skip all", cfg.CANCEL],
+                    (cfg.OVERWRITE, cfg.OVERWRITE_ALL, "Skip", "Skip all", cfg.CANCEL),
                 )
                 if mem_command == cfg.CANCEL:
                     return
                 if mem_command in ["Skip", "Skip all"]:
                     continue
+            try:
+                if output_format in [cfg.CSV_EXT, cfg.TSV_EXT, cfg.HTML]:
+                    with open(file_name_with_subject, "wb") as f:
+                        f.write(str.encode(results_df[obs_id][subject].export(output_format)))
 
-            if output_format in [cfg.CSV_EXT, cfg.TSV_EXT, cfg.HTML]:
-                with open(file_name_with_subject, "wb") as f:
-                    f.write(str.encode(results_df[obs_id][subject].export(output_format)))
-
-            if output_format in [cfg.ODS_EXT, cfg.XLSX_EXT, cfg.XLS_EXT]:
-                with open(file_name_with_subject, "wb") as f:
-                    f.write(results_df[obs_id][subject].export(output_format))
+                if output_format in [cfg.ODS_EXT, cfg.XLSX_EXT, cfg.XLS_EXT]:
+                    with open(file_name_with_subject, "wb") as f:
+                        f.write(results_df[obs_id][subject].export(output_format))
+            except Exception as e:
+                QMessageBox.critical(
+                    None,
+                    cfg.programName,
+                    (f"Error saving the file: {e}."),
+                    QMessageBox.StandardButton.Ok,
+                )

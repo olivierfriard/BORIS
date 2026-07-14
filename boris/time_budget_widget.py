@@ -377,11 +377,19 @@ class timeBudgetResults(QWidget):
             return
 
         # write results
-        with open(file_name, "wb") as f:
-            if filter_ in (cfg.TSV, cfg.CSV, cfg.HTML, cfg.TEXT_FILE):
-                f.write(str.encode(data.export(cfg.FILE_NAME_SUFFIX[filter_])))
-            if filter_ in (cfg.ODS, cfg.XLSX, cfg.XLS):
-                f.write(data.export(cfg.FILE_NAME_SUFFIX[filter_]))
+        try:
+            with open(file_name, "wb") as f:
+                if filter_ in (cfg.TSV, cfg.CSV, cfg.HTML, cfg.TEXT_FILE):
+                    f.write(str.encode(data.export(cfg.FILE_NAME_SUFFIX[filter_])))
+                if filter_ in (cfg.ODS, cfg.XLSX, cfg.XLS):
+                    f.write(data.export(cfg.FILE_NAME_SUFFIX[filter_]))
+        except Exception as e:
+            QMessageBox.critical(
+                None,
+                cfg.programName,
+                (f"Error saving the results: {e}."),
+                QMessageBox.StandardButton.Ok,
+            )
 
 
 def time_budget(self, mode: str, mode2: str = "list"):
@@ -418,7 +426,7 @@ def time_budget(self, mode: str, mode2: str = "list"):
     flagGroup: bool = False
     if len(selected_observations) > 1:
         flagGroup = (
-            dialog.MessageDialog(cfg.programName, "Group the selected observations in a single time budget analysis?", [cfg.YES, cfg.NO])
+            dialog.MessageDialog(cfg.programName, "Group the selected observations in a single time budget analysis?", (cfg.YES, cfg.NO))
             == cfg.YES
         )
 
@@ -1028,16 +1036,22 @@ def time_budget(self, mode: str, mode2: str = "list"):
                     if mem_command in (cfg.SKIP, cfg.SKIP_ALL):
                         continue
 
-                with open(file_name, "wb") as f:
-                    if output_format in (cfg.TSV, cfg.CSV, cfg.HTML):
-                        f.write(str.encode(data.export(cfg.FILE_NAME_SUFFIX[output_format])))
+                try:
+                    with open(file_name, "wb") as f:
+                        if output_format in (cfg.TSV, cfg.CSV, cfg.HTML):
+                            f.write(str.encode(data.export(cfg.FILE_NAME_SUFFIX[output_format])))
 
-                    if output_format in (cfg.ODS, cfg.XLSX, cfg.XLS):
-                        f.write(data.export(cfg.FILE_NAME_SUFFIX[output_format]))
+                        if output_format in (cfg.ODS, cfg.XLSX, cfg.XLS):
+                            f.write(data.export(cfg.FILE_NAME_SUFFIX[output_format]))
+                except Exception as e:
+                    QMessageBox.critical(None, cfg.programName, f"Error during file saving: {e}", QMessageBox.StandardButton.Ok)
 
-        if output_format == cfg.XLSX_WB:
-            with open(wb_file_name, "wb") as f:
-                f.write(workbook.xlsx)
-        if output_format == cfg.ODS_WB:
-            with open(wb_file_name, "wb") as f:
-                f.write(workbook.ods)
+        try:
+            if output_format == cfg.XLSX_WB:
+                with open(wb_file_name, "wb") as f:
+                    f.write(workbook.xlsx)
+            if output_format == cfg.ODS_WB:
+                with open(wb_file_name, "wb") as f:
+                    f.write(workbook.ods)
+        except Exception as e:
+            QMessageBox.critical(None, cfg.programName, f"Error during file saving: {e}", QMessageBox.StandardButton.Ok)
