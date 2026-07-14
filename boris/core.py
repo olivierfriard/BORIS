@@ -1519,17 +1519,18 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             #    self.seek_mediaplayer(dec(0))
             #    return
 
+            playlist_pos = self.dw_player[0].player.playlist_pos
+            playlist_count = self.dw_player[0].player.playlist_count
             if self.MPV_IPC_MODE:
-                if self.dw_player[0].player.playlist_pos is None:
+                if playlist_pos is None or playlist_count is None:
                     return
 
             # check if media not first media
-            if self.dw_player[0].player.playlist_pos > 0:
+            if playlist_pos > 0:
                 self.dw_player[0].player.playlist_prev()
 
-            elif self.dw_player[0].player.playlist_count == 1:
+            elif playlist_count == 1:
                 self.seek_mediaplayer(dec(0))
-                # self.statusbar.showMessage("There is only one media file", 5000)
 
         if self.playerType == cfg.IMAGES:
             if len(self.pj[cfg.OBSERVATIONS][self.observationId].get(cfg.DIRECTORIES_LIST, [])) <= 1:
@@ -2076,7 +2077,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             dx = self.dw_player[player_id].player.mouse_pos["x"]
             dy = self.dw_player[player_id].player.mouse_pos["y"]
 
-            print(f"{dx=} {dy=}") # remove before release
+            print(f"{dx=} {dy=}")  # remove before release
 
             # convert to float for operations
             vw = float(vw)
