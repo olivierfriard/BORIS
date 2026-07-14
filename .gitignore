@@ -10,3 +10,6 @@ tests/output
 boris_behav_obs.egg-info
 .venv
 uv.lock
+.zed
+.codex
+AGENTS.md
