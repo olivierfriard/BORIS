@@ -22,8 +22,11 @@ This file is part of BORIS.
 
 import json
 import logging
+import os
 import socket
 import subprocess
+import threading
+import time
 
 import config as cfg
 
@@ -35,69 +38,201 @@ class IPC_MPV:
     class for managing mpv through Inter Process Communication (IPC)
     """
 
+    CONNECT_TIMEOUT = 2.0
+    RESPONSE_TIMEOUT = 2.0
+    RETRY_DELAY = 0.05
+    LOAD_TIMEOUT = 5.0
+
     media_durations: list = []
     cumul_media_durations: list = []
     fps: list = []
     _pause: bool = False
 
     def __init__(self, socket_path: str = cfg.MPV_SOCKET, parent=None):
-        # print(f"{parent=}")
         self.socket_path = socket_path
         self.process = None
-        # self.sock = None
+        self._sock = None
+        self._recv_buffer = b""
+        self._next_request_id = 1
+        self._pending_responses = {}
+        self._socket_lock = threading.RLock()
         self.init_mpv()
-        # self.init_socket()
 
     def init_mpv(self):
         """
         Start mpv process and embed it in the PySide6 application.
         """
-        logger.info("Start mpv ipc process")
-        # print(f"{self.winId()=}")
-        self.process = subprocess.Popen(
-            [
-                "mpv",
-                "--ontop",
-                "--no-border",
-                "--osc=no",  # no on screen commands
-                "--input-ipc-server=" + self.socket_path,
-                # "--wid=" + str(int(self.winId())),  # Embed in the widget
-                "--idle=yes",  # Keeps mpv running with no video
-                "--keep-open=always",
-                "--input-default-bindings=no",
-                "--input-vo-keyboard=no",
-            ],
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
-        )
+        with self._socket_lock:
+            self._reset_connection(log_level="debug")
+            self._remove_stale_socket_file()
+
+            logger.info("Start mpv ipc process")
+            self.process = subprocess.Popen(
+                [
+                    "mpv",
+                    "--ontop",
+                    "--no-border",
+                    "--osc=no",  # no on screen commands
+                    "--input-ipc-server=" + self.socket_path,
+                    # "--wid=" + str(int(self.winId())),  # Embed in the widget
+                    "--idle=yes",  # Keeps mpv running with no video
+                    "--keep-open=always",
+                    "--input-default-bindings=no",
+                    "--input-vo-keyboard=no",
+                ],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+            )
+
+    def _remove_stale_socket_file(self):
+        if os.path.exists(self.socket_path):
+            try:
+                os.unlink(self.socket_path)
+            except OSError as exc:
+                logger.debug(f"Unable to remove stale mpv IPC socket {self.socket_path}: {exc}")
+
+    def _reset_connection(self, reason: str = "", log_level: str = "warning"):
+        if self._sock is not None:
+            try:
+                self._sock.close()
+            except OSError:
+                pass
+        self._sock = None
+        self._recv_buffer = b""
+        self._pending_responses = {}
+
+        if reason:
+            getattr(logger, log_level)(reason)
+
+    def close(self):
+        with self._socket_lock:
+            self._reset_connection(log_level="debug")
+
+    def _ensure_process(self):
+        if self.process is not None and self.process.poll() is not None:
+            returncode = self.process.returncode
+            logger.warning(f"mpv IPC process exited with code {returncode}; restarting")
+            self.process = None
+            self.init_mpv()
+
+    def _connect_socket(self) -> bool:
+        if self._sock is not None:
+            return True
+
+        self._ensure_process()
+
+        deadline = time.monotonic() + self.CONNECT_TIMEOUT
+        last_error = None
+
+        while time.monotonic() < deadline:
+            if not os.path.exists(self.socket_path):
+                time.sleep(self.RETRY_DELAY)
+                continue
+
+            client = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+            client.settimeout(self.RESPONSE_TIMEOUT)
+
+            try:
+                client.connect(self.socket_path)
+            except OSError as exc:
+                last_error = exc
+                client.close()
+                time.sleep(self.RETRY_DELAY)
+                continue
+
+            self._sock = client
+            self._recv_buffer = b""
+            logger.debug(f"Connected to mpv IPC socket {self.socket_path}")
+            return True
+
+        if last_error is None:
+            logger.warning(f"mpv IPC socket {self.socket_path} did not appear before timeout")
+        else:
+            logger.warning(f"Unable to connect to mpv IPC socket {self.socket_path}: {last_error}")
+        return False
+
+    def _next_id(self) -> int:
+        request_id = self._next_request_id
+        self._next_request_id += 1
+        return request_id
+
+    def _read_message(self) -> dict:
+        # mpv JSON IPC is newline-delimited JSON over a stream socket. recv()
+        # can return partial or multiple messages, so keep a byte buffer.
+        while True:
+            newline_idx = self._recv_buffer.find(b"\n")
+            if newline_idx != -1:
+                raw_message = self._recv_buffer[:newline_idx].strip()
+                self._recv_buffer = self._recv_buffer[newline_idx + 1 :]
+                if not raw_message:
+                    continue
+
+                try:
+                    return json.loads(raw_message.decode("utf-8"))
+                except json.JSONDecodeError as exc:
+                    logger.warning(f"Invalid mpv IPC JSON message: {exc}")
+                    continue
+
+            chunk = self._sock.recv(4096)
+            if not chunk:
+                raise ConnectionError("mpv IPC socket closed by peer")
+            self._recv_buffer += chunk
+
+    def _read_response(self, request_id: int):
+        if request_id in self._pending_responses:
+            return self._pending_responses.pop(request_id)
+
+        deadline = time.monotonic() + self.RESPONSE_TIMEOUT
+
+        while time.monotonic() < deadline:
+            response = self._read_message()
+            response_request_id = response.get("request_id")
+
+            if response_request_id == request_id:
+                return response
+
+            if response_request_id is not None:
+                self._pending_responses[response_request_id] = response
+                logger.debug(f"Queued out-of-order mpv IPC response for request_id={response_request_id}")
+                continue
+
+            logger.debug(f"Ignoring unsolicited mpv IPC message: {response}")
+
+        raise TimeoutError(f"Timed out waiting for mpv IPC response request_id={request_id}")
 
     def send_command(self, command):
         """
         Send a JSON command to the mpv IPC server.
         """
-        # print(f"send command: {command}")
-        try:
-            # Create a Unix socket
-            with socket.socket(socket.AF_UNIX, socket.SOCK_STREAM) as client:
-                # Connect to the MPV IPC server
-                client.connect(self.socket_path)
-                # Send the JSON command
-                # print(f"{json.dumps(command).encode('utf-8')=}")
-                client.sendall(json.dumps(command).encode("utf-8") + b"\n")
-                # Receive the response
-                response = client.recv(2000)
+        with self._socket_lock:
+            request_id = self._next_id()
+            payload = dict(command)
+            payload["request_id"] = request_id
 
-                # print(f"{response=}")
-                # Parse the response as JSON
-                response_data = json.loads(response.decode("utf-8"))
-                if response_data["error"] != "success":
-                    logging.warning(f"send command: {command} response data: {response_data}")
-                # Return the 'data' field which contains the playback position
-                return response_data.get("data")
-        except FileNotFoundError:
-            logger.critical("Error: Socket file not found.")
-        except Exception as e:
-            logger.critical(f"An error occurred: {e}")
+            for attempt in range(2):
+                if not self._connect_socket():
+                    if attempt == 0 and self.process is not None and self.process.poll() is not None:
+                        self.init_mpv()
+                        continue
+                    return None
+
+                try:
+                    self._sock.sendall(json.dumps(payload).encode("utf-8") + b"\n")
+                    response_data = self._read_response(request_id)
+                    if response_data.get("error") not in ("success", "property unavailable"):
+                        logger.warning(f"mpv IPC command failed: command={command} response={response_data}")
+                    elif response_data.get("error") == "property unavailable":
+                        logger.debug(f"mpv IPC property unavailable: command={command}")
+                    return response_data.get("data")
+                except (BrokenPipeError, ConnectionError, OSError, TimeoutError) as exc:
+                    logger.warning(f"mpv IPC command transport error: command={command} error={exc}")
+                    self._reset_connection(reason="Resetting mpv IPC connection after transport failure", log_level="debug")
+
+                    if self.process is not None and self.process.poll() is not None and attempt == 0:
+                        self.init_mpv()
+                    elif attempt == 0:
+                        continue
+
         return None
 
     @property
@@ -171,7 +306,17 @@ class IPC_MPV:
         return self.send_command({"command": ["loadfile", media, "append"]})
 
     def wait_until_playing(self):
-        return
+        deadline = time.monotonic() + self.LOAD_TIMEOUT
+
+        while time.monotonic() < deadline:
+            playlist_count = self.playlist_count
+            duration = self.duration
+            if playlist_count and duration is not None:
+                return True
+            time.sleep(self.RETRY_DELAY)
+
+        logger.debug(f"Timed out waiting for mpv IPC media readiness on {self.socket_path}")
+        return False
 
     def seek(self, value, mode: str):
         self.send_command({"command": ["seek", value, mode]})

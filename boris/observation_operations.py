@@ -124,6 +124,8 @@ def close_observation(self):
 
                 if self.MPV_IPC_MODE:
                     try:
+                        if hasattr(player.player, "close"):
+                            player.player.close()
                         player.player.process.terminate()
                         try:
                             player.player.process.wait(timeout=3)  # wait up to 3s

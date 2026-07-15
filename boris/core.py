@@ -1412,13 +1412,19 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         logging.debug(f"paused? {flag_paused}")
 
-        if not self.dw_player[player].player.playlist_count:
+        playlist_count = self.dw_player[player].player.playlist_count
+        if not playlist_count:
             return
 
         try:
             # one media
-            if self.dw_player[player].player.playlist_count == 1:
-                if new_time < self.dw_player[player].player.duration:
+            if playlist_count == 1:
+                duration_ = self.dw_player[player].player.duration
+                if duration_ is None:
+                    logging.debug("seek_mediaplayer skipped: media duration is not available yet")
+                    return
+
+                if new_time < duration_:
                     new_time_float = round(float(new_time), 3)
 
                     if player == 0:
@@ -5557,6 +5563,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         if self.MPV_IPC_MODE:
             try:
                 for idx, p in enumerate(self.dw_player):
+                    if hasattr(p.player, "close"):
+                        p.player.close()
                     p.player.process.terminate()
                     try:
                         p.player.process.wait(timeout=3)  # wait up to 3s
