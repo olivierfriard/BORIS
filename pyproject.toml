@@ -75,7 +75,7 @@ dev = [
 # Ref: https://github.com/codespell-project/codespell#using-a-config-file
 # Skip Qt-generated resource/UI code and the vendored python-mpv library
 # (kept in sync with tool.ruff.exclude above).
-skip = '.git,.gitignore,.gitattributes,*.svg,*.lock,*core_qrc.py,*_ui.py,mpv*'
+skip = '.git,.git-meta,.gitignore,.gitattributes,*.svg,*.lock,*core_qrc.py,*_ui.py,mpv*'
 check-hidden = true
 # ignore-regex = ''
 # fo - Windows `systeminfo /FO csv` output-format flag (not "for"/"of"/"to")

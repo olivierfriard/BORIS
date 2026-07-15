@@ -93,7 +93,7 @@ def MessageDialog(title: str, text: str, buttons: tuple) -> str:
 def global_error_message(exception_type, exception_value, traceback_object):
     """
     Global error management
-    save error using loggin.critical and stdout
+    save error using logging.critical and stdout
     """
 
     error_text = "\n\nSystem info\n===========\n\n"
