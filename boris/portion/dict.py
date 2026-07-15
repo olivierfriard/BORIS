@@ -21,7 +21,7 @@ class IntervalDict(MutableMapping):
     subset of values covered by the given interval. If no matching value is
     found, an empty IntervalDict is returned.
     When keys are "single values", its behaviour corresponds to the one of Python
-    built-in dict. When no matching value is found, a KeyError is raised.
+    built-in dict. When no matchin value is found, a KeyError is raised.
 
     Note that this class does not aim to have the best performance, but is
     provided mainly for convenience. Its performance mainly depends on the
