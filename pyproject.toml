@@ -70,3 +70,10 @@ exclude = ["*_ui.py", "mpv*"]
 dev = [
     "pytest>=8.3.5",
 ]
+
+[tool.codespell]
+# Ref: https://github.com/codespell-project/codespell#using-a-config-file
+skip = '.git,.gitignore,.gitattributes,*.svg,*.lock'
+check-hidden = true
+# ignore-regex = ''
+# ignore-words-list = ''
