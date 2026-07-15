@@ -23,7 +23,7 @@ class Test_load_events_in_db(object):
 
         cursor = db_functions.load_events_in_db(pj, ["subject1"], ["observation #1"], ["s"])
         cursor.execute(
-            "SELECT occurence FROM events WHERE observation = ? AND subject = ? AND code = ?",
+            "SELECT occurrence FROM events WHERE observation = ? AND subject = ? AND code = ?",
             ("observation #1", "subject1", "s"),
         )
         out = ""
@@ -37,7 +37,7 @@ class Test_load_events_in_db(object):
         pj = json.loads(open("files/test.boris").read())
 
         cursor = db_functions.load_events_in_db(pj, ["subject2"], ["live"], ["s", "p"])
-        cursor.execute("SELECT occurence FROM events WHERE observation = ? AND subject = ? AND code = ?", ("live", "subject2", "s"))
+        cursor.execute("SELECT occurrence FROM events WHERE observation = ? AND subject = ? AND code = ?", ("live", "subject2", "s"))
         out = ""
         for r in cursor.fetchall():
             out += "{}\n".format(r[0])
@@ -55,7 +55,7 @@ class Test_load_events_in_db(object):
 
         cursor = db_functions.load_events_in_db(pj, ["No focal subject"], ["live not paired"], ["s", "p"])
         cursor.execute(
-            "SELECT occurence FROM events WHERE observation = ? AND subject = ? AND code = ?",
+            "SELECT occurrence FROM events WHERE observation = ? AND subject = ? AND code = ?",
             ("live not paired", "No focal subject", "s"),
         )
         out = ""

@@ -970,7 +970,7 @@ def set_media_paths_relative_to_project_dir(pj: dict, project_file_name: str) ->
         bool: True if project changed else False
     """
 
-    # chek if media and images dir are relative to project dir
+    # check if media and images dir are relative to project dir
     for obs_id in pj[cfg.OBSERVATIONS]:
         if pj[cfg.OBSERVATIONS][obs_id][cfg.TYPE] == cfg.IMAGES:
             for img_dir in pj[cfg.OBSERVATIONS][obs_id][cfg.DIRECTORIES_LIST]:
@@ -1062,7 +1062,7 @@ def set_data_paths_relative_to_project_dir(pj: dict, project_file_name: str) -> 
     Returns:
         bool: True if project changed else False
     """
-    # chek if data paths are relative to project dir
+    # check if data paths are relative to project dir
     for obs_id in pj[cfg.OBSERVATIONS]:
         for _, v in pj[cfg.OBSERVATIONS][obs_id].get(cfg.PLOT_DATA, {}).items():
             if cfg.FILE_PATH in v:

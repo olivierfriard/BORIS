@@ -743,11 +743,11 @@ def time_budget_analysis(
                     for modifier in distinct_modifiers:
                         cursor.execute(
                             (
-                                "SELECT occurence, observation FROM events "
+                                "SELECT occurrence, observation FROM events "
                                 "WHERE subject = ? "
                                 "AND code = ? "
                                 "AND modifiers = ? "
-                                "ORDER BY observation, occurence"
+                                "ORDER BY observation, occurrence"
                             ),
                             (subject, behavior, modifier),
                         )
@@ -756,11 +756,11 @@ def time_budget_analysis(
 
                         if len(selected_observations) == 1:
                             new_rows: list = []
-                            for occurence, observation in rows:
-                                if occurence is None:
+                            for occurrence, observation in rows:
+                                if occurrence is None:
                                     new_rows.append([float("NaN"), observation])
                                 else:
-                                    new_rows.append([occurence, observation])
+                                    new_rows.append([occurrence, observation])
                             rows = list(new_rows)
 
                         # include behaviors without events
@@ -815,11 +815,11 @@ def time_budget_analysis(
                     for modifier in distinct_modifiers:
                         cursor.execute(
                             (
-                                "SELECT occurence, observation FROM events "
+                                "SELECT occurrence, observation FROM events "
                                 "WHERE subject = ? "
                                 "AND code = ? "
                                 "AND modifiers = ? "
-                                "ORDER BY observation, occurence"
+                                "ORDER BY observation, occurrence"
                             ),
                             (subject, behavior, modifier),
                         )
@@ -927,7 +927,7 @@ def time_budget_analysis(
             else:  # no modifiers
                 if project_functions.event_type(behavior, ethogram) in cfg.POINT_EVENT_TYPES:
                     cursor.execute(
-                        ("SELECT occurence, observation FROM events WHERE subject = ? AND code = ? ORDER BY observation, occurence"),
+                        ("SELECT occurrence, observation FROM events WHERE subject = ? AND code = ? ORDER BY observation, occurrence"),
                         (subject, behavior),
                     )
 
@@ -935,11 +935,11 @@ def time_budget_analysis(
 
                     if len(selected_observations) == 1:
                         new_rows: list = []
-                        for occurence, observation in rows:
-                            if occurence is None:
+                        for occurrence, observation in rows:
+                            if occurrence is None:
                                 new_rows.append([float("NaN"), observation])
                             else:
-                                new_rows.append([occurence, observation])
+                                new_rows.append([occurrence, observation])
                         rows = list(new_rows)
 
                     # include behaviors without events
@@ -992,7 +992,7 @@ def time_budget_analysis(
 
                 if project_functions.event_type(behavior, ethogram) in cfg.STATE_EVENT_TYPES:
                     cursor.execute(
-                        ("SELECT occurence, observation FROM events WHERE subject = ? AND code = ? ORDER BY observation, occurence"),
+                        ("SELECT occurrence, observation FROM events WHERE subject = ? AND code = ? ORDER BY observation, occurrence"),
                         (subject, behavior),
                     )
 

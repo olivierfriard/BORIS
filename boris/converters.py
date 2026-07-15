@@ -81,7 +81,7 @@ def add_converter(self):
 
 def modify_converter(self):
     """
-    Modifiy the selected converter
+    Modify the selected converter
     """
 
     if not self.tw_converters.selectedIndexes():
@@ -252,13 +252,13 @@ def load_converters_from_file_repo(self, mode: str):
         try:
             converters_from_repo = urllib.request.urlopen(converters_repo_URL).read().strip().decode("utf-8")
         except Exception:
-            QMessageBox.critical(self, cfg.programName, "An error occured during retrieving converters from BORIS remote repository")
+            QMessageBox.critical(self, cfg.programName, "An error occurred during retrieving converters from BORIS remote repository")
             return
 
         try:
             converters_from_file = eval(converters_from_repo)["BORIS converters"]
         except Exception:
-            QMessageBox.critical(self, cfg.programName, "An error occured during retrieving converters from BORIS remote repository")
+            QMessageBox.critical(self, cfg.programName, "An error occurred during retrieving converters from BORIS remote repository")
             return
 
     if converters_from_file:

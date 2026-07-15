@@ -73,10 +73,10 @@ def load_observations_from_boris_project(self, project_file_path: str):
     if selected_observations:
         flagImported = False
 
-        # set of behaviors in current projet ethogram
+        # set of behaviors in current project ethogram
         behav_set = set([self.pj[cfg.ETHOGRAM][idx][cfg.BEHAVIOR_CODE] for idx in self.pj[cfg.ETHOGRAM]])
 
-        # set of subjects in current projet
+        # set of subjects in current project
         subjects_set = set([self.pj[cfg.SUBJECTS][idx][cfg.SUBJECT_NAME] for idx in self.pj[cfg.SUBJECTS]])
 
         for obs_id in selected_observations:

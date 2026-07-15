@@ -929,7 +929,7 @@ def events_to_behavioral_sequences(pj, obs_id: str, subj: str, parameters: dict,
         obs_id (str): observation id
         subj (str): subject
         parameters (dict): parameters
-        behav_seq_separator (str): separator of behviors in behavioral sequences
+        behav_seq_separator (str): separator of behaviors in behavioral sequences
 
     Returns:
         str: behavioral string for selected subject in selected observation
@@ -1012,7 +1012,7 @@ def events_to_behavioral_sequences_all_subj(pj, obs_id: str, subjects_list: list
         obs_id (str): observation id
         subjects_list (list): list of subjects
         parameters (dict): parameters
-        behav_seq_separator (str): separator of behviors in behavioral sequences
+        behav_seq_separator (str): separator of behaviors in behavioral sequences
 
     Returns:
         str: behavioral sequences for all selected subjects in selected observation
@@ -1097,7 +1097,7 @@ def events_to_timed_behavioral_sequences(
         subj (str): subject
         parameters (dict): parameters
         precision (float): time value for scan sample
-        behav_seq_separator (str): separator of behviors in behavioral sequences
+        behav_seq_separator (str): separator of behaviors in behavioral sequences
 
     Returns:
         str: behavioral string for selected subject in selected observation

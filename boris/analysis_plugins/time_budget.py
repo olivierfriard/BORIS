@@ -17,7 +17,7 @@ def run(df: pd.DataFrame):
     """
     Calculate the following values:
 
-    - Total number of occurences of behavior
+    - Total number of occurrences of behavior
     - Total duration of behavior (in seconds)  (pandas.DataFrame.sum() ignore NaN values when computing the sum. Use min_count=1)
     - Duration mean of behavior (in seconds)
     - Standard deviation of behavior duration (in seconds)
@@ -29,7 +29,7 @@ def run(df: pd.DataFrame):
     group_by = ["Subject", "Behavior"]
 
     dfs = [
-        df.groupby(group_by)["Behavior"].count().reset_index(name="number of occurences"),
+        df.groupby(group_by)["Behavior"].count().reset_index(name="number of occurrences"),
         df.groupby(group_by)["Duration (s)"].sum(min_count=1).reset_index(name="total duration"),
         df.groupby(group_by)["Duration (s)"].mean().astype(float).round(3).reset_index(name="duration mean"),
         df.groupby(group_by)["Duration (s)"].std().astype(float).round(3).reset_index(name="duration std dev"),

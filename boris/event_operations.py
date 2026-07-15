@@ -170,7 +170,7 @@ def add_event(self):
                             if exif_date_time != -1:
                                 time_ = exif_date_time
 
-                                # check if first value must be substracted
+                                # check if first value must be subtracted
                                 if self.pj[cfg.OBSERVATIONS][self.observationId].get(cfg.SUBSTRACT_FIRST_EXIF_DATE, True):
                                     time_ -= self.image_time_ref
 
@@ -860,7 +860,7 @@ def edit_time_selected_events(self):
 
     w = dialog.Ask_time(0)
     w.setWindowTitle("Shift time of selected event(s)")
-    w.label.setText("Amount of time to add or substract")
+    w.label.setText("Amount of time to add or subtract")
 
     if not w.exec_():
         return

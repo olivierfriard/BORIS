@@ -98,7 +98,7 @@ def global_error_message(exception_type, exception_value, traceback_object):
 
     error_text = "\n\nSystem info\n===========\n\n"
     error_text += util.get_systeminfo()
-    error_text += f"Error succeded at {dt.datetime.now():%Y-%m-%d %H:%M}\n\n"
+    error_text += f"Error succeeded at {dt.datetime.now():%Y-%m-%d %H:%M}\n\n"
     error_text += "".join(traceback.format_exception(exception_type, exception_value, traceback_object))
 
     # write to stdout
@@ -117,7 +117,7 @@ def global_error_message(exception_type, exception_value, traceback_object):
     cb.setText(error_text)
 
     text: str = (
-        f"An error has occured!\n\n"
+        f"An error has occurred!\n\n"
         "to improve the software please report this problem at:\n"
         "https://github.com/olivierfriard/BORIS/issues\n\n"
         "Please no screenshot, the error message was copied to the clipboard.\n\n"
@@ -127,7 +127,7 @@ def global_error_message(exception_type, exception_value, traceback_object):
 
     errorbox = Results_dialog()
 
-    errorbox.setWindowTitle("BORIS - An error occured")
+    errorbox.setWindowTitle("BORIS - An error occurred")
     errorbox.pbOK.setText(cfg.ABORT)
     errorbox.pbCancel.setVisible(True)
     errorbox.pbCancel.setText("Ignore and try to continue")

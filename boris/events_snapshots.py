@@ -146,18 +146,18 @@ def extract_media_snapshots(self):
             for subject in parameters[cfg.SELECTED_SUBJECTS]:
                 for behavior in parameters[cfg.SELECTED_BEHAVIORS]:
                     cursor.execute(
-                        "SELECT occurence, modifiers FROM events WHERE observation = ? AND subject = ? AND code = ?",
+                        "SELECT occurrence, modifiers FROM events WHERE observation = ? AND subject = ? AND code = ?",
                         (obs_id, subject, behavior),
                     )
 
                     rows = tuple(
-                        {"occurence": util.float2decimal(r["occurence"]), "modifiers": r[cfg.MODIFIERS]} for r in cursor.fetchall()
+                        {"occurrence": util.float2decimal(r["occurrence"]), "modifiers": r[cfg.MODIFIERS]} for r in cursor.fetchall()
                     )
 
                     behavior_state = project_functions.event_type(behavior, self.pj[cfg.ETHOGRAM])
 
                     for idx, row in enumerate(rows):
-                        mediaFileIdx = [idx1 for idx1, x in enumerate(duration1) if row["occurence"] >= sum(duration1[0:idx1])][-1]
+                        mediaFileIdx = [idx1 for idx1, x in enumerate(duration1) if row["occurrence"] >= sum(duration1[0:idx1])][-1]
 
                         # check if media has video
                         flag_no_video = False
@@ -213,9 +213,9 @@ def extract_media_snapshots(self):
                             if response == cfg.ABORT:
                                 return
 
-                        global_start = dec("0.000") if row["occurence"] < time_interval else round(row["occurence"] - time_interval, 3)
+                        global_start = dec("0.000") if row["occurrence"] < time_interval else round(row["occurrence"] - time_interval, 3)
                         start = round(
-                            row["occurence"]
+                            row["occurrence"]
                             - time_interval
                             - util.float2decimal(sum(duration1[0:mediaFileIdx]))
                             - self.pj[cfg.OBSERVATIONS][obs_id][cfg.TIME_OFFSET],
@@ -239,7 +239,7 @@ def extract_media_snapshots(self):
                                 # check if stop is on same media file
                                 if (
                                     mediaFileIdx
-                                    != [idx1 for idx1, x in enumerate(duration1) if rows[idx + 1]["occurence"] >= sum(duration1[0:idx1])][
+                                    != [idx1 for idx1, x in enumerate(duration1) if rows[idx + 1]["occurrence"] >= sum(duration1[0:idx1])][
                                         -1
                                     ]
                                 ):
@@ -257,10 +257,10 @@ def extract_media_snapshots(self):
                                     if response == cfg.ABORT:
                                         return
 
-                                # globalStop = round(rows[idx + 1]["occurence"] + time_interval, 3)
+                                # globalStop = round(rows[idx + 1]["occurrence"] + time_interval, 3)
 
                                 stop = round(
-                                    rows[idx + 1]["occurence"]
+                                    rows[idx + 1]["occurrence"]
                                     + time_interval
                                     - util.float2decimal(sum(duration1[0:mediaFileIdx]))
                                     - self.pj[cfg.OBSERVATIONS][obs_id][cfg.TIME_OFFSET],
@@ -448,18 +448,18 @@ def extract_media_clips(self):
             for subject in parameters[cfg.SELECTED_SUBJECTS]:
                 for behavior in parameters[cfg.SELECTED_BEHAVIORS]:
                     cursor.execute(
-                        "SELECT occurence, modifiers FROM events WHERE observation = ? AND subject = ? AND code = ?",
+                        "SELECT occurrence, modifiers FROM events WHERE observation = ? AND subject = ? AND code = ?",
                         (obs_id, subject, behavior),
                     )
                     rows = tuple(
-                        {"occurence": util.float2decimal(r["occurence"]), "modifiers": r[cfg.MODIFIERS]} for r in cursor.fetchall()
+                        {"occurrence": util.float2decimal(r["occurrence"]), "modifiers": r[cfg.MODIFIERS]} for r in cursor.fetchall()
                     )
                     behavior_state = project_functions.event_type(behavior, self.pj[cfg.ETHOGRAM])
                     if behavior_state in cfg.STATE_EVENT_TYPES and len(rows) % 2:  # unpaired events
                         continue
 
                     for idx, row in enumerate(rows):
-                        mediaFileIdx = [idx1 for idx1, x in enumerate(duration1) if row["occurence"] >= sum(duration1[0:idx1])][-1]
+                        mediaFileIdx = [idx1 for idx1, x in enumerate(duration1) if row["occurrence"] >= sum(duration1[0:idx1])][-1]
 
                         if "VIDEO" in items_to_extract.upper():
                             # check if media has video
@@ -515,9 +515,9 @@ def extract_media_clips(self):
                             codecs = "-vn"
 
                         if behavior_state in cfg.POINT_EVENT_TYPES:
-                            globalStart = dec("0.000") if row["occurence"] < timeOffset else round(row["occurence"] - timeOffset, 3)
+                            globalStart = dec("0.000") if row["occurrence"] < timeOffset else round(row["occurrence"] - timeOffset, 3)
                             start = round(
-                                row["occurence"]
+                                row["occurrence"]
                                 - (timeOffset if timeOffset else 1)  # if time offset is not set default = 1 s
                                 - util.float2decimal(sum(duration1[0:mediaFileIdx]))
                                 - self.pj[cfg.OBSERVATIONS][obs_id][cfg.TIME_OFFSET],
@@ -526,10 +526,10 @@ def extract_media_clips(self):
                             if start < timeOffset:
                                 start = dec("0.000")
 
-                            globalStop = round(row["occurence"] + timeOffset, 3)
+                            globalStop = round(row["occurrence"] + timeOffset, 3)
 
                             stop = round(
-                                row["occurence"]
+                                row["occurrence"]
                                 + (timeOffset if timeOffset else 1)  # if time offset is not set default = 1 s
                                 - util.float2decimal(sum(duration1[0:mediaFileIdx]))
                                 - self.pj[cfg.OBSERVATIONS][obs_id][cfg.TIME_OFFSET],
@@ -541,7 +541,7 @@ def extract_media_clips(self):
                                 # check if stop is on same media file
                                 if (
                                     mediaFileIdx
-                                    != [idx1 for idx1, x in enumerate(duration1) if rows[idx + 1]["occurence"] >= sum(duration1[0:idx1])][
+                                    != [idx1 for idx1, x in enumerate(duration1) if rows[idx + 1]["occurrence"] >= sum(duration1[0:idx1])][
                                         -1
                                     ]
                                 ):
@@ -558,9 +558,9 @@ def extract_media_clips(self):
                                     if response == cfg.ABORT:
                                         return
 
-                                globalStart = dec("0.000") if row["occurence"] < timeOffset else round(row["occurence"] - timeOffset, 3)
+                                globalStart = dec("0.000") if row["occurrence"] < timeOffset else round(row["occurrence"] - timeOffset, 3)
                                 start = round(
-                                    row["occurence"]
+                                    row["occurrence"]
                                     - timeOffset
                                     - util.float2decimal(sum(duration1[0:mediaFileIdx]))
                                     - self.pj[cfg.OBSERVATIONS][obs_id][cfg.TIME_OFFSET],
@@ -569,10 +569,10 @@ def extract_media_clips(self):
                                 if start < timeOffset:
                                     start = dec("0.000")
 
-                                globalStop = round(rows[idx + 1]["occurence"] + timeOffset, 3)
+                                globalStop = round(rows[idx + 1]["occurrence"] + timeOffset, 3)
 
                                 stop = round(
-                                    rows[idx + 1]["occurence"]
+                                    rows[idx + 1]["occurrence"]
                                     + timeOffset
                                     - util.float2decimal(sum(duration1[0:mediaFileIdx]))
                                     - self.pj[cfg.OBSERVATIONS][obs_id][cfg.TIME_OFFSET],

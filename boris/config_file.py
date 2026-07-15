@@ -112,7 +112,7 @@ def read(self) -> None:
         except Exception:
             self.automaticBackup = 0
 
-        # activate or desactivate autosave timer
+        # activate or deactivate autosave timer
         if self.automaticBackup:
             self.automaticBackupTimer.start(self.automaticBackup * 60000)
         else:

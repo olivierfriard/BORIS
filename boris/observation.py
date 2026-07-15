@@ -143,7 +143,7 @@ class Observation(QDialog, Ui_Form):
             {
                 "from directory": [
                     "dir abs path|with absolute path ",
-                    "dir rel path|wih relative path ",
+                    "dir rel path|with relative path ",
                 ]
             },
         ]
@@ -165,7 +165,7 @@ class Observation(QDialog, Ui_Form):
         self.action1.triggered.connect(lambda: self.add_media(mode="media abs path|with absolute path"))
         self.action2.triggered.connect(lambda: self.add_media(mode="media rel path|with relative path"))
         self.action3.triggered.connect(lambda: self.add_media(mode="dir abs path|with absolute path"))
-        self.action4.triggered.connect(lambda: self.add_media(mode="dir rel path|wih relative path"))
+        self.action4.triggered.connect(lambda: self.add_media(mode="dir rel path|with relative path"))
         """
 
         self.media_menu.triggered.connect(lambda x: self.add_media(mode=x.statusTip()))
@@ -258,7 +258,7 @@ class Observation(QDialog, Ui_Form):
 
     # def cb_date_offset_changed(self):
     #    """
-    #    activate/desactivate time value
+    #    activate/deactivate time value
     #    """
     #    self.de_date_offset.setEnabled(self.cb_date_offset.isChecked())
 
@@ -306,7 +306,7 @@ class Observation(QDialog, Ui_Form):
 
     def cb_time_offset_changed(self):
         """
-        activate/desactivate date value
+        activate/deactivate date value
         """
         self.obs_time_offset.setEnabled(self.cb_time_offset.isChecked())
 
@@ -753,7 +753,7 @@ class Observation(QDialog, Ui_Form):
                 item.setBackground(self.not_editable_column_color())
             self.tw_data_files.setItem(self.tw_data_files.rowCount() - 1, col_idx, item)
 
-        # substract first value
+        # subtract first value
         combobox = QComboBox()
         combobox.addItems(["True", "False"])
         self.tw_data_files.setCellWidget(self.tw_data_files.rowCount() - 1, cfg.PLOT_DATA_SUBSTRACT1STVALUE_IDX, combobox)
@@ -1105,12 +1105,12 @@ class Observation(QDialog, Ui_Form):
                     )
                     return False
 
-            # check that the longuest media is in player #1
+            # check that the longest media is in player #1
             durations: list = []
             for i in sorted(list(players.keys())):
                 durations.append(sum(players[i]))
             if [x for x in durations[1:] if x > durations[0]]:
-                QMessageBox.critical(self, cfg.programName, "The longuest media file(s) must be loaded in player #1")
+                QMessageBox.critical(self, cfg.programName, "The longest media file(s) must be loaded in player #1")
                 return False
 
             # check offset for media files

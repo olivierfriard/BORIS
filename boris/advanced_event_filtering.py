@@ -78,7 +78,7 @@ class Advanced_event_filtering_dialog(QDialog):
 
     summary_header: tuple = (
         "Observation id",
-        "Number of occurences",
+        "Number of occurrences",
         "Total duration (s)",
         "Duration mean (s)",
         "Std Dev",
@@ -185,7 +185,7 @@ class Advanced_event_filtering_dialog(QDialog):
 
     def add_logic(self):
         """
-        add selected logic operaton to lineedit
+        add selected logic operation to lineedit
         """
         if self.lw3.currentItem():
             text = ""

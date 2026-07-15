@@ -102,7 +102,7 @@ if (sys.platform.startswith("win") or sys.platform.startswith("linux")) and ("-i
             try:
                 from . import mpv2 as mpv
             except Exception:
-                logger.critical("MPV library not found after dowloading")
+                logger.critical("MPV library not found after downloading")
                 sys.exit(5)
 
         elif sys.platform.startswith("linux"):
@@ -404,7 +404,7 @@ def smart_time_format(sec: Union[float, dec], time_format: str = cfg.S, cutoff: 
     Smart time format
     returns time in seconds if <= cutoff else in HH:MM:SS.ZZZ format
     """
-    # cutoff = 0 follows the time format selectd by user
+    # cutoff = 0 follows the time format selected by user
     if cutoff == 0:
         return convertTime(time_format, sec)
     if sec <= cutoff:
@@ -458,7 +458,7 @@ def txt2np_array(
         column_converter (dict): dictionary key: column index, value: converter name
 
     Returns:
-        bool: True if data successfullly loaded, False if case of error
+        bool: True if data successfully loaded, False if case of error
         str: error message. Empty if success
         numpy array: data. Empty if not data failed to be loaded
 
@@ -538,7 +538,7 @@ def txt2np_array(
     except Exception:
         return False, f"{sys.exc_info()[1]}", np.array([])
 
-    # check if first value must be substracted
+    # check if first value must be subtracted
     if substract_first_value == "True":
         data[:, 0] -= data[:, 0][0]
 
