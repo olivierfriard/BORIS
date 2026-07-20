@@ -173,6 +173,81 @@ class TestOfficialPluginDirectories:
         assert plugins.get_official_plugin_files(config_param) == [plugin_file]
 
 
+class TestPluginLoading:
+    class FakeMenu:
+        def __init__(self):
+            self.clear_called = False
+
+        def clear(self):
+            self.clear_called = True
+
+    class FakeWindow:
+        def __init__(self, config_param):
+            self.config_param = config_param
+            self.menu_plugins = TestPluginLoading.FakeMenu()
+
+    @staticmethod
+    def write_plugin(plugin_dir, file_name, plugin_name):
+        plugin_file = plugin_dir / file_name
+        plugin_file.write_text(
+            f'__plugin_name__ = "{plugin_name}"\n'
+            '__version__ = "1.0"\n'
+            "def run(df=None):\n"
+            "    return df\n",
+            encoding="utf-8",
+        )
+        return plugin_file
+
+    def test_load_plugins_uses_configured_official_and_personal_directories(self, tmp_path):
+        official_plugins_dir = tmp_path / "BORIS_plugins" / "plugins"
+        personal_plugins_dir = tmp_path / "personal_plugins"
+        official_plugins_dir.mkdir(parents=True)
+        personal_plugins_dir.mkdir()
+        official_plugin = self.write_plugin(official_plugins_dir, "official.py", "Official test plugin")
+        personal_plugin = self.write_plugin(personal_plugins_dir, "personal.py", "Personal test plugin")
+        window = self.FakeWindow(
+            {
+                cfg.OFFICIAL_PLUGINS_DIR: str(tmp_path / "BORIS_plugins"),
+                cfg.PERSONAL_PLUGINS_DIR: str(personal_plugins_dir),
+                cfg.EXCLUDED_PLUGINS: set(),
+            }
+        )
+
+        plugins.load_plugins(window)
+
+        assert window.menu_plugins.clear_called
+        assert window.config_param[cfg.ANALYSIS_PLUGINS] == {
+            "Official test plugin": str(official_plugin),
+            "Personal test plugin": str(personal_plugin),
+        }
+
+    def test_load_plugins_keeps_official_plugin_when_personal_name_duplicates(self, monkeypatch, tmp_path):
+        official_plugins_dir = tmp_path / "BORIS_plugins" / "plugins"
+        personal_plugins_dir = tmp_path / "personal_plugins"
+        official_plugins_dir.mkdir(parents=True)
+        personal_plugins_dir.mkdir()
+        official_plugin = self.write_plugin(official_plugins_dir, "official.py", "Duplicate plugin")
+        personal_plugin = self.write_plugin(personal_plugins_dir, "personal.py", "Duplicate plugin")
+        warning_calls = []
+
+        def fake_warning(*args, **kwargs):
+            warning_calls.append((args, kwargs))
+
+        monkeypatch.setattr(plugins.QMessageBox, "warning", fake_warning)
+        window = self.FakeWindow(
+            {
+                cfg.OFFICIAL_PLUGINS_DIR: str(tmp_path / "BORIS_plugins"),
+                cfg.PERSONAL_PLUGINS_DIR: str(personal_plugins_dir),
+                cfg.EXCLUDED_PLUGINS: set(),
+            }
+        )
+
+        plugins.load_plugins(window)
+
+        assert window.config_param[cfg.ANALYSIS_PLUGINS] == {"Duplicate plugin": str(official_plugin)}
+        assert str(personal_plugin) in warning_calls[0][0][2]
+
+
 class TestPluginBorisVersionRequirement:
     def test_requirement_accepts_current_or_newer_version(self):
         assert plugins.boris_version_satisfies_requirement("9.12.0", ">=9.12")
