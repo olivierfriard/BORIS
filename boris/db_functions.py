@@ -22,6 +22,7 @@ Copyright 2012-2026 Olivier Friard
 """
 
 import logging
+import math
 import sqlite3
 from typing import Optional, Tuple
 
@@ -112,7 +113,7 @@ def load_events_in_db(
                                     event[cfg.EVENT_BEHAVIOR_FIELD_IDX],
                                     cfg.STATE if event[cfg.EVENT_BEHAVIOR_FIELD_IDX] in state_behaviors_codes else cfg.POINT,
                                     event[cfg.EVENT_MODIFIER_FIELD_IDX],
-                                    float(event[cfg.EVENT_TIME_FIELD_IDX]) if not event[cfg.EVENT_TIME_FIELD_IDX].is_nan() else None,
+                                    float(event[cfg.EVENT_TIME_FIELD_IDX]) if not math.isnan(event[cfg.EVENT_TIME_FIELD_IDX]) else None,
                                     event[cfg.EVENT_COMMENT_FIELD_IDX],
                                     # frame index or NA
                                     event_operations.read_event_field(event, pj[cfg.OBSERVATIONS][obs_id][cfg.TYPE], cfg.FRAME_INDEX),
@@ -134,7 +135,7 @@ def load_events_in_db(
                                     event[cfg.EVENT_BEHAVIOR_FIELD_IDX],
                                     cfg.STATE if event[cfg.EVENT_BEHAVIOR_FIELD_IDX] in state_behaviors_codes else cfg.POINT,
                                     event[cfg.EVENT_MODIFIER_FIELD_IDX],
-                                    float(event[cfg.EVENT_TIME_FIELD_IDX]) if not event[cfg.EVENT_TIME_FIELD_IDX].is_nan() else None,
+                                    float(event[cfg.EVENT_TIME_FIELD_IDX]) if not math.isnan(event[cfg.EVENT_TIME_FIELD_IDX]) else None,
                                     event[cfg.EVENT_COMMENT_FIELD_IDX],
                                     event[cfg.PJ_OBS_FIELDS[cfg.IMAGES][cfg.IMAGE_INDEX]],
                                     event[cfg.PJ_OBS_FIELDS[cfg.IMAGES][cfg.IMAGE_PATH]],

@@ -29,7 +29,7 @@ from decimal import Decimal as dec
 
 import shiboken6
 import tablib
-from PySide6.QtCore import QObject, Qt, QThread, Signal
+from PySide6.QtCore import QObject, Signal
 from PySide6.QtWidgets import QApplication, QFileDialog, QInputDialog, QMessageBox
 
 from . import config as cfg
@@ -666,7 +666,7 @@ class ExportTextGridWorker(QObject):
 
     def run(self):
         """
-        export events using a separated thread
+        export events as textgrid
         """
         try:
             mem_command: str = ""
@@ -696,7 +696,7 @@ class ExportTextGridWorker(QObject):
 
             point_template = '        points [{count}]:\n            number = {number}\n            mark = "{mark}"\n'
 
-            # carica gli eventi aggregati
+            # load aggregated events
             ok, msg, db_connector = db_functions.load_aggregated_events_in_db(
                 self.pj,
                 self.parameters[cfg.SELECTED_SUBJECTS],
@@ -771,7 +771,7 @@ class ExportTextGridWorker(QObject):
                     continue
 
                 cursor.execute(
-                    "DELETE FROM aggregated_events WHERE observation = ? AND (start < ? AND stop < ?) OR (start > ? AND stop > ?)",
+                    "DELETE FROM aggregated_events WHERE (observation = ?) AND ((start < ? AND stop < ?) OR (start > ? AND stop > ?))",
                     (
                         obs_id,
                         min_time,
@@ -1037,8 +1037,6 @@ def export_events_as_textgrid(self) -> None:
         selected_observations,
         start_coding=start_coding,
         end_coding=end_coding,
-        # start_interval=start_interval,
-        # end_interval=end_interval,
         start_interval=None,
         end_interval=None,
         show_include_modifiers=False,
@@ -1068,8 +1066,6 @@ def export_events_as_textgrid(self) -> None:
     results_widget.setWindowTitle(f"{cfg.programName} - Export events as Praat TextGrid")
     results_widget.show()
 
-    thread = QThread(self)
-    # results_widget.destroyed.connect(thread.quit)
     worker = ExportTextGridWorker(
         pj=self.pj,
         selected_observations=selected_observations,
@@ -1077,8 +1073,6 @@ def export_events_as_textgrid(self) -> None:
         export_dir=export_dir,
     )
 
-    worker.moveToThread(thread)
-    thread.started.connect(worker.run)
     worker.log.connect(results_widget.ptText.appendHtml)
 
     def on_worker_error(msg: str):
@@ -1089,13 +1083,11 @@ def export_events_as_textgrid(self) -> None:
     def on_worker_finished(file_count: int, export_dir: str):
         results_widget.ptText.appendHtml(f"Done. {file_count} file(s) were created in {export_dir}.")
 
-    worker.finished.connect(on_worker_finished, Qt.QueuedConnection)
-    worker.finished.connect(thread.quit)
-    worker.finished.connect(worker.deleteLater)
-    thread.finished.connect(thread.deleteLater)
+    worker.finished.connect(on_worker_finished)
 
-    # tieni riferimenti se vuoi evitare che vengano GC-ati
-    self._export_textgrid_thread = thread
+    # Keep a reference while the synchronous export is running.
     self._export_textgrid_worker = worker
 
-    thread.start()
+    QApplication.processEvents()
+    worker.run()
+    self._export_textgrid_worker = None

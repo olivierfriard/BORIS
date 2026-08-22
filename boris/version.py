@@ -20,6 +20,6 @@ This file is part of BORIS.
 
 """
 
-__version__ = "9.12.7"
-__version_date__ = "2026-07-14"
-__version_comment__ = "À la Bastille!"
+__version__ = "9.13.0"
+__version_date__ = "2026-07-20"
+__version_comment__ = ""

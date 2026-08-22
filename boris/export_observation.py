@@ -704,7 +704,7 @@ def export_aggregated_events(pj: dict, parameters: dict, obsId: str, force_numbe
     if not math.isnan(min_time) and not math.isnan(max_time):  # obs with timestamp
         # delete events outside time interval
         cursor.execute(
-            "DELETE FROM aggregated_events WHERE observation = ? AND (start < ? AND stop < ?) OR (start > ? AND stop > ?)",
+            "DELETE FROM aggregated_events WHERE (observation = ?) AND ((start < ? AND stop < ?) OR (start > ? AND stop > ?))",
             (
                 obsId,
                 min_time,
