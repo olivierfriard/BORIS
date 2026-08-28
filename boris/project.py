@@ -361,6 +361,8 @@ class projectDialog(QDialog, Ui_dlgProject):
 
         self.twBehaviors.cellChanged[int, int].connect(self.twBehaviors_cellChanged)
         self.twBehaviors.cellDoubleClicked[int, int].connect(self.twBehaviors_cellDoubleClicked)
+        self.twBehaviors.setContextMenuPolicy(Qt.CustomContextMenu)
+        self.twBehaviors.customContextMenuRequested.connect(self.twBehaviors_context_menu)
 
         # left align table header
         for i in range(self.twBehaviors.columnCount()):
@@ -554,6 +556,62 @@ class projectDialog(QDialog, Ui_dlgProject):
         order ethogram table
         """
         self.twBehaviors.sortItems(index, order)
+
+    def twBehaviors_context_menu(self, position) -> None:
+        """
+        Show row actions for the ethogram table.
+        """
+        row = self.twBehaviors.rowAt(position.y())
+        if row < 0:
+            return
+
+        self.twBehaviors.selectRow(row)
+
+        menu = QMenu(self)
+        move_up_action = menu.addAction("Move up")
+        move_down_action = menu.addAction("Move down")
+        move_up_action.setEnabled(row > 0)
+        move_down_action.setEnabled(row < self.twBehaviors.rowCount() - 1)
+
+        selected_action = menu.exec(self.twBehaviors.viewport().mapToGlobal(position))
+        if selected_action == move_up_action:
+            self.move_behavior_row(row, row - 1)
+        if selected_action == move_down_action:
+            self.move_behavior_row(row, row + 1)
+
+    def move_behavior_row(self, source_row: int, target_row: int) -> None:
+        """
+        Move one ethogram row while preserving item flags and formatting.
+        """
+        if source_row == target_row:
+            return
+        if source_row < 0 or source_row >= self.twBehaviors.rowCount():
+            return
+        if target_row < 0 or target_row >= self.twBehaviors.rowCount():
+            return
+
+        signals_blocked = self.twBehaviors.blockSignals(True)
+        try:
+            row_height = self.twBehaviors.rowHeight(source_row)
+            vertical_header_item = self.twBehaviors.takeVerticalHeaderItem(source_row)
+            row_items = [self.twBehaviors.takeItem(source_row, column) for column in range(self.twBehaviors.columnCount())]
+
+            self.twBehaviors.removeRow(source_row)
+            self.twBehaviors.insertRow(target_row)
+
+            if vertical_header_item:
+                self.twBehaviors.setVerticalHeaderItem(target_row, vertical_header_item)
+            self.twBehaviors.setRowHeight(target_row, row_height)
+
+            for column, item in enumerate(row_items):
+                if item:
+                    self.twBehaviors.setItem(target_row, column, item)
+        finally:
+            self.twBehaviors.blockSignals(signals_blocked)
+
+        self.twBehaviors.selectRow(target_row)
+        self.twBehaviors.setCurrentCell(target_row, cfg.behavioursFields[cfg.BEHAVIOR_CODE])
+        self.twBehaviors_cellChanged(0, 0)
 
     def sort_twSubjects(self, index, order):
         """
