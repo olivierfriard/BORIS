@@ -882,10 +882,8 @@ class ExportTextGridWorker(QObject):
                             # overlapping
                             if (idx + 1 < len(rows)) and (row["stop"] > rows[idx + 1]["start"]):
                                 self.log.emit(
-                                    (
-                                        f"The events overlap for subject <b>{subject}</b> in the observation <b>{obs_id}</b>. "
-                                        "It is not possible to create the Praat TextGrid file."
-                                    )
+                                    f"The events overlap for subject <b>{subject}</b> in the observation <b>{obs_id}</b>. "
+                                    "It is not possible to create the Praat TextGrid file."
                                 )
                                 next_obs = True
                                 break
@@ -917,7 +915,7 @@ class ExportTextGridWorker(QObject):
                         if next_obs:
                             break
 
-                        # ultimo evento non arriva a max_time
+                        # last event finish before a max_time
                         if rows[-1]["stop"] < max_time:
                             count += 1
                             out += interval_template.format(
@@ -925,7 +923,7 @@ class ExportTextGridWorker(QObject):
                                 name="null",
                                 xmin=rows[-1]["stop"],
                                 xmax=max_time,
-                            )  # numero di items per size
+                            )
 
                         subject_index += 1
                         out = out.format(
@@ -987,6 +985,7 @@ class ExportTextGridWorker(QObject):
                     # self.log.emit(f"File {out_path} created.")
                 except Exception as e:
                     self.log.emit(f"The file {out_path} cannot be created: {e!r}")
+                    self.error.emit(f"The file {out_path} cannot be created: {e!r}")
 
             self.finished.emit(file_count, self.export_dir)
 
@@ -1057,6 +1056,19 @@ def export_events_as_textgrid(self) -> None:
         options=QFileDialog.Option.ShowDirsOnly,
     )
     if not export_dir:
+        return
+
+    # check if textgrid files already exists with same name
+    flag_already_exist: bool = False
+    for obs_id in selected_observations:
+        out_path = pl.Path(export_dir) / f"{util.safeFileName(obs_id)}.TextGrid"
+        if out_path.is_file():
+            flag_already_exist = True
+            break
+    if (
+        flag_already_exist
+        and dialog.MessageDialog(cfg.programName, "One or more TextGrid files already exist. Overwrite them?", (cfg.YES, cfg.NO)) == cfg.NO
+    ):
         return
 
     # widget for results
