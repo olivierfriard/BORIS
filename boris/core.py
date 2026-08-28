@@ -2066,6 +2066,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         receive signal from dock widget when player clicked.
         """
 
+        # remove before release
+
         def get_pan_for_zoom_in_clicked_coordinates(player, videoframe, zoom, pan_x, pan_y, new_zoom):
             """
             returns the pan (pan_x, pan_y) necessary to zoom in or zoom out in the clicked coordinates
@@ -2160,6 +2162,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
             # SET NEW VALUES AND UPDATE
             set_and_update_pan_and_zoom(new_pan_x, new_pan_y, new_zoom)
+
+        if cmd == "MBTN_LEFT":
+            logging.debug(f"set player #{player_id} active")
+            self.current_player = player_id
 
         if cmd == "MBTN_LEFT_DBL":
             logging.debug("MBTN_LEFT_DBL")
