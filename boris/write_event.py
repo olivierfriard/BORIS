@@ -23,15 +23,13 @@ Copyright 2012-2026 Olivier Friard
 
 import bisect
 import logging
-from decimal import Decimal as dec
-import re
 import pathlib as pl
+import re
+from decimal import Decimal as dec
 
 from . import config as cfg
-from . import dialog
+from . import dialog, event_operations, select_modifiers
 from . import utilities as util
-from . import select_modifiers
-from . import event_operations
 
 
 def write_event(self, event: dict, mem_time: dec) -> int:
@@ -532,6 +530,7 @@ def write_event(self, event: dict, mem_time: dec) -> int:
     )
 
     self.lbCurrentStates.setText(f"Observed behaviors: {', '.join(self.currentStates[subject_idx])}")
+    self.lb_main_current_states.setText(f"Observed behaviors: {', '.join(self.currentStates[subject_idx])}")
     # show current states in subjects table
     self.show_current_states_in_subjects_table()
 

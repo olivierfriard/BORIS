@@ -173,16 +173,30 @@ def close_observation(self):
     self.statusbar.showMessage("", 0)
 
     self.dwEvents.setVisible(False)
+    self.dwMain.setVisible(False)
 
     self.w_obs_info.setVisible(False)
 
-    self.lb_current_media_time.clear()
-    self.lb_player_status.clear()
-    self.lb_video_info.clear()
-    self.lb_zoom_level.clear()
+    # self.lb_current_media_time.clear()
+    # self.lb_player_status.clear()
+    # self.lb_video_info.clear()
+    # self.lb_zoom_level.clear()
+
+    for w in (
+        self.lb_current_media_time,
+        self.lb_player_status,
+        self.lb_video_info,
+        self.lb_zoom_level,
+        self.lb_main_current_media_time,
+        self.lb_main_player_status,
+        self.lb_main_video_info,
+        self.lb_main_zoom_level,
+    ):
+        w.clear()
 
     self.currentSubject = ""
     self.lbFocalSubject.setText(cfg.NO_FOCAL_SUBJECT)
+    self.lb_main_focal_subject.setText(cfg.NO_FOCAL_SUBJECT)
 
     # clear current state(s) column in subjects table
     for i in range(self.twSubjects.rowCount()):
@@ -379,6 +393,7 @@ def load_observation(self, obs_id: str, mode: str = cfg.OBS_START) -> str:
     menu_options.update_menu(self)
     # title of dock widget  “  ”
     self.dwEvents.setWindowTitle(f"Events for “{self.observationId}” observation")
+    self.dwMain.setWindowTitle("Information")
 
     logging.debug("end load observation")
     return ""
@@ -1349,7 +1364,7 @@ def initialize_new_media_observation(self) -> bool:
 
     logging.debug("function: initialize new observation for media file(s)")
 
-    for dw in (self.dwEthogram, self.dwSubjects, self.dwEvents):
+    for dw in (self.dwEthogram, self.dwSubjects, self.dwEvents, self.dwMain):
         dw.setVisible(True)
 
     ok, msg = project_functions.check_if_media_available(self.pj[cfg.OBSERVATIONS][self.observationId], self.projectFileName)
@@ -1380,8 +1395,12 @@ def initialize_new_media_observation(self) -> bool:
     font = QFont()
     font.setPointSize(15)
     self.lb_current_media_time.setFont(font)
+    self.lb_main_current_media_time.setFont(font)
+
     self.lb_video_info.setFont(font)
+    self.lb_main_video_info.setFont(font)
     self.lb_zoom_level.setFont(font)
+    self.lb_main_zoom_level.setFont(font)
 
     # initialize video slider
     self.video_slider = QSlider(Qt.Orientation.Horizontal, self)
@@ -2267,8 +2286,9 @@ def initialize_new_live_observation(self):
     font = QFont()
     font.setPointSize(48)
     self.lb_current_media_time.setFont(font)
+    self.lb_main_current_media_time.setFont(font)
 
-    for dw in [self.dwEthogram, self.dwSubjects, self.dwEvents]:
+    for dw in (self.dwEthogram, self.dwSubjects, self.dwEvents, self.dwMain):
         dw.setVisible(True)
 
     # button start enabled
@@ -2290,6 +2310,7 @@ def initialize_new_live_observation(self):
         current_time = 0
 
     self.lb_current_media_time.setText(util.convertTime(self.timeFormat, current_time))
+    self.lb_main_current_media_time.setText(util.convertTime(self.timeFormat, current_time))
 
     # display observation time interval (if any)
     self.lb_obs_time_interval.setVisible(True)
@@ -2300,6 +2321,7 @@ def initialize_new_live_observation(self):
     self.state_behaviors_codes = tuple(util.state_behavior_codes(self.pj[cfg.ETHOGRAM]))
 
     self.lbCurrentStates.setText("")
+    self.lb_main_current_states.setText("")
 
     self.liveStartTime = None
     self.live_timer.stop()
@@ -2314,7 +2336,7 @@ def initialize_new_images_observation(self):
     initialize a new observation from directories of images
     """
 
-    for dw in (self.dwEthogram, self.dwSubjects, self.dwEvents):
+    for dw in (self.dwEthogram, self.dwSubjects, self.dwEvents, self.dwMain):
         dw.setVisible(True)
     # disable start live button
     self.pb_live_obs.setEnabled(False)

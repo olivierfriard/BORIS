@@ -237,6 +237,7 @@ def display_zoom_level(self) -> None:
         vz = player.player.video_zoom
         if vz is None:
             self.lb_zoom_level.setText("-")
+            self.lb_main_zoom_level.setText("-")
             return
         player_video_zoom = player.player.video_zoom
         if player_video_zoom is not None:
@@ -245,6 +246,7 @@ def display_zoom_level(self) -> None:
             msg += "NA "
     msg += "</b>"
     self.lb_zoom_level.setText(msg)
+    self.lb_main_zoom_level.setText(msg)
 
 
 def display_play_rate(self) -> None:
@@ -253,6 +255,7 @@ def display_play_rate(self) -> None:
     """
 
     self.lb_video_info.setText(f"Play rate: <b>x{self.play_rate:.3f}</b>")
+    self.lb_main_video_info.setText(f"Play rate: <b>x{self.play_rate:.3f}</b>")
 
     logging.debug(f"play rate: {self.play_rate:.3f}")
 

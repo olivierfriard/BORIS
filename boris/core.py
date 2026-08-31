@@ -385,7 +385,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.toolBar.setEnabled(True)
 
         # start with dock widget invisible
-        for w in (self.w_obs_info, self.dwEvents, self.dwEthogram, self.dwSubjects):
+        for w in (self.w_obs_info, self.dwEvents, self.dwEthogram, self.dwSubjects, self.dwMain):
             w.setVisible(False)
             w.keyPressEvent = self.keyPressEvent
 
@@ -404,10 +404,17 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.lb_zoom_level,
             self.lbFocalSubject,
             self.lbCurrentStates,
+            self.lb_main_player_status,
+            self.lb_main_current_media_time,
+            self.lb_main_video_info,
+            self.lb_main_zoom_level,
+            self.lb_main_focal_subject,
+            self.lb_main_current_states,
         ):
             w.clear()
             w.setFont(font)
         self.lbFocalSubject.setText(cfg.NO_FOCAL_SUBJECT)
+        self.lb_main_focal_subject.setText(cfg.NO_FOCAL_SUBJECT)
 
         # statusbat font
         self.statusBar().setFont(font)
@@ -448,7 +455,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         """
         allow to block Qdockwidgets on main window because they can have a strange behavior specially on Mac
         """
-        for w in (self.dwEvents, self.dwEthogram, self.dwSubjects):
+        for w in (self.dwEvents, self.dwEthogram, self.dwSubjects, self.dwMain):
             if self.action_block_dockwidgets.isChecked():
                 w.setFloating(False)
                 w.setFeatures(QDockWidget.DockWidgetFeature.NoDockWidgetFeatures)
@@ -1639,9 +1646,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         if (not subject) or (subject == cfg.NO_FOCAL_SUBJECT) or (self.currentSubject == subject):
             self.currentSubject = ""
             self.lbFocalSubject.setText(cfg.NO_FOCAL_SUBJECT)
+            self.lb_main_focal_subject.setText(cfg.NO_FOCAL_SUBJECT)
         else:
             self.currentSubject = subject
             self.lbFocalSubject.setText(f" Focal subject: <b>{self.currentSubject}</b>")
+            self.lb_main_focal_subject.setText(f" Focal subject: <b>{self.currentSubject}</b>")
 
     def getCurrentMediaByFrame(self, player: str, requiredFrame: int, fps: float) -> tuple[str, int]:
         """
@@ -1727,6 +1736,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             msg += f"<br><small>Image resolution: <b>{pixmap.size().width()}x{pixmap.size().height()}</b></small>"
 
             self.lb_current_media_time.setText(msg)
+            self.lb_main_current_media_time.setText(msg)
 
             dw.frame_viewer.setPixmap(pixmap.scaled(dw.frame_viewer.size(), Qt.KeepAspectRatio, Qt.SmoothTransformation))
 
@@ -1744,6 +1754,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         )
 
         self.lbCurrentStates.setText(f"Observed behaviors: {', '.join(self.currentStates[subject_idx])}")
+        self.lb_main_current_states.setText(f"Observed behaviors: {', '.join(self.currentStates[subject_idx])}")
         # show current states in subjects table
         self.show_current_states_in_subjects_table()
 
@@ -3550,6 +3561,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 self.pb_live_obs.setText("Live observation finished")
 
         self.lb_current_media_time.setText(util.convertTime(self.timeFormat, current_time))
+        self.lb_main_current_media_time.setText(util.convertTime(self.timeFormat, current_time))
 
         # extract State events
         self.currentStates = {}
@@ -3567,6 +3579,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         # index of current subject
         idx = self.subject_name_index[self.currentSubject] if self.currentSubject else ""
         self.lbCurrentStates.setText(f"Observed behaviors: {', '.join(self.currentStates[idx])}")
+        self.lb_main_current_states.setText(f"Observed behaviors: {', '.join(self.currentStates[idx])}")
         self.show_current_states_in_subjects_table()
 
         self.plot_timer_out()
@@ -3603,11 +3616,17 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     self.lb_current_media_time.setText(
                         datetime.datetime.fromtimestamp(time.time()).isoformat(sep=" ", timespec="milliseconds")
                     )
+                    self.lb_main_current_media_time.setText(
+                        datetime.datetime.fromtimestamp(time.time()).isoformat(sep=" ", timespec="milliseconds")
+                    )
+
                 else:
                     self.lb_current_media_time.setText("00:00:00.000")
+                    self.lb_main_current_media_time.setText("00:00:00.000")
 
             if self.timeFormat == cfg.S:
                 self.lb_current_media_time.setText("0.000")
+                self.lb_main_current_media_time.setText("0.000")
 
         else:
             if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS]:
@@ -4325,9 +4344,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             currentTimeOffset,
             include_modifiers=True,
         )
-        # print("get_current_states_modifiers_by_subject:", time.time() - t1)
 
         self.lbCurrentStates.setText(f"Observed behaviors: {', '.join(self.currentStates[subject_idx])}")
+        self.lb_main_current_states.setText(f"Observed behaviors: {', '.join(self.currentStates[subject_idx])}")
 
         # show current states in subjects table
         self.show_current_states_in_subjects_table()
@@ -4372,7 +4391,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         playlist = self.dw_player[0].player.playlist
         # update observation info
         playlist_length = len(playlist) if playlist else 0
-        msg = ""
+        msg: str = ""
 
         if self.dw_player[0].player.time_pos is not None:  # check if video
             playlist_pos = self.dw_player[0].player.playlist_pos
@@ -4410,12 +4429,12 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         if msg:
             self.lb_current_media_time.setText(msg)
+            self.lb_main_current_media_time.setText(msg)
 
             # set video scroll bar
 
-            if scroll_slider and not self.user_move_slider:
-                if current_media_time_pos is not None and current_media_duration is not None:
-                    self.video_slider.setValue(round(current_media_time_pos / current_media_duration * (cfg.SLIDER_MAXIMUM - 1)))
+            if scroll_slider and not self.user_move_slider and current_media_time_pos is not None and current_media_duration is not None:
+                self.video_slider.setValue(round(current_media_time_pos / current_media_duration * (cfg.SLIDER_MAXIMUM - 1)))
 
     def mpv_eof_reached(self):
         """
@@ -4433,6 +4452,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     self.pause_video()
 
                     self.lb_player_status.setText("End of playlist reached")
+                    self.lb_main_player_status.setText("End of playlist reached")
 
                     min_ = self.dw_player[0].cumul_media_durations_sec[self.dw_player[0].player.playlist_pos]
 
@@ -5040,8 +5060,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             if self.pj[cfg.OBSERVATIONS][self.observationId].get(cfg.SCAN_SAMPLING_TIME, 0):
                 if self.timeFormat == cfg.HHMMSS:
                     memLaps = dec(int(util.time2seconds(self.lb_current_media_time.text())))
+                    memLaps = dec(int(util.time2seconds(self.lb_main_current_media_time.text())))
                 if self.timeFormat == cfg.S:
                     memLaps = dec(int(dec(self.lb_current_media_time.text())))
+                    memLaps = dec(int(dec(self.lb_main_current_media_time.text())))
 
             else:  # no scan sampling
                 if self.pj[cfg.OBSERVATIONS][self.observationId].get(cfg.START_FROM_CURRENT_TIME, False):
@@ -5647,6 +5669,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 dw.player.pause = False
 
         self.lb_player_status.clear()
+        self.lb_main_player_status.clear()
 
         self.statusbar.showMessage("", 0)
 

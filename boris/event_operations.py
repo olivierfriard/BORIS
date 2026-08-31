@@ -136,6 +136,7 @@ def add_event(self):
             )
             subject_idx = self.subject_name_index[self.currentSubject] if self.currentSubject else ""
             self.lbCurrentStates.setText(", ".join(self.currentStates[subject_idx]))
+            self.lb_main_current_states.setText(", ".join(self.currentStates[subject_idx]))
             self.show_current_states_in_subjects_table()
             """
 
