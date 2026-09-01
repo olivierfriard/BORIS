@@ -23,15 +23,13 @@ Copyright 2012-2026 Olivier Friard
 
 import bisect
 import logging
-from decimal import Decimal as dec
-import re
 import pathlib as pl
+import re
+from decimal import Decimal as dec
 
 from . import config as cfg
-from . import dialog
+from . import dialog, event_operations, select_modifiers
 from . import utilities as util
-from . import select_modifiers
-from . import event_operations
 
 
 def write_event(self, event: dict, mem_time: dec) -> int:
@@ -108,7 +106,7 @@ def write_event(self, event: dict, mem_time: dec) -> int:
 
     # check if time > 2**31 - 1 (2147483647)
     if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE] in (cfg.MEDIA, cfg.VIEWER_MEDIA, cfg.LIVE, cfg.VIEWER_LIVE):
-        if (mem_time < -2147483647) or (mem_time > 2147483647):
+        if (not mem_time.is_nan()) and ((mem_time < -2147483647) or (mem_time > 2147483647)):
             _ = dialog.MessageDialog(
                 cfg.programName,
                 (f"The timestamp must be between -2147483647 and 2147483647.<br>The current timestamp is {mem_time}"),
