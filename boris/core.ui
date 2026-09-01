@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>3163</width>
-    <height>775</height>
+    <width>1488</width>
+    <height>997</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -64,96 +64,6 @@
           </layout>
          </widget>
         </item>
-        <item>
-         <widget class="QWidget" name="w_obs_info" native="true">
-          <property name="enabled">
-           <bool>true</bool>
-          </property>
-          <layout class="QVBoxLayout" name="verticalLayout_10">
-           <item>
-            <layout class="QVBoxLayout" name="verticalLayout_9">
-             <item>
-              <widget class="QLabel" name="lb_player_status">
-               <property name="text">
-                <string>lb_player_status</string>
-               </property>
-              </widget>
-             </item>
-             <item>
-              <widget class="QLabel" name="lb_current_media_time">
-               <property name="text">
-                <string>lb_current_media_time</string>
-               </property>
-               <property name="wordWrap">
-                <bool>true</bool>
-               </property>
-              </widget>
-             </item>
-             <item>
-              <widget class="QLabel" name="lb_video_info">
-               <property name="text">
-                <string>lb_video_info</string>
-               </property>
-              </widget>
-             </item>
-             <item>
-              <widget class="QLabel" name="lb_zoom_level">
-               <property name="text">
-                <string>lb_zoom_level</string>
-               </property>
-              </widget>
-             </item>
-             <item>
-              <spacer name="verticalSpacer_2">
-               <property name="orientation">
-                <enum>Qt::Orientation::Vertical</enum>
-               </property>
-               <property name="sizeHint" stdset="0">
-                <size>
-                 <width>20</width>
-                 <height>40</height>
-                </size>
-               </property>
-              </spacer>
-             </item>
-             <item>
-              <widget class="QLabel" name="lbFocalSubject">
-               <property name="text">
-                <string>lbFocalSubject</string>
-               </property>
-               <property name="wordWrap">
-                <bool>true</bool>
-               </property>
-              </widget>
-             </item>
-             <item>
-              <widget class="QLabel" name="lbCurrentStates">
-               <property name="text">
-                <string>lbCurrentStates</string>
-               </property>
-               <property name="wordWrap">
-                <bool>true</bool>
-               </property>
-              </widget>
-             </item>
-            </layout>
-           </item>
-           <item>
-            <widget class="QWidget" name="w_live" native="true">
-             <layout class="QVBoxLayout" name="verticalLayout_11">
-              <item>
-               <widget class="QPushButton" name="pb_live_obs">
-                <property name="text">
-                 <string>PushButton</string>
-                </property>
-               </widget>
-              </item>
-             </layout>
-            </widget>
-           </item>
-          </layout>
-         </widget>
-        </item>
        </layout>
       </item>
      </layout>
@@ -165,8 +75,8 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>3163</width>
-     <height>25</height>
+     <width>1488</width>
+     <height>20</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuHelp">
@@ -638,6 +548,105 @@
          <string>Current state(s)</string>
         </property>
        </column>
+      </widget>
+     </item>
+    </layout>
+   </widget>
+  </widget>
+  <widget class="QDockWidget" name="dw_info">
+   <attribute name="dockWidgetArea">
+    <number>1</number>
+   </attribute>
+   <widget class="QWidget" name="dockWidgetContents_4">
+    <layout class="QVBoxLayout" name="verticalLayout_7">
+     <item>
+      <widget class="QWidget" name="w_obs_info" native="true">
+       <property name="enabled">
+        <bool>true</bool>
+       </property>
+       <layout class="QVBoxLayout" name="verticalLayout_10">
+        <item>
+         <layout class="QVBoxLayout" name="verticalLayout_9">
+          <item>
+           <widget class="QLabel" name="lb_player_status">
+            <property name="text">
+             <string>lb_player_status</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QLabel" name="lb_current_media_time">
+            <property name="text">
+             <string>lb_current_media_time</string>
+            </property>
+            <property name="wordWrap">
+             <bool>true</bool>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QLabel" name="lb_video_info">
+            <property name="text">
+             <string>lb_video_info</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QLabel" name="lb_zoom_level">
+            <property name="text">
+             <string>lb_zoom_level</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <spacer name="verticalSpacer_2">
+            <property name="orientation">
+             <enum>Qt::Orientation::Vertical</enum>
+            </property>
+            <property name="sizeHint" stdset="0">
+             <size>
+              <width>20</width>
+              <height>40</height>
+             </size>
+            </property>
+           </spacer>
+          </item>
+          <item>
+           <widget class="QLabel" name="lbFocalSubject">
+            <property name="text">
+             <string>lbFocalSubject</string>
+            </property>
+            <property name="wordWrap">
+             <bool>true</bool>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QLabel" name="lbCurrentStates">
+            <property name="text">
+             <string>lbCurrentStates</string>
+            </property>
+            <property name="wordWrap">
+             <bool>true</bool>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </item>
+        <item>
+         <widget class="QWidget" name="w_live" native="true">
+          <layout class="QVBoxLayout" name="verticalLayout_11">
+           <item>
+            <widget class="QPushButton" name="pb_live_obs">
+             <property name="text">
+              <string>PushButton</string>
+             </property>
+            </widget>
+           </item>
+          </layout>
+         </widget>
+        </item>
+       </layout>
       </widget>
      </item>
     </layout>

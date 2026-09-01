@@ -132,7 +132,8 @@ def close_observation(self):
                     except Exception as e:
                         logging.warning(f"Error stopping MPV process #{i}: {e}")
 
-        self.verticalLayout_3.removeWidget(self.video_slider)
+        # self.verticalLayout_3.removeWidget(self.video_slider)
+        self.verticalLayout_9.removeWidget(self.video_slider)
 
         if self.video_slider is not None:
             self.video_slider.setVisible(False)
@@ -173,6 +174,7 @@ def close_observation(self):
     self.statusbar.showMessage("", 0)
 
     self.dwEvents.setVisible(False)
+    self.dw_info.setVisible(False)
 
     self.w_obs_info.setVisible(False)
 
@@ -352,6 +354,7 @@ def load_observation(self, obs_id: str, mode: str = cfg.OBS_START) -> str:
         if mode == cfg.VIEW:
             self.playerType = cfg.VIEWER_IMAGES
             self.dwEvents.setVisible(True)
+            self.dw_info.setVisible(True)
 
     if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE] == cfg.LIVE:
         if mode == cfg.OBS_START:
@@ -360,6 +363,7 @@ def load_observation(self, obs_id: str, mode: str = cfg.OBS_START) -> str:
         if mode == cfg.VIEW:
             self.playerType = cfg.VIEWER_LIVE
             self.dwEvents.setVisible(True)
+            self.dw_info.setVisible(True)
 
     if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE] == cfg.MEDIA:
         if mode == cfg.OBS_START:
@@ -373,12 +377,14 @@ def load_observation(self, obs_id: str, mode: str = cfg.OBS_START) -> str:
         if mode == cfg.VIEW:
             self.playerType = cfg.VIEWER_MEDIA
             self.dwEvents.setVisible(True)
+            self.dw_info.setVisible(True)
 
     self.load_tw_events(self.observationId)
 
     menu_options.update_menu(self)
     # title of dock widget  “  ”
     self.dwEvents.setWindowTitle(f"Events for “{self.observationId}” observation")
+    self.dw_info.setWindowTitle("Information")
 
     logging.debug("end load observation")
     return ""
@@ -1260,6 +1266,7 @@ def new_observation(self, mode: str = cfg.NEW, obsId: str = "") -> None:
 
             # title of dock widget
             self.dwEvents.setWindowTitle(f"Events for “{self.observationId}“ observation")
+            self.dw_info.setWindowTitle("Information")
 
             if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE] == cfg.LIVE:
                 self.playerType = cfg.LIVE
@@ -1349,7 +1356,7 @@ def initialize_new_media_observation(self) -> bool:
 
     logging.debug("function: initialize new observation for media file(s)")
 
-    for dw in (self.dwEthogram, self.dwSubjects, self.dwEvents):
+    for dw in (self.dwEthogram, self.dwSubjects, self.dwEvents, self.dw_info):
         dw.setVisible(True)
 
     ok, msg = project_functions.check_if_media_available(self.pj[cfg.OBSERVATIONS][self.observationId], self.projectFileName)
@@ -1389,7 +1396,8 @@ def initialize_new_media_observation(self) -> bool:
     self.video_slider.setMaximum(cfg.SLIDER_MAXIMUM)
     self.video_slider.sliderMoved.connect(self.video_slider_sliderMoved)
     self.video_slider.sliderReleased.connect(self.video_slider_sliderReleased)
-    self.verticalLayout_3.addWidget(self.video_slider)
+    # self.verticalLayout_3.addWidget(self.video_slider)
+    self.verticalLayout_9.addWidget(self.video_slider)
 
     # add all media files to media lists
     self.setDockOptions(QMainWindow.DockOption.AnimatedDocks | QMainWindow.DockOption.AllowNestedDocks)
@@ -2268,7 +2276,7 @@ def initialize_new_live_observation(self):
     font.setPointSize(48)
     self.lb_current_media_time.setFont(font)
 
-    for dw in [self.dwEthogram, self.dwSubjects, self.dwEvents]:
+    for dw in (self.dwEthogram, self.dwSubjects, self.dwEvents, self.dw_info):
         dw.setVisible(True)
 
     # button start enabled
@@ -2314,7 +2322,7 @@ def initialize_new_images_observation(self):
     initialize a new observation from directories of images
     """
 
-    for dw in (self.dwEthogram, self.dwSubjects, self.dwEvents):
+    for dw in (self.dwEthogram, self.dwSubjects, self.dwEvents, self.dw_info):
         dw.setVisible(True)
     # disable start live button
     self.pb_live_obs.setEnabled(False)
