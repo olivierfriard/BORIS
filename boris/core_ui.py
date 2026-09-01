@@ -26,7 +26,7 @@ class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
         if not MainWindow.objectName():
             MainWindow.setObjectName(u"MainWindow")
-        MainWindow.resize(3163, 1469)
+        MainWindow.resize(1094, 886)
         MainWindow.setDockOptions(QMainWindow.DockOption.AllowNestedDocks|QMainWindow.DockOption.AllowTabbedDocks|QMainWindow.DockOption.AnimatedDocks)
         MainWindow.setUnifiedTitleAndToolBarOnMac(False)
         self.actionDocumentation = QAction(MainWindow)
@@ -427,42 +427,9 @@ class Ui_MainWindow(object):
         self.verticalLayout_10.setObjectName(u"verticalLayout_10")
         self.verticalLayout_9 = QVBoxLayout()
         self.verticalLayout_9.setObjectName(u"verticalLayout_9")
-        self.lb_player_status = QLabel(self.w_obs_info)
-        self.lb_player_status.setObjectName(u"lb_player_status")
-
-        self.verticalLayout_9.addWidget(self.lb_player_status)
-
-        self.lb_current_media_time = QLabel(self.w_obs_info)
-        self.lb_current_media_time.setObjectName(u"lb_current_media_time")
-        self.lb_current_media_time.setWordWrap(True)
-
-        self.verticalLayout_9.addWidget(self.lb_current_media_time)
-
-        self.lb_video_info = QLabel(self.w_obs_info)
-        self.lb_video_info.setObjectName(u"lb_video_info")
-
-        self.verticalLayout_9.addWidget(self.lb_video_info)
-
-        self.lb_zoom_level = QLabel(self.w_obs_info)
-        self.lb_zoom_level.setObjectName(u"lb_zoom_level")
-
-        self.verticalLayout_9.addWidget(self.lb_zoom_level)
-
         self.verticalSpacer_2 = QSpacerItem(20, 40, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding)
 
         self.verticalLayout_9.addItem(self.verticalSpacer_2)
-
-        self.lbFocalSubject = QLabel(self.w_obs_info)
-        self.lbFocalSubject.setObjectName(u"lbFocalSubject")
-        self.lbFocalSubject.setWordWrap(True)
-
-        self.verticalLayout_9.addWidget(self.lbFocalSubject)
-
-        self.lbCurrentStates = QLabel(self.w_obs_info)
-        self.lbCurrentStates.setObjectName(u"lbCurrentStates")
-        self.lbCurrentStates.setWordWrap(True)
-
-        self.verticalLayout_9.addWidget(self.lbCurrentStates)
 
 
         self.verticalLayout_10.addLayout(self.verticalLayout_9)
@@ -471,11 +438,6 @@ class Ui_MainWindow(object):
         self.w_live.setObjectName(u"w_live")
         self.verticalLayout_11 = QVBoxLayout(self.w_live)
         self.verticalLayout_11.setObjectName(u"verticalLayout_11")
-        self.pb_live_obs = QPushButton(self.w_live)
-        self.pb_live_obs.setObjectName(u"pb_live_obs")
-
-        self.verticalLayout_11.addWidget(self.pb_live_obs)
-
 
         self.verticalLayout_10.addWidget(self.w_live)
 
@@ -491,7 +453,7 @@ class Ui_MainWindow(object):
         MainWindow.setCentralWidget(self.centralwidget)
         self.menubar = QMenuBar(MainWindow)
         self.menubar.setObjectName(u"menubar")
-        self.menubar.setGeometry(QRect(0, 0, 3163, 25))
+        self.menubar.setGeometry(QRect(0, 0, 1094, 20))
         self.menuHelp = QMenu(self.menubar)
         self.menuHelp.setObjectName(u"menuHelp")
         self.menuFile = QMenu(self.menubar)
@@ -646,34 +608,57 @@ class Ui_MainWindow(object):
         self.dockWidgetContents_4.setObjectName(u"dockWidgetContents_4")
         self.verticalLayout_7 = QVBoxLayout(self.dockWidgetContents_4)
         self.verticalLayout_7.setObjectName(u"verticalLayout_7")
-        self.observation_info = QWidget(self.dockWidgetContents_4)
-        self.observation_info.setObjectName(u"observation_info")
-        self.observation_info.setEnabled(True)
+        self.w_main_obs_info = QWidget(self.dockWidgetContents_4)
+        self.w_main_obs_info.setObjectName(u"w_main_obs_info")
+        self.w_main_obs_info.setEnabled(True)
         sizePolicy = QSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
-        sizePolicy.setHeightForWidth(self.observation_info.sizePolicy().hasHeightForWidth())
-        self.observation_info.setSizePolicy(sizePolicy)
-        self.verticalLayout_13 = QVBoxLayout(self.observation_info)
-        self.verticalLayout_13.setObjectName(u"verticalLayout_13")
+        sizePolicy.setHeightForWidth(self.w_main_obs_info.sizePolicy().hasHeightForWidth())
+        self.w_main_obs_info.setSizePolicy(sizePolicy)
+        self.verticalLayout_15 = QVBoxLayout(self.w_main_obs_info)
+        self.verticalLayout_15.setObjectName(u"verticalLayout_15")
+        self.verticalLayout_14 = QVBoxLayout()
+        self.verticalLayout_14.setObjectName(u"verticalLayout_14")
         self.verticalLayout_12 = QVBoxLayout()
         self.verticalLayout_12.setObjectName(u"verticalLayout_12")
-        self.lb_main_player_status = QLabel(self.observation_info)
+        self.lb_player_status = QLabel(self.w_main_obs_info)
+        self.lb_player_status.setObjectName(u"lb_player_status")
+
+        self.verticalLayout_12.addWidget(self.lb_player_status)
+
+        self.lb_current_media_time = QLabel(self.w_main_obs_info)
+        self.lb_current_media_time.setObjectName(u"lb_current_media_time")
+        self.lb_current_media_time.setWordWrap(True)
+
+        self.verticalLayout_12.addWidget(self.lb_current_media_time)
+
+        self.lb_video_info = QLabel(self.w_main_obs_info)
+        self.lb_video_info.setObjectName(u"lb_video_info")
+
+        self.verticalLayout_12.addWidget(self.lb_video_info)
+
+        self.lb_zoom_level = QLabel(self.w_main_obs_info)
+        self.lb_zoom_level.setObjectName(u"lb_zoom_level")
+
+        self.verticalLayout_12.addWidget(self.lb_zoom_level)
+
+        self.lb_main_player_status = QLabel(self.w_main_obs_info)
         self.lb_main_player_status.setObjectName(u"lb_main_player_status")
 
         self.verticalLayout_12.addWidget(self.lb_main_player_status)
 
-        self.lb_main_current_media_time = QLabel(self.observation_info)
+        self.lb_main_current_media_time = QLabel(self.w_main_obs_info)
         self.lb_main_current_media_time.setObjectName(u"lb_main_current_media_time")
 
         self.verticalLayout_12.addWidget(self.lb_main_current_media_time)
 
-        self.lb_main_video_info = QLabel(self.observation_info)
+        self.lb_main_video_info = QLabel(self.w_main_obs_info)
         self.lb_main_video_info.setObjectName(u"lb_main_video_info")
 
         self.verticalLayout_12.addWidget(self.lb_main_video_info)
 
-        self.lb_main_zoom_level = QLabel(self.observation_info)
+        self.lb_main_zoom_level = QLabel(self.w_main_obs_info)
         self.lb_main_zoom_level.setObjectName(u"lb_main_zoom_level")
 
         self.verticalLayout_12.addWidget(self.lb_main_zoom_level)
@@ -682,21 +667,53 @@ class Ui_MainWindow(object):
 
         self.verticalLayout_12.addItem(self.verticalSpacer)
 
-        self.lb_main_focal_subject = QLabel(self.observation_info)
+        self.lbFocalSubject = QLabel(self.w_main_obs_info)
+        self.lbFocalSubject.setObjectName(u"lbFocalSubject")
+        self.lbFocalSubject.setWordWrap(True)
+
+        self.verticalLayout_12.addWidget(self.lbFocalSubject)
+
+        self.lbCurrentStates = QLabel(self.w_main_obs_info)
+        self.lbCurrentStates.setObjectName(u"lbCurrentStates")
+        self.lbCurrentStates.setWordWrap(True)
+
+        self.verticalLayout_12.addWidget(self.lbCurrentStates)
+
+        self.lb_main_focal_subject = QLabel(self.w_main_obs_info)
         self.lb_main_focal_subject.setObjectName(u"lb_main_focal_subject")
 
         self.verticalLayout_12.addWidget(self.lb_main_focal_subject)
 
-        self.lb_main_current_states = QLabel(self.observation_info)
+        self.lb_main_current_states = QLabel(self.w_main_obs_info)
         self.lb_main_current_states.setObjectName(u"lb_main_current_states")
 
         self.verticalLayout_12.addWidget(self.lb_main_current_states)
 
 
-        self.verticalLayout_13.addLayout(self.verticalLayout_12)
+        self.verticalLayout_14.addLayout(self.verticalLayout_12)
+
+        self.w_main_live = QWidget(self.w_main_obs_info)
+        self.w_main_live.setObjectName(u"w_main_live")
+        self.verticalLayout_13 = QVBoxLayout(self.w_main_live)
+        self.verticalLayout_13.setObjectName(u"verticalLayout_13")
+        self.pb_live_obs = QPushButton(self.w_main_live)
+        self.pb_live_obs.setObjectName(u"pb_live_obs")
+
+        self.verticalLayout_13.addWidget(self.pb_live_obs)
+
+        self.pb_main_live_obs = QPushButton(self.w_main_live)
+        self.pb_main_live_obs.setObjectName(u"pb_main_live_obs")
+
+        self.verticalLayout_13.addWidget(self.pb_main_live_obs)
 
 
-        self.verticalLayout_7.addWidget(self.observation_info)
+        self.verticalLayout_14.addWidget(self.w_main_live)
+
+
+        self.verticalLayout_15.addLayout(self.verticalLayout_14)
+
+
+        self.verticalLayout_7.addWidget(self.w_main_obs_info)
 
         self.dwMain.setWidget(self.dockWidgetContents_4)
         MainWindow.addDockWidget(Qt.DockWidgetArea.LeftDockWidgetArea, self.dwMain)
@@ -1106,13 +1123,6 @@ class Ui_MainWindow(object):
         self.action_add_comment.setText(QCoreApplication.translate("MainWindow", u"Add/Edit comment", None))
         self.lbLogoBoris.setText("")
         self.lbLogoUnito.setText("")
-        self.lb_player_status.setText(QCoreApplication.translate("MainWindow", u"lb_player_status", None))
-        self.lb_current_media_time.setText(QCoreApplication.translate("MainWindow", u"lb_current_media_time", None))
-        self.lb_video_info.setText(QCoreApplication.translate("MainWindow", u"lb_video_info", None))
-        self.lb_zoom_level.setText(QCoreApplication.translate("MainWindow", u"lb_zoom_level", None))
-        self.lbFocalSubject.setText(QCoreApplication.translate("MainWindow", u"lbFocalSubject", None))
-        self.lbCurrentStates.setText(QCoreApplication.translate("MainWindow", u"lbCurrentStates", None))
-        self.pb_live_obs.setText(QCoreApplication.translate("MainWindow", u"PushButton", None))
         self.menuHelp.setTitle(QCoreApplication.translate("MainWindow", u"Help", None))
         self.menuFile.setTitle(QCoreApplication.translate("MainWindow", u"Project", None))
         self.menuRecent_projects.setTitle(QCoreApplication.translate("MainWindow", u"Recent projects", None))
@@ -1166,11 +1176,19 @@ class Ui_MainWindow(object):
         ___qtablewidgetitem10.setText(QCoreApplication.translate("MainWindow", u"Description", None));
         ___qtablewidgetitem11 = self.twSubjects.horizontalHeaderItem(3)
         ___qtablewidgetitem11.setText(QCoreApplication.translate("MainWindow", u"Current state(s)", None));
-        self.lb_main_player_status.setText(QCoreApplication.translate("MainWindow", u"TextLabel", None))
-        self.lb_main_current_media_time.setText(QCoreApplication.translate("MainWindow", u"TextLabel", None))
-        self.lb_main_video_info.setText(QCoreApplication.translate("MainWindow", u"TextLabel", None))
-        self.lb_main_zoom_level.setText(QCoreApplication.translate("MainWindow", u"TextLabel", None))
-        self.lb_main_focal_subject.setText(QCoreApplication.translate("MainWindow", u"TextLabel", None))
-        self.lb_main_current_states.setText(QCoreApplication.translate("MainWindow", u"TextLabel", None))
+        self.lb_player_status.setText(QCoreApplication.translate("MainWindow", u"lb_player_status", None))
+        self.lb_current_media_time.setText(QCoreApplication.translate("MainWindow", u"lb_current_media_time", None))
+        self.lb_video_info.setText(QCoreApplication.translate("MainWindow", u"lb_video_info", None))
+        self.lb_zoom_level.setText(QCoreApplication.translate("MainWindow", u"lb_zoom_level", None))
+        self.lb_main_player_status.setText(QCoreApplication.translate("MainWindow", u"lb_main_player_status", None))
+        self.lb_main_current_media_time.setText(QCoreApplication.translate("MainWindow", u"lb_main_current_media_time", None))
+        self.lb_main_video_info.setText(QCoreApplication.translate("MainWindow", u"lb_main_video_info", None))
+        self.lb_main_zoom_level.setText(QCoreApplication.translate("MainWindow", u"lb_main_zoom_level", None))
+        self.lbFocalSubject.setText(QCoreApplication.translate("MainWindow", u"lbFocalSubject", None))
+        self.lbCurrentStates.setText(QCoreApplication.translate("MainWindow", u"lbCurrentStates", None))
+        self.lb_main_focal_subject.setText(QCoreApplication.translate("MainWindow", u"lb_main_focal_subject", None))
+        self.lb_main_current_states.setText(QCoreApplication.translate("MainWindow", u"lb_main_current_states", None))
+        self.pb_live_obs.setText(QCoreApplication.translate("MainWindow", u"PushButton", None))
+        self.pb_main_live_obs.setText(QCoreApplication.translate("MainWindow", u"PushButton", None))
     # retranslateUi
 

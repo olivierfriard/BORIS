@@ -142,7 +142,9 @@ def close_observation(self):
     if self.playerType == cfg.LIVE:
         self.live_timer.stop()
         self.pb_live_obs.setEnabled(False)
+        # self.pb_main_live_obs.setEnabled(False)
         self.w_live.setVisible(False)
+        # self.w_main_live.setVisible(False)
         self.liveObservationStarted = False
         self.liveStartTime = None
 
@@ -176,6 +178,7 @@ def close_observation(self):
     self.dwMain.setVisible(False)
 
     self.w_obs_info.setVisible(False)
+    self.w_main_obs_info.setVisible(False)
 
     # self.lb_current_media_time.clear()
     # self.lb_player_status.clear()
@@ -1275,6 +1278,7 @@ def new_observation(self, mode: str = cfg.NEW, obsId: str = "") -> None:
 
             # title of dock widget
             self.dwEvents.setWindowTitle(f"Events for “{self.observationId}“ observation")
+            self.dwMain.setWindowTitle("Information")
 
             if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE] == cfg.LIVE:
                 self.playerType = cfg.LIVE
@@ -1317,17 +1321,6 @@ def check_creation_date(self) -> Tuple[int, dict]:
                 else:
                     creation_time_epoch = int(dt.datetime.strptime(media_info[cfg.MEDIA_CREATION_TIME], "%Y-%m-%d %H:%M:%S").timestamp())
                     media_creation_time[media_path] = creation_time_epoch
-
-    """
-    for row in range(self.twVideo1.rowCount()):
-        if self.twVideo1.item(row, 2).text() not in media_not_found_list:
-            media_info = util.accurate_media_analysis(self.ffmpeg_bin, self.twVideo1.item(row, 2).text())
-            if cfg.MEDIA_CREATION_TIME not in media_info or media_info[cfg.MEDIA_CREATION_TIME] == cfg.NA:
-                not_tagged_media_list.append(self.twVideo1.item(row, 2).text())
-            else:
-                creation_time_epoch = int(dt.datetime.strptime(media_info[cfg.MEDIA_CREATION_TIME], "%Y-%m-%d %H:%M:%S").timestamp())
-                self.media_creation_time[self.twVideo1.item(row, 2).text()] = creation_time_epoch
-    """
 
     if not_tagged_media_list:
         dlg = dialog.Results_dialog()
@@ -1390,7 +1383,11 @@ def initialize_new_media_observation(self) -> bool:
 
     self.pb_live_obs.setEnabled(False)
     self.w_live.setVisible(False)
+    # self.pb_main_live_obs.setEnabled(False)
+    # self.w_main_live.setVisible(False)
+
     self.w_obs_info.setVisible(True)
+    self.w_main_obs_info.setVisible(True)
 
     font = QFont()
     font.setPointSize(15)
@@ -2282,6 +2279,7 @@ def initialize_new_live_observation(self):
     self.playerType = cfg.LIVE
 
     self.pb_live_obs.setMinimumHeight(60)
+    self.pb_main_live_obs.setMinimumHeight(60)
 
     font = QFont()
     font.setPointSize(48)
@@ -2293,14 +2291,18 @@ def initialize_new_live_observation(self):
 
     # button start enabled
     self.pb_live_obs.setEnabled(True)
-
     self.w_live.setVisible(True)
     self.w_obs_info.setVisible(True)
+
+    self.pb_main_live_obs.setEnabled(True)
+    self.w_main_live.setVisible(True)
+    self.w_main_obs_info.setVisible(True)
 
     menu_options.update_menu(self)
 
     self.liveObservationStarted = False
     self.pb_live_obs.setText("Start live observation")
+    self.pb_main_live_obs.setText("Start live observation")
 
     if self.pj[cfg.OBSERVATIONS][self.observationId].get(cfg.START_FROM_CURRENT_TIME, False):
         current_time = util.seconds_of_day(dt.datetime.now())
@@ -2341,6 +2343,9 @@ def initialize_new_images_observation(self):
     # disable start live button
     self.pb_live_obs.setEnabled(False)
     self.w_live.setVisible(False)
+
+    self.pb_main_live_obs.setEnabled(False)
+    self.w_main_live.setVisible(False)
 
     # check if directories are available
     ok, msg = project_functions.check_directories_availability(self.pj[cfg.OBSERVATIONS][self.observationId], self.projectFileName)
@@ -2452,6 +2457,7 @@ def initialize_new_images_observation(self):
 
     self.extract_frame(self.dw_player[i])
     self.w_obs_info.setVisible(True)
+    self.w_main_obs_info.setVisible(True)
 
     self.get_events_current_row()
 

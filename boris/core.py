@@ -385,7 +385,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.toolBar.setEnabled(True)
 
         # start with dock widget invisible
-        for w in (self.w_obs_info, self.dwEvents, self.dwEthogram, self.dwSubjects, self.dwMain):
+        for w in (self.w_obs_info, self.w_main_obs_info, self.dwEvents, self.dwEthogram, self.dwSubjects, self.dwMain):
             w.setVisible(False)
             w.keyPressEvent = self.keyPressEvent
 
@@ -3053,6 +3053,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.clear_interface(flag_new=False)
 
         self.w_obs_info.setVisible(False)
+        self.w_main_obs_info.setVisible(False)
 
     def not_editable_column_color(self):
         """
