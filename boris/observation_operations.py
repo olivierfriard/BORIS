@@ -1854,6 +1854,13 @@ def initialize_new_media_observation(self) -> bool:
         # for receiving mouse event from frame viewer
         self.dw_player[i].frame_viewer.mouse_pressed_signal.connect(self.frame_image_clicked)
 
+        # On Windows the embedded MPV child window does not forward mouse
+        # button events through MPV, so receive the click from its Qt parent.
+        if sys.platform.startswith("win") and not self.MPV_IPC_MODE:
+            self.dw_player[i].videoframe.left_clicked_signal.connect(
+                lambda player_id: self.video_click_signal.emit(player_id, "MBTN_LEFT")
+            )
+
         # for receiving key event from dock widget
         self.dw_player[i].key_pressed_signal.connect(self.signal_from_widget)
 

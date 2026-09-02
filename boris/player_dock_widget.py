@@ -74,6 +74,23 @@ class Clickable_label(QLabel):
         self.mouse_pressed_signal.emit(self.id_, event)
 
 
+class Clickable_video_frame(QWidget):
+    """Video frame that reports left mouse button presses."""
+
+    left_clicked_signal = Signal(int)
+
+    def __init__(self, id_, parent=None):
+        super().__init__(parent)
+        self.id_ = id_
+
+    def mousePressEvent(self, event):
+        """Emit the player identifier when the frame is left-clicked."""
+        if event.button() == Qt.MouseButton.LeftButton:
+            logging.debug(f"mousepress event: video frame {self.id_} clicked {event.position()}")
+            self.left_clicked_signal.emit(self.id_)
+        super().mousePressEvent(event)
+
+
 def mpv_logger(player_id, loglevel, component, message):
     """
     redirect MPV log messages to general logging system
@@ -103,7 +120,7 @@ class DW_player(QDockWidget):
         self.stack1 = QWidget()
         self.hlayout = QHBoxLayout()
 
-        self.videoframe = QWidget(self)
+        self.videoframe = Clickable_video_frame(self.id_, self)
 
         if parent.MPV_IPC_MODE:
             self.player = ipc_mpv.IPC_MPV(socket_path=f"{cfg.MPV_SOCKET}{self.id_}")
