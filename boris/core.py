@@ -385,7 +385,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.toolBar.setEnabled(True)
 
         # start with dock widget invisible
-        for w in (self.w_obs_info, self.dwEvents, self.dwEthogram, self.dwSubjects):
+        for w in (self.w_obs_info, self.dwEvents, self.dwEthogram, self.dwSubjects, self.dw_info):
             w.setVisible(False)
             w.keyPressEvent = self.keyPressEvent
 
@@ -448,7 +448,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         """
         allow to block Qdockwidgets on main window because they can have a strange behavior specially on Mac
         """
-        for w in (self.dwEvents, self.dwEthogram, self.dwSubjects):
+        for w in (self.dwEvents, self.dwEthogram, self.dwSubjects, self.dw_info):
             if self.action_block_dockwidgets.isChecked():
                 w.setFloating(False)
                 w.setFeatures(QDockWidget.DockWidgetFeature.NoDockWidgetFeatures)
