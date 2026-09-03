@@ -8,7 +8,7 @@ version = "9.15.0"
 description = "BORIS - Behavioral Observation Research Interactive Software"
 authors = [{ name="Olivier Friard", email="olivier.friard@unito.it" }]
 readme = "README.md"
-requires-python = ">=3.12"
+requires-python = ">=3.13,<3.14"
 license = "GPL-3.0-only"
 classifiers=[
         "Topic :: Scientific/Engineering",
