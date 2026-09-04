@@ -27,7 +27,6 @@ import pathlib
 import sys
 from decimal import Decimal as dec
 from io import StringIO
-from typing import Tuple
 
 import pandas as pd
 import tablib
@@ -46,7 +45,7 @@ from . import utilities as util
 
 def export_events_jwatcher(
     parameters: dict, obsId: str, observation: list, ethogram: dict, file_name: str, output_format: str
-) -> Tuple[bool, str]:
+) -> tuple[bool, str]:
     """
     export events jwatcher .dat format
 
@@ -287,7 +286,7 @@ def export_events_jwatcher(
 
 def export_tabular_events(
     pj: dict, parameters: dict, obs_id: str, observation: dict, ethogram: dict, file_name: str, output_format: str
-) -> Tuple[bool, str]:
+) -> tuple[bool, str]:
     """
     export events for one observation (obs_id)
 
@@ -634,7 +633,7 @@ def dataset_write(dataset: tablib.Dataset, file_name: str, output_format: str, d
         return False, str(sys.exc_info()[1])
 
 
-def export_aggregated_events(pj: dict, parameters: dict, obsId: str, force_number_modifiers: int = 0) -> Tuple[tablib.Dataset, int]:
+def export_aggregated_events(pj: dict, parameters: dict, obsId: str, force_number_modifiers: int = 0) -> tuple[tablib.Dataset, int]:
     """
     export aggregated events of one observation
 

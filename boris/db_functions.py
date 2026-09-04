@@ -24,7 +24,6 @@ Copyright 2012-2026 Olivier Friard
 import logging
 import math
 import sqlite3
-from typing import Optional, Tuple
 
 from . import config as cfg
 from . import event_operations, project_functions
@@ -148,7 +147,7 @@ def load_events_in_db(
 
 def load_aggregated_events_in_db(
     pj: dict, selected_subjects: list, selected_observations: list, selected_behaviors: list
-) -> Tuple[bool, str, Optional[sqlite3.Connection]]:
+) -> tuple[bool, str, sqlite3.Connection | None]:
     """
     populate a memory sqlite database with aggregated events from selected_observations, selected_subjects and selected_behaviors
 

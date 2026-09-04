@@ -26,7 +26,6 @@ import sys
 from decimal import Decimal as dec
 from pathlib import Path
 from shutil import copyfile
-from typing import Dict, List, Tuple
 
 import numpy as np
 import pandas as pd
@@ -41,7 +40,7 @@ from . import utilities as util
 
 
 def check_observation_exhaustivity(
-    events: List[list],
+    events: list[list],
     state_events_list: list = [],
 ) -> float:
     """
@@ -140,7 +139,7 @@ def check_observation_exhaustivity_pictures(obs) -> float | str:
     return round(coded_images_number / tot_images_number * 100, 1)
 
 
-def behavior_category(ethogram: dict) -> Dict[str, str]:
+def behavior_category(ethogram: dict) -> dict[str, str]:
     """
     returns a dictionary containing the behavioral category of each behavior
 
@@ -160,7 +159,7 @@ def behavior_category(ethogram: dict) -> Dict[str, str]:
     return behavioral_category
 
 
-def check_if_media_available(observation: dict, project_file_name: str) -> Tuple[bool, str]:
+def check_if_media_available(observation: dict, project_file_name: str) -> tuple[bool, str]:
     """
     check if media files available for media and images observations
 
@@ -195,7 +194,7 @@ def check_if_media_available(observation: dict, project_file_name: str) -> Tuple
     return (False, "Observation type not found")
 
 
-def check_directories_availability(observation: dict, project_file_name: str) -> Tuple[bool, str]:
+def check_directories_availability(observation: dict, project_file_name: str) -> tuple[bool, str]:
     """
     check if directories are available
 
@@ -276,7 +275,7 @@ def check_coded_behaviors(pj: dict) -> set:
     return set(sorted(behaviors_not_defined))
 
 
-def check_state_events_obs(obsId: str, ethogram: dict, observation: dict, time_format: str = cfg.HHMMSS) -> Tuple[bool, str]:
+def check_state_events_obs(obsId: str, ethogram: dict, observation: dict, time_format: str = cfg.HHMMSS) -> tuple[bool, str]:
     """
     check state events for the observation obsId
     check if behaviors in observation are defined in ethogram
@@ -612,7 +611,7 @@ def check_project_integrity(
     return out
 
 
-def create_subtitles(pj: dict, selected_observations: list, parameters: dict, export_dir: str) -> Tuple[bool, str]:
+def create_subtitles(pj: dict, selected_observations: list, parameters: dict, export_dir: str) -> tuple[bool, str]:
     """
     create subtitles for selected observations, subjects and behaviors
 
@@ -627,7 +626,7 @@ def create_subtitles(pj: dict, selected_observations: list, parameters: dict, ex
         str: error message
     """
 
-    def subject_color(subject: str) -> Tuple[str, str]:
+    def subject_color(subject: str) -> tuple[str, str]:
         """
         subject color
 
@@ -1261,7 +1260,7 @@ def observed_interval(observation: dict) -> tuple[dec, dec] | None:
             return (dec("NaN"), dec("NaN"))
 
 
-def events_start_stop(ethogram: dict, events: list, obs_type: str) -> List[tuple]:
+def events_start_stop(ethogram: dict, events: list, obs_type: str) -> list[tuple]:
     """
     returns events with status (START/STOP or POINT)
 
@@ -1895,7 +1894,7 @@ def explore_project(self) -> None:
         QMessageBox.information(self, cfg.programName, "No events found")
 
 
-def project2dataframe(pj: dict, observations_list: list = []) -> Tuple[str, pd.DataFrame]:
+def project2dataframe(pj: dict, observations_list: list = []) -> tuple[str, pd.DataFrame]:
     """
     returns a pandas dataframe containing observations data
     """
