@@ -42,6 +42,8 @@ from . import config as cfg
 from . import db_functions, dialog, event_operations, observation_operations, project_functions
 from . import utilities as util
 
+logger = logging.getLogger(__name__)
+
 
 def export_events_jwatcher(
     parameters: dict, obsId: str, observation: list, ethogram: dict, file_name: str, output_format: str
@@ -303,8 +305,8 @@ def export_tabular_events(
         str: error message
     """
 
-    logging.debug(f"function: export tabular events for {obs_id}")
-    logging.debug(f"parameters: {parameters}")
+    logger.debug(f"function: export tabular events for {obs_id}")
+    logger.debug(f"parameters: {parameters}")
 
     interval = parameters["time"]
 
@@ -336,7 +338,7 @@ def export_tabular_events(
         # Use max media duration for max time if no interval is defined (=0)
         max_time = end_interval if end_interval != 0 else max_media_duration
 
-    logging.debug(f"min_time: {min_time}  max_time: {max_time}")
+    logger.debug(f"min_time: {min_time}  max_time: {max_time}")
 
     events_with_status = project_functions.events_start_stop(ethogram, observation[cfg.EVENTS], observation[cfg.TYPE])
 
@@ -584,7 +586,7 @@ def dataset_write(dataset: tablib.Dataset, file_name: str, output_format: str, d
         str: error message
     """
 
-    logging.debug("function: dataset_write")
+    logger.debug("function: dataset_write")
 
     try:
         if output_format in (cfg.PANDAS_DF_EXT, cfg.RDS_EXT):
@@ -648,7 +650,7 @@ def export_aggregated_events(pj: dict, parameters: dict, obsId: str, force_numbe
         int: Maximum number of modifiers
 
     """
-    logging.debug(f"function: export aggregated events {obsId} parameters: {parameters} ")
+    logger.debug(f"function: export aggregated events {obsId} parameters: {parameters} ")
 
     observation = pj[cfg.OBSERVATIONS][obsId]
     interval = parameters["time"]
@@ -685,7 +687,7 @@ def export_aggregated_events(pj: dict, parameters: dict, obsId: str, force_numbe
         # Use max media duration for max time if no interval is defined (=0)
         max_time = float(end_interval) if end_interval != 0 else float(max_media_duration)
 
-    logging.debug(f"min_time: {min_time}  max_time: {max_time}")
+    logger.debug(f"min_time: {min_time}  max_time: {max_time}")
 
     # obs description
     obs_description = util.eol2space(observation[cfg.DESCRIPTION])
@@ -694,7 +696,7 @@ def export_aggregated_events(pj: dict, parameters: dict, obsId: str, force_numbe
         pj, parameters[cfg.SELECTED_SUBJECTS], [obsId], parameters[cfg.SELECTED_BEHAVIORS]
     )
     if connector is None:
-        logging.critical("error when loading aggregated events in DB")
+        logger.critical("error when loading aggregated events in DB")
         return data, 0
 
     cursor = connector.cursor()

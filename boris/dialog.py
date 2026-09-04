@@ -64,6 +64,8 @@ from PySide6.QtWidgets import (
 from . import config as cfg
 from . import utilities as util
 
+logger = logging.getLogger(__name__)
+
 
 def MessageDialog(title: str, text: str, buttons: tuple) -> str:
     """
@@ -101,14 +103,14 @@ def global_error_message(exception_type, exception_value, traceback_object):
     error_text += "".join(traceback.format_exception(exception_type, exception_value, traceback_object))
 
     # write to stdout
-    logging.critical(error_text)
+    logger.critical(error_text)
 
     # write to $HOME/boris_error.log
     try:
         with open(pl.Path.home() / "boris_error.log", "w") as f_error:
             f_error.write(error_text)
     except Exception:
-        logging.critical(f"Impossible to write to {pl.Path.home() / 'boris_error.log'}")
+        logger.critical(f"Impossible to write to {pl.Path.home() / 'boris_error.log'}")
 
     # copy to clipboard
     cb = QApplication.clipboard()

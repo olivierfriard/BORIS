@@ -28,6 +28,8 @@ import sqlite3
 from . import config as cfg
 from . import event_operations, project_functions
 
+logger = logging.getLogger(__name__)
+
 
 def load_events_in_db(
     pj: dict,
@@ -164,7 +166,7 @@ def load_aggregated_events_in_db(
 
     """
 
-    logging.debug("function: load_aggregated_events_in_db")
+    logger.debug("function: load_aggregated_events_in_db")
 
     # if no observation selected select all
     if not selected_observations:
