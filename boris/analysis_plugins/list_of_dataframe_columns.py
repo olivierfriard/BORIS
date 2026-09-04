@@ -1,7 +1,7 @@
 """
 BORIS plugin
 
-number of occurences of behaviors
+number of occurrences of behaviors
 """
 
 import pandas as pd

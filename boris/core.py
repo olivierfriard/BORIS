@@ -2912,7 +2912,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                                             + value.split(")")[-1]
                                         )
                             except Exception:
-                                logging.warning("error during convertion of modifier short cut to lower case")
+                                logging.warning("error during conversion of modifier short cut to lower case")
 
                     for idx in pj[cfg.SUBJECTS]:
                         pj[cfg.SUBJECTS][idx][cfg.SUBJECT_KEY] = pj[cfg.SUBJECTS][idx][cfg.SUBJECT_KEY].lower()
@@ -3233,7 +3233,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     (
                         "Please note that editing the project may interfere with the coded events in your previous observations.<br>"
                         "For example modifying a behavior code, renaming a subject or modifying the modifiers sets "
-                        "can unvalidate your previous observations.<br>"
+                        "can invalidate your previous observations.<br>"
                         "Remember to make a backup of your project."
                     ),
                     (cfg.CANCEL, "Edit"),
@@ -4646,7 +4646,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
     def getLaps(self, n_player: int = 0) -> dec:
         """
-        Cumulative laps time from begining of observation
+        Cumulative laps time from beginning of observation
         do not add time offset
 
         Args:
@@ -4679,7 +4679,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     and util.extract_exif_DateTimeOriginal(self.images_list[self.image_idx]) != -1
                 ):
                     time_ = util.extract_exif_DateTimeOriginal(self.images_list[self.image_idx])
-                    # check if first value must be substracted
+                    # check if first value must be subtracted
                     if self.pj[cfg.OBSERVATIONS][self.observationId].get(cfg.SUBSTRACT_FIRST_EXIF_DATE, True):
                         time_ -= self.image_time_ref
 
@@ -4704,7 +4704,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
     def get_obs_time(self, n_player: int = 0) -> tuple[dec, dec | None]:
         """
-        returns time in current media and cumulative time from begining of observation
+        returns time in current media and cumulative time from beginning of observation
         do not add time offset
 
         Args:
@@ -5281,10 +5281,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
             time_ = util.time2seconds(time_str) if ":" in time_str else dec(time_str)
 
-            # substract time offset
+            # subtract time offset
             time_ -= self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TIME_OFFSET]
 
-            # substract media creation time
+            # subtract media creation time
             if self.pj[cfg.OBSERVATIONS][self.observationId].get(cfg.MEDIA_CREATION_DATE_AS_OFFSET, False):
                 if len(self.dw_player[0].player.playlist) > 1:
                     QMessageBox.information(

@@ -505,7 +505,7 @@
                  </column>
                  <column>
                   <property name="text">
-                   <string>Substract first value</string>
+                   <string>Subtract first value</string>
                   </property>
                  </column>
                  <column>

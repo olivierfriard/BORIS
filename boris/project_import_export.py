@@ -743,13 +743,13 @@ def import_behaviors_from_repository(self):
     try:
         ethogram_list = urllib.request.urlopen(f"{cfg.ETHOGRAM_REPOSITORY_URL}/ethogram_list.json").read().strip().decode("utf-8")
     except Exception:
-        QMessageBox.critical(self, cfg.programName, "An error occured during retrieving the ethogram list from BORIS repository")
+        QMessageBox.critical(self, cfg.programName, "An error occurred during retrieving the ethogram list from BORIS repository")
         return
 
     try:
         ethogram_list_list = json.loads(ethogram_list)
     except Exception:
-        QMessageBox.critical(self, cfg.programName, "An error occured during loading ethogram list from BORIS repository")
+        QMessageBox.critical(self, cfg.programName, "An error occurred during loading ethogram list from BORIS repository")
         return
 
     choice_dialog = dialog.ChooseObservationsToImport(
@@ -777,7 +777,7 @@ def import_behaviors_from_repository(self):
     try:
         boris_project_str = urllib.request.urlopen(f"{cfg.ETHOGRAM_REPOSITORY_URL}/{file_name}").read().strip().decode("utf-8")
     except Exception:
-        QMessageBox.critical(self, cfg.programName, f"An error occured during retrieving {file_name} from BORIS repository")
+        QMessageBox.critical(self, cfg.programName, f"An error occurred during retrieving {file_name} from BORIS repository")
         return
     boris_project = json.loads(boris_project_str)
 

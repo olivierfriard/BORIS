@@ -166,7 +166,7 @@ class BehavioralCategories(QDialog):
                 )
                 == cfg.YES
             ):
-                # add behavioral categories present in ethogram in behavioal categories list
+                # add behavioral categories present in ethogram in behavioral categories list
                 rc = self.lw.rowCount()
                 self.lw.setRowCount(rc + len(behavioral_categories_in_ethogram.difference(set(behavioral_categories))))
                 for idx, category in enumerate(sorted(list(behavioral_categories_in_ethogram.difference(set(behavioral_categories))))):
@@ -1145,7 +1145,7 @@ class projectDialog(QDialog, Ui_dlgProject):
                     f"Row: {r + 1} - The variable label <b>{self.twVariables.item(r, 0).text()}</b> is already in use.",
                 )
 
-            # check if same lables
+            # check if same labels
             existing_var.append(self.twVariables.item(r, 0).text().strip().upper())
 
             # check default value
@@ -1579,7 +1579,7 @@ class projectDialog(QDialog, Ui_dlgProject):
                 try:
                     new_map = json.loads(open(file_name, "r").read())
                 except Exception:
-                    QMessageBox.critical(self, cfg.programName, "Error reding the coding map")
+                    QMessageBox.critical(self, cfg.programName, "Error reading the coding map")
                     return
                 self.pj[cfg.CODING_MAP][new_map["name"]] = new_map
 
@@ -2105,7 +2105,7 @@ class projectDialog(QDialog, Ui_dlgProject):
                         QMessageBox.warning(
                             self,
                             cfg.programName,
-                            f"The label of an indipendent variable can not be empty (check row #{r + 1}).",
+                            f"The label of an independent variable can not be empty (check row #{r + 1}).",
                         )
                         return
 

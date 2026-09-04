@@ -751,7 +751,7 @@ def new_observation(self, mode: str = cfg.NEW, obsId: str = "") -> None:
         mode (str): NEW or EDIT
         obsId (str): observation Id to be edited
 
-    Retruns:
+    Returns:
         None
 
     """
@@ -1218,12 +1218,12 @@ def new_observation(self, mode: str = cfg.NEW, obsId: str = "") -> None:
             # check if exif data must be used
             self.pj[cfg.OBSERVATIONS][new_obs_id][cfg.USE_EXIF_DATE] = observationWindow.rb_use_exif.isChecked()
 
-            # ask if the value of the exif date time of the first picture must be substracted
+            # ask if the value of the exif date time of the first picture must be subtracted
             # TODO: improve this
             if self.pj[cfg.OBSERVATIONS][new_obs_id][cfg.USE_EXIF_DATE]:
                 response = dialog.MessageDialog(
                     cfg.programName,
-                    "You choose to use the EXIF metadata. Do you want to substract the date time value of the first picture?",
+                    "You choose to use the EXIF metadata. Do you want to subtract the date time value of the first picture?",
                     (cfg.YES, cfg.NO),
                 )
                 self.pj[cfg.OBSERVATIONS][new_obs_id][cfg.SUBSTRACT_FIRST_EXIF_DATE] = response == cfg.YES

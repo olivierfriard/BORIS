@@ -345,7 +345,7 @@ class timeBudgetResults(QWidget):
                 "Subject": str,
                 "Behavior": str,
                 "Modifiers": str,
-                "Total number of occurences": float,
+                "Total number of occurrences": float,
                 "Total duration (s)": float,
                 "Duration mean (s)": float,
                 "Duration std dev": float,
@@ -561,7 +561,7 @@ def time_budget(self, mode: str, mode2: str = "list"):
                                         (
                                             "SELECT * FROM events "
                                             "WHERE observation = ? AND subject = ? AND code = ? AND modifiers = ? "
-                                            "AND occurence < ?"
+                                            "AND occurrence < ?"
                                         ),
                                         (obsId, subj, behav, modifier[0], min_time),
                                     ).fetchall()
@@ -569,7 +569,7 @@ def time_budget(self, mode: str, mode2: str = "list"):
                                 % 2
                             ):
                                 cursor.execute(
-                                    ("INSERT INTO events (observation, subject, code, type, modifiers, occurence) VALUES (?,?,?,?,?,?)"),
+                                    ("INSERT INTO events (observation, subject, code, type, modifiers, occurrence) VALUES (?,?,?,?,?,?)"),
                                     (obsId, subj, behav, "STATE", modifier[0], min_time),
                                 )
 
@@ -578,7 +578,7 @@ def time_budget(self, mode: str, mode2: str = "list"):
                                     cursor.execute(
                                         (
                                             "SELECT * FROM events WHERE observation = ? AND subject = ? AND code = ? "
-                                            "AND modifiers = ? AND occurence > ?"
+                                            "AND modifiers = ? AND occurrence > ?"
                                         ),
                                         (obsId, subj, behav, modifier[0], max_time),
                                     ).fetchall()
@@ -586,7 +586,7 @@ def time_budget(self, mode: str, mode2: str = "list"):
                                 % 2
                             ):
                                 cursor.execute(
-                                    ("INSERT INTO events (observation, subject, code, type, modifiers, occurence) VALUES (?,?,?,?,?,?)"),
+                                    ("INSERT INTO events (observation, subject, code, type, modifiers, occurrence) VALUES (?,?,?,?,?,?)"),
                                     (obsId, subj, behav, "STATE", modifier[0], max_time),
                                 )
                         try:
@@ -598,7 +598,7 @@ def time_budget(self, mode: str, mode2: str = "list"):
 
             # delete all events out of time interval from db
             cursor.execute(
-                "DELETE FROM events WHERE observation = ? AND (occurence < ? OR occurence > ?)",
+                "DELETE FROM events WHERE observation = ? AND (occurrence < ? OR occurrence > ?)",
                 (obsId, min_time, max_time),
             )
             try:
@@ -666,7 +666,7 @@ def time_budget(self, mode: str, mode2: str = "list"):
                 "Subject",
                 "Behavior",
                 "Modifiers",
-                "Total number of occurences",
+                "Total number of occurrences",
                 "Total duration (s)",
                 "Duration mean (s)",
                 "Duration std dev",
@@ -707,7 +707,7 @@ def time_budget(self, mode: str, mode2: str = "list"):
                     item = QTableWidgetItem(str(row["duration"]))
                 elif row["duration"] not in ("-", cfg.UNPAIRED) and not start_coding.is_nan():
                     tot_time = float(total_observation_time)
-                    # substract time of excluded behaviors from the total for the subject
+                    # subtract time of excluded behaviors from the total for the subject
                     if row["subject"] in excl_behaviors_total_time and row["behavior"] not in parameters[cfg.EXCLUDED_BEHAVIORS]:
                         tot_time -= excl_behaviors_total_time[row["subject"]]
                     item = QTableWidgetItem(f"{row['duration'] / tot_time * 100:.1f}" if tot_time > 0 else cfg.NA)
@@ -817,7 +817,7 @@ def time_budget(self, mode: str, mode2: str = "list"):
                 "Subject",
                 "Behavior",
                 "Modifiers",
-                "Total number of occurences",
+                "Total number of occurrences",
                 "Total duration (s)",
                 "Duration mean (s)",
                 "Duration std dev",
@@ -838,7 +838,7 @@ def time_budget(self, mode: str, mode2: str = "list"):
             ]
 
         if mode == "by_category":
-            tb_fields = ["Subject", "Category", "Total number of occurences", "Total duration (s)"]
+            tb_fields = ["Subject", "Category", "Total number of occurrences", "Total duration (s)"]
             fields = ["subject", "category", "number", "duration"]
 
         mem_command = ""
@@ -894,7 +894,7 @@ def time_budget(self, mode: str, mode2: str = "list"):
                                         (
                                             "SELECT * FROM events "
                                             "WHERE observation = ? AND subject = ? "
-                                            "AND code = ? AND modifiers = ? AND occurence < ?"
+                                            "AND code = ? AND modifiers = ? AND occurrence < ?"
                                         ),
                                         (obsId, subj, behav, modifier[0], min_time),
                                     ).fetchall()
@@ -902,7 +902,7 @@ def time_budget(self, mode: str, mode2: str = "list"):
                                 % 2
                             ):
                                 cursor.execute(
-                                    ("INSERT INTO events (observation, subject, code, type, modifiers, occurence) VALUES (?,?,?,?,?,?)"),
+                                    ("INSERT INTO events (observation, subject, code, type, modifiers, occurrence) VALUES (?,?,?,?,?,?)"),
                                     (obsId, subj, behav, "STATE", modifier[0], min_time),
                                 )
                             if (
@@ -910,7 +910,7 @@ def time_budget(self, mode: str, mode2: str = "list"):
                                     cursor.execute(
                                         (
                                             "SELECT * FROM events WHERE observation = ? AND subject = ? AND code = ?"
-                                            " AND modifiers = ? AND occurence > ?"
+                                            " AND modifiers = ? AND occurrence > ?"
                                         ),
                                         (obsId, subj, behav, modifier[0], max_time),
                                     ).fetchall()
@@ -918,7 +918,7 @@ def time_budget(self, mode: str, mode2: str = "list"):
                                 % 2
                             ):
                                 cursor.execute(
-                                    ("INSERT INTO events (observation, subject, code, type, modifiers, occurence) VALUES (?,?,?,?,?,?)"),
+                                    ("INSERT INTO events (observation, subject, code, type, modifiers, occurrence) VALUES (?,?,?,?,?,?)"),
                                     (obsId, subj, behav, cfg.STATE, modifier[0], max_time),
                                 )
                         try:
@@ -927,7 +927,7 @@ def time_budget(self, mode: str, mode2: str = "list"):
                             pass
 
             cursor.execute(
-                "DELETE FROM events WHERE observation = ? AND (occurence < ? OR occurence > ?)",
+                "DELETE FROM events WHERE observation = ? AND (occurrence < ? OR occurrence > ?)",
                 (obsId, min_time, max_time),
             )
 
@@ -980,7 +980,7 @@ def time_budget(self, mode: str, mode2: str = "list"):
                         values.append(row["duration"])
                     elif row["duration"] not in ("-", cfg.UNPAIRED) and not start_coding.is_nan():
                         tot_time = float(max_time - min_time)
-                        # substract duration of excluded behaviors from total time for each subject
+                        # subtract duration of excluded behaviors from total time for each subject
                         if row["subject"] in excl_behaviors_total_time and row["behavior"] not in parameters[cfg.EXCLUDED_BEHAVIORS]:
                             tot_time -= excl_behaviors_total_time[row["subject"]]
                         # % of tot time

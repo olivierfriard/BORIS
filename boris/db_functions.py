@@ -78,7 +78,7 @@ def load_events_in_db(
             "code TEXT, "
             "type TEXT, "
             "modifiers TEXT, "
-            "occurence FLOAT, "
+            "occurrence FLOAT, "
             "comment TEXT,"
             "image_index INTEGER,"
             "image_path TEXT)"
@@ -102,7 +102,7 @@ def load_events_in_db(
                             cursor.execute(
                                 (
                                     "INSERT INTO events "
-                                    "(observation, subject, code, type, modifiers, occurence, comment, image_index) "
+                                    "(observation, subject, code, type, modifiers, occurrence, comment, image_index) "
                                     "VALUES (?,?,?,?,?,?,?,?)"
                                 ),
                                 (
@@ -124,7 +124,7 @@ def load_events_in_db(
                             cursor.execute(
                                 (
                                     "INSERT INTO events "
-                                    "(observation, subject, code, type, modifiers, occurence, comment, image_index, image_path) "
+                                    "(observation, subject, code, type, modifiers, occurrence, comment, image_index, image_path) "
                                     "VALUES (?,?,?,?,?,?,?,?,?)"
                                 ),
                                 (
@@ -265,8 +265,8 @@ def load_aggregated_events_in_db(
                 for distinct_modifiers in rows_distinct_modifiers:
                     cursor1.execute(
                         (
-                            "SELECT occurence, comment, image_index, image_path FROM events "
-                            "WHERE subject = ? AND code = ? AND modifiers = ? ORDER by occurence"
+                            "SELECT occurrence, comment, image_index, image_path FROM events "
+                            "WHERE subject = ? AND code = ? AND modifiers = ? ORDER by occurrence"
                         ),
                         (subject, behavior, distinct_modifiers),
                     )
@@ -280,8 +280,8 @@ def load_aggregated_events_in_db(
                                 behavior,
                                 cfg.POINT,
                                 distinct_modifiers,
-                                row["occurence"],
-                                row["occurence"],
+                                row["occurrence"],
+                                row["occurrence"],
                                 row["comment"],
                                 "",  # no stop comment for point event
                                 row["image_index"],
@@ -299,8 +299,8 @@ def load_aggregated_events_in_db(
                                     behavior,
                                     cfg.STATE,
                                     distinct_modifiers,
-                                    row["occurence"],
-                                    rows[idx + 1]["occurence"],
+                                    row["occurrence"],
+                                    rows[idx + 1]["occurrence"],
                                     row["comment"],
                                     rows[idx + 1]["comment"],
                                     row["image_index"],

@@ -70,3 +70,13 @@ exclude = ["*_ui.py", "mpv*"]
 dev = [
     "pytest>=8.3.5",
 ]
+
+[tool.codespell]
+# Ref: https://github.com/codespell-project/codespell#using-a-config-file
+# Skip Qt-generated resource/UI code and the vendored python-mpv library
+# (kept in sync with tool.ruff.exclude above).
+skip = '.git,.git-meta,.gitignore,.gitattributes,.ruff_cache,*.svg,*.lock,*core_qrc.py,*_ui.py,mpv*,*/portion/*'
+check-hidden = true
+# ignore-regex = ''
+# fo - Windows `systeminfo /FO csv` output-format flag (not "for"/"of"/"to")
+ignore-words-list = 'fo'

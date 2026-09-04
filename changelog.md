@@ -839,7 +839,7 @@ If you have an observation with many video players you must select the player yo
 
 * fixed bug when an observation is closed after state events reparation (Thanks to Haaken Zhong Bungum)
 
-* fix bug when ethogram, subjects list or independant variables list are edited after sorting (Thanks to Jana Muschinski)
+* fix bug when ethogram, subjects list or independent variables list are edited after sorting (Thanks to Jana Muschinski)
 
 
 **v. 7.9.8 2020-03-13**
@@ -900,7 +900,7 @@ If you have an observation with many video players you must select the player yo
 
 **v. 7.9 RC2 2019-10-24**
 
-* Added time budget bar plot for durations and number of occurences of behaviors
+* Added time budget bar plot for durations and number of occurrences of behaviors
 
 * Added behaviors defined as point event to the **Advanced event filtering** function
 
@@ -1903,7 +1903,7 @@ image::https://github.com/olivierfriard/boris_docs/blob/master/flow_diagram_grap
 
 * fixed behaviors colors in plot events  (https://github.com/olivierfriard/BORIS/issues/50)
 
-* fixed double "cariage return" bug when exporting plain text file on Windows 
+* fixed double "carriage return" bug when exporting plain text file on Windows 
 
 **2016-10-03 v. 2.995**
 
@@ -2045,7 +2045,7 @@ See **Tools -> Coding pad**
 
 **2015-12-02 v.2.7**
 
-* added sound spectrogram visualization during observation (FFmpeg framwork required)
+* added sound spectrogram visualization during observation (FFmpeg framework required)
 * added multi-editing function for events. Subject, behavior and comment fields can be edited for all the selected events.
 * added time offset feature in *plot events* function
 * added subjects and behaviors selection for the *export events* function
@@ -2188,7 +2188,7 @@ Bug fixed:
 
 * Added a parameters panel before plot events and time budget function in oreder to select subjects and behaviors to treat. This panel allows to include/exclude modifiers and include/exclude behaviors without events.
 
-* The % of total time changed in 'time budget' function, this value is now caculated using the total media duration (if available).
+* The % of total time changed in 'time budget' function, this value is now calculated using the total media duration (if available).
 
 * Added VIEWER mode when media file is no more available. Events can be created, modified, deleted but not logged from keyboard.
 
@@ -2202,7 +2202,7 @@ Bug fixed:
 
 **2015-06-14**
 
-* added sorting function for all fields in ethogram, subjects and indepedent variables tab in project window
+* added sorting function for all fields in ethogram, subjects and independent variables tab in project window
 * removed possibility to sort items manually
 * added VIEW mode to visualize/modify events of an observation without the corresponding media file
 * observed behaviors are now preselected in time budget and plot events functions
@@ -2631,6 +2631,6 @@ do not more return error if the code or subject in the edited event do not more 
 **2013-01-23**
 
 * reorganized the whole directory
-* add obs extension when project saved without extention when *.obs filter is active
+* add obs extension when project saved without extension when *.obs filter is active
 * edit project: check replace audio check box if necessary
 * edit project: check second video check box if necessary

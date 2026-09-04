@@ -49,7 +49,7 @@ from PySide6.QtGui import QIcon, QAction
 
 class Clickable_label(QLabel):
     """
-    QLabel class for visualiziong frames for geometric measurments
+    QLabel class for visualiziong frames for geometric measurements
     Label emits a signal when clicked
     """
 

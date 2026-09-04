@@ -390,7 +390,7 @@ class wgMeasurement(QDialog):
                 pyreadr.write_rds(file_name, df)
 
         except Exception:
-            QMessageBox.warning(self, cfg.programName, "An error occured during saving the measurement results")
+            QMessageBox.warning(self, cfg.programName, "An error occurred during saving the measurement results")
             return True
         return False  # everything OK
 

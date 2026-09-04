@@ -1,14 +1,14 @@
 """
 BORIS plugin
 
-number of occurences of behaviors by independent_variable
+number of occurrences of behaviors by independent_variable
 """
 
 import pandas as pd
 
 __version__ = "0.4.0"
 __version_date__ = "2025-07-17"
-__plugin_name__ = "Number of occurences of behaviors by subject by independent_variable"
+__plugin_name__ = "Number of occurrences of behaviors by subject by independent_variable"
 __author__ = "Olivier Friard - University of Torino - Italy"
 
 
@@ -37,7 +37,7 @@ def run(df: pd.DataFrame):
                 ]
             )["Behavior"]
             .count()
-            .reset_index(name="number of occurences")
+            .reset_index(name="number of occurrences")
         )
 
         grouped_df.rename(columns={column: "Value"}, inplace=True)

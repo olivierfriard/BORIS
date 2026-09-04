@@ -29,7 +29,7 @@ else
     exit 1
 fi
 
-# We need to check for that specific binary; there are mutliple "xquartz" hits during startup
+# We need to check for that specific binary; there are multiple "xquartz" hits during startup
 # If checked for just "xquartz" it will match before the TCP is fully initialized and fail later
 isXQuartzRunning () {
     local xqProcesses

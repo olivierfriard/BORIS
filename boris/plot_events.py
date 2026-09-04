@@ -149,7 +149,7 @@ def create_behaviors_bar_plot(
     start_time = param[cfg.START_TIME]
     end_time = param[cfg.END_TIME]
 
-    parameters = ["duration", "number of occurences"]
+    parameters = ["duration", "number of occurrences"]
 
     ok, msg, db_connector = db_functions.load_aggregated_events_in_db(pj, selected_subjects, selected_observations, selected_behaviors)
 
@@ -200,7 +200,7 @@ def create_behaviors_bar_plot(
             axs2[0] = ax2
 
         fig.suptitle("Durations of behaviors")
-        fig2.suptitle("Number of occurences of behaviors")
+        fig2.suptitle("Number of occurrences of behaviors")
 
         # if modifiers not to be included set modifiers to ""
         cursor.execute("UPDATE aggregated_events SET modifiers = ''")
@@ -261,7 +261,7 @@ def create_behaviors_bar_plot(
 
         for ax_idx, subject in enumerate(sorted(distinct_subjects)):
             for behavior in distinct_behav:
-                # number of occurences
+                # number of occurrences
                 cursor.execute(
                     ("SELECT COUNT(*) AS count FROM aggregated_events WHERE observation = ? AND subject = ? AND behavior = ?"),
                     (
@@ -271,7 +271,7 @@ def create_behaviors_bar_plot(
                     ),
                 )
                 for row in cursor.fetchall():
-                    behaviors[subject][behavior]["number of occurences"] = 0 if row["count"] is None else row["count"]
+                    behaviors[subject][behavior]["number of occurrences"] = 0 if row["count"] is None else row["count"]
 
                 # total duration
                 if project_functions.event_type(behavior, pj[cfg.ETHOGRAM]) in cfg.STATE_EVENT_TYPES:
@@ -299,10 +299,10 @@ def create_behaviors_bar_plot(
             ) = ([], [], [], [], [], [])
 
             for behavior in sorted(distinct_behav):
-                if param[cfg.EXCLUDE_BEHAVIORS] and behaviors[subject][behavior]["number of occurences"] == 0:
+                if param[cfg.EXCLUDE_BEHAVIORS] and behaviors[subject][behavior]["number of occurrences"] == 0:
                     continue
 
-                n_occurences.append(behaviors[subject][behavior]["number of occurences"])
+                n_occurences.append(behaviors[subject][behavior]["number of occurrences"])
                 x_labels.append(behavior)
 
                 # color
@@ -358,7 +358,7 @@ def create_behaviors_bar_plot(
             axs[ax_idx].set_xticklabels(x_labels_duration, rotation="vertical", fontsize=8)
 
             if ax_idx == 0:
-                axs2[ax_idx].set_ylabel("Number of occurences")
+                axs2[ax_idx].set_ylabel("Number of occurrences")
             axs2[ax_idx].set_xlabel("Behaviors")
             axs2[ax_idx].set_title(f"{subject}")
 

@@ -527,7 +527,7 @@ def preferences(self):
             item.setData(PLUGIN_NAME_ROLE, plugin_name)
             preferencesWindow.lw_personal_plugins.addItem(item)
 
-    # PROJET FILE INDENTATION
+    # PROJECT FILE INDENTATION
     preferencesWindow.combo_project_file_indentation.clear()
     preferencesWindow.combo_project_file_indentation.addItems(cfg.PROJECT_FILE_INDENTATION_COMBO_OPTIONS)
     try:

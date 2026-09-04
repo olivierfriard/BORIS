@@ -73,13 +73,13 @@ commands_usage = {
         "usage:\nboris_cli -p PROJECT_FILE -o OBSERVATION_ID --command check_state_events\n"
         "where\n"
         "PROJECT_FILE is the path of the BORIS project\n"
-        "OBSERVATION_ID is the id of observation(s) (if ommitted all observations are checked)"
+        "OBSERVATION_ID is the id of observation(s) (if omitted all observations are checked)"
     ),
     "export_events": (
         "usage:\nboris_cli -p PROJECT_FILE -o OBSERVATION_ID --command export_events [OUTPUT_FORMAT]\n"
         "where:\n"
         "PROJECT_FILE is the path of the BORIS project\n"
-        "OBSERVATION_ID is the id of observation(s) (if ommitted all observations are exported)\n"
+        "OBSERVATION_ID is the id of observation(s) (if omitted all observations are exported)\n"
         "OUTPUT_FORMAT can be tsv (default), csv, xls, xlsx, ods, html"
     ),
     "irr": (
@@ -304,7 +304,7 @@ def main(argv=None):
             if msg:
                 print(cleanhtml(msg))
             else:
-                print("No issuses found in project")
+                print("No issues found in project")
             sys.exit()
 
         if "plot_events" in args.command[0]:
