@@ -31,7 +31,6 @@ from collections import deque
 from decimal import Decimal as dec
 from math import floor, log2
 from pathlib import Path
-from typing import Optional, Tuple
 
 from matplotlib import pyplot
 from PySide6 import QtTest
@@ -56,14 +55,12 @@ from . import (
     observation,
     player_dock_widget,
     plot_data_module,
+    plot_spectrogram_rt,
     plot_waveform_rt,
     project_functions,
     select_observations,
     state_events,
     video_operations,
-)
-from . import (
-    plot_spectrogram_rt as plot_spectrogram_rt,
 )
 from . import utilities as util
 
@@ -475,7 +472,7 @@ def remove_observations(self):
             self.project_changed()
 
 
-def coding_time(observations: dict, observations_list: list) -> Tuple[Optional[dec], Optional[dec], Optional[dec]]:
+def coding_time(observations: dict, observations_list: list) -> tuple[dec | None, dec | None, dec | None]:
     """
     returns first even timestamp, last event timestamp and duration of observation
 
@@ -527,7 +524,7 @@ def coding_time(observations: dict, observations_list: list) -> Tuple[Optional[d
     return start_coding, end_coding, coding_duration
 
 
-def time_intervals_range(observations: dict, observations_list: list) -> Tuple[Optional[dec], Optional[dec]]:
+def time_intervals_range(observations: dict, observations_list: list) -> tuple[dec | None, dec | None]:
     """
     returns earliest start interval and latest end interval
 
@@ -650,7 +647,7 @@ def observation_total_length(observation: dict) -> dec:
     return dec(0)
 
 
-def media_duration(observations: dict, selected_observations: list) -> Tuple[Optional[dec], Optional[dec]]:
+def media_duration(observations: dict, selected_observations: list) -> tuple[dec | None, dec | None]:
     """
     maximum media duration and total media duration of selected observations
 
@@ -1310,7 +1307,7 @@ def new_observation(self, mode: str = cfg.NEW, obsId: str = "") -> None:
             menu_options.update_menu(self)
 
 
-def check_creation_date(self) -> Tuple[int, dict]:
+def check_creation_date(self) -> tuple[int, dict]:
     """
     check if media file exists
     check if Creation Date tag is present in metadata of media file
@@ -2472,7 +2469,7 @@ def initialize_new_images_observation(self):
     self.get_events_current_row()
 
 
-def event2media_file_name(observation: dict, timestamp: dec) -> Optional[str]:
+def event2media_file_name(observation: dict, timestamp: dec) -> str | None:
     """
     returns the media file name corresponding to the event (start time in case of state event)
 
