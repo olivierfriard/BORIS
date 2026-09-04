@@ -40,7 +40,6 @@ from decimal import ROUND_DOWN, getcontext
 from decimal import Decimal as dec
 from pathlib import Path
 from shutil import copyfile, which
-from typing import Tuple, Union
 
 import exifread
 import numpy as np
@@ -239,7 +238,7 @@ def extract_date_time_from_file_name(file_path: str) -> int | None:
     return None
 
 
-def mpv_lib_version() -> Tuple[str, str, str]:
+def mpv_lib_version() -> tuple[str, str, str]:
     """
     Version of MPV library
 
@@ -347,7 +346,7 @@ def return_file_header(file_name: str, row_number: int = 5) -> list:
     return header
 
 
-def return_file_header_footer(file_name: str, file_row_number: int = 0, row_number: int = 5) -> Tuple[list, list]:
+def return_file_header_footer(file_name: str, file_row_number: int = 0, row_number: int = 5) -> tuple[list, list]:
     """
     return file header and footer
 
@@ -376,7 +375,7 @@ def return_file_header_footer(file_name: str, file_row_number: int = 0, row_numb
     return header, footer
 
 
-def convertTime(time_format: str, sec: Union[float, dec]) -> Union[str, None]:
+def convertTime(time_format: str, sec: float | dec) -> str | None:
     """
     convert time in base at the current format (S or HHMMSS)
 
@@ -399,7 +398,7 @@ def convertTime(time_format: str, sec: Union[float, dec]) -> Union[str, None]:
     return None
 
 
-def smart_time_format(sec: Union[float, dec], time_format: str = cfg.S, cutoff: dec = cfg.SMART_TIME_CUTOFF_DEFAULT) -> str:
+def smart_time_format(sec: float | dec, time_format: str = cfg.S, cutoff: dec = cfg.SMART_TIME_CUTOFF_DEFAULT) -> str:
     """
     Smart time format
     returns time in seconds if <= cutoff else in HH:MM:SS.ZZZ format
@@ -446,7 +445,7 @@ def count_media_file(media_files: dict) -> int:
 
 def txt2np_array(
     file_name: str, columns_str: str, substract_first_value: str, converters=None, column_converter=None
-) -> Tuple[bool, str, np.array]:
+) -> tuple[bool, str, np.array]:
     """
     read a txt file (tsv or csv) and return a np array with columns cited in columns_str
 
@@ -561,7 +560,7 @@ def versiontuple(version_str: str) -> tuple:
     return tuple(filled)
 
 
-def behavior_user_color(ethogram: dict, behavior_code: str) -> Union[str, None]:
+def behavior_user_color(ethogram: dict, behavior_code: str) -> str | None:
     """
     returns the color of behavior if defined else None
     """
@@ -575,7 +574,7 @@ def behavior_user_color(ethogram: dict, behavior_code: str) -> Union[str, None]:
     return None
 
 
-def behav_category_user_color(behavioral_categories: dict, name: str) -> Union[str, None]:
+def behav_category_user_color(behavioral_categories: dict, name: str) -> str | None:
     """
     returns the color of the behavioral category if defined else None
     """
@@ -700,12 +699,8 @@ def get_current_states_modifiers_by_subject(
         return current_states
 
     # check if time contains NA
-    #if [x for x in events if x[cfg.EVENT_TIME_FIELD_IDX].is_nan()]:
-    if any(
-            isinstance(x[cfg.EVENT_TIME_FIELD_IDX], float)
-            and math.isnan(x[cfg.EVENT_TIME_FIELD_IDX])
-            for x in events
-        ):
+    # if [x for x in events if x[cfg.EVENT_TIME_FIELD_IDX].is_nan()]:
+    if any(isinstance(x[cfg.EVENT_TIME_FIELD_IDX], float) and math.isnan(x[cfg.EVENT_TIME_FIELD_IDX]) for x in events):
         check_index = cfg.PJ_OBS_FIELDS[cfg.IMAGES][cfg.IMAGE_INDEX]
     else:
         check_index = cfg.EVENT_TIME_FIELD_IDX
@@ -1066,7 +1061,7 @@ def oriented_angle(P1: tuple, P2: tuple, P3: tuple) -> float:
     return oriented_angle
 
 
-def oriented_angle_trigo(B: Tuple[float, float], A: Tuple[float, float], C: Tuple[float, float]) -> float:
+def oriented_angle_trigo(B: tuple[float, float], A: tuple[float, float], C: tuple[float, float]) -> float:
     """
     Calculates the oriented angle between vectors BA and BC, in degrees.
     The angle is positive in the counter-clockwise (trigonometric) direction.
@@ -1292,7 +1287,7 @@ def eol2space(s: str) -> str:
     return s.replace("\r\n", " ").replace("\n", " ").replace("\r", " ")
 
 
-def test_ffmpeg_path(FFmpegPath: str) -> Tuple[bool, str]:
+def test_ffmpeg_path(FFmpegPath: str) -> tuple[bool, str]:
     """
     test if ffmpeg has valid path
 
@@ -1317,7 +1312,7 @@ def test_ffmpeg_path(FFmpegPath: str) -> Tuple[bool, str]:
     return True, ""
 
 
-def check_ffmpeg_path() -> Tuple[bool, str]:
+def check_ffmpeg_path() -> tuple[bool, str]:
     """
     check for ffmpeg path
     firstly search for embedded version
@@ -1348,7 +1343,7 @@ def check_ffmpeg_path() -> Tuple[bool, str]:
         return False, "FFmpeg is not available"
 
 
-def smart_size_format(n: Union[float, int, str, None]) -> str:
+def smart_size_format(n: float | int | str | None) -> str:
     """
     format with kb, Mb or Gb in base of value
     """
