@@ -2287,7 +2287,7 @@ def initialize_new_media_observation(self) -> bool:
                     self.pj[cfg.OBSERVATIONS][self.observationId][cfg.PLOT_DATA][idx]["substract_first_value"],
                     self.pj[cfg.CONVERTERS] if cfg.CONVERTERS in self.pj else {},
                     self.pj[cfg.OBSERVATIONS][self.observationId][cfg.PLOT_DATA][idx]["converters"],
-                    log_level=logger.getLogger().getEffectiveLevel(),
+                    log_level=logging.getLogger().getEffectiveLevel(),
                 )
 
                 if w1.error_msg:
@@ -2343,7 +2343,7 @@ def initialize_new_media_observation(self) -> bool:
                     self.pj[cfg.OBSERVATIONS][self.observationId][cfg.PLOT_DATA][idx]["substract_first_value"],
                     self.pj[cfg.CONVERTERS] if cfg.CONVERTERS in self.pj else {},
                     self.pj[cfg.OBSERVATIONS][self.observationId][cfg.PLOT_DATA][idx]["converters"],
-                    log_level=logger.getLogger().getEffectiveLevel(),
+                    log_level=logging.getLogger().getEffectiveLevel(),
                 )
 
                 if w2.error_msg:

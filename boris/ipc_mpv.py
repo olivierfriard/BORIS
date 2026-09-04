@@ -28,7 +28,7 @@ import subprocess
 import threading
 import time
 
-import config as cfg
+from . import config as cfg
 
 logger = logging.getLogger(__name__)
 

@@ -38,6 +38,8 @@ from . import db_functions, dialog, observation_operations, version
 from . import portion as I
 from . import utilities as util
 
+logger = logging.getLogger(__name__)
+
 
 def check_observation_exhaustivity(
     events: list[list],
@@ -352,7 +354,7 @@ def check_state_events(pj: dict, observations_list: list) -> tuple[bool, list]:
     use check_state_events_obs function
     """
 
-    logging.info("Check state events function")
+    logger.info("Check state events function")
 
     out = ""
     not_paired_obs_list = []
@@ -379,7 +381,7 @@ def check_state_events(pj: dict, observations_list: list) -> tuple[bool, list]:
     if not new_observations_list:
         QMessageBox.warning(None, cfg.programName, "The observation list is empty")
 
-    logging.info("Check state events done")
+    logger.info("Check state events done")
 
     return False, new_observations_list  # no state events are unpaired
 
@@ -1346,7 +1348,7 @@ def open_project_json(project_file_name: str) -> tuple:
         str: message
     """
 
-    logging.debug(f"open_project_json function: {project_file_name}")
+    logger.debug(f"open_project_json function: {project_file_name}")
 
     projectChanged: bool = False
     msg: str = ""
@@ -1490,7 +1492,7 @@ def open_project_json(project_file_name: str) -> tuple:
     # check if BEHAVIORAL_CATEGORIES is present
     if cfg.BEHAVIORAL_CATEGORIES not in pj:
         pj[cfg.BEHAVIORAL_CATEGORIES] = []
-        logging.info("Behavioral categories section was added to project")
+        logger.info("Behavioral categories section was added to project")
         projectChanged = True
 
     # check if behavioral categories config are stored as a list
@@ -1498,11 +1500,11 @@ def open_project_json(project_file_name: str) -> tuple:
         if isinstance(pj[cfg.BEHAVIORAL_CATEGORIES_CONF], list):
             # convert to dict
             pj[cfg.BEHAVIORAL_CATEGORIES_CONF] = {str(idx): {"name": bc} for idx, bc in enumerate(pj[cfg.BEHAVIORAL_CATEGORIES_CONF])}
-            logging.info("Behavioral categories was converted from a list to a dictionary")
+            logger.info("Behavioral categories was converted from a list to a dictionary")
             projectChanged = True
     else:
         pj[cfg.BEHAVIORAL_CATEGORIES_CONF] = dict()
-        logging.info("Behavioral categories config section was added to project")
+        logger.info("Behavioral categories config section was added to project")
         projectChanged = True
 
     # add behavioral category key if not found
@@ -1723,7 +1725,7 @@ def fix_unpaired_state_events2(ethogram: dict, events: list, fix_at_time: dec) -
         list: list of events with state events fixed
     """
 
-    logging.debug("fix_unpaired_state_events2 function")
+    logger.debug("fix_unpaired_state_events2 function")
 
     closing_events_to_add: list = []
     subjects: list = [event[cfg.EVENT_SUBJECT_FIELD_IDX] for event in events]

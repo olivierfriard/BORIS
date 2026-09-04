@@ -37,6 +37,8 @@ try:
 except Exception:
     import config as cfg
 
+logger = logging.getLogger(__name__)
+
 
 def otx_to_boris(file_path: str) -> tuple[dict, list]:
     """
@@ -130,7 +132,7 @@ def otx_to_boris(file_path: str) -> tuple[dict, list]:
                 flag_long_key = True
             modifiers[modif_id] = {"set_name": modif_code, "key": key, "description": description, "values": []}
 
-    logging.debug(modifiers)
+    logger.debug(modifiers)
 
     # connect modifiers to behaviors
     connections: dict = {}
@@ -140,7 +142,7 @@ def otx_to_boris(file_path: str) -> tuple[dict, list]:
             connections[item.attributes["CDS_ELEMENT_ID"].value] = []
         connections[item.attributes["CDS_ELEMENT_ID"].value].append(item.attributes["CDS_MODIFIER_ID"].value)
 
-    logging.debug(connections)
+    logger.debug(connections)
 
     # behaviors
     behaviors: dict = {}
@@ -235,7 +237,7 @@ def otx_to_boris(file_path: str) -> tuple[dict, list]:
                         "description": modifiers[modif_key]["description"],
                     }
 
-    logging.debug(behaviors_boris)
+    logger.debug(behaviors_boris)
 
     # subjects
     subjects = {}
@@ -352,7 +354,7 @@ def otx_to_boris(file_path: str) -> tuple[dict, list]:
 
             CREATION_DATETIME = CREATION_DATETIME.replace(" ", "T")  # .split(".")[0]
 
-            logging.debug(f"{CREATION_DATETIME=}")  # ex: 2022-05-18 10:04:09.474512"""
+            logger.debug(f"{CREATION_DATETIME=}")  # ex: 2022-05-18 10:04:09.474512"""
 
             project[cfg.OBSERVATIONS][obs_id]["date"] = CREATION_DATETIME
 
@@ -360,7 +362,7 @@ def otx_to_boris(file_path: str) -> tuple[dict, list]:
                 OBS_EVENT_TIMESTAMP = event.getElementsByTagName("OBS_EVENT_TIMESTAMP")[0].childNodes[0].data
 
                 full_timestamp = dt.datetime.strptime(OBS_EVENT_TIMESTAMP, "%Y-%m-%d %H:%M:%S.%f").timestamp()
-                logging.debug(f"{full_timestamp=}")
+                logger.debug(f"{full_timestamp=}")
 
                 # day_timestamp = dt.datetime.strptime(OBS_EVENT_TIMESTAMP.split(" ")[0], "%Y-%m-%d").timestamp()
                 # timestamp = dec(str(round(full_timestamp - day_timestamp, 3)))
@@ -372,9 +374,9 @@ def otx_to_boris(file_path: str) -> tuple[dict, list]:
                     OBS_EVENT_SUBJECT = ""
 
                 OBS_EVENT_BEHAVIOR = event.getElementsByTagName("OBS_EVENT_BEHAVIOR")[0].getAttribute("NAME")
-                logging.debug(f"{OBS_EVENT_BEHAVIOR=}")
+                logger.debug(f"{OBS_EVENT_BEHAVIOR=}")
                 if not OBS_EVENT_BEHAVIOR:
-                    logging.warning(f"Behavior missing in observation {obs_id} at {timestamp}")
+                    logger.warning(f"Behavior missing in observation {obs_id} at {timestamp}")
                     error_list.append(f"Behavior missing in observation {obs_id} at {timestamp}")
                     continue
 
@@ -395,11 +397,11 @@ def otx_to_boris(file_path: str) -> tuple[dict, list]:
                 except Exception:
                     OBS_EVENT_COMMENT: str = ""
 
-                logging.debug(f"{timestamp=}")
-                logging.debug(f"{OBS_EVENT_SUBJECT=}")
-                logging.debug(f"{OBS_EVENT_BEHAVIOR=}")
-                logging.debug(f"{OBS_EVENT_BEHAVIOR_MODIFIER=}")
-                logging.debug(f"{OBS_EVENT_COMMENT=}")
+                logger.debug(f"{timestamp=}")
+                logger.debug(f"{OBS_EVENT_SUBJECT=}")
+                logger.debug(f"{OBS_EVENT_BEHAVIOR=}")
+                logger.debug(f"{OBS_EVENT_BEHAVIOR_MODIFIER=}")
+                logger.debug(f"{OBS_EVENT_COMMENT=}")
 
                 project[cfg.OBSERVATIONS][obs_id][cfg.EVENTS].append(
                     [
@@ -421,21 +423,6 @@ def otx_to_boris(file_path: str) -> tuple[dict, list]:
 
     if flag_long_key:
         error_list.append("The keys longer than one char were deleted.")
-        logging.debug("The keys longer than one char were deleted.")
+        logger.debug("The keys longer than one char were deleted.")
 
     return project, error_list
-
-
-if __name__ == "__main__":
-    import pprint
-    import sys
-
-    logging.basicConfig(
-        format="%(asctime)s,%(msecs)d  %(module)s l.%(lineno)d %(levelname)s %(message)s",
-        datefmt="%H:%M:%S",
-        level=logging.DEBUG,
-    )
-    project, errors = otx_to_boris(sys.argv[1])
-
-    pprint.pprint(project)
-    pprint.pprint(errors)

@@ -33,6 +33,8 @@ from . import config as cfg
 from . import db_functions, observation_operations, project_functions
 from . import portion as I
 
+logger = logging.getLogger(__name__)
+
 
 def default_value(ethogram: dict, behavior_code: str, param):
     """
@@ -669,21 +671,21 @@ def time_budget_analysis(
         dict:
     """
 
-    logging.debug("time_budget_analysis function")
+    logger.debug("time_budget_analysis function")
 
-    logging.debug(f"{selected_observations=}")
-    logging.debug(f"{parameters=}")
+    logger.debug(f"{selected_observations=}")
+    logger.debug(f"{parameters=}")
 
     categories: dict = {}
     out: list = []
     for subject in parameters[cfg.SELECTED_SUBJECTS]:
-        logging.debug(f"{subject=}")
+        logger.debug(f"{subject=}")
 
         out_cat: list = []
         categories[subject] = {}
 
         for behavior in parameters[cfg.SELECTED_BEHAVIORS]:
-            logging.debug(f"{behavior=}")
+            logger.debug(f"{behavior=}")
 
             if parameters[cfg.INCLUDE_MODIFIERS]:  # with modifiers
                 if parameters[cfg.EXCLUDE_NON_CODED_MODIFIERS]:
