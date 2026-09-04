@@ -67,12 +67,14 @@ from . import (
 )
 from . import utilities as util
 
+logger = logging.getLogger(__name__)
+
 
 def _shutdown_mpv_player(player, player_number: int, ipc_mode: bool) -> None:
     try:
         player.stop()
     except Exception as exc:
-        logging.warning(f"Error stopping MPV player #{player_number}: {exc}")
+        logger.warning(f"Error stopping MPV player #{player_number}: {exc}")
 
     if ipc_mode:
         process = getattr(player, "process", None)
@@ -86,7 +88,7 @@ def _shutdown_mpv_player(player, player_number: int, ipc_mode: bool) -> None:
             except subprocess.TimeoutExpired:
                 process.kill()
         except Exception as exc:
-            logging.warning(f"Error stopping MPV process #{player_number}: {exc}")
+            logger.warning(f"Error stopping MPV process #{player_number}: {exc}")
         return
 
     if hasattr(player, "_log_handler"):
@@ -99,7 +101,7 @@ def _shutdown_mpv_player(player, player_number: int, ipc_mode: bool) -> None:
     try:
         terminate()
     except Exception as exc:
-        logging.warning(f"Error terminating MPV player #{player_number}: {exc}")
+        logger.warning(f"Error terminating MPV player #{player_number}: {exc}")
 
 
 def close_observation(self):
@@ -107,7 +109,7 @@ def close_observation(self):
     close current observation
     """
 
-    logging.info(f"Close observation (player type: {self.playerType})")
+    logger.info(f"Close observation (player type: {self.playerType})")
 
     # check observation state events
 
@@ -142,7 +144,7 @@ def close_observation(self):
 
     if self.playerType == cfg.MEDIA:
         self.media_scan_sampling_mem = []
-        logging.info("Stop plot timer")
+        logger.info("Stop plot timer")
         self.plot_timer.stop()
 
         if self.MPV_IPC_MODE:
@@ -151,8 +153,9 @@ def close_observation(self):
         observation_files = self.pj[cfg.OBSERVATIONS][self.observationId][cfg.FILE]
         for i, player_dock in enumerate(self.dw_player):
             player_number = str(i + 1)
-            if player_number in observation_files and observation_files[player_number]:
-                logging.info(f"Stop player #{player_number}")
+            # if player_number in observation_files and observation_files[player_number]:
+            if observation_files.get(player_number, None):
+                logger.info(f"Stop player #{player_number}")
                 _shutdown_mpv_player(player_dock.player, i + 1, self.MPV_IPC_MODE)
 
         # self.verticalLayout_3.removeWidget(self.video_slider)
@@ -176,7 +179,7 @@ def close_observation(self):
         for pd in self.plot_data:
             self.plot_data[pd].close_plot()
 
-    logging.info("close tool window")
+    logger.info("close tool window")
 
     self.close_observation_tools()
 
@@ -188,7 +191,7 @@ def close_observation(self):
 
     if self.playerType in (cfg.MEDIA, cfg.IMAGES):
         for dw in self.dw_player:
-            logging.info("remove dock widget")
+            logger.info("remove dock widget")
             self.removeDockWidget(dw)
             dw.deleteLater()
         self.dw_player = []
@@ -218,7 +221,7 @@ def close_observation(self):
 
     menu_options.update_menu(self)
 
-    logging.info(f"Observation {self.playerType} closed")
+    logger.info(f"Observation {self.playerType} closed")
 
 
 def export_observations_list_clicked(self):
@@ -262,7 +265,7 @@ def observations_list(self):
     show list of all observations of current project
     """
 
-    logging.debug("observations list")
+    logger.debug("observations list")
 
     if self.playerType in cfg.VIEWERS:
         close_observation(self)
@@ -306,7 +309,7 @@ def observations_list(self):
                 (f"The observation <b>{self.observationId}</b> is running!<br>Close it before editing."),
             )
 
-    logging.debug("end observations list")
+    logger.debug("end observations list")
     # activate main window
     self.activateWindow()
 
@@ -320,7 +323,7 @@ def open_observation(self, mode: str) -> str:
                     "view" to view observation
     """
 
-    logging.debug("open observation")
+    logger.debug("open observation")
 
     # check if current observation must be closed to open a new one
     if self.observationId:
@@ -355,7 +358,7 @@ def load_observation(self, obs_id: str, mode: str = cfg.OBS_START) -> str:
                     "view"  to view observation
     """
 
-    logging.debug("load observation")
+    logger.debug("load observation")
 
     if obs_id not in self.pj[cfg.OBSERVATIONS]:
         return "Error: Observation not found"
@@ -408,7 +411,7 @@ def load_observation(self, obs_id: str, mode: str = cfg.OBS_START) -> str:
     self.dwEvents.setWindowTitle(f"Events for “{self.observationId}” observation")
     self.dw_info.setWindowTitle("Information")
 
-    logging.debug("end load observation")
+    logger.debug("end load observation")
     return ""
 
 
@@ -417,7 +420,7 @@ def edit_observation(self, edit_current_observation: bool = False) -> None:
     edit observation
     """
 
-    logging.debug("edit_observation function")
+    logger.debug("edit_observation function")
 
     mem_observationId: str | None = None
     # check if current observation must be closed to open a new one
@@ -595,7 +598,7 @@ def observation_total_length(observation: dict) -> dec:
                 last_event = obs_length = max(observation[cfg.EVENTS])[cfg.TW_OBS_FIELD[cfg.IMAGES]["time"]]
                 obs_length = last_event - first_event
             except Exception:
-                logging.critical("Length of observation from images not available")
+                logger.critical("Length of observation from images not available")
                 obs_length = dec(-2)
         else:
             obs_length = dec(0)
@@ -624,7 +627,7 @@ def observation_total_length(observation: dict) -> dec:
                     mediaLength = observation[cfg.MEDIA_INFO][cfg.LENGTH][mediaFile]
                     media_total_length[nplayer] += dec(mediaLength)
                 except Exception:
-                    logging.critical(f"media length not found for {mediaFile}")
+                    logger.critical(f"media length not found for {mediaFile}")
                     mediaLength = -1
                     media_total_length[nplayer] = -1
                     break
@@ -642,7 +645,7 @@ def observation_total_length(observation: dict) -> dec:
 
         return media_max_total_length
 
-    logging.critical("observation not LIVE nor MEDIA")
+    logger.critical("observation not LIVE nor MEDIA")
 
     return dec(0)
 
@@ -672,7 +675,7 @@ def media_duration(observations: dict, selected_observations: list) -> Tuple[Opt
                 media_duration = observations[obs_id][cfg.MEDIA_INFO][cfg.LENGTH][media_file]
                 total_media_duration += dec(media_duration)
             except Exception:
-                logging.critical(f"media length not found for {media_file}")
+                logger.critical(f"media length not found for {media_file}")
                 return None, None
         total_media_duration_all_obs += total_media_duration
         max_media_duration_all_obs = max(max_media_duration_all_obs, total_media_duration)
@@ -724,7 +727,7 @@ def observation_length(pj: dict, selected_observations: list) -> tuple:
                         maxTime += max(pj[cfg.OBSERVATIONS][obs_id][cfg.EVENTS])[0]
                         max_length = max(max_length, max(pj[cfg.OBSERVATIONS][obs_id][cfg.EVENTS])[0])
 
-                logging.debug(f"max time all events all subjects: {maxTime}")
+                logger.debug(f"max time all events all subjects: {maxTime}")
 
                 max_obs_length = max_length
                 selectedObsTotalMediaLength = maxTime
@@ -755,7 +758,7 @@ def new_observation(self, mode: str = cfg.NEW, obsId: str = "") -> None:
         None
 
     """
-    logging.debug("new_observation function")
+    logger.debug("new_observation function")
 
     # check if current observation must be closed to create a new one
     if mode == cfg.NEW and self.observationId:
@@ -860,7 +863,7 @@ def new_observation(self, mode: str = cfg.NEW, obsId: str = "") -> None:
         try:
             time.strptime(self.pj[cfg.OBSERVATIONS][obsId]["date"], "%Y-%m-%d %H:%M")
             self.pj[cfg.OBSERVATIONS][obsId]["date"] = self.pj[cfg.OBSERVATIONS][obsId]["date"].replace(" ", "T") + ":00.000"
-            logging.info("Old observation date/time format was converted")
+            logger.info("Old observation date/time format was converted")
         except ValueError:
             pass
 
@@ -885,7 +888,7 @@ def new_observation(self, mode: str = cfg.NEW, obsId: str = "") -> None:
             if cfg.HAS_AUDIO in self.pj[cfg.OBSERVATIONS][obsId][cfg.MEDIA_INFO]:
                 observationWindow.mediaHasAudio = self.pj[cfg.OBSERVATIONS][obsId][cfg.MEDIA_INFO][cfg.HAS_AUDIO]
         except Exception:
-            logging.info("No Video/Audio information")
+            logger.info("No Video/Audio information")
 
         # offset
         if self.pj[cfg.OBSERVATIONS][obsId][cfg.TIME_OFFSET] > cfg.DATE_CUTOFF:
@@ -1101,7 +1104,7 @@ def new_observation(self, mode: str = cfg.NEW, obsId: str = "") -> None:
 
         # check if id changed
         if mode == cfg.EDIT and new_obs_id != obsId:
-            logging.info(f"observation id {obsId} changed in {new_obs_id}")
+            logger.info(f"observation id {obsId} changed in {new_obs_id}")
 
             self.pj[cfg.OBSERVATIONS][new_obs_id] = dict(self.pj[cfg.OBSERVATIONS][obsId])
             del self.pj[cfg.OBSERVATIONS][obsId]
@@ -1251,11 +1254,11 @@ def new_observation(self, mode: str = cfg.NEW, obsId: str = "") -> None:
                 self.pj[cfg.OBSERVATIONS][new_obs_id][cfg.MEDIA_INFO][cfg.HAS_VIDEO] = observationWindow.mediaHasVideo
                 self.pj[cfg.OBSERVATIONS][new_obs_id][cfg.MEDIA_INFO][cfg.HAS_AUDIO] = observationWindow.mediaHasAudio
             except Exception:
-                logging.warning("error with media_info information")
+                logger.warning("error with media_info information")
 
             self.pj[cfg.OBSERVATIONS][new_obs_id][cfg.MEDIA_INFO][cfg.MEDIA_INFO_OFFSET] = {}
 
-            logging.debug(f"media_info: {self.pj[cfg.OBSERVATIONS][new_obs_id][cfg.MEDIA_INFO]}")
+            logger.debug(f"media_info: {self.pj[cfg.OBSERVATIONS][new_obs_id][cfg.MEDIA_INFO]}")
 
             for i in range(cfg.N_PLAYER):
                 self.pj[cfg.OBSERVATIONS][new_obs_id][cfg.FILE][str(i + 1)] = []
@@ -1376,7 +1379,7 @@ def initialize_new_media_observation(self) -> bool:
     initialize new observation from media file(s)
     """
 
-    logging.debug("function: initialize new observation for media file(s)")
+    logger.debug("function: initialize new observation for media file(s)")
 
     for dw in (self.dwEthogram, self.dwSubjects, self.dwEvents, self.dw_info):
         dw.setVisible(True)
@@ -1879,9 +1882,7 @@ def initialize_new_media_observation(self) -> bool:
         # On Windows the embedded MPV child window does not forward mouse
         # button events through MPV, so receive the click from its Qt parent.
         if sys.platform.startswith("win") and not self.MPV_IPC_MODE:
-            self.dw_player[i].videoframe.left_clicked_signal.connect(
-                lambda player_id: self.video_click_signal.emit(player_id, "MBTN_LEFT")
-            )
+            self.dw_player[i].videoframe.left_clicked_signal.connect(lambda player_id: self.video_click_signal.emit(player_id, "MBTN_LEFT"))
 
         # for receiving key event from dock widget
         self.dw_player[i].key_pressed_signal.connect(self.signal_from_widget)
@@ -1905,7 +1906,7 @@ def initialize_new_media_observation(self) -> bool:
         if self.MPV_IPC_MODE:
             while True:
                 r = util.test_mpv_ipc(f"{cfg.MPV_SOCKET}{i}")
-                logging.debug(f"MPV IPC started: {r}")
+                logger.debug(f"MPV IPC started: {r}")
                 if r:
                     break
 
@@ -1916,18 +1917,18 @@ def initialize_new_media_observation(self) -> bool:
             self.main_window_activation_timer.start()
 
         for mediaFile in self.pj[cfg.OBSERVATIONS][self.observationId][cfg.FILE][n_player]:
-            logging.debug(f"media file: {mediaFile}")
+            logger.debug(f"media file: {mediaFile}")
 
             media_full_path = project_functions.full_path(mediaFile, self.projectFileName)
 
-            logging.debug(f"media_full_path: {media_full_path}")
+            logger.debug(f"media_full_path: {media_full_path}")
 
             # media duration
             try:
                 mediaLength = self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO][cfg.LENGTH][mediaFile] * 1000
                 mediaFPS = self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO][cfg.FPS][mediaFile]
             except Exception:
-                logging.debug("media_info key not found in project")
+                logger.debug("media_info key not found in project")
 
                 r = util.accurate_media_analysis(self.ffmpeg_bin, media_full_path)
                 if "error" not in r:
@@ -1978,14 +1979,14 @@ def initialize_new_media_observation(self) -> bool:
                 )
                 out, _ = p.communicate()
                 flag_vm = b"SerialNumber  \r\r\n0 " in out
-                logging.debug(f"Running on Windows VM: {flag_vm}")
+                logger.debug(f"Running on Windows VM: {flag_vm}")
 
             if not flag_vm:
                 self.dw_player[i].player.hwdec = self.config_param.get(cfg.MPV_HWDEC, cfg.MPV_HWDEC_DEFAULT_VALUE)
             else:
                 self.dw_player[i].player.hwdec = cfg.MPV_HWDEC_NO
 
-            logging.debug(f"Player hwdec of player #{i} set to: {self.dw_player[i].player.hwdec}")
+            logger.debug(f"Player hwdec of player #{i} set to: {self.dw_player[i].player.hwdec}")
             self.config_param[cfg.MPV_HWDEC] = self.dw_player[i].player.hwdec
 
         self.dw_player[i].player.playlist_pos = 0
@@ -2086,7 +2087,7 @@ def initialize_new_media_observation(self) -> bool:
 
             r = self.spectro[media_full_path].load_wav(wav_file_path)
             if "error" in r:
-                logging.warning(f"spectro_load_wav error: {r['error']}")
+                logger.warning(f"spectro_load_wav error: {r['error']}")
                 QMessageBox.warning(
                     self,
                     cfg.programName,
@@ -2115,7 +2116,7 @@ def initialize_new_media_observation(self) -> bool:
 
             r = self.waveform[media_full_path].load_wav(wav_file_path)
             if "error" in r:
-                logging.warning(f"waveform: load wav error: {r['error']}")
+                logger.warning(f"waveform: load wav error: {r['error']}")
                 QMessageBox.warning(
                     self,
                     cfg.programName,
@@ -2165,7 +2166,7 @@ def initialize_new_media_observation(self) -> bool:
                     self.pj[cfg.OBSERVATIONS][self.observationId][cfg.PLOT_DATA][idx]["substract_first_value"],
                     self.pj[cfg.CONVERTERS] if cfg.CONVERTERS in self.pj else {},
                     self.pj[cfg.OBSERVATIONS][self.observationId][cfg.PLOT_DATA][idx]["converters"],
-                    log_level=logging.getLogger().getEffectiveLevel(),
+                    log_level=logger.getLogger().getEffectiveLevel(),
                 )
 
                 if w1.error_msg:
@@ -2221,7 +2222,7 @@ def initialize_new_media_observation(self) -> bool:
                     self.pj[cfg.OBSERVATIONS][self.observationId][cfg.PLOT_DATA][idx]["substract_first_value"],
                     self.pj[cfg.CONVERTERS] if cfg.CONVERTERS in self.pj else {},
                     self.pj[cfg.OBSERVATIONS][self.observationId][cfg.PLOT_DATA][idx]["converters"],
-                    log_level=logging.getLogger().getEffectiveLevel(),
+                    log_level=logger.getLogger().getEffectiveLevel(),
                 )
 
                 if w2.error_msg:
@@ -2263,7 +2264,7 @@ def initialize_new_media_observation(self) -> bool:
         try:
             self.restoreState(self.saved_state)
         except TypeError:
-            logging.critical("state not restored: Type error")
+            logger.critical("state not restored: Type error")
             self.saved_state = self.saveState()
             self.restoreState(self.saved_state)
 
@@ -2295,7 +2296,7 @@ def initialize_new_live_observation(self):
     """
     initialize a new live observation
     """
-    logging.debug(f"function: initialize new live obs: {self.observationId}")
+    logger.debug(f"function: initialize new live obs: {self.observationId}")
 
     self.playerType = cfg.LIVE
 
@@ -2416,7 +2417,7 @@ def initialize_new_images_observation(self):
                 )
             )
 
-    # logging.debug(self.images_list)
+    # logger.debug(self.images_list)
 
     self.image_idx = 0
     self.image_time_ref = None
@@ -2461,7 +2462,7 @@ def initialize_new_images_observation(self):
         try:
             self.restoreState(self.saved_state)
         except TypeError:
-            logging.critical("state not restored: Type error")
+            logger.critical("state not restored: Type error")
             self.saved_state = self.saveState()
             self.restoreState(self.saved_state)
 
@@ -2515,7 +2516,7 @@ def event2media_file_name(observation: dict, timestamp: dec) -> Optional[str]:
 
         cumul_media_durations.remove(dec(0))
 
-        logging.debug(f"{cumul_media_durations=}")
+        logger.debug(f"{cumul_media_durations=}")
 
         # test if timestamp is at end of last media
         if timestamp == cumul_media_durations[-1]:
