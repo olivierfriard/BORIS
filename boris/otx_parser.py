@@ -426,18 +426,3 @@ def otx_to_boris(file_path: str) -> tuple[dict, list]:
         logger.debug("The keys longer than one char were deleted.")
 
     return project, error_list
-
-
-if __name__ == "__main__":
-    import pprint
-    import sys
-
-    logger.basicConfig(
-        format="%(asctime)s,%(msecs)d  %(module)s l.%(lineno)d %(levelname)s %(message)s",
-        datefmt="%H:%M:%S",
-        level=logger.DEBUG,
-    )
-    project, errors = otx_to_boris(sys.argv[1])
-
-    pprint.pprint(project)
-    pprint.pprint(errors)

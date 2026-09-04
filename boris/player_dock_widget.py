@@ -20,31 +20,30 @@ This file is part of BORIS.
 
 """
 
-import sys
-import logging
 import functools
+import logging
+import sys
 
 if (sys.platform.startswith("win") or sys.platform.startswith("linux")) and ("-i" not in sys.argv) and ("--ipc" not in sys.argv):
     from . import mpv2 as mpv
 else:
-    import ipc_mpv
-import config as cfg
-import gui_utilities
-
-
+    from . import ipc_mpv
+from PySide6.QtCore import QEvent, Qt, Signal
+from PySide6.QtGui import QAction, QIcon
 from PySide6.QtWidgets import (
-    QLabel,
     QDockWidget,
-    QWidget,
     QHBoxLayout,
-    QVBoxLayout,
-    QSlider,
+    QLabel,
     QSizePolicy,
+    QSlider,
     QStackedWidget,
     QToolButton,
+    QVBoxLayout,
+    QWidget,
 )
-from PySide6.QtCore import Signal, QEvent, Qt
-from PySide6.QtGui import QIcon, QAction
+
+from . import config as cfg
+from . import gui_utilities
 
 
 class Clickable_label(QLabel):
