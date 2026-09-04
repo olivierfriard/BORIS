@@ -25,13 +25,12 @@ and independent variables to BORIS format
 """
 
 import datetime as dt
-from decimal import Decimal as dec
+import logging
+import pathlib as pl
 import re
 import zipfile
-import pathlib as pl
+from decimal import Decimal as dec
 from xml.dom import minidom
-import logging
-from typing import Tuple
 
 try:
     from . import config as cfg
@@ -39,7 +38,7 @@ except Exception:
     import config as cfg
 
 
-def otx_to_boris(file_path: str) -> Tuple[dict, list]:
+def otx_to_boris(file_path: str) -> tuple[dict, list]:
     """
     convert otx/otb/odx file in a BORIS project
 
@@ -428,8 +427,8 @@ def otx_to_boris(file_path: str) -> Tuple[dict, list]:
 
 
 if __name__ == "__main__":
-    import sys
     import pprint
+    import sys
 
     logging.basicConfig(
         format="%(asctime)s,%(msecs)d  %(module)s l.%(lineno)d %(levelname)s %(message)s",

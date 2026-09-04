@@ -11,7 +11,6 @@ Inter Rater Reliability (IRR) Unweighted Cohen's Kappa
 """
 
 import math
-from typing import Dict, Tuple
 
 import pandas as pd
 from PySide6.QtWidgets import QInputDialog, QMessageBox
@@ -102,7 +101,7 @@ def run(df: pd.DataFrame) -> pd.DataFrame:
 
     # ---------- compute Cohen's Kappa ----------------------------------
 
-    ck_results: Dict[Tuple[str, str], str] = {}
+    ck_results: dict[tuple[str, str], str] = {}
     nan_pairs: list[tuple[str, str]] = []  # collect NaN pairs to show ONE popup at end
 
     for idx1, obs_id1 in enumerate(unique_obs_list):

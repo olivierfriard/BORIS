@@ -27,7 +27,6 @@ import pathlib as pl
 import sys
 import traceback
 from decimal import Decimal as dec
-from typing import Union
 
 from PySide6.QtCore import QDateTime, QRect, QSize, Qt, QTime, Signal
 from PySide6.QtGui import QFont, QTextCursor
@@ -352,7 +351,7 @@ class get_time_widget(QWidget):
         else:
             self.pb_sign.setText("+")
 
-    def get_time(self) -> Union[dec, None]:
+    def get_time(self) -> dec | None:
         """
         Get time from the selected format in the time widget
 
@@ -568,8 +567,8 @@ class Video_overlay_dialog(QDialog):
 class Input_dialog(QDialog):
     """
     dialog for user input. Elements can be:
-        checkbox (cb): Tuple(str, str, bool)
-        lineedit (le): Tuple(str, str)
+        checkbox (cb): tuple(str, str, bool)
+        lineedit (le): tuple(str, str)
         spinbox (sb)
         doubleSpinbox (dsb)
         items list (il)
