@@ -37,6 +37,8 @@ from . import dialog, select_modifiers, select_subj_behav, write_event
 from . import utilities as util
 from .edit_event import DlgEditEvent, EditSelectedEvents
 
+logger = logging.getLogger(__name__)
+
 
 def add_event(self):
     """
@@ -47,12 +49,10 @@ def add_event(self):
         self.no_observation()
         return
 
-    if self.pause_before_addevent:
-        # pause media
-        if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE] == cfg.MEDIA and self.playerType == cfg.MEDIA:
-            memState = self.is_playing()
-            if memState:
-                self.pause_video()
+    if self.pause_before_addevent and self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE] == cfg.MEDIA and self.playerType == cfg.MEDIA:
+        memState = self.is_playing()
+        if memState:
+            self.pause_video()
 
     if not self.pj[cfg.ETHOGRAM]:
         QMessageBox.warning(self, cfg.programName, "The ethogram is not set!")
@@ -77,7 +77,7 @@ def add_event(self):
 
     editWindow.cobSubject.addItems(sortedSubjects)
     if self.currentSubject:
-        editWindow.cobSubject.setCurrentIndex(editWindow.cobSubject.findText(self.currentSubject, Qt.MatchFixedString))
+        editWindow.cobSubject.setCurrentIndex(editWindow.cobSubject.findText(self.currentSubject, Qt.MatchFlag.MatchFixedString))
 
     sortedCodes = sorted([self.pj[cfg.ETHOGRAM][x][cfg.BEHAVIOR_CODE] for x in self.pj[cfg.ETHOGRAM]])
 
@@ -181,11 +181,13 @@ def add_event(self):
 
                     break
 
-    if self.pause_before_addevent:
-        # restart media
-        if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE] == cfg.MEDIA and self.playerType == cfg.MEDIA:
-            if memState:
-                self.play_video()
+    if (
+        self.pause_before_addevent
+        and self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE] == cfg.MEDIA
+        and self.playerType == cfg.MEDIA
+        and memState
+    ):
+        self.play_video()
 
 
 def find_events(self):
@@ -198,7 +200,7 @@ def find_events(self):
     self.find_dialog.rowsToFind = set([self.tv_idx2events_idx[item.row()] for item in self.tv_events.selectedIndexes()])
     self.find_dialog.currentIdx = -1
     self.find_dialog.clickSignal.connect(self.click_signal_find_in_events)
-    self.find_dialog.setWindowFlags(Qt.WindowStaysOnTopHint)
+    self.find_dialog.setWindowFlags(Qt.WindowType.WindowStaysOnTopHint)
     self.find_dialog.show()
 
 
@@ -213,7 +215,7 @@ def find_replace_events(self):
     # list of rows to find/replace
     self.find_replace_dialog.rowsToFind = set([self.tv_idx2events_idx[item.row()] for item in self.tv_events.selectedIndexes()])
     self.find_replace_dialog.clickSignal.connect(self.click_signal_find_replace_in_events)
-    self.find_replace_dialog.setWindowFlags(Qt.WindowStaysOnTopHint)
+    self.find_replace_dialog.setWindowFlags(Qt.WindowType.WindowStaysOnTopHint)
     self.find_replace_dialog.show()
 
 
@@ -237,7 +239,7 @@ def filter_events(self):
         self.filtered_subjects.append("")
     self.filtered_behaviors = parameters[cfg.SELECTED_BEHAVIORS][:]
 
-    logging.debug(f"self.filtered_behaviors: {self.filtered_behaviors}")
+    logger.debug(f"self.filtered_behaviors: {self.filtered_behaviors}")
 
     self.load_tw_events(self.observationId)
     self.dwEvents.setWindowTitle(f"Events for “{self.observationId}” observation (filtered)")
@@ -257,7 +259,7 @@ def fill_events_undo_list(self, operation_description: str) -> None:
     """
     fill the undo events list for Undo function (CTRL + Z)
     """
-    logging.debug("fill_events_undo_list function")
+    logger.debug("fill_events_undo_list function")
 
     self.undo_queue.append(copy.deepcopy(self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS]))
 
@@ -266,12 +268,12 @@ def fill_events_undo_list(self, operation_description: str) -> None:
     self.actionUndo.setText(operation_description)
     self.actionUndo.setEnabled(True)
 
-    logging.debug(f"{operation_description} added to undo events list")
+    logger.debug(f"{operation_description} added to undo events list")
 
     if len(self.undo_queue) > cfg.MAX_UNDO_QUEUE:
         self.undo_queue.popleft()
         self.undo_description.popleft()
-        logging.debug("Max events undo ")
+        logger.debug("Max events undo ")
 
 
 def undo_event_operation(self) -> None:
@@ -279,7 +281,7 @@ def undo_event_operation(self) -> None:
     undo operation on event(s)
     """
 
-    logging.debug("Undo event operation function")
+    logger.debug("Undo event operation function")
 
     if len(self.undo_queue) == 0:
         self.statusbar.showMessage("The Undo buffer is empty", 5000)
@@ -293,7 +295,7 @@ def undo_event_operation(self) -> None:
 
     self.statusbar.showMessage(operation_description, 5000)
 
-    logging.debug(operation_description)
+    logger.debug(operation_description)
 
     # reload all events in tw
     self.load_tw_events(self.observationId)
@@ -324,7 +326,7 @@ def delete_all_events(self):
         dialog.MessageDialog(
             cfg.programName,
             ("Confirm the deletion of all (filtered) events in the current observation?<br>Filters do not apply!"),
-            [cfg.YES, cfg.NO],
+            (cfg.YES, cfg.NO),
         )
         == cfg.YES
     ):
@@ -352,7 +354,7 @@ def delete_selected_events(self):
         self.no_observation()
         return
 
-    logging.debug("begin function delete_selected_events")
+    logger.debug("begin function delete_selected_events")
 
     if not self.tv_events.selectedIndexes():
         QMessageBox.warning(self, cfg.programName, "No event selected!")
@@ -408,7 +410,7 @@ def select_events_between_activated(self):
         self,
         "Select events in time interval",
         "Interval: (example: 12.5-14.7 or 02:45.780-03:15.120)",
-        QLineEdit.Normal,
+        QLineEdit.EchoMode.Normal,
         "",
     )
 
@@ -434,7 +436,7 @@ def select_events_between_activated(self):
             return
 
         self.tv_events.clearSelection()
-        self.tv_events.setSelectionMode(QAbstractItemView.MultiSelection)
+        self.tv_events.setSelectionMode(QAbstractItemView.SelectionMode.MultiSelection)
 
         # for r in range(self.tv_events.rowCount()):
         # for idx, event in enumerate(self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS]):
@@ -446,7 +448,7 @@ def select_events_between_activated(self):
             if from_sec <= time <= to_sec:
                 self.tv_events.selectRow(tv_idx)
 
-        self.tv_events.setSelectionMode(QAbstractItemView.ExtendedSelection)
+        self.tv_events.setSelectionMode(QAbstractItemView.SelectionMode.ExtendedSelection)
 
 
 def add_comment(self):
@@ -619,12 +621,10 @@ def edit_event(self):
         QMessageBox.warning(self, cfg.programName, "Select an event to edit")
         return
 
-    if self.pause_before_addevent:
-        # pause media
-        if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE] == cfg.MEDIA and self.playerType == cfg.MEDIA:
-            player_mem_state = self.is_playing()
-            if player_mem_state:
-                self.pause_video()
+    if self.pause_before_addevent and self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE] == cfg.MEDIA and self.playerType == cfg.MEDIA:
+        player_mem_state = self.is_playing()
+        if player_mem_state:
+            self.pause_video()
 
     tvevents_row = self.tv_events.selectionModel().selectedIndexes()[0].row()
 
@@ -704,7 +704,7 @@ def edit_event(self):
             f"The behaviour {self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS][pj_event_idx][cfg.EVENT_BEHAVIOR_FIELD_IDX]} "
             "does not exist longer in the ethogram"
         )
-        logging.warning(msg)
+        logger.warning(msg)
 
         QMessageBox.warning(
             self,
@@ -713,7 +713,7 @@ def edit_event(self):
         )
         edit_window.cobCode.setCurrentIndex(0)
 
-    logging.debug(
+    logger.debug(
         f"original modifiers: {self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS][pj_event_idx][cfg.EVENT_MODIFIER_FIELD_IDX]}"
     )
 
@@ -761,26 +761,13 @@ def edit_event(self):
                         event[cfg.COMMENT] = edit_window.leComment.toPlainText()
 
                         # determine the new frame index
-                        if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE] == cfg.MEDIA:
-                            if self.playerType == cfg.MEDIA:
-                                mem_time = self.getLaps()
-                                if not self.seek_mediaplayer(new_time):
-                                    time.sleep(0.1)
-                                    frame_idx = self.get_frame_index()
-                                    event[cfg.FRAME_INDEX] = frame_idx
-                                    self.seek_mediaplayer(mem_time)
-
-                            # if not edit_window.sb_frame_idx.value() or edit_window.cb_set_frame_idx_na.isChecked():
-                            #     event[cfg.FRAME_INDEX] = cfg.NA
-                            # else:
-                            #     if self.playerType == cfg.MEDIA:
-                            #         mem_time = self.getLaps()
-                            #         if not self.seek_mediaplayer(new_time):
-                            #             frame_idx = self.get_frame_index()
-                            #             event[cfg.FRAME_INDEX] = frame_idx
-                            #             self.seek_mediaplayer(mem_time)
-                            #
-                            #     # event[cfg.FRAME_INDEX] = edit_window.sb_frame_idx.value()
+                        if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE] == cfg.MEDIA and self.playerType == cfg.MEDIA:
+                            mem_time = self.getLaps()
+                            if not self.seek_mediaplayer(new_time):
+                                time.sleep(0.1)
+                                frame_idx = self.get_frame_index()
+                                event[cfg.FRAME_INDEX] = frame_idx
+                                self.seek_mediaplayer(mem_time)
 
                         event["row"] = pj_event_idx
                         event["original_modifiers"] = self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS][pj_event_idx][
@@ -791,7 +778,7 @@ def edit_event(self):
 
                         # scroll tv events
                         index = self.tv_events.model().index(pj_event_idx, 0)
-                        self.tv_events.scrollTo(index, QAbstractItemView.EnsureVisible)
+                        self.tv_events.scrollTo(index, QAbstractItemView.ScrollHint.EnsureVisible)
 
                         if r == 1:  # same event already present
                             continue
@@ -841,11 +828,13 @@ def edit_event(self):
         if flag_ok:
             break
 
-    if self.pause_before_addevent:
-        # restart media
-        if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE] == cfg.MEDIA and self.playerType == cfg.MEDIA:
-            if player_mem_state:
-                self.play_video()
+    if (
+        self.pause_before_addevent
+        and self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE] == cfg.MEDIA
+        and self.playerType == cfg.MEDIA
+        and player_mem_state
+    ):
+        self.play_video()
 
 
 def edit_time_selected_events(self):
@@ -878,7 +867,7 @@ def edit_time_selected_events(self):
         dialog.MessageDialog(
             cfg.programName,
             (f"Confirm the {'addition' if d > 0 else 'subtraction'} of {smart_d} to all selected events in the current observation?"),
-            [cfg.YES, cfg.NO],
+            (cfg.YES, cfg.NO),
         )
         == cfg.NO
     ):
@@ -895,17 +884,16 @@ def edit_time_selected_events(self):
             f"{d:.3f}"
         )
         # set new frame index
-        if self.playerType == cfg.MEDIA:
-            if not self.seek_mediaplayer(
-                self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS][pj_event_idx][cfg.PJ_OBS_FIELDS[self.playerType][cfg.TIME]]
-            ):
-                # determine the new frame index
-                time.sleep(0.1)
-                frame_idx = self.get_frame_index()
-                if len(self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS][pj_event_idx]) == 6:
-                    self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS][pj_event_idx][-1] = frame_idx
-                elif len(self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS][pj_event_idx]) == 5:
-                    self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS][pj_event_idx].append(frame_idx)
+        if self.playerType == cfg.MEDIA and not self.seek_mediaplayer(
+            self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS][pj_event_idx][cfg.PJ_OBS_FIELDS[self.playerType][cfg.TIME]]
+        ):
+            # determine the new frame index
+            time.sleep(0.1)
+            frame_idx = self.get_frame_index()
+            if len(self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS][pj_event_idx]) == 6:
+                self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS][pj_event_idx][-1] = frame_idx
+            elif len(self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS][pj_event_idx]) == 5:
+                self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS][pj_event_idx].append(frame_idx)
 
         self.project_changed()
 
@@ -923,7 +911,7 @@ def copy_selected_events(self):
     copy selected events from project to clipboard
     """
 
-    logging.debug("Copy selected events to clipboard")
+    logger.debug("Copy selected events to clipboard")
 
     tvevents_rows_to_copy = set([index.row() for index in self.tv_events.selectionModel().selectedIndexes()])
     if not len(tvevents_rows_to_copy):
@@ -944,7 +932,7 @@ def copy_selected_events(self):
     cb.clear(mode=QClipboard.Mode.Clipboard)
     cb.setText("\n".join(copied_events), mode=QClipboard.Mode.Clipboard)
 
-    logging.debug("Selected events copied in clipboard")
+    logger.debug("Selected events copied in clipboard")
 
 
 def paste_clipboard_to_events(self):
@@ -1000,7 +988,7 @@ def paste_clipboard_to_events(self):
     self.update_realtime_plot(force_plot=True)
 
 
-def read_event_field(event: list, player_type: str, field_type: str) -> Union[str, None, int, dec]:
+def read_event_field(event: list, player_type: str, field_type: str) -> str | None | int | dec:
     """
     return value of field for event or NA if not available
     """

@@ -31,6 +31,8 @@ from . import config as cfg
 from . import dialog, event_operations, select_modifiers
 from . import utilities as util
 
+logger = logging.getLogger(__name__)
+
 
 def write_event(self, event: dict, mem_time: dec) -> int:
     """
@@ -46,7 +48,7 @@ def write_event(self, event: dict, mem_time: dec) -> int:
 
     """
 
-    logging.debug(f"write event - event: {event}  memtime: {mem_time}")
+    logger.debug(f"write event - event: {event}  memtime: {mem_time}")
 
     if event is None:
         return 1
@@ -92,11 +94,11 @@ def write_event(self, event: dict, mem_time: dec) -> int:
             if self.pj[cfg.OBSERVATIONS][self.observationId].get(cfg.MEDIA_CREATION_DATE_AS_OFFSET, False):
                 media_file_name = self.dw_player[0].player.playlist[self.dw_player[0].player.playlist_pos]["filename"]
 
-                logging.debug(f"{media_file_name=}")
+                logger.debug(f"{media_file_name=}")
 
                 media_file_name_posix = pl.Path(media_file_name).as_posix()
 
-                logging.debug(f"{media_file_name_posix=}")
+                logger.debug(f"{media_file_name_posix=}")
 
                 # add media creation date/time
 
@@ -309,13 +311,13 @@ def write_event(self, event: dict, mem_time: dec) -> int:
 
     # print(f"{current_states=}")
 
-    # logging.debug(f"self.currentSubject {self.currentSubject}")
-    # logging.debug(f"current_states {current_states}")
+    # logger.debug(f"self.currentSubject {self.currentSubject}")
+    # logger.debug(f"current_states {current_states}")
 
     # fill the undo list
     event_operations.fill_events_undo_list(self, "Undo last event edition" if editing_event else "Undo last event insertion")
 
-    logging.debug("save list of events for undo operation")
+    logger.debug("save list of events for undo operation")
 
     if not editing_event:
         if self.currentSubject:
@@ -331,7 +333,7 @@ def write_event(self, event: dict, mem_time: dec) -> int:
             except Exception:
                 csj = []
 
-        logging.debug(f"csj {csj}")
+        logger.debug(f"{csj=}")
 
         # print(f"{csj=}")
 

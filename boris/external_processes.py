@@ -35,6 +35,8 @@ from . import config as cfg
 from . import dialog
 from . import utilities as util
 
+logger = logging.getLogger(__name__)
+
 
 def ffmpeg_process(self, action: str):
     """
@@ -51,18 +53,15 @@ def ffmpeg_process(self, action: str):
         read stdout and stderr form qprocess and display them
         """
         self.processes_widget.label.setText(
-            (
-                "This operation can be long. Be patient...\n"
-                "In the meanwhile you can continue to use BORIS\n\n"
-                f"Done: {self.processes_widget.number_of_files - len(self.processes)} of {self.processes_widget.number_of_files}"
-            )
+            "This operation can be long. Be patient...\n"
+            "In the meanwhile you can continue to use BORIS\n\n"
+            f"Done: {self.processes_widget.number_of_files - len(self.processes)} of {self.processes_widget.number_of_files}"
         )
 
         raw_output = self.processes[idx - 1][0].readAllStandardOutput().data()
         std_out = raw_output.decode("utf-8", errors="backslashreplace")
         if std_out:
             self.processes_widget.lwi.addItems((f"{Path(self.processes[idx - 1][1][2]).name}:   {std_out}",))
-
 
         self.processes_widget.lwi.scrollToBottom()
 
@@ -124,16 +123,15 @@ def ffmpeg_process(self, action: str):
         if not ib.exec_():
             return
 
-        if len(file_names) > 1:
-            if (
-                dialog.MessageDialog(
-                    cfg.programName,
-                    "All the selected video files will be re-encoded / resized with these parameters",
-                    (cfg.OK, cfg.CANCEL),
-                )
-                == cfg.CANCEL
-            ):
-                return
+        if len(file_names) > 1 and (
+            dialog.MessageDialog(
+                cfg.programName,
+                "All the selected video files will be re-encoded / resized with these parameters",
+                (cfg.OK, cfg.CANCEL),
+            )
+            == cfg.CANCEL
+        ):
+            return
 
         horiz_resol = ib.elements["Horizontal resolution (in pixel)"].value()
         video_quality = ib.elements["Video quality (bitrate Mb/s)"].value()
@@ -208,7 +206,7 @@ def ffmpeg_process(self, action: str):
     self.processes_widget = dialog.Info_widget()
     self.processes_widget.resize(700, 300)
 
-    self.processes_widget.setWindowFlags(Qt.WindowStaysOnTopHint)
+    self.processes_widget.setWindowFlags(Qt.WindowType.WindowStaysOnTopHint)
     match action:
         case "reencode_resize":
             self.processes_widget.setWindowTitle("Re-encoding and resizing with FFmpeg")
@@ -228,7 +226,7 @@ def ffmpeg_process(self, action: str):
             # ffmpeg -f concat -safe 0 -i join_video.txt -c copy output.mp4
             args = ["-hide_banner", "-y", "-f", "concat", "-safe", "0", "-i", file_list, "-c", "copy", output_file_name]
             self.processes.append([QProcess(self), [self.ffmpeg_bin, args, output_file_name]])
-            self.processes[-1][0].setProcessChannelMode(QProcess.MergedChannels)
+            self.processes[-1][0].setProcessChannelMode(QProcess.ProcessChannelMode.MergedChannels)
             self.processes[-1][0].readyReadStandardOutput.connect(lambda: readStdOutput(len(self.processes)))
             self.processes[-1][0].readyReadStandardError.connect(lambda: readStdOutput(len(self.processes)))
             self.processes[-1][0].finished.connect(lambda: qprocess_finished(len(self.processes)))
@@ -251,7 +249,7 @@ def ffmpeg_process(self, action: str):
                     output_file_name,
                 ]
                 self.processes.append([QProcess(self), [self.ffmpeg_bin, args, output_file_name]])
-                self.processes[-1][0].setProcessChannelMode(QProcess.MergedChannels)
+                self.processes[-1][0].setProcessChannelMode(QProcess.ProcessChannelMode.MergedChannels)
                 self.processes[-1][0].readyReadStandardOutput.connect(lambda: readStdOutput(len(self.processes)))
                 self.processes[-1][0].readyReadStandardError.connect(lambda: readStdOutput(len(self.processes)))
                 self.processes[-1][0].finished.connect(lambda: qprocess_finished(len(self.processes)))
@@ -311,13 +309,13 @@ def ffmpeg_process(self, action: str):
                             f"{file_name}.rotated180.avi",
                         ]
 
-                logging.debug("Launch process")
-                logging.debug(f"{self.ffmpeg_bin} {' '.join(args)}")
+                logger.debug("Launch process")
+                logger.debug(f"{self.ffmpeg_bin} {' '.join(args)}")
 
                 self.processes.append([QProcess(self), [self.ffmpeg_bin, args, file_name]])
 
                 ## FFmpeg output the work in progress on stderr
-                self.processes[-1][0].setProcessChannelMode(QProcess.MergedChannels)
+                self.processes[-1][0].setProcessChannelMode(QProcess.ProcessChannelMode.MergedChannels)
                 self.processes[-1][0].readyReadStandardOutput.connect(lambda: readStdOutput(len(self.processes)))
                 # self.processes[-1][0].readyReadStandardError.connect(lambda: readStdOutput(len(self.processes)))
 

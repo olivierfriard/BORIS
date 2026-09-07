@@ -2248,12 +2248,20 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         self.load_tw_events(self.observationId)
 
-    def populate_tv_events(self, obs_id: str, header: list, time_format: str, behaviors_filter=tuple(), subjects_filter=tuple()) -> None:
+    def populate_tv_events(self, obs_id: str, header: list, time_format: str, behaviors_filter=tuple, subjects_filter=tuple) -> None:
         """
         populate table view with events
         """
+
+        logging.debug("populate tv_events")  # remove before release
+
         model = self.tv_events.model()
+        widths = []
         if model is not None:
+            # memory of header width
+            # header = self.tv_events.horizontalHeader()
+            widths = [self.tv_events.columnWidth(i) for i in range(self.tv_events.model().columnCount())]
+
             self.tv_events.setModel(None)
             model.deleteLater()
 
@@ -2271,7 +2279,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 subject = row[cfg.PJ_OBS_FIELDS[self.playerType][cfg.SUBJECT]]
                 modifier = row[cfg.PJ_OBS_FIELDS[self.playerType][cfg.MODIFIER]]
 
-                if f"{subject}|{code}|{modifier}" in mem_behav and mem_behav[f"{subject}|{code}|{modifier}"]:
+                if mem_behav.get(f"{subject}|{code}|{modifier}", None):
                     state[idx] = cfg.STOP
                 else:
                     state[idx] = cfg.START
@@ -2309,6 +2317,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         # column width
         self.tv_events.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Interactive)
+        if widths:
+            for i, width in enumerate(widths):
+                self.tv_events.setColumnWidth(i, width)
 
     def load_tw_events(self, obs_id) -> None:
         """
@@ -2331,10 +2342,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.filtered_behaviors,
             self.filtered_subjects,
         )
-
-        # print("load table view:", time.time() - t1)
-
-        return
 
     def close_observation_tools(self):
         """

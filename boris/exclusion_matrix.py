@@ -21,17 +21,20 @@ This file is part of BORIS.
 """
 
 import logging
+
 from PySide6.QtWidgets import (
-    QDialog,
-    QVBoxLayout,
-    QHBoxLayout,
-    QPushButton,
-    QLabel,
-    QTableWidget,
-    QSpacerItem,
     QAbstractItemView,
+    QDialog,
+    QHBoxLayout,
+    QLabel,
+    QPushButton,
     QSizePolicy,
+    QSpacerItem,
+    QTableWidget,
+    QVBoxLayout,
 )
+
+logger = logging.getLogger(__name__)
 
 
 class ExclusionMatrix(QDialog):
@@ -42,14 +45,14 @@ class ExclusionMatrix(QDialog):
 
         self.label = QLabel()
         self.label.setText(
-            ("Check if behaviors are mutually exclusive.\nThe Point events (displayed on blue background) cannot be excluded)")
+            "Check if behaviors are mutually exclusive.\nThe Point events (displayed on blue background) cannot be excluded)"
         )
         hbox.addWidget(self.label)
 
         self.twExclusions = QTableWidget()
-        self.twExclusions.setSelectionBehavior(QAbstractItemView.SelectRows)
+        self.twExclusions.setSelectionBehavior(QAbstractItemView.SelectionBehavior.SelectRows)
         self.twExclusions.setAlternatingRowColors(True)
-        self.twExclusions.setEditTriggers(QAbstractItemView.NoEditTriggers)
+        self.twExclusions.setEditTriggers(QAbstractItemView.EditTrigger.NoEditTriggers)
         hbox.addWidget(self.twExclusions)
 
         hbox2 = QHBoxLayout()
@@ -102,7 +105,7 @@ class ExclusionMatrix(QDialog):
                     try:
                         self.twExclusions.cellWidget(row, column).setChecked(to_check)
                     except Exception:
-                        logging.warning(f"Error during checking/unchecking for {row}/{column} in exclusion matrix")
+                        logger.warning(f"Error during checking/unchecking for {row}/{column} in exclusion matrix")
         self.cb_clicked()
 
     def pb_cb_selection(self, mode):
@@ -125,7 +128,7 @@ class ExclusionMatrix(QDialog):
                         state = not self.twExclusions.cellWidget(r, c).isChecked()
                     self.twExclusions.cellWidget(r, c).setChecked(state)
                 except Exception:
-                    logging.warning(f"Error during checking/unchecking for {r}/{c} in exclusion matrix")
+                    logger.warning(f"Error during checking/unchecking for {r}/{c} in exclusion matrix")
 
     def cb_clicked(self):
         """
@@ -138,4 +141,4 @@ class ExclusionMatrix(QDialog):
                         if f"{c_name}|{r_name}" in self.checkboxes:
                             self.checkboxes[f"{c_name}|{r_name}"].setChecked(self.checkboxes[f"{r_name}|{c_name}"].isChecked())
                     except Exception:
-                        logging.warning(f"Error during checking/unchecking for {r_name}/{c_name} in exclusion matrix")
+                        logger.warning(f"Error during checking/unchecking for {r_name}/{c_name} in exclusion matrix")
