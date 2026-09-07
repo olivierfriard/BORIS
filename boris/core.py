@@ -4529,31 +4529,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                         QTableWidgetItem(""),
                     )
 
-    # def update_events_start_stop(self) -> None:
-    #    """
-    #    update status start/stop of state events in Events table
-    #    take consideration of subject and modifiers
-    #    twEvents must be ordered by time asc
-    #
-    #    does not return value
-    #    """
-    #    state_events_list = util.state_behavior_codes(self.pj[cfg.ETHOGRAM])
-    #    mem_behav: dict = {}
-    #    for row in range(self.twEvents.rowCount()):
-    #        code = self.twEvents.item(row, cfg.TW_OBS_FIELD[self.playerType][cfg.BEHAVIOR_CODE]).text()
-    #        # check if code is state
-    #        if code in state_events_list:
-    #            subject = self.twEvents.item(row, cfg.TW_OBS_FIELD[self.playerType][cfg.SUBJECT]).text()
-    #            modifier = self.twEvents.item(row, cfg.TW_OBS_FIELD[self.playerType][cfg.MODIFIER]).text()
-    #            if f"{subject}|{code}|{modifier}" in mem_behav and mem_behav[f"{subject}|{code}|{modifier}"]:
-    #                self.twEvents.item(row, cfg.TW_OBS_FIELD[self.playerType][cfg.TYPE]).setText(cfg.STOP)
-    #            else:
-    #                self.twEvents.item(row, cfg.TW_OBS_FIELD[self.playerType][cfg.TYPE]).setText(cfg.START)
-    #            if f"{subject}|{code}|{modifier}" in mem_behav:
-    #                mem_behav[f"{subject}|{code}|{modifier}"] = not mem_behav[f"{subject}|{code}|{modifier}"]
-    #            else:
-    #                mem_behav[f"{subject}|{code}|{modifier}"] = 1
-
     def checkSameEvent(self, obs_id: str, time: dec, subject: str, code: str) -> bool:
         """
         check if a same event is already in events list (time, subject, code)
