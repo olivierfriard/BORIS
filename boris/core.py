@@ -2321,6 +2321,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             for i, width in enumerate(widths):
                 self.tv_events.setColumnWidth(i, width)
 
+        # self.tv_events.horizontalHeader().setSectionsMovable(True)
+
     def load_tw_events(self, obs_id) -> None:
         """
         load events in table view and update START/STOP
