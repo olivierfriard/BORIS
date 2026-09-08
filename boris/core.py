@@ -2267,27 +2267,24 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         # add behavior type (POINT, START, STOP)
         mem_behav: dict = {}
-        state_events_list = util.state_behavior_codes(self.pj[cfg.ETHOGRAM])
+        state_events_codes = set(util.state_behavior_codes(self.pj[cfg.ETHOGRAM]))
+        events = self.pj[cfg.OBSERVATIONS][obs_id][cfg.EVENTS]
+        fields = cfg.PJ_OBS_FIELDS[self.playerType]
+        code_idx = fields[cfg.BEHAVIOR_CODE]
+        subject_idx = fields[cfg.SUBJECT]
+        modifier_idx = fields[cfg.MODIFIER]
 
-        state = [""] * len(self.pj[cfg.OBSERVATIONS][obs_id][cfg.EVENTS])
+        state = [""] * len(events)
 
-        for idx, row in enumerate(self.pj[cfg.OBSERVATIONS][obs_id][cfg.EVENTS]):
-            code = row[cfg.PJ_OBS_FIELDS[self.playerType][cfg.BEHAVIOR_CODE]]
+        for idx, row in enumerate(events):
+            code = row[code_idx]
 
             # check if code is state
-            if code in state_events_list:
-                subject = row[cfg.PJ_OBS_FIELDS[self.playerType][cfg.SUBJECT]]
-                modifier = row[cfg.PJ_OBS_FIELDS[self.playerType][cfg.MODIFIER]]
-
-                if mem_behav.get(f"{subject}|{code}|{modifier}", None):
-                    state[idx] = cfg.STOP
-                else:
-                    state[idx] = cfg.START
-
-                if f"{subject}|{code}|{modifier}" in mem_behav:
-                    mem_behav[f"{subject}|{code}|{modifier}"] = not mem_behav[f"{subject}|{code}|{modifier}"]
-                else:
-                    mem_behav[f"{subject}|{code}|{modifier}"] = 1
+            if code in state_events_codes:
+                key = (row[subject_idx], code, row[modifier_idx])
+                was_active = mem_behav.get(key, False)
+                state[idx] = cfg.STOP if was_active else cfg.START
+                mem_behav[key] = not was_active
 
         self.event_state: list = []
         self.tv_idx2events_idx: list = []
