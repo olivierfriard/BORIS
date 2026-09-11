@@ -26,7 +26,6 @@ import logging
 import time
 from decimal import ROUND_DOWN, InvalidOperation
 from decimal import Decimal as dec
-from typing import Union
 
 from PySide6.QtCore import Qt, QTime
 from PySide6.QtGui import QClipboard
@@ -68,7 +67,7 @@ def add_event(self):
         time_value=dec("NaN"),
         image_idx=0,
         current_time=current_time,
-        time_format=self.timeFormat,
+        time_format=self.config_param["time_format"],
         show_set_current_time=True,
     )
     editWindow.setWindowTitle("Add a new event")
@@ -656,7 +655,7 @@ def edit_event(self):
         time_value=time_value,
         image_idx=image_idx,
         current_time=current_value,
-        time_format=self.timeFormat,
+        time_format=self.config_param["time_format"],
         show_set_current_time=True,
         exif_date_time=exif_date_time,
     )

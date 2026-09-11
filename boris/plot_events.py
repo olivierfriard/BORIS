@@ -497,7 +497,7 @@ def create_events_plot(
             print(f"{min_time=}")
             print(f"{max_time=}")
 
-        use_date_axis = self.timeFormat == cfg.HHMMSS and _can_use_date_axis(
+        use_date_axis = self.config_param["time_format"] == cfg.HHMMSS and _can_use_date_axis(
             epoch_date, min_time, max_time + cfg.POINT_EVENT_PLOT_DURATION
         )
 
@@ -580,14 +580,14 @@ def create_events_plot(
                 for row in cursor.fetchall():
                     bars[behavior_modifiers_str].append((row["start"], row["stop"]))
 
-                    if self.timeFormat == cfg.HHMMSS:
+                    if self.config_param["time_format"] == cfg.HHMMSS:
                         start_date = _plot_time(row["start"], epoch_date, use_date_axis)
                         end_date = _plot_time(
                             row["stop"] + cfg.POINT_EVENT_PLOT_DURATION * (row["stop"] == row["start"]),
                             epoch_date,
                             use_date_axis,
                         )
-                    if self.timeFormat == cfg.S:
+                    if self.config_param["time_format"] == cfg.S:
                         start_date = row["start"]
                         end_date = row["stop"]
 
@@ -649,7 +649,7 @@ def create_events_plot(
                 fontdict={"fontsize": 10},
             )
 
-            if self.timeFormat == cfg.HHMMSS:
+            if self.config_param["time_format"] == cfg.HHMMSS:
                 axs[ax_idx].set_xlim(
                     left=_plot_time(min_time, epoch_date, use_date_axis),
                     right=_plot_time(max_time, epoch_date, use_date_axis),
@@ -661,7 +661,7 @@ def create_events_plot(
                     axs[ax_idx].xaxis.set_major_formatter(FuncFormatter(_hhmmss_axis_formatter))
                 axs[ax_idx].set_xlabel("Time (HH:MM:SS)", fontdict={"fontsize": 12})
 
-            if self.timeFormat == cfg.S:
+            if self.config_param["time_format"] == cfg.S:
                 axs[ax_idx].set_xlim(
                     left=min_time,
                     right=max_time,
@@ -672,7 +672,7 @@ def create_events_plot(
 
             axs[ax_idx].invert_yaxis()
 
-        if self.timeFormat == cfg.HHMMSS and use_date_axis:
+        if self.config_param["time_format"] == cfg.HHMMSS and use_date_axis:
             fig.autofmt_xdate()
 
         plt.tight_layout()

@@ -438,10 +438,10 @@ def preferences(self):
     preferencesWindow = Preferences()
     preferencesWindow.tabWidget.setCurrentIndex(0)
 
-    if self.timeFormat == cfg.S:
+    if self.config_param["time_format"] == cfg.S:
         preferencesWindow.cbTimeFormat.setCurrentIndex(0)
 
-    if self.timeFormat == cfg.HHMMSS:
+    if self.config_param["time_format"] == cfg.HHMMSS:
         preferencesWindow.cbTimeFormat.setCurrentIndex(1)
 
     preferencesWindow.sbffSpeed.setValue(self.fast)
@@ -619,10 +619,10 @@ def preferences(self):
                     sys.exit()
 
             if preferencesWindow.cbTimeFormat.currentIndex() == 0:
-                self.timeFormat = cfg.S
+                self.config_param["time_format"] = cfg.S
 
             if preferencesWindow.cbTimeFormat.currentIndex() == 1:
-                self.timeFormat = cfg.HHMMSS
+                self.config_param["time_format"] = cfg.HHMMSS
 
             self.fast = preferencesWindow.sbffSpeed.value()
 

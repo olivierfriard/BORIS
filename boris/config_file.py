@@ -30,6 +30,8 @@ from PySide6.QtCore import QByteArray, QSettings
 from . import config as cfg
 from . import dialog
 
+logger = logging.getLogger(__name__)
+
 
 def read(self) -> None:
     """
@@ -38,14 +40,14 @@ def read(self) -> None:
 
     ini_file_path = pl.Path.home() / pl.Path(".boris")
 
-    logging.debug(f"read config file: {ini_file_path}")
+    logger.debug(f"read config file: {ini_file_path}")
 
     if ini_file_path.is_file():
         settings = QSettings(str(ini_file_path), QSettings.Format.IniFormat)
 
         try:
             self.config_param = settings.value("config")
-        except Exception:
+        except Exception:  # noqa: BLE001
             self.config_param = {}
 
         if self.config_param == {}:
@@ -55,61 +57,63 @@ def read(self) -> None:
             # display subtitles
             try:
                 self.config_param[cfg.DISPLAY_SUBTITLES] = settings.value(cfg.DISPLAY_SUBTITLES) == "true"
-            except Exception:
+            except Exception:  # noqa: BLE001
                 self.config_param[cfg.DISPLAY_SUBTITLES] = False
 
-            logging.debug(f"{cfg.DISPLAY_SUBTITLES}: {self.config_param[cfg.DISPLAY_SUBTITLES]}")
+            logger.debug(f"{cfg.DISPLAY_SUBTITLES}: {self.config_param[cfg.DISPLAY_SUBTITLES]}")
 
         try:
-            logging.debug("restore geometry")
+            logger.debug("restore geometry")
 
             self.restoreGeometry(settings.value("geometry"))
-        except Exception:
-            logging.warning("Error restoring geometry")
-            pass
+        except Exception:  # noqa: BLE001
+            logger.warning("Error restoring geometry")
 
         self.saved_state = settings.value("dockwidget_positions")
         if not isinstance(self.saved_state, QByteArray):
             self.saved_state = None
 
-        # logging.debug(f"saved state: {self.saved_state}")
+        # time format
+        if self.config_param.get("time_format", None):
+            self.timeFormat = self.config_param.get("time_format", cfg.HHMMSS)
+        else:
+            self.timeFormat = cfg.HHMMSS  # default
+            try:
+                self.timeFormat = settings.value("Time/Format")
+            except Exception:  # noqa: BLE001
+                self.timeFormat = cfg.HHMMSS
+            self.config_param["time_format"] = self.timeFormat
 
-        self.timeFormat = cfg.HHMMSS
-        try:
-            self.timeFormat = settings.value("Time/Format")
-        except Exception:
-            self.timeFormat = cfg.HHMMSS
-
-        logging.debug(f"time format: {self.timeFormat}")
+        logger.debug(f"time format: {self.config_param['time_format']}")
 
         self.fast = cfg.FAST_FORWARD_DEFAULT_VALUE
         try:
             self.fast = float(settings.value("Time/fast_forward_speed"))
-        except Exception:
+        except Exception:  # noqa: BLE001
             self.fast = cfg.FAST_FORWARD_DEFAULT_VALUE
 
-        logging.debug(f"Time/fast_forward_speed: {self.fast}")
+        logger.debug(f"Time/fast_forward_speed: {self.fast}")
 
         self.repositioningTimeOffset = 0
         try:
             self.repositioningTimeOffset = int(settings.value("Time/Repositioning_time_offset"))
-        except Exception:
+        except Exception:  # noqa: BLE001
             self.repositioningTimeOffset = 0
 
-        logging.debug(f"Time/Repositioning_time_offset: {self.repositioningTimeOffset}")
+        logger.debug(f"Time/Repositioning_time_offset: {self.repositioningTimeOffset}")
 
         self.play_rate_step = 0.1
         try:
             self.play_rate_step = float(settings.value("Time/play_rate_step"))
-        except Exception:
+        except Exception:  # noqa: BLE001
             self.play_rate_step = 0.1
 
-        logging.debug(f"Time/play_rate_step: {self.play_rate_step}")
+        logger.debug(f"Time/play_rate_step: {self.play_rate_step}")
 
         self.automaticBackup = 0
         try:
             self.automaticBackup = int(settings.value("Automatic_backup"))
-        except Exception:
+        except Exception:  # noqa: BLE001
             self.automaticBackup = 0
 
         # activate or desactivate autosave timer
@@ -118,53 +122,53 @@ def read(self) -> None:
         else:
             self.automaticBackupTimer.stop()
 
-        logging.debug(f"Autosave: {self.automaticBackup}")
+        logger.debug(f"Autosave: {self.automaticBackup}")
 
         self.behav_seq_separator = "|"
         try:
             self.behav_seq_separator = settings.value("behavioural_strings_separator")
             if not self.behav_seq_separator:
                 self.behav_seq_separator = "|"
-        except Exception:
+        except Exception:  # noqa: BLE001
             self.behav_seq_separator = "|"
 
-        logging.debug(f"behavioural_strings_separator: {self.behav_seq_separator}")
+        logger.debug(f"behavioural_strings_separator: {self.behav_seq_separator}")
 
         self.close_the_same_current_event = False
         try:
             self.close_the_same_current_event = settings.value("close_the_same_current_event") == "true"
-        except Exception:
+        except Exception:  # noqa: BLE001
             self.close_the_same_current_event = False
 
-        logging.debug(f"close_the_same_current_event: {self.close_the_same_current_event}")
+        logger.debug(f"close_the_same_current_event: {self.close_the_same_current_event}")
 
         self.confirmSound = False
         try:
             self.confirmSound = settings.value("confirm_sound") == "true"
-        except Exception:
+        except Exception:  # noqa: BLE001
             self.confirmSound = False
 
-        logging.debug(f"confirm_sound: {self.confirmSound}")
+        logger.debug(f"confirm_sound: {self.confirmSound}")
 
         self.alertNoFocalSubject = False
         try:
             self.alertNoFocalSubject = settings.value("alert_nosubject") == "true"
-        except Exception:
+        except Exception:  # noqa: BLE001
             self.alertNoFocalSubject = False
-        logging.debug(f"alert_nosubject: {self.alertNoFocalSubject}")
+        logger.debug(f"alert_nosubject: {self.alertNoFocalSubject}")
 
         try:
             self.beep_every = int(settings.value("beep_every"))
         except Exception:
             self.beep_every = 0
-        logging.debug(f"beep_every: {self.beep_every}")
+        logger.debug(f"beep_every: {self.beep_every}")
 
         self.trackingCursorAboveEvent = False
         try:
             self.trackingCursorAboveEvent = settings.value("tracking_cursor_above_event") == "true"
-        except Exception:
+        except Exception:  # noqa: BLE001
             self.trackingCursorAboveEvent = False
-        logging.debug(f"tracking_cursor_above_event: {self.trackingCursorAboveEvent}")
+        logger.debug(f"tracking_cursor_above_event: {self.trackingCursorAboveEvent}")
 
         # check for new version
         self.checkForNewVersion = False
@@ -188,7 +192,7 @@ def read(self) -> None:
                     self.checkForNewVersion = settings.value("check_for_new_version") == "true"
             except Exception:
                 self.checkForNewVersion = False
-        logging.debug(f"Automatic check for new version: {self.checkForNewVersion}")
+        logger.debug(f"Automatic check for new version: {self.checkForNewVersion}")
 
         # pause before add event
         self.pause_before_addevent = False
@@ -197,15 +201,16 @@ def read(self) -> None:
         except Exception:
             self.pause_before_addevent = False
 
-        logging.debug(f"pause_before_addevent: {self.pause_before_addevent}")
+        logger.debug(f"pause_before_addevent: {self.pause_before_addevent}")
 
-        if self.checkForNewVersion:
-            if settings.value("last_check_for_new_version") and (
-                int(time.mktime(time.localtime())) - int(settings.value("last_check_for_new_version")) > cfg.CHECK_NEW_VERSION_DELAY
-            ):
-                self.actionCheckUpdate_activated(flagMsgOnlyIfNew=True)
+        if (
+            self.checkForNewVersion
+            and settings.value("last_check_for_new_version")
+            and (int(time.mktime(time.localtime())) - int(settings.value("last_check_for_new_version")) > cfg.CHECK_NEW_VERSION_DELAY)
+        ):
+            self.actionCheckUpdate_activated(flagMsgOnlyIfNew=True)
 
-        logging.debug(f"last check for new version: {settings.value('last_check_for_new_version')}")
+        logger.debug(f"last check for new version: {settings.value('last_check_for_new_version')}")
 
         self.ffmpeg_cache_dir = ""
         try:
@@ -214,7 +219,7 @@ def read(self) -> None:
                 self.ffmpeg_cache_dir = ""
         except Exception:
             self.ffmpeg_cache_dir = ""
-        logging.debug(f"ffmpeg_cache_dir: {self.ffmpeg_cache_dir}")
+        logger.debug(f"ffmpeg_cache_dir: {self.ffmpeg_cache_dir}")
 
         try:
             self.spectrogram_color_map = settings.value("spectrogram_color_map")
@@ -236,16 +241,15 @@ def read(self) -> None:
         except Exception:
             self.plot_colors = cfg.BEHAVIORS_PLOT_COLORS
 
-        if "white" in self.plot_colors or "azure" in self.plot_colors or "snow" in self.plot_colors:
-            if (
-                dialog.MessageDialog(
-                    cfg.programName,
-                    ("The colors list contain colors that are very light.\nDo you want to reload the default colors list?"),
-                    (cfg.NO, cfg.YES),
-                )
-                == cfg.YES
-            ):
-                self.plot_colors = cfg.BEHAVIORS_PLOT_COLORS
+        if ("white" in self.plot_colors or "azure" in self.plot_colors or "snow" in self.plot_colors) and (
+            dialog.MessageDialog(
+                cfg.programName,
+                ("The colors list contain colors that are very light.\nDo you want to reload the default colors list?"),
+                (cfg.NO, cfg.YES),
+            )
+            == cfg.YES
+        ):
+            self.plot_colors = cfg.BEHAVIORS_PLOT_COLORS
 
         # behavioral categories colors
         try:
@@ -265,7 +269,7 @@ def read(self) -> None:
                 self.behav_category_colors = cfg.CATEGORY_COLORS_LIST
 
     else:  # no .boris file found
-        logging.info("No config file found")
+        logger.info("No config file found")
         # ask user for checking for new version
         if not self.no_first_launch_dialog:
             self.checkForNewVersion = (
@@ -285,7 +289,7 @@ def read(self) -> None:
             self.checkForNewVersion = False
 
     # recent projects
-    logging.debug("read recent projects")
+    logger.debug("read recent projects")
     self.recent_projects: list = []
     recent_projects_file_path = pl.Path.home() / ".boris_recent_projects"
     if recent_projects_file_path.is_file():
@@ -306,7 +310,7 @@ def save(self, lastCheckForNewVersion=0):
 
     file_path = pl.Path.home() / pl.Path(".boris")
 
-    logging.debug(f"save config file: {file_path}")
+    logger.debug(f"save config file: {file_path}")
 
     settings = QSettings(str(file_path), QSettings.Format.IniFormat)
 
@@ -317,7 +321,8 @@ def save(self, lastCheckForNewVersion=0):
     if self.saved_state:
         settings.setValue("dockwidget_positions", self.saved_state)
 
-    settings.setValue("Time/Format", self.timeFormat)
+    if self.config_param.get("time_format", None) is None:
+        settings.setValue("Time/Format", self.config_param["time_format"])
     settings.setValue("Time/Repositioning_time_offset", self.repositioningTimeOffset)
     settings.setValue("Time/fast_forward_speed", self.fast)
     settings.setValue("Time/play_rate_step", self.play_rate_step)
@@ -346,7 +351,7 @@ def save(self, lastCheckForNewVersion=0):
     settings.setValue("behav_category_colors", "|".join(self.behav_category_colors))
 
     # recent projects
-    logging.debug("Save recent projects")
+    logger.debug("Save recent projects")
 
     settings = QSettings(str(pl.Path.home() / ".boris_recent_projects"), QSettings.Format.IniFormat)
     settings.setValue("recent_projects", "|||".join(self.recent_projects))

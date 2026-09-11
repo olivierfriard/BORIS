@@ -773,7 +773,7 @@ def new_observation(self, mode: str = cfg.NEW, obsId: str = "") -> None:
         tmp_dir=self.ffmpeg_cache_dir if (self.ffmpeg_cache_dir and Path(self.ffmpeg_cache_dir).is_dir()) else tempfile.gettempdir(),
         project_path=self.projectFileName,
         converters=self.pj.get(cfg.CONVERTERS, {}),
-        time_format=self.timeFormat,
+        time_format=self.config_param["time_format"],
     )
 
     observationWindow.pj = dict(self.pj)
@@ -844,10 +844,9 @@ def new_observation(self, mode: str = cfg.NEW, obsId: str = "") -> None:
         observationWindow.twIndepVariables.resizeColumnsToContents()
 
     # adapt time offset for current time format
-    if self.timeFormat == cfg.S:
+    if self.config_param["time_format"] == cfg.S:
         observationWindow.obs_time_offset.rb_seconds.setChecked(True)
-    if self.timeFormat == cfg.HHMMSS:
-        # observationWindow.obs_time_offset.set_format_hhmmss()
+    if self.config_param["time_format"] == cfg.HHMMSS:
         observationWindow.obs_time_offset.rb_time.setChecked(True)
 
     observationWindow.obs_time_offset.set_time(dec(0))
@@ -2324,7 +2323,7 @@ def initialize_new_live_observation(self):
     else:
         current_time = 0
 
-    self.lb_current_media_time.setText(util.convertTime(self.timeFormat, current_time))
+    self.lb_current_media_time.setText(util.convertTime(self.config_param["time_format"], current_time))
 
     # display observation time interval (if any)
     self.lb_obs_time_interval.setVisible(True)

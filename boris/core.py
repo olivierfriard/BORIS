@@ -493,7 +493,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         msg = project_functions.check_project_integrity(
             self.pj,
-            self.timeFormat,
+            self.config_param["time_format"],
             self.projectFileName,
             media_file_available=ib.elements["Test media file accessibility"].isChecked(),
         )
@@ -1494,10 +1494,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         jt = dialog.Ask_time(0)
         jt.setWindowTitle("Jump to specific time")
         jt.label.setText("Set the time")
-        if self.timeFormat == cfg.S:
+        if self.config_param["time_format"] == cfg.S:
             jt.time_widget.rb_seconds.setChecked(True)
             jt.time_widget.le_seconds.setFocus()
-        if self.timeFormat == cfg.HHMMSS:
+        if self.config_param["time_format"] == cfg.HHMMSS:
             jt.time_widget.rb_time.setChecked(True)
 
         if jt.exec():
@@ -1710,7 +1710,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     if self.image_time_ref is not None:
                         seconds_from_1st = date_time_original - self.image_time_ref
 
-                    if self.timeFormat == cfg.HHMMSS:
+                    if self.config_param["time_format"] == cfg.HHMMSS:
                         seconds_from_1st_formated = util.seconds2time(seconds_from_1st).split(".")[0]  # remove milliseconds
                     else:
                         seconds_from_1st_formated = seconds_from_1st
@@ -2337,7 +2337,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.populate_tv_events(
             obs_id,
             [s.capitalize() for s in cfg.TW_EVENTS_FIELDS[self.playerType]],
-            self.timeFormat,
+            self.config_param["time_format"],
             self.filtered_behaviors,
             self.filtered_subjects,
         )
@@ -2497,9 +2497,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         try:
             if self.pj[cfg.OBSERVATIONS][obs_id][cfg.TIME_OFFSET]:
                 time_offset = 0
-                if self.timeFormat == cfg.S:
+                if self.config_param["time_format"] == cfg.S:
                     time_offset = self.pj[cfg.OBSERVATIONS][obs_id][cfg.TIME_OFFSET]
-                if self.timeFormat == cfg.HHMMSS:
+                if self.config_param["time_format"] == cfg.HHMMSS:
                     time_offset = util.seconds2time(self.pj[cfg.OBSERVATIONS][obs_id][cfg.TIME_OFFSET])
                 self.lbTimeOffset.setText(f"Time offset: <b>{time_offset}</b>")
             else:
@@ -2514,10 +2514,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     0,
                     0,
                 ]:
-                    if self.timeFormat == cfg.HHMMSS:
+                    if self.config_param["time_format"] == cfg.HHMMSS:
                         start_time = util.seconds2time(self.pj[cfg.OBSERVATIONS][obs_id][cfg.OBSERVATION_TIME_INTERVAL][0])
                         stop_time = util.seconds2time(self.pj[cfg.OBSERVATIONS][obs_id][cfg.OBSERVATION_TIME_INTERVAL][1])
-                    if self.timeFormat == cfg.S:
+                    if self.config_param["time_format"] == cfg.S:
                         start_time = f"{self.pj[cfg.OBSERVATIONS][obs_id][cfg.OBSERVATION_TIME_INTERVAL][0]:.3f}"
                         stop_time = f"{self.pj[cfg.OBSERVATIONS][obs_id][cfg.OBSERVATION_TIME_INTERVAL][1]:.3f}"
 
@@ -2927,7 +2927,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             if self.config_param.get(cfg.CHECK_PROJECT_INTEGRITY, True):
                 msg = project_functions.check_project_integrity(
                     pj,
-                    self.timeFormat,
+                    self.config_param["time_format"],
                     project_path,
                     media_file_available=True,
                 )
@@ -3263,10 +3263,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
             # time format
             if newProjectWindow.rbSeconds.isChecked():
-                self.timeFormat = cfg.S
+                self.config_param["time_format"] = cfg.S
 
             if newProjectWindow.rbHMS.isChecked():
-                self.timeFormat = cfg.HHMMSS
+                self.config_param["time_format"] = cfg.HHMMSS
 
             # configuration
             if newProjectWindow.lbObservationsState.text() != "":
@@ -3446,7 +3446,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         if self.config_param.get(cfg.CHECK_PROJECT_INTEGRITY, True):
             msg = project_functions.check_project_integrity(
                 self.pj,
-                self.timeFormat,
+                self.config_param["time_format"],
                 self.projectFileName,
                 media_file_available=True,
             )
@@ -3555,7 +3555,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 current_time = dec(self.pj[cfg.OBSERVATIONS][self.observationId].get(cfg.OBSERVATION_TIME_INTERVAL, [None, None])[1])
                 self.pb_live_obs.setText("Live observation finished")
 
-        self.lb_current_media_time.setText(util.convertTime(self.timeFormat, current_time))
+        self.lb_current_media_time.setText(util.convertTime(self.config_param["time_format"], current_time))
 
         # extract State events
         self.currentStates = {}
@@ -3602,7 +3602,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
             self.liveStartTime = None
 
-            if self.timeFormat == cfg.HHMMSS:
+            if self.config_param["time_format"] == cfg.HHMMSS:
                 if self.pj[cfg.OBSERVATIONS][self.observationId].get(cfg.START_FROM_CURRENT_TIME, False):
                     self.lb_current_media_time.setText(datetime.datetime.now().isoformat(" ").split(" ")[1][:12])
                 elif self.pj[cfg.OBSERVATIONS][self.observationId].get(cfg.START_FROM_CURRENT_EPOCH_TIME, False):
@@ -3612,7 +3612,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 else:
                     self.lb_current_media_time.setText("00:00:00.000")
 
-            if self.timeFormat == cfg.S:
+            if self.config_param["time_format"] == cfg.S:
                 self.lb_current_media_time.setText("0.000")
 
         else:
@@ -4386,23 +4386,23 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 msg = f"Current media name: <b>{current_media_name}</b> (#{playlist_pos + 1} / {playlist_length})<br>"
 
                 msg += (
-                    f"Media position: <b>{util.convertTime(self.timeFormat, current_media_time_pos)}</b> / "
-                    f"{util.convertTime(self.timeFormat, current_media_duration)} frame: <b>{frame_idx}</b>"
+                    f"Media position: <b>{util.convertTime(self.config_param['time_format'], current_media_time_pos)}</b> / "
+                    f"{util.convertTime(self.config_param['time_format'], current_media_duration)} frame: <b>{frame_idx}</b>"
                 )
 
             # with time offset
             if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TIME_OFFSET]:
                 msg += (
                     "<br>Media position with offset: "
-                    f"<b>{util.convertTime(self.timeFormat, current_media_time_pos + float(self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TIME_OFFSET]))}</b> / "
-                    f"{util.convertTime(self.timeFormat, current_media_duration + float(self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TIME_OFFSET]))}"
+                    f"<b>{util.convertTime(self.config_param['time_format'], current_media_time_pos + float(self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TIME_OFFSET]))}</b> / "
+                    f"{util.convertTime(self.config_param['time_format'], current_media_duration + float(self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TIME_OFFSET]))}"
                 )
 
             # if many media files
             if self.dw_player[0].player.playlist_count > 1:
                 msg += (
-                    f"<br>Total: <b>{util.convertTime(self.timeFormat, cumulative_time_pos)} / "
-                    f"{util.convertTime(self.timeFormat, all_media_duration)}</b>"
+                    f"<br>Total: <b>{util.convertTime(self.config_param['time_format'], cumulative_time_pos)} / "
+                    f"{util.convertTime(self.config_param['time_format'], all_media_duration)}</b>"
                 )
 
         else:  # player ended
@@ -5019,9 +5019,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         memLaps = None
         if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE] == cfg.LIVE:
             if self.pj[cfg.OBSERVATIONS][self.observationId].get(cfg.SCAN_SAMPLING_TIME, 0):
-                if self.timeFormat == cfg.HHMMSS:
+                if self.config_param["time_format"] == cfg.HHMMSS:
                     memLaps = dec(int(util.time2seconds(self.lb_current_media_time.text())))
-                if self.timeFormat == cfg.S:
+                if self.config_param["time_format"] == cfg.S:
                     memLaps = dec(int(dec(self.lb_current_media_time.text())))
 
             else:  # no scan sampling

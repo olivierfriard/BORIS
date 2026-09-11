@@ -449,6 +449,6 @@ def event_filtering(self):
 
     w = Advanced_event_filtering_dialog(events)
     w.lb_time_interval.setText(
-        (f"Time interval: {util.smart_time_format(min_time, self.timeFormat)} - {util.smart_time_format(max_time, self.timeFormat)}")
+        f"Time interval: {util.smart_time_format(min_time, self.config_param['time_format'])} - {util.smart_time_format(max_time, self.config_param['time_format'])}"
     )
     w.exec_()

@@ -383,7 +383,7 @@ def convertTime(time_format: str, sec: float | dec) -> str | None:
         sec (float): time in seconds
 
     Returns:
-        string: time in base of current format (self.timeFormat S or cfg.HHMMSS)
+        string: time in base of current format (self.config_param["time_format"] S or cfg.HHMMSS)
     """
 
     if isinstance(sec, dec) and sec.is_nan():
