@@ -370,7 +370,7 @@ def write_event(self, event: dict, mem_time: dec) -> int:
         for cs in csj:
             # close state if same state without modifier
             if (
-                self.close_the_same_current_event
+                self.config_param["close_the_same_current_event"]
                 and (event[cfg.BEHAVIOR_CODE] == cs)
                 and modifier_str.replace("None", "").replace("|", "") == ""
             ):

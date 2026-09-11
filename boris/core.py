@@ -4893,7 +4893,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             return
 
         # beep
-        if self.confirmSound:
+        if self.config_param["confirm_sound"]:
             self.beep("key_sound")
 
         flagPlayerPlaying = self.is_playing()
@@ -5281,8 +5281,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
                 time_ -= self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO][cfg.MEDIA_CREATION_TIME][media_file_name]
 
-            if time_ + self.repositioningTimeOffset >= 0:
-                new_time = time_ + self.repositioningTimeOffset
+            if time_ + self.config_param["repositioning_time_offset"] >= 0:
+                new_time = time_ + self.config_param["repositioning_time_offset"]
             else:
                 new_time = 0
 
@@ -5703,7 +5703,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         if self.playerType == cfg.MEDIA:
             logging.debug("jump backward")
 
-            decrement = self.fast * self.play_rate if self.config_param.get(cfg.ADAPT_FAST_JUMP, cfg.ADAPT_FAST_JUMP_DEFAULT) else self.fast
+            decrement = (
+                self.config_param["fast_forward_speed"] * self.play_rate
+                if self.config_param.get(cfg.ADAPT_FAST_JUMP, cfg.ADAPT_FAST_JUMP_DEFAULT)
+                else self.config_param["fast_forward_speed"]
+            )
 
             try:
                 new_time = (
@@ -5727,7 +5731,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         """
 
         if self.playerType == cfg.MEDIA:
-            increment = self.fast * self.play_rate if self.config_param.get(cfg.ADAPT_FAST_JUMP, cfg.ADAPT_FAST_JUMP_DEFAULT) else self.fast
+            increment = (
+                self.config_param["fast_forward_speed"] * self.play_rate
+                if self.config_param.get(cfg.ADAPT_FAST_JUMP, cfg.ADAPT_FAST_JUMP_DEFAULT)
+                else self.config_param["fast_forward_speed"]
+            )
 
             logging.info(f"Jump forward for {increment} seconds")
 

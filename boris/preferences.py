@@ -444,18 +444,18 @@ def preferences(self):
     if self.config_param["time_format"] == cfg.HHMMSS:
         preferencesWindow.cbTimeFormat.setCurrentIndex(1)
 
-    preferencesWindow.sbffSpeed.setValue(self.fast)
+    preferencesWindow.sbffSpeed.setValue(self.config_param["fast_forward_speed"])
     preferencesWindow.cb_adapt_fast_jump.setChecked(self.config_param.get(cfg.ADAPT_FAST_JUMP, False))
-    preferencesWindow.sbRepositionTimeOffset.setValue(self.repositioningTimeOffset)
-    preferencesWindow.sbSpeedStep.setValue(self.play_rate_step)
+    preferencesWindow.sbRepositionTimeOffset.setValue(self.config_param["repositioning_time_offset"])
+    preferencesWindow.sbSpeedStep.setValue(self.config_param["play_rate_step"])
     # automatic backup
     preferencesWindow.sbAutomaticBackup.setValue(self.automaticBackup)
     # separator for behavioural strings
     preferencesWindow.leSeparator.setText(self.behav_seq_separator)
     # close same event indep of modifiers
-    preferencesWindow.cbCloseSameEvent.setChecked(self.close_the_same_current_event)
+    preferencesWindow.cbCloseSameEvent.setChecked(self.config_param["close_the_same_current_event"])
     # confirm sound
-    preferencesWindow.cbConfirmSound.setChecked(self.confirmSound)
+    preferencesWindow.cbConfirmSound.setChecked(self.config_param["confirm_sound"])
     # beep every
     preferencesWindow.sbBeepEvery.setValue(self.beep_every)
     # frame step size
@@ -624,13 +624,13 @@ def preferences(self):
             if preferencesWindow.cbTimeFormat.currentIndex() == 1:
                 self.config_param["time_format"] = cfg.HHMMSS
 
-            self.fast = preferencesWindow.sbffSpeed.value()
+            self.config_param["fast_forward_speed"] = preferencesWindow.sbffSpeed.value()
 
             self.config_param[cfg.ADAPT_FAST_JUMP] = preferencesWindow.cb_adapt_fast_jump.isChecked()
 
-            self.repositioningTimeOffset = preferencesWindow.sbRepositionTimeOffset.value()
+            self.config_param["repositioning_time_offset"] = preferencesWindow.sbRepositionTimeOffset.value()
 
-            self.play_rate_step = preferencesWindow.sbSpeedStep.value()
+            self.config_param["play_rate_step"] = preferencesWindow.sbSpeedStep.value()
 
             self.automaticBackup = preferencesWindow.sbAutomaticBackup.value()
             if self.automaticBackup:
@@ -640,9 +640,9 @@ def preferences(self):
 
             self.behav_seq_separator = preferencesWindow.leSeparator.text()
 
-            self.close_the_same_current_event = preferencesWindow.cbCloseSameEvent.isChecked()
+            self.config_param["close_the_same_current_event"] = preferencesWindow.cbCloseSameEvent.isChecked()
 
-            self.confirmSound = preferencesWindow.cbConfirmSound.isChecked()
+            self.config_param["confirm_sound"] = preferencesWindow.cbConfirmSound.isChecked()
 
             self.beep_every = preferencesWindow.sbBeepEvery.value()
 

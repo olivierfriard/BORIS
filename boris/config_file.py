@@ -74,41 +74,48 @@ def read(self) -> None:
             self.saved_state = None
 
         # time format
-        if self.config_param.get("time_format", None):
-            self.timeFormat = self.config_param.get("time_format", cfg.HHMMSS)
-        else:
-            self.timeFormat = cfg.HHMMSS  # default
+        if self.config_param.get("time_format", None) is None:
+            time_format = cfg.HHMMSS  # default
             try:
-                self.timeFormat = settings.value("Time/Format")
+                time_format = settings.value("Time/Format")
             except Exception:  # noqa: BLE001
-                self.timeFormat = cfg.HHMMSS
-            self.config_param["time_format"] = self.timeFormat
+                time_format = cfg.HHMMSS
+            self.config_param["time_format"] = time_format
 
         logger.debug(f"time format: {self.config_param['time_format']}")
 
-        self.fast = cfg.FAST_FORWARD_DEFAULT_VALUE
-        try:
-            self.fast = float(settings.value("Time/fast_forward_speed"))
-        except Exception:  # noqa: BLE001
-            self.fast = cfg.FAST_FORWARD_DEFAULT_VALUE
+        # fast forward value
+        if self.config_param.get("fast_forward_speed", None) is None:
+            fast = cfg.FAST_FORWARD_DEFAULT_VALUE
+            try:
+                fast = float(settings.value("Time/fast_forward_speed"))
+            except Exception:  # noqa: BLE001
+                fast = cfg.FAST_FORWARD_DEFAULT_VALUE
+            self.config_param["fast_forward_speed"] = fast
 
-        logger.debug(f"Time/fast_forward_speed: {self.fast}")
+        logger.debug(f"fast_forward_speed: {self.config_param['fast_forward_speed']}")
 
-        self.repositioningTimeOffset = 0
-        try:
-            self.repositioningTimeOffset = int(settings.value("Time/Repositioning_time_offset"))
-        except Exception:  # noqa: BLE001
-            self.repositioningTimeOffset = 0
+        # repositioning_time_offset
+        if self.config_param.get("repositioning_time_offset", None) is None:
+            repositioningTimeOffset = 0
+            try:
+                repositioningTimeOffset = int(settings.value("Time/Repositioning_time_offset"))
+            except Exception:  # noqa: BLE001
+                repositioningTimeOffset = 0
+            self.config_param["repositioning_time_offset"] = repositioningTimeOffset
 
-        logger.debug(f"Time/Repositioning_time_offset: {self.repositioningTimeOffset}")
+        logger.debug(f"repositioning_time_offset: {self.config_param['repositioning_time_offset']}")
 
-        self.play_rate_step = 0.1
-        try:
-            self.play_rate_step = float(settings.value("Time/play_rate_step"))
-        except Exception:  # noqa: BLE001
-            self.play_rate_step = 0.1
+        # play_rate_step
+        if self.config_param.get("play_rate_step", None) is None:
+            play_rate_step = 0.1
+            try:
+                play_rate_step = float(settings.value("Time/play_rate_step"))
+            except Exception:  # noqa: BLE001
+                play_rate_step = 0.1
+            self.config_param["play_rate_step"] = play_rate_step
 
-        logger.debug(f"Time/play_rate_step: {self.play_rate_step}")
+        logger.debug(f"play_rate_step: {self.config_param['play_rate_step']}")
 
         self.automaticBackup = 0
         try:
@@ -134,21 +141,26 @@ def read(self) -> None:
 
         logger.debug(f"behavioural_strings_separator: {self.behav_seq_separator}")
 
-        self.close_the_same_current_event = False
-        try:
-            self.close_the_same_current_event = settings.value("close_the_same_current_event") == "true"
-        except Exception:  # noqa: BLE001
-            self.close_the_same_current_event = False
+        # close_the_same_current_event
+        if self.config_param.get("close_the_same_current_event", None) is None:
+            close_the_same_current_event = False
+            try:
+                close_the_same_current_event = settings.value("close_the_same_current_event") == "true"
+            except Exception:  # noqa: BLE001
+                close_the_same_current_event = False
+            self.config_param["close_the_same_current_event"] = close_the_same_current_event
 
-        logger.debug(f"close_the_same_current_event: {self.close_the_same_current_event}")
+        logger.debug(f"close_the_same_current_event: {self.config_param['close_the_same_current_event']}")
 
-        self.confirmSound = False
-        try:
-            self.confirmSound = settings.value("confirm_sound") == "true"
-        except Exception:  # noqa: BLE001
-            self.confirmSound = False
+        if self.config_param.get("confirm_sound", None) is None:
+            confirm_sound = False
+            try:
+                confirm_sound = settings.value("confirm_sound") == "true"
+            except Exception:  # noqa: BLE001
+                confirm_sound = False
+            self.config_param["confirm_sound"] = confirm_sound
 
-        logger.debug(f"confirm_sound: {self.confirmSound}")
+        logger.debug(f"confirm_sound: {self.config_param['confirm_sound']}")
 
         self.alertNoFocalSubject = False
         try:
@@ -159,7 +171,7 @@ def read(self) -> None:
 
         try:
             self.beep_every = int(settings.value("beep_every"))
-        except Exception:
+        except Exception:  # noqa: BLE001
             self.beep_every = 0
         logger.debug(f"beep_every: {self.beep_every}")
 
@@ -190,7 +202,7 @@ def read(self) -> None:
                     )
                 else:
                     self.checkForNewVersion = settings.value("check_for_new_version") == "true"
-            except Exception:
+            except Exception:  # noqa: BLE001
                 self.checkForNewVersion = False
         logger.debug(f"Automatic check for new version: {self.checkForNewVersion}")
 
@@ -198,7 +210,7 @@ def read(self) -> None:
         self.pause_before_addevent = False
         try:
             self.pause_before_addevent = settings.value("pause_before_addevent") == "true"
-        except Exception:
+        except Exception:  # noqa: BLE001
             self.pause_before_addevent = False
 
         logger.debug(f"pause_before_addevent: {self.pause_before_addevent}")
@@ -217,7 +229,7 @@ def read(self) -> None:
             self.ffmpeg_cache_dir = settings.value("ffmpeg_cache_dir")
             if not self.ffmpeg_cache_dir:
                 self.ffmpeg_cache_dir = ""
-        except Exception:
+        except Exception:  # noqa: BLE001
             self.ffmpeg_cache_dir = ""
         logger.debug(f"ffmpeg_cache_dir: {self.ffmpeg_cache_dir}")
 
@@ -225,20 +237,20 @@ def read(self) -> None:
             self.spectrogram_color_map = settings.value("spectrogram_color_map")
             if self.spectrogram_color_map is None:
                 self.spectrogram_color_map = cfg.SPECTROGRAM_DEFAULT_COLOR_MAP
-        except Exception:
+        except Exception:  # noqa: BLE001
             self.spectrogram_color_map = cfg.SPECTROGRAM_DEFAULT_COLOR_MAP
 
         try:
             self.spectrogram_time_interval = int(settings.value("spectrogram_time_interval"))
             if not self.spectrogram_time_interval:
                 self.spectrogram_time_interval = cfg.SPECTROGRAM_DEFAULT_TIME_INTERVAL
-        except Exception:
+        except Exception:  # noqa: BLE001
             self.spectrogram_time_interval = cfg.SPECTROGRAM_DEFAULT_TIME_INTERVAL
 
         # plot colors
         try:
             self.plot_colors = settings.value("plot_colors").split("|")
-        except Exception:
+        except Exception:  # noqa: BLE001
             self.plot_colors = cfg.BEHAVIORS_PLOT_COLORS
 
         if ("white" in self.plot_colors or "azure" in self.plot_colors or "snow" in self.plot_colors) and (
@@ -254,19 +266,18 @@ def read(self) -> None:
         # behavioral categories colors
         try:
             self.behav_category_colors = settings.value("behav_category_colors").split("|")
-        except Exception:
+        except Exception:  # noqa: BLE001
             self.behav_category_colors = cfg.CATEGORY_COLORS_LIST
 
-        if "white" in self.behav_category_colors or "azure" in self.behav_category_colors or "snow" in self.behav_category_colors:
-            if (
-                dialog.MessageDialog(
-                    cfg.programName,
-                    ("The colors list contain colors that are very light.\nDo you want to reload the default colors list?"),
-                    (cfg.NO, cfg.YES),
-                )
-                == cfg.YES
-            ):
-                self.behav_category_colors = cfg.CATEGORY_COLORS_LIST
+        if ("white" in self.behav_category_colors or "azure" in self.behav_category_colors or "snow" in self.behav_category_colors) and (
+            dialog.MessageDialog(
+                cfg.programName,
+                ("The colors list contain colors that are very light.\nDo you want to reload the default colors list?"),
+                (cfg.NO, cfg.YES),
+            )
+            == cfg.YES
+        ):
+            self.behav_category_colors = cfg.CATEGORY_COLORS_LIST
 
     else:  # no .boris file found
         logger.info("No config file found")
@@ -288,9 +299,11 @@ def read(self) -> None:
         else:
             self.checkForNewVersion = False
 
+        self.config_param = cfg.INIT_PARAM
+
     # recent projects
     logger.debug("read recent projects")
-    self.recent_projects: list = []
+    self.recent_projects = []
     recent_projects_file_path = pl.Path.home() / ".boris_recent_projects"
     if recent_projects_file_path.is_file():
         settings = QSettings(str(recent_projects_file_path), QSettings.Format.IniFormat)
@@ -299,8 +312,8 @@ def read(self) -> None:
             while "" in self.recent_projects:
                 self.recent_projects.remove("")
             self.set_recent_projects_menu()
-        except Exception:
-            pass
+        except Exception:  # noqa: BLE001
+            logger.warning("recent projects file not created")
 
 
 def save(self, lastCheckForNewVersion=0):
@@ -321,15 +334,14 @@ def save(self, lastCheckForNewVersion=0):
     if self.saved_state:
         settings.setValue("dockwidget_positions", self.saved_state)
 
-    if self.config_param.get("time_format", None) is None:
-        settings.setValue("Time/Format", self.config_param["time_format"])
-    settings.setValue("Time/Repositioning_time_offset", self.repositioningTimeOffset)
-    settings.setValue("Time/fast_forward_speed", self.fast)
-    settings.setValue("Time/play_rate_step", self.play_rate_step)
+    settings.setValue("Time/Format", self.config_param["time_format"])
+    settings.setValue("Time/Repositioning_time_offset", self.config_param["repositioning_time_offset"])
+    settings.setValue("Time/fast_forward_speed", self.config_param["fast_forward_speed"])
+    settings.setValue("Time/play_rate_step", self.config_param["play_rate_step"])
     settings.setValue("Automatic_backup", self.automaticBackup)
     settings.setValue("behavioural_strings_separator", self.behav_seq_separator)
-    settings.setValue("close_the_same_current_event", self.close_the_same_current_event)
-    settings.setValue("confirm_sound", self.confirmSound)
+    settings.setValue("close_the_same_current_event", self.config_param["close_the_same_current_event"])
+    settings.setValue("confirm_sound", self.config_param["confirm_sound"])
     settings.setValue("beep_every", self.beep_every)
     settings.setValue("alert_nosubject", self.alertNoFocalSubject)
     settings.setValue("tracking_cursor_above_event", self.trackingCursorAboveEvent)
