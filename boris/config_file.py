@@ -117,29 +117,35 @@ def read(self) -> None:
 
         logger.debug(f"play_rate_step: {self.config_param['play_rate_step']}")
 
-        self.automaticBackup = 0
-        try:
-            self.automaticBackup = int(settings.value("Automatic_backup"))
-        except Exception:  # noqa: BLE001
-            self.automaticBackup = 0
+        # automatic backup
+        if self.config_param.get("automatic_backup", None) is None:
+            automatic_backup = 0
+            try:
+                automatic_backup = int(settings.value("Automatic_backup"))
+            except Exception:  # noqa: BLE001
+                automatic_backup = 0
+            self.config_param["automatic_backup"] = automatic_backup
 
         # activate or desactivate autosave timer
-        if self.automaticBackup:
+        if self.config_param["automatic_backup"]:
             self.automaticBackupTimer.start(self.automaticBackup * 60000)
         else:
             self.automaticBackupTimer.stop()
 
-        logger.debug(f"Autosave: {self.automaticBackup}")
+        logger.debug(f"Autosave: {self.config_param['automatic_backup']}")
 
-        self.behav_seq_separator = "|"
-        try:
-            self.behav_seq_separator = settings.value("behavioural_strings_separator")
-            if not self.behav_seq_separator:
-                self.behav_seq_separator = "|"
-        except Exception:  # noqa: BLE001
-            self.behav_seq_separator = "|"
+        # behaviours sequence separator
+        if self.config_param.get("behav_seq_separator", None) is None:
+            behav_seq_separator = "|"
+            try:
+                behav_seq_separator = settings.value("behavioural_strings_separator")
+                if not behav_seq_separator:
+                    behav_seq_separator = "|"
+            except Exception:  # noqa: BLE001
+                behav_seq_separator = "|"
+            self.config_param["behav_seq_separator"] = behav_seq_separator
 
-        logger.debug(f"behavioural_strings_separator: {self.behav_seq_separator}")
+        logger.debug(f"behav_seq_separator: {self.config_param['behav_seq_separator']}")
 
         # close_the_same_current_event
         if self.config_param.get("close_the_same_current_event", None) is None:
@@ -149,9 +155,9 @@ def read(self) -> None:
             except Exception:  # noqa: BLE001
                 close_the_same_current_event = False
             self.config_param["close_the_same_current_event"] = close_the_same_current_event
-
         logger.debug(f"close_the_same_current_event: {self.config_param['close_the_same_current_event']}")
 
+        # confirm sound
         if self.config_param.get("confirm_sound", None) is None:
             confirm_sound = False
             try:
@@ -159,21 +165,26 @@ def read(self) -> None:
             except Exception:  # noqa: BLE001
                 confirm_sound = False
             self.config_param["confirm_sound"] = confirm_sound
-
         logger.debug(f"confirm_sound: {self.config_param['confirm_sound']}")
 
-        self.alertNoFocalSubject = False
-        try:
-            self.alertNoFocalSubject = settings.value("alert_nosubject") == "true"
-        except Exception:  # noqa: BLE001
-            self.alertNoFocalSubject = False
-        logger.debug(f"alert_nosubject: {self.alertNoFocalSubject}")
+        # alert if no focal subject
+        if self.config_param.get("alert_if_no_focal_subject", None) is None:
+            alert_if_no_focal_subject = False
+            try:
+                alert_if_no_focal_subject = settings.value("alert_nosubject") == "true"
+            except Exception:  # noqa: BLE001
+                alert_if_no_focal_subject = False
+            self.config_param["alert_if_no_focal_subject"] = alert_if_no_focal_subject
+        logger.debug(f"alert_if_no_focal_subject: {self.config_param['alert_if_no_focal_subject']}")
 
-        try:
-            self.beep_every = int(settings.value("beep_every"))
-        except Exception:  # noqa: BLE001
-            self.beep_every = 0
-        logger.debug(f"beep_every: {self.beep_every}")
+        # beep every
+        if self.config_param.get("beep_every", None) is None:
+            try:
+                beep_every = int(settings.value("beep_every"))
+            except Exception:  # noqa: BLE001
+                beep_every = 0
+            self.config_param["beep_every"] = beep_every
+            logger.debug(f"beep_every: {self.config_param['beep_every']}")
 
         self.trackingCursorAboveEvent = False
         try:
@@ -184,7 +195,6 @@ def read(self) -> None:
 
         # check for new version
         self.checkForNewVersion = False
-
         if not self.no_first_launch_dialog:
             try:
                 if settings.value("check_for_new_version") is None:
@@ -334,18 +344,20 @@ def save(self, lastCheckForNewVersion=0):
     if self.saved_state:
         settings.setValue("dockwidget_positions", self.saved_state)
 
+    settings.setValue("check_for_new_version", self.checkForNewVersion)
+
     settings.setValue("Time/Format", self.config_param["time_format"])
     settings.setValue("Time/Repositioning_time_offset", self.config_param["repositioning_time_offset"])
     settings.setValue("Time/fast_forward_speed", self.config_param["fast_forward_speed"])
     settings.setValue("Time/play_rate_step", self.config_param["play_rate_step"])
-    settings.setValue("Automatic_backup", self.automaticBackup)
-    settings.setValue("behavioural_strings_separator", self.behav_seq_separator)
+    settings.setValue("Automatic_backup", self.config_param["automatic_backup"])
+    settings.setValue("behavioural_strings_separator", self.config_param["behav_seq_separator"])
     settings.setValue("close_the_same_current_event", self.config_param["close_the_same_current_event"])
     settings.setValue("confirm_sound", self.config_param["confirm_sound"])
-    settings.setValue("beep_every", self.beep_every)
-    settings.setValue("alert_nosubject", self.alertNoFocalSubject)
+    settings.setValue("beep_every", self.config_param["beep_every"])
+    settings.setValue("alert_nosubject", self.config_param["alert_if_no_focal_subject"])
     settings.setValue("tracking_cursor_above_event", self.trackingCursorAboveEvent)
-    settings.setValue("check_for_new_version", self.checkForNewVersion)
+
     # settings.setValue(DISPLAY_SUBTITLES, self.config_param[DISPLAY_SUBTITLES])
     settings.setValue("pause_before_addevent", self.pause_before_addevent)
 

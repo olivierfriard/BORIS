@@ -449,20 +449,20 @@ def preferences(self):
     preferencesWindow.sbRepositionTimeOffset.setValue(self.config_param["repositioning_time_offset"])
     preferencesWindow.sbSpeedStep.setValue(self.config_param["play_rate_step"])
     # automatic backup
-    preferencesWindow.sbAutomaticBackup.setValue(self.automaticBackup)
+    preferencesWindow.sbAutomaticBackup.setValue(self.config_param["automatic_backup"])
     # separator for behavioural strings
-    preferencesWindow.leSeparator.setText(self.behav_seq_separator)
+    preferencesWindow.leSeparator.setText(self.config_param["behav_seq_separator"])
     # close same event indep of modifiers
     preferencesWindow.cbCloseSameEvent.setChecked(self.config_param["close_the_same_current_event"])
     # confirm sound
     preferencesWindow.cbConfirmSound.setChecked(self.config_param["confirm_sound"])
     # beep every
-    preferencesWindow.sbBeepEvery.setValue(self.beep_every)
+    preferencesWindow.sbBeepEvery.setValue(self.config_param["beep_every"])
     # frame step size
     # preferencesWindow.sb_frame_step_size.setValue(self.config_param.get(cfg.FRAME_STEP_SIZE, cfg.FRAME_STEP_SIZE_DEFAULT_VALUE))
 
     # alert no focal subject
-    preferencesWindow.cbAlertNoFocalSubject.setChecked(self.alertNoFocalSubject)
+    preferencesWindow.cbAlertNoFocalSubject.setChecked(self.config_param["alert_if_no_focal_subject"])
     # tracking cursor above event
     preferencesWindow.cbTrackingCursorAboveEvent.setChecked(self.trackingCursorAboveEvent)
     # check for new version
@@ -478,7 +478,7 @@ def preferences(self):
         preferencesWindow.cb_hwdec.setCurrentIndex(
             cfg.MPV_HWDEC_OPTIONS.index(self.config_param.get(cfg.MPV_HWDEC, cfg.MPV_HWDEC_DEFAULT_VALUE))
         )
-    except Exception:
+    except Exception:  # noqa: BLE001
         preferencesWindow.cb_hwdec.setCurrentIndex(cfg.MPV_HWDEC_OPTIONS.index(cfg.MPV_HWDEC_DEFAULT_VALUE))
     # check integrity
     preferencesWindow.cb_check_integrity_at_opening.setChecked(self.config_param.get(cfg.CHECK_PROJECT_INTEGRITY, True))
@@ -632,24 +632,24 @@ def preferences(self):
 
             self.config_param["play_rate_step"] = preferencesWindow.sbSpeedStep.value()
 
-            self.automaticBackup = preferencesWindow.sbAutomaticBackup.value()
-            if self.automaticBackup:
-                self.automaticBackupTimer.start(self.automaticBackup * 60000)
+            self.config_param["automatic_backup"] = preferencesWindow.sbAutomaticBackup.value()
+            if self.config_param["automatic_backup"]:
+                self.automaticBackupTimer.start(self.config_param["automatic_backup"] * 60000)
             else:
                 self.automaticBackupTimer.stop()
 
-            self.behav_seq_separator = preferencesWindow.leSeparator.text()
+            self.config_param["behav_seq_separator"] = preferencesWindow.leSeparator.text()
 
             self.config_param["close_the_same_current_event"] = preferencesWindow.cbCloseSameEvent.isChecked()
 
             self.config_param["confirm_sound"] = preferencesWindow.cbConfirmSound.isChecked()
 
-            self.beep_every = preferencesWindow.sbBeepEvery.value()
+            self.config_param["beep_every"] = preferencesWindow.sbBeepEvery.value()
 
             # frame step size
             # self.config_param[cfg.FRAME_STEP_SIZE] = preferencesWindow.sb_frame_step_size.value()
 
-            self.alertNoFocalSubject = preferencesWindow.cbAlertNoFocalSubject.isChecked()
+            self.config_param["alert_if_no_focal_subject"] = preferencesWindow.cbAlertNoFocalSubject.isChecked()
 
             self.trackingCursorAboveEvent = preferencesWindow.cbTrackingCursorAboveEvent.isChecked()
 

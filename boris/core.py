@@ -53,7 +53,7 @@ from PIL.ImageQt import Image
 
 matplotlib.use("QtAgg")
 
-from PySide6.QtCore import QAbstractTableModel, QDateTime, QElapsedTimer, QEvent, QPoint, QSettings, Qt, QUrl, Signal
+from PySide6.QtCore import QAbstractTableModel, QDateTime, QElapsedTimer, QEvent, QPoint, QSettings, Qt, QTimer, QUrl, Signal
 from PySide6.QtGui import QAction, QColor, QDesktopServices, QFont, QIcon, QKeyEvent, QKeySequence, QPainter, QPixmap, QPolygon
 from PySide6.QtMultimedia import QSoundEffect
 from PySide6.QtWidgets import (
@@ -266,7 +266,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     current_image_size = None
 
     media_scan_sampling_mem: list = []
-    behav_seq_separator: str = "|"
     # time laps
     fast = 10
 
@@ -431,9 +430,12 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         # PySide6
         self.tv_events.setItemDelegate(events_cursor.StyledItemDelegateTriangle(self.events_current_row))
 
-        connections.connections(self)
+        self.automaticBackupTimer = QTimer(self)
+        self.automaticBackupTimer.timeout.connect(self.automatic_backup)
+
         self.config_param = dict(cfg.INIT_PARAM)
         config_file.read(self)
+        connections.connections(self)
         menu_options.update_menu(self)
 
         plugins.load_plugins(self)
@@ -3436,7 +3438,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         logging.debug("check project integrity open save")
 
-        if self.automaticBackup:
+        if self.config_param["automatic_backup"]:
             return
 
         logging.debug(
@@ -4265,16 +4267,17 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             current_media_time_pos = value
 
         # observation time interval
-        if self.pj[cfg.OBSERVATIONS][self.observationId].get(cfg.OBSERVATION_TIME_INTERVAL, [0, 0])[1]:
-            if cumulative_time_pos >= self.pj[cfg.OBSERVATIONS][self.observationId].get(cfg.OBSERVATION_TIME_INTERVAL, [0, 0])[1]:
-                if self.is_playing():
-                    self.pause_video("End of observation interval reached. Player paused")
-                    self.beep("beep")
+        if (
+            self.pj[cfg.OBSERVATIONS][self.observationId].get(cfg.OBSERVATION_TIME_INTERVAL, [0, 0])[1]
+            and (cumulative_time_pos >= self.pj[cfg.OBSERVATIONS][self.observationId].get(cfg.OBSERVATION_TIME_INTERVAL, [0, 0])[1])
+            and self.is_playing()
+        ):
+            self.pause_video("End of observation interval reached. Player paused")
+            self.beep("beep")
 
         # alarm
-        if self.beep_every:
-            if cumulative_time_pos % (self.beep_every) <= 0.1:
-                self.beep("beep")
+        if self.config_param["beep_every"] and cumulative_time_pos % (self.config_param["beep_every"]) <= 0.1:
+            self.beep("beep")
 
         # scan sampling
         if self.pj[cfg.OBSERVATIONS][self.observationId].get(cfg.MEDIA_SCAN_SAMPLING_DURATION, 0):
@@ -5205,7 +5208,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         if behavior_idx is not None:
             # check if focal subject is defined
-            if not self.currentSubject and self.alertNoFocalSubject:
+            if not self.currentSubject and self.config_param["alert_if_no_focal_subject"]:
                 if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE] == cfg.MEDIA:
                     if self.playerType == cfg.MEDIA:
                         if self.is_playing():

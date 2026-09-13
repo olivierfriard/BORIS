@@ -772,6 +772,10 @@ INIT_PARAM = {
     "play_rate_step": 0.1,
     "close_the_same_current_event": False,
     "confirm_sound": False,
+    "automatic_backup": 0,
+    "behav_seq_separator": "|",
+    "alert_if_no_focal_subject": False,
+    "beep_every": 0,
 }
 
 SDIS_EXT = "sds"

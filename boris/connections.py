@@ -404,9 +404,9 @@ def connections(self):
     self.live_timer.timeout.connect(self.live_timer_out)
 
     # timer for automatic backup
-    self.automaticBackupTimer = QTimer(self)
-    self.automaticBackupTimer.timeout.connect(self.automatic_backup)
-    if self.automaticBackup:
-        self.automaticBackupTimer.start(self.automaticBackup * 60000)
+    # self.automaticBackupTimer = QTimer(self)
+    # self.automaticBackupTimer.timeout.connect(self.automatic_backup)
+    if self.config_param["automatic_backup"]:
+        self.automaticBackupTimer.start(self.config_param["automatic_backup"] * 60000)
 
     self.pb_live_obs.clicked.connect(self.start_live_observation)

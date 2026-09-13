@@ -36,11 +36,13 @@ from . import config as cfg
 from . import db_functions, dialog, export_observation, observation_operations, project_functions, select_observations, select_subj_behav
 from . import utilities as util
 
+logger = logging.getLogger(__name__)
+
 
 def export_events_as_behavioral_sequences(self, separated_subjects=False, timed=False):
     """
     export events from selected observations by subject as behavioral sequences (plain text file)
-    behaviors are separated by character specified in self.behav_seq_separator (usually pipe |)
+    behaviors are separated by character specified in self.config_param['behav_seq_separator'] (usually pipe |)
     for use with Behatrix (see https://www.boris.unito.it/pages/behatrix)
 
     Args:
@@ -101,13 +103,13 @@ def export_events_as_behavioral_sequences(self, separated_subjects=False, timed=
         pj=self.pj,
         selected_observations=selected_observations,
         parameters=parameters,
-        behaviors_separator=self.behav_seq_separator,
+        behaviors_separator=self.config_param["behav_seq_separator"],
         separated_subjects=separated_subjects,
         timed=timed,
         file_name=file_name,
     )
     if not r:
-        logging.critical(f"Error while exporting events as behavioral sequences: {msg}")
+        logger.critical(f"Error while exporting events as behavioral sequences: {msg}")
         QMessageBox.critical(
             None,
             cfg.programName,
@@ -462,7 +464,7 @@ def export_aggregated_events(self):
             with open(fileName, "w") as f:
                 for line in conn.iterdump():
                     f.write(f"{line}\n")
-        except Exception:
+        except Exception:  # noqa: BLE001
             QMessageBox.critical(
                 None,
                 cfg.programName,
@@ -479,7 +481,7 @@ def export_aggregated_events(self):
         _, max_modifiers = export_observation.export_aggregated_events(self.pj, parameters, obs_id)
         tot_max_modifiers = max(tot_max_modifiers, max_modifiers)
 
-    logging.debug(f"tot_max_modifiers: {tot_max_modifiers}")
+    logger.debug(f"tot_max_modifiers: {tot_max_modifiers}")
 
     data_grouped_obs = tablib.Dataset()
 
@@ -487,7 +489,7 @@ def export_aggregated_events(self):
     header = list(fields_type(tot_max_modifiers).keys())
 
     for obs_id in selected_observations:
-        logging.debug(f"Exporting aggregated events for obs Id: {obs_id}")
+        logger.debug(f"Exporting aggregated events for obs Id: {obs_id}")
 
         data_single_obs, _ = export_observation.export_aggregated_events(
             self.pj, parameters, obs_id, force_number_modifiers=tot_max_modifiers
@@ -705,7 +707,7 @@ class ExportTextGridWorker(QObject):
             )
 
             if db_connector is None:
-                logging.critical("Error when loading aggregated events in DB")
+                logger.critical("Error when loading aggregated events in DB")
                 self.error.emit("Error when loading aggregated events in DB")
                 self.finished.emit(0, self.export_dir)
                 return
@@ -990,7 +992,7 @@ class ExportTextGridWorker(QObject):
             self.finished.emit(file_count, self.export_dir)
 
         except Exception as e:
-            logging.exception("Unhandled exception in ExportTextGridWorker")
+            logger.exception("Unhandled exception in ExportTextGridWorker")
             self.error.emit(str(e))
             self.finished.emit(0, self.export_dir)
 
