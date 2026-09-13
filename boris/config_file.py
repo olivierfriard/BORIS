@@ -217,13 +217,14 @@ def read(self) -> None:
         logger.debug(f"Automatic check for new version: {self.checkForNewVersion}")
 
         # pause before add event
-        self.pause_before_addevent = False
-        try:
-            self.pause_before_addevent = settings.value("pause_before_addevent") == "true"
-        except Exception:  # noqa: BLE001
-            self.pause_before_addevent = False
-
-        logger.debug(f"pause_before_addevent: {self.pause_before_addevent}")
+        if self.config_param.get("pause_before_addevent", None) is None:
+            pause_before_addevent = False
+            try:
+                pause_before_addevent = settings.value("pause_before_addevent") == "true"
+            except Exception:  # noqa: BLE001
+                pause_before_addevent = False
+            self.config_param["pause_before_addevent"] = pause_before_addevent
+        logger.debug(f"pause_before_addevent: {self.config_param['pause_before_addevent']}")
 
         if (
             self.checkForNewVersion
@@ -357,9 +358,8 @@ def save(self, lastCheckForNewVersion=0):
     settings.setValue("beep_every", self.config_param["beep_every"])
     settings.setValue("alert_nosubject", self.config_param["alert_if_no_focal_subject"])
     settings.setValue("tracking_cursor_above_event", self.trackingCursorAboveEvent)
-
+    settings.setValue("pause_before_addevent", self.config_param["pause_before_addevent"])
     # settings.setValue(DISPLAY_SUBTITLES, self.config_param[DISPLAY_SUBTITLES])
-    settings.setValue("pause_before_addevent", self.pause_before_addevent)
 
     if lastCheckForNewVersion:
         settings.setValue("last_check_for_new_version", lastCheckForNewVersion)

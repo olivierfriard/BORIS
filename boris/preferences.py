@@ -470,7 +470,7 @@ def preferences(self):
     # display subtitles
     preferencesWindow.cb_display_subtitles.setChecked(self.config_param.get(cfg.DISPLAY_SUBTITLES, False))
     # pause before add event
-    preferencesWindow.cb_pause_before_addevent.setChecked(self.pause_before_addevent)
+    preferencesWindow.cb_pause_before_addevent.setChecked(self.config_param["pause_before_addevent"])
     # MPV hwdec
     preferencesWindow.cb_hwdec.clear()
     preferencesWindow.cb_hwdec.addItems(cfg.MPV_HWDEC_OPTIONS)
@@ -657,7 +657,7 @@ def preferences(self):
 
             self.config_param[cfg.DISPLAY_SUBTITLES] = preferencesWindow.cb_display_subtitles.isChecked()
 
-            self.pause_before_addevent = preferencesWindow.cb_pause_before_addevent.isChecked()
+            self.config_param["pause_before_addevent"] = preferencesWindow.cb_pause_before_addevent.isChecked()
 
             # MPV hwdec
             self.config_param[cfg.MPV_HWDEC] = cfg.MPV_HWDEC_OPTIONS[preferencesWindow.cb_hwdec.currentIndex()]

@@ -48,7 +48,11 @@ def add_event(self):
         self.no_observation()
         return
 
-    if self.pause_before_addevent and self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE] == cfg.MEDIA and self.playerType == cfg.MEDIA:
+    if (
+        self.config_param["pause_before_addevent"]
+        and self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE] == cfg.MEDIA
+        and self.playerType == cfg.MEDIA
+    ):
         memState = self.is_playing()
         if memState:
             self.pause_video()
@@ -181,7 +185,7 @@ def add_event(self):
                     break
 
     if (
-        self.pause_before_addevent
+        self.config_param["pause_before_addevent"]
         and self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE] == cfg.MEDIA
         and self.playerType == cfg.MEDIA
         and memState
@@ -620,7 +624,11 @@ def edit_event(self):
         QMessageBox.warning(self, cfg.programName, "Select an event to edit")
         return
 
-    if self.pause_before_addevent and self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE] == cfg.MEDIA and self.playerType == cfg.MEDIA:
+    if (
+        self.config_param["pause_before_addevent"]
+        and self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE] == cfg.MEDIA
+        and self.playerType == cfg.MEDIA
+    ):
         player_mem_state = self.is_playing()
         if player_mem_state:
             self.pause_video()
@@ -828,7 +836,7 @@ def edit_event(self):
             break
 
     if (
-        self.pause_before_addevent
+        self.config_param["pause_before_addevent"]
         and self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE] == cfg.MEDIA
         and self.playerType == cfg.MEDIA
         and player_mem_state
@@ -854,7 +862,7 @@ def edit_time_selected_events(self):
         return
 
     d = w.time_widget.get_time()
-    if d.is_nan() or not d:
+    if d is None or not d or d.is_nan():
         return
 
     if ":" in util.smart_time_format(abs(d)):
@@ -958,7 +966,7 @@ def paste_clipboard_to_events(self):
                 f"the events must be organized in {len(cfg.PJ_EVENTS_FIELDS[self.playerType])} columns separated by <TAB> character"
             ),
         )
-        msg_box.setWindowFlags(msg_box.windowFlags() | Qt.WindowStaysOnTopHint)
+        msg_box.setWindowFlags(msg_box.windowFlags() | Qt.WindowType.WindowStaysOnTopHint)
         msg_box.exec()
 
         return
