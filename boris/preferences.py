@@ -464,7 +464,7 @@ def preferences(self):
     # alert no focal subject
     preferencesWindow.cbAlertNoFocalSubject.setChecked(self.config_param["alert_if_no_focal_subject"])
     # tracking cursor above event
-    preferencesWindow.cbTrackingCursorAboveEvent.setChecked(self.trackingCursorAboveEvent)
+    preferencesWindow.cbTrackingCursorAboveEvent.setChecked(self.config_param["tracking_cursor_above_event"])
     # check for new version
     preferencesWindow.cbCheckForNewVersion.setChecked(self.checkForNewVersion)
     # display subtitles
@@ -554,12 +554,14 @@ def preferences(self):
     preferencesWindow.cbSpectrogramColorMap.clear()
     preferencesWindow.cbSpectrogramColorMap.addItems(cfg.SPECTROGRAM_COLOR_MAPS)
     try:
-        preferencesWindow.cbSpectrogramColorMap.setCurrentIndex(cfg.SPECTROGRAM_COLOR_MAPS.index(self.spectrogram_color_map))
+        preferencesWindow.cbSpectrogramColorMap.setCurrentIndex(
+            cfg.SPECTROGRAM_COLOR_MAPS.index(self.config_param["spectrogram_color_map"])
+        )
     except Exception:
         preferencesWindow.cbSpectrogramColorMap.setCurrentIndex(cfg.SPECTROGRAM_COLOR_MAPS.index(cfg.SPECTROGRAM_DEFAULT_COLOR_MAP))
     # time interval
     try:
-        preferencesWindow.sb_time_interval.setValue(self.spectrogram_time_interval)
+        preferencesWindow.sb_time_interval.setValue(self.config_param["spectrogram_time_interval"])
     except Exception:
         preferencesWindow.sb_time_interval.setValue(cfg.SPECTROGRAM_DEFAULT_TIME_INTERVAL)
     # window type
@@ -579,14 +581,14 @@ def preferences(self):
     preferencesWindow.sb_vmax.setValue(self.config_param.get(cfg.SPECTROGRAM_VMAX, cfg.SPECTROGRAM_DEFAULT_VMAX))
 
     # behavior colors
-    if not self.plot_colors:
-        self.plot_colors = cfg.BEHAVIORS_PLOT_COLORS
-    preferencesWindow.te_behav_colors.setPlainText("\n".join(self.plot_colors))
+    if not self.config_param["plot_colors"]:
+        self.config_param["plot_colors"] = cfg.BEHAVIORS_PLOT_COLORS
+    preferencesWindow.te_behav_colors.setPlainText("\n".join(self.config_param["plot_colors"]))
 
     # category colors
-    if not self.behav_category_colors:
-        self.behav_category_colors = cfg.CATEGORY_COLORS_LIST
-    preferencesWindow.te_category_colors.setPlainText("\n".join(self.behav_category_colors))
+    if not self.config_param["behav_category_colors"]:
+        self.config_param["behav_category_colors"] = cfg.CATEGORY_COLORS_LIST
+    preferencesWindow.te_category_colors.setPlainText("\n".join(self.config_param["behav_category_colors"]))
 
     # interface
     preferencesWindow.sb_toolbar_icon_size.setValue(self.config_param.get(cfg.TOOLBAR_ICON_SIZE, cfg.DEFAULT_TOOLBAR_ICON_SIZE_VALUE))
@@ -651,7 +653,7 @@ def preferences(self):
 
             self.config_param["alert_if_no_focal_subject"] = preferencesWindow.cbAlertNoFocalSubject.isChecked()
 
-            self.trackingCursorAboveEvent = preferencesWindow.cbTrackingCursorAboveEvent.isChecked()
+            self.config_param["tracking_cursor_above_event"] = preferencesWindow.cbTrackingCursorAboveEvent.isChecked()
 
             self.checkForNewVersion = preferencesWindow.cbCheckForNewVersion.isChecked()
 
@@ -703,8 +705,8 @@ def preferences(self):
             self.ffmpeg_cache_dir = preferencesWindow.leFFmpegCacheDir.text()
 
             # spectrogram
-            self.spectrogram_color_map = preferencesWindow.cbSpectrogramColorMap.currentText()
-            self.spectrogram_time_interval = preferencesWindow.sb_time_interval.value()
+            self.config_param["spectrogram_color_map"] = preferencesWindow.cbSpectrogramColorMap.currentText()
+            self.config_param["spectrogram_time_interval"] = preferencesWindow.sb_time_interval.value()
             # window type
             self.config_param[cfg.SPECTROGRAM_WINDOW_TYPE] = preferencesWindow.cb_window_type.currentText()
             # NFFT
@@ -719,9 +721,9 @@ def preferences(self):
             self.config_param[cfg.SPECTROGRAM_VMAX] = preferencesWindow.sb_vmax.value()
 
             # behav colors
-            self.plot_colors = preferencesWindow.te_behav_colors.toPlainText().split()
+            self.config_param["plot_colors"] = preferencesWindow.te_behav_colors.toPlainText().split()
             # category colors
-            self.behav_category_colors = preferencesWindow.te_category_colors.toPlainText().split()
+            self.config_param["behav_category_colors"] = preferencesWindow.te_category_colors.toPlainText().split()
 
             # interface
             self.config_param[cfg.TOOLBAR_ICON_SIZE] = preferencesWindow.sb_toolbar_icon_size.value()

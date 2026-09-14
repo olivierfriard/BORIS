@@ -2654,7 +2654,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self,
             selected_observations,
             parameters,
-            plot_colors=self.plot_colors,
+            plot_colors=self.config_param["plot_colors"],
             plot_directory=plot_directory,
             file_format=file_format,
         )
@@ -2785,7 +2785,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             parameters,
             plot_directory,
             output_format,
-            plot_colors=self.plot_colors,
+            plot_colors=self.config_param["plot_colors"],
         )
         if "error" in r:
             QMessageBox.warning(self, cfg.programName, r.get("message", "Error on time budget bar plot"))
@@ -3509,17 +3509,16 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
                 self.projectFileName += ".boris.gz"
                 # check if file name with extension already exists
-                if Path(self.projectFileName).is_file():
-                    if (
-                        dialog.MessageDialog(
-                            cfg.programName,
-                            f"The file {self.projectFileName} already exists.",
-                            (cfg.CANCEL, cfg.OVERWRITE),
-                        )
-                        == cfg.CANCEL
-                    ):
-                        self.projectFileName = ""
-                        return ""
+                if Path(self.projectFileName).is_file() and (
+                    dialog.MessageDialog(
+                        cfg.programName,
+                        f"The file {self.projectFileName} already exists.",
+                        (cfg.CANCEL, cfg.OVERWRITE),
+                    )
+                    == cfg.CANCEL
+                ):
+                    self.projectFileName = ""
+                    return ""
 
             r = self.save_project_json(self.projectFileName)
             if r:
@@ -4077,18 +4076,12 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
             if cr_list:
                 self.events_current_row = cr_list[0]
-                if not self.trackingCursorAboveEvent:
+                if not self.config_param["tracking_cursor_above_event"]:
                     self.events_current_row += 1
             else:
                 self.events_current_row = -1
 
         self.tv_events.setItemDelegate(events_cursor.StyledItemDelegateTriangle(self.events_current_row))
-
-        # if self.twEvents.item(self.events_current_row, 0):
-        #    self.twEvents.scrollToItem(
-        #        self.twEvents.item(self.events_current_row, 0),
-        #        QAbstractItemView.EnsureVisible,
-        #    )
 
         index = self.tv_events.model().index(self.events_current_row, 0)
         self.tv_events.scrollTo(index, QAbstractItemView.EnsureVisible)
