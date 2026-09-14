@@ -755,7 +755,12 @@ EMPTY_PROJECT = {
     CONVERTERS: {},
 }
 
-DEFAULT_CONFIG_VALUES: dict = {"tracking_cursor_above_event": False, "pause_before_addevent": False}
+DEFAULT_CONFIG_VALUES: dict = {
+    "tracking_cursor_above_event": False,
+    "pause_before_addevent": False,
+    "automatic_backup": 0,
+    "confirm_sound": False,
+}
 
 INIT_PARAM = {
     DISPLAY_SUBTITLES: False,
@@ -773,8 +778,8 @@ INIT_PARAM = {
     "repositioning_time_offset": 0,
     "play_rate_step": 0.1,
     "close_the_same_current_event": False,
-    "confirm_sound": False,
-    "automatic_backup": 0,
+    "confirm_sound": DEFAULT_CONFIG_VALUES["confirm_sound"],
+    "automatic_backup": DEFAULT_CONFIG_VALUES["automatic_backup"],
     "behav_seq_separator": "|",
     "alert_if_no_focal_subject": False,
     "beep_every": 0,
