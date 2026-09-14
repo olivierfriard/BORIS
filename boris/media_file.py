@@ -42,7 +42,7 @@ def get_info(self) -> None:
 
             ffmpeg_output += (
                 f"File path: <b>{media_full_path}</b><br><br>"
-                f"Duration: {r['duration']} seconds ({util.convertTime(self.timeFormat, r['duration'])})<br>"
+                f"Duration: {r['duration']} seconds ({util.convertTime(self.config_param['time_format'], r['duration'])})<br>"
                 f"FPS: {r['fps']}<br>"
                 f"Resolution: {r['resolution']} pixels<br>"
                 f"Format long name: {r.get('format_long_name', cfg.NA)}<br>"
@@ -94,7 +94,7 @@ def get_info(self) -> None:
                 media_full_path = project_functions.full_path(file_path, self.projectFileName)
                 ffmpeg_output += media_analysis_str(self.ffmpeg_bin, media_full_path)
 
-            ffmpeg_output += f"<br>Total duration: {sum(self.dw_player[i].media_durations) / 1000} ({util.convertTime(self.timeFormat, sum(self.dw_player[i].media_durations) / 1000)})"
+            ffmpeg_output += f"<br>Total duration: {sum(self.dw_player[i].media_durations) / 1000} ({util.convertTime(self.config_param['time_format'], sum(self.dw_player[i].media_durations) / 1000)})"
 
             tot_output += mpv_output + ffmpeg_output + "<br><hr>"
 

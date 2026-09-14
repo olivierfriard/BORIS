@@ -102,10 +102,10 @@ def choose_obs_subj_behav_category(
     paramPanelWindow.start_interval = start_interval
     paramPanelWindow.end_interval = end_interval
 
-    if self.timeFormat == cfg.S:
+    if self.config_param["time_format"] == cfg.S:
         paramPanelWindow.start_time.rb_seconds.setChecked(True)
         paramPanelWindow.end_time.rb_seconds.setChecked(True)
-    if self.timeFormat == cfg.HHMMSS:
+    if self.config_param["time_format"] == cfg.HHMMSS:
         paramPanelWindow.start_time.rb_time.setChecked(True)
         paramPanelWindow.end_time.rb_time.setChecked(True)
 

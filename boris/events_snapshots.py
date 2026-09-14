@@ -32,6 +32,8 @@ from . import config as cfg
 from . import db_functions, dialog, project_functions, select_observations, select_subj_behav
 from . import utilities as util
 
+logger = logging.getLogger(__name__)
+
 
 def extract_media_snapshots(self):
     """
@@ -169,7 +171,7 @@ def extract_media_snapshots(self):
                             flag_no_video = True
 
                         if flag_no_video:
-                            logging.debug(f"Media {self.pj[cfg.OBSERVATIONS][obs_id][cfg.FILE][nplayer][mediaFileIdx]} does not have video")
+                            logger.debug(f"Media {self.pj[cfg.OBSERVATIONS][obs_id][cfg.FILE][nplayer][mediaFileIdx]} does not have video")
                             flag_no_video = True
                             response = dialog.MessageDialog(
                                 cfg.programName,
@@ -199,7 +201,7 @@ def extract_media_snapshots(self):
                             mediafile_fps = 0
 
                         if not mediafile_fps:
-                            logging.debug(f"FPS not found for {self.pj[cfg.OBSERVATIONS][obs_id][cfg.FILE][nplayer][mediaFileIdx]}")
+                            logger.debug(f"FPS not found for {self.pj[cfg.OBSERVATIONS][obs_id][cfg.FILE][nplayer][mediaFileIdx]}")
                             response = dialog.MessageDialog(
                                 cfg.programName,
                                 (
@@ -310,7 +312,7 @@ def extract_media_snapshots(self):
                             ]
                         )
 
-                        logging.debug(f"ffmpeg command: {ffmpeg_command}")
+                        logger.debug(f"ffmpeg command: {ffmpeg_command}")
 
                         p = subprocess.Popen(ffmpeg_command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
                         out, _ = p.communicate()
@@ -630,7 +632,7 @@ def extract_media_clips(self):
                             codecs=codecs,
                         )
 
-                        logging.debug(f'ffmpeg command: {ffmpeg_command} "{new_file_name}"')
+                        logger.debug(f'ffmpeg command: {ffmpeg_command} "{new_file_name}"')
 
                         # run ffmpeg command non blocking UI
                         # self.process = QProcess(self)

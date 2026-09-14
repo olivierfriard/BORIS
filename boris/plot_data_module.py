@@ -43,6 +43,8 @@ from PySide6.QtWidgets import (
 from . import config as cfg
 from . import utilities as util
 
+logger = logging.getLogger(__name__)
+
 
 class MyMplCanvas(FigureCanvas):
     def __init__(self, parent=None):
@@ -139,11 +141,6 @@ class Plot_data(QWidget):
             self.error_msg = error_msg
             return
 
-        """
-        logging.debug("data[50]: {}".format(data[:50]))
-        logging.debug("shape: {}".format(data.shape))
-        """
-
         if data.shape == (0,):
             self.error_msg = "Empty input file"
             return
@@ -173,19 +170,11 @@ class Plot_data(QWidget):
             self.error_msg = "more values for same time"
             return
 
-        """logging.debug(f"diff: {diff}")"""
-
         min_time_step = min(diff)
-
-        """logging.debug(f"min_time_step: {min_time_step}")"""
 
         # check if sampling rate is not constant
         if len(diff) != 1:
-            """logging.debug("len diff != 1")"""
-
             min_time_step = min(diff)
-
-            """logging.debug(f"min_time_step: {min_time_step}")"""
 
             # increase value for low sampling rate (> 1 s)
             if min_time_step > 1:
@@ -194,8 +183,6 @@ class Plot_data(QWidget):
             x2 = np.arange(min_time_value, max_time_value + min_time_step, min_time_step)
             data = np.array((x2, np.interp(x2, data[:, 0], data[:, 1]))).T
             del x2
-
-            """logging.debug(f"data[:,0]: {data[:, 0]}")"""
 
             # time
             min_time_value, max_time_value = min(data[:, 0]), max(data[:, 0])
@@ -209,8 +196,6 @@ class Plot_data(QWidget):
         if min_time_step < 0.04:
             data = data[0 :: int(round(0.04 / min_time_step, 2))]
             min_time_step = 0.04
-
-        """logging.debug(f"new data after subsampling: {data[:50]}")"""
 
         min_var_value, max_var_value = min(data[:, 1]), max(data[:, 1])
 
@@ -307,7 +292,7 @@ class Plot_data(QWidget):
 
             self.myplot.draw()
         except Exception:
-            logging.debug(f"error in plotting external data: {sys.exc_info()[1]}")
+            logger.debug(f"error in plotting external data: {sys.exc_info()[1]}")
 
 
 class Plotter(QObject):
@@ -323,17 +308,17 @@ class Plotter(QObject):
 
     @Slot(float)
     def replot(self, current_time):  # time_ in s
-        logging.debug("current_time: {}".format(current_time))
+        logger.debug("current_time: {}".format(current_time))
 
         current_discrete_time = round(round(current_time / self.min_time_step) * self.min_time_step, 2)
 
-        logging.debug("current_discrete_time: {}".format(current_discrete_time))
-        logging.debug("self.interval: {}".format(self.interval))
+        logger.debug("current_discrete_time: {}".format(current_discrete_time))
+        logger.debug("self.interval: {}".format(self.interval))
 
         freq_interval = int(round(self.interval / self.min_time_step))
 
         if self.min_time_value <= current_discrete_time <= self.max_time_value:
-            logging.debug("self.min_time_value <= current_discrete_time <= self.max_time_value")
+            logger.debug("self.min_time_value <= current_discrete_time <= self.max_time_value")
 
             idx = np.where(self.data[:, 0] == current_discrete_time)[0]
             if not len(idx):
@@ -342,7 +327,7 @@ class Plotter(QObject):
             if len(idx):
                 position_data = idx[0]
 
-                logging.debug(f"position data: {position_data}")
+                logger.debug(f"position data: {position_data}")
 
                 position_start = int(position_data - freq_interval // 2)
 
@@ -352,7 +337,7 @@ class Plotter(QObject):
                     i = np.array([np.nan] * abs(position_start)).T
                     flag_i = True
 
-                    logging.debug(f"len(i): {len(i)}")
+                    logger.debug(f"len(i): {len(i)}")
 
                     position_start = 0
 
@@ -376,21 +361,21 @@ class Plotter(QObject):
                 d = np.array([np.nan] * int(self.interval / self.min_time_step)).T
 
         elif current_time > self.max_time_value:
-            logging.debug(f"self.interval/self.min_time_step/2: {self.interval / self.min_time_step / 2}")
+            logger.debug(f"self.interval/self.min_time_step/2: {self.interval / self.min_time_step / 2}")
 
             dim_footer = int(round((current_time - self.max_time_value) / self.min_time_step + self.interval / self.min_time_step / 2))
 
             footer = np.array([np.nan] * dim_footer).T
-            logging.debug(f"len footer: {len(footer)}")
+            logger.debug(f"len footer: {len(footer)}")
 
             a = (self.interval / 2 - (current_time - self.max_time_value)) / self.min_time_step
-            logging.debug(f"a: {a}")
+            logger.debug(f"a: {a}")
 
             if a >= 0:
-                logging.debug("a>=0")
+                logger.debug("a>=0")
 
                 st = int(round(len(self.data) - a))
-                logging.debug(f"st: {st}")
+                logger.debug(f"st: {st}")
 
                 flag_i = False
                 if st < 0:
@@ -403,13 +388,13 @@ class Plotter(QObject):
                 if flag_i:
                     d = np.append(i, d, axis=0)
 
-                logging.debug(f"len d a>=0: {len(d)}")
+                logger.debug(f"len d a>=0: {len(d)}")
 
             else:  # a <0
-                logging.debug("a<0")
+                logger.debug("a<0")
                 d = np.array([np.nan] * int(self.interval / self.min_time_step)).T
 
-                logging.debug(f"len d a<0: {len(d)}")
+                logger.debug(f"len d a<0: {len(d)}")
 
         elif current_time < self.min_time_value:
             x = (self.min_time_value - current_time) / self.min_time_step
@@ -427,9 +412,9 @@ class Plotter(QObject):
                 d = np.array([np.nan] * int(self.interval / self.min_time_step)).T
 
         y = d
-        logging.debug(f"len y: {len(y)}")
+        logger.debug(f"len y: {len(y)}")
 
-        logging.debug(f"self.min_time_step: {self.min_time_step}")
+        logger.debug(f"self.min_time_step: {self.min_time_step}")
 
         x = np.arange(
             current_time - self.interval // 2,
@@ -437,7 +422,7 @@ class Plotter(QObject):
             self.min_time_step,
         )
 
-        logging.debug(f"len x 1: {len(x)}")
+        logger.debug(f"len x 1: {len(x)}")
 
         self.return_fig.emit(
             x,

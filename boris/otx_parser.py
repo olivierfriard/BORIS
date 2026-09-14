@@ -32,10 +32,7 @@ import zipfile
 from decimal import Decimal as dec
 from xml.dom import minidom
 
-try:
-    from . import config as cfg
-except Exception:
-    import config as cfg
+from . import config as cfg
 
 logger = logging.getLogger(__name__)
 
@@ -60,20 +57,20 @@ def otx_to_boris(file_path: str) -> tuple[dict, list]:
             if files_list:
                 try:
                     file_zip.extract(files_list[0])
-                except Exception:
+                except Exception:  # noqa: BLE001
                     return {"fatal": True}, ["Error when extracting file from OTB"]
             else:
                 return {"fatal": True}, ["Error when extracting file"]
 
             try:
                 xmldoc = minidom.parse(files_list[0])
-            except Exception:
+            except Exception:  # noqa: BLE001
                 return {"fatal": True}, ["XML parsing error"]
 
     elif pl.Path(file_path).suffix in (".odx", ".otx"):
         try:
             xmldoc = minidom.parse(file_path)
-        except Exception:
+        except Exception:  # noqa: BLE001
             return {"fatal": True}, ["XML parsing error"]
 
     else:
@@ -87,21 +84,20 @@ def otx_to_boris(file_path: str) -> tuple[dict, list]:
         metadata = minidom.parseString(item.toxml())
         try:
             project_name = re.sub("<[^>]*>", "", metadata.getElementsByTagName("MET_PROJECT_NAME")[0].toxml())
-        except Exception:
+        except Exception:  # noqa: BLE001
             project_name = ""
         try:
             project_description = re.sub("<[^>]*>", "", metadata.getElementsByTagName("MET_PROJECT_DESCRIPTION")[0].toxml())
-        except Exception:
+        except Exception:  # noqa: BLE001
             project_description = ""
 
         try:
             project_creation_date = re.sub("<[^>]*>", "", metadata.getElementsByTagName("MET_CREATION_DATETIME")[0].toxml())
-        except Exception:
+        except Exception:  # noqa: BLE001
             project_creation_date = ""
 
     # modifiers
     modifiers: dict = {}
-    # modifiers_set = {}
     itemlist = xmldoc.getElementsByTagName("CDS_MODIFIER")
     for item in itemlist:
         modif = minidom.parseString(item.toxml())
@@ -112,16 +108,16 @@ def otx_to_boris(file_path: str) -> tuple[dict, list]:
 
         try:
             modif_parent_id = re.sub("<[^>]*>", "", modif.getElementsByTagName("CDS_ELE_PARENT_ID")[0].toxml())
-        except Exception:
+        except Exception:  # noqa: BLE001
             modif_parent_id = ""
 
         try:
             description = re.sub("<[^>]*>", "", modif.getElementsByTagName("CDS_ELE_DESCRIPTION")[0].toxml())
-        except Exception:
+        except Exception:  # noqa: BLE001
             description = ""
         try:
             key = re.sub("<[^>]*>", "", modif.getElementsByTagName("CDS_ELE_START_KEYCODE")[0].toxml())
-        except Exception:
+        except Exception:  # noqa: BLE001
             key = ""
 
         if modif_parent_id:
@@ -159,26 +155,26 @@ def otx_to_boris(file_path: str) -> tuple[dict, list]:
 
         try:
             description = re.sub("<[^>]*>", "", behav.getElementsByTagName("CDS_ELE_DESCRIPTION")[0].toxml())
-        except Exception:
+        except Exception:  # noqa: BLE001
             description = ""
         try:
             key = re.sub("<[^>]*>", "", behav.getElementsByTagName("CDS_ELE_START_KEYCODE")[0].toxml())
-        except Exception:
+        except Exception:  # noqa: BLE001
             key = ""
 
         try:
             stop_key = re.sub("<[^>]*>", "", behav.getElementsByTagName("CDS_ELE_STOP_KEYCODE")[0].toxml())
-        except Exception:
+        except Exception:  # noqa: BLE001
             stop_key = ""
 
         try:
             parent_name = re.sub("<[^>]*>", "", behav.getElementsByTagName("CDS_ELE_PARENT_NAME")[0].toxml())
-        except Exception:
+        except Exception:  # noqa: BLE001
             parent_name = ""
 
         try:
             mutually_exclusive = re.sub("<[^>]*>", "", behav.getElementsByTagName("CDS_ELE_MUT_EXCLUSIVE")[0].toxml())
-        except Exception:
+        except Exception:  # noqa: BLE001
             mutually_exclusive = ""
 
         if mutually_exclusive == "Y" and parent_name:
@@ -247,11 +243,11 @@ def otx_to_boris(file_path: str) -> tuple[dict, list]:
         subject_name = re.sub("<[^>]*>", "", subject.getElementsByTagName("CDS_ELE_NAME")[0].toxml())
         try:
             key = re.sub("<[^>]*>", "", subject.getElementsByTagName("CDS_ELE_START_KEYCODE")[0].toxml())
-        except Exception:
+        except Exception:  # noqa: BLE001
             key = ""
         try:
             parent_name = re.sub("<[^>]*>", "", subject.getElementsByTagName("CDS_ELE_PARENT_NAME")[0].toxml())
-        except Exception:
+        except Exception:  # noqa: BLE001
             parent_name = ""
 
         if parent_name:
@@ -286,7 +282,7 @@ def otx_to_boris(file_path: str) -> tuple[dict, list]:
 
         try:
             variable_description = re.sub("<[^>]*>", "", modif.getElementsByTagName("VL_DESCRIPTION")[0].toxml())
-        except Exception:
+        except Exception:  # noqa: BLE001
             variable_description = ""
 
         try:
@@ -296,7 +292,7 @@ def otx_to_boris(file_path: str) -> tuple[dict, list]:
                 values_list.append(re.sub("<[^>]*>", "", value.toxml()))
             values_str = ",".join(values_list)
 
-        except Exception:
+        except Exception:  # noqa: BLE001
             values_str = ""
 
         variables[variable_id] = {
@@ -325,8 +321,6 @@ def otx_to_boris(file_path: str) -> tuple[dict, list]:
     observations = xmldoc.getElementsByTagName("OBS_OBSERVATION")
 
     for OBS_OBSERVATION in observations:
-        # OBS_OBSERVATION = minidom.parseString(OBS_OBSERVATION.toxml())
-
         obs_id = OBS_OBSERVATION.getAttribute("NAME")
 
         project[cfg.OBSERVATIONS][obs_id] = dict(
@@ -364,13 +358,11 @@ def otx_to_boris(file_path: str) -> tuple[dict, list]:
                 full_timestamp = dt.datetime.strptime(OBS_EVENT_TIMESTAMP, "%Y-%m-%d %H:%M:%S.%f").timestamp()
                 logger.debug(f"{full_timestamp=}")
 
-                # day_timestamp = dt.datetime.strptime(OBS_EVENT_TIMESTAMP.split(" ")[0], "%Y-%m-%d").timestamp()
-                # timestamp = dec(str(round(full_timestamp - day_timestamp, 3)))
                 timestamp = dec(full_timestamp).quantize(dec(".001"))
 
                 try:
                     OBS_EVENT_SUBJECT = event.getElementsByTagName("OBS_EVENT_SUBJECT")[0].getAttribute("NAME")
-                except Exception:
+                except Exception:  # noqa: BLE001
                     OBS_EVENT_SUBJECT = ""
 
                 OBS_EVENT_BEHAVIOR = event.getElementsByTagName("OBS_EVENT_BEHAVIOR")[0].getAttribute("NAME")
@@ -388,13 +380,13 @@ def otx_to_boris(file_path: str) -> tuple[dict, list]:
                         .childNodes[0]
                         .data
                     )
-                except Exception:
+                except Exception:  # noqa: BLE001
                     OBS_EVENT_BEHAVIOR_MODIFIER: str = ""
 
                 # comment
                 try:
                     OBS_EVENT_COMMENT: str = event.getElementsByTagName("OBS_EVENT_COMMENT")[0].childNodes[0].data
-                except Exception:
+                except Exception:  # noqa: BLE001
                     OBS_EVENT_COMMENT: str = ""
 
                 logger.debug(f"{timestamp=}")

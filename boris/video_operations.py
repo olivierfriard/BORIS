@@ -284,8 +284,8 @@ def video_faster_activated(self):
     if self.playerType != cfg.MEDIA:
         return
 
-    if self.play_rate + self.play_rate_step <= 60:
-        self.play_rate += self.play_rate_step
+    if self.play_rate + self.config_param["play_rate_step"] <= 60:
+        self.play_rate += self.config_param["play_rate_step"]
         for i, player in enumerate(self.dw_player):
             if (
                 str(i + 1) in self.pj[cfg.OBSERVATIONS][self.observationId][cfg.FILE]
@@ -305,8 +305,8 @@ def video_slower_activated(self):
     if self.playerType != cfg.MEDIA:
         return
 
-    if self.play_rate - self.play_rate_step >= 0.1:
-        self.play_rate -= self.play_rate_step
+    if self.play_rate - self.config_param["play_rate_step"] >= 0.1:
+        self.play_rate -= self.config_param["play_rate_step"]
 
         for i, player in enumerate(self.dw_player):
             player.player.speed = round(self.play_rate, 3)

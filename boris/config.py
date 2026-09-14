@@ -766,6 +766,17 @@ INIT_PARAM = {
     f"{MEDIA} tw fields": MEDIA_TW_EVENTS_FIELDS_DEFAULT,
     # FRAME_STEP_SIZE: FRAME_STEP_SIZE_DEFAULT_VALUE,
     TOOLBAR_ICON_SIZE: DEFAULT_TOOLBAR_ICON_SIZE_VALUE,
+    TIME_FORMAT: HHMMSS,
+    "fast_forward_speed": FAST_FORWARD_DEFAULT_VALUE,
+    "repositioning_time_offset": 0,
+    "play_rate_step": 0.1,
+    "close_the_same_current_event": False,
+    "confirm_sound": False,
+    "automatic_backup": 0,
+    "behav_seq_separator": "|",
+    "alert_if_no_focal_subject": False,
+    "beep_every": 0,
+    "pause_before_addevent": False,
 }
 
 SDIS_EXT = "sds"

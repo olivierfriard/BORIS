@@ -53,7 +53,7 @@ from PIL.ImageQt import Image
 
 matplotlib.use("QtAgg")
 
-from PySide6.QtCore import QAbstractTableModel, QDateTime, QElapsedTimer, QEvent, QPoint, QSettings, Qt, QUrl, Signal
+from PySide6.QtCore import QAbstractTableModel, QDateTime, QElapsedTimer, QEvent, QPoint, QSettings, Qt, QTimer, QUrl, Signal
 from PySide6.QtGui import QAction, QColor, QDesktopServices, QFont, QIcon, QKeyEvent, QKeySequence, QPainter, QPixmap, QPolygon
 from PySide6.QtMultimedia import QSoundEffect
 from PySide6.QtWidgets import (
@@ -266,7 +266,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     current_image_size = None
 
     media_scan_sampling_mem: list = []
-    behav_seq_separator: str = "|"
     # time laps
     fast = 10
 
@@ -431,9 +430,12 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         # PySide6
         self.tv_events.setItemDelegate(events_cursor.StyledItemDelegateTriangle(self.events_current_row))
 
-        connections.connections(self)
+        self.automaticBackupTimer = QTimer(self)
+        self.automaticBackupTimer.timeout.connect(self.automatic_backup)
+
         self.config_param = dict(cfg.INIT_PARAM)
         config_file.read(self)
+        connections.connections(self)
         menu_options.update_menu(self)
 
         plugins.load_plugins(self)
@@ -493,7 +495,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         msg = project_functions.check_project_integrity(
             self.pj,
-            self.timeFormat,
+            self.config_param["time_format"],
             self.projectFileName,
             media_file_available=ib.elements["Test media file accessibility"].isChecked(),
         )
@@ -1500,10 +1502,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         jt = dialog.Ask_time(0)
         jt.setWindowTitle("Jump to specific time")
         jt.label.setText("Set the time")
-        if self.timeFormat == cfg.S:
+        if self.config_param["time_format"] == cfg.S:
             jt.time_widget.rb_seconds.setChecked(True)
             jt.time_widget.le_seconds.setFocus()
-        if self.timeFormat == cfg.HHMMSS:
+        if self.config_param["time_format"] == cfg.HHMMSS:
             jt.time_widget.rb_time.setChecked(True)
 
         if jt.exec():
@@ -1716,7 +1718,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     if self.image_time_ref is not None:
                         seconds_from_1st = date_time_original - self.image_time_ref
 
-                    if self.timeFormat == cfg.HHMMSS:
+                    if self.config_param["time_format"] == cfg.HHMMSS:
                         seconds_from_1st_formated = util.seconds2time(seconds_from_1st).split(".")[0]  # remove milliseconds
                     else:
                         seconds_from_1st_formated = seconds_from_1st
@@ -2254,38 +2256,43 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         self.load_tw_events(self.observationId)
 
-    def populate_tv_events(self, obs_id: str, header: list, time_format: str, behaviors_filter=tuple(), subjects_filter=tuple()) -> None:
+    def populate_tv_events(self, obs_id: str, header: list, time_format: str, behaviors_filter=tuple, subjects_filter=tuple) -> None:
         """
         populate table view with events
         """
+
+        logging.debug("populate tv_events")  # remove before release
+
         model = self.tv_events.model()
+        widths = []
         if model is not None:
+            # memory of header width
+            # header = self.tv_events.horizontalHeader()
+            widths = [self.tv_events.columnWidth(i) for i in range(self.tv_events.model().columnCount())]
+
             self.tv_events.setModel(None)
             model.deleteLater()
 
         # add behavior type (POINT, START, STOP)
         mem_behav: dict = {}
-        state_events_list = util.state_behavior_codes(self.pj[cfg.ETHOGRAM])
+        state_events_codes = set(util.state_behavior_codes(self.pj[cfg.ETHOGRAM]))
+        events = self.pj[cfg.OBSERVATIONS][obs_id][cfg.EVENTS]
+        fields = cfg.PJ_OBS_FIELDS[self.playerType]
+        code_idx = fields[cfg.BEHAVIOR_CODE]
+        subject_idx = fields[cfg.SUBJECT]
+        modifier_idx = fields[cfg.MODIFIER]
 
-        state = [""] * len(self.pj[cfg.OBSERVATIONS][obs_id][cfg.EVENTS])
+        state = [""] * len(events)
 
-        for idx, row in enumerate(self.pj[cfg.OBSERVATIONS][obs_id][cfg.EVENTS]):
-            code = row[cfg.PJ_OBS_FIELDS[self.playerType][cfg.BEHAVIOR_CODE]]
+        for idx, row in enumerate(events):
+            code = row[code_idx]
 
             # check if code is state
-            if code in state_events_list:
-                subject = row[cfg.PJ_OBS_FIELDS[self.playerType][cfg.SUBJECT]]
-                modifier = row[cfg.PJ_OBS_FIELDS[self.playerType][cfg.MODIFIER]]
-
-                if f"{subject}|{code}|{modifier}" in mem_behav and mem_behav[f"{subject}|{code}|{modifier}"]:
-                    state[idx] = cfg.STOP
-                else:
-                    state[idx] = cfg.START
-
-                if f"{subject}|{code}|{modifier}" in mem_behav:
-                    mem_behav[f"{subject}|{code}|{modifier}"] = not mem_behav[f"{subject}|{code}|{modifier}"]
-                else:
-                    mem_behav[f"{subject}|{code}|{modifier}"] = 1
+            if code in state_events_codes:
+                key = (row[subject_idx], code, row[modifier_idx])
+                was_active = mem_behav.get(key, False)
+                state[idx] = cfg.STOP if was_active else cfg.START
+                mem_behav[key] = not was_active
 
         self.event_state: list = []
         self.tv_idx2events_idx: list = []
@@ -2315,6 +2322,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         # column width
         self.tv_events.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Interactive)
+        if widths:
+            for i, width in enumerate(widths):
+                self.tv_events.setColumnWidth(i, width)
+
+        # self.tv_events.horizontalHeader().setSectionsMovable(True)
 
     def load_tw_events(self, obs_id) -> None:
         """
@@ -2333,14 +2345,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.populate_tv_events(
             obs_id,
             [s.capitalize() for s in cfg.TW_EVENTS_FIELDS[self.playerType]],
-            self.timeFormat,
+            self.config_param["time_format"],
             self.filtered_behaviors,
             self.filtered_subjects,
         )
-
-        # print("load table view:", time.time() - t1)
-
-        return
 
     def close_observation_tools(self):
         """
@@ -2497,9 +2505,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         try:
             if self.pj[cfg.OBSERVATIONS][obs_id][cfg.TIME_OFFSET]:
                 time_offset = 0
-                if self.timeFormat == cfg.S:
+                if self.config_param["time_format"] == cfg.S:
                     time_offset = self.pj[cfg.OBSERVATIONS][obs_id][cfg.TIME_OFFSET]
-                if self.timeFormat == cfg.HHMMSS:
+                if self.config_param["time_format"] == cfg.HHMMSS:
                     time_offset = util.seconds2time(self.pj[cfg.OBSERVATIONS][obs_id][cfg.TIME_OFFSET])
                 self.lbTimeOffset.setText(f"Time offset: <b>{time_offset}</b>")
             else:
@@ -2514,10 +2522,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     0,
                     0,
                 ]:
-                    if self.timeFormat == cfg.HHMMSS:
+                    if self.config_param["time_format"] == cfg.HHMMSS:
                         start_time = util.seconds2time(self.pj[cfg.OBSERVATIONS][obs_id][cfg.OBSERVATION_TIME_INTERVAL][0])
                         stop_time = util.seconds2time(self.pj[cfg.OBSERVATIONS][obs_id][cfg.OBSERVATION_TIME_INTERVAL][1])
-                    if self.timeFormat == cfg.S:
+                    if self.config_param["time_format"] == cfg.S:
                         start_time = f"{self.pj[cfg.OBSERVATIONS][obs_id][cfg.OBSERVATION_TIME_INTERVAL][0]:.3f}"
                         stop_time = f"{self.pj[cfg.OBSERVATIONS][obs_id][cfg.OBSERVATION_TIME_INTERVAL][1]:.3f}"
 
@@ -2927,7 +2935,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             if self.config_param.get(cfg.CHECK_PROJECT_INTEGRITY, True):
                 msg = project_functions.check_project_integrity(
                     pj,
-                    self.timeFormat,
+                    self.config_param["time_format"],
                     project_path,
                     media_file_available=True,
                 )
@@ -3263,10 +3271,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
             # time format
             if newProjectWindow.rbSeconds.isChecked():
-                self.timeFormat = cfg.S
+                self.config_param["time_format"] = cfg.S
 
             if newProjectWindow.rbHMS.isChecked():
-                self.timeFormat = cfg.HHMMSS
+                self.config_param["time_format"] = cfg.HHMMSS
 
             # configuration
             if newProjectWindow.lbObservationsState.text() != "":
@@ -3436,7 +3444,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         logging.debug("check project integrity open save")
 
-        if self.automaticBackup:
+        if self.config_param["automatic_backup"]:
             return
 
         logging.debug(
@@ -3446,7 +3454,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         if self.config_param.get(cfg.CHECK_PROJECT_INTEGRITY, True):
             msg = project_functions.check_project_integrity(
                 self.pj,
-                self.timeFormat,
+                self.config_param["time_format"],
                 self.projectFileName,
                 media_file_available=True,
             )
@@ -3555,7 +3563,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 current_time = dec(self.pj[cfg.OBSERVATIONS][self.observationId].get(cfg.OBSERVATION_TIME_INTERVAL, [None, None])[1])
                 self.pb_live_obs.setText("Live observation finished")
 
-        self.lb_current_media_time.setText(util.convertTime(self.timeFormat, current_time))
+        self.lb_current_media_time.setText(util.convertTime(self.config_param["time_format"], current_time))
 
         # extract State events
         self.currentStates = {}
@@ -3602,7 +3610,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
             self.liveStartTime = None
 
-            if self.timeFormat == cfg.HHMMSS:
+            if self.config_param["time_format"] == cfg.HHMMSS:
                 if self.pj[cfg.OBSERVATIONS][self.observationId].get(cfg.START_FROM_CURRENT_TIME, False):
                     self.lb_current_media_time.setText(datetime.datetime.now().isoformat(" ").split(" ")[1][:12])
                 elif self.pj[cfg.OBSERVATIONS][self.observationId].get(cfg.START_FROM_CURRENT_EPOCH_TIME, False):
@@ -3612,7 +3620,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 else:
                     self.lb_current_media_time.setText("00:00:00.000")
 
-            if self.timeFormat == cfg.S:
+            if self.config_param["time_format"] == cfg.S:
                 self.lb_current_media_time.setText("0.000")
 
         else:
@@ -4265,16 +4273,17 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             current_media_time_pos = value
 
         # observation time interval
-        if self.pj[cfg.OBSERVATIONS][self.observationId].get(cfg.OBSERVATION_TIME_INTERVAL, [0, 0])[1]:
-            if cumulative_time_pos >= self.pj[cfg.OBSERVATIONS][self.observationId].get(cfg.OBSERVATION_TIME_INTERVAL, [0, 0])[1]:
-                if self.is_playing():
-                    self.pause_video("End of observation interval reached. Player paused")
-                    self.beep("beep")
+        if (
+            self.pj[cfg.OBSERVATIONS][self.observationId].get(cfg.OBSERVATION_TIME_INTERVAL, [0, 0])[1]
+            and (cumulative_time_pos >= self.pj[cfg.OBSERVATIONS][self.observationId].get(cfg.OBSERVATION_TIME_INTERVAL, [0, 0])[1])
+            and self.is_playing()
+        ):
+            self.pause_video("End of observation interval reached. Player paused")
+            self.beep("beep")
 
         # alarm
-        if self.beep_every:
-            if cumulative_time_pos % (self.beep_every) <= 0.1:
-                self.beep("beep")
+        if self.config_param["beep_every"] and cumulative_time_pos % (self.config_param["beep_every"]) <= 0.1:
+            self.beep("beep")
 
         # scan sampling
         if self.pj[cfg.OBSERVATIONS][self.observationId].get(cfg.MEDIA_SCAN_SAMPLING_DURATION, 0):
@@ -4386,23 +4395,23 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 msg = f"Current media name: <b>{current_media_name}</b> (#{playlist_pos + 1} / {playlist_length})<br>"
 
                 msg += (
-                    f"Media position: <b>{util.convertTime(self.timeFormat, current_media_time_pos)}</b> / "
-                    f"{util.convertTime(self.timeFormat, current_media_duration)} frame: <b>{frame_idx}</b>"
+                    f"Media position: <b>{util.convertTime(self.config_param['time_format'], current_media_time_pos)}</b> / "
+                    f"{util.convertTime(self.config_param['time_format'], current_media_duration)} frame: <b>{frame_idx}</b>"
                 )
 
             # with time offset
             if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TIME_OFFSET]:
                 msg += (
                     "<br>Media position with offset: "
-                    f"<b>{util.convertTime(self.timeFormat, current_media_time_pos + float(self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TIME_OFFSET]))}</b> / "
-                    f"{util.convertTime(self.timeFormat, current_media_duration + float(self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TIME_OFFSET]))}"
+                    f"<b>{util.convertTime(self.config_param['time_format'], current_media_time_pos + float(self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TIME_OFFSET]))}</b> / "
+                    f"{util.convertTime(self.config_param['time_format'], current_media_duration + float(self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TIME_OFFSET]))}"
                 )
 
             # if many media files
             if self.dw_player[0].player.playlist_count > 1:
                 msg += (
-                    f"<br>Total: <b>{util.convertTime(self.timeFormat, cumulative_time_pos)} / "
-                    f"{util.convertTime(self.timeFormat, all_media_duration)}</b>"
+                    f"<br>Total: <b>{util.convertTime(self.config_param['time_format'], cumulative_time_pos)} / "
+                    f"{util.convertTime(self.config_param['time_format'], all_media_duration)}</b>"
                 )
 
         else:  # player ended
@@ -4525,31 +4534,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                         len(cfg.subjectsFields),
                         QTableWidgetItem(""),
                     )
-
-    # def update_events_start_stop(self) -> None:
-    #    """
-    #    update status start/stop of state events in Events table
-    #    take consideration of subject and modifiers
-    #    twEvents must be ordered by time asc
-    #
-    #    does not return value
-    #    """
-    #    state_events_list = util.state_behavior_codes(self.pj[cfg.ETHOGRAM])
-    #    mem_behav: dict = {}
-    #    for row in range(self.twEvents.rowCount()):
-    #        code = self.twEvents.item(row, cfg.TW_OBS_FIELD[self.playerType][cfg.BEHAVIOR_CODE]).text()
-    #        # check if code is state
-    #        if code in state_events_list:
-    #            subject = self.twEvents.item(row, cfg.TW_OBS_FIELD[self.playerType][cfg.SUBJECT]).text()
-    #            modifier = self.twEvents.item(row, cfg.TW_OBS_FIELD[self.playerType][cfg.MODIFIER]).text()
-    #            if f"{subject}|{code}|{modifier}" in mem_behav and mem_behav[f"{subject}|{code}|{modifier}"]:
-    #                self.twEvents.item(row, cfg.TW_OBS_FIELD[self.playerType][cfg.TYPE]).setText(cfg.STOP)
-    #            else:
-    #                self.twEvents.item(row, cfg.TW_OBS_FIELD[self.playerType][cfg.TYPE]).setText(cfg.START)
-    #            if f"{subject}|{code}|{modifier}" in mem_behav:
-    #                mem_behav[f"{subject}|{code}|{modifier}"] = not mem_behav[f"{subject}|{code}|{modifier}"]
-    #            else:
-    #                mem_behav[f"{subject}|{code}|{modifier}"] = 1
 
     def checkSameEvent(self, obs_id: str, time: dec, subject: str, code: str) -> bool:
         """
@@ -4918,7 +4902,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             return
 
         # beep
-        if self.confirmSound:
+        if self.config_param["confirm_sound"]:
             self.beep("key_sound")
 
         flagPlayerPlaying = self.is_playing()
@@ -5044,9 +5028,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         memLaps = None
         if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE] == cfg.LIVE:
             if self.pj[cfg.OBSERVATIONS][self.observationId].get(cfg.SCAN_SAMPLING_TIME, 0):
-                if self.timeFormat == cfg.HHMMSS:
+                if self.config_param["time_format"] == cfg.HHMMSS:
                     memLaps = dec(int(util.time2seconds(self.lb_current_media_time.text())))
-                if self.timeFormat == cfg.S:
+                if self.config_param["time_format"] == cfg.S:
                     memLaps = dec(int(dec(self.lb_current_media_time.text())))
 
             else:  # no scan sampling
@@ -5230,7 +5214,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         if behavior_idx is not None:
             # check if focal subject is defined
-            if not self.currentSubject and self.alertNoFocalSubject:
+            if not self.currentSubject and self.config_param["alert_if_no_focal_subject"]:
                 if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE] == cfg.MEDIA:
                     if self.playerType == cfg.MEDIA:
                         if self.is_playing():
@@ -5306,8 +5290,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
                 time_ -= self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO][cfg.MEDIA_CREATION_TIME][media_file_name]
 
-            if time_ + self.repositioningTimeOffset >= 0:
-                new_time = time_ + self.repositioningTimeOffset
+            if time_ + self.config_param["repositioning_time_offset"] >= 0:
+                new_time = time_ + self.config_param["repositioning_time_offset"]
             else:
                 new_time = 0
 
@@ -5730,7 +5714,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         if self.playerType == cfg.MEDIA:
             logging.debug("jump backward")
 
-            decrement = self.fast * self.play_rate if self.config_param.get(cfg.ADAPT_FAST_JUMP, cfg.ADAPT_FAST_JUMP_DEFAULT) else self.fast
+            decrement = (
+                self.config_param["fast_forward_speed"] * self.play_rate
+                if self.config_param.get(cfg.ADAPT_FAST_JUMP, cfg.ADAPT_FAST_JUMP_DEFAULT)
+                else self.config_param["fast_forward_speed"]
+            )
 
             try:
                 new_time = (
@@ -5754,7 +5742,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         """
 
         if self.playerType == cfg.MEDIA:
-            increment = self.fast * self.play_rate if self.config_param.get(cfg.ADAPT_FAST_JUMP, cfg.ADAPT_FAST_JUMP_DEFAULT) else self.fast
+            increment = (
+                self.config_param["fast_forward_speed"] * self.play_rate
+                if self.config_param.get(cfg.ADAPT_FAST_JUMP, cfg.ADAPT_FAST_JUMP_DEFAULT)
+                else self.config_param["fast_forward_speed"]
+            )
 
             logging.info(f"Jump forward for {increment} seconds")
 

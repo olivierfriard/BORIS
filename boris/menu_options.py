@@ -26,6 +26,8 @@ from PySide6.QtCore import QSize
 
 from . import config as cfg
 
+logger = logging.getLogger(__name__)
+
 
 def update_windows_title(self):
     """
@@ -51,7 +53,7 @@ def update_menu(self):
     """
     enable/disable menu option
     """
-    logging.debug("function: menu_options")
+    logger.debug("function: menu_options")
 
     project_opened = self.project
     observation_is_active = self.observationId != ""
@@ -213,4 +215,4 @@ def update_menu(self):
     for w in (self.lbTimeOffset, self.lb_obs_time_interval):
         w.setVisible(self.playerType == cfg.MEDIA)
 
-    logging.debug("function: menu_options finished")
+    logger.debug("function: menu_options finished")

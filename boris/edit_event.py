@@ -20,8 +20,8 @@ This file is part of BORIS.
 
 """
 
-from decimal import Decimal as dec
 import logging
+from decimal import Decimal as dec
 
 from PySide6.QtWidgets import (
     QDialog,
@@ -38,6 +38,8 @@ from PySide6.QtWidgets import (
 from . import config as cfg
 from . import dialog
 from .edit_event_ui import Ui_Form
+
+logger = logging.getLogger(__name__)
 
 
 class DlgEditEvent(QDialog, Ui_Form):
@@ -140,7 +142,7 @@ class DlgEditEvent(QDialog, Ui_Form):
         set/unset time to NA
         """
 
-        logging.debug("time_na function")
+        logger.debug("time_na function")
 
         self.time_widget.setVisible(not self.cb_set_time_na.isChecked())
         self.time_widget.setEnabled(not self.cb_set_time_na.isChecked())

@@ -634,20 +634,20 @@ def time_budget(self, mode: str, mode2: str = "list"):
         # media length
         if len(selected_observations) > 1:
             if total_observation_time:
-                if self.timeFormat == cfg.HHMMSS:
+                if self.config_param["time_format"] == cfg.HHMMSS:
                     self.results_objects[-1].lbTotalObservedTime.setText(
                         f"Total observation length: {util.seconds2time(total_observation_time)}"
                     )
-                if self.timeFormat == cfg.S:
+                if self.config_param["time_format"] == cfg.S:
                     self.results_objects[-1].lbTotalObservedTime.setText(f"Total observation length: {float(total_observation_time):0.3f}")
             else:
                 self.results_objects[-1].lbTotalObservedTime.setText("Total observation length: not available")
         else:
-            if self.timeFormat == cfg.HHMMSS:
+            if self.config_param["time_format"] == cfg.HHMMSS:
                 self.results_objects[-1].lbTotalObservedTime.setText(
                     f"Analysis from {util.seconds2time(min_time)} to {util.seconds2time(max_time)}"
                 )
-            if self.timeFormat == cfg.S:
+            if self.config_param["time_format"] == cfg.S:
                 self.results_objects[-1].lbTotalObservedTime.setText(f"Analysis from {float(min_time):0.3f} to {float(max_time):0.3f} s")
 
         # behaviors excluded from total time

@@ -36,6 +36,8 @@ from . import config as cfg
 from . import dialog, export_observation, param_panel, project_functions
 from . import utilities as util
 
+logger = logging.getLogger(__name__)
+
 
 def export_project_as_pickle_object(pj: dict) -> None:
     """
@@ -902,7 +904,7 @@ def import_subjects_from_project(self):
     _, _, project, _ = project_functions.open_project_json(file_name)
 
     if "error" in project:
-        logging.debug(project["error"])
+        logger.debug(project["error"])
         QMessageBox.critical(self, cfg.programName, project["error"])
         return
 
@@ -1063,7 +1065,7 @@ def import_indep_variables_from_project(self):
     _, _, project, _ = project_functions.open_project_json(file_name)
 
     if "error" in project:
-        logging.debug(project["error"])
+        logger.debug(project["error"])
         QMessageBox.critical(self, cfg.programName, project["error"])
         return
 

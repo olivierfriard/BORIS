@@ -45,7 +45,7 @@ def check_state_events(self, mode: str = "all") -> None:
                 self.observationId,
                 self.pj[cfg.ETHOGRAM],
                 self.pj[cfg.OBSERVATIONS][self.observationId],
-                self.timeFormat,
+                self.config_param["time_format"],
             )
             tot_out = f"Observation: <strong>{self.observationId}</strong><br>{msg}<br><br>"
 
@@ -67,7 +67,7 @@ def check_state_events(self, mode: str = "all") -> None:
 
         for obsId in sorted(selectedObservations):
             r, msg = project_functions.check_state_events_obs(
-                obsId, self.pj[cfg.ETHOGRAM], self.pj[cfg.OBSERVATIONS][obsId], self.timeFormat
+                obsId, self.pj[cfg.ETHOGRAM], self.pj[cfg.OBSERVATIONS][obsId], self.config_param["time_format"]
             )
 
             tot_out += f"<strong>{obsId}</strong><br>{msg}<br>"
@@ -102,10 +102,10 @@ def fix_unpaired_events(self, silent_mode: bool = False):
         w = dialog.Ask_time(0)
         w.setWindowTitle("Fix UNPAIRED state events")
         w.label.setText("Fix UNPAIRED events at time:")
-        if self.timeFormat == cfg.S:
+        if self.config_param["time_format"] == cfg.S:
             w.time_widget.rb_seconds.setChecked(True)
             w.time_widget.le_seconds.setFocus()
-        if self.timeFormat == cfg.HHMMSS:
+        if self.config_param["time_format"] == cfg.HHMMSS:
             w.time_widget.rb_time.setChecked(True)
 
         if not w.exec_():

@@ -29,8 +29,9 @@ from pathlib import Path
 from PySide6.QtWidgets import QFileDialog, QMessageBox
 
 from . import config as cfg
-from . import dialog, export_observation, select_subj_behav
-from . import select_observations
+from . import dialog, export_observation, select_observations, select_subj_behav
+
+logger = logging.getLogger(__name__)
 
 
 def behavioral_strings_analysis(strings, behav_seq_separator):
@@ -69,8 +70,8 @@ def observed_transitions_matrix(sequences, behaviours, mode="frequency") -> str:
     * frequencies_after_behaviors
     """
 
-    logging.debug("function: observed_transitions_matrix")
-    logging.debug(f"behaviours: {behaviours}")
+    logger.debug("function: observed_transitions_matrix")
+    logger.debug(f"behaviours: {behaviours}")
 
     if "" in behaviours:
         behaviours.remove("")
@@ -171,7 +172,7 @@ def transitions_matrix(self, mode):
     * number
     * frequencies_after_behaviors
     """
-    logging.debug("flag transitions_matrix function")
+    logger.debug("flag transitions_matrix function")
 
     # ask user observations to analyze
     _, selected_observations = select_observations.select_observations2(
@@ -218,15 +219,17 @@ def transitions_matrix(self, mode):
 
     flag_overwrite_all = False
     for subject in parameters[cfg.SELECTED_SUBJECTS]:
-        logging.debug(f"subjects: {subject}")
+        logger.debug(f"subjects: {subject}")
 
         strings_list = []
         for obs_id in selected_observations:
             strings_list.append(
-                export_observation.events_to_behavioral_sequences(self.pj, obs_id, subject, parameters, self.behav_seq_separator)
+                export_observation.events_to_behavioral_sequences(
+                    self.pj, obs_id, subject, parameters, self.config_param["behav_seq_separator"]
+                )
             )
 
-        sequences, observed_behaviors = behavioral_strings_analysis(strings_list, self.behav_seq_separator)
+        sequences, observed_behaviors = behavioral_strings_analysis(strings_list, self.config_param["behav_seq_separator"])
 
         observed_matrix = observed_transitions_matrix(
             sequences, sorted(list(set(observed_behaviors + parameters[cfg.SELECTED_BEHAVIORS]))), mode=mode
@@ -236,7 +239,7 @@ def transitions_matrix(self, mode):
             QMessageBox.warning(self, cfg.programName, f"No transitions found for <b>{subject}</b>")
             continue
 
-        logging.debug(f"observed_matrix {mode}:\n{observed_matrix}")
+        logger.debug(f"observed_matrix {mode}:\n{observed_matrix}")
 
         if flagMulti:
             try:
@@ -246,23 +249,23 @@ def transitions_matrix(self, mode):
                     answer = dialog.MessageDialog(
                         cfg.programName,
                         f"A file with same name already exists.<br><b>{nf}</b>",
-                        ["Overwrite", "Overwrite all", cfg.CANCEL],
+                        (cfg.OVERWRITE, cfg.OVERWRITE_ALL, cfg.CANCEL),
                     )
                     if answer == cfg.CANCEL:
                         continue
-                    if answer == "Overwrite all":
+                    if answer == cfg.OVERWRITE_ALL:
                         flag_overwrite_all = True
 
                 with open(nf, "w") as outfile:
                     outfile.write(observed_matrix)
-            except Exception:
+            except Exception:  # noqa: BLE001
                 QMessageBox.critical(self, cfg.programName, f"The file {nf} can not be saved")
         else:
             try:
                 with open(file_name, "w") as outfile:
                     outfile.write(observed_matrix)
 
-            except Exception:
+            except Exception:  # noqa: BLE001
                 QMessageBox.critical(self, cfg.programName, f"The file {file_name} can not be saved")
 
 
@@ -294,7 +297,7 @@ def transitions_dot_script():
             try:
                 with open(file_name + ".gv", "w") as file_out:
                     file_out.write(gv)
-            except Exception:
+            except Exception:  # noqa: BLE001
                 QMessageBox.critical(
                     None,
                     cfg.programName,
@@ -354,7 +357,7 @@ def transitions_flow_diagram():
             with open(tempfile.gettempdir() + os.sep + os.path.basename(file_name) + ".tmp.gv", "w") as f:
                 f.write(gv)
             result = subprocess.getoutput(
-                (f'dot -Tpng -o "{file_name}.png" "{tempfile.gettempdir() + os.sep + os.path.basename(file_name)}.tmp.gv"')
+                f'dot -Tpng -o "{file_name}.png" "{tempfile.gettempdir() + os.sep + os.path.basename(file_name)}.tmp.gv"'
             )
             if not result:
                 out += f"<b>{file_name}.png</b> created<br>"
