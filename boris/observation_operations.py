@@ -2195,13 +2195,13 @@ def initialize_new_media_observation(self) -> bool:
             self.spectro[media_full_path].setWindowFlags(
                 self.spectro[media_full_path].windowFlags() & ~Qt.WindowType.WindowMinimizeButtonHint
             )
-            self.spectro[media_full_path].interval = self.spectrogram_time_interval
+            self.spectro[media_full_path].interval = self.config_param["spectrogram_time_interval"]
             self.spectro[media_full_path].cursor_color = cfg.REALTIME_PLOT_CURSOR_COLOR
             self.spectro[media_full_path].config_param = self.config_param
 
             # color palette
             try:
-                self.spectro[media_full_path].spectro_color_map = pyplot.get_cmap(self.spectrogram_color_map)
+                self.spectro[media_full_path].spectro_color_map = pyplot.get_cmap(self.config_param["spectrogram_color_map"])
             except ValueError:
                 self.spectro[media_full_path].spectro_color_map = pyplot.get_cmap("viridis")
 
@@ -2231,7 +2231,7 @@ def initialize_new_media_observation(self) -> bool:
             self.waveform[media_full_path].setWindowFlags(
                 self.waveform[media_full_path].windowFlags() & ~Qt.WindowType.WindowMinimizeButtonHint
             )
-            self.waveform[media_full_path].interval = self.spectrogram_time_interval
+            self.waveform[media_full_path].interval = self.config_param["spectrogram_time_interval"]
             self.waveform[media_full_path].cursor_color = cfg.REALTIME_PLOT_CURSOR_COLOR
 
             r = self.waveform[media_full_path].load_wav(wav_file_path)

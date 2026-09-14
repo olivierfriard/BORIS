@@ -125,14 +125,12 @@ def read(self) -> None:
             except Exception:  # noqa: BLE001
                 automatic_backup = 0
             self.config_param["automatic_backup"] = automatic_backup
-
+        logger.debug(f"Autosave: {self.config_param['automatic_backup']}")
         # activate or desactivate autosave timer
         if self.config_param["automatic_backup"]:
             self.automaticBackupTimer.start(self.automaticBackup * 60000)
         else:
             self.automaticBackupTimer.stop()
-
-        logger.debug(f"Autosave: {self.config_param['automatic_backup']}")
 
         # behaviours sequence separator
         if self.config_param.get("behav_seq_separator", None) is None:
@@ -144,7 +142,6 @@ def read(self) -> None:
             except Exception:  # noqa: BLE001
                 behav_seq_separator = "|"
             self.config_param["behav_seq_separator"] = behav_seq_separator
-
         logger.debug(f"behav_seq_separator: {self.config_param['behav_seq_separator']}")
 
         # close_the_same_current_event
@@ -184,14 +181,16 @@ def read(self) -> None:
             except Exception:  # noqa: BLE001
                 beep_every = 0
             self.config_param["beep_every"] = beep_every
-            logger.debug(f"beep_every: {self.config_param['beep_every']}")
+        logger.debug(f"beep_every: {self.config_param['beep_every']}")
 
-        self.trackingCursorAboveEvent = False
-        try:
-            self.trackingCursorAboveEvent = settings.value("tracking_cursor_above_event") == "true"
-        except Exception:  # noqa: BLE001
-            self.trackingCursorAboveEvent = False
-        logger.debug(f"tracking_cursor_above_event: {self.trackingCursorAboveEvent}")
+        # tracking_cursor_above_event
+        if self.config_param.get("tracking_cursor_above_event", None) is None:
+            try:
+                tracking_cursor_above_event = settings.value("tracking_cursor_above_event") == "true"
+            except Exception:  # noqa: BLE001
+                tracking_cursor_above_event = cfg.DEFAULT_CONFIG_VALUES["tracking_cursor_above_event"]
+            self.config_param["tracking_cursor_above_event"] = tracking_cursor_above_event
+        logger.debug(f"tracking_cursor_above_event: {self.config_param['tracking_cursor_above_event']}")
 
         # check for new version
         self.checkForNewVersion = False
@@ -216,16 +215,6 @@ def read(self) -> None:
                 self.checkForNewVersion = False
         logger.debug(f"Automatic check for new version: {self.checkForNewVersion}")
 
-        # pause before add event
-        if self.config_param.get("pause_before_addevent", None) is None:
-            pause_before_addevent = False
-            try:
-                pause_before_addevent = settings.value("pause_before_addevent") == "true"
-            except Exception:  # noqa: BLE001
-                pause_before_addevent = False
-            self.config_param["pause_before_addevent"] = pause_before_addevent
-        logger.debug(f"pause_before_addevent: {self.config_param['pause_before_addevent']}")
-
         if (
             self.checkForNewVersion
             and settings.value("last_check_for_new_version")
@@ -234,6 +223,18 @@ def read(self) -> None:
             self.actionCheckUpdate_activated(flagMsgOnlyIfNew=True)
 
         logger.debug(f"last check for new version: {settings.value('last_check_for_new_version')}")
+
+        # pause before add event
+        # for setting_key, init_key in {"pause_before_addevent":"pause_before_addevent"}.items():
+
+        if self.config_param.get("pause_before_addevent", None) is None:
+            pause_before_addevent = False
+            try:
+                pause_before_addevent = settings.value("pause_before_addevent") == "true"
+            except Exception:  # noqa: BLE001
+                pause_before_addevent = cfg.DEFAULT_CONFIG_VALUES["pause_before_addevent"]
+            self.config_param["pause_before_addevent"] = pause_before_addevent
+        logger.debug(f"pause_before_addevent: {self.config_param['pause_before_addevent']}")
 
         self.ffmpeg_cache_dir = ""
         try:
@@ -244,43 +245,65 @@ def read(self) -> None:
             self.ffmpeg_cache_dir = ""
         logger.debug(f"ffmpeg_cache_dir: {self.ffmpeg_cache_dir}")
 
-        try:
-            self.spectrogram_color_map = settings.value("spectrogram_color_map")
-            if self.spectrogram_color_map is None:
-                self.spectrogram_color_map = cfg.SPECTROGRAM_DEFAULT_COLOR_MAP
-        except Exception:  # noqa: BLE001
-            self.spectrogram_color_map = cfg.SPECTROGRAM_DEFAULT_COLOR_MAP
+        # spectrogram settings
+        ## spectrogram_color_map
+        if self.config_param.get("spectrogram_color_map", None) is None:
+            try:
+                spectrogram_color_map = settings.value("spectrogram_color_map")
+                if spectrogram_color_map is None:
+                    spectrogram_color_map = cfg.SPECTROGRAM_DEFAULT_COLOR_MAP
+            except Exception:  # noqa: BLE001
+                spectrogram_color_map = cfg.SPECTROGRAM_DEFAULT_COLOR_MAP
+            self.config_param["spectrogram_color_map"] = spectrogram_color_map
+        logger.debug(f"spectrogram_color_map: {self.config_param['spectrogram_color_map']}")
 
-        try:
-            self.spectrogram_time_interval = int(settings.value("spectrogram_time_interval"))
-            if not self.spectrogram_time_interval:
-                self.spectrogram_time_interval = cfg.SPECTROGRAM_DEFAULT_TIME_INTERVAL
-        except Exception:  # noqa: BLE001
-            self.spectrogram_time_interval = cfg.SPECTROGRAM_DEFAULT_TIME_INTERVAL
+        ## spectrogram_time_interval
+        if self.config_param.get("spectrogram_time_interval", None) is None:
+            try:
+                spectrogram_time_interval = int(settings.value("spectrogram_time_interval"))
+                if not spectrogram_time_interval:
+                    spectrogram_time_interval = cfg.SPECTROGRAM_DEFAULT_TIME_INTERVAL
+            except Exception:  # noqa: BLE001
+                spectrogram_time_interval = cfg.SPECTROGRAM_DEFAULT_TIME_INTERVAL
+            self.config_param["spectrogram_time_interval"] = spectrogram_time_interval
+        logger.debug(f"spectrogram_time_interval: {self.config_param['spectrogram_time_interval']}")
 
         # plot colors
-        try:
-            self.plot_colors = settings.value("plot_colors").split("|")
-        except Exception:  # noqa: BLE001
-            self.plot_colors = cfg.BEHAVIORS_PLOT_COLORS
-
-        if ("white" in self.plot_colors or "azure" in self.plot_colors or "snow" in self.plot_colors) and (
+        if self.config_param.get("plot_colors", None) is None:
+            try:
+                plot_colors = settings.value("plot_colors").split("|")
+            except Exception:  # noqa: BLE001
+                plot_colors = cfg.BEHAVIORS_PLOT_COLORS
+            self.config_param["plot_colors"] = plot_colors
+        # verify if colors are not too light
+        if (
+            "white" in self.config_param["plot_colors"]
+            or "azure" in self.config_param["plot_colors"]
+            or "snow" in self.config_param["plot_colors"]
+        ) and (
             dialog.MessageDialog(
                 cfg.programName,
                 ("The colors list contain colors that are very light.\nDo you want to reload the default colors list?"),
                 (cfg.NO, cfg.YES),
             )
-            == cfg.YES
+            == cfg.YESself.behav_category_colors
         ):
-            self.plot_colors = cfg.BEHAVIORS_PLOT_COLORS
+            self.config_param["plot_colors"] = cfg.BEHAVIORS_PLOT_COLORS
+        logger.debug(f"plot_colors: {self.config_param['plot_colors']}")
 
         # behavioral categories colors
-        try:
-            self.behav_category_colors = settings.value("behav_category_colors").split("|")
-        except Exception:  # noqa: BLE001
-            self.behav_category_colors = cfg.CATEGORY_COLORS_LIST
-
-        if ("white" in self.behav_category_colors or "azure" in self.behav_category_colors or "snow" in self.behav_category_colors) and (
+        if self.config_param.get("behav_category_colors", None) is None:
+            try:
+                behav_category_colors = settings.value("behav_category_colors").split("|")
+            except Exception:  # noqa: BLE001
+                behav_category_colors = cfg.CATEGORY_COLORS_LIST
+            self.config_param["behav_category_colors"] = behav_category_colors
+        # verify if colors are not too light
+        if (
+            "white" in self.config_param["behav_category_colors"]
+            or "azure" in self.config_param["behav_category_colors"]
+            or "snow" in self.config_param["behav_category_colors"]
+        ) and (
             dialog.MessageDialog(
                 cfg.programName,
                 ("The colors list contain colors that are very light.\nDo you want to reload the default colors list?"),
@@ -288,7 +311,8 @@ def read(self) -> None:
             )
             == cfg.YES
         ):
-            self.behav_category_colors = cfg.CATEGORY_COLORS_LIST
+            self.config_param["behav_category_colors"] = cfg.CATEGORY_COLORS_LIST
+        logger.debug(f"behav_category_colors: {self.config_param['behav_category_colors']}")
 
     else:  # no .boris file found
         logger.info("No config file found")
@@ -357,7 +381,7 @@ def save(self, lastCheckForNewVersion=0):
     settings.setValue("confirm_sound", self.config_param["confirm_sound"])
     settings.setValue("beep_every", self.config_param["beep_every"])
     settings.setValue("alert_nosubject", self.config_param["alert_if_no_focal_subject"])
-    settings.setValue("tracking_cursor_above_event", self.trackingCursorAboveEvent)
+    settings.setValue("tracking_cursor_above_event", self.config_param["tracking_cursor_above_event"])
     settings.setValue("pause_before_addevent", self.config_param["pause_before_addevent"])
     # settings.setValue(DISPLAY_SUBTITLES, self.config_param[DISPLAY_SUBTITLES])
 
@@ -367,12 +391,12 @@ def save(self, lastCheckForNewVersion=0):
     # FFmpeg
     settings.setValue("ffmpeg_cache_dir", self.ffmpeg_cache_dir)
     # spectrogram
-    settings.setValue("spectrogram_color_map", self.spectrogram_color_map)
-    settings.setValue("spectrogram_time_interval", self.spectrogram_time_interval)
+    settings.setValue("spectrogram_color_map", self.config_param["spectrogram_color_map"])
+    settings.setValue("spectrogram_time_interval", self.config_param["spectrogram_time_interval"])
     # plot colors
-    settings.setValue("plot_colors", "|".join(self.plot_colors))
+    settings.setValue("plot_colors", "|".join(self.config_param["plot_colors"]))
     # behavioral categories colors
-    settings.setValue("behav_category_colors", "|".join(self.behav_category_colors))
+    settings.setValue("behav_category_colors", "|".join(self.config_param["behav_category_colors"]))
 
     # recent projects
     logger.debug("Save recent projects")

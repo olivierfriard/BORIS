@@ -755,6 +755,13 @@ EMPTY_PROJECT = {
     CONVERTERS: {},
 }
 
+DEFAULT_CONFIG_VALUES: dict = {
+    "tracking_cursor_above_event": False,
+    "pause_before_addevent": False,
+    "automatic_backup": 0,
+    "confirm_sound": False,
+}
+
 INIT_PARAM = {
     DISPLAY_SUBTITLES: False,
     ADAPT_FAST_JUMP: ADAPT_FAST_JUMP_DEFAULT,
@@ -771,12 +778,17 @@ INIT_PARAM = {
     "repositioning_time_offset": 0,
     "play_rate_step": 0.1,
     "close_the_same_current_event": False,
-    "confirm_sound": False,
-    "automatic_backup": 0,
+    "confirm_sound": DEFAULT_CONFIG_VALUES["confirm_sound"],
+    "automatic_backup": DEFAULT_CONFIG_VALUES["automatic_backup"],
     "behav_seq_separator": "|",
     "alert_if_no_focal_subject": False,
     "beep_every": 0,
-    "pause_before_addevent": False,
+    "pause_before_addevent": DEFAULT_CONFIG_VALUES["pause_before_addevent"],
+    "tracking_cursor_above_event": DEFAULT_CONFIG_VALUES["tracking_cursor_above_event"],
+    "spectrogram_color_map": SPECTROGRAM_DEFAULT_COLOR_MAP,
+    "spectrogram_time_interval": SPECTROGRAM_DEFAULT_TIME_INTERVAL,
+    "plot_colors": BEHAVIORS_PLOT_COLORS,
+    "behav_category_colors": CATEGORY_COLORS_LIST,
 }
 
 SDIS_EXT = "sds"

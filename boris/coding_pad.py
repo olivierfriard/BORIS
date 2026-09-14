@@ -244,8 +244,8 @@ def show_coding_pad(self):
         self.codingpad.show()
 
         # update colors
-        self.codingpad.behavior_colors_list = self.plot_colors
-        self.codingpad.behavioral_category_colors_list = self.behav_category_colors
+        self.codingpad.behavior_colors_list = self.config_param["plot_colors"]
+        self.codingpad.behavioral_category_colors_list = self.config_param["behav_category_colors"]
 
     else:  # coding pad does not exist
         filtered_behaviors = [self.twEthogram.item(i, 1).text() for i in range(self.twEthogram.rowCount())]
@@ -254,8 +254,8 @@ def show_coding_pad(self):
             return
         self.codingpad = CodingPad(self.pj, filtered_behaviors)
 
-        self.codingpad.behavior_colors_list = self.plot_colors
-        self.codingpad.behavioral_category_colors_list = self.behav_category_colors
+        self.codingpad.behavior_colors_list = self.config_param["plot_colors"]
+        self.codingpad.behavioral_category_colors_list = self.config_param["behav_category_colors"]
 
         self.codingpad.compose()
 
