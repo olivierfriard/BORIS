@@ -525,8 +525,17 @@ def txt2np_array(
         with open(file_name, "r") as f:
             reader = csv.reader(f, dialect="dialect")
             for row in reader:
-                if sum([isinstance(intfloatstr(x), str) for x in row]) == len(row):
+                for value in row:
+                    try:
+                        float(value)
+                    except ValueError:
+                        continue
+                    break
+                else:
                     header_rows_nb += 1
+                    continue
+                # Only leading nonnumeric rows are part of the header.
+                break
 
     except Exception:
         return False, f"{sys.exc_info()[1]}", np.array([])

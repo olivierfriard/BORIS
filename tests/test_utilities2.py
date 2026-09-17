@@ -38,9 +38,9 @@ def mock_dec(value):
     return float(value)
 
 
-@patch("utilities.ffprobe_media_analysis", side_effect=mock_ffprobe_media_analysis)
-@patch("utilities.time2seconds", side_effect=mock_time2seconds)
-@patch("utilities.dec", side_effect=mock_dec)
+@patch("boris.utilities.ffprobe_media_analysis", side_effect=mock_ffprobe_media_analysis)
+@patch("boris.utilities.time2seconds", side_effect=mock_time2seconds)
+@patch("boris.utilities.dec", side_effect=mock_dec)
 def test_accurate_media_analysis_success(mock_dec, mock_time2seconds, mock_ffprobe_media_analysis):
     ffmpeg_bin = "/path/to/ffmpeg"
     file_name = "test_video.mp4"

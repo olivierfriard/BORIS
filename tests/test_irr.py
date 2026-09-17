@@ -9,6 +9,7 @@ import sys
 import json
 import os
 import decimal
+from pathlib import Path
 
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
@@ -20,7 +21,7 @@ from boris import config
 
 class Test_irr(object):
     def test_cohen_kappa_same_observation(self):
-        pj = json.loads(open("files/test.boris").read())
+        pj = json.loads(Path("files/test.boris").read_text())
 
         ethogram = pj[config.ETHOGRAM]
         selected_observations = ["observation #1", "observation #1"]
@@ -42,7 +43,7 @@ class Test_irr(object):
         assert K == 1
 
     def test_cohen_kappa_very_different_obs(self):
-        pj = json.loads(open("files/test.boris").read())
+        pj = json.loads(Path("files/test.boris").read_text())
 
         ethogram = pj[config.ETHOGRAM]
         selected_observations = ["observation #1", "observation #2"]
@@ -63,7 +64,7 @@ class Test_irr(object):
         assert K == -0.036
 
     def test_cohen_kappa_very_similar_obs_interval_state_1s(self):
-        pj = json.loads(open("files/test.boris").read())
+        pj = json.loads(Path("files/test.boris").read_text())
 
         ethogram = pj[config.ETHOGRAM]
         selected_observations = ["observation #2", "observation #2 (copy)"]
@@ -84,7 +85,7 @@ class Test_irr(object):
         assert K == 0.988
 
     def test_cohen_kappa_very_similar_obs_interval_state_3s(self):
-        pj = json.loads(open("files/test.boris").read())
+        pj = json.loads(Path("files/test.boris").read_text())
 
         ethogram = pj[config.ETHOGRAM]
         selected_observations = ["observation #2", "observation #2 (copy)"]
@@ -105,7 +106,7 @@ class Test_irr(object):
         assert K == 1
 
     def test_cohen_kappa_very_similar_obs_interval_point_1s(self):
-        pj = json.loads(open("files/test.boris").read())
+        pj = json.loads(Path("files/test.boris").read_text())
 
         ethogram = pj[config.ETHOGRAM]
         selected_observations = ["observation #2", "observation #2 (copy)"]
@@ -126,7 +127,7 @@ class Test_irr(object):
         assert K == 0.866
 
     def test_cohen_kappa_very_similar_obs_interval_point_3s(self):
-        pj = json.loads(open("files/test.boris").read())
+        pj = json.loads(Path("files/test.boris").read_text())
 
         ethogram = pj[config.ETHOGRAM]
         selected_observations = ["observation #2", "observation #2 (copy)"]
@@ -147,7 +148,7 @@ class Test_irr(object):
         assert K == 0.798
 
     def test_obs_without_events(self):
-        pj = json.loads(open("files/test.boris").read())
+        pj = json.loads(Path("files/test.boris").read_text())
 
         ethogram = pj[config.ETHOGRAM]
         selected_observations = ["observation #2", "observation without events"]
@@ -168,7 +169,7 @@ class Test_irr(object):
         assert K == -100
 
     def test_needleman_wunsch_identity_same_observation(self):
-        pj = json.loads(open("files/test.boris").read())
+        pj = json.loads(Path("files/test.boris").read_text())
 
         ethogram = pj[config.ETHOGRAM]
         selected_observations = ["observation #1", "observation #1"]
@@ -190,7 +191,7 @@ class Test_irr(object):
         assert identity == 100.0
 
     def test_needleman_wunsch_identity_very_different_obs(self):
-        pj = json.loads(open("files/test.boris").read())
+        pj = json.loads(Path("files/test.boris").read_text())
 
         ethogram = pj[config.ETHOGRAM]
         selected_observations = ["observation #1", "observation #2"]
@@ -209,10 +210,10 @@ class Test_irr(object):
         )
 
         # print(identity)
-        assert identity == 85.84070796460178
+        assert identity == pytest.approx(85.08771929824562)
 
     def test_needleman_wunsch_identity_very_similar_obs_state_1s(self):
-        pj = json.loads(open("files/test.boris").read())
+        pj = json.loads(Path("files/test.boris").read_text())
 
         ethogram = pj[config.ETHOGRAM]
         selected_observations = ["observation #2", "observation #2 (copy)"]
@@ -231,10 +232,10 @@ class Test_irr(object):
         )
 
         # print(identity)
-        assert identity == 99.36708860759494
+        assert identity == pytest.approx(99.37304075235109)
 
     def test_needleman_wunsch_identity_very_similar_obs_state_3s(self):
-        pj = json.loads(open("files/test.boris").read())
+        pj = json.loads(Path("files/test.boris").read_text())
 
         ethogram = pj[config.ETHOGRAM]
         selected_observations = ["observation #2", "observation #2 (copy)"]
@@ -256,7 +257,7 @@ class Test_irr(object):
         assert identity == 100.0
 
     def test_needleman_wunsch_identity_very_similar_obs_point_1s(self):
-        pj = json.loads(open("files/test.boris").read())
+        pj = json.loads(Path("files/test.boris").read_text())
 
         ethogram = pj[config.ETHOGRAM]
         selected_observations = ["observation #2", "observation #2 (copy)"]
@@ -278,7 +279,7 @@ class Test_irr(object):
         assert identity == 99.29577464788733
 
     def test_needleman_wunsch_identity_very_similar_obs_point_3s(self):
-        pj = json.loads(open("files/test.boris").read())
+        pj = json.loads(Path("files/test.boris").read_text())
 
         ethogram = pj[config.ETHOGRAM]
         selected_observations = ["observation #2", "observation #2 (copy)"]

@@ -4527,24 +4527,16 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         check if a same event is already in events list (time, subject, code)
         """
 
-        if self.pj[cfg.OBSERVATIONS][obs_id][cfg.TYPE] in (cfg.MEDIA, cfg.LIVE):
-            return (time, subject, code) in (
-                (
-                    x[cfg.PJ_OBS_FIELDS[self.pj[cfg.OBSERVATIONS][obs_id][cfg.TYPE]][cfg.TIME]],
-                    x[cfg.PJ_OBS_FIELDS[self.pj[cfg.OBSERVATIONS][obs_id][cfg.TYPE]][cfg.SUBJECT]],
-                    x[cfg.PJ_OBS_FIELDS[self.pj[cfg.OBSERVATIONS][obs_id][cfg.TYPE]][cfg.BEHAVIOR_CODE]],
-                )
-                for x in self.pj[cfg.OBSERVATIONS][obs_id][cfg.EVENTS]
-            )
+        observation = self.pj[cfg.OBSERVATIONS][obs_id]
+        observation_type = observation[cfg.TYPE]
+        if observation_type in (cfg.MEDIA, cfg.LIVE, cfg.IMAGES):
+            fields = cfg.PJ_OBS_FIELDS[observation_type]
+            position_idx = fields[cfg.IMAGE_INDEX if observation_type == cfg.IMAGES else cfg.TIME]
+            subject_idx = fields[cfg.SUBJECT]
+            code_idx = fields[cfg.BEHAVIOR_CODE]
 
-        if self.pj[cfg.OBSERVATIONS][obs_id][cfg.TYPE] == cfg.IMAGES:
             return (time, subject, code) in (
-                (
-                    x[cfg.PJ_OBS_FIELDS[self.pj[cfg.OBSERVATIONS][obs_id][cfg.TYPE]][cfg.IMAGE_INDEX]],
-                    x[cfg.PJ_OBS_FIELDS[self.pj[cfg.OBSERVATIONS][obs_id][cfg.TYPE]][cfg.SUBJECT]],
-                    x[cfg.PJ_OBS_FIELDS[self.pj[cfg.OBSERVATIONS][obs_id][cfg.TYPE]][cfg.BEHAVIOR_CODE]],
-                )
-                for x in self.pj[cfg.OBSERVATIONS][obs_id][cfg.EVENTS]
+                (row[position_idx], row[subject_idx], row[code_idx]) for row in observation[cfg.EVENTS]
             )
 
     def choose_behavior(self, idx_list: list) -> None | str:

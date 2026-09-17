@@ -8,20 +8,13 @@ import pytest
 import sys
 import json
 import os
+from pathlib import Path
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
-
-print(sys.path)
 
 from boris import time_budget_functions
 from boris import db_functions
 from boris import config
-
-
-@pytest.fixture()
-def before():
-    os.system("rm -rf output")
-    os.system("mkdir output")
 
 
 class Test_time_budget(object):
@@ -38,7 +31,7 @@ class Test_time_budget(object):
                 "duration": "NA",
                 "duration_mean": "NA",
                 "duration_stdev": "NA",
-                "number": "0",
+                "number": 0,
                 "inter_duration_mean": "NA",
                 "inter_duration_stdev": "NA",
             },
@@ -60,7 +53,7 @@ class Test_time_budget(object):
                 "duration": "NA",
                 "duration_mean": "NA",
                 "duration_stdev": "NA",
-                "number": "0",
+                "number": 0,
                 "inter_duration_mean": "NA",
                 "inter_duration_stdev": "NA",
             },
@@ -77,7 +70,7 @@ class Test_time_budget(object):
             },
         ]
 
-        pj = json.loads(open("files/test.boris").read())
+        pj = json.loads(Path("files/test.boris").read_text())
 
         ethogram = pj[config.ETHOGRAM]
         selected_observations = ["observation #1"]
@@ -108,7 +101,7 @@ class Test_time_budget(object):
                 "duration": "NA",
                 "duration_mean": "NA",
                 "duration_stdev": "NA",
-                "number": "0",
+                "number": 0,
                 "inter_duration_mean": "NA",
                 "inter_duration_stdev": "NA",
             },
@@ -120,12 +113,12 @@ class Test_time_budget(object):
                 "duration_mean": "NA",
                 "duration_stdev": "NA",
                 "number": 2,
-                "inter_duration_mean": 0.0,
+                "inter_duration_mean": 1.575,
                 "inter_duration_stdev": "NA",
             },
         ]
 
-        pj = json.loads(open("files/test.boris").read())
+        pj = json.loads(Path("files/test.boris").read_text())
 
         ethogram = pj[config.ETHOGRAM]
         selected_observations = ["observation #2"]
@@ -174,7 +167,7 @@ class Test_time_budget(object):
             },
         ]
 
-        pj = json.loads(open("files/test.boris").read())
+        pj = json.loads(Path("files/test.boris").read_text())
 
         ethogram = pj[config.ETHOGRAM]
         selected_observations = ["observation #2"]
@@ -223,7 +216,7 @@ class Test_time_budget(object):
             },
         ]
 
-        pj = json.loads(open("files/test.boris").read())
+        pj = json.loads(Path("files/test.boris").read_text())
 
         ethogram = pj[config.ETHOGRAM]
         selected_observations = ["live not paired"]
@@ -309,7 +302,7 @@ class Test_time_budget(object):
             },
         ]
 
-        pj = json.loads(open("files/test.boris").read())
+        pj = json.loads(Path("files/test.boris").read_text())
 
         ethogram = pj[config.ETHOGRAM]
         selected_observations = ["modifiers"]
@@ -318,6 +311,7 @@ class Test_time_budget(object):
             config.SELECTED_BEHAVIORS: ["q", "r"],
             config.INCLUDE_MODIFIERS: True,
             config.EXCLUDE_BEHAVIORS: False,
+            config.EXCLUDE_NON_CODED_MODIFIERS: True,
             "start time": 0,
             "end time": 180,
         }

@@ -131,6 +131,7 @@ class FakeObservationWindow:
         self.close_observation_tools_calls = 0
         self.currentSubject = "subject"
         self.dwEvents = FakeWidget()
+        self.dw_info = FakeWidget()
         self.dw_player = player_docks
         self.events = events if events is not None else []
         self.ext_data_timer_list = []
@@ -149,7 +150,7 @@ class FakeObservationWindow:
         self.removed_docks = []
         self.statusbar = FakeStatusBar()
         self.twSubjects = FakeSubjectsTable()
-        self.verticalLayout_3 = FakeLayout()
+        self.verticalLayout_9 = FakeLayout()
         self.video_slider = FakeWidget()
         self.w_obs_info = FakeWidget()
 
