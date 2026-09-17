@@ -23,7 +23,7 @@ dependencies = [
     "numpy==2.3.2",
     "matplotlib==3.10.5",
     "pandas==2.3.2",
-    "tablib[cli,html,ods,pandas,xls,xlsx]==3.8.0",
+    "tablib[cli,html,ods,pandas,xls,xlsx]==3.10.0",
     "pyreadr==0.5.3",
     "pyside6==6.10",
     "hachoir==3.3.0",
