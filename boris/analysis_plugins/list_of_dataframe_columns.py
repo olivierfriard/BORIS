@@ -1,7 +1,7 @@
 """
 BORIS plugin
 
-number of occurences of behaviors
+List the columns present in the dataframe
 """
 
 import pandas as pd

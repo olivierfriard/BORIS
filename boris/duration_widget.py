@@ -182,7 +182,7 @@ class Duration_widget(QWidget):
         """
         widget time has changed
         """
-        self.time_value = x
+        self.time_value = dec(str(x)).quantize(dec(".001"))
 
     def set_time(self, new_time):
         if new_time.is_nan():
