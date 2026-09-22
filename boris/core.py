@@ -110,6 +110,7 @@ from . import (
     param_panel,
     plot_events,
     plot_events_rt,
+    plot_spectrogram_rt,
     plugins,
     project,
     project_functions,
@@ -121,13 +122,10 @@ from . import (
     write_event,
 )
 from . import config as cfg
-from . import (
-    plot_spectrogram_rt as plot_spectrogram_rt,
-)
 from . import utilities as util
 from .core_ui import Ui_MainWindow
 
-logging.debug("test")
+logger = logging.getLogger(__name__)
 
 __version__ = version.__version__
 __version_date__ = version.__version_date__
@@ -136,7 +134,7 @@ __version_date__ = version.__version_date__
 MIN_PYTHON_VERSION = "3.12"
 if util.versiontuple(platform.python_version()) < util.versiontuple(MIN_PYTHON_VERSION):
     msg = f"BORIS requires Python {MIN_PYTHON_VERSION}+! You are using Python v. {platform.python_version()}\n"
-    logging.critical(msg)
+    logger.critical(msg)
     sys.exit()
 
 if sys.platform.startswith("darwin"):  # for MacOS
@@ -147,15 +145,15 @@ if options.version:
     print(f"version {__version__} release date: {__version_date__}")
     sys.exit(0)
 
-logging.debug("BORIS started")
-logging.info(util.get_systeminfo())
+logger.debug("BORIS started")
+logger.info(util.get_systeminfo())
 
 
 def excepthook(exception_type, exception_value, traceback_object):
     """
     global error management
     """
-    logging.debug("excepthook")
+    logger.debug("excepthook function")
 
     dialog.global_error_message(exception_type, exception_value, traceback_object)
 
@@ -916,7 +914,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         default to player #1 for back compatibility
         """
 
-        logging.debug("function: create wav file from media")
+        logger.debug("function: create wav file from media")
 
         # check temp dir for images from ffmpeg
         tmp_dir = self.ffmpeg_cache_dir if self.ffmpeg_cache_dir and os.path.isdir(self.ffmpeg_cache_dir) else tempfile.gettempdir()
@@ -952,7 +950,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         extract wav from all media file
         """
 
-        logging.debug("function: create wav file from media file")
+        logger.debug("function: create wav file from media file")
 
         # check temp dir
         tmp_dir = self.ffmpeg_cache_dir if self.ffmpeg_cache_dir and os.path.isdir(self.ffmpeg_cache_dir) else tempfile.gettempdir()
@@ -1005,10 +1003,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             plot_type (str): type of plot (cfg.SPECTROGRAM_PLOT, cfg.WAVEFORM_PLOT, cfg.EVENTS_PLOT)
             warning (bool): Display message if True
         """
-        logging.debug("function: show_plot_widget")
+        logger.debug("function: show_plot_widget")
 
         if plot_type not in (cfg.WAVEFORM_PLOT, cfg.SPECTROGRAM_PLOT, cfg.EVENTS_PLOT):
-            logging.critical(f"Error on plot type: {plot_type}")
+            logger.critical(f"Error on plot type: {plot_type}")
             return
 
         if ((self.playerType == cfg.LIVE) or (self.playerType in cfg.VIEWERS)) and plot_type in (
@@ -1072,7 +1070,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             if hasattr(self, "plot_events"):
                 self.plot_events.show()
             else:
-                logging.debug("create real-time events plot widget")
+                logger.debug("create real-time events plot widget")
 
                 self.plot_events = plot_events_rt.Plot_events_RT()
 
@@ -1133,7 +1131,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         timer for plotting visualizations: spectrogram, waveform, plot events
         """
 
-        # logging.debug("plot_timer _out function")
+        # logger.debug("plot_timer _out function")
 
         self.update_realtime_plot()
 
@@ -1168,7 +1166,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     if "error" not in r:
                         self.waveform[cfg.PLAYER1].plot_waveform(current_media_time, window_title=f"Waveform of {self.mem_media_name}")
                     else:
-                        logging.warning(f"waveform_load_wav error: {r['error']}")
+                        logger.warning(f"waveform_load_wav error: {r['error']}")
         """
 
         # multiple waveform
@@ -1219,7 +1217,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     if "error" not in r:
                         self.spectro[cfg.PLAYER1].plot_spectro(current_media_time, window_title=f"Spectrogram of {self.mem_media_name}")
                     else:
-                        logging.warning(f"spectro_load_wav error: {r['error']}")
+                        logger.warning(f"spectro_load_wav error: {r['error']}")
         """
 
         # multiple spectrogram
@@ -1412,7 +1410,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         """
         flag_paused = self.is_playing()
 
-        logging.debug(f"paused? {flag_paused}")
+        logger.debug(f"paused? {flag_paused}")
 
         if not self.dw_player[player].player.playlist_count:
             return
@@ -1514,7 +1512,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         go to previous media file (if any)
         """
 
-        logging.debug("previous media file")
+        logger.debug("previous media file")
 
         if self.playerType == cfg.MEDIA:
             # if len(self.pj[cfg.OBSERVATIONS][self.observationId][cfg.FILE][cfg.PLAYER1]) == 1:
@@ -1563,7 +1561,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         go to next media file (if any) in first player
         """
 
-        logging.debug("next media file")
+        logger.debug("next media file")
 
         if self.playerType == cfg.MEDIA:
             if len(self.pj[cfg.OBSERVATIONS][self.observationId][cfg.FILE][cfg.PLAYER1]) == 1:
@@ -1602,7 +1600,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             new_volume (int): volume to set
         """
         if self.playerType == cfg.MEDIA:
-            logging.debug(f"set volume to {new_volume}")
+            logger.debug(f"set volume to {new_volume}")
             self.dw_player[nplayer].player.volume = new_volume
 
     def set_mute(self, nplayer):
@@ -1614,7 +1612,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         """
         if self.playerType == cfg.MEDIA:
             self.dw_player[nplayer].player.mute = not self.dw_player[nplayer].player.mute
-            logging.debug(f"{nplayer} set mute {'ON' if self.dw_player[nplayer].player.mute else 'OFF'}")
+            logger.debug(f"{nplayer} set mute {'ON' if self.dw_player[nplayer].player.mute else 'OFF'}")
 
     def automatic_backup(self):
         """
@@ -1624,11 +1622,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         if self.observationId and self.projectFileName:
             if not self.save_project_activated():
-                logging.info("project autosaved")
+                logger.info("project autosaved")
             else:
-                logging.warning("Error autosaving project")
+                logger.warning("Error autosaving project")
         else:
-            logging.debug((f"project not autosaved: observation id: {self.observationId} project file name: {self.projectFileName}"))
+            logger.debug((f"project not autosaved: observation id: {self.observationId} project file name: {self.projectFileName}"))
 
     def update_subject(self, subject: str) -> None:
         """
@@ -1672,7 +1670,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         for IMAGES obs: load picture and visualize it in frame_viewer, extract EXIF Date/Time Original tag if available
         """
 
-        logging.debug("extract_frame")
+        logger.debug("extract_frame")
 
         if self.playerType == cfg.MEDIA:
             time.sleep(0.3)  # required for correct frame number
@@ -2046,16 +2044,16 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     .strip()
                 )
             except Exception:
-                logging.warning("error in overlay position")
+                logger.warning("error in overlay position")
 
         try:
             self.overlays[dw_id].remove()
         except Exception:
-            logging.debug("error removing overlay")
+            logger.debug("error removing overlay")
         try:
             self.overlays[dw_id].update(img_resized, pos=(x1 + x_offset, y1 + y_offset))
         except Exception:
-            logging.debug("error updating overlay")
+            logger.debug("error updating overlay")
 
     def player_clicked(self, player_id: int, cmd: str) -> None:
         """
@@ -2160,51 +2158,51 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             set_and_update_pan_and_zoom(new_pan_x, new_pan_y, new_zoom)
 
         if cmd == "MBTN_LEFT":
-            logging.debug(f"set player #{player_id} active")
+            logger.debug(f"set player #{player_id} active")
             self.current_player = player_id
 
         if cmd == "MBTN_LEFT_DBL":
-            logging.debug("MBTN_LEFT_DBL")
+            logger.debug("MBTN_LEFT_DBL")
             # ZOOM IN x2
             do_zoom_in_clicked_coords(zoom_increment=1)
             return
         if cmd == "MBTN_RIGHT_DBL":
-            logging.debug("MBTN_RIGHT_DBL")
+            logger.debug("MBTN_RIGHT_DBL")
             # ZOOM OUT x2
             do_zoom_in_clicked_coords(zoom_increment=-1)
             return
         if cmd == "Ctrl+WHEEL_UP":
-            logging.debug("Ctrl+WHEEL_UP")
+            logger.debug("Ctrl+WHEEL_UP")
             # ZOOM IN (3 wheel steps to zoom X2)
             do_zoom_in_clicked_coords(zoom_increment=1.0 / 3.0)
             return
         if cmd == "Ctrl+WHEEL_DOWN":
-            logging.debug("Ctrl+WHEEL_DOWN")
+            logger.debug("Ctrl+WHEEL_DOWN")
             # ZOOM OUT (3 wheel steps to zoom X2)
             do_zoom_in_clicked_coords(zoom_increment=-1.0 / 3.0)
             return
         if cmd == "WHEEL_UP":
-            logging.debug("WHEEL_UP")
+            logger.debug("WHEEL_UP")
             # PAN UP (VIDEO MOVES DOWN)
             do_pan_in_clicked_coords(pan_x_increment=0, pan_y_increment=+0.01)
             return
         if cmd == "WHEEL_DOWN":
-            logging.debug("WHEEL_DOWN")
+            logger.debug("WHEEL_DOWN")
             # PAN DOWN (VIDEO MOVES UP)
             do_pan_in_clicked_coords(pan_x_increment=0, pan_y_increment=-0.01)
             return
         if cmd == "Shift+WHEEL_UP":
-            logging.debug("Shift+WHEEL_UP")
+            logger.debug("Shift+WHEEL_UP")
             # PAN LEFT (VIDEO MOVES TO THE RIGHT)
             do_pan_in_clicked_coords(pan_x_increment=+0.01, pan_y_increment=0)
             return
         if cmd == "Shift+WHEEL_DOWN":
-            logging.debug("Shift+WHEEL_DOWN")
+            logger.debug("Shift+WHEEL_DOWN")
             # PAN RIGHT (VIDEO MOVES TO THE LEFT)
             do_pan_in_clicked_coords(pan_x_increment=-0.01, pan_y_increment=0)
             return
         if cmd == "Shift+MBTN_LEFT":
-            logging.debug("Shift+MBTN_LEFT")
+            logger.debug("Shift+MBTN_LEFT")
             # RESET PAN AND ZOOM TO DEFAULT
             set_and_update_pan_and_zoom(pan_x=0, pan_y=0, zoom=0)
             return
@@ -2255,7 +2253,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         populate table view with events
         """
 
-        logging.debug("populate tv_events")  # remove before release
+        logger.debug("populate tv_events")  # remove before release
 
         model = self.tv_events.model()
         widths = []
@@ -2333,7 +2331,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             obsId (str): observation to load
         """
 
-        logging.debug(f"begin load events from obs in tableView: {obs_id}")
+        logger.debug(f"begin load events from obs in tableView: {obs_id}")
 
         # t1 = time.time()
         self.populate_tv_events(
@@ -2348,7 +2346,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         """
         close observation tools objects
         """
-        logging.debug("function: close_observation_tools")
+        logger.debug("function: close_observation_tools")
 
         for widget in self.spectro.values():
             widget.setParent(None)
@@ -2373,28 +2371,28 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 self.plot_data[pd].close_plot()
 
         except Exception:
-            logging.warning("Error closing plot window")
+            logger.warning("Error closing plot window")
 
         if hasattr(self, "measurement_w"):
             try:
                 self.measurement_w.close()
                 del self.measurement_w
             except Exception:
-                logging.warning("Error closing measurement window")
+                logger.warning("Error closing measurement window")
 
         if hasattr(self, "codingpad"):
             try:
                 self.codingpad.close()
                 del self.codingpad
             except Exception:
-                logging.warning("Error closing coding pad window")
+                logger.warning("Error closing coding pad window")
 
         if hasattr(self, "subjects_pad"):
             try:
                 self.subjects_pad.close()
                 del self.subjects_pad
             except Exception:
-                logging.warning("Error closing subjects pad window")
+                logger.warning("Error closing subjects pad window")
 
         for player in self.spectro:
             self.spectro[player].close()
@@ -2407,14 +2405,14 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 self.plot_events.close()
                 del self.plot_events
             except Exception:
-                logging.warning("Error closing plot events window")
+                logger.warning("Error closing plot events window")
 
         if hasattr(self, "video_equalizer_wgt"):
             try:
                 self.video_equalizer_wgt.close()
                 del self.video_equalizer_wgt
             except Exception:
-                logging.warning("Error closing video equalizer window")
+                logger.warning("Error closing video equalizer window")
 
         # delete behavior coding map
         for idx in self.bcm_dict:
@@ -2427,9 +2425,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 self.results.close()
                 del self.results
             except Exception:
-                logging.warning("Error closing results window")
+                logger.warning("Error closing results window")
 
-        logging.debug("end function: close_observation_tools")
+        logger.debug("end function: close_observation_tools")
 
     def close_tool_windows(self):
         """
@@ -2440,7 +2438,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             video_equalizer
         """
 
-        logging.debug("function: close_tool_windows")
+        logger.debug("function: close_tool_windows")
 
         self.close_observation_tools()
 
@@ -2454,21 +2452,21 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 self.mapCreatorWindow.close()
                 del self.mapCreatorWindow
             except Exception:
-                logging.warning("Error closing map creator window")
+                logger.warning("Error closing map creator window")
 
         if hasattr(self, "view_dataframe"):
             try:
                 self.view_dataframe.close()
                 del self.view_dataframe
             except Exception:
-                logging.warning("Error closing the plugin results window")
+                logger.warning("Error closing the plugin results window")
 
         while self.results_objects:
             w = self.results_objects.pop()
             w.close()
             w.deleteLater()
 
-        logging.debug("function: close_tool_windows finished")
+        logger.debug("function: close_tool_windows finished")
 
     def set_recent_projects_menu(self):
         """
@@ -2494,7 +2492,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         time offset, observation time interval
         """
 
-        logging.debug(f"function: display statusbar info: {obs_id}")
+        logger.debug(f"function: display statusbar info: {obs_id}")
 
         try:
             if self.pj[cfg.OBSERVATIONS][obs_id][cfg.TIME_OFFSET]:
@@ -2507,7 +2505,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             else:
                 self.lbTimeOffset.clear()
         except Exception:
-            logging.debug("error in time offset display")
+            logger.debug("error in time offset display")
             pass
 
         try:
@@ -2529,7 +2527,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             else:
                 self.lb_obs_time_interval.clear()
         except Exception:
-            logging.debug("error in observation time interval")
+            logger.debug("error in observation time interval")
 
     def extract_observed_behaviors(self, selected_observations, selectedSubjects):
         """
@@ -2717,7 +2715,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             )
             return
 
-        logging.debug(f"max_obs_length: {max_obs_length}, selectedObsTotalMediaLength: {selectedObsTotalMediaLength}")
+        logger.debug(f"max_obs_length: {max_obs_length}, selectedObsTotalMediaLength: {selectedObsTotalMediaLength}")
 
         # exit with message if events do not have timestamp
         if max_obs_length.is_nan():
@@ -2873,7 +2871,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         ) = project_functions.open_project_json(file_name)
 
         if "error" in pj:
-            logging.debug(pj["error"])
+            logger.debug(pj["error"])
             QMessageBox.critical(self, cfg.programName, pj["error"])
         else:
             if msg:
@@ -2920,7 +2918,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                                             + value.split(")")[-1]
                                         )
                             except Exception:
-                                logging.warning("error during convertion of modifier short cut to lower case")
+                                logger.warning("error during convertion of modifier short cut to lower case")
 
                     for idx in pj[cfg.SUBJECTS]:
                         pj[cfg.SUBJECTS][idx][cfg.SUBJECT_KEY] = pj[cfg.SUBJECTS][idx][cfg.SUBJECT_KEY].lower()
@@ -3002,7 +3000,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         """
         initialize interface and variables for a new or edited project
         """
-        logging.debug("initialize new project...")
+        logger.debug("initialize new project...")
 
         self.w_logo.setVisible(not flag_new)
         self.dwEthogram.setVisible(flag_new)
@@ -3299,10 +3297,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             str:
         """
 
-        logging.debug(f"init save_project_json function {project_file_name}")
+        logger.debug(f"init save_project_json function {project_file_name}")
 
         if self.save_project_json_started:
-            logging.warning("Function save_project_json already launched")
+            logger.warning("Function save_project_json already launched")
             return
 
         self.save_project_json_started = True
@@ -3345,7 +3343,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             menu_options.update_windows_title(self)
             self.save_project_json_started = False
 
-            logging.debug("end save_project_json function")
+            logger.debug("end save_project_json function")
             return 0
 
         except PermissionError:
@@ -3375,7 +3373,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         """
         save current project asking for a new file name
         """
-        logging.debug("function: save_project_as_activated")
+        logger.debug("function: save_project_as_activated")
 
         project_new_file_name, filtr = QFileDialog().getSaveFileName(
             self,
@@ -3436,12 +3434,12 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         to be used after opening or saving the current project
         """
 
-        logging.debug("check project integrity open save")
+        logger.debug("check project integrity open save")
 
         if self.config_param["automatic_backup"]:
             return
 
-        logging.debug(
+        logger.debug(
             f"{self.config_param[cfg.CHECK_PROJECT_INTEGRITY] if cfg.CHECK_PROJECT_INTEGRITY in self.config_param else 'Check project integrity config NOT FOUND'=}"
         )
 
@@ -3464,8 +3462,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         """
         save current project
         """
-        logging.debug("function: save project activated")
-        logging.debug(f"Project file name: {self.projectFileName}")
+        logger.debug("function: save project activated")
+        logger.debug(f"Project file name: {self.projectFileName}")
 
         if not self.projectFileName:
             if not self.pj[cfg.PROJECT_NAME]:
@@ -3716,7 +3714,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             return
         ok, msg = project_functions.create_subtitles(self.pj, selected_observations, parameters, export_dir)
         if not ok:
-            logging.critical(f"Error creating subtitles. {msg}")
+            logger.critical(f"Error creating subtitles. {msg}")
             QMessageBox.critical(
                 None,
                 cfg.programName,
@@ -3767,7 +3765,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         show previous frame
         """
 
-        logging.debug("previous frame")
+        logger.debug("previous frame")
 
         if self.playerType == cfg.IMAGES:
             if self.image_idx:
@@ -4007,7 +4005,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         if self.playerType != cfg.MEDIA:
             return
 
-        logging.debug(f"video_slider moved: {self.video_slider.value() / (cfg.SLIDER_MAXIMUM - 1)}")
+        logger.debug(f"video_slider moved: {self.video_slider.value() / (cfg.SLIDER_MAXIMUM - 1)}")
 
         if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE] == cfg.MEDIA:
             self.user_move_slider = True
@@ -4030,7 +4028,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         adjust frame when slider is moved by user
         """
 
-        logging.debug(f"video_slider released: {self.video_slider.value() / (cfg.SLIDER_MAXIMUM - 1)}")
+        logger.debug(f"video_slider released: {self.video_slider.value() / (cfg.SLIDER_MAXIMUM - 1)}")
         self.user_move_slider = False
 
     def get_events_current_row(self):
@@ -4040,7 +4038,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         scroll to corresponding event
         """
 
-        # logging.debug("get_events_current_row")
+        # logger.debug("get_events_current_row")
 
         if not self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS]:
             return
@@ -4179,13 +4177,13 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     < sum(self.dw_player[n_player].media_durations[0 : media_idx + 1])
                 ):
                     # in current media
-                    logging.debug(f"{n_player + 1} correct media")
+                    logger.debug(f"{n_player + 1} correct media")
                     self.seek_mediaplayer(
                         new_time - sum(self.dw_player[n_player].media_durations[0:media_idx]),
                         player=n_player,
                     )
                 else:  # out of current media
-                    logging.debug(f"{n_player + 1} not correct media")
+                    logger.debug(f"{n_player + 1} not correct media")
 
                     flag_paused = self.dw_player[n_player].player.pause
                     tot = 0
@@ -4202,7 +4200,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                         tot += d
 
             else:  # end of media list
-                logging.debug(f"{n_player + 1} end of media")
+                logger.debug(f"{n_player + 1} end of media")
                 self.dw_player[n_player].player.playlist_pos = self.dw_player[n_player].player.playlist_count - 1
                 self.seek_mediaplayer(self.dw_player[n_player].media_durations[-1], player=n_player)
 
@@ -4213,7 +4211,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         """
         # check if eof reached
         if self.dw_player[0].player.eof_reached and self.dw_player[0].player.core_idle:
-            logging.debug("end of playlist reached")
+            logger.debug("end of playlist reached")
             if self.dw_player[0].player.playlist_pos is not None and self.dw_player[0].player.playlist_count is not None:
                 if self.dw_player[0].player.playlist_pos == self.dw_player[0].player.playlist_count - 1:
                     self.pause_video()
@@ -4432,14 +4430,14 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         close all started state events if option activated
         """
 
-        logging.info("Media end reached")
+        logger.info("Media end reached")
 
         if self.pj[cfg.OBSERVATIONS][self.observationId].get(
             cfg.CLOSE_BEHAVIORS_BETWEEN_VIDEOS, cfg.CLOSE_BEHAVIORS_BETWEEN_VIDEOS_DEFAULT_VALUE
         ):
             if self.dw_player[0].player.eof_reached and self.dw_player[0].player.core_idle:
                 if self.dw_player[0].player.playlist_pos == len(self.dw_player[0].player.playlist) - 1:
-                    logging.debug("End of playlist reached")
+                    logger.debug("End of playlist reached")
 
                     self.pause_video()
 
@@ -4792,7 +4790,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             sound_type (str): type of sound
         """
 
-        logging.debug(f"sound: {sound_type}")
+        logger.debug(f"sound: {sound_type}")
 
         self.sound = QSoundEffect()
         self.sound.setSource(f"qrc:{sound_type}")
@@ -4875,7 +4873,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             event_operations.undo_event_operation(self)
             return
 
-        logging.debug(f"key: {key}    event text: #{ek_text=}#    event key: {ek}   Modifier: {event.modifiers()}")
+        logger.debug(f"key: {key}    event text: #{ek_text=}#    event key: {ek}   Modifier: {event.modifiers()}")
 
         if self.playerType in cfg.VIEWERS:
             if ek == Qt.Key.Key_CapsLock:
@@ -5240,7 +5238,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.update_subject(self.pj[cfg.SUBJECTS][subject_idx][cfg.SUBJECT_NAME])
 
         else:
-            logging.debug(f"Key not assigned ({seq.toString(QKeySequence.SequenceFormat.PortableText)})")
+            logger.debug(f"Key not assigned ({seq.toString(QKeySequence.SequenceFormat.PortableText)})")
             self.statusbar.showMessage(f"Key not assigned ({seq.toString(QKeySequence.SequenceFormat.PortableText)})", 5000)
 
     def tv_events_doubleClicked(self):
@@ -5533,7 +5531,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         close spectrogram window if it exists
          and close program
         """
-        logging.debug("function: closeEvent")
+        logger.debug("function: closeEvent")
 
         # close MPV in IPC mode
         if self.MPV_IPC_MODE:
@@ -5545,7 +5543,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     except subprocess.TimeoutExpired:
                         p.player.process.kill()  # force if still alive
             except Exception as e:
-                logging.warning(f"Error stopping MPV process #{idx}: {e}")
+                logger.warning(f"Error stopping MPV process #{idx}: {e}")
 
         # check if re-encoding
         if self.processes:
@@ -5583,7 +5581,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 try:
                     del self.config_param["refresh_preferences"]
                 except KeyError:
-                    logging.warning("no refresh_preferences key")
+                    logger.warning("no refresh_preferences key")
                 event.ignore()
 
         if "refresh_preferences" not in self.config_param:
@@ -5600,7 +5598,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         check if first player ended
         """
 
-        logging.debug("play_video")
+        logger.debug("play_video")
 
         if self.geometric_measurements_mode:
             return
@@ -5696,7 +5694,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         rewind from current position
         """
         if self.playerType == cfg.MEDIA:
-            logging.debug("jump backward")
+            logger.debug("jump backward")
 
             decrement = (
                 self.config_param["fast_forward_speed"] * self.play_rate
@@ -5732,7 +5730,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 else self.config_param["fast_forward_speed"]
             )
 
-            logging.info(f"Jump forward for {increment} seconds")
+            logger.info(f"Jump forward for {increment} seconds")
 
             try:
                 new_time = (
@@ -5760,7 +5758,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         """
         reset video to beginning
         """
-        logging.info("Video reset activated")
+        logger.info("Video reset activated")
 
         if self.playerType == cfg.MEDIA:
             self.pause_video()
@@ -5795,7 +5793,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.pj[cfg.OBSERVATIONS], selected_observations
         )
 
-        logging.debug(
+        logger.debug(
             f"max_media_duration_all_obs: {max_media_duration_all_obs}, total_media_duration_all_obs={total_media_duration_all_obs}"
         )
 
@@ -5822,7 +5820,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             QMessageBox.warning(None, cfg.programName, "Select subject(s) and behavior(s) to analyze")
             return [], {}
 
-        logging.debug(f"{parameters=}")
+        logger.debug(f"{parameters=}")
         return selected_observations, parameters
 
     def remove_closed_results_objects(self):
@@ -5830,14 +5828,14 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         eliminate closed objects from list
         remove them from memory
         """
-        logging.debug("remove_closed_results_objects function")
-        logging.debug(f"{self.results_objects}=")
+        logger.debug("remove_closed_results_objects function")
+        logger.debug(f"{self.results_objects}=")
         for w in self.results_objects[:]:
             if not w.isVisible():
                 self.results_objects.remove(w)
                 w.close()
                 w.deleteLater()
-        logging.debug(f"{self.results_objects}=")
+        logger.debug(f"{self.results_objects}=")
 
 
 def main():
@@ -5863,7 +5861,7 @@ def main():
                 10000,
             )  # time out
 
-            logging.info("FFmpeg is not available. It will be downloaded from the BORIS GitHub repository")
+            logger.info("FFmpeg is not available. It will be downloaded from the BORIS GitHub repository")
 
             # download ffmpeg and ffprobe from https://github.com/boris-behav-obs/boris-behav-obs.github.io/releases/download/files/
             url: str = "https://github.com/boris-behav-obs/boris-behav-obs.github.io/releases/download/files/"
@@ -5871,19 +5869,19 @@ def main():
             # search where to download ffmpeg
             ffmpeg_dir = Path(__file__).parent / "misc"
 
-            logging.debug(f"{ffmpeg_dir=}")
+            logger.debug(f"{ffmpeg_dir=}")
 
             if not ffmpeg_dir.is_dir():
-                logging.info(f"Creating {ffmpeg_dir} directory")
+                logger.info(f"Creating {ffmpeg_dir} directory")
                 ffmpeg_dir.mkdir(parents=True, exist_ok=True)
 
             for file_ in ("ffmpeg.exe", "ffprobe.exe"):
                 local_filename = ffmpeg_dir / file_
-                logging.info(f"Downloading {file_}...")
+                logger.info(f"Downloading {file_}...")
                 try:
                     urllib.request.urlretrieve(url + file_, local_filename)
                 except Exception:
-                    logging.critical("The FFmpeg program can not be downloaded! Check your connection.")
+                    logger.critical("The FFmpeg program can not be downloaded! Check your connection.")
                     QMessageBox.warning(
                         None,
                         cfg.programName,
@@ -5893,7 +5891,7 @@ def main():
                     )
                     sys.exit(3)
 
-                logging.info(f"File downloaded as {local_filename}")
+                logger.info(f"File downloaded as {local_filename}")
 
             # re-test for ffmpeg
             ret, msg = util.check_ffmpeg_path()
@@ -5935,7 +5933,7 @@ def main():
         if sys.platform == "darwin" and "sn_0_" in project_to_open:
             project_to_open = ""
 
-    logging.debug(f"command line arguments: {args}")
+    logger.debug(f"command line arguments: {args}")
 
     if options.observation:
         if not project_to_open:
@@ -5947,7 +5945,7 @@ def main():
         project_path, project_changed, pj, msg = project_functions.open_project_json(project_to_open)
 
         if "error" in pj:
-            logging.debug(pj["error"])
+            logger.debug(pj["error"])
             QMessageBox.critical(window, cfg.programName, pj["error"])
         else:
             if msg:
@@ -5988,7 +5986,7 @@ def main():
         window.MPV_IPC_MODE = True
         # check if mpv is available
         if not shutil.which("mpv"):
-            logging.critical("The mpv command is not available on the path")
+            logger.critical("The mpv command is not available on the path")
             QMessageBox.critical(
                 None,
                 cfg.programName,
