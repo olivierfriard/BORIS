@@ -1012,7 +1012,7 @@ class Results_widget(QWidget):
                 QMessageBox.critical(self, cfg.programName, f"The file {file_name} can not be saved")
 
         else:
-            self.done(cfg.SAVE_DATASET)
+            self.close()
 
 
 class Results_dialog_exit_code(QDialog):
