@@ -62,7 +62,7 @@ def test_mouse_motion_and_click_report_all_matching_areas(monkeypatch, map_windo
     monkeypatch.setattr(map_window.view, "mapToScene", lambda _: QPointF(7, 7))
     clicked = []
     map_window.clickSignal.connect(lambda name, codes: clicked.append((name, codes)))
-    event = SimpleNamespace(pos=lambda: QPoint(1, 1))
+    event = SimpleNamespace(position=lambda: QPointF(1, 1))
 
     map_window.mouse_move_event(event)
     map_window.viewMousePressEvent(event)
@@ -76,7 +76,7 @@ def test_clicking_outside_an_area_does_not_emit_a_signal(monkeypatch, map_window
     clicked = []
     map_window.clickSignal.connect(lambda *args: clicked.append(args))
 
-    map_window.viewMousePressEvent(SimpleNamespace(pos=lambda: QPoint(1, 1)))
+    map_window.viewMousePressEvent(SimpleNamespace(position=lambda: QPointF(1, 1)))
 
     assert clicked == []
 
