@@ -403,6 +403,8 @@ def write_event(self, event: dict, mem_time: dec) -> int:
                         )
 
                         r = modifiers_selector.exec_()
+                        if not r:
+                            return
                         if r:
                             selected_modifiers = modifiers_selector.get_modifiers()
 

@@ -370,7 +370,7 @@ def return_file_header_footer(file_name: str, file_row_number: int = 0, row_numb
                     footer.append(row.strip())
                 row_idx += 1
 
-    except Exception:
+    except Exception:  # noqa: BLE001
         return [], []
     return header, footer
 
@@ -470,7 +470,7 @@ def txt2np_array(
     # check columns
     try:
         columns = [int(x) - 1 for x in columns_str.split(",")]
-    except Exception:
+    except Exception:  # noqa: BLE001
         return False, f"Problem with columns {columns_str}", np.array([])
 
     # check converters
@@ -494,18 +494,6 @@ def txt2np_array(
             mod = types.ModuleType("converter_module")
             exec(function, mod.__dict__)
 
-            """
-            try:
-                exec(function)
-            except Exception:
-                return False, f"error in converter: {sys.exc_info()[1]}", np.array([])
-
-            print(f"{converters=}")
-            print(f"{column_converter=}")
-            print(locals())
-            print(f"{conv_name=}")
-            """
-
             # np_converters[column_idx - 1] = locals()['conv_name']
             np_converters[column_idx - 1] = getattr(mod, conv_name)
 
@@ -518,7 +506,7 @@ def txt2np_array(
             buff = csvfile.read(4096)
             snif = csv.Sniffer()
             dialect = snif.sniff(buff)
-            """has_header = snif.has_header(buff)"""
+
         # count number of header rows
         header_rows_nb = 0
         csv.register_dialect("dialect", dialect)
@@ -537,13 +525,13 @@ def txt2np_array(
                 # Only leading nonnumeric rows are part of the header.
                 break
 
-    except Exception:
+    except Exception:  # noqa: BLE001
         return False, f"{sys.exc_info()[1]}", np.array([])
 
     try:
         data = np.loadtxt(file_name, delimiter=dialect.delimiter, usecols=columns, skiprows=header_rows_nb, converters=np_converters)
 
-    except Exception:
+    except Exception:  # noqa: BLE001
         return False, f"{sys.exc_info()[1]}", np.array([])
 
     # check if first value must be substracted
@@ -573,12 +561,12 @@ def behavior_user_color(ethogram: dict, behavior_code: str) -> str | None:
     """
     returns the color of behavior if defined else None
     """
-    for x in ethogram:
-        if ethogram[x][cfg.BEHAVIOR_CODE] == behavior_code:
-            if ethogram[x].get(cfg.COLOR, None) == "":
+    for value in ethogram.values():
+        if value[cfg.BEHAVIOR_CODE] == behavior_code:
+            if value.get(cfg.COLOR, None) == "":
                 return None
             else:
-                return ethogram[x].get(cfg.COLOR, None)
+                return value.get(cfg.COLOR, None)
 
     return None
 

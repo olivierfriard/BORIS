@@ -249,14 +249,14 @@ class Advanced_event_filtering_dialog(QDialog):
                 summary[obs_id].append(float(duration))
 
             self.out = []
-            for obs_id in summary:
+            for obs_id, value in summary.items():
                 self.out.append(
                     [
                         obs_id,
-                        str(len(summary[obs_id])),
-                        str(round(sum(summary[obs_id]), 3)),
-                        str(round(statistics.mean(summary[obs_id]), 3)),
-                        str(round(statistics.stdev(summary[obs_id]), 3)) if len(summary[obs_id]) > 1 else "NA",
+                        str(len(value)),
+                        str(round(sum(value), 3)),
+                        str(round(statistics.mean(value), 3)),
+                        str(round(statistics.stdev(value), 3)) if len(value) > 1 else "NA",
                     ]
                 )
 

@@ -95,12 +95,14 @@ else:
 from . import (
     advanced_event_filtering,
     config_file,
+    connections,
     core_qrc,
     dialog,
     event_operations,
     events_cursor,
     geometric_measurement,
     gui_utilities,
+    menu_options,
     modifier_coding_map_creator,
     modifiers_coding_map,
     observation_operations,
@@ -119,8 +121,6 @@ from . import (
     write_event,
 )
 from . import config as cfg
-from . import connections as connections
-from . import menu_options as menu_options
 from . import (
     plot_spectrogram_rt as plot_spectrogram_rt,
 )
@@ -4300,12 +4300,15 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 ct = self.getLaps(n_player=n_player)
 
                 # sync players 2..8 if time diff >= 1 s
-                if not math.isnan(ct) and not math.isnan(ct0):
-                    if (
+                if (
+                    not math.isnan(ct)
+                    and not math.isnan(ct0)
+                    and (
                         abs(ct0 - (ct + dec(self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO][cfg.OFFSET][str(n_player + 1)])))
                         >= 1
-                    ):
-                        self.sync_time(n_player, float(ct0))  # self.seek_mediaplayer(ct0, n_player)
+                    )
+                ):
+                    self.sync_time(n_player, float(ct0))  # self.seek_mediaplayer(ct0, n_player)
 
         currentTimeOffset = dec(cumulative_time_pos + self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TIME_OFFSET])
 
