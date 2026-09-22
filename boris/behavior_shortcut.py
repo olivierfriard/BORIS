@@ -93,16 +93,15 @@ class ShortcutDialog(QDialog):
         self._on_shortcut_changed(self._editor.keySequence())
 
     def clear(self):
+        was_empty = self.shortcut().isEmpty()
         self._editor.clear()
-        empty = QKeySequence()
-        self._on_shortcut_changed(empty)
-        self.shortcutChanged.emit(empty)
+        if was_empty:
+            empty = QKeySequence()
+            self._on_shortcut_changed(empty)
+            self.shortcutChanged.emit(empty)
 
     def _on_shortcut_changed(self, sequence: QKeySequence):
 
-        # if len(sequence.toString(QKeySequence.SequenceFormat.PortableText)) == 1:
-        #    text = sequence.toString(QKeySequence.SequenceFormat.PortableText).lower()
-        # else:
         text = sequence.toString(QKeySequence.SequenceFormat.PortableText)
 
         self._info_label.setText(f"Current shortcut: {text or 'None'}")
@@ -128,5 +127,3 @@ if __name__ == "__main__":
         print("Portable:", shortcut.toString(QKeySequence.SequenceFormat.PortableText))
     else:
         print("Cancelled operation")
-
-    # app.exec()
