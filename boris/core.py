@@ -4241,6 +4241,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     def mpv_timer_out(self, value: float | None = None, scroll_slider=True):
         """
         print the media current position and total length for MPV player
+        update player dockwidget title
         scroll video slider to video position
         update spectro, waveform and data (if any)
         Time offset is NOT added!
@@ -4319,7 +4320,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         # index of current subject selected by observer
         subject_idx = self.subject_name_index[self.currentSubject] if self.currentSubject else ""
 
-        # t1 = time.time()
         self.currentStates = util.get_current_states_modifiers_by_subject(
             self.state_behaviors_codes,
             self.pj[cfg.OBSERVATIONS][self.observationId][cfg.EVENTS],
@@ -4327,9 +4327,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             currentTimeOffset,
             include_modifiers=True,
         )
-        # print("get_current_states_modifiers_by_subject:", time.time() - t1)
 
-        self.lbCurrentStates.setText(f"Observed behaviors: {', '.join(self.currentStates[subject_idx])}")
+        self.lbCurrentStates.setText(f"Observed behaviors: <b>{', '.join(self.currentStates[subject_idx])}</b>")
 
         # show current states in subjects table
         self.show_current_states_in_subjects_table()
@@ -4340,9 +4339,15 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         if current_media_path_:
             current_media_name = Path(current_media_path_).name
 
+        # update dockwidget player title
+
+        self.dw_player[0].setWindowTitle(f"Player #{1} ({current_media_name})")
+
         # check for ongoing state events between media or at the end of last media
         if (
-            self.pj[cfg.OBSERVATIONS][self.observationId][cfg.CLOSE_BEHAVIORS_BETWEEN_VIDEOS]
+            self.pj[cfg.OBSERVATIONS][self.observationId].get(
+                cfg.CLOSE_BEHAVIORS_BETWEEN_VIDEOS, cfg.CLOSE_BEHAVIORS_BETWEEN_VIDEOS_DEFAULT_VALUE
+            )
             and self.mem_playlist_index is not None
             and current_playlist_index != self.mem_playlist_index
         ):
@@ -4415,9 +4420,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
             # set video scroll bar
 
-            if scroll_slider and not self.user_move_slider:
-                if current_media_time_pos is not None and current_media_duration is not None:
-                    self.video_slider.setValue(round(current_media_time_pos / current_media_duration * (cfg.SLIDER_MAXIMUM - 1)))
+            if scroll_slider and not self.user_move_slider and current_media_time_pos is not None and current_media_duration is not None:
+                self.video_slider.setValue(round(current_media_time_pos / current_media_duration * (cfg.SLIDER_MAXIMUM - 1)))
 
     def mpv_eof_reached(self):
         """
@@ -4427,7 +4431,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         logging.info("Media end reached")
 
-        if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.CLOSE_BEHAVIORS_BETWEEN_VIDEOS]:
+        if self.pj[cfg.OBSERVATIONS][self.observationId].get(
+            cfg.CLOSE_BEHAVIORS_BETWEEN_VIDEOS, cfg.CLOSE_BEHAVIORS_BETWEEN_VIDEOS_DEFAULT_VALUE
+        ):
             if self.dw_player[0].player.eof_reached and self.dw_player[0].player.core_idle:
                 if self.dw_player[0].player.playlist_pos == len(self.dw_player[0].player.playlist) - 1:
                     logging.debug("End of playlist reached")
@@ -4535,9 +4541,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             subject_idx = fields[cfg.SUBJECT]
             code_idx = fields[cfg.BEHAVIOR_CODE]
 
-            return (time, subject, code) in (
-                (row[position_idx], row[subject_idx], row[code_idx]) for row in observation[cfg.EVENTS]
-            )
+            return (time, subject, code) in ((row[position_idx], row[subject_idx], row[code_idx]) for row in observation[cfg.EVENTS])
 
     def choose_behavior(self, idx_list: list) -> None | str:
         """

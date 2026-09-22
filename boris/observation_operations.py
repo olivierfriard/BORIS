@@ -388,13 +388,9 @@ def load_observation(self, obs_id: str, mode: str = cfg.OBS_START) -> str:
             self.dw_info.setVisible(True)
 
     if self.pj[cfg.OBSERVATIONS][self.observationId][cfg.TYPE] == cfg.MEDIA:
-        if mode == cfg.OBS_START:
-            if not initialize_new_media_observation(self):
-                close_observation(self)
-                # self.observationId = ""
-                # self.twEvents.setRowCount(0)
-                # menu_options.update_menu(self)
-                return "Error: loading observation problem"
+        if mode == cfg.OBS_START and not initialize_new_media_observation(self):
+            close_observation(self)
+            return "Error: loading observation problem"
 
         if mode == cfg.VIEW:
             self.playerType = cfg.VIEWER_MEDIA
@@ -1065,17 +1061,14 @@ def new_observation(self, mode: str = cfg.NEW, obsId: str = "") -> None:
             observationWindow.cb_observation_time_interval.setChecked(True)
             observationWindow.observation_time_interval = self.pj[cfg.OBSERVATIONS][obsId].get(cfg.OBSERVATION_TIME_INTERVAL, [0, 0])
             observationWindow.cb_observation_time_interval.setText(
-                (
-                    "Limit observation to a time interval: "
-                    f"{self.pj[cfg.OBSERVATIONS][obsId].get(cfg.OBSERVATION_TIME_INTERVAL, [0, 0])[0]} - "
-                    f"{self.pj[cfg.OBSERVATIONS][obsId].get(cfg.OBSERVATION_TIME_INTERVAL, [0, 0])[1]}"
-                )
+                "Limit observation to a time interval: "
+                f"{self.pj[cfg.OBSERVATIONS][obsId].get(cfg.OBSERVATION_TIME_INTERVAL, [0, 0])[0]} - "
+                f"{self.pj[cfg.OBSERVATIONS][obsId].get(cfg.OBSERVATION_TIME_INTERVAL, [0, 0])[1]}"
             )
 
-        if cfg.CLOSE_BEHAVIORS_BETWEEN_VIDEOS in self.pj[cfg.OBSERVATIONS][obsId]:
-            observationWindow.cbCloseCurrentBehaviorsBetweenVideo.setChecked(
-                self.pj[cfg.OBSERVATIONS][obsId][cfg.CLOSE_BEHAVIORS_BETWEEN_VIDEOS]
-            )
+        observationWindow.cbCloseCurrentBehaviorsBetweenVideo.setChecked(
+            self.pj[cfg.OBSERVATIONS][obsId].get(cfg.CLOSE_BEHAVIORS_BETWEEN_VIDEOS, cfg.CLOSE_BEHAVIORS_BETWEEN_VIDEOS_DEFAULT_VALUE)
+        )
     rv = observationWindow.exec()
 
     # save geometry
@@ -1351,11 +1344,9 @@ def check_creation_date(self) -> tuple[int, dict]:
 
         dlg.ptText.clear()
         dlg.ptText.appendHtml(
-            (
-                "Some media file does not contain the <b>Creation date/time</b> metadata tag:<br>"
-                f"{'<br>'.join(not_tagged_media_list)}<br><br>"
-                "Use the media file date/time instead?"
-            )
+            "Some media file does not contain the <b>Creation date/time</b> metadata tag:<br>"
+            f"{'<br>'.join(not_tagged_media_list)}<br><br>"
+            "Use the media file date/time instead?"
         )
         dlg.ptText.moveCursor(QTextCursor.MoveOperation.Start)
         ret = dlg.exec_()
@@ -1923,7 +1914,7 @@ def initialize_new_media_observation(self) -> bool:
             try:
                 mediaLength = self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO][cfg.LENGTH][mediaFile] * 1000
                 mediaFPS = self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO][cfg.FPS][mediaFile]
-            except Exception:
+            except Exception:  # noqa: BLE001
                 logger.debug("media_info key not found in project")
 
                 r = util.accurate_media_analysis(self.ffmpeg_bin, media_full_path)
@@ -1954,8 +1945,8 @@ def initialize_new_media_observation(self) -> bool:
             # add media file to playlist
             self.dw_player[i].player.playlist_append(media_full_path)
 
-            # add media file name to player window title
-            self.dw_player[i].setWindowTitle(f"Player #{i + 1} ({Path(media_full_path).name})")
+        # add first media file name to player window title
+        self.dw_player[i].setWindowTitle(f"Player #{i + 1} ({Path(self.dw_player[i].player.playlist[0]['filename']).name})")
 
         # media duration cumuled in seconds
         self.dw_player[i].cumul_media_durations_sec = [round(dec(x / 1000), 3) for x in self.dw_player[i].cumul_media_durations]

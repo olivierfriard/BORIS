@@ -334,7 +334,7 @@ def otx_to_boris(file_path: str) -> tuple[dict, list]:
                 "independent_variables": {},
                 "visualize_spectrogram": False,
                 "visualize_waveform": False,
-                "close_behaviors_between_videos": False,
+                cfg.CLOSE_BEHAVIORS_BETWEEN_VIDEOS: cfg.CLOSE_BEHAVIORS_BETWEEN_VIDEOS_DEFAULT_VALUE,
                 "scan_sampling_time": 0,
                 "start_from_current_time": False,
                 "start_from_current_epoch_time": False,
