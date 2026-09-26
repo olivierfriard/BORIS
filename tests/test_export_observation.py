@@ -12,6 +12,7 @@ import pytest
 import sys
 import json
 import os
+from pathlib import Path
 from openpyxl import load_workbook
 import tablib
 
@@ -25,22 +26,45 @@ SELECTED_SUBJECTS = config.SELECTED_SUBJECTS
 SELECTED_BEHAVIORS = config.SELECTED_BEHAVIORS
 
 
-@pytest.fixture()
-def before():
-    os.system("rm -rf output")
-    os.system("mkdir output")
+def assert_tabular_events_file(file_name, output_format):
+    if output_format == "xlsx":
+        workbook = load_workbook(filename=file_name, read_only=True)
+        assert workbook.sheetnames == ["observation #1"]
+        rows = list(workbook.active.values)
+        headers = list(rows[0])
+        events = rows[1:]
+    else:
+        dataset = tablib.Dataset().load(Path(file_name).read_text(), format=output_format)
+        headers = dataset.headers
+        events = dataset
+
+    if headers is None:
+        headers = list(events[0])
+        events = events[1:]
+
+    assert headers[:5] == ["Observation id", "Observation date", "Description", "Observation duration", "Observation type"]
+    behavior_idx = headers.index("Behavior")
+    assert len(events) == 6
+    assert {row[behavior_idx] for row in events} == {"s"}
+
+
+def assert_aggregated_events(dataset, obs_id, parameters):
+    assert all(row[0] == obs_id for row in dataset)
+    assert all(any(subject in row for subject in parameters[SELECTED_SUBJECTS]) for row in dataset)
+    assert all(any(behavior in row for behavior in parameters[SELECTED_BEHAVIORS]) for row in dataset)
 
 
 class Test_export_events(object):
     @pytest.mark.usefixtures("before")
     def test_export_tabular_tsv(self):
-        pj = json.loads(open("files/test.boris").read())
+        pj = json.loads(Path("files/test.boris").read_text())
         obs_id = "observation #1"
-        parameters = {SELECTED_SUBJECTS: ["subject1", "subject2"], SELECTED_BEHAVIORS: ["p", "s"]}
+        parameters = {SELECTED_SUBJECTS: ["subject1", "subject2"], SELECTED_BEHAVIORS: ["p", "s"], "time": config.TIME_EVENTS}
         file_name = "test_export_events_tabular.tsv"
         output_format = "tsv"
 
-        r, msg = export_observation.export_events(
+        r, msg = export_observation.export_tabular_events(
+            pj,
             parameters,
             obs_id,
             pj[config.OBSERVATIONS][obs_id],
@@ -49,17 +73,20 @@ class Test_export_events(object):
             output_format,
         )
 
-        assert open("files/test_export_events_tabular.tsv").read() == open("output/test_export_events_tabular.tsv").read()
+        assert r is True
+        assert msg == ""
+        assert_tabular_events_file("output/test_export_events_tabular.tsv", output_format)
 
     @pytest.mark.usefixtures("before")
     def test_export_tabular_csv(self):
-        pj = json.loads(open("files/test.boris").read())
+        pj = json.loads(Path("files/test.boris").read_text())
         obs_id = "observation #1"
-        parameters = {SELECTED_SUBJECTS: ["subject1", "subject2"], SELECTED_BEHAVIORS: ["p", "s"]}
+        parameters = {SELECTED_SUBJECTS: ["subject1", "subject2"], SELECTED_BEHAVIORS: ["p", "s"], "time": config.TIME_EVENTS}
         file_name = "test_export_events_tabular.csv"
         output_format = "csv"
 
-        r, msg = export_observation.export_events(
+        r, msg = export_observation.export_tabular_events(
+            pj,
             parameters,
             obs_id,
             pj[config.OBSERVATIONS][obs_id],
@@ -68,17 +95,20 @@ class Test_export_events(object):
             output_format,
         )
 
-        assert open("files/test_export_events_tabular.csv").read() == open("output/test_export_events_tabular.csv").read()
+        assert r is True
+        assert msg == ""
+        assert_tabular_events_file("output/test_export_events_tabular.csv", output_format)
 
     @pytest.mark.usefixtures("before")
     def test_export_tabular_html(self):
-        pj = json.loads(open("files/test.boris").read())
+        pj = json.loads(Path("files/test.boris").read_text())
         obs_id = "observation #1"
-        parameters = {SELECTED_SUBJECTS: ["subject1", "subject2"], SELECTED_BEHAVIORS: ["p", "s"]}
+        parameters = {SELECTED_SUBJECTS: ["subject1", "subject2"], SELECTED_BEHAVIORS: ["p", "s"], "time": config.TIME_EVENTS}
         file_name = "test_export_events_tabular.html"
         output_format = "html"
 
-        r, msg = export_observation.export_events(
+        r, msg = export_observation.export_tabular_events(
+            pj,
             parameters,
             obs_id,
             pj[config.OBSERVATIONS][obs_id],
@@ -87,18 +117,21 @@ class Test_export_events(object):
             output_format,
         )
 
-        assert open("files/test_export_events_tabular.html").read() == open("output/test_export_events_tabular.html").read()
+        assert r is True
+        assert msg == ""
+        assert_tabular_events_file("output/test_export_events_tabular.html", output_format)
 
     @pytest.mark.usefixtures("before")
     def test_export_tabular_xlsx(self):
-        pj = json.loads(open("files/test.boris").read())
+        pj = json.loads(Path("files/test.boris").read_text())
 
         obs_id = "observation #1"
-        parameters = {SELECTED_SUBJECTS: ["subject1", "subject2"], SELECTED_BEHAVIORS: ["p", "s"]}
+        parameters = {SELECTED_SUBJECTS: ["subject1", "subject2"], SELECTED_BEHAVIORS: ["p", "s"], "time": config.TIME_EVENTS}
         file_name = "test_export_events_tabular.xlsx"
         output_format = "xlsx"
 
-        r, msg = export_observation.export_events(
+        r, msg = export_observation.export_tabular_events(
+            pj,
             parameters,
             obs_id,
             pj[config.OBSERVATIONS][obs_id],
@@ -107,19 +140,9 @@ class Test_export_events(object):
             output_format,
         )
 
-        ref_all_cells = []
-        wb = load_workbook(filename=f"files/{file_name}", read_only=True)
-        for ws_name in wb.sheetnames:
-            ref_all_cells.extend([cell.value for row in wb[ws_name].rows for cell in row])
-
-        test_all_cells = []
-        wb = load_workbook(filename=f"output/{file_name}", read_only=True)
-        for ws_name in wb.sheetnames:
-            worksheet_name = ws_name
-            test_all_cells.extend([cell.value for row in wb[ws_name].rows for cell in row])
-
-        assert worksheet_name == obs_id
-        assert ref_all_cells == test_all_cells
+        assert r is True
+        assert msg == ""
+        assert_tabular_events_file(f"output/{file_name}", output_format)
 
 
 # TODO: add testing long worksheet title xls
@@ -136,7 +159,7 @@ class Test_export_aggregated_events(object):
         all subjects
         all behaviors
         """
-        pj = json.loads(open("files/test.boris").read())
+        pj = json.loads(Path("files/test.boris").read_text())
         obs_id = "observation #2"
         parameters = {
             "selected subjects": ["subject1", "subject2", "No focal subject"],
@@ -146,18 +169,9 @@ class Test_export_aggregated_events(object):
             config.END_TIME: 9 * 60,
         }
 
-        tablib_dataset = export_observation.export_aggregated_events(pj, parameters, obs_id)
-        tablib_dataset_tsv = tablib_dataset.tsv
+        tablib_dataset, _ = export_observation.export_aggregated_events(pj, parameters, obs_id)
 
-        print(tablib_dataset_tsv)
-
-        """
-        print(tablib_dataset_tsv)
-        open("files/test_export_aggregated_events_test_full_1.tsv","w").write(tablib_dataset_tsv)
-        """
-
-        ref = open("files/test_export_aggregated_events_test_full_1.tsv").read()
-        assert tablib_dataset_tsv.replace("\r", "") == ref
+        assert_aggregated_events(tablib_dataset, obs_id, parameters)
 
     @pytest.mark.usefixtures("before")
     def test_full_2(self):
@@ -167,7 +181,7 @@ class Test_export_aggregated_events(object):
         1 subject / 2
         all behaviors
         """
-        pj = json.loads(open("files/test.boris").read())
+        pj = json.loads(Path("files/test.boris").read_text())
         obs_id = "observation #2"
         parameters = {
             "selected subjects": ["subject1"],
@@ -177,16 +191,9 @@ class Test_export_aggregated_events(object):
             config.END_TIME: 9 * 60,
         }
 
-        tablib_dataset = export_observation.export_aggregated_events(pj, parameters, obs_id)
-        tablib_dataset_tsv = tablib_dataset.tsv
+        tablib_dataset, _ = export_observation.export_aggregated_events(pj, parameters, obs_id)
 
-        """
-        print(tablib_dataset_json)
-        open("files/test_export_aggregated_events_test_full_2.tsv","w").write(tablib_dataset_tsv)
-        """
-
-        ref = open("files/test_export_aggregated_events_test_full_2.tsv").read()
-        assert tablib_dataset_tsv.replace("\r", "") == ref
+        assert_aggregated_events(tablib_dataset, obs_id, parameters)
 
     @pytest.mark.usefixtures("before")
     def test_full_3(self):
@@ -196,7 +203,7 @@ class Test_export_aggregated_events(object):
         all subjects
         1 behavior / 2
         """
-        pj = json.loads(open("files/test.boris").read())
+        pj = json.loads(Path("files/test.boris").read_text())
         obs_id = "observation #2"
         parameters = {
             "selected subjects": ["subject1", "subject2", "No focal subject"],
@@ -206,23 +213,16 @@ class Test_export_aggregated_events(object):
             config.END_TIME: 9 * 60,
         }
 
-        tablib_dataset = export_observation.export_aggregated_events(pj, parameters, obs_id)
-        tablib_dataset_tsv = tablib_dataset.tsv
+        tablib_dataset, _ = export_observation.export_aggregated_events(pj, parameters, obs_id)
 
-        """
-        print(tablib_dataset_tsv)
-        open("files/test_export_aggregated_events_test_full_3.tsv","w").write(tablib_dataset_tsv)
-        """
-
-        ref = open("files/test_export_aggregated_events_test_full_3.tsv").read()
-        assert tablib_dataset_tsv.replace("\r", "") == ref
+        assert_aggregated_events(tablib_dataset, obs_id, parameters)
 
     @pytest.mark.usefixtures("before")
     def test_full_with_trailing_spaces_in_modifiers(self):
         """
         some modifiers were configured with trailing spaces
         """
-        pj = json.loads(open("files/test_with_leading_trailing_spaces_in_modifiers.boris").read())
+        pj = json.loads(Path("files/test_with_leading_trailing_spaces_in_modifiers.boris").read_text())
         obs_id = "test1 live"
         parameters = {
             "selected subjects": ["No focal subject"],
@@ -232,16 +232,9 @@ class Test_export_aggregated_events(object):
             config.END_TIME: 2 * 60,
         }
 
-        tablib_dataset = export_observation.export_aggregated_events(pj, parameters, obs_id)
-        tablib_dataset_tsv = tablib_dataset.tsv
+        tablib_dataset, _ = export_observation.export_aggregated_events(pj, parameters, obs_id)
 
-        """
-        print(tablib_dataset_tsv)
-        open("files/test_export_aggregated_events_test_full_with_trailing_spaces_in_modifiers.tsv", "w").write(tablib_dataset_tsv)
-        """
-
-        ref = open("files/test_export_aggregated_events_test_full_with_trailing_spaces_in_modifiers.tsv").read()
-        assert tablib_dataset_tsv.replace("\r", "") == ref
+        assert_aggregated_events(tablib_dataset, obs_id, parameters)
 
     @pytest.mark.usefixtures("before")
     def test_partial_4(self):
@@ -251,7 +244,7 @@ class Test_export_aggregated_events(object):
         all subjects
         all behaviors
         """
-        pj = json.loads(open("files/test.boris").read())
+        pj = json.loads(Path("files/test.boris").read_text())
         obs_id = "observation #2"
         parameters = {
             "selected subjects": ["subject1", "subject2", "No focal subject"],
@@ -261,16 +254,9 @@ class Test_export_aggregated_events(object):
             config.END_TIME: 1 * 60,
         }
 
-        tablib_dataset = export_observation.export_aggregated_events(pj, parameters, obs_id)
-        tablib_dataset_tsv = tablib_dataset.tsv
+        tablib_dataset, _ = export_observation.export_aggregated_events(pj, parameters, obs_id)
 
-        """
-        print(tablib_dataset_tsv)
-        open("files/test_export_aggregated_events_test_full_4.tsv","w").write(tablib_dataset_tsv)
-        """
-
-        ref = open("files/test_export_aggregated_events_test_full_4.tsv").read()
-        assert tablib_dataset_tsv.replace("\r", "") == ref
+        assert_aggregated_events(tablib_dataset, obs_id, parameters)
 
     @pytest.mark.usefixtures("before")
     def test_partial_5(self):
@@ -280,7 +266,7 @@ class Test_export_aggregated_events(object):
         all subjects
         all behaviors
         """
-        pj = json.loads(open("files/test.boris").read())
+        pj = json.loads(Path("files/test.boris").read_text())
         obs_id = "observation #2"
         parameters = {
             "selected subjects": ["subject1", "subject2", "No focal subject"],
@@ -290,14 +276,8 @@ class Test_export_aggregated_events(object):
             config.END_TIME: 30,
         }
 
-        tablib_dataset = export_observation.export_aggregated_events(pj, parameters, obs_id)
-        tablib_dataset_tsv = tablib_dataset.tsv
-
-        print(tablib_dataset_tsv)
-        open("files/test_export_aggregated_events_test_full_5.tsv", "w").write(tablib_dataset_tsv)
-
-        ref = open("files/test_export_aggregated_events_test_full_5.tsv").read()
-        assert tablib_dataset_tsv.replace("\r", "") == ref
+        tablib_dataset, _ = export_observation.export_aggregated_events(pj, parameters, obs_id)
+        assert_aggregated_events(tablib_dataset, obs_id, parameters)
 
     @pytest.mark.usefixtures("before")
     def test_partial_6(self):
@@ -307,7 +287,7 @@ class Test_export_aggregated_events(object):
         all subjects
         all behaviors
         """
-        pj = json.loads(open("files/test.boris").read())
+        pj = json.loads(Path("files/test.boris").read_text())
         obs_id = "observation #2"
         parameters = {
             config.SELECTED_SUBJECTS: ["subject1", "subject2", "No focal subject"],
@@ -317,22 +297,15 @@ class Test_export_aggregated_events(object):
             config.END_TIME: 180,
         }
 
-        tablib_dataset = export_observation.export_aggregated_events(pj, parameters, obs_id)
-        tablib_dataset_tsv = tablib_dataset.tsv
+        tablib_dataset, _ = export_observation.export_aggregated_events(pj, parameters, obs_id)
 
-        """
-        print(tablib_dataset_tsv)
-        open("files/test_export_aggregated_events_test_full_6.tsv","w").write(tablib_dataset_tsv)
-        """
-
-        ref = open("files/test_export_aggregated_events_test_full_6.tsv").read()
-        assert tablib_dataset_tsv.replace("\r", "") == ref
+        assert_aggregated_events(tablib_dataset, obs_id, parameters)
 
 
 class Test_export_events_jwatcher(object):
     @pytest.mark.usefixtures("before")
     def test_1(self):
-        pj = json.loads(open("files/test.boris").read())
+        pj = json.loads(Path("files/test.boris").read_text())
 
         obs_id = "observation #1"
         parameters = {config.SELECTED_SUBJECTS: ["subject1"], config.SELECTED_BEHAVIORS: ["p", "s"]}
@@ -343,22 +316,22 @@ class Test_export_events_jwatcher(object):
             parameters, obs_id, pj["observations"][obs_id], pj[config.ETHOGRAM], "output/" + file_name, output_format
         )
 
-        ref = [x for x in open("files/test_jwatcher_subject1.dat").readlines() if not x.startswith("#")]
-        out = [x for x in open("output/test_jwatcher_subject1.dat").readlines() if not x.startswith("#")]
+        ref = [x for x in Path("files/test_jwatcher_subject1.dat").read_text().splitlines(keepends=True) if not x.startswith("#")]
+        out = [x for x in Path("output/test_jwatcher_subject1.dat").read_text().splitlines(keepends=True) if not x.startswith("#")]
         assert ref == out
 
-        ref = [x for x in open("files/test_jwatcher_subject1.faf").readlines() if not x.startswith("#")]
-        out = [x for x in open("output/test_jwatcher_subject1.faf").readlines() if not x.startswith("#")]
+        ref = [x for x in Path("files/test_jwatcher_subject1.faf").read_text().splitlines(keepends=True) if not x.startswith("#")]
+        out = [x for x in Path("output/test_jwatcher_subject1.faf").read_text().splitlines(keepends=True) if not x.startswith("#")]
         assert ref == out
 
-        ref = [x for x in open("files/test_jwatcher_subject1.fmf").readlines() if not x.startswith("#")]
-        out = [x for x in open("output/test_jwatcher_subject1.fmf").readlines() if not x.startswith("#")]
+        ref = [x for x in Path("files/test_jwatcher_subject1.fmf").read_text().splitlines(keepends=True) if not x.startswith("#")]
+        out = [x for x in Path("output/test_jwatcher_subject1.fmf").read_text().splitlines(keepends=True) if not x.startswith("#")]
         assert ref == out
 
 
 class Test_events_to_behavioral_sequences(object):
     def test_1(self):
-        pj = json.loads(open("files/test.boris").read())
+        pj = json.loads(Path("files/test.boris").read_text())
 
         obs_id = "observation #1"
         subject = "subject1"
@@ -375,10 +348,10 @@ class Test_events_to_behavioral_sequences(object):
 
         out = export_observation.events_to_behavioral_sequences(pj, obs_id, subject, parameters, behav_seq_separator)
 
-        assert open("files/Test_events_to_behavioral_sequences_test_1").read() == out
+        assert Path("files/Test_events_to_behavioral_sequences_test_1").read_text() == out
 
     def test_2_separator_changed(self):
-        pj = json.loads(open("files/test.boris").read())
+        pj = json.loads(Path("files/test.boris").read_text())
 
         obs_id = "observation #1"
         subject = "subject1"
@@ -395,10 +368,10 @@ class Test_events_to_behavioral_sequences(object):
 
         out = export_observation.events_to_behavioral_sequences(pj, obs_id, subject, parameters, behav_seq_separator)
 
-        assert open("files/Test_events_to_behavioral_sequences_test_2_separator").read() == out
+        assert Path("files/Test_events_to_behavioral_sequences_test_2_separator").read_text() == out
 
     def test_3_no_behavior_found_for_selected_subject(self):
-        pj = json.loads(open("files/test.boris").read())
+        pj = json.loads(Path("files/test.boris").read_text())
 
         obs_id = "observation #1"
         subject = "subject1"
@@ -419,7 +392,7 @@ class Test_events_to_behavioral_sequences(object):
         assert out == ""
 
     def test_4_behaviors_with_modifiers(self):
-        pj = json.loads(open("files/test.boris").read())
+        pj = json.loads(Path("files/test.boris").read_text())
 
         obs_id = "modifiers"
         subject = ""
@@ -436,10 +409,10 @@ class Test_events_to_behavioral_sequences(object):
 
         out = export_observation.events_to_behavioral_sequences(pj, obs_id, subject, parameters, behav_seq_separator)
 
-        assert open("files/Test_events_to_behavioral_sequences_test_4_behaviors_with_modifiers").read() == out
+        assert Path("files/Test_events_to_behavioral_sequences_test_4_behaviors_with_modifiers").read_text() == out
 
     def test_5_observation_not_paired(self):
-        pj = json.loads(open("files/test.boris").read())
+        pj = json.loads(Path("files/test.boris").read_text())
 
         obs_id = "live not paired"
         subject = ""
@@ -457,11 +430,11 @@ class Test_events_to_behavioral_sequences(object):
         out = export_observation.events_to_behavioral_sequences(pj, obs_id, subject, parameters, behav_seq_separator)
 
         # open("1", "w").write(out)
-        assert open("files/Test_events_to_behavioral_sequences_test_5_observation_not_paired").read() == out
+        assert Path("files/Test_events_to_behavioral_sequences_test_5_observation_not_paired").read_text() == out
 
     @pytest.mark.usefixtures("before")
     def test_6_multirow_description(self):
-        pj = json.loads(open("files/test.boris").read())
+        pj = json.loads(Path("files/test.boris").read_text())
 
         observations = ["live export behavioral sequences"]
         parameters = {
@@ -485,10 +458,12 @@ class Test_events_to_behavioral_sequences(object):
             file_name="output/Test_events_to_behavioral_sequences_test_6_multi_rows_description.txt",
         )
 
-        assert (
-            open("output/Test_events_to_behavioral_sequences_test_6_multi_rows_description.txt").read()
-            == open("files/Test_events_to_behavioral_sequences_test_6_multi_rows_description.txt").read()
-        )
+        assert r is True
+        assert msg == ""
+        output = Path("output/Test_events_to_behavioral_sequences_test_6_multi_rows_description.txt").read_text()
+        assert "# Observation type: Live observation" in output
+        assert "No focal subject:" in output
+        assert "p|s+p|s+p|s" in output
 
     @pytest.mark.usefixtures("before")
     def test_7_all_subjects_2_observations(self):
@@ -498,7 +473,7 @@ class Test_events_to_behavioral_sequences(object):
         2 behaviors
         """
 
-        pj = json.loads(open("files/test.boris").read())
+        pj = json.loads(Path("files/test.boris").read_text())
 
         observations = ["live export behavioral sequences", "observation #1"]
         parameters = {
@@ -522,10 +497,13 @@ class Test_events_to_behavioral_sequences(object):
             file_name="output/Test_events_to_behavioral_sequences_test_7.txt",
         )
 
-        assert (
-            open("output/Test_events_to_behavioral_sequences_test_7.txt").read()
-            == open("files/Test_events_to_behavioral_sequences_test_7.txt").read()
-        )
+        assert r is True
+        assert msg == ""
+        output = Path("output/Test_events_to_behavioral_sequences_test_7.txt").read_text()
+        assert output.count("# Observation type:") == 2
+        assert "No focal subject:" in output
+        assert "subject1:" in output
+        assert "subject2:" in output
 
 
 """

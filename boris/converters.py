@@ -314,6 +314,7 @@ def load_converters_from_file_repo(self, mode: str):
                             "BORIS",
                             (f"The code of {converter_name} converter produces an error: <br><b>{sys.exc_info()[1]}</b>"),
                         )
+                        continue
 
                     self.tw_converters.setRowCount(self.tw_converters.rowCount() + 1)
                     self.tw_converters.setItem(self.tw_converters.rowCount() - 1, 0, QTableWidgetItem(converter_name))

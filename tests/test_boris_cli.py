@@ -1,5 +1,6 @@
 import subprocess
 import sys
+import os
 from pathlib import Path
 
 
@@ -7,7 +8,9 @@ PROJECT_ROOT = Path(__file__).resolve().parents[1]
 
 
 def run_command(command):
-    return subprocess.run(command, cwd=PROJECT_ROOT, capture_output=True, text=True)
+    environment = os.environ.copy()
+    environment["UV_CACHE_DIR"] = "/tmp/boris-uv-cache"
+    return subprocess.run(command, cwd=PROJECT_ROOT, capture_output=True, text=True, env=environment)
 
 
 def test_cli_version_runs_as_script():

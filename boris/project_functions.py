@@ -95,7 +95,7 @@ def check_observation_exhaustivity(
     if events:
         # coding duration
         event_timestamps = [event[cfg.EVENT_TIME_FIELD_IDX] for event in events]
-        obs_theo_dur = max(event_timestamps) - min(event_timestamps)
+        obs_theo_dur = dec(str(max(event_timestamps))) - dec(str(min(event_timestamps)))
     else:
         obs_theo_dur = dec("0")
 
@@ -471,7 +471,7 @@ def check_project_integrity(
     for obs_id in pj[cfg.OBSERVATIONS]:
         # check if timestamp between -2147483647 and 2147483647
         for event in pj[cfg.OBSERVATIONS][obs_id][cfg.EVENTS]:
-            timestamp = event[cfg.PJ_OBS_FIELDS[pj[cfg.OBSERVATIONS][obs_id][cfg.TYPE]][cfg.TIME]]
+            timestamp = dec(str(event[cfg.PJ_OBS_FIELDS[pj[cfg.OBSERVATIONS][obs_id][cfg.TYPE]][cfg.TIME]]))
             if not timestamp.is_nan() and not (-2147483647 <= timestamp <= 2147483647):
                 out_events += f"Observation: <b>{obs_id}</b><br>The timestamp {timestamp} is not between -2147483647 and 2147483647.<br>"
 

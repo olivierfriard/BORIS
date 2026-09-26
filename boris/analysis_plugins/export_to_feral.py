@@ -24,6 +24,7 @@ __version__ = "0.3.2"
 __version_date__ = "2025-12-19"
 __plugin_name__ = "Export observations to FERAL"
 __author__ = "Jacopo Razzauti - The Rockefeller University; Olivier Friard - University of Torino - Italy"
+__description__ = "Export observations to FERAL (getferal.ai)"
 
 
 # ---------------------------

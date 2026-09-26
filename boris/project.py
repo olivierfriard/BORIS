@@ -710,16 +710,15 @@ class projectDialog(QDialog, Ui_dlgProject):
         if dialog.MessageDialog(cfg.programName, "Confirm the conversion of key to lower case.", [cfg.YES, cfg.CANCEL]) == cfg.CANCEL:
             return
 
-        if len([x.lower() for x in all_keys]) != len(set([x.lower() for x in all_keys])):
-            if (
-                dialog.MessageDialog(
-                    cfg.programName,
-                    "Some keys will be duplicated after conversion. Proceed?",
-                    [cfg.YES, cfg.CANCEL],
-                )
-                == cfg.CANCEL
-            ):
-                return
+        if len([x.lower() for x in all_keys]) != len(set([x.lower() for x in all_keys])) and (
+            dialog.MessageDialog(
+                cfg.programName,
+                "Some keys will be duplicated after conversion. Proceed?",
+                (cfg.YES, cfg.CANCEL),
+            )
+            == cfg.CANCEL
+        ):
+            return
 
         for row in range(self.twBehaviors.rowCount()):
             if self.twBehaviors.item(row, cfg.behavioursFields["key"]).text():
@@ -742,7 +741,7 @@ class projectDialog(QDialog, Ui_dlgProject):
                                 modifiers_dict[modifier_set]["values"][idx2] = (
                                     value.split("(")[0] + "(" + re.findall(r"\((\w+)\)", value)[0].lower() + ")" + value.split(")")[-1]
                                 )
-                    except Exception:
+                    except Exception:  # noqa: BLE001
                         logging.warning("error during conversion of modifier short cut to lower case")
 
                 self.twBehaviors.item(row, cfg.behavioursFields[cfg.MODIFIERS]).setText(json.dumps(modifiers_dict))
@@ -754,7 +753,7 @@ class projectDialog(QDialog, Ui_dlgProject):
         # check if some keys will be duplicated after conversion
         try:
             all_keys = [self.twSubjects.item(row, cfg.subjectsFields.index("key")).text() for row in range(self.twSubjects.rowCount())]
-        except Exception:
+        except Exception:  # noqa: BLE001
             pass
         if all_keys == [x.lower() for x in all_keys]:
             QMessageBox.information(self, cfg.programName, "All keys are already lower case")
@@ -792,7 +791,7 @@ class projectDialog(QDialog, Ui_dlgProject):
             return
         try:
             bcm = json.loads(open(file_name, "r").read())
-        except Exception:
+        except Exception:  # noqa: BLE001
             QMessageBox.critical(self, cfg.programName, f"The file {file_name} is not a behaviors coding map.")
             return
 
@@ -900,28 +899,32 @@ class projectDialog(QDialog, Ui_dlgProject):
             # check if behavior belong to removed category
             if bc.removed:
                 for row in range(self.twBehaviors.rowCount()):
-                    if self.twBehaviors.item(row, cfg.behavioursFields[cfg.BEHAVIOR_CATEGORY]):
-                        if self.twBehaviors.item(row, cfg.behavioursFields[cfg.BEHAVIOR_CATEGORY]).text() == bc.removed:
-                            if (
-                                dialog.MessageDialog(
-                                    cfg.programName,
-                                    (
-                                        f"The <b>{self.twBehaviors.item(row, cfg.behavioursFields['code']).text()}</b> behavior belongs "
-                                        "to a behavioral category "
-                                        f"<b>{self.twBehaviors.item(row, cfg.behavioursFields['category']).text()}</b> "
-                                        "that is no more in the behavioral categories list.<br><br>"
-                                        "Remove the behavior from category?"
-                                    ),
-                                    (cfg.YES, cfg.CANCEL),
-                                )
-                                == cfg.YES
-                            ):
-                                self.twBehaviors.item(row, cfg.behavioursFields[cfg.BEHAVIOR_CATEGORY]).setText("")
+                    if (
+                        self.twBehaviors.item(row, cfg.behavioursFields[cfg.BEHAVIOR_CATEGORY])
+                        and self.twBehaviors.item(row, cfg.behavioursFields[cfg.BEHAVIOR_CATEGORY]).text() == bc.removed
+                        and (
+                            dialog.MessageDialog(
+                                cfg.programName,
+                                (
+                                    f"The <b>{self.twBehaviors.item(row, cfg.behavioursFields['code']).text()}</b> behavior belongs "
+                                    "to a behavioral category "
+                                    f"<b>{self.twBehaviors.item(row, cfg.behavioursFields['category']).text()}</b> "
+                                    "that is no more in the behavioral categories list.<br><br>"
+                                    "Remove the behavior from category?"
+                                ),
+                                (cfg.YES, cfg.CANCEL),
+                            )
+                            == cfg.YES
+                        )
+                    ):
+                        self.twBehaviors.item(row, cfg.behavioursFields[cfg.BEHAVIOR_CATEGORY]).setText("")
             if bc.renamed:
                 for row in range(self.twBehaviors.rowCount()):
-                    if self.twBehaviors.item(row, cfg.behavioursFields[cfg.BEHAVIOR_CATEGORY]):
-                        if self.twBehaviors.item(row, cfg.behavioursFields[cfg.BEHAVIOR_CATEGORY]).text() == bc.renamed[0]:
-                            self.twBehaviors.item(row, cfg.behavioursFields[cfg.BEHAVIOR_CATEGORY]).setText(bc.renamed[1])
+                    if (
+                        self.twBehaviors.item(row, cfg.behavioursFields[cfg.BEHAVIOR_CATEGORY])
+                        and self.twBehaviors.item(row, cfg.behavioursFields[cfg.BEHAVIOR_CATEGORY]).text() == bc.renamed[0]
+                    ):
+                        self.twBehaviors.item(row, cfg.behavioursFields[cfg.BEHAVIOR_CATEGORY]).setText(bc.renamed[1])
 
     def twSubjects_cellDoubleClicked(self, row: int, column: int) -> None:
         """
@@ -1090,7 +1093,7 @@ class projectDialog(QDialog, Ui_dlgProject):
                 if txt:
                     float(txt)
                 return True
-            except Exception:
+            except Exception:  # noqa: BLE001
                 return False
 
         return True
@@ -1283,9 +1286,11 @@ class projectDialog(QDialog, Ui_dlgProject):
 
         # list of point events
         for r in range(self.twBehaviors.rowCount()):
-            if self.twBehaviors.item(r, cfg.behavioursFields[cfg.BEHAVIOR_CODE]):
-                if "Point" in self.twBehaviors.item(r, cfg.behavioursFields[cfg.TYPE]).text():
-                    point_behaviors.append(self.twBehaviors.item(r, cfg.behavioursFields[cfg.BEHAVIOR_CODE]).text())
+            if (
+                self.twBehaviors.item(r, cfg.behavioursFields[cfg.BEHAVIOR_CODE])
+                and "Point" in self.twBehaviors.item(r, cfg.behavioursFields[cfg.TYPE]).text()
+            ):
+                point_behaviors.append(self.twBehaviors.item(r, cfg.behavioursFields[cfg.BEHAVIOR_CODE]).text())
 
         # check if point are present and if user want to include them in exclusion matrix
         include_point_events = cfg.NO
@@ -1293,7 +1298,7 @@ class projectDialog(QDialog, Ui_dlgProject):
             include_point_events = dialog.MessageDialog(
                 cfg.programName,
                 "Do you want to include the point events in the exclusion matrix?",
-                [cfg.YES, cfg.NO],
+                (cfg.YES, cfg.NO),
             )
 
         for r in range(self.twBehaviors.rowCount()):
@@ -1373,10 +1378,8 @@ class projectDialog(QDialog, Ui_dlgProject):
         if ex.exec_():
             for c, c_name in enumerate(state_behaviors):
                 for r, r_name in enumerate(point_behaviors + state_behaviors):
-                    if c_name != r_name:
-                        if ex.twExclusions.cellWidget(r, c).isChecked():
-                            if c_name not in new_excl[r_name]:
-                                new_excl[r_name].append(c_name)
+                    if c_name != r_name and ex.twExclusions.cellWidget(r, c).isChecked() and c_name not in new_excl[r_name]:
+                        new_excl[r_name].append(c_name)
 
             logging.debug(f"new exclusion matrix {new_excl}")
 
@@ -1828,7 +1831,7 @@ class projectDialog(QDialog, Ui_dlgProject):
                             modif_code = value.split(" (")[0]
                             if modif_code.strip() != modif_code:
                                 modifiers_with_leading_trailing_spaces.append(modif_code)
-                except Exception:
+                except Exception:  # noqa: BLE001
                     logging.critical("error checking leading/trailing spaces in modifiers")
 
         remove_leading_trailing_spaces = cfg.NO
@@ -1845,7 +1848,7 @@ class projectDialog(QDialog, Ui_dlgProject):
                     """<font color="red"><b>Be careful with this option"""
                     """ if you have already done observations!</b></font>"""
                 ),
-                [cfg.YES, cfg.NO, cfg.CANCEL],
+                (cfg.YES, cfg.NO, cfg.CANCEL),
             )
         if remove_leading_trailing_spaces == cfg.CANCEL:
             return {cfg.CANCEL: True}
@@ -2018,7 +2021,7 @@ class projectDialog(QDialog, Ui_dlgProject):
                     '<font color="red"><b>Be careful with this option'
                     " if you have already done observations!</b></font>"
                 ),
-                [cfg.YES, cfg.NO],
+                (cfg.YES, cfg.NO),
             )
 
         # check subjects

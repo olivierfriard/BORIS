@@ -13,3 +13,4 @@ uv.lock
 .zed
 .codex
 AGENTS.md
+.coverage

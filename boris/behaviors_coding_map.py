@@ -134,7 +134,7 @@ class BehaviorsCodingMapWindowClass(QWidget):
 
         self.leareaCode.clear()
         codes = []
-        test = self.view.mapToScene(event.pos()).toPoint()
+        test = self.view.mapToScene(event.position().toPoint()).toPoint()
         for areaCode, pg in self.polygonsList2:
             if pg.contains(test):
                 codes.append(areaCode)
@@ -145,7 +145,7 @@ class BehaviorsCodingMapWindowClass(QWidget):
         insert clicked areas codes
         """
 
-        test = self.view.mapToScene(event.pos()).toPoint()
+        test = self.view.mapToScene(event.position().toPoint()).toPoint()
         to_be_sent: list = []
 
         for areaCode, pg in self.polygonsList2:

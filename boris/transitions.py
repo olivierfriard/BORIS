@@ -98,17 +98,17 @@ def observed_transitions_matrix(sequences, behaviours, mode="frequency") -> str:
 
     out = "\t" + "\t".join(list(behaviours)) + "\n"
     for behaviour in behaviours:
-        out += "{}\t".format(behaviour)
+        out += f"{behaviour}\t"
         for behaviour2 in behaviours:
             if mode == "frequency":
-                out += "{}\t".format(transitions[behaviour][behaviour2] / transitions_total_number)
+                out += f"{transitions[behaviour][behaviour2] / transitions_total_number}\t"
             elif mode == "number":
-                out += "{}\t".format(transitions[behaviour][behaviour2])
+                out += f"{transitions[behaviour][behaviour2]}\t"
             elif mode == "frequencies_after_behaviors":
                 if sum(transitions[behaviour].values()):
-                    out += "{}\t".format(transitions[behaviour][behaviour2] / sum(transitions[behaviour].values()))
+                    out += f"{transitions[behaviour][behaviour2] / sum(transitions[behaviour].values())}\t"
                 else:
-                    out += "{}\t".format(transitions[behaviour][behaviour2])
+                    out += f"{transitions[behaviour][behaviour2]}\t"
         out = out[:-1] + "\n"
 
     return out
@@ -136,8 +136,6 @@ def create_transitions_gv_from_matrix(matrix, cutoff_all=0, cutoff_behavior=0, e
             else:
                 transitions[row.split("\t")[0]][behaviours[idx]] = int(r)
 
-    """transitions_total_number = sum([sum(transitions[x].values()) for x in transitions])"""
-
     out = "digraph G { \n"
 
     for behaviour1 in behaviours:
@@ -145,20 +143,13 @@ def create_transitions_gv_from_matrix(matrix, cutoff_all=0, cutoff_behavior=0, e
             if behaviour1 not in transitions or behaviour2 not in transitions:
                 return True, "Error: the file does not seem a transition matrix"
             if transitions[behaviour1][behaviour2]:
-                if edge_label == "percent_node":
-                    if transitions[behaviour1][behaviour2] > cutoff_all:
-                        out += '"{behaviour1}" -> "{behaviour2}" [label="{label:0.3f}"];\n'.format(
-                            behaviour1=behaviour1, behaviour2=behaviour2, label=transitions[behaviour1][behaviour2]
-                        )
+                if edge_label == "percent_node" and transitions[behaviour1][behaviour2] > cutoff_all:
+                    out += f'"{behaviour1}" -> "{behaviour2}" [label="{transitions[behaviour1][behaviour2]:0.3f}"];\n'
 
                 if edge_label == "fraction_node":
                     transition_sum = sum(transitions[behaviour1].values())
                     if transitions[behaviour1][behaviour2] / transition_sum > cutoff_behavior:
-                        out += """"{behaviour1}" -> "{behaviour2}" [label="{label}%"];\n""".format(
-                            behaviour1=behaviour1,
-                            behaviour2=behaviour2,
-                            label=round(transitions[behaviour1][behaviour2] / transition_sum * 100, 1),
-                        )
+                        out += '"{behaviour1}" -> "{behaviour2}" [label="{round(transitions[behaviour1][behaviour2] / transition_sum * 100, 1)}%"];\n'
 
     out += "\n}"
     return False, out

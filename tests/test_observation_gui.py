@@ -1,200 +1,95 @@
-"""
-module for testing observation GUI
+"""Tests for the observation dialog using the application's Qt binding."""
 
+import copy
+from pathlib import Path
 
-pytest -s -vv test_observation_gui.py
-"""
+import pytest
+from PySide6.QtWidgets import QDialog, QMessageBox
 
-import sys
-import os
-from PyQt5.QtCore import *
-
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
-
+from boris import config as cfg
 from boris import observation
-from boris import config
 
 
-def test_no_media_loaded(qtbot):
-    w = observation.Observation("/tmp")
-    # w.show()
-
-    qtbot.addWidget(w)
-
-    def handle_dialog():
-        qtbot.keyClick(w.qm, Qt.Key_Enter)
-
-    QTimer.singleShot(1000, handle_dialog)
-
-    qtbot.mouseClick(w.pbSave, Qt.LeftButton)
-
-    assert w.state == "refused"
+@pytest.fixture
+def window(tmp_path, qapp):
+    widget = observation.Observation(str(tmp_path), str(tmp_path / "project.boris"))
+    widget.pj = copy.deepcopy(cfg.EMPTY_PROJECT)
+    widget.ffmpeg_bin = "ffmpeg"
+    widget.mode = "new"
+    widget.rb_media_files.setChecked(True)
+    widget.leObservationId.setText("test")
+    yield widget
+    widget.close()
+    widget.deleteLater()
 
 
-def test_no_obs_id(qtbot):
-    w = observation.Observation("/tmp")
-    # w.show()
-    qtbot.addWidget(w)
-    w.ffmpeg_bin = "ffmpeg"
+@pytest.fixture
+def errors(monkeypatch):
+    messages = []
 
-    media_file = "files/geese1.mp4"
-    w.check_media("1", media_file, True)
-    w.add_media_to_listview("1", media_file)
+    def critical(parent, title, message, *args):
+        messages.append(message)
+        return QMessageBox.StandardButton.Ok
 
-    def handle_dialog():
-        qtbot.keyClick(w.qm, Qt.Key_Enter)
-        # qtbot.mouseClick(w.qm.Ok, Qt.LeftButton)
-
-    QTimer.singleShot(1000, handle_dialog)
-
-    qtbot.mouseClick(w.pbSave, Qt.LeftButton)
-
-    assert w.state == "refused"
+    monkeypatch.setattr(QMessageBox, "critical", critical)
+    return messages
 
 
-def test_file_not_media(qtbot):
-    """
-    test if the loaded file is a media file or not
-    """
-
-    w = observation.Observation("/tmp")
-    w.show()
-    qtbot.addWidget(w)
-    w.mode = "new"
-    w.pj = config.EMPTY_PROJECT
-    w.ffmpeg_bin = "ffmpeg"
-
-    w.leObservationId.setText("test")
-    media_file = "files/test.boris"
-    r, msg = w.check_media("1", media_file, True)
-    assert r == False
+def add_media(window, name="geese1.mp4"):
+    error, message = window.check_media(str(Path("files", name).absolute()), "media abs path")
+    assert error is False, message
 
 
-def test_players_in_crescent_order(qtbot):
-    """
-    test if players are used in crescent order
-    """
-
-    w = observation.Observation("/tmp")
-    # w.show()
-    qtbot.addWidget(w)
-    # w.mode = "new"
-    w.pj = config.EMPTY_PROJECT
-    w.ffmpeg_bin = "ffmpeg"
-
-    # w.leObservationId.setText("test")
-    media_file1 = "files/geese1.mp4"
-    w.check_media("1", media_file1, True)
-    # w.add_media_to_listview("1", media_file1)
-
-    media_file2 = "files/geese1.mp4"
-    w.check_media("1", media_file2, True)
-    w.twVideo1.cellWidget(1, 0).setCurrentIndex(2)
-
-    def handle_dialog():
-        qtbot.keyClick(w.qm, Qt.Key_Enter)
-        # qtbot.mouseClick(w.qm.Ok, Qt.LeftButton)
-
-    QTimer.singleShot(1000, handle_dialog)
-
-    qtbot.mouseClick(w.pbSave, Qt.LeftButton)
-
-    assert w.state == "refused"
+def test_no_media_loaded(window, errors):
+    window.pbSave.click()
+    assert window.state == "refused"
+    assert errors == ["A media file must be loaded in player #1"]
 
 
-def test_ok(qtbot):
-    w = observation.Observation("/tmp")
-    # w.show()
-    qtbot.addWidget(w)
-    w.mode = "new"
-    w.pj = config.EMPTY_PROJECT
-    w.ffmpeg_bin = "ffmpeg"
-
-    media_file = "files/geese1.mp4"
-    w.leObservationId.setText("test")
-    w.check_media("1", media_file, True)
-    w.add_media_to_listview("1", media_file)
-
-    qtbot.mouseClick(w.pbSave, Qt.LeftButton)
-
-    assert w.state == "accepted"
-
-    assert w.pj == {
-        "time_format": "hh:mm:ss",
-        "project_date": "",
-        "project_name": "",
-        "project_description": "",
-        "project_format_version": config.project_format_version,
-        "subjects_conf": {},
-        "behaviors_conf": {},
-        "observations": {},
-        "behavioral_categories": [],
-        "independent_variables": {},
-        "coding_map": {},
-        "behaviors_coding_map": [],
-        "converters": {},
-    }
+def test_no_obs_id(window, errors):
+    add_media(window)
+    window.leObservationId.clear()
+    window.pbSave.click()
+    assert window.state == "refused"
+    assert errors == ["The <b>observation id</b> is mandatory and must be unique."]
 
 
-def test_cancel(qtbot):
-    w = observation.Observation("/tmp")
-    # w.show()
-    qtbot.addWidget(w)
-    w.mode = "new"
-    w.pj = config.EMPTY_PROJECT
-    w.ffmpeg_bin = "ffmpeg"
-
-    media_file = "files/geese1.mp4"
-    w.leObservationId.setText("test")
-    w.check_media("1", media_file, True)
-    w.add_media_to_listview("1", media_file)
-
-    qtbot.mouseClick(w.pbCancel, Qt.LeftButton)
-
-    assert w.pj == config.EMPTY_PROJECT
+def test_file_not_media(window):
+    error, message = window.check_media("files/test.boris", "media abs path")
+    assert error is True
+    assert message
+    assert window.twVideo1.rowCount() == 0
 
 
-def test_extract_wav_from_video(qtbot):
-    try:
-        os.remove("/tmp/geese1.mp4.wav")
-    except Exception:
-        pass
-
-    w = observation.Observation("/tmp")
-    # w.show()
-    qtbot.addWidget(w)
-    w.mode = "new"
-    w.pj = config.EMPTY_PROJECT
-    w.ffmpeg_bin = "ffmpeg"
-    w.ffmpeg_cache_dir = "/tmp"
-
-    media_file = "files/geese1.mp4"
-    w.leObservationId.setText("test")
-    w.check_media("1", media_file, True)
-    w.add_media_to_listview("1", media_file)
-
-    w.cbVisualizeSpectrogram.setChecked(True)
-    w.extract_wav()
-
-    assert os.path.isfile("/tmp/geese1.mp4.wav")
+def test_players_in_crescent_order(window, errors):
+    add_media(window)
+    add_media(window)
+    window.twVideo1.cellWidget(1, cfg.PLAYER_NUMBER_IDX).setCurrentText("3")
+    window.pbSave.click()
+    assert window.state == "refused"
+    assert errors == ["Some player are not used. Please reorganize your media files"]
 
 
-def test_extract_wav_from_wav(qtbot):
-    w = observation.Observation("/tmp")
+def test_ok(window, errors):
+    add_media(window)
+    window.pbSave.click()
+    assert errors == []
+    assert window.state == "accepted"
+    assert window.result() == QDialog.DialogCode.Accepted
+    assert window.pj == cfg.EMPTY_PROJECT
 
-    # w.show()
-    qtbot.addWidget(w)
-    w.mode = "new"
-    w.pj = config.EMPTY_PROJECT
-    w.ffmpeg_bin = "ffmpeg"
-    w.ffmpeg_cache_dir = "/tmp"
 
-    media_file = "files/test.wav"
-    w.leObservationId.setText("test")
-    w.check_media("1", media_file, True)
-    w.add_media_to_listview("1", media_file)
+def test_cancel(window):
+    add_media(window)
+    window.pbCancel.click()
+    assert window.result() == QDialog.DialogCode.Rejected
+    assert window.pj == cfg.EMPTY_PROJECT
 
-    w.cbVisualizeSpectrogram.setChecked(True)
-    w.extract_wav()
 
-    assert os.path.isfile("/tmp/test.wav.wav")
+@pytest.mark.parametrize("media_file", ["geese1.mp4", "test.wav"])
+def test_extract_wav(window, tmp_path, errors, media_file):
+    add_media(window, media_file)
+    window.cbVisualizeSpectrogram.setChecked(True)
+    window.extract_wav()
+    assert errors == []
+    assert (tmp_path / f"{media_file}.wav").stat().st_size > 0

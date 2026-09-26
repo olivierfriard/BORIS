@@ -286,7 +286,7 @@ def read(self) -> None:
                 ("The colors list contain colors that are very light.\nDo you want to reload the default colors list?"),
                 (cfg.NO, cfg.YES),
             )
-            == cfg.YESself.behav_category_colors
+            == cfg.YES
         ):
             self.config_param["plot_colors"] = cfg.BEHAVIORS_PLOT_COLORS
         logger.debug(f"plot_colors: {self.config_param['plot_colors']}")

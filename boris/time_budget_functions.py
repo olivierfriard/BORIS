@@ -688,7 +688,7 @@ def time_budget_analysis(
             logger.debug(f"{behavior=}")
 
             if parameters[cfg.INCLUDE_MODIFIERS]:  # with modifiers
-                if parameters[cfg.EXCLUDE_NON_CODED_MODIFIERS]:
+                if parameters.get(cfg.EXCLUDE_NON_CODED_MODIFIERS, False):
                     # get coded modifiers
                     cursor.execute("SELECT DISTINCT modifiers FROM events WHERE subject = ? AND code = ?", (subject, behavior))
                     distinct_modifiers = [x[0] for x in cursor.fetchall()]

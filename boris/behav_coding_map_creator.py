@@ -24,7 +24,6 @@ import binascii
 import io
 import json
 from pathlib import Path
-import gui_utilities
 
 from PySide6.QtCore import QBuffer, QByteArray, QIODevice, QLineF, QPoint, Qt, Signal
 from PySide6.QtGui import QBrush, QColor, QIcon, QMouseEvent, QPen, QPixmap, QPolygonF, QAction
@@ -57,6 +56,7 @@ from PySide6.QtWidgets import (
 
 from . import config as cfg
 from . import dialog
+from . import gui_utilities
 from . import utilities as util
 
 designColor = QColor(255, 0, 0, 128)  # red opacity: 50%
@@ -669,7 +669,7 @@ class BehaviorsMapCreatorWindow(QMainWindow):
         if not fileName:
             return
         try:
-            self.codingMap = json.loads(open(fileName, "r").read())
+            self.codingMap = json.loads(Path(fileName).read_text())
         except Exception:
             QMessageBox.critical(self, cfg.programName, f"The file {fileName} is not a behaviors coding map.")
             return

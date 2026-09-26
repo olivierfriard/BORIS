@@ -170,7 +170,7 @@ class CodingPad(QWidget):
                     behav_cat_color = util.behav_category_user_color(self.pj[cfg.BEHAVIORAL_CATEGORIES_CONF], behav_cat)
                 else:
                     behav_cat_color = None
-                if behav_cat_color is None:
+                if not behav_cat_color:
                     color = self.behavioral_category_colors[behav_cat]
                 else:
                     color = behav_cat_color

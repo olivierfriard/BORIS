@@ -30,6 +30,8 @@ dependencies = [
     "scipy==1.16.1",
     "scikit-learn==1.7.1",
     "pyqtgraph>=0.14.0",
+    "pytest-cov==7.1.0",
+    "pytest==9.1.1",
 ]
 
 [project.optional-dependencies]
