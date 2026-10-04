@@ -1,6 +1,7 @@
 import os
 import subprocess
 import sys
+from unittest.mock import Mock
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
@@ -119,6 +120,14 @@ class FakeDockWidget:
         self.delete_later_calls = 0
         self.events = events if events is not None else []
         self.player = player
+        self.object_name = "player1"
+
+    def setObjectName(self, name):
+        """Record the dock name used by Qt state restoration.
+
+        Function written by Codex - ChatGPT 6.
+        """
+        self.object_name = name
 
     def deleteLater(self):
         self.delete_later_calls += 1
@@ -231,8 +240,30 @@ def test_close_observation_shuts_down_embedded_mpv_before_removing_dock(monkeypa
     assert player.terminate_calls == 1
     assert window.removed_docks == [player_dock]
     assert player_dock.delete_later_calls == 1
+    assert player_dock.object_name == ""
     assert window.dw_player == []
     assert events == ["stop", "terminate", "removeDockWidget", "deleteLater"]
+
+
+def test_close_observation_releases_render_context_before_terminating_player(monkeypatch):
+    """Verify the macOS render context is freed before terminating libmpv.
+
+    Function written by Codex - ChatGPT 6.
+    """
+    allow_observation_close(monkeypatch)
+    events = []
+    player = FakeEmbeddedMpvPlayer(events=events)
+    dock = FakeDockWidget(player, events=events)
+    dock.release_video_output = Mock(side_effect=events.append)
+    # The release callback has no arguments in a real dock widget.
+    dock.release_video_output.side_effect = lambda: events.append("release_render_context")
+    window = FakeObservationWindow([dock], events=events)
+
+    observation_operations.close_observation(window)
+
+    dock.release_video_output.assert_called_once_with()
+    assert events == ["stop", "release_render_context", "terminate", "removeDockWidget", "deleteLater"]
+    assert window.dw_player == []
 
 
 def test_close_observation_still_removes_dock_when_embedded_terminate_fails(monkeypatch):

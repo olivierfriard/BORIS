@@ -21,6 +21,7 @@ This file is part of BORIS.
 """
 
 import json
+from collections import deque
 import logging
 import os
 import socket
@@ -50,6 +51,7 @@ class IPC_MPV:
 
     def __init__(self, socket_path: str = cfg.MPV_SOCKET, parent=None):
         self.socket_path = socket_path
+        self.log_path = socket_path + ".log"
         self.process = None
         self._sock = None
         self._recv_buffer = b""
@@ -66,23 +68,37 @@ class IPC_MPV:
             self._reset_connection(log_level="debug")
             self._remove_stale_socket_file()
 
-            logger.info("Start mpv ipc process")
-            self.process = subprocess.Popen(
-                [
-                    "mpv",
-                    "--ontop",
-                    "--no-border",
-                    "--osc=no",  # no on screen commands
-                    "--input-ipc-server=" + self.socket_path,
-                    # "--wid=" + str(int(self.winId())),  # Embed in the widget
-                    "--idle=yes",  # Keeps mpv running with no video
-                    "--keep-open=always",
-                    "--input-default-bindings=no",
-                    "--input-vo-keyboard=no",
-                ],
-                stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE,
-            )
+            logger.info(f"Start mpv ipc process (mpv messages in {self.log_path})")
+            # Unread pipes fill up and block playback. Keep diagnostic output in a file.
+            with open(self.log_path, "w") as log_file:
+                self.process = subprocess.Popen(
+                    [
+                        "mpv",
+                        "--ontop",
+                        "--no-border",
+                        "--osc=no",  # no on screen commands
+                        "--quiet",
+                        "--input-ipc-server=" + self.socket_path,
+                        "--idle=yes",  # Keeps mpv running with no video
+                        "--keep-open=always",
+                        "--input-default-bindings=no",
+                        "--input-vo-keyboard=no",
+                    ],
+                    stdin=subprocess.DEVNULL,
+                    stdout=log_file,
+                    stderr=subprocess.STDOUT,
+                )
+
+    def log_tail(self, max_lines: int = 20) -> str:
+        """Return the last diagnostic messages from mpv.
+
+        Function written by Codex - ChatGPT 6.
+        """
+        try:
+            with open(self.log_path, errors="replace") as log_file:
+                return "".join(deque(log_file, maxlen=max_lines))
+        except OSError:
+            return ""
 
     def _remove_stale_socket_file(self):
         if os.path.exists(self.socket_path):

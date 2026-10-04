@@ -125,6 +125,25 @@ if (sys.platform.startswith("win") or sys.platform.startswith("linux")) and ("-i
         else:
             sys.exit(5)
 
+if sys.platform.startswith("darwin") and ("-i" not in sys.argv) and ("--ipc" not in sys.argv):
+    # macOS: libmpv is used for displaying the video in the BORIS window.
+    # If libmpv is not available BORIS uses the mpv IPC mode (video in mpv windows)
+    try:
+        from . import mpv2 as mpv
+    except Exception:
+        mpv = None
+        logger.warning("MPV library not found. BORIS will use the mpv IPC mode")
+
+
+def mpv_ipc_mode_required() -> bool:
+    """
+    returns True if mpv must be used in IPC mode: requested by the user (-i/--ipc)
+    or libmpv not available on macOS
+    """
+    if ("-i" in sys.argv) or ("--ipc" in sys.argv):
+        return True
+    return sys.platform.startswith("darwin") and mpv is None
+
 
 def is_subdir(a: Path, b: Path) -> bool:
     """
@@ -245,11 +264,11 @@ def mpv_lib_version() -> tuple[str, str, str]:
     Returns:
         str: MPV library version
     """
-    if ("-i" in sys.argv) or ("--ipc" in sys.argv) or sys.platform.startswith("darwin"):
+    if mpv_ipc_mode_required():
         return "MPV IPC mode", "", ""
 
     mpv_lib_file = None
-    if sys.platform.startswith("linux"):
+    if sys.platform.startswith("linux") or sys.platform.startswith("darwin"):
         mpv_lib_file = mpv.sofile
     if sys.platform.startswith("win"):
         mpv_lib_file = mpv.dll

@@ -386,11 +386,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             w.setVisible(False)
             w.keyPressEvent = self.keyPressEvent
 
-        # if BORIS is running on Mac lock all dockwidget features
-        # because Qdockwidgets may have a strange behavior
-        if sys.platform.startswith("darwin"):
-            self.action_block_dockwidgets.setChecked(True)
-            self.block_dockwidgets()
+        # BORIS macOS: the dock widgets are not locked by default anymore (like on Windows and Linux)
+        # They can be locked with Tools > Lock dockwidgets
 
         font = QFont()
         font.setPointSize(15)
@@ -2012,6 +2009,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         fw = self.dw_player[dw_id].videoframe.size().width()
         fh = self.dw_player[dw_id].videoframe.size().height()
+        if sys.platform.startswith("darwin"):
+            # the mpv OSD (overlay) uses physical pixels (Retina display)
+            fw = round(fw * self.dw_player[dw_id].videoframe.devicePixelRatioF())
+            fh = round(fh * self.dw_player[dw_id].videoframe.devicePixelRatioF())
 
         if fw / fh <= w / h:
             w_r = fw
@@ -5847,6 +5848,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
 
 def main():
+    if sys.platform.startswith("darwin") and not util.mpv_ipc_mode_required():
+        from . import video_render_widget
+
+        video_render_widget.set_opengl_defaults()
+
     app = QApplication(sys.argv)
     app.setStyle("Fusion")
 
@@ -5990,7 +5996,8 @@ def main():
 
     # check mpv IPC mode
     window.MPV_IPC_MODE = False
-    if options.ipc or sys.platform.startswith("darwin"):
+    # on macOS the IPC mode is used only if libmpv is not available
+    if options.ipc or util.mpv_ipc_mode_required():
         window.MPV_IPC_MODE = True
         # check if mpv is available
         if not shutil.which("mpv"):
@@ -6004,14 +6011,20 @@ def main():
             )
             sys.exit()
 
-        if sys.platform.startswith("darwin"):
-            QMessageBox.warning(
-                None,
-                cfg.programName,
-                ("This version of BORIS for macOS is still EXPERIMENTAL and should be used at your own risk."),
-                QMessageBox.StandardButton.Ok | QMessageBox.StandardButton.Default,
-                QMessageBox.StandardButton.NoButton,
+    if sys.platform.startswith("darwin"):
+        msg = "This version of BORIS for macOS is still EXPERIMENTAL and should be used at your own risk."
+        if window.MPV_IPC_MODE and not options.ipc:
+            msg += (
+                "<br><br>The MPV library (libmpv) was not found: the video will be displayed in separate mpv windows.<br>"
+                "Install mpv with Homebrew (<b>brew install mpv</b>) to display the video in the BORIS window."
             )
+        QMessageBox.warning(
+            None,
+            cfg.programName,
+            msg,
+            QMessageBox.StandardButton.Ok | QMessageBox.StandardButton.Default,
+            QMessageBox.StandardButton.NoButton,
+        )
 
     window.show()
     window.raise_()  # for overlapping widget (?)
@@ -6035,6 +6048,10 @@ def main():
         sys.exit()
 
     return_code = app.exec()
+
+    if sys.platform.startswith("darwin") and not window.MPV_IPC_MODE:
+        # the mpv players must be terminated after their render context and before the widgets
+        video_render_widget.release_all()
 
     del window
 

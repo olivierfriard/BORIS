@@ -28,6 +28,12 @@ if (sys.platform.startswith("win") or sys.platform.startswith("linux")) and ("-i
     from . import mpv2 as mpv
 else:
     from . import ipc_mpv
+
+    if sys.platform.startswith("darwin") and ("-i" not in sys.argv) and ("--ipc" not in sys.argv):
+        try:
+            from . import video_render_widget
+        except (ImportError, OSError):
+            logging.warning("MPV library not found")
 from PySide6.QtCore import QEvent, Qt, Signal
 from PySide6.QtGui import QAction, QIcon
 from PySide6.QtWidgets import (
@@ -119,10 +125,20 @@ class DW_player(QDockWidget):
         self.stack1 = QWidget()
         self.hlayout = QHBoxLayout()
 
-        self.videoframe = Clickable_video_frame(self.id_, self)
+        if not parent.MPV_IPC_MODE and sys.platform.startswith("darwin"):
+            self.videoframe = video_render_widget.VideoRenderWidget(self)
+        else:
+            self.videoframe = Clickable_video_frame(self.id_, self)
 
         if parent.MPV_IPC_MODE:
             self.player = ipc_mpv.IPC_MPV(socket_path=f"{cfg.MPV_SOCKET}{self.id_}")
+        elif sys.platform.startswith("darwin"):
+            self.player = video_render_widget.EmbeddedMPV(
+                self.videoframe,
+                log_handler=functools.partial(mpv_logger, self.id_),
+                loglevel="debug",
+            )
+            self.player.screenshot_format = "png"
         else:
             self.player = mpv.MPV(
                 wid=str(int(self.videoframe.winId())),
@@ -182,6 +198,24 @@ class DW_player(QDockWidget):
         self.setWidget(self.stack)
 
         self.stack.setCurrentIndex(0)
+
+    def wait_for_video_output(self) -> None:
+        """
+        macOS: wait until the video widget can display the video.
+        Must be done before loading a media file
+        """
+        if hasattr(self.videoframe, "wait_until_ready"):
+            self.videoframe.wait_until_ready()
+
+    def release_video_output(self) -> None:
+        """
+        macOS: free the resources used for displaying the video
+        Function written by Codex - ChatGPT 6.
+        """
+        if hasattr(self.videoframe, "release_render_context"):
+            self.videoframe.release_render_context()
+            # Application shutdown must not terminate a player already closed with its observation.
+            self.videoframe.player = None
 
     def volume_slider_moved(self):
         """

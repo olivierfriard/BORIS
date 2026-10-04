@@ -21,6 +21,7 @@ This file is part of BORIS.
 """
 
 import datetime as dt
+import html
 import logging
 import os
 import subprocess
@@ -67,7 +68,11 @@ from . import utilities as util
 logger = logging.getLogger(__name__)
 
 
-def _shutdown_mpv_player(player, player_number: int, ipc_mode: bool) -> None:
+def _shutdown_mpv_player(player, player_number: int, ipc_mode: bool, release_video_output=None) -> None:
+    """Stop playback, release the render context, and terminate the player.
+
+    Function written by Codex - ChatGPT 6.
+    """
     try:
         player.stop()
     except Exception as exc:
@@ -91,6 +96,9 @@ def _shutdown_mpv_player(player, player_number: int, ipc_mode: bool) -> None:
     if hasattr(player, "_log_handler"):
         player._log_handler = None
 
+    if release_video_output is not None:
+        release_video_output()
+
     terminate = getattr(player, "terminate", None)
     if terminate is None:
         return
@@ -99,40 +107,6 @@ def _shutdown_mpv_player(player, player_number: int, ipc_mode: bool) -> None:
         terminate()
     except Exception as exc:
         logger.warning(f"Error terminating MPV player #{player_number}: {exc}")
-
-
-def _shutdown_mpv_player(player, player_number: int, ipc_mode: bool) -> None:
-    try:
-        player.stop()
-    except Exception as exc:
-        logging.warning(f"Error stopping MPV player #{player_number}: {exc}")
-
-    if ipc_mode:
-        process = getattr(player, "process", None)
-        if process is None:
-            return
-
-        try:
-            process.terminate()
-            try:
-                process.wait(timeout=3)
-            except subprocess.TimeoutExpired:
-                process.kill()
-        except Exception as exc:
-            logging.warning(f"Error stopping MPV process #{player_number}: {exc}")
-        return
-
-    if hasattr(player, "_log_handler"):
-        player._log_handler = None
-
-    terminate = getattr(player, "terminate", None)
-    if terminate is None:
-        return
-
-    try:
-        terminate()
-    except Exception as exc:
-        logging.warning(f"Error terminating MPV player #{player_number}: {exc}")
 
 
 def close_observation(self):
@@ -200,7 +174,12 @@ def close_observation(self):
                     except Exception as e:
                         logging.warning(f"Error stopping MPV process #{i}: {e}")
                 else:
-                    _shutdown_mpv_player(player_dock.player, i + 1, self.MPV_IPC_MODE)
+                    _shutdown_mpv_player(
+                        player_dock.player,
+                        i + 1,
+                        self.MPV_IPC_MODE,
+                        release_video_output=getattr(player_dock, "release_video_output", None),
+                    )
 
         # for i, player in enumerate(self.dw_player):
         #    if (
@@ -257,6 +236,7 @@ def close_observation(self):
     if self.playerType in (cfg.MEDIA, cfg.IMAGES):
         for dw in self.dw_player:
             logger.info("remove dock widget")
+            dw.setObjectName("")
             self.removeDockWidget(dw)
             dw.deleteLater()
         self.dw_player = []
@@ -1982,6 +1962,11 @@ def initialize_new_media_observation(self) -> bool:
             self.dw_player[-1],
         )
 
+        # share the width of the dock area between the players (a new player is squeezed to its minimum width)
+        # the video widget can not display the video with a null width (macOS)
+        same_area = [dw for dw in self.dw_player if self.dockWidgetArea(dw) == self.dockWidgetArea(self.dw_player[-1])]
+        self.resizeDocks(same_area, [self.width() // len(same_area)] * len(same_area), Qt.Orientation.Horizontal)
+
         self.dw_player[i].setVisible(True)
 
         # for receiving mouse event from frame viewer
@@ -2012,17 +1997,34 @@ def initialize_new_media_observation(self) -> bool:
         self.dw_player[i].fps = {}
 
         if self.MPV_IPC_MODE:
-            while True:
-                r = util.test_mpv_ipc(f"{cfg.MPV_SOCKET}{i}")
-                logger.debug(f"MPV IPC started: {r}")
-                if r:
-                    break
+            # wait for the mpv IPC server (stop if mpv exited or did not start in 10 s)
+            start_time = time.monotonic()
+            while not util.test_mpv_ipc(f"{cfg.MPV_SOCKET}{i}"):
+                if self.dw_player[i].player.process.poll() is not None or time.monotonic() - start_time > 10:
+                    logger.critical(f"The mpv process #{i + 1} did not start")
+                    QMessageBox.critical(
+                        self,
+                        cfg.programName,
+                        (
+                            "The mpv player could not be started.<br><br>"
+                            f"<pre>{html.escape(self.dw_player[i].player.log_tail())}</pre>"
+                            f"mpv messages: {self.dw_player[i].player.log_path}"
+                        ),
+                        QMessageBox.StandardButton.Ok | QMessageBox.StandardButton.Default,
+                        QMessageBox.StandardButton.NoButton,
+                    )
+                    return False
+                time.sleep(0.05)
+            logger.debug("MPV IPC started")
 
             # start timer for activating the main window
             self.main_window_activation_timer = QTimer()
             self.main_window_activation_timer.setInterval(500)
             self.main_window_activation_timer.timeout.connect(self.activate_main_window)
             self.main_window_activation_timer.start()
+
+        # macOS: the video widget must be ready before loading the media files
+        self.dw_player[i].wait_for_video_output()
 
         for mediaFile in self.pj[cfg.OBSERVATIONS][self.observationId][cfg.FILE][n_player]:
             logger.debug(f"media file: {mediaFile}")
@@ -2118,7 +2120,8 @@ def initialize_new_media_observation(self) -> bool:
         # restore video zoom level
         if cfg.ZOOM_LEVEL in self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO]:
             self.dw_player[i].player.video_zoom = log2(
-                self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO][cfg.ZOOM_LEVEL].get(n_player, 0)
+                # zoom level is stored as 2**video_zoom: 1 if no zoom (0 crashed with players without zoom level)
+                self.pj[cfg.OBSERVATIONS][self.observationId][cfg.MEDIA_INFO][cfg.ZOOM_LEVEL].get(n_player, 1)
             )
 
         # restore video pan

@@ -8,6 +8,23 @@ BORIS is an easy-to-use event logging software for video/audio coding or live ob
 
 BORIS is a free and open-source software available for GNU/Linux, Windows and macOS.
 
+### Video playback on macOS
+
+On macOS, BORIS displays video inside its player panels using libmpv and OpenGL.
+Install mpv (including libmpv) and FFmpeg with Homebrew:
+
+```
+brew install mpv ffmpeg
+```
+
+If libmpv is unavailable, BORIS uses separate mpv windows through IPC. This mode
+can also be selected with `--ipc` (`-i`). IPC diagnostic messages are written to
+`/tmp/mpvsocket<N>.log` to prevent unread output pipes from blocking playback.
+
+Panels can be moved, floated, and docked again. Use *Tools > Lock dockwidgets* to
+lock them. Hardware decoding set to `auto` or `auto-safe` uses VideoToolbox
+copy-back so that frame extraction and geometric measurements remain available.
+
 It provides also some analysis tools like time budget and some plotting functions.
 
 

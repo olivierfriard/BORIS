@@ -68,6 +68,14 @@ else:
     locale.setlocale(locale.LC_NUMERIC, 'C')
 
     sofile = ctypes.util.find_library('mpv')
+    if sofile is None and sys.platform == 'darwin':
+        # BORIS macOS: Homebrew (Apple silicon) and MacPorts install libmpv outside of the default dyld search path
+        import shutil
+        candidates = []
+        if shutil.which('mpv'):
+            candidates.append(os.path.join(os.path.dirname(os.path.dirname(os.path.realpath(shutil.which('mpv')))), 'lib', 'libmpv.dylib'))
+        candidates += ['/opt/homebrew/lib/libmpv.dylib', '/usr/local/lib/libmpv.dylib', '/opt/local/lib/libmpv.dylib']
+        sofile = next((c for c in candidates if os.path.isfile(c)), None)
     if sofile is None:
         raise OSError("Cannot find libmpv in the usual places. Depending on your distro, you may try installing an mpv-devel or mpv-libs package. If you have libmpv around but this script can't find it, consult the documentation for ctypes.util.find_library which this script uses to look up the library filename.")
     backend = CDLL(sofile)
@@ -1785,7 +1793,8 @@ class MPV(object):
             raise TypeError('register_key_binding expects either an str with an mpv command or a python callable.')
         self.command('enable-section', binding_name, 'allow-hide-cursor+allow-vo-dragging')
 
-    def _handle_key_binding_message(self, binding_name, key_state, key_name=None, key_char=None):
+    def _handle_key_binding_message(self, binding_name, key_state, key_name=None, key_char=None, *_extra_args):
+        # recent mpv versions send additional arguments (e.g. scale, arg)
         binding_name = binding_name.decode('utf-8')
         key_state = key_state.decode('utf-8')
         key_name = key_name.decode('utf-8') if key_name is not None else None
