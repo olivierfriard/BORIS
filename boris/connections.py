@@ -20,7 +20,7 @@ Copyright 2012-2026 Olivier Friard
 """
 
 from PySide6.QtCore import Qt, QTimer
-from PySide6.QtGui import QAction
+from PySide6.QtGui import QAction, QCursor
 
 from . import (
     about,
@@ -28,6 +28,7 @@ from . import (
     behavior_binary_table,
     behaviors_coding_map,
     coding_pad,
+    column_visibility,
     cooccurence,
     event_operations,
     events_snapshots,
@@ -285,6 +286,14 @@ def connections(self):
     self.actionShowAllBehaviors.triggered.connect(self.show_all_behaviors)
     self.twEthogram.addAction(self.actionShowAllBehaviors)
 
+    # show / hide columns (also with a right click on the header)
+    self.action_configure_ethogram_columns = QAction("Configure columns", self)
+    self.action_configure_ethogram_columns.triggered.connect(
+        lambda: column_visibility.show_columns_menu(self.twEthogram, column_visibility.ETHOGRAM, QCursor.pos())
+    )
+    self.twEthogram.addAction(self.action_configure_ethogram_columns)
+    column_visibility.setup(self.twEthogram, column_visibility.ETHOGRAM)
+
     # Actions for twSubjects context menu
     self.twSubjects.setContextMenuPolicy(Qt.ContextMenuPolicy.ActionsContextMenu)
     self.twSubjects.horizontalHeader().sortIndicatorChanged.connect(self.sort_twSubjects)
@@ -294,14 +303,21 @@ def connections(self):
     self.actionShowAllSubjects.triggered.connect(self.show_all_subjects)
     self.twSubjects.addAction(self.actionShowAllSubjects)
 
+    # show / hide columns (also with a right click on the header)
+    self.action_configure_subjects_columns = QAction("Configure columns", self)
+    self.action_configure_subjects_columns.triggered.connect(
+        lambda: column_visibility.show_columns_menu(self.twSubjects, column_visibility.SUBJECTS, QCursor.pos())
+    )
+    self.twSubjects.addAction(self.action_configure_subjects_columns)
+    column_visibility.setup(self.twSubjects, column_visibility.SUBJECTS)
+
     # actions for twEvents horizontal header menu
     # tw_headers = self.twEvents.horizontalHeader()
     # tw_headers.setContextMenuPolicy(Qt.ActionsContextMenu)
     # tw_headers.addAction(self.actionConfigure_twEvents_columns)
 
-    tv_headers = self.tv_events.horizontalHeader()
-    tv_headers.setContextMenuPolicy(Qt.ContextMenuPolicy.ActionsContextMenu)
-    tv_headers.addAction(self.actionConfigure_tvevents_columns)
+    # show / hide columns with a right click on the header (or with the "Configure columns" action of the events menu)
+    column_visibility.setup(self.tv_events, column_visibility.EVENTS)
 
     # Actions for twEvents menu
     # self.twEvents.setContextMenuPolicy(Qt.ActionsContextMenu)
@@ -384,6 +400,12 @@ def connections(self):
     self.tv_events.addAction(separator2)
 
     self.tv_events.addAction(self.actionDelete_selected_events)
+
+    separator2 = QAction(self)
+    separator2.setSeparator(True)
+    self.tv_events.addAction(separator2)
+
+    self.tv_events.addAction(self.actionConfigure_tvevents_columns)
 
     # Actions for twSubjects context menu
     self.actionDeselectCurrentSubject.triggered.connect(lambda: self.update_subject(""))

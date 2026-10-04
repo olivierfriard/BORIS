@@ -254,9 +254,7 @@ def test_close_observation_releases_render_context_before_terminating_player(mon
     events = []
     player = FakeEmbeddedMpvPlayer(events=events)
     dock = FakeDockWidget(player, events=events)
-    dock.release_video_output = Mock(side_effect=events.append)
-    # The release callback has no arguments in a real dock widget.
-    dock.release_video_output.side_effect = lambda: events.append("release_render_context")
+    dock.release_video_output = Mock(side_effect=lambda: events.append("release_render_context"))
     window = FakeObservationWindow([dock], events=events)
 
     observation_operations.close_observation(window)

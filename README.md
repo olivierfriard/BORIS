@@ -8,6 +8,8 @@ BORIS is an easy-to-use event logging software for video/audio coding or live ob
 
 BORIS is a free and open-source software available for GNU/Linux, Windows and macOS.
 
+It provides also some analysis tools like time budget and some plotting functions.
+
 ### Video playback on macOS
 
 On macOS, BORIS displays video inside its player panels using libmpv and OpenGL.
@@ -25,8 +27,10 @@ Panels can be moved, floated, and docked again. Use *Tools > Lock dockwidgets* t
 lock them. Hardware decoding set to `auto` or `auto-safe` uses VideoToolbox
 copy-back so that frame extraction and geometric measurements remain available.
 
-It provides also some analysis tools like time budget and some plotting functions.
-
+On macOS, arrow keys reported with the numeric keypad modifier are normalized
+for navigation and behavior shortcuts. To show or hide columns in the Ethogram,
+Subjects, or Events tables, right-click the table header or choose *Configure
+columns* from the table menu. Column visibility is saved between sessions.
 
 
 The BORIS paper has more than 2931 citations in peer-reviewed scientific publications.

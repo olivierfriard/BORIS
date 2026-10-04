@@ -1,4 +1,4 @@
-from types import SimpleNamespace
+from unittest.mock import Mock
 
 import pytest
 
@@ -38,8 +38,24 @@ class Action:
 class Header:
     def __init__(self):
         self.sortIndicatorChanged = Signal()
+        self.customContextMenuRequested = Signal()
         self.context_policy = None
         self.actions = []
+        self.tooltip = None
+
+    def setToolTip(self, tooltip):
+        """Record the column menu hint.
+
+        Function written by Codex - ChatGPT 6.
+        """
+        self.tooltip = tooltip
+
+    def mapToGlobal(self, position):
+        """Return the position supplied by the fake header.
+
+        Function written by Codex - ChatGPT 6.
+        """
+        return position
 
     def setContextMenuPolicy(self, policy):
         self.context_policy = policy
@@ -56,6 +72,13 @@ class Widget:
         self.context_policy = None
         self.actions = []
         self._header = Header()
+
+    def model(self):
+        """Represent a table whose model has not been loaded yet.
+
+        Function written by Codex - ChatGPT 6.
+        """
+        return None
 
     def setContextMenuPolicy(self, policy):
         self.context_policy = policy
@@ -127,15 +150,34 @@ def test_connections_configure_actions_context_menus_and_timers(connected_window
     assert window.twEthogram.context_policy == connections.Qt.ContextMenuPolicy.ActionsContextMenu
     assert window.tv_events.context_policy == connections.Qt.ContextMenuPolicy.ActionsContextMenu
     assert window.twEthogram.horizontalHeader().sortIndicatorChanged.callbacks
-    assert window.tv_events.horizontalHeader().actions == [window.actionConfigure_tvevents_columns]
+    assert window.tv_events.horizontalHeader().context_policy == connections.Qt.ContextMenuPolicy.CustomContextMenu
+    assert window.tv_events.horizontalHeader().tooltip == "Right-click to show or hide columns"
+    assert window.tv_events.horizontalHeader().customContextMenuRequested.callbacks
+    assert window.actionConfigure_tvevents_columns in window.tv_events.actions
     assert window.actionAdd_event in window.tv_events.actions
     assert window.actionDelete_selected_events in window.tv_events.actions
-    assert sum(action.separator for action in window.tv_events.actions) == 4
+    assert sum(action.separator for action in window.tv_events.actions) == 5
     assert window.plot_timer.interval == cfg.SPECTRO_TIMER
     assert window.plot_timer.timeout.callbacks
     assert window.live_timer.timeout.callbacks
     assert window.automaticBackupTimer.starts == [240000]
     assert window.pb_live_obs.clicked.callbacks
+
+
+@pytest.mark.parametrize("widget_name, table_name", [("twEthogram", "ethogram"), ("twSubjects", "subjects"), ("tv_events", "events")])
+def test_header_column_menus_use_the_correct_table(connected_window, monkeypatch, widget_name, table_name):
+    """Verify each header opens the menu for its own saved column settings.
+
+    Function written by Codex - ChatGPT 6.
+    """
+    show_menu = Mock()
+    monkeypatch.setattr(connections.column_visibility, "show_columns_menu", show_menu)
+    widget = getattr(connected_window, widget_name)
+    position = connections.QCursor.pos()
+
+    widget.horizontalHeader().customContextMenuRequested.emit(position)
+
+    show_menu.assert_called_once_with(widget, table_name, position)
 
 
 def test_connections_do_not_start_automatic_backup_when_disabled(monkeypatch):

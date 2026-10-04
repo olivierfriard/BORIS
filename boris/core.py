@@ -54,7 +54,7 @@ from PIL.ImageQt import Image
 matplotlib.use("QtAgg")
 
 from PySide6.QtCore import QAbstractTableModel, QDateTime, QElapsedTimer, QEvent, QPoint, QSettings, Qt, QTimer, QUrl, Signal
-from PySide6.QtGui import QAction, QColor, QDesktopServices, QFont, QIcon, QKeyEvent, QKeySequence, QPainter, QPixmap, QPolygon
+from PySide6.QtGui import QAction, QColor, QCursor, QDesktopServices, QFont, QIcon, QKeyEvent, QKeySequence, QPainter, QPixmap, QPolygon
 from PySide6.QtMultimedia import QSoundEffect
 from PySide6.QtWidgets import (
     QAbstractItemView,
@@ -94,6 +94,7 @@ else:
 
 from . import (
     advanced_event_filtering,
+    column_visibility,
     config_file,
     connections,
     core_qrc,
@@ -102,6 +103,7 @@ from . import (
     events_cursor,
     geometric_measurement,
     gui_utilities,
+    keyboard_utils,
     menu_options,
     modifier_coding_map_creator,
     modifiers_coding_map,
@@ -2216,44 +2218,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
     def configure_tvevents_columns(self):
         """
-        configure the visible columns of tv_events tableview
-        configuration for playerType is recorded in self.config_param[f"{self.playerType} tw fields"]
+        show the list of the columns of the events table with check boxes to show / hide them
+        (also with a right click on the header of the events table)
         """
-        QMessageBox.information(
-            None,
-            cfg.programName,
-            ("This function is not yet implemented"),
-            QMessageBox.StandardButton.Ok,
-            QMessageBox.StandardButton.NoButton,
-        )
-
-        return
-        # TODO: implement
-        dlg = dialog.Input_dialog(
-            label_caption="Select the columns to show",
-            elements_list=[
-                (
-                    "cb",
-                    x,
-                    # default state
-                    x
-                    in self.config_param.get(
-                        f"{self.playerType} tw fields",
-                        cfg.TW_EVENTS_FIELDS[self.playerType],
-                    ),
-                )
-                for x in cfg.TW_EVENTS_FIELDS[self.playerType]
-            ],
-            title="Select the column to show",
-        )
-        if not dlg.exec_():
-            return
-
-        self.config_param[f"{self.playerType} tw fields"] = tuple(
-            field for field in cfg.TW_EVENTS_FIELDS[self.playerType] if dlg.elements[field].isChecked()
-        )
-
-        self.load_tw_events(self.observationId)
+        column_visibility.show_columns_menu(self.tv_events, column_visibility.EVENTS, QCursor.pos())
 
     def populate_tv_events(self, obs_id: str, header: list, time_format: str, behaviors_filter=tuple, subjects_filter=tuple) -> None:
         """
@@ -2326,6 +2294,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 self.tv_events.setColumnWidth(i, width)
 
         # self.tv_events.horizontalHeader().setSectionsMovable(True)
+
+        # the hidden columns are reset by the new model
+        column_visibility.apply_hidden_columns(self.tv_events, column_visibility.EVENTS)
 
     def load_tw_events(self, obs_id) -> None:
         """
@@ -4869,9 +4840,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         ):
             return False
 
-        seq = QKeySequence(event.modifiers() | key)
+        # macOS: the arrow keys are reported with the keypad modifier (Num+Left)
+        modifiers = keyboard_utils.normalize_modifiers(key, event.modifiers())
+        seq = keyboard_utils.key_sequence_from_key(key, modifiers)
         has_non_shift_modifier = bool(
-            event.modifiers() & (Qt.KeyboardModifier.ControlModifier | Qt.KeyboardModifier.AltModifier | Qt.KeyboardModifier.MetaModifier)
+            modifiers & (Qt.KeyboardModifier.ControlModifier | Qt.KeyboardModifier.AltModifier | Qt.KeyboardModifier.MetaModifier)
         )
         text_shortcut = event_text if event_text and len(event_text) == 1 and not has_non_shift_modifier else ""
 

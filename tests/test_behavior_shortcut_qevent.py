@@ -125,12 +125,23 @@ def test_empty_qt_sequence_is_ignored(monkeypatch, shortcut_dialog):
         def isEmpty(self):
             return True
 
-    monkeypatch.setattr(behavior_shortcut_qevent, "QKeySequence", EmptySequence)
+    monkeypatch.setattr(behavior_shortcut_qevent.keyboard_utils, "key_sequence_from_key", lambda *_: EmptySequence())
 
     shortcut_dialog._handle_key_press(key_event(Qt.Key.Key_S, "", Qt.KeyboardModifier.ControlModifier))
     monkeypatch.undo()
 
     assert shortcut_dialog.shortcut().isEmpty()
+
+
+@pytest.mark.parametrize("key, expected", [(Qt.Key.Key_Left, "Left"), (Qt.Key.Key_Right, "Right"), (Qt.Key.Key_Up, "Up"), (Qt.Key.Key_Down, "Down")])
+def test_macos_arrow_shortcuts_ignore_the_keypad_modifier(monkeypatch, shortcut_dialog, key, expected):
+    """Capture macOS arrow shortcuts using their normalized Qt sequence.
+
+    Function written by Codex - ChatGPT 6.
+    """
+    monkeypatch.setattr(behavior_shortcut_qevent.keyboard_utils.sys, "platform", "darwin")
+    shortcut_dialog._handle_key_press(key_event(key, modifiers=Qt.KeyboardModifier.KeypadModifier))
+    assert shortcut_dialog.shortcutPortableText() == expected
 
 
 @pytest.mark.parametrize(
