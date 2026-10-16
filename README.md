@@ -33,7 +33,7 @@ Subjects, or Events tables, right-click the table header or choose *Configure
 columns* from the table menu. Column visibility is saved between sessions.
 
 
-The BORIS paper has more than 2931 citations in peer-reviewed scientific publications.
+The BORIS paper has more than 3000 citations in peer-reviewed scientific publications.
 
 
 
