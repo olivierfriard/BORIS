@@ -2069,8 +2069,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         receive signal from dock widget when player clicked.
         """
 
-        # remove before release
-
         def get_pan_for_zoom_in_clicked_coordinates(player, videoframe, zoom, pan_x, pan_y, new_zoom):
             """
             returns the pan (pan_x, pan_y) necessary to zoom in or zoom out in the clicked coordinates
@@ -2087,8 +2085,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             # click coordinates in dialog reference frame
             dx = self.dw_player[player_id].player.mouse_pos["x"]
             dy = self.dw_player[player_id].player.mouse_pos["y"]
-
-            print(f"{dx=} {dy=}")  # remove before release
 
             # convert to float for operations
             vw = float(vw)
@@ -2227,8 +2223,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         """
         populate table view with events
         """
-
-        logger.debug("populate tv_events")  # remove before release
 
         model = self.tv_events.model()
         widths = []
@@ -4967,11 +4961,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             if seq == QKeySequence("Right"):
                 self.next_frame()
                 return
-
-            """
-            print(f"{seq=}")  # remove before release
-            print(f"{seq==QKeySequence(Qt.Key.Key_PageUp)=}")  # remove before release
-            """
 
             # next media file (page up)
             if seq == QKeySequence(Qt.Key.Key_PageUp):
