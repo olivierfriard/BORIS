@@ -42,6 +42,8 @@ def read(self) -> None:
 
     logger.debug(f"read config file: {ini_file_path}")
 
+    last_check_for_new_version = None
+
     if ini_file_path.is_file():
         settings = QSettings(str(ini_file_path), QSettings.Format.IniFormat)
 
@@ -215,14 +217,8 @@ def read(self) -> None:
                 self.checkForNewVersion = False
         logger.debug(f"Automatic check for new version: {self.checkForNewVersion}")
 
-        if (
-            self.checkForNewVersion
-            and settings.value("last_check_for_new_version")
-            and (int(time.mktime(time.localtime())) - int(settings.value("last_check_for_new_version")) > cfg.CHECK_NEW_VERSION_DELAY)
-        ):
-            self.actionCheckUpdate_activated(flagMsgOnlyIfNew=True)
-
-        logger.debug(f"last check for new version: {settings.value('last_check_for_new_version')}")
+        last_check_for_new_version = settings.value("last_check_for_new_version")
+        logger.debug(f"last check for new version: {last_check_for_new_version}")
 
         # pause before add event
         # for setting_key, init_key in {"pause_before_addevent":"pause_before_addevent"}.items():
@@ -349,6 +345,13 @@ def read(self) -> None:
             self.set_recent_projects_menu()
         except Exception:  # noqa: BLE001
             logger.warning("recent projects file not created")
+
+    if (
+        self.checkForNewVersion
+        and last_check_for_new_version
+        and (int(time.mktime(time.localtime())) - int(last_check_for_new_version) > cfg.CHECK_NEW_VERSION_DELAY)
+    ):
+        self.actionCheckUpdate_activated(flagMsgOnlyIfNew=True)
 
 
 def save(self, lastCheckForNewVersion=0):

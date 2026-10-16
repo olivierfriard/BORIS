@@ -127,6 +127,27 @@ def test_read_restores_saved_values_timer_update_check_and_recent_projects(confi
     assert window.recent_menu_updates == 1
 
 
+def test_read_migrates_config_before_an_update_check_saves_it(config_home):
+    config_settings = settings(config_home / ".boris")
+    config_settings.setValue("config", {"legacy_config": True})
+    config_settings.setValue("check_for_new_version", "true")
+    config_settings.setValue("last_check_for_new_version", "0")
+    config_settings.sync()
+    window = Window(no_first_launch_dialog=False)
+
+    def check_for_update(**kwargs):
+        window.update_checks.append(kwargs)
+        config_file.save(window, lastCheckForNewVersion=12345)
+
+    window.actionCheckUpdate_activated = check_for_update
+
+    config_file.read(window)
+
+    assert window.update_checks == [{"flagMsgOnlyIfNew": True}]
+    assert window.config_param["pause_before_addevent"] is False
+    assert settings(config_home / ".boris").value("config")["pause_before_addevent"] is False
+
+
 def test_read_migrates_legacy_settings_and_resets_light_colors(monkeypatch, config_home):
     config_settings = settings(config_home / ".boris")
     config_settings.setValue("config", {"legacy_config": True})
