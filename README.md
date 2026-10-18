@@ -2,43 +2,37 @@ BORIS (Behavioral Observation Research Interactive Software)
 ===============================================================
 
 
-![BORIS logo](https://github.com/olivierfriard/BORIS/blob/master/boris/icons/logo_boris.png?raw=true)
+![BORIS logo](https://raw.githubusercontent.com/olivierfriard/BORIS/master/boris/icons/logo_boris.png)
 
 BORIS is an easy-to-use event logging software for video/audio coding or live observations.
 
 BORIS is a free and open-source software available for GNU/Linux, Windows and macOS.
 
-It provides also some analysis tools like time budget and some plotting functions.
+It provides some analysis tools like time budget, some plotting functions and a plugin system that allow to write your own analysis.
 
-### Video playback on macOS
+# Main features
 
-On macOS, BORIS displays video inside its player panels using libmpv and OpenGL.
-Install mpv (including libmpv) and FFmpeg with Homebrew:
-
-```
-brew install mpv ffmpeg
-```
-
-If libmpv is unavailable, BORIS uses separate mpv windows through IPC. This mode
-can also be selected with `--ipc` (`-i`). IPC diagnostic messages are written to
-`/tmp/mpvsocket<N>.log` to prevent unread output pipes from blocking playback.
-
-Panels can be moved, floated, and docked again. Use *Tools > Lock dockwidgets* to
-lock them. Hardware decoding set to `auto` or `auto-safe` uses VideoToolbox
-copy-back so that frame extraction and geometric measurements remain available.
-
-On macOS, arrow keys reported with the numeric keypad modifier are normalized
-for navigation and behavior shortcuts. To show or hide columns in the Ethogram,
-Subjects, or Events tables, right-click the table header or choose *Configure
-columns* from the table menu. Column visibility is saved between sessions.
+* Event logging from video, audio and live observations
+* Support for point events, state events and modifiers
+* Time budget, inter-observer reliability and plotting analyses
+* Data export in common formats
+* Analysis plugins
 
 
-The BORIS paper has more than 3000 citations in peer-reviewed scientific publications.
+
+The BORIS paper has more than 2931 citations in peer-reviewed scientific publications.
 
 
 
 
 See the official [BORIS web site](https://www.boris.unito.it).
+
+
+# Download
+
+
+See the [Download](https://www.boris.unito.it/download/) section of the BORIS web site.
+
 
 <a href="https://www.boris.unito.it" target="_blank"><img alt="Website" src="https://img.shields.io/website?url=https%3A%2F%2Fwww.boris.unito.it"></a>
 <a href="https://www.boris.unito.it/user_guide/" target="_blank"><img alt="User guide" src="https://img.shields.io/badge/Documentation-orange"></a>
@@ -46,14 +40,10 @@ See the official [BORIS web site](https://www.boris.unito.it).
 ![Python versions](https://img.shields.io/pypi/pyversions/boris-behav-obs)
 ![BORIS license](https://img.shields.io/pypi/l/boris-behav-obs)
 [![PyPI version](https://img.shields.io/pypi/v/boris-behav-obs.svg)](https://pypi.org/project/boris-behav-obs/)
-
 [![Number of downloads](https://static.pepy.tech/personalized-badge/boris-behav-obs?period=total&units=international_system&left_color=black&right_color=orange&left_text=Downloads)](https://pepy.tech/project/boris-behav-obs)
 ![commit-activity](https://img.shields.io/github/commit-activity/m/olivierfriard/BORIS)
 ![GitHub last commit](https://img.shields.io/github/last-commit/olivierfriard/BORIS)
-
 ![BORIS scopus citations badge](https://penelope.unito.it/friard/boris_scopus_citations.svg)
-
-
 ![GitHub Repo stars](https://img.shields.io/github/stars/olivierfriard/BORIS?style=flat&label=Stars)
 [![Please Star](https://img.shields.io/badge/⭐-Star%20this%20repo-blue?style=flat-square)](https://github.com/olivierfriard/BORIS/stargazers)
 
