@@ -10,6 +10,7 @@ BORIS is a free and open-source software available for GNU/Linux, Windows and ma
 
 It provides some analysis tools like time budget, some plotting functions and a plugin system that allow to write your own analysis.
 
+
 # Main features
 
 * Event logging from video, audio and live observations
@@ -108,4 +109,4 @@ GNU General Public License for more details.
 
 Distributed with a [GPL v.3 license](LICENSE.TXT).
 
-Copyright (C) 2012-2025 Olivier Friard
+Copyright (C) 2012-2026 Olivier Friard
