@@ -10,6 +10,8 @@ BORIS is a free and open-source software available for GNU/Linux, Windows and ma
 
 It provides some analysis tools like time budget, some plotting functions and a plugin system that allow to write your own analysis.
 
+I would like to thank [Daniel San Miguel](https://github.com/dsanmiguel) for his decisive work on the macOS version.
+
 
 # Main features
 
