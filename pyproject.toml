@@ -3,7 +3,7 @@ requires = ["setuptools>=40.8.0"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "boris-behav-obs"
+name = "BORIS"
 version = "10.0.2"
 description = "BORIS - Behavioral Observation Research Interactive Software"
 authors = [{ name="Olivier Friard", email="olivier.friard@unito.it" }]
