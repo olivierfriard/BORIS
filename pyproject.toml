@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "BORIS"
-version = "10.0.2"
+version = "10.0.3"
 description = "BORIS - Behavioral Observation Research Interactive Software"
 authors = [{ name="Olivier Friard", email="olivier.friard@unito.it" }]
 readme = "README.md"
