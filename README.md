@@ -1,7 +1,6 @@
 BORIS (Behavioral Observation Research Interactive Software)
 ===============================================================
 
-
 ![BORIS logo](https://raw.githubusercontent.com/olivierfriard/BORIS/master/boris/icons/logo_boris.png)
 
 BORIS is an easy-to-use event logging software for video/audio coding or live observations.
@@ -12,38 +11,29 @@ It provides some analysis tools like time budget, some plotting functions and a 
 
 I would like to thank [Daniel San Miguel](https://github.com/dsanmiguel) for his decisive work on the macOS version.
 
-
 # Main features
 
-* Event logging from video, audio and live observations
-* Support for point events, state events and modifiers
-* Time budget, inter-observer reliability and plotting analyses
-* Data export in common formats
-* Analysis plugins
+- Event logging from video, audio and live observations
+- Support for point events, state events and modifiers
+- Time budget, inter-observer reliability and plotting analyses
+- Data export in common formats
+- Analysis plugins
 
-
-
-The BORIS paper has more than 2931 citations in peer-reviewed scientific publications.
-
-
-
+The BORIS paper has more than 3000 citations in peer-reviewed scientific publications.
 
 See the official [BORIS web site](https://www.boris.unito.it).
 
-
 # Download
 
-
 See the [Download](https://www.boris.unito.it/download/) section of the BORIS web site.
-
 
 <a href="https://www.boris.unito.it" target="_blank"><img alt="Website" src="https://img.shields.io/website?url=https%3A%2F%2Fwww.boris.unito.it"></a>
 <a href="https://www.boris.unito.it/user_guide/" target="_blank"><img alt="User guide" src="https://img.shields.io/badge/Documentation-orange"></a>
 [![Python web site](https://img.shields.io/badge/Made%20with-Python-1f425f.svg)](https://www.python.org)
-![Python versions](https://img.shields.io/pypi/pyversions/boris-behav-obs)
-![BORIS license](https://img.shields.io/pypi/l/boris-behav-obs)
-[![PyPI version](https://img.shields.io/pypi/v/boris-behav-obs.svg)](https://pypi.org/project/boris-behav-obs/)
-[![Number of downloads](https://static.pepy.tech/personalized-badge/boris-behav-obs?period=total&units=international_system&left_color=black&right_color=orange&left_text=Downloads)](https://pepy.tech/project/boris-behav-obs)
+![Python versions](https://img.shields.io/pypi/pyversions/boris)
+![BORIS license](https://img.shields.io/pypi/l/boris)
+[![PyPI version](https://img.shields.io/pypi/v/boris.svg)](https://pypi.org/project/boris-obs/)
+[![Number of downloads](https://static.pepy.tech/personalized-badge/boris?period=total&units=international_system&left_color=black&right_color=orange&left_text=Downloads)](https://pepy.tech/project/boris)
 ![commit-activity](https://img.shields.io/github/commit-activity/m/olivierfriard/BORIS)
 ![GitHub last commit](https://img.shields.io/github/last-commit/olivierfriard/BORIS)
 ![BORIS scopus citations badge](https://penelope.unito.it/friard/boris_scopus_citations.svg)
@@ -52,27 +42,15 @@ See the [Download](https://www.boris.unito.it/download/) section of the BORIS we
 
 # Documentation
 
-
-
 The [user guide](https://www.boris.unito.it/user_guide/) provides a good starting point for learning how to use BORIS.
 
 Some [video tutorials](https://www.boris.unito.it/video_tutorials/) are available.
 
-
-
-
-
 # Bug reports and feature requests
-
 
 To search for bugs, report them or request a feature, please use the [GitHub issues tracker](https://github.com/olivierfriard/BORIS/issues)
 
-
-
-
-
 # Citing BORIS
-
 
 Please acknowledge and cite the use of this software and its authors when
 results are used in publications or published elsewhere. You can use the
@@ -93,21 +71,12 @@ following BibTex entry
 
 You can also send us a nice postcard! See the [user testimonials](https://www.boris.unito.it/postcards).
 
-
-
-
-
-
-
-
 # Licence
-
 
 This program is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
 GNU General Public License for more details.
-
 
 Distributed with a [GPL v.3 license](LICENSE.TXT).
 
