@@ -20,6 +20,6 @@ This file is part of BORIS.
 
 """
 
-__version__ = "10.0.2"
-__version_date__ = "2026-10-16"
+__version__ = "10.0.3"
+__version_date__ = "2026-10-28"
 __version_comment__ = ""
