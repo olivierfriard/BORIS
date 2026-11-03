@@ -435,6 +435,12 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         connections.connections(self)
         menu_options.update_menu(self)
 
+        # bring back on screen the floating dock widgets (video players included) when a monitor is disconnected.
+        # Delayed: the windows of the removed screen are moved by the system after the signal
+        QApplication.instance().screenRemoved.connect(
+            lambda screen: QTimer.singleShot(1000, lambda: gui_utilities.fit_floating_dock_widgets(self))
+        )
+
         plugins.load_plugins(self)
         plugins.add_plugins_to_menu(self)
 

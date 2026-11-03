@@ -22,9 +22,9 @@ Copyright 2012-2026 Olivier Friard
 import logging
 import pathlib as pl
 
-from PySide6.QtCore import QSettings
-from PySide6.QtGui import QIcon
-from PySide6.QtWidgets import QApplication, QWidget
+from PySide6.QtCore import QRect, QSettings
+from PySide6.QtGui import QGuiApplication, QIcon
+from PySide6.QtWidgets import QApplication, QDockWidget, QWidget
 
 
 def theme_mode() -> str:
@@ -136,3 +136,40 @@ def resize_center(app, window, width: int, height: int) -> None:
     center_y = (screen_geometry.height() - window.height()) // 2
 
     window.move(center_x, center_y)
+
+
+def fit_floating_dock_widgets(self) -> None:
+    """
+    move and resize the floating dock widgets whose title bar and content are not entirely visible on a screen.
+    A position saved with a monitor that is no longer connected is restored by Qt with the title bar above the top of the screen.
+    """
+    for dw in self.findChildren(QDockWidget):
+        if not dw.isFloating() or not dw.isVisible():
+            continue
+
+        frame = dw.frameGeometry()
+        geometry = dw.geometry()
+        # visible part of the window: title bar and content.
+        # The left, right and bottom borders of the frame can be invisible resize borders (Windows 10/11)
+        # that Windows itself places outside the screen (e.g. snapped window)
+        visible = QRect(geometry.left(), frame.top(), geometry.width(), geometry.bottom() + 1 - frame.top())
+        screen = QGuiApplication.screenAt(visible.center()) or QGuiApplication.screenAt(geometry.center()) or dw.screen()
+        available = screen.availableGeometry()
+        if available.contains(visible):
+            continue
+
+        logging.warning(
+            f"{dw.objectName()} not entirely visible: title bar and content {visible.getRect()} available {available.getRect()}"
+        )
+
+        title_bar_height = geometry.top() - frame.top()
+        width = min(geometry.width(), available.width())
+        height = min(geometry.height(), available.height() - title_bar_height)
+        dw.resize(width, height)
+
+        left = min(max(geometry.left(), available.left()), available.right() + 1 - width)
+        top = min(max(frame.top(), available.top()), available.bottom() + 1 - (title_bar_height + height))
+        # move() positions the window frame (borders included)
+        dw.move(left - (geometry.left() - frame.left()), top)
+
+        logging.info(f"{dw.objectName()} moved to frame {dw.frameGeometry().getRect()}")
