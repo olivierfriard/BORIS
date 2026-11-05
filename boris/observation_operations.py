@@ -2385,6 +2385,9 @@ def initialize_new_media_observation(self) -> bool:
     for player in self.dw_player:
         player.setVisible(True)
 
+    # bring back on screen the floating players restored out of reach (e.g. monitor disconnected)
+    QTimer.singleShot(0, lambda: gui_utilities.fit_floating_dock_widgets(self))
+
     self.load_tw_events(self.observationId)
 
     # initial synchro
@@ -2579,6 +2582,9 @@ def initialize_new_images_observation(self):
             logger.critical("state not restored: Type error")
             self.saved_state = self.saveState()
             self.restoreState(self.saved_state)
+
+    # bring back on screen the floating players restored out of reach (e.g. monitor disconnected)
+    QTimer.singleShot(0, lambda: gui_utilities.fit_floating_dock_widgets(self))
 
     self.extract_frame(self.dw_player[i])
     self.w_obs_info.setVisible(True)
