@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "BORIS"
-version = "10.0.3"
+version = "10.0.4"
 description = "BORIS - Behavioral Observation Research Interactive Software"
 authors = [{ name="Olivier Friard", email="olivier.friard@unito.it" }]
 readme = "README.md"
@@ -15,6 +15,7 @@ classifiers=[
         "Intended Audience :: Science/Research",
         "Intended Audience :: Education",
         "Programming Language :: Python :: 3.13",
+        "Programming Language :: Python :: 3.14",
         "Operating System :: OS Independent",
         "Topic :: Scientific/Engineering",
     ]
@@ -47,8 +48,8 @@ Source_code = "https://github.com/olivierfriard/BORIS"
 Issues = "https://github.com/olivierfriard/BORIS/issues"
 
 [project.scripts]
-boris = "boris.core:main"
-"boris_cli.py" = "boris.boris_cli:main"
+boris = "boris.launcher:main"
+boris_cli = "boris.boris_cli:main"
 
 
 [[tool.uv.index]]

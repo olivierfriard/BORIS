@@ -42,7 +42,7 @@ def test_cli_help_runs_as_module():
 
 
 def test_cli_help_runs_with_uv_entrypoint():
-    result = run_command(["uv", "run", "boris_cli.py", "-h"])
+    result = run_command(["uv", "run", "boris_cli", "-h"])
     assert result.returncode == 0
     assert "BORIS CLI" in result.stdout
     assert "--command" in result.stdout

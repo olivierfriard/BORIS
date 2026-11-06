@@ -20,6 +20,8 @@ This file is part of BORIS.
 
 """
 
-from boris import main
+import sys
 
-main()
+from boris.launcher import main
+
+sys.exit(main())
