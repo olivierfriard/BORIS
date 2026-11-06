@@ -26,6 +26,8 @@ from PySide6.QtCore import QRect, QSettings
 from PySide6.QtGui import QGuiApplication, QIcon
 from PySide6.QtWidgets import QApplication, QDockWidget, QWidget
 
+logger = logging.getLogger(__name__)
+
 
 def theme_mode() -> str:
     """
@@ -46,8 +48,8 @@ def save_geometry(widget: QWidget, widget_name: str):
         try:
             settings = QSettings(str(ini_file_path), QSettings.Format.IniFormat)
             settings.setValue(f"{widget_name} geometry", widget.saveGeometry())
-        except Exception:
-            logging.warning(f"error during saving {widget_name} geometry")
+        except Exception:  # noqa: BLE001
+            logger.warning(f"error during saving {widget_name} geometry")
 
 
 def restore_geometry(widget: QWidget, widget_name: str, default_width_height):
@@ -59,20 +61,20 @@ def restore_geometry(widget: QWidget, widget_name: str, default_width_height):
         if default_width_height != (0, 0):
             try:
                 widget.resize(default_width_height[0], default_width_height[1])
-            except Exception:
-                logging.warning("Error during restoring default")
+            except Exception:  # noqa: BLE001
+                logger.warning("Error during restoring default")
 
-    logging.debug(f"restore geometry function for {widget_name}")
+    logger.debug(f"restore geometry function for {widget_name}")
     try:
         ini_file_path = pl.Path.home() / pl.Path(".boris")
         if ini_file_path.is_file():
             settings = QSettings(str(ini_file_path), QSettings.Format.IniFormat)
             widget.restoreGeometry(settings.value(f"{widget_name} geometry"))
-            logging.debug(f"geometry restored for {widget_name}  {settings.value(f'{widget_name} geometry')}")
+            logger.debug(f"geometry restored for {widget_name}  {settings.value(f'{widget_name} geometry')}")
         else:
             default_resize(widget, default_width_height)
-    except Exception:
-        logging.warning(f"error during restoring {widget_name} geometry")
+    except Exception:  # noqa: BLE001
+        logger.warning(f"error during restoring {widget_name} geometry")
         default_resize(widget, default_width_height)
 
 
@@ -143,6 +145,7 @@ def fit_floating_dock_widgets(self) -> None:
     move and resize the floating dock widgets whose title bar and content are not entirely visible on a screen.
     A position saved with a monitor that is no longer connected is restored by Qt with the title bar above the top of the screen.
     """
+
     for dw in self.findChildren(QDockWidget):
         if not dw.isFloating() or not dw.isVisible():
             continue
@@ -158,9 +161,7 @@ def fit_floating_dock_widgets(self) -> None:
         if available.contains(visible):
             continue
 
-        logging.warning(
-            f"{dw.objectName()} not entirely visible: title bar and content {visible.getRect()} available {available.getRect()}"
-        )
+        logger.warning(f"{dw.objectName()} not entirely visible: title bar and content {visible.getRect()} available {available.getRect()}")
 
         title_bar_height = geometry.top() - frame.top()
         width = min(geometry.width(), available.width())
@@ -172,4 +173,4 @@ def fit_floating_dock_widgets(self) -> None:
         # move() positions the window frame (borders included)
         dw.move(left - (geometry.left() - frame.left()), top)
 
-        logging.info(f"{dw.objectName()} moved to frame {dw.frameGeometry().getRect()}")
+        logger.info(f"{dw.objectName()} moved to frame {dw.frameGeometry().getRect()}")

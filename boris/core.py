@@ -19,7 +19,6 @@ This file is part of BORIS.
   along with this program; if not see <http://www.gnu.org/licenses/>.
 
 """
-# ruff: noqa: E402
 
 import os
 import sys
@@ -5979,6 +5978,7 @@ def main():
             )
             sys.exit()
 
+    """
     if sys.platform.startswith("darwin"):
         msg = "This version of BORIS for macOS is still EXPERIMENTAL and should be used at your own risk."
         if window.MPV_IPC_MODE and not options.ipc:
@@ -5993,6 +5993,7 @@ def main():
             QMessageBox.StandardButton.Ok | QMessageBox.StandardButton.Default,
             QMessageBox.StandardButton.NoButton,
         )
+    """
 
     window.show()
     window.raise_()  # for overlapping widget (?)

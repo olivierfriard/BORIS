@@ -58,7 +58,7 @@ logger = logging.getLogger(__name__)
 if (sys.platform.startswith("win") or sys.platform.startswith("linux")) and ("-i" not in sys.argv) and ("--ipc" not in sys.argv):
     try:
         from . import mpv2 as mpv
-    except Exception:
+    except Exception:  # noqa: BLE001
         logger.warning("MPV library not found")
 
         if sys.platform.startswith("win"):
@@ -93,14 +93,14 @@ if (sys.platform.startswith("win") or sys.platform.startswith("linux")) and ("-i
             try:
                 urllib.request.urlretrieve(url + "libmpv-2.dll", local_filename)
                 logger.info(f"File downloaded as {local_filename}")
-            except Exception:
+            except Exception:  # noqa: BLE001
                 logger.critical("The MPV library can not be downloaded! Check your connection.")
                 ctypes.windll.user32.MessageBoxW(0, "The MPV library can not be downloaded!\nCheck your connection.", "BORIS", 0)
                 sys.exit(5)
             # reload package
             try:
                 from . import mpv2 as mpv
-            except Exception:
+            except Exception:  # noqa: BLE001
                 logger.critical("MPV library not found after dowloading")
                 sys.exit(5)
 
@@ -130,7 +130,7 @@ if sys.platform.startswith("darwin") and ("-i" not in sys.argv) and ("--ipc" not
     # If libmpv is not available BORIS uses the mpv IPC mode (video in mpv windows)
     try:
         from . import mpv2 as mpv
-    except Exception:
+    except Exception:  # noqa: BLE001
         mpv = None
         logger.warning("MPV library not found. BORIS will use the mpv IPC mode")
 
@@ -166,7 +166,7 @@ def test_mpv_ipc(socket_path: str = cfg.MPV_SOCKET) -> bool:
         client.connect(socket_path)
         client.close()
         return True
-    except Exception:
+    except Exception:  # noqa: BLE001
         return False
 
 
@@ -198,11 +198,11 @@ def extract_exif_DateTimeOriginal(file_path: str) -> int:
                 try:
                     # read from file name (YYYY-MM-DD_HHMMSS)
                     return int(datetime.datetime.strptime(Path(file_path).stem, "%Y-%m-%d_%H%M%S").timestamp())
-                except Exception:
+                except Exception:  # noqa: BLE001
                     # read from file name (YYYY-MM-DD_HH:MM:SS)
                     return int(datetime.datetime.strptime(Path(file_path).stem, "%Y-%m-%d_%H:%M:%S").timestamp())
 
-    except Exception:
+    except Exception:  # noqa: BLE001
         return -1
 
 
@@ -219,7 +219,7 @@ def extract_video_creation_date(file_path: str) -> int | None:
     try:
         parser = createParser(file_path)
         metadata = extractMetadata(parser)
-    except Exception:
+    except Exception:  # noqa: BLE001
         return None
 
     if metadata.has("creation_date"):
@@ -282,7 +282,7 @@ def python_mpv_script_version() -> str:
     """
     try:
         return mpv.__version__
-    except Exception:
+    except Exception:  # noqa: BLE001
         return "Not found"
 
 
@@ -360,7 +360,7 @@ def return_file_header(file_name: str, row_number: int = 5) -> list:
         with open(file_name) as f_in:
             for _ in range(row_number):
                 header.append(f_in.readline())
-    except Exception:
+    except Exception:  # noqa: BLE001
         return []
     return header
 
