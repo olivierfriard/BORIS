@@ -8,7 +8,7 @@ version = "10.0.3"
 description = "BORIS - Behavioral Observation Research Interactive Software"
 authors = [{ name="Olivier Friard", email="olivier.friard@unito.it" }]
 readme = "README.md"
-requires-python = ">=3.13,<3.14"
+requires-python = ">=3.13,<3.15"
 license = "GPL-3.0-only"
 classifiers=[
         "Topic :: Scientific/Engineering",
@@ -19,17 +19,17 @@ classifiers=[
         "Topic :: Scientific/Engineering",
     ]
 dependencies = [
-    "exifread==3.5.1",
-    "numpy==2.3.2",
-    "matplotlib==3.10.5",
-    "pandas==2.3.2",
-    "tablib[cli,html,ods,pandas,xls,xlsx]>=3.10.0",
-    "pyreadr==0.5.3",
+    "exifread>=3,<4",
+    "numpy>=2,<3",
+    "matplotlib>=3,<4",
+    "pandas>=2,<3",
+    "tablib[cli,html,ods,pandas,xls,xlsx]>=3.10.0,<4",
+    "pyreadr",
     "pyside6==6.10",
     "pyobjc-framework-Cocoa; sys_platform == 'darwin'",
-    "hachoir==3.3.0",
-    "scipy==1.16.1",
-    "scikit-learn==1.7.1",
+    "hachoir>=3.3,<4",
+    "scipy",
+    "scikit-learn>=1.7.2,<2",
     "pyqtgraph>=0.14.0",
     "pytest-cov==7.1.0",
     "pytest==9.1.1",
