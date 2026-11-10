@@ -74,23 +74,6 @@ from PySide6.QtWidgets import (
 
 from . import cmd_arguments
 
-# parse command line arguments
-(options, args) = cmd_arguments.parse_arguments()
-
-# set logging parameters
-if options.debug:
-    logging.basicConfig(
-        format="%(asctime)s,%(msecs)d  %(module)s l.%(lineno)d %(levelname)s %(message)s",
-        datefmt="%H:%M:%S",
-        level=logging.DEBUG,
-    )
-else:
-    logging.basicConfig(
-        format="%(asctime)s,%(msecs)d  %(message)s",
-        datefmt="%H:%M:%S",
-        level=logging.INFO,
-    )
-
 from . import (
     advanced_event_filtering,
     column_visibility,
@@ -140,14 +123,6 @@ if util.versiontuple(platform.python_version()) < util.versiontuple(MIN_PYTHON_V
 
 if sys.platform.startswith("darwin"):  # for MacOS
     os.environ["LC_ALL"] = "en_US.UTF-8"
-
-
-if options.version:
-    print(f"version {__version__} release date: {__version_date__}")
-    sys.exit(0)
-
-logger.debug("BORIS started")
-logger.info(util.get_systeminfo())
 
 
 def excepthook(exception_type, exception_value, traceback_object):
@@ -209,7 +184,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     """
 
     # check first launch dialog
-    no_first_launch_dialog = options.no_first_launch_dialog
+    no_first_launch_dialog = False
 
     pj: dict = dict(cfg.EMPTY_PROJECT)
     project: bool = False  # project is loaded?
@@ -5815,6 +5790,30 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
 
 def main():
+    # Only the application entry point owns the process command-line arguments.
+    options, args = cmd_arguments.parse_arguments()
+
+    if options.debug:
+        logging.basicConfig(
+            format="%(asctime)s,%(msecs)d  %(module)s l.%(lineno)d %(levelname)s %(message)s",
+            datefmt="%H:%M:%S",
+            level=logging.DEBUG,
+        )
+    else:
+        logging.basicConfig(
+            format="%(asctime)s,%(msecs)d  %(message)s",
+            datefmt="%H:%M:%S",
+            level=logging.INFO,
+        )
+
+    if options.version:
+        print(f"version {__version__} release date: {__version_date__}")
+        sys.exit(0)
+
+    logger.debug("BORIS started")
+    logger.info(util.get_systeminfo())
+    MainWindow.no_first_launch_dialog = options.no_first_launch_dialog
+
     if sys.platform.startswith("darwin") and not util.mpv_ipc_mode_required():
         from . import video_render_widget
 
