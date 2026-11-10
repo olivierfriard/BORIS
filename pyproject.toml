@@ -26,7 +26,7 @@ dependencies = [
     "pandas>=2,<3",
     "tablib[cli,html,ods,pandas,xls,xlsx]>=3.10.0,<4",
     "pyreadr",
-    "pyside6==6.10",
+    "pyside6>=6.10,<6.11",
     "pyobjc-framework-Cocoa; sys_platform == 'darwin'",
     "hachoir>=3.3,<4",
     "scipy",
