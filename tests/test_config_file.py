@@ -1,5 +1,4 @@
 import copy
-from types import SimpleNamespace
 
 import pytest
 from PySide6.QtCore import QByteArray, QSettings
@@ -55,10 +54,23 @@ def settings(path):
     return QSettings(str(path), QSettings.Format.IniFormat)
 
 
-def full_config():
+@pytest.fixture(
+    params=[
+        cfg.MEDIA_TW_EVENTS_FIELDS_DEFAULT,
+        tuple(reversed(cfg.MEDIA_TW_EVENTS_FIELDS_DEFAULT)),
+        ["time", "code", "subject"],
+    ],
+    ids=["default", "reordered", "custom-list"],
+)
+def media_fields(request):
+    return copy.deepcopy(request.param)
+
+
+def full_config(media_fields=cfg.MEDIA_TW_EVENTS_FIELDS_DEFAULT):
     values = copy.deepcopy(cfg.INIT_PARAM)
     values.update(
         {
+            f"{cfg.MEDIA} tw fields": copy.deepcopy(media_fields),
             "time_format": cfg.S,
             "fast_forward_speed": 2.5,
             "repositioning_time_offset": 7,
@@ -80,8 +92,8 @@ def full_config():
     return values
 
 
-def test_save_writes_config_and_recent_projects(config_home):
-    window = Window(config_param=full_config())
+def test_save_writes_config_and_recent_projects(config_home, media_fields):
+    window = Window(config_param=full_config(media_fields))
     window.saved_state = QByteArray(b"dock positions")
     window.checkForNewVersion = True
     window.ffmpeg_cache_dir = "/tmp/ffmpeg-cache"
@@ -91,7 +103,9 @@ def test_save_writes_config_and_recent_projects(config_home):
 
     config_settings = settings(config_home / ".boris")
     recent_settings = settings(config_home / ".boris_recent_projects")
-    assert config_settings.value("config") == window.config_param
+    # QSettings stores this tuple/list field as a list; values and order must survive.
+    assert config_settings.value("config") == full_config(list(media_fields))
+    assert window.config_param == full_config(media_fields)
     assert config_settings.value("geometry") == QByteArray(b"window geometry")
     assert config_settings.value("dockwidget_positions") == QByteArray(b"dock positions")
     assert config_settings.value("last_check_for_new_version") == 12345
@@ -100,9 +114,9 @@ def test_save_writes_config_and_recent_projects(config_home):
     assert recent_settings.value("recent_projects") == "one.boris|||two.boris"
 
 
-def test_read_restores_saved_values_timer_update_check_and_recent_projects(config_home):
+def test_read_restores_saved_values_timer_update_check_and_recent_projects(config_home, media_fields):
     config_settings = settings(config_home / ".boris")
-    config_settings.setValue("config", full_config())
+    config_settings.setValue("config", full_config(media_fields))
     config_settings.setValue("geometry", QByteArray(b"stored geometry"))
     config_settings.setValue("dockwidget_positions", QByteArray(b"stored docks"))
     config_settings.setValue("check_for_new_version", "true")
@@ -116,7 +130,7 @@ def test_read_restores_saved_values_timer_update_check_and_recent_projects(confi
 
     config_file.read(window)
 
-    assert window.config_param == full_config()
+    assert window.config_param == full_config(list(media_fields))
     assert window.restored_geometry == [QByteArray(b"stored geometry")]
     assert window.saved_state == QByteArray(b"stored docks")
     assert window.automaticBackupTimer.calls == [("start", 180000)]
