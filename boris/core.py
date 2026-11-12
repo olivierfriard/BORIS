@@ -134,9 +134,6 @@ def excepthook(exception_type, exception_value, traceback_object):
     dialog.global_error_message(exception_type, exception_value, traceback_object)
 
 
-sys.excepthook = excepthook
-
-
 class TableModel(QAbstractTableModel):
     """
     class for populating table view with events
@@ -5809,6 +5806,8 @@ def main():
     if options.version:
         print(f"version {__version__} release date: {__version_date__}")
         sys.exit(0)
+
+    sys.excepthook = excepthook
 
     logger.debug("BORIS started")
     logger.info(util.get_systeminfo())
