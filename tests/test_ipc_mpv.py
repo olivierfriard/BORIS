@@ -33,13 +33,24 @@ def test_process_uses_a_log_file_instead_of_unread_pipes(player):
     assert player.RESPONSE_TIMEOUT == 2.0
 
 
-def test_log_tail_returns_only_the_last_lines(player, tmp_path):
-    """Keep only the requested diagnostic lines, including invalid bytes.
+@pytest.mark.parametrize(
+    "log_bytes, expected_tail",
+    [
+        (b"first\nsecond\nlast\xff\n", "second\nlast\ufffd\n"),
+        (
+            "first\ncaf\u00e9 / \u6620\u50cf.mp4\n".encode("utf-8") + b"last\xff\n",
+            "caf\u00e9 / \u6620\u50cf.mp4\nlast\ufffd\n",
+        ),
+    ],
+    ids=["invalid-byte", "unicode-and-invalid-byte"],
+)
+def test_log_tail_returns_only_the_last_lines(player, tmp_path, log_bytes, expected_tail):
+    """Keep the requested UTF-8 diagnostic lines and replace invalid bytes.
 
     Function written by Codex - ChatGPT 6.
     """
-    (tmp_path / "mpvsocket0.log").write_bytes(b"first\nsecond\nlast\xff\n")
-    assert player.log_tail(2) == "second\nlast\ufffd\n"
+    (tmp_path / "mpvsocket0.log").write_bytes(log_bytes)
+    assert player.log_tail(2) == expected_tail
 
 
 def test_log_tail_tolerates_a_missing_file(player, tmp_path):

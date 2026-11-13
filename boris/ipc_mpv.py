@@ -95,7 +95,7 @@ class IPC_MPV:
         Function written by Codex - ChatGPT 6.
         """
         try:
-            with open(self.log_path, errors="replace") as log_file:
+            with open(self.log_path, encoding="utf-8", errors="replace") as log_file:
                 return "".join(deque(log_file, maxlen=max_lines))
         except OSError:
             return ""
