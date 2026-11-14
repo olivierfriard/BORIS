@@ -172,7 +172,8 @@ class Test_export_observations_list(object):
 
 class Test_media_full_path(object):
     def test_file_and_dir(self):
-        assert project_functions.full_path("geese1.mp4", os.getcwd() + "/files/test.boris") == os.getcwd() + "/files/geese1.mp4"
+        expected = str(Path.cwd() / "files" / "geese1.mp4")
+        assert project_functions.full_path("geese1.mp4", os.getcwd() + "/files/test.boris") == expected
 
     def test_file_not_found(self):
         assert project_functions.full_path("geese1.xxx", os.getcwd() + "/files/test.boris") == ""

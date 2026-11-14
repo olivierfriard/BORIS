@@ -315,18 +315,25 @@ class Test_export_events_jwatcher(object):
         r, msg = export_observation.export_events_jwatcher(
             parameters, obs_id, pj["observations"][obs_id], pj[config.ETHOGRAM], "output/" + file_name, output_format
         )
+        assert r, msg
 
-        ref = [x for x in Path("files/test_jwatcher_subject1.dat").read_text().splitlines(keepends=True) if not x.startswith("#")]
-        out = [x for x in Path("output/test_jwatcher_subject1.dat").read_text().splitlines(keepends=True) if not x.startswith("#")]
-        assert ref == out
-
-        ref = [x for x in Path("files/test_jwatcher_subject1.faf").read_text().splitlines(keepends=True) if not x.startswith("#")]
-        out = [x for x in Path("output/test_jwatcher_subject1.faf").read_text().splitlines(keepends=True) if not x.startswith("#")]
-        assert ref == out
-
-        ref = [x for x in Path("files/test_jwatcher_subject1.fmf").read_text().splitlines(keepends=True) if not x.startswith("#")]
-        out = [x for x in Path("output/test_jwatcher_subject1.fmf").read_text().splitlines(keepends=True) if not x.startswith("#")]
-        assert ref == out
+        for suffix in ("dat", "faf", "fmf"):
+            ref = [
+                x
+                for x in Path(f"files/test_jwatcher_subject1.{suffix}").read_text().splitlines(keepends=True)
+                if not x.startswith("#")
+            ]
+            # The fixtures use POSIX separators; the exporter writes native paths.
+            ref = [
+                f"FocalMasterFile={Path(x.partition('=')[2].strip())}\n" if x.startswith("FocalMasterFile=") else x
+                for x in ref
+            ]
+            out = [
+                x
+                for x in Path(f"output/test_jwatcher_subject1.{suffix}").read_text().splitlines(keepends=True)
+                if not x.startswith("#")
+            ]
+            assert ref == out
 
 
 class Test_events_to_behavioral_sequences(object):
@@ -368,7 +375,7 @@ class Test_events_to_behavioral_sequences(object):
 
         out = export_observation.events_to_behavioral_sequences(pj, obs_id, subject, parameters, behav_seq_separator)
 
-        assert Path("files/Test_events_to_behavioral_sequences_test_2_separator").read_text() == out
+        assert Path("files/Test_events_to_behavioral_sequences_test_2_separator").read_text(encoding="utf-8") == out
 
     def test_3_no_behavior_found_for_selected_subject(self):
         pj = json.loads(Path("files/test.boris").read_text())

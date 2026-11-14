@@ -124,7 +124,7 @@ def test_add_event_uses_the_observation_format(monkeypatch, tmp_path, write_even
     if observation_type == cfg.MEDIA:
         assert saved[0][5] == Decimal("42")
     if observation_type == cfg.IMAGES:
-        assert saved[0][5:] == [Decimal("2"), "images/two.jpg"]
+        assert saved[0][5:] == [Decimal("2"), str(Path("images") / "two.jpg")]
     assert write_event_dependencies.undo_messages == ["Undo last event insertion"]
     assert window.calls[-4:] == [("load", "obs"), ("changed",), ("current row",), ("show states",)]
 
