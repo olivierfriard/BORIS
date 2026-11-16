@@ -1221,15 +1221,15 @@ def full_path(path: str, project_file_name: str) -> str:
     """
 
     source_path = Path(path)
-    if source_path.exists():
-        return str(source_path)
-    else:
-        # check relative path (to project path)
-        project_path = Path(project_file_name)
-        if (project_path.parent / source_path).exists():
-            return str(project_path.parent / source_path)
-        else:
-            return ""
+    # Keep the working-directory candidate first, then try the project directory.
+    for candidate in (source_path, Path(project_file_name).parent / source_path):
+        try:
+            if candidate.exists():
+                return str(candidate)
+        except OSError:
+            # Before Python 3.14, exists() can raise for inaccessible paths.
+            continue
+    return ""
 
 
 def observed_interval(observation: dict) -> tuple[dec, dec] | None:
