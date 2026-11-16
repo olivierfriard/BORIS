@@ -700,8 +700,9 @@ def observation_total_length(observation: dict) -> dec:
         media_max_total_length = max([media_total_length[x] for x in media_total_length])
 
         if observation[cfg.EVENTS]:
-            if max(observation[cfg.EVENTS])[cfg.EVENT_TIME_FIELD_IDX] > media_max_total_length:
-                media_max_total_length = max(observation[cfg.EVENTS])[cfg.EVENT_TIME_FIELD_IDX]
+            # Tied times must not compare metadata such as numeric/NA frame indices.
+            last_event_time = max(event[cfg.EVENT_TIME_FIELD_IDX] for event in observation[cfg.EVENTS])
+            media_max_total_length = max(media_max_total_length, last_event_time)
 
         return media_max_total_length
 
