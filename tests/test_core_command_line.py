@@ -79,6 +79,8 @@ def test_main_applies_first_launch_option_before_starting_gui(monkeypatch, argum
     monkeypatch.setattr(sys, "excepthook", sys.__excepthook__)
     monkeypatch.setattr(sys, "argv", ["boris", *arguments])
     monkeypatch.setattr(core.MainWindow, "no_first_launch_dialog", not expected)
+    # Startup option handling must not depend on the loaded media backend.
+    monkeypatch.setattr(core.util, "get_systeminfo", lambda: "test system information")
     monkeypatch.setattr(core, "QApplication", check_option_and_stop)
     with pytest.raises(StopBeforeGui):
         core.main()
