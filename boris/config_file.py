@@ -21,6 +21,7 @@ This file is part of BORIS.
 Read and write the BORIS config file
 """
 
+import copy
 import logging
 import pathlib as pl
 import time
@@ -52,8 +53,8 @@ def read(self) -> None:
         except Exception:  # noqa: BLE001
             self.config_param = {}
 
-        if self.config_param == {}:
-            self.config_param = cfg.INIT_PARAM
+        if not isinstance(self.config_param, dict) or not self.config_param:
+            self.config_param = copy.deepcopy(cfg.INIT_PARAM)
 
             # for back compatibility
             # display subtitles
