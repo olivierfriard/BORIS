@@ -202,3 +202,20 @@ def test_read_without_a_config_file_asks_about_update_checks(monkeypatch, config
     assert window.checkForNewVersion is expected
     assert window.config_param == cfg.INIT_PARAM
     assert window.recent_projects == []
+
+
+@pytest.mark.parametrize("stored_config", [None, "invalid", {}], ids=["missing", "non-dictionary", "empty"])
+def test_read_recovers_preferences_without_a_usable_config(config_home, stored_config):
+    config_settings = settings(config_home / ".boris")
+    config_settings.setValue(cfg.DISPLAY_SUBTITLES, "true")
+    if stored_config is not None:
+        config_settings.setValue("config", stored_config)
+    config_settings.sync()
+    defaults = copy.deepcopy(cfg.INIT_PARAM)
+    window = Window()
+
+    config_file.read(window)
+
+    assert window.config_param[cfg.TIME_FORMAT] == defaults[cfg.TIME_FORMAT]
+    assert window.config_param[cfg.DISPLAY_SUBTITLES] is True
+    assert cfg.INIT_PARAM == defaults
